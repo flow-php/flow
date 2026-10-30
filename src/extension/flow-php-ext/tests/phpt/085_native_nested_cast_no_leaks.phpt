@@ -6,7 +6,7 @@ nested values cast natively, handed to the PHP lane half-appended, and refused l
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Column\RustBackend;
+use Flow\ETL\Values\Column\RustBackend;
 
 use function Flow\ETL\DSL\{list_schema, map_schema, structure_schema};
 use function Flow\Types\DSL\{structure_element, type_datetime, type_integer, type_list, type_map, type_optional, type_string, type_structure};
@@ -35,13 +35,13 @@ $cycle = static function () use ($backend, $orders, $lists, $maps): void {
     try {
         $backend->builder($orders)->appendMany([['id' => 1, 'tags' => ['a'], 'at' => null], ['id' => 2, 'tags' => ['b', null]]]);
         throw new LogicException('a refused value was accepted');
-    } catch (Flow\ETL\Exception\SchemaMismatchException) {
+    } catch (Flow\ETL\Foundation\Exception\SchemaMismatchException) {
     }
 
     try {
         $backend->builder($lists)->append([[1, 2], ['not an int']]);
         throw new LogicException('a refused value was accepted');
-    } catch (Flow\Types\Exception\CastingException) {
+    } catch (Flow\ETL\Foundation\Exception\ColumnMismatchException) {
     }
 };
 

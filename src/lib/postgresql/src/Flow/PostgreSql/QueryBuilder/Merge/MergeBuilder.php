@@ -11,7 +11,7 @@ use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\RangeSubselect;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\Protobuf\AST\ResTarget;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\Clause\WithClause;
 use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
@@ -23,8 +23,6 @@ use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
  */
 final readonly class MergeBuilder implements MergeIntoStep, MergeOnStep, MergeUsingStep, MergeWhenStep
 {
-    use AstToSql;
-
     /**
      * @param list<MergeWhenClauseData> $whenClauses
      */
@@ -99,6 +97,11 @@ final readonly class MergeBuilder implements MergeIntoStep, MergeOnStep, MergeUs
             $condition,
             $this->whenClauses,
         );
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): MergeStmt

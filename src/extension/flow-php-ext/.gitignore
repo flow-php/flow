@@ -38,3 +38,6 @@ composer.lock
 /ext/*.lo
 /ext/*.o
 /ext/*.dep
+
+# Cargo build output of every workspace crate
+target/

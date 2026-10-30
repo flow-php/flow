@@ -8,12 +8,10 @@ use Flow\PostgreSql\Protobuf\AST\DropBehavior;
 use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\Protobuf\AST\RenameStmt;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 final readonly class RenameViewBuilder implements RenameViewFinalStep
 {
-    use AstToSql;
-
     private function __construct(
         private string $view,
         private ?string $schema,
@@ -24,6 +22,11 @@ final readonly class RenameViewBuilder implements RenameViewFinalStep
     public static function create(string $view, ?string $schema, string $newName, bool $ifExists): self
     {
         return new self($view, $schema, $newName, $ifExists);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): RenameStmt

@@ -12,13 +12,14 @@ use Doctrine\DBAL\Schema\PrimaryKeyConstraint;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
-use Flow\ETL\Adapter\Doctrine\DescribeQuery;
-use Flow\ETL\Adapter\Doctrine\Order;
-use Flow\ETL\Adapter\Doctrine\OrderBy;
-use Flow\ETL\Adapter\Doctrine\PgSqlResultColumns;
-use Flow\ETL\Adapter\Doctrine\ProbeRefusal;
+use Flow\ETL\Adapter\Doctrine\Foundation\Exception\ProbeRefusal;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\DescribeQuery;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\Order;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\OrderBy;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\PgSqlResultColumns;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
-use Flow\ETL\Exception\SchemaNotDerivableException;
+use Flow\ETL\Foundation\Exception\SchemaNotDerivableException;
+use Flow\ETL\IO\Extractor\Criteria;
 use PgSql\Connection as PgSqlConnection;
 
 use function Flow\ETL\Adapter\Doctrine\from_dbal_limit_offset;
@@ -73,7 +74,7 @@ final class PostgreSQLSchemaDerivationTest extends IntegrationTestCase
             ['min' => 1],
         );
 
-        static::assertSame(['id', 'name'], $extractor->schema()->references()->names());
+        static::assertSame(['id', 'name'], $extractor->schema()->names());
         static::assertCount(2, data_frame()->read($extractor)->fetch());
     }
 
@@ -85,7 +86,7 @@ final class PostgreSQLSchemaDerivationTest extends IntegrationTestCase
             ['id', 'name'],
             from_dbal_query($this->pgsqlDatabaseContext->connection(), 'SELECT id, name FROM orders WHERE id > :min', [
                 'min' => 'not-an-integer',
-            ])->schema()->references()->names(),
+            ])->schema()->names(),
         );
     }
 
@@ -93,10 +94,7 @@ final class PostgreSQLSchemaDerivationTest extends IntegrationTestCase
     {
         static::assertSame(
             ['id'],
-            from_dbal_query($this->pgsqlDatabaseContext->connection(), 'SELECT id FROM orders;')
-                ->schema()
-                ->references()
-                ->names(),
+            from_dbal_query($this->pgsqlDatabaseContext->connection(), 'SELECT id FROM orders;')->schema()->names(),
         );
     }
 
@@ -149,7 +147,7 @@ final class PostgreSQLSchemaDerivationTest extends IntegrationTestCase
             $batches = 0;
 
             try {
-                foreach ($extractor->extract(flow_context()) as $_rows) {
+                foreach ($extractor->extract(flow_context()->backend(), new Criteria()) as $_rows) {
                     $batches++;
                 }
                 static::fail('a read that cannot be described must not run');
@@ -210,7 +208,7 @@ final class PostgreSQLSchemaDerivationTest extends IntegrationTestCase
 
         $batches = 0;
 
-        foreach ($extractor->extract(flow_context()) as $rows) {
+        foreach ($extractor->extract(flow_context()->backend(), new Criteria()) as $rows) {
             $batches++;
             static::assertTrue($rows->schema()->isSame($extractor->schema()));
         }

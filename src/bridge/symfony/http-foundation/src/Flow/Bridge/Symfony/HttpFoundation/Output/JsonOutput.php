@@ -6,7 +6,7 @@ namespace Flow\Bridge\Symfony\HttpFoundation\Output;
 
 use DateTimeInterface;
 use Flow\Bridge\Symfony\HttpFoundation\Output;
-use Flow\ETL\Loader;
+use Flow\ETL\IO\Loader;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
 use RuntimeException;

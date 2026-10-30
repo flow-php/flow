@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use Flow\ETL\Config\ConfigBuilder;
-use Flow\ETL\Extractor\RowsExtractor;
+use Flow\ETL\API\Config\ConfigBuilder;
+use Flow\ETL\API\DataFrame;
+use Flow\ETL\IO\Extractor;
+use Flow\ETL\IO\Extractor\RowsExtractor;
+use Flow\ETL\Runtime\Config;
+use Flow\ETL\Values\Rows;
 
 final readonly class Flow
 {
@@ -17,7 +21,7 @@ final readonly class Flow
             $config = $config->build();
         }
 
-        $this->config = $config ?: Config::default();
+        $this->config = $config ?: (new ConfigBuilder())->build();
     }
 
     public static function setUp(ConfigBuilder|Config $config): self
@@ -25,26 +29,13 @@ final readonly class Flow
         return new self($config instanceof ConfigBuilder ? $config->build() : $config);
     }
 
-    public function extract(Extractor $extractor): DataFrame
-    {
-        return new DataFrame($extractor, $this->config);
-    }
-
-    public function from(Extractor $extractor): DataFrame
-    {
-        return $this->read($extractor);
-    }
-
     public function process(Rows ...$rows): DataFrame
     {
         return new DataFrame(new RowsExtractor(...$rows), $this->config);
     }
 
-    /**
-     * Alias for Flow::extract function.
-     */
     public function read(Extractor $extractor): DataFrame
     {
-        return $this->extract($extractor);
+        return new DataFrame($extractor, $this->config);
     }
 }

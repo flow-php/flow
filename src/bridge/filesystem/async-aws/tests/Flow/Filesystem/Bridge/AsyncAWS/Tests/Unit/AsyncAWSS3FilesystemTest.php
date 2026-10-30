@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Bridge\AsyncAWS\Tests\Unit;
 
 use AsyncAws\S3\S3Client;
+use Flow\Filesystem\Bridge\AsyncAWS\AsyncAWSS3Filesystem;
+use Flow\Filesystem\Bridge\AsyncAWS\Options;
 use Flow\Filesystem\Exception\InvalidSchemeException;
+use Flow\Filesystem\Stream\BlockFactory;
+use Flow\Types\Exception\InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\Filesystem\Bridge\AsyncAWS\DSL\aws_s3_filesystem;
@@ -87,5 +91,47 @@ final class AsyncAWSS3FilesystemTest extends TestCase
         $this->expectException(InvalidSchemeException::class);
 
         aws_s3_filesystem('bucket', $this->createStub(S3Client::class))->writeTo(path('file:///var/foo.txt'));
+    }
+
+    public function test_a_configured_filesystem_round_trips_its_configuration(): void
+    {
+        $filesystem = aws_s3_filesystem(
+            'bucket',
+            ['region' => 'eu-west-1', 'accessKeyId' => 'k', 'accessKeySecret' => 's'],
+            protocol: 'warehouse',
+        );
+        $configuration = $filesystem->normalize();
+
+        static::assertNotNull($configuration);
+        static::assertSame('warehouse', $configuration['protocol']);
+        static::assertSame('bucket', $configuration['bucket']);
+        static::assertSame(
+            ['region' => 'eu-west-1', 'accessKeyId' => 'k', 'accessKeySecret' => 's'],
+            $configuration['client'],
+        );
+        static::assertSame($configuration, AsyncAWSS3Filesystem::fromArray($configuration)->normalize());
+    }
+
+    public function test_a_filesystem_over_a_live_client_has_no_configuration(): void
+    {
+        static::assertNull(aws_s3_filesystem('bucket', $this->createStub(S3Client::class))->normalize());
+    }
+
+    public function test_a_filesystem_with_a_custom_block_factory_has_no_configuration(): void
+    {
+        static::assertNull(
+            aws_s3_filesystem(
+                'bucket',
+                ['region' => 'eu-west-1'],
+                (new Options())->withBlockFactory($this->createStub(BlockFactory::class)),
+            )->normalize(),
+        );
+    }
+
+    public function test_a_configuration_without_a_bucket_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        AsyncAWSS3Filesystem::fromArray(['protocol' => 'aws-s3', 'client' => [], 'options' => []]);
     }
 }

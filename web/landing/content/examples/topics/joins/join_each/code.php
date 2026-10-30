@@ -2,11 +2,15 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\{array_to_rows, data_frame, df, equal, from_array, int_schema, join_on, schema, str_schema, to_output};
-use Flow\ETL\{DataFrame, DataFrameFactory, Extractor, FlowContext, Rows};
-use Flow\ETL\Extractor\Statistics;
-use Flow\ETL\Join\Join;
-use Flow\ETL\Schema;
+use function Flow\ETL\DSL\{array_to_rows, data_frame, equal, from_array, int_schema, join_on, schema, str_schema, to_output};
+use Flow\ETL\IO\Extractor;
+use Flow\ETL\IO\Extractor\Criteria;
+use Flow\ETL\IO\Extractor\ExtractorFactory;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Rows;
+use Flow\ETL\IO\Extractor\Statistics;
+use Flow\ETL\Values\Join\JoinType;
+use Flow\ETL\Values\Schema;
 
 require __DIR__ . '/vendor/autoload.php';
 
@@ -17,11 +21,16 @@ $apiExtractor = new class($apiSchema) implements Extractor {
     {
     }
 
-    public function extract(FlowContext $context, ?int $limit = null): Generator
+    public function extract(Backend $backend, Criteria $criteria): Generator
     {
         yield array_to_rows([['id' => 1, 'sku' => 'PRODUCT01'], ['id' => 2, 'sku' => 'PRODUCT02']], $this->schema);
 
         yield array_to_rows([['id' => 10_001, 'sku' => 'PRODUCT10_001']], $this->schema);
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
     }
 
     public function schema(): Schema
@@ -40,12 +49,12 @@ $apiExtractor = new class($apiSchema) implements Extractor {
     }
 };
 
-$dbDataFrameFactory = new class($apiSchema) implements DataFrameFactory {
+$dbExtractorFactory = new class($apiSchema) implements ExtractorFactory {
     public function __construct(private Schema $schema)
     {
     }
 
-    public function from(Rows $rows): DataFrame
+    public function from(Rows $rows): Extractor
     {
         // in real life this is one SQL query for $rows->reduceToArray('id')
         $known = [
@@ -53,13 +62,13 @@ $dbDataFrameFactory = new class($apiSchema) implements DataFrameFactory {
             ['id' => 2, 'sku' => 'PRODUCT02'],
         ];
 
-        return df()->read(from_array($known, $this->schema));
+        return from_array($known, $this->schema);
     }
 };
 
 data_frame()
-    ->extract($apiExtractor)
+    ->read($apiExtractor)
     // left_anti keeps the rows the database does not know about
-    ->joinEach($dbDataFrameFactory, join_on(equal('id', 'id')), Join::left_anti)
+    ->joinEach($dbExtractorFactory, join_on(equal('id', 'id')), JoinType::left_anti)
     ->write(to_output(truncate: false))
     ->run();

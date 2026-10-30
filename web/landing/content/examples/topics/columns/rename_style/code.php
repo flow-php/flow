@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use function Flow\ETL\DSL\{data_frame, from_array, rename_style, to_output};
-use Flow\ETL\String\StringStyles;
+use Flow\ETL\Functions\String\StringStyles;
 
 require __DIR__ . '/vendor/autoload.php';
 

@@ -12,11 +12,11 @@ Flow is a framework, and as all frameworks, it should provide extension points f
 
 How to find an extension point? 
 
-Easy, look for interfaces! For example take a look at `\Flow\ETL\Cache` which is 
+Easy, look for interfaces! For example take a look at `\Flow\ETL\Storage\RowsStorage` which is 
 an interface with few implementations. Thanks to the interface, you can easily
 create your own implementation and use it in the framework.
 
-Most of the extension points exposed through `\Flow\ETL\Config` where you can
+Most of the extension points exposed through `\Flow\ETL\Runtime\Config` where you can
 replace a default implementations of various interfaces with those that better 
 fit your needs.
 

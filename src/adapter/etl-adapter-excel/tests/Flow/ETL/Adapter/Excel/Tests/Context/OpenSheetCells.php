@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel\Tests\Context;
 
-use Flow\ETL\Adapter\Excel\Sheet\SheetCells;
+use Flow\ETL\Adapter\Excel\IO\Extractor\Sheet\SheetCells;
 use OpenSpout\Reader\ODS\Reader as OdsReader;
 use OpenSpout\Reader\XLSX\Reader as XlsxReader;
 

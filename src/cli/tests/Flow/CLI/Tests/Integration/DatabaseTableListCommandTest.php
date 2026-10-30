@@ -14,7 +14,7 @@ use Doctrine\DBAL\Types\Types;
 use Flow\CLI\Command\DatabaseTableListCommand;
 use Flow\CLI\Tests\Context\DatabaseContext;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\Filesystem\Tests\OperatingSystem;
+use Flow\Filesystem\Tests\Context\OperatingSystem;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -22,13 +22,11 @@ final class DatabaseTableListCommandTest extends FlowTestCase
 {
     protected ?DatabaseContext $dbContext = null;
 
-    use OperatingSystem;
-
     protected function setUp(): void
     {
         parent::setUp();
 
-        if ($this->isWindows()) {
+        if (OperatingSystem::isWindows()) {
             self::markTestSkipped('DatabaseTableListCommand is not supported on Windows.');
         }
 

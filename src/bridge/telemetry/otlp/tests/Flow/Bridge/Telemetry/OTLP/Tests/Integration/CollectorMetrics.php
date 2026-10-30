@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Tests\Integration;
 
-use Flow\ETL\Dataset\Statistics\HighResolutionTime;
+use Flow\ETL\Foundation\Clock\HighResolutionTime;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
 

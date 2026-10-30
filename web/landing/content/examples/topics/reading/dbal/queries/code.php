@@ -8,7 +8,7 @@ use function Flow\ETL\DSL\{data_frame, to_output};
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Schema\{Column, Table};
 use Doctrine\DBAL\Types\{Type, Types};
-use Flow\ETL\Adapter\Doctrine\ParametersSet;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\ParametersSet;
 
 require __DIR__ . '/vendor/autoload.php';
 

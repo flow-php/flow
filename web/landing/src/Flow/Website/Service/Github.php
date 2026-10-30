@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Website\Service;
 
 use Flow\Bridge\Psr18\Telemetry\PSR18TraceableClient;
-use Flow\ETL\Memory\ArrayMemory;
+use Flow\ETL\Storage\Memory\ArrayMemory;
 use Flow\Website\Factory\Github\ContributorsRequestFactory;
 use Http\Client\Curl\Client;
 use Http\Discovery\Psr17Factory;
@@ -44,9 +44,11 @@ final readonly class Github
         }
 
         $factory = new Psr17Factory();
-        $client = new PSR18TraceableClient(new Client($factory, $factory), $this->configFactory->telemetry());
 
-        $from_github = from_dynamic_http_requests($client, $this->requestFactory);
+        $from_github = from_dynamic_http_requests(
+            new PSR18TraceableClient(new Client($factory, $factory), $this->configFactory->telemetry()),
+            $this->requestFactory,
+        );
 
         try {
             df($this->configFactory->configBuilderWithCache('github_contributors'))

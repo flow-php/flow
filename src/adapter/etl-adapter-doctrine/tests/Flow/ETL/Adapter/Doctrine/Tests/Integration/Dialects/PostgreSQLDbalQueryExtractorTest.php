@@ -9,11 +9,11 @@ use Doctrine\DBAL\Schema\PrimaryKeyConstraint;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
-use Flow\ETL\Adapter\Doctrine\DbalLoader;
-use Flow\ETL\Adapter\Doctrine\ParametersSet;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\ParametersSet;
+use Flow\ETL\Adapter\Doctrine\IO\Loader\DbalLoader;
 use Flow\ETL\Adapter\Doctrine\Tests\Context\PlannedTable;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
-use Flow\ETL\Cardinality;
+use Flow\ETL\Values\Cardinality;
 
 use function array_fill;
 use function Flow\ETL\Adapter\Doctrine\from_dbal_queries;
@@ -45,17 +45,13 @@ final class PostgreSQLDbalQueryExtractorTest extends IntegrationTestCase
         );
 
         data_frame()
-            ->extract(from_array([
+            ->read(from_array([
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
                 ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
             ]))
-            ->load(DbalLoader::fromConnection($this->pgsqlDatabaseContext->connection(), $table))
+            ->write(DbalLoader::fromConnection($this->pgsqlDatabaseContext->connection(), $table))
             ->run();
-
-        $rows = df()
-            ->extract(from_dbal_query($this->pgsqlDatabaseContext->connection(), "SELECT * FROM {$table} ORDER BY id"))
-            ->fetch();
 
         static::assertSame(
             [
@@ -63,7 +59,10 @@ final class PostgreSQLDbalQueryExtractorTest extends IntegrationTestCase
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
                 ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
             ],
-            $rows->toArray(),
+            df()
+                ->read(from_dbal_query($this->pgsqlDatabaseContext->connection(), "SELECT * FROM {$table} ORDER BY id"))
+                ->fetch()
+                ->toArray(),
         );
     }
 
@@ -81,7 +80,7 @@ final class PostgreSQLDbalQueryExtractorTest extends IntegrationTestCase
         );
 
         data_frame()
-            ->extract(from_array([
+            ->read(from_array([
                 ['id' => 1, 'name' => 'Name', 'description' => 'Description'],
                 ['id' => 2, 'name' => 'Name', 'description' => 'Description'],
                 ['id' => 3, 'name' => 'Name', 'description' => 'Description'],
@@ -93,11 +92,11 @@ final class PostgreSQLDbalQueryExtractorTest extends IntegrationTestCase
                 ['id' => 9, 'name' => 'Name', 'description' => 'Description'],
                 ['id' => 10, 'name' => 'Name', 'description' => 'Description'],
             ]))
-            ->load(DbalLoader::fromConnection($this->pgsqlDatabaseContext->connection(), $table))
+            ->write(DbalLoader::fromConnection($this->pgsqlDatabaseContext->connection(), $table))
             ->run();
 
         $rows = data_frame()
-            ->extract(from_dbal_queries(
+            ->read(from_dbal_queries(
                 $this->pgsqlDatabaseContext->connection(),
                 "SELECT * FROM {$table} ORDER BY id LIMIT :limit OFFSET :offset",
                 new ParametersSet(
@@ -142,7 +141,7 @@ final class PostgreSQLDbalQueryExtractorTest extends IntegrationTestCase
         );
 
         data_frame()
-            ->extract(from_array([
+            ->read(from_array([
                 ['id' => 1, 'name' => 'Name', 'tags' => '{"a": 1, "b": 2 }'],
                 ['id' => 2, 'name' => 'Name', 'tags' => '{"a": 1, "b": 2 }'],
                 ['id' => 3, 'name' => 'Name', 'tags' => '{"a": 1, "b": 2 }'],
@@ -154,26 +153,8 @@ final class PostgreSQLDbalQueryExtractorTest extends IntegrationTestCase
                 ['id' => 9, 'name' => 'Name', 'tags' => '{"a": 1, "b": 2 }'],
                 ['id' => 10, 'name' => 'Name', 'tags' => '{"a": 1, "b": 2 }'],
             ]))
-            ->load(DbalLoader::fromConnection($this->pgsqlDatabaseContext->connection(), $table))
+            ->write(DbalLoader::fromConnection($this->pgsqlDatabaseContext->connection(), $table))
             ->run();
-
-        $schema = data_frame()
-            ->extract(from_dbal_queries(
-                $this->pgsqlDatabaseContext->connection(),
-                "SELECT * FROM {$table} ORDER BY id LIMIT :limit OFFSET :offset",
-                new ParametersSet(
-                    ['limit' => 2, 'offset' => 0],
-                    ['limit' => 2, 'offset' => 2],
-                    ['limit' => 2, 'offset' => 4],
-                    ['limit' => 2, 'offset' => 6],
-                    ['limit' => 2, 'offset' => 8],
-                ),
-            )->withSchema(schema(
-                int_schema('id'),
-                str_schema('name'),
-                map_schema('tags', type_map(type_string(), type_integer())),
-            )))
-            ->schema();
 
         static::assertEquals(
             [
@@ -208,7 +189,24 @@ final class PostgreSQLDbalQueryExtractorTest extends IntegrationTestCase
                     'metadata' => [],
                 ],
             ],
-            $schema->normalize(),
+            data_frame()
+                ->read(from_dbal_queries(
+                    $this->pgsqlDatabaseContext->connection(),
+                    "SELECT * FROM {$table} ORDER BY id LIMIT :limit OFFSET :offset",
+                    new ParametersSet(
+                        ['limit' => 2, 'offset' => 0],
+                        ['limit' => 2, 'offset' => 2],
+                        ['limit' => 2, 'offset' => 4],
+                        ['limit' => 2, 'offset' => 6],
+                        ['limit' => 2, 'offset' => 8],
+                    ),
+                )->withSchema(schema(
+                    int_schema('id'),
+                    str_schema('name'),
+                    map_schema('tags', type_map(type_string(), type_integer())),
+                )))
+                ->schema()
+                ->normalize(),
         );
     }
 

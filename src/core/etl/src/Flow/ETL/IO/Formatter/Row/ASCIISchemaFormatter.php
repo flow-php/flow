@@ -1,0 +1,164 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\IO\Formatter\Row;
+
+use Flow\ETL\IO\Formatter\AsciiTableFormatter;
+use Flow\ETL\IO\Formatter\Schema\SchemaFormatter;
+use Flow\ETL\Values\Column\AdaptiveBackend;
+use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Rows\RowsBuilder;
+use Flow\ETL\Values\Schema;
+use Flow\ETL\Values\Schema\Definition;
+use Flow\ETL\Values\Schema\Definition\BooleanDefinition;
+use Flow\ETL\Values\Schema\Definition\StringDefinition;
+use Flow\Types\Type;
+use Flow\Types\Type\Logical\StructureType;
+
+use function array_merge;
+use function implode;
+use function json_encode;
+use function ksort;
+use function str_repeat;
+
+use const JSON_THROW_ON_ERROR;
+
+final readonly class ASCIISchemaFormatter implements SchemaFormatter
+{
+    public function __construct(
+        private bool $asTable = false,
+        private bool $withMetadata = true,
+    ) {}
+
+    public function format(Schema $schema): string
+    {
+        if ($this->asTable) {
+            return (new AsciiTableFormatter())->format($this->table($schema), false);
+        }
+
+        /** @var array<string, string> $buffer */
+        $buffer = [];
+
+        foreach ($schema->definitions() as $definition) {
+            $buffer = $this->formatColumn($definition, $buffer);
+        }
+
+        ksort($buffer);
+
+        $output = "schema\n";
+        $output .= implode("\n", $buffer);
+
+        return $output . "\n";
+    }
+
+    private function table(Schema $schema): Rows
+    {
+        $rows = [];
+
+        foreach ($schema->definitions() as $definition) {
+            $values = [
+                'name' => $definition->name(),
+                'type' => $definition->type()->normalize()['type'],
+                'nullable' => $definition->isNullable(),
+            ];
+
+            if ($this->withMetadata) {
+                // a json column holds a Json value, not a raw array, and the table only prints it
+                $values['metadata'] = json_encode($definition->metadata()->normalize(), JSON_THROW_ON_ERROR);
+            }
+
+            $rows[] = $values;
+        }
+
+        $columns = [new StringDefinition('name'), new StringDefinition('type'), new BooleanDefinition('nullable')];
+
+        if ($this->withMetadata) {
+            $columns[] = new StringDefinition('metadata');
+        }
+
+        return (new RowsBuilder(new Schema(...$columns), new AdaptiveBackend()))
+            ->appendRows($rows)
+            ->finish();
+    }
+
+    /**
+     * @param Definition<mixed> $definition
+     * @param array<string> $buffer
+     *
+     * @return array<string>
+     */
+    private function formatColumn(Definition $definition, array $buffer): array
+    {
+        $column = $definition->name();
+
+        $indention = '';
+
+        if ($definition->type() instanceof StructureType) {
+            $buffer[] = $indention . '|-- ' . $column . ': structure';
+
+            /** @var StructureType<array<array-key, mixed>> $structureType */
+            $structureType = $definition->type();
+
+            $fields = [];
+
+            foreach ($structureType->elements() as $element) {
+                $fields += $this->formatStructureElement(
+                    $element->optional ? $element->name . '?' : $element->name,
+                    $element->type,
+                    $fields,
+                    1,
+                );
+            }
+
+            $buffer = array_merge($buffer, $fields);
+        } else {
+            $buffer[] =
+                $indention
+                . '|-- '
+                . $column
+                . ': '
+                . ($definition->isNullable() ? '?' : '')
+                . $definition->type()->toString();
+        }
+
+        return $buffer;
+    }
+
+    /**
+     * @param Type<mixed> $structureType
+     * @param array<int, string> $buffer
+     * @param int<0, max> $level
+     *
+     * @return array<int, string>
+     */
+    private function formatStructureElement(int|string $name, Type $structureType, array $buffer, int $level): array
+    {
+        $indention = str_repeat('    ', $level);
+
+        if ($indention !== '') {
+            $indention = '|' . $indention;
+        }
+
+        if ($structureType instanceof StructureType) {
+            $buffer[] = $indention . '|-- ' . $name . ': structure';
+
+            $fields = [];
+
+            foreach ($structureType->elements() as $element) {
+                $fields += $this->formatStructureElement(
+                    $element->optional ? $element->name . '?' : $element->name,
+                    $element->type,
+                    $fields,
+                    $level + 1,
+                );
+            }
+
+            $buffer = array_merge($buffer, $fields);
+        } else {
+            $buffer[] = $indention . '|-- ' . $name . ': ' . $structureType->toString();
+        }
+
+        return $buffer;
+    }
+}

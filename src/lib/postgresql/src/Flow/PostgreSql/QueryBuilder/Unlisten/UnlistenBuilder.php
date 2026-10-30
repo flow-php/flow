@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Unlisten;
 
 use Flow\PostgreSql\Protobuf\AST\UnlistenStmt;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 final readonly class UnlistenBuilder implements UnlistenFinalStep
 {
-    use AstToSql;
-
     private function __construct(
         private string $channel,
     ) {}
@@ -23,6 +21,11 @@ final readonly class UnlistenBuilder implements UnlistenFinalStep
     public static function create(string $channel): UnlistenFinalStep
     {
         return new self($channel);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): UnlistenStmt

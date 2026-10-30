@@ -5,16 +5,14 @@ declare(strict_types=1);
 namespace Flow\CLI\Tests\Integration;
 
 use Flow\CLI\Command\FileReadCommand;
-use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
-use Flow\ETL\Tests\CommandOutputNormalizer;
+use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
+use Flow\ETL\Tests\Context\CommandOutputNormalizer;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
 final class FileReadCommandTest extends TestCase
 {
-    use CommandOutputNormalizer;
-
     public function test_read_rows_csv(): void
     {
         $tester = new CommandTester(new FileReadCommand('read'));
@@ -23,7 +21,7 @@ final class FileReadCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputContains(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputContains(<<<'OUTPUT'
             +----------------------+----------------------+----------------------+-----------+----------------------+----------------------+----------------------+
             |             order_id |           created_at |           updated_at |  discount |              address |                notes |                items |
             +----------------------+----------------------+----------------------+-----------+----------------------+----------------------+----------------------+
@@ -50,7 +48,7 @@ final class FileReadCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputContains(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputContains(<<<'OUTPUT'
             +------------+------------+------------+----------+------------+------------+------------+
             |   order_id | created_at | updated_at | discount |    address |      notes |      items |
             +------------+------------+------------+----------+------------+------------+------------+
@@ -73,7 +71,7 @@ final class FileReadCommandTest extends TestCase
         $tester->assertCommandIsSuccessful();
 
         // The frozen ?integer schema truncates 1.5 - integer::cast(1.5) is 1
-        self::assertCommandOutputContains(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputContains(<<<'OUTPUT'
             +---+
             | a |
             +---+
@@ -92,7 +90,7 @@ final class FileReadCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputContains(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputContains(<<<'OUTPUT'
             +----------------------+----------------------+----------------------+----------+----------------------+----------------------+----------------------+
             |             order_id |           created_at |           updated_at | discount |              address |                notes |                items |
             +----------------------+----------------------+----------------------+----------+----------------------+----------------------+----------------------+
@@ -114,7 +112,7 @@ final class FileReadCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputIdentical(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputIdentical(<<<'OUTPUT'
             +----------------------+----------------------+----------------------+--------------+-------------+-----------+----------------------+----------------------+----------------------+
             |             order_id |           created_at |           updated_at | cancelled_at | total_price |  discount |             customer |              address |                notes |
             +----------------------+----------------------+----------------------+--------------+-------------+-----------+----------------------+----------------------+----------------------+
@@ -141,7 +139,7 @@ final class FileReadCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputIdentical(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputIdentical(<<<'OUTPUT'
             +----------+
             |  /orders |
             +----------+
@@ -161,7 +159,7 @@ final class FileReadCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputIdentical(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputIdentical(<<<'OUTPUT'
             +----------------------+----------------------+----------------------+-----------+----------------------+------------------+----------------------+----------------------+----------------------+
             |             order_id |           created_at |           updated_at |  discount |                email |         customer |              address |                notes |                items |
             +----------------------+----------------------+----------------------+-----------+----------------------+------------------+----------------------+----------------------+----------------------+
@@ -184,7 +182,7 @@ final class FileReadCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputContains(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputContains(<<<'OUTPUT'
             +----------------------+
             |                 text |
             +----------------------+
@@ -232,14 +230,14 @@ final class FileReadCommandTest extends TestCase
 
         // Should skip first row and show next 3 rows with only order_id and discount columns
         static::assertStringNotContainsString('e13d7098-5a78-3389-9', $output); // First row should not be displayed
-        self::assertCommandOutputContains('947df050-3abb-3f5a-9', $output); // Second row should be first displayed
-        self::assertCommandOutputContains('6315f9e2-86bf-3321-a', $output); // Third row should be displayed
-        self::assertCommandOutputContains('4cccb632-fade-34e2-8', $output); // Fourth row should be displayed
-        self::assertCommandOutputContains('3 rows', $output); // Should show 3 rows
+        CommandOutputNormalizer::assertCommandOutputContains('947df050-3abb-3f5a-9', $output); // Second row should be first displayed
+        CommandOutputNormalizer::assertCommandOutputContains('6315f9e2-86bf-3321-a', $output); // Third row should be displayed
+        CommandOutputNormalizer::assertCommandOutputContains('4cccb632-fade-34e2-8', $output); // Fourth row should be displayed
+        CommandOutputNormalizer::assertCommandOutputContains('3 rows', $output); // Should show 3 rows
 
         // Should only show selected columns
-        self::assertCommandOutputContains('order_id', $output);
-        self::assertCommandOutputContains('discount', $output);
+        CommandOutputNormalizer::assertCommandOutputContains('order_id', $output);
+        CommandOutputNormalizer::assertCommandOutputContains('discount', $output);
         static::assertStringNotContainsString('created_at', $output);
         static::assertStringNotContainsString('address', $output);
     }
@@ -259,10 +257,10 @@ final class FileReadCommandTest extends TestCase
         $output = $tester->getDisplay();
 
         // Should display rows starting from offset 2 (third row)
-        self::assertCommandOutputContains('6315f9e2-86bf-3321-a', $output); // Third row should be first displayed
+        CommandOutputNormalizer::assertCommandOutputContains('6315f9e2-86bf-3321-a', $output); // Third row should be first displayed
         static::assertStringNotContainsString('e13d7098-5a78-3389-9', $output); // First row should not be displayed
         static::assertStringNotContainsString('947df050-3abb-3f5a-9', $output); // Second row should not be displayed
-        self::assertCommandOutputContains('1 rows', $output); // Only 1 row should be displayed (limit 3 - offset 2)
+        CommandOutputNormalizer::assertCommandOutputContains('1 rows', $output); // Only 1 row should be displayed (limit 3 - offset 2)
     }
 
     public function test_read_rows_with_offset_zero(): void
@@ -280,9 +278,9 @@ final class FileReadCommandTest extends TestCase
         $output = $tester->getDisplay();
 
         // Should behave same as no offset - show first 2 rows
-        self::assertCommandOutputContains('e13d7098-5a78-3389-9', $output); // First row should be displayed
-        self::assertCommandOutputContains('947df050-3abb-3f5a-9', $output); // Second row should be displayed
-        self::assertCommandOutputContains('2 rows', $output);
+        CommandOutputNormalizer::assertCommandOutputContains('e13d7098-5a78-3389-9', $output); // First row should be displayed
+        CommandOutputNormalizer::assertCommandOutputContains('947df050-3abb-3f5a-9', $output); // Second row should be displayed
+        CommandOutputNormalizer::assertCommandOutputContains('2 rows', $output);
     }
 
     public function test_read_rows_with_output_columns_empty_maintains_all_columns(): void
@@ -298,14 +296,14 @@ final class FileReadCommandTest extends TestCase
 
         // Should contain all original columns (order_id, created_at, updated_at, discount, address, notes, items)
         $output = $tester->getDisplay();
-        self::assertCommandOutputContains('order_id', $output);
-        self::assertCommandOutputContains('created_at', $output);
-        self::assertCommandOutputContains('updated_at', $output);
-        self::assertCommandOutputContains('discount', $output);
-        self::assertCommandOutputContains('address', $output);
-        self::assertCommandOutputContains('notes', $output);
-        self::assertCommandOutputContains('items', $output);
-        self::assertCommandOutputContains('2 rows', $output);
+        CommandOutputNormalizer::assertCommandOutputContains('order_id', $output);
+        CommandOutputNormalizer::assertCommandOutputContains('created_at', $output);
+        CommandOutputNormalizer::assertCommandOutputContains('updated_at', $output);
+        CommandOutputNormalizer::assertCommandOutputContains('discount', $output);
+        CommandOutputNormalizer::assertCommandOutputContains('address', $output);
+        CommandOutputNormalizer::assertCommandOutputContains('notes', $output);
+        CommandOutputNormalizer::assertCommandOutputContains('items', $output);
+        CommandOutputNormalizer::assertCommandOutputContains('2 rows', $output);
     }
 
     public function test_read_rows_with_output_columns_multiple_columns(): void
@@ -320,7 +318,7 @@ final class FileReadCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputContains(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputContains(<<<'OUTPUT'
             +----------------------+-----------+----------------------+
             |             order_id |  discount |           created_at |
             +----------------------+-----------+----------------------+
@@ -360,7 +358,7 @@ final class FileReadCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputContains(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputContains(<<<'OUTPUT'
             +----------------------+
             |             order_id |
             +----------------------+
@@ -384,7 +382,7 @@ final class FileReadCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputContains(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputContains(<<<'OUTPUT'
             +----------------------+
             |                 node |
             +----------------------+

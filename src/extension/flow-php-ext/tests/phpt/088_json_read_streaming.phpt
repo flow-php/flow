@@ -6,8 +6,8 @@ RustJsonOpenSource reads a JSON array and JSON lines in memory independent of th
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Adapter\JSON\RustJsonOpenSource;
-use Flow\ETL\Column\RustBackend;
+use Flow\ETL\Adapter\JSON\IO\Extractor\RustJsonOpenSource;
+use Flow\ETL\Values\Column\RustBackend;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 
 use function Flow\ETL\DSL\{float_schema, int_schema, list_schema, schema, str_schema};

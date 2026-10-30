@@ -1,0 +1,28 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Adapter\ChartJS\IO\Loader;
+
+use Flow\ETL\Functions\Reference\Reference;
+use Flow\ETL\Values\Rows;
+
+interface Chart
+{
+    public function collect(Rows $rows): void;
+
+    /**
+     * @return array<array-key, mixed>
+     */
+    public function data(): array;
+
+    /**
+     * @param array<array-key, mixed> $options
+     */
+    public function setDatasetOptions(Reference $dataset, array $options): self;
+
+    /**
+     * @param array<array-key, mixed> $options
+     */
+    public function setOptions(array $options): self;
+}

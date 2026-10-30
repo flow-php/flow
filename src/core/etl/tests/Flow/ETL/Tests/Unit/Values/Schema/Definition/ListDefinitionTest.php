@@ -1,0 +1,345 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Tests\Unit\Values\Schema\Definition;
+
+use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Foundation\Exception\UnsupportedUnionTypeException;
+use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Values\Schema\Definition;
+use Flow\ETL\Values\Schema\Definition\BooleanDefinition;
+use Flow\ETL\Values\Schema\Definition\ListDefinition;
+use Flow\ETL\Values\Schema\Metadata;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
+
+use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\list_schema;
+use function Flow\ETL\DSL\null_schema;
+use function Flow\ETL\DSL\string_schema;
+use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_empty_array;
+use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_null;
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
+use function Flow\Types\DSL\type_union;
+
+final class ListDefinitionTest extends FlowTestCase
+{
+    public static function provideIsCompatibleCases(): Generator
+    {
+        yield 'same type and name' => [
+            list_schema('items', type_list(type_integer())),
+            list_schema('items', type_list(type_integer())),
+            true,
+        ];
+
+        yield 'same type different name' => [
+            list_schema('items', type_list(type_integer())),
+            list_schema('other', type_list(type_integer())),
+            false,
+        ];
+
+        yield 'not nullable with nullable' => [
+            list_schema('items', type_list(type_integer()), false),
+            list_schema('items', type_list(type_integer()), true),
+            false,
+        ];
+
+        yield 'nullable with not nullable' => [
+            list_schema('items', type_list(type_integer()), true),
+            list_schema('items', type_list(type_integer()), false),
+            true,
+        ];
+
+        yield 'different element type' => [
+            list_schema('items', type_list(type_integer())),
+            list_schema('items', type_list(type_string())),
+            false,
+        ];
+    }
+
+    public static function provideMergeCases(): Generator
+    {
+        yield 'same type' => [
+            list_schema('items', type_list(type_integer())),
+            list_schema('items', type_list(type_integer())),
+            list_schema('items', type_list(type_integer())),
+        ];
+
+        yield 'makes nullable when other is nullable' => [
+            list_schema('items', type_list(type_integer()), false),
+            list_schema('items', type_list(type_integer()), true),
+            list_schema('items', type_list(type_integer()), true),
+        ];
+
+        yield 'with string produces string' => [
+            list_schema('col', type_list(type_integer())),
+            string_schema('col'),
+            string_schema('col'),
+        ];
+
+        yield 'integer list with float list produces float list' => [
+            list_schema('col', type_list(type_integer())),
+            list_schema('col', type_list(type_float())),
+            list_schema('col', type_list(type_float())),
+        ];
+
+        yield 'different element type widens the element, staying a list' => [
+            list_schema('col', type_list(type_integer())),
+            list_schema('col', type_list(type_string())),
+            list_schema('col', type_list(type_string())),
+        ];
+    }
+
+    public function test_add_metadata(): void
+    {
+        $def = list_schema('items', type_list(type_integer()));
+
+        $withMeta = $def->addMetadata('key', 'value');
+
+        static::assertTrue($withMeta->metadata()->has('key'));
+        static::assertSame('value', $withMeta->metadata()->get('key'));
+        static::assertFalse($def->metadata()->has('key'));
+    }
+
+    public function test_does_not_match_a_null_entry_when_not_nullable(): void
+    {
+        static::assertFalse(list_schema('col', type_list(type_integer()))->matches(null));
+    }
+
+    public function test_does_not_match_an_entry_of_a_different_list_instantiation(): void
+    {
+        static::assertFalse(list_schema('col', type_list(type_integer()))->matches(['x']));
+    }
+
+    public function test_does_not_match_an_entry_of_a_different_nested_list_instantiation(): void
+    {
+        static::assertFalse(list_schema('col', type_list(type_list(type_integer())))->matches([['x']]));
+    }
+
+    public function test_does_not_match_entry_with_different_type(): void
+    {
+        static::assertFalse(list_schema('col', type_list(type_integer()))->matches(1));
+    }
+
+    public function test_array_element_is_projected_to_json(): void
+    {
+        static::assertSame('list<json>', list_schema('items', type_list(type_array()))->type()->toString());
+    }
+
+    public function test_empty_array_element_is_projected_to_json(): void
+    {
+        static::assertSame('list<json>', list_schema('items', type_list(type_empty_array()))->type()->toString());
+    }
+
+    /**
+     * @param Definition<mixed> $definition
+     * @param Definition<mixed> $other
+     */
+    #[DataProvider('provideIsCompatibleCases')]
+    public function test_is_compatible(Definition $definition, Definition $other, bool $expected): void
+    {
+        static::assertSame($expected, $definition->isCompatible($other));
+    }
+
+    public function test_is_same_with_different_metadata(): void
+    {
+        static::assertFalse(list_schema(
+            'items',
+            type_list(type_integer()),
+            false,
+            Metadata::with('key', 'value1'),
+        )->isSame(list_schema('items', type_list(type_integer()), false, Metadata::with('key', 'value2'))));
+    }
+
+    public function test_is_same_with_different_nullability(): void
+    {
+        static::assertFalse(list_schema('items', type_list(type_integer()), true)->isSame(list_schema(
+            'items',
+            type_list(type_integer()),
+            false,
+        )));
+    }
+
+    public function test_is_same_with_different_type(): void
+    {
+        static::assertFalse(list_schema('items', type_list(type_integer()))->isSame(string_schema('items')));
+    }
+
+    public function test_is_same_with_identical_definition(): void
+    {
+        static::assertTrue(list_schema(
+            'items',
+            type_list(type_integer()),
+            true,
+            Metadata::with('key', 'value'),
+        )->isSame(list_schema('items', type_list(type_integer()), true, Metadata::with('key', 'value'))));
+    }
+
+    public function test_is_same_is_field_order_sensitive_for_nested_structures(): void
+    {
+        static::assertFalse(list_schema(
+            'items',
+            type_list(type_structure(['a' => type_integer(), 'b' => type_string()])),
+        )->isSame(list_schema('items', type_list(type_structure(['b' => type_string(), 'a' => type_integer()])))));
+    }
+
+    public function test_make_nullable(): void
+    {
+        $def = list_schema('items', type_list(type_integer()), false);
+
+        static::assertTrue($def->makeNullable()->isNullable());
+        static::assertFalse($def->isNullable());
+    }
+
+    public function test_matches_an_empty_list_entry_of_a_different_instantiation(): void
+    {
+        static::assertTrue(list_schema('col', type_list(type_integer()))->matches([]));
+    }
+
+    public function test_matches_and_is_compatible_agree_on_a_different_instantiation(): void
+    {
+        $def = list_schema('col', type_list(type_integer()));
+
+        static::assertFalse($def->matches(['x']));
+        static::assertFalse($def->isCompatible(list_schema('col', type_list(type_string()))));
+    }
+
+    public function test_matches_entry_with_same_name_and_type(): void
+    {
+        static::assertTrue(list_schema('items', type_list(type_integer()))->matches([1, 2, 3]));
+    }
+
+    /**
+     * @param Definition<mixed> $definition
+     * @param Definition<mixed> $other
+     * @param Definition<mixed> $expected
+     */
+    #[DataProvider('provideMergeCases')]
+    public function test_merge(Definition $definition, Definition $other, Definition $expected): void
+    {
+        static::assertEquals($expected, $definition->merge($other));
+    }
+
+    public function test_merge_with_null_definition_keeps_original_type(): void
+    {
+        $merged = list_schema('col', type_list(type_integer()), false)->merge(null_schema('col'));
+
+        static::assertInstanceOf(ListDefinition::class, $merged);
+        static::assertTrue($merged->isNullable());
+    }
+
+    public function test_merge_when_this_is_null_definition(): void
+    {
+        $merged = null_schema('col')->merge(list_schema('col', type_list(type_integer()), false));
+
+        static::assertInstanceOf(ListDefinition::class, $merged);
+        static::assertTrue($merged->isNullable());
+    }
+
+    public function test_merge_with_different_entry_name_throws_exception(): void
+    {
+        $def = list_schema('items', type_list(type_integer()));
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Cannot merge different definitions, items and other');
+
+        $def->merge(list_schema('other', type_list(type_integer())));
+    }
+
+    public function test_merge_with_incompatible_type_falls_back_to_string(): void
+    {
+        static::assertSame(
+            'string',
+            list_schema('col', type_list(type_integer()))->merge(new BooleanDefinition('col'))->type()->toString(),
+        );
+    }
+
+    public function test_normalize(): void
+    {
+        $normalized = list_schema(
+            'items',
+            type_list(type_integer()),
+            true,
+            Metadata::with('key', 'value'),
+        )->normalize();
+
+        static::assertSame('items', $normalized['ref']);
+        static::assertTrue($normalized['nullable']);
+        static::assertArrayHasKey('type', $normalized);
+        static::assertArrayHasKey('metadata', $normalized);
+    }
+
+    public function test_nullable_does_not_match_an_entry_of_a_different_type(): void
+    {
+        static::assertFalse(list_schema('col', type_list(type_integer()), true)->matches(1));
+    }
+
+    public function test_nullable_matches_null(): void
+    {
+        static::assertTrue(list_schema('col', type_list(type_integer()), true)->matches(null));
+    }
+
+    public function test_nullable_matches_an_entry_with_a_non_null_value_of_its_type(): void
+    {
+        static::assertTrue(list_schema('col', type_list(type_integer()), true)->matches([1, 2, 3]));
+    }
+
+    public function test_rename(): void
+    {
+        $def = list_schema('items', type_list(type_integer()));
+
+        static::assertSame('new_items', $def->rename('new_items')->name());
+        static::assertSame('items', $def->name());
+    }
+
+    public function test_set_metadata(): void
+    {
+        $def = list_schema('items', type_list(type_integer()));
+        $metadata = Metadata::with('key', 'value');
+
+        static::assertTrue($def->setMetadata($metadata)->metadata()->isEqual($metadata));
+        static::assertTrue($def->metadata()->isEmpty());
+    }
+
+    public function test_type_returns_list_type(): void
+    {
+        static::assertStringContainsString('list', list_schema('items', type_list(type_integer()))->type()->toString());
+    }
+
+    public function test_merge_with_an_unrelated_type_falls_back_to_common_type(): void
+    {
+        static::assertSame(
+            'string',
+            list_schema('col', type_list(type_integer()))->merge(bool_schema('col'))->type()->toString(),
+        );
+    }
+
+    public function test_a_null_or_t_element_is_the_optional_element(): void
+    {
+        static::assertTrue(list_schema('a', type_list(type_union(type_integer(), type_null())))->isSame(list_schema(
+            'a',
+            type_list(type_optional(type_integer())),
+        )));
+    }
+
+    public function test_a_union_element_is_refused_naming_the_column(): void
+    {
+        $this->expectException(UnsupportedUnionTypeException::class);
+        $this->expectExceptionMessage('Column "tags" cannot hold elements of type "integer|string"');
+
+        list_schema('tags', type_list(type_union(type_integer(), type_string())));
+    }
+
+    public function test_matches_validates_the_elements(): void
+    {
+        static::assertTrue(list_schema('tags', type_list(type_string()))->matches(['a', 'b']));
+        static::assertFalse(list_schema('tags', type_list(type_string()))->matches([1, 2]));
+    }
+}

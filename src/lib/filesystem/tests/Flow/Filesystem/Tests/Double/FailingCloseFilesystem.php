@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Tests\Double;
 
 use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Mount;
@@ -13,6 +14,7 @@ use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Filesystem\SourceStream;
 use Generator;
+use SensitiveParameter;
 
 final class FailingCloseFilesystem implements Filesystem
 {
@@ -24,6 +26,13 @@ final class FailingCloseFilesystem implements Filesystem
         private readonly int $failingStreams = 1,
     ) {}
 
+    public static function fromArray(#[SensitiveParameter] array $configuration): static
+    {
+        throw new InvalidArgumentException(
+            'FailingCloseFilesystem is a test double and cannot be rebuilt from a configuration',
+        );
+    }
+
     public function appendTo(Path $path): DestinationStream
     {
         $stream = $this->inner->appendTo($path);
@@ -32,6 +41,11 @@ final class FailingCloseFilesystem implements Filesystem
         return $index >= $this->healthyStreams && $index < ($this->healthyStreams + $this->failingStreams)
             ? new FailingCloseDestinationStream($stream)
             : $stream;
+    }
+
+    public function normalize(): ?array
+    {
+        return null;
     }
 
     public function getSystemTmpDir(): Path

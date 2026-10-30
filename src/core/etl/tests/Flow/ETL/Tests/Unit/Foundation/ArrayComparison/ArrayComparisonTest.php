@@ -1,0 +1,201 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Tests\Unit\Foundation\ArrayComparison;
+
+use DateTimeImmutable;
+use Flow\ETL\Foundation\ArrayComparison\ArrayComparison;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
+use stdClass;
+
+final class ArrayComparisonTest extends TestCase
+{
+    public static function equal_arrays(): Generator
+    {
+        yield 'simple arrays' => [
+            ['id' => 1, 'name' => 'one', 'color' => 'red'],
+            ['name' => 'one', 'color' => 'red', 'id' => 1],
+        ];
+
+        yield 'simple arrays with null values' => [
+            ['id' => 1, 'name' => 'one', 'color' => 'red', 'description' => null],
+            ['name' => 'one', 'color' => 'red', 'id' => 1, 'description' => null],
+        ];
+
+        yield 'arrays with datetimes' => [
+            ['date' => new DateTimeImmutable('2020-01-01 00:00:00 UTC')],
+            ['date' => new DateTimeImmutable('2020-01-01 00:00:00 UTC')],
+        ];
+
+        yield 'arrays with objects' => [
+            ['date' => new stdClass()],
+            ['date' => new stdClass()],
+        ];
+
+        yield 'complex arrays' => [
+            [
+                'id' => 5,
+                'labels' => ['pending', 'risky'],
+                'title' => 'Title',
+                'address' => [
+                    'origin' => [
+                        'city' => 'New York City',
+                        'country' => 'US',
+                    ],
+                    'delivery' => [
+                        'city' => 'Atlanta City',
+                        'country' => 'US',
+                    ],
+                ],
+                'items' => [
+                    [
+                        'name' => 'One',
+                        'item-id' => 1,
+                    ],
+                    [
+                        'name' => 'Two',
+                        'item-id' => 2,
+                    ],
+                    [
+                        'item-id' => 3,
+                        'name' => 'Three',
+                    ],
+                ],
+                'name' => 'Name',
+            ],
+            [
+                'id' => 5,
+                'name' => 'Name',
+                'title' => 'Title',
+                'items' => [
+                    [
+                        'name' => 'Two',
+                        'item-id' => 2,
+                    ],
+                    [
+                        'name' => 'Three',
+                        'item-id' => 3,
+                    ],
+                    [
+                        'item-id' => 1,
+                        'name' => 'One',
+                    ],
+                ],
+                'address' => [
+                    'delivery' => [
+                        'city' => 'Atlanta City',
+                        'country' => 'US',
+                    ],
+                    'origin' => [
+                        'city' => 'New York City',
+                        'country' => 'US',
+                    ],
+                ],
+                'labels' => ['risky', 'pending'],
+            ],
+        ];
+    }
+
+    public static function not_equal_arrays(): Generator
+    {
+        yield 'simple arrays' => [
+            ['id' => 1, 'name' => 'one', 'color' => 'red'],
+            ['name' => 'one', 'color' => 'red', 'id' => 2],
+        ];
+
+        yield 'arrays with floats' => [
+            ['temp' => 36.00],
+            ['temp' => 36],
+        ];
+
+        yield 'some data but different key' => [
+            [
+                'items' => [
+                    [
+                        'name' => 'One',
+                        'item-id' => 1,
+                    ],
+                    [
+                        'name' => 'Two',
+                        'item-id' => 2,
+                    ],
+                ],
+            ],
+            [
+                'receipts' => [
+                    [
+                        'name' => 'One',
+                        'item-id' => 1,
+                    ],
+                    [
+                        'name' => 'Two',
+                        'item-id' => 2,
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    public function test_compare_arrays(): void
+    {
+        static::assertSame(-1, (new ArrayComparison())->compare([1, 2, 3], [4, 5, 6]));
+    }
+
+    /**
+     * @param array<array-key, mixed> $a
+     * @param array<array-key, mixed> $b
+     */
+    #[DataProvider('equal_arrays')]
+    public function test_equals(array $a, array $b): void
+    {
+        static::assertTrue((new ArrayComparison())->equals($a, $b));
+    }
+
+    /**
+     * @param array<array-key, mixed> $a
+     * @param array<array-key, mixed> $b
+     */
+    #[DataProvider('not_equal_arrays')]
+    public function test_not_equals(array $a, array $b): void
+    {
+        static::assertFalse((new ArrayComparison())->equals($a, $b));
+    }
+
+    public function test_equals_empty_arrays(): void
+    {
+        static::assertTrue((new ArrayComparison())->equals([], []));
+    }
+
+    public function test_equals_identical_arrays_short_circuit(): void
+    {
+        static::assertTrue((new ArrayComparison())->equals(['a' => 1, 'b' => 2], ['a' => 1, 'b' => 2]));
+    }
+
+    public function test_equals_returns_false_on_size_mismatch(): void
+    {
+        static::assertFalse((new ArrayComparison())->equals([1, 2], [1, 2, 3]));
+    }
+
+    public function test_equals_order_independence_preserved_for_lists(): void
+    {
+        static::assertTrue((new ArrayComparison())->equals([1, 2], [2, 1]));
+    }
+
+    public function test_equals_order_independence_preserved_for_nested_maps(): void
+    {
+        static::assertTrue((new ArrayComparison())->equals(['tags' => ['b', 'a'], 'id' => 1], [
+            'id' => 1,
+            'tags' => ['a', 'b'],
+        ]));
+    }
+
+    public function test_equals_null_handling_unchanged(): void
+    {
+        static::assertTrue((new ArrayComparison())->equals(null, null));
+        static::assertFalse((new ArrayComparison())->equals(null, []));
+        static::assertFalse((new ArrayComparison())->equals([], null));
+    }
+}

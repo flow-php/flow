@@ -8,9 +8,9 @@ use std::collections::HashMap;
 
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::types::{ZendHashTable, Zval};
+use flow_csv_tokenizer::is_space;
 
 use crate::csv::php_trim;
-use crate::csv::tokenizer::is_space;
 use crate::ctx::{self, call_handle, zval_str};
 use crate::date_check::{checkdate, iso_date_gate, iso_date_time_gate};
 use crate::exception::ext_exception;

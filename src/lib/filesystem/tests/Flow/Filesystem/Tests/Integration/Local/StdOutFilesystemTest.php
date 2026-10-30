@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Integration\Local;
 
+use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Exception\InvalidSchemeException;
 use Flow\Filesystem\Local\StdOutFilesystem;
 use Flow\Filesystem\Local\StreamFilter\Intercept;
@@ -197,5 +198,20 @@ final class StdOutFilesystemTest extends TestCase
         $this->expectExceptionMessage('Only one stream can be open at the same time for php://output');
 
         $filesystem->writeTo(path('stdout://b', ['stream' => 'output']));
+    }
+
+    public function test_a_stdout_filesystem_has_no_configuration(): void
+    {
+        static::assertNull((new StdOutFilesystem())->normalize());
+    }
+
+    public function test_a_stdout_filesystem_cannot_be_rebuilt_from_a_configuration(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'StdOutFilesystem holds in-process state and cannot be rebuilt from a configuration',
+        );
+
+        StdOutFilesystem::fromArray([]);
     }
 }

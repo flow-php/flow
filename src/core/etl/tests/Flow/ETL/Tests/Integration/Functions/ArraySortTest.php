@@ -1,0 +1,39 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Tests\Integration\Functions;
+
+use Flow\ETL\Functions\ArraySort\Sort;
+use Flow\ETL\Storage\Memory\ArrayMemory;
+use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\DSL\array_sort;
+use function Flow\ETL\DSL\data_frame;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\optional;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\to_memory;
+
+final class ArraySortTest extends FlowTestCase
+{
+    public function test_array_sort(): void
+    {
+        data_frame()
+            ->read(from_array([
+                ['id' => 1, 'array' => ['a' => 1, 'c' => 3, 'b' => 2]],
+                ['id' => 2],
+            ]))
+            ->withColumn('array', optional(array_sort(ref('array'), Sort::ksort)))
+            ->write(to_memory($memory = new ArrayMemory()))
+            ->run();
+
+        static::assertSame(
+            [
+                ['id' => 1, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]],
+                ['id' => 2, 'array' => null],
+            ],
+            $memory->dump(),
+        );
+    }
+}

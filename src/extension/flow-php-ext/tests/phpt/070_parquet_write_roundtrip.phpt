@@ -1,20 +1,22 @@
 --TEST--
-RustParquetOpenSink writes native and PHP columns that PhpParquetEngine reads back equal, and refuses a string that is not valid UTF-8
+RustParquetFileWriter writes native and PHP columns that PhpParquetEngine reads back equal, and refuses a string that is not valid UTF-8
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 <?php extension_loaded('arrow') || die('skip arrow'); ?>
 --FILE--
 <?php
+use Flow\ETL\IO\Extractor\Criteria;
 require __DIR__ . '/bootstrap.php';
 
-use Flow\Parquet\Engine\RustParquetFileWriter;
+use Flow\Parquet\Engine\RustParquetFileWriter as ArrowRustParquetFileWriter;
 
-use Flow\ETL\Adapter\Parquet\{RustParquetOpenSink, SchemaConverter};
-use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Adapter\Parquet\IO\Loader\{ParquetSchemaConformance, RustParquetFileWriter};
+use Flow\ETL\Adapter\Parquet\Values\Schema\SchemaConverter;
+use Flow\ETL\Values\Column\PhpBackend;
 use Flow\Parquet\Engine\Arrow\{OptionsConverter, SchemaConverter as ArrowSchemaConverter};
 use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Options;
-use Flow\ETL\Schema;
+use Flow\ETL\Values\Schema;
 use Flow\Types\Value\Uuid;
 use Flow\Parquet\ParquetFile\Compressions;
 
@@ -53,13 +55,17 @@ $values = [
 ];
 $context = flow_context(config_builder()->backend(new PhpBackend())->build());
 $write = static function (Schema $schema, array $batches): void {
-    $writer = new RustParquetOpenSink(new RustParquetFileWriter(
-        memory_filesystem()->writeTo(path('memory://unused.parquet')),
-        ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquet($schema)),
-        Compressions::ZSTD,
-        OptionsConverter::toExtension(Options::default()),
-        1_000,
-    ));
+    $writer = new RustParquetFileWriter(
+        new ArrowRustParquetFileWriter(
+            memory_filesystem()->writeTo(path('memory://unused.parquet')),
+            ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquetSchema($schema)),
+            Compressions::ZSTD,
+            OptionsConverter::toExtension(Options::default()),
+            1_000,
+        ),
+        new ParquetSchemaConformance((new SchemaConverter())->toParquetSchema($schema)),
+        new PhpBackend(),
+    );
 
     foreach ($batches as $batch) {
         $writer->write($batch);
@@ -69,38 +75,46 @@ $write = static function (Schema $schema, array $batches): void {
 };
 
 $filesystem = memory_filesystem();
-$writer = new RustParquetOpenSink(new RustParquetFileWriter(
-    $filesystem->writeTo(path('memory://roundtrip.parquet')),
-    ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquet($schema)),
-    Compressions::ZSTD,
-    OptionsConverter::toExtension(Options::default()),
-    1_000,
-));
+$writer = new RustParquetFileWriter(
+    new ArrowRustParquetFileWriter(
+        $filesystem->writeTo(path('memory://roundtrip.parquet')),
+        ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquetSchema($schema)),
+        Compressions::ZSTD,
+        OptionsConverter::toExtension(Options::default()),
+        1_000,
+    ),
+    new ParquetSchemaConformance((new SchemaConverter())->toParquetSchema($schema)),
+    new PhpBackend(),
+);
 $writer->write(native_rows($schema, $values));
 $writer->write(php_rows($schema, $values));
 $writer->close();
 
 $read = [];
 
-foreach (from_parquet(path('memory://roundtrip.parquet'), filesystem: $filesystem, engine: new PhpParquetEngine())->extract($context) as $batch) {
+foreach (from_parquet(path('memory://roundtrip.parquet'), filesystem: $filesystem, engine: new PhpParquetEngine())->extract($context->backend(), new Criteria()) as $batch) {
     array_push($read, ...$batch->toArray());
 }
 
 var_dump(comparable($read) === comparable([...php_rows($schema, $values)->toArray(), ...php_rows($schema, $values)->toArray()]));
 
 $partial = memory_filesystem();
-$partialWriter = new RustParquetOpenSink(new RustParquetFileWriter(
-    $partial->writeTo(path('memory://partial.parquet')),
-    ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquet(schema(int_schema('id'), str_schema('name', nullable: true)))),
-    Compressions::SNAPPY,
-    OptionsConverter::toExtension(Options::default()),
-    1_000,
-));
+$partialWriter = new RustParquetFileWriter(
+    new ArrowRustParquetFileWriter(
+        $partial->writeTo(path('memory://partial.parquet')),
+        ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquetSchema(schema(int_schema('id'), str_schema('name', nullable: true)))),
+        Compressions::SNAPPY,
+        OptionsConverter::toExtension(Options::default()),
+        1_000,
+    ),
+    new ParquetSchemaConformance((new SchemaConverter())->toParquetSchema(schema(int_schema('id'), str_schema('name', nullable: true)))),
+    new PhpBackend(),
+);
 $partialWriter->write(native_rows(schema(int_schema('id')), [['id' => 1], ['id' => 2]]));
 $partialWriter->close();
 $partialRead = [];
 
-foreach (from_parquet(path('memory://partial.parquet'), filesystem: $partial, engine: new PhpParquetEngine())->extract($context) as $batch) {
+foreach (from_parquet(path('memory://partial.parquet'), filesystem: $partial, engine: new PhpParquetEngine())->extract($context->backend(), new Criteria()) as $batch) {
     array_push($partialRead, ...$batch->toArray());
 }
 

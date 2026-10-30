@@ -1,0 +1,39 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Adapter\Excel\IO\Extractor\Sheet;
+
+use Flow\ETL\Adapter\Excel\Functions\SheetNameAssertion;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use OpenSpout\Reader\SheetInterface;
+use OpenSpout\Reader\SheetIteratorInterface;
+
+final readonly class SheetsManager
+{
+    public function __construct(
+        private SheetIteratorInterface $sheets,
+    ) {}
+
+    public function first(): SheetInterface
+    {
+        $this->sheets->rewind();
+
+        return $this->sheets->current();
+    }
+
+    public function get(string $sheetName): SheetInterface
+    {
+        SheetNameAssertion::assert($sheetName);
+
+        $this->sheets->rewind();
+
+        foreach ($this->sheets as $sheet) {
+            if ($sheet->getName() === $sheetName) {
+                return $sheet;
+            }
+        }
+
+        throw new InvalidArgumentException("Sheet with name: '{$sheetName}' not found.");
+    }
+}

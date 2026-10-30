@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\CLI\Tests\Integration\Options;
 
 use Flow\CLI\Options\ConfigOption;
-use Flow\ETL\Config;
+use Flow\ETL\Runtime\Config;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Input\ArrayInput;

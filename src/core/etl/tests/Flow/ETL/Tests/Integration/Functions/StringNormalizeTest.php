@@ -1,0 +1,51 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Tests\Integration\Functions;
+
+use Flow\ETL\Storage\Memory\ArrayMemory;
+use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\DSL\data_frame;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\optional;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\to_memory;
+
+final class StringNormalizeTest extends FlowTestCase
+{
+    public function test_normalize_nfc(): void
+    {
+        data_frame()
+            ->read(from_array([
+                ['text' => 'hello'],
+                ['text' => 'café'],
+                ['text' => "e\u{0301}"],
+                ['text' => 'Việt Nam'],
+                ['text' => ''],
+                ['text' => null],
+                ['text' => 'مرحبا'],
+                ['text' => 'καλημέρα'],
+                ['text' => '👋🏻'],
+            ]))
+            ->withColumn('normalized', optional(ref('text')->stringNormalize()))
+            ->write(to_memory($memory = new ArrayMemory()))
+            ->run();
+
+        static::assertSame(
+            [
+                ['text' => 'hello', 'normalized' => 'hello'],
+                ['text' => 'café', 'normalized' => 'café'],
+                ['text' => "e\u{0301}", 'normalized' => 'é'],
+                ['text' => 'Việt Nam', 'normalized' => 'Việt Nam'],
+                ['text' => '', 'normalized' => ''],
+                ['text' => null, 'normalized' => null],
+                ['text' => 'مرحبا', 'normalized' => 'مرحبا'],
+                ['text' => 'καλημέρα', 'normalized' => 'καλημέρα'],
+                ['text' => '👋🏻', 'normalized' => '👋🏻'],
+            ],
+            $memory->dump(),
+        );
+    }
+}

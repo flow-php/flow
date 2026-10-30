@@ -5,17 +5,18 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use DateTimeImmutable;
-use Flow\ETL\Extractor;
-use Flow\ETL\Extractor\Signal;
-use Flow\ETL\Extractor\Statistics;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Rows;
-use Flow\ETL\Schema;
-use Flow\ETL\Tests\CommandOutputNormalizer;
+use Flow\ETL\IO\Extractor;
+use Flow\ETL\IO\Extractor\Criteria;
+use Flow\ETL\IO\Extractor\Signal;
+use Flow\ETL\IO\Extractor\Statistics;
+use Flow\ETL\Tests\Context\CommandOutputNormalizer;
 use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\ETL\Tests\Mother\RowsMother;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Schema;
 use Generator;
 
 use function array_map;
@@ -51,232 +52,248 @@ use function range;
 
 final class DisplayTest extends FlowIntegrationTestCase
 {
-    use CommandOutputNormalizer;
-
     public function test_display(): void
     {
-        $etl = df()->read(new class implements Extractor {
-            public function withSchema(Schema $schema): static
-            {
-                return $this;
-            }
+        CommandOutputNormalizer::assertCommandOutputIdentical(
+            <<<'ASCIITABLE'
+                +------+------------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+-------+----------------------+
+                |   id |      price | 100 | deleted |           created-at | phase |                array |    list |               map |                items |  enum |                  xml |
+                +------+------------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+-------+----------------------+
+                | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | three | <xml><node id="123"> |
+                | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | three | <xml><node id="123"> |
+                | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | three | <xml><node id="123"> |
+                | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | three | <xml><node id="123"> |
+                | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | three | <xml><node id="123"> |
+                +------+------------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+-------+----------------------+
+                5 rows
 
-            public function schema(): Schema
-            {
-                return new Schema();
-            }
+                ASCIITABLE,
+            df()
+                ->read(new class implements Extractor {
+                    public function withSchema(Schema $schema): static
+                    {
+                        return $this;
+                    }
 
-            /**
-             * @return \Generator<int, Rows, Signal|null, void>
-             */
-            public function extract(FlowContext $context, ?int $limit = null): Generator
-            {
-                for ($i = 0; $i < 20; $i++) {
-                    yield array_to_rows(
-                        [[
-                            'id' => 1234,
-                            'price' => 123.45,
-                            '100' => 100,
-                            'deleted' => false,
-                            'created-at' => new DateTimeImmutable('2020-07-13 15:00'),
-                            'phase' => null,
-                            'array' => type_json()->cast([
-                                ['id' => 1, 'status' => 'NEW'],
-                                ['id' => 2, 'status' => 'PENDING'],
-                            ]),
-                            'list' => [1, 2, 3],
-                            'map' => ['NEW', 'PENDING'],
-                            'items' => ['item-id' => '1', 'name' => 'one'],
-                            'enum' => BackedStringEnum::three,
-                            'xml' => type_xml()->cast('<xml><node id="123">test<foo>bar</foo></node></xml>'),
-                        ]],
-                        schema(
-                            int_schema('id'),
-                            float_schema('price'),
-                            int_schema('100'),
-                            bool_schema('deleted'),
-                            datetime_schema('created-at'),
-                            str_schema('phase', nullable: true),
-                            json_schema('array'),
-                            list_schema('list', type_list(type_integer())),
-                            map_schema('map', type_map(type_integer(), type_string())),
-                            structure_schema('items', type_structure([
-                                'item-id' => type_string(),
-                                'name' => type_string(),
-                            ])),
-                            enum_schema('enum', BackedStringEnum::class),
-                            xml_schema('xml'),
-                        ),
-                    );
-                }
-            }
+                    public function schema(): Schema
+                    {
+                        return new Schema();
+                    }
 
-            public function statistics(): Statistics
-            {
-                return new Statistics();
-            }
-        })->collect();
+                    /**
+                     * @return \Generator<int, Rows, Signal|null, void>
+                     */
+                    public function extract(Backend $backend, Criteria $criteria): Generator
+                    {
+                        for ($i = 0; $i < 20; $i++) {
+                            yield array_to_rows(
+                                [[
+                                    'id' => 1234,
+                                    'price' => 123.45,
+                                    '100' => 100,
+                                    'deleted' => false,
+                                    'created-at' => new DateTimeImmutable('2020-07-13 15:00'),
+                                    'phase' => null,
+                                    'array' => type_json()->cast([
+                                        ['id' => 1, 'status' => 'NEW'],
+                                        ['id' => 2, 'status' => 'PENDING'],
+                                    ]),
+                                    'list' => [1, 2, 3],
+                                    'map' => ['NEW', 'PENDING'],
+                                    'items' => ['item-id' => '1', 'name' => 'one'],
+                                    'enum' => BackedStringEnum::three,
+                                    'xml' => type_xml()->cast('<xml><node id="123">test<foo>bar</foo></node></xml>'),
+                                ]],
+                                schema(
+                                    int_schema('id'),
+                                    float_schema('price'),
+                                    int_schema('100'),
+                                    bool_schema('deleted'),
+                                    datetime_schema('created-at'),
+                                    str_schema('phase', nullable: true),
+                                    json_schema('array'),
+                                    list_schema('list', type_list(type_integer())),
+                                    map_schema('map', type_map(type_integer(), type_string())),
+                                    structure_schema('items', type_structure([
+                                        'item-id' => type_string(),
+                                        'name' => type_string(),
+                                    ])),
+                                    enum_schema('enum', BackedStringEnum::class),
+                                    xml_schema('xml'),
+                                ),
+                            );
+                        }
+                    }
 
-        self::assertCommandOutputIdentical(<<<'ASCIITABLE'
-            +------+------------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+-------+----------------------+
-            |   id |      price | 100 | deleted |           created-at | phase |                array |    list |               map |                items |  enum |                  xml |
-            +------+------------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+-------+----------------------+
-            | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | three | <xml><node id="123"> |
-            | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | three | <xml><node id="123"> |
-            | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | three | <xml><node id="123"> |
-            | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | three | <xml><node id="123"> |
-            | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | three | <xml><node id="123"> |
-            +------+------------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+-------+----------------------+
-            5 rows
+                    public function statistics(): Statistics
+                    {
+                        return new Statistics();
+                    }
 
-            ASCIITABLE, $etl->display(5));
+                    public function isRepeatable(): bool
+                    {
+                        return false;
+                    }
+                })
+                ->collect()
+                ->display(5),
+        );
     }
 
     public function test_display_partitioned(): void
     {
-        $etl = df()
-            ->read(new class implements Extractor {
-                public function withSchema(Schema $schema): static
-                {
-                    return $this;
-                }
+        CommandOutputNormalizer::assertCommandOutputIdentical(
+            <<<'ASCIITABLE'
+                +------+------------+-----+---------+----------------------+-------+
+                |   id |      price | 100 | deleted |           created-at | group |
+                +------+------------+-----+---------+----------------------+-------+
+                | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     A |
+                | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     A |
+                | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     A |
+                | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     A |
+                | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     A |
+                | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     B |
+                | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     B |
+                | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     B |
+                | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     B |
+                | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     B |
+                +------+------------+-----+---------+----------------------+-------+
+                10 rows
 
-                public function schema(): Schema
-                {
-                    return new Schema();
-                }
-
-                /**
-                 * @return \Generator<int, Rows, Signal|null, void>
-                 */
-                public function extract(FlowContext $context, ?int $limit = null): Generator
-                {
-                    for ($i = 0; $i < 5; $i++) {
-                        yield array_to_rows(
-                            [[
-                                'id' => 1234,
-                                'price' => 123.45,
-                                '100' => 100,
-                                'deleted' => false,
-                                'created-at' => new DateTimeImmutable('2020-07-13 15:00'),
-                                'group' => 'A',
-                            ]],
-                            schema(
-                                int_schema('id'),
-                                float_schema('price'),
-                                int_schema('100'),
-                                bool_schema('deleted'),
-                                datetime_schema('created-at'),
-                                string_schema('group'),
-                            ),
-                        );
+                ASCIITABLE,
+            df()
+                ->read(new class implements Extractor {
+                    public function withSchema(Schema $schema): static
+                    {
+                        return $this;
                     }
 
-                    for ($i = 0; $i < 5; $i++) {
-                        yield array_to_rows(
-                            [[
-                                'id' => 1234,
-                                'price' => 123.45,
-                                '100' => 100,
-                                'deleted' => false,
-                                'created-at' => new DateTimeImmutable('2020-07-13 15:00'),
-                                'group' => 'B',
-                            ]],
-                            schema(
-                                int_schema('id'),
-                                float_schema('price'),
-                                int_schema('100'),
-                                bool_schema('deleted'),
-                                datetime_schema('created-at'),
-                                string_schema('group'),
-                            ),
-                        );
+                    public function schema(): Schema
+                    {
+                        return new Schema();
                     }
-                }
 
-                public function statistics(): Statistics
-                {
-                    return new Statistics();
-                }
-            })
-            ->collect()
-            ->repartition(ref('group'));
+                    /**
+                     * @return \Generator<int, Rows, Signal|null, void>
+                     */
+                    public function extract(Backend $backend, Criteria $criteria): Generator
+                    {
+                        for ($i = 0; $i < 5; $i++) {
+                            yield array_to_rows(
+                                [[
+                                    'id' => 1234,
+                                    'price' => 123.45,
+                                    '100' => 100,
+                                    'deleted' => false,
+                                    'created-at' => new DateTimeImmutable('2020-07-13 15:00'),
+                                    'group' => 'A',
+                                ]],
+                                schema(
+                                    int_schema('id'),
+                                    float_schema('price'),
+                                    int_schema('100'),
+                                    bool_schema('deleted'),
+                                    datetime_schema('created-at'),
+                                    string_schema('group'),
+                                ),
+                            );
+                        }
 
-        self::assertCommandOutputIdentical(<<<'ASCIITABLE'
-            +------+------------+-----+---------+----------------------+-------+
-            |   id |      price | 100 | deleted |           created-at | group |
-            +------+------------+-----+---------+----------------------+-------+
-            | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     A |
-            | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     A |
-            | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     A |
-            | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     A |
-            | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     A |
-            | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     B |
-            | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     B |
-            | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     B |
-            | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     B |
-            | 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |     B |
-            +------+------------+-----+---------+----------------------+-------+
-            10 rows
+                        for ($i = 0; $i < 5; $i++) {
+                            yield array_to_rows(
+                                [[
+                                    'id' => 1234,
+                                    'price' => 123.45,
+                                    '100' => 100,
+                                    'deleted' => false,
+                                    'created-at' => new DateTimeImmutable('2020-07-13 15:00'),
+                                    'group' => 'B',
+                                ]],
+                                schema(
+                                    int_schema('id'),
+                                    float_schema('price'),
+                                    int_schema('100'),
+                                    bool_schema('deleted'),
+                                    datetime_schema('created-at'),
+                                    string_schema('group'),
+                                ),
+                            );
+                        }
+                    }
 
-            ASCIITABLE, $etl->display(10));
+                    public function statistics(): Statistics
+                    {
+                        return new Statistics();
+                    }
+
+                    public function isRepeatable(): bool
+                    {
+                        return false;
+                    }
+                })
+                ->collect()
+                ->repartition(ref('group'))
+                ->display(10),
+        );
     }
 
     public function test_display_with_very_long_entry_name(): void
     {
-        $etl = df()
-            ->read(from_array([
-                [
-                    'this is very long entry name that should be longer than items' => [
-                        ['id' => 1, 'status' => 'NEW'],
-                        ['id' => 2, 'status' => 'PENDING'],
+        CommandOutputNormalizer::assertCommandOutputContains(
+            <<<'ASCIITABLE'
+                +----------------------+
+                | this is very long en |
+                +----------------------+
+                | [{"id":1,"status":"N |
+                | [{"id":1,"status":"N |
+                | [{"id":1,"status":"N |
+                | [{"id":1,"status":"N |
+                | [{"id":1,"status":"N |
+                +----------------------+
+                5 rows
+                ASCIITABLE,
+            df()
+                ->read(from_array([
+                    [
+                        'this is very long entry name that should be longer than items' => [
+                            ['id' => 1, 'status' => 'NEW'],
+                            ['id' => 2, 'status' => 'PENDING'],
+                        ],
                     ],
-                ],
-                [
-                    'this is very long entry name that should be longer than items' => [
-                        ['id' => 1, 'status' => 'NEW'],
-                        ['id' => 2, 'status' => 'PENDING'],
+                    [
+                        'this is very long entry name that should be longer than items' => [
+                            ['id' => 1, 'status' => 'NEW'],
+                            ['id' => 2, 'status' => 'PENDING'],
+                        ],
                     ],
-                ],
-                [
-                    'this is very long entry name that should be longer than items' => [
-                        ['id' => 1, 'status' => 'NEW'],
-                        ['id' => 2, 'status' => 'PENDING'],
+                    [
+                        'this is very long entry name that should be longer than items' => [
+                            ['id' => 1, 'status' => 'NEW'],
+                            ['id' => 2, 'status' => 'PENDING'],
+                        ],
                     ],
-                ],
-                [
-                    'this is very long entry name that should be longer than items' => [
-                        ['id' => 1, 'status' => 'NEW'],
-                        ['id' => 2, 'status' => 'PENDING'],
+                    [
+                        'this is very long entry name that should be longer than items' => [
+                            ['id' => 1, 'status' => 'NEW'],
+                            ['id' => 2, 'status' => 'PENDING'],
+                        ],
                     ],
-                ],
-                [
-                    'this is very long entry name that should be longer than items' => [
-                        ['id' => 1, 'status' => 'NEW'],
-                        ['id' => 2, 'status' => 'PENDING'],
+                    [
+                        'this is very long entry name that should be longer than items' => [
+                            ['id' => 1, 'status' => 'NEW'],
+                            ['id' => 2, 'status' => 'PENDING'],
+                        ],
                     ],
-                ],
-                [
-                    'this is very long entry name that should be longer than items' => [
-                        ['id' => 1, 'status' => 'NEW'],
-                        ['id' => 2, 'status' => 'PENDING'],
+                    [
+                        'this is very long entry name that should be longer than items' => [
+                            ['id' => 1, 'status' => 'NEW'],
+                            ['id' => 2, 'status' => 'PENDING'],
+                        ],
                     ],
-                ],
-            ]))
-            ->collect();
-
-        self::assertCommandOutputContains(<<<'ASCIITABLE'
-            +----------------------+
-            | this is very long en |
-            +----------------------+
-            | [{"id":1,"status":"N |
-            | [{"id":1,"status":"N |
-            | [{"id":1,"status":"N |
-            | [{"id":1,"status":"N |
-            | [{"id":1,"status":"N |
-            +----------------------+
-            5 rows
-            ASCIITABLE, $etl->display(5));
+                ]))
+                ->collect()
+                ->display(5),
+        );
     }
 
     public function test_print_rows(): void
@@ -306,11 +323,10 @@ final class DisplayTest extends FlowIntegrationTestCase
                 ),
             ))
             ->printRows();
-        $output = ob_get_clean() ?: '';
 
         // from_rows() folds its batches into one shape and matches each batch to it, so the first
         // batch carries the nullable "salary" column the second one introduced; both print as one table
-        self::assertCommandOutputContains(<<<'ASCII'
+        CommandOutputNormalizer::assertCommandOutputContains(<<<'ASCII'
             +----+---------+-----+--------+
             | id | country | age | salary |
             +----+---------+-----+--------+
@@ -321,7 +337,7 @@ final class DisplayTest extends FlowIntegrationTestCase
             |  1 |      PL |  20 |        |
             +----+---------+-----+--------+
             5 rows
-            ASCII, $output);
+            ASCII, ob_get_clean() ?: '');
     }
 
     public function test_print_schema_leaves_the_frame_unchanged(): void
@@ -364,17 +380,16 @@ final class DisplayTest extends FlowIntegrationTestCase
                 ),
             ))
             ->printSchema();
-        $output = ob_get_clean() ?: '';
 
         // printSchema() formats the plan's schema once and runs nothing, so the batch count is
         // no longer visible in the output
-        self::assertCommandOutputContains(<<<'ASCII'
+        CommandOutputNormalizer::assertCommandOutputContains(<<<'ASCII'
             schema
             |-- id: integer
             |-- country: string
             |-- age: integer
             |-- salary: ?integer
-            ASCII, $output);
+            ASCII, ob_get_clean() ?: '');
     }
 
     public function test_display_renders_one_table_for_a_varying_batch_source(): void

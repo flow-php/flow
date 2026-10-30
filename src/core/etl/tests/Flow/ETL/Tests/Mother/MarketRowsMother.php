@@ -32,7 +32,7 @@ final class MarketRowsMother
      *
      * @return array<int, array<string, int|string>>
      */
-    private static function days(callable $index): array
+    public static function days(callable $index): array
     {
         $rows = [];
 

@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Context;
 
-use Flow\ETL\Bucketing\KeyGrouping;
-use Flow\ETL\Bucketing\KeyValues;
-use Flow\ETL\Bucketing\NativeHasher;
-use Flow\ETL\Column\AdaptiveBackend;
-use Flow\ETL\Row\Reference;
-use Flow\ETL\Rows;
+use Flow\ETL\Functions\Reference\Reference;
+use Flow\ETL\Functions\Reference\References;
+use Flow\ETL\Kernels\Bucketing\KeyEncoder;
+use Flow\ETL\Kernels\Bucketing\KeyGrouping;
+use Flow\ETL\Values\Column\AdaptiveBackend;
+use Flow\ETL\Values\Rows;
 use Generator;
 
 use function array_map;
@@ -27,7 +27,7 @@ final class KeyGroupingContext
     public static function groups(array $by, Generator $input): array
     {
         return iterator_to_array(
-            (new KeyGrouping(new KeyValues($by), new NativeHasher(), new AdaptiveBackend()))->group($input),
+            (new KeyGrouping(new KeyEncoder((new References(...$by))->names()), new AdaptiveBackend()))->group($input),
             preserve_keys: false,
         );
     }

@@ -9,12 +9,10 @@ use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\VariableSetKind;
 use Flow\PostgreSql\Protobuf\AST\VariableSetStmt;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 final readonly class SetRoleBuilder implements SetRoleFinalStep
 {
-    use AstToSql;
-
     private function __construct(
         private string $roleName,
     ) {}
@@ -22,6 +20,11 @@ final readonly class SetRoleBuilder implements SetRoleFinalStep
     public static function create(string $role): SetRoleFinalStep
     {
         return new self($role);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): VariableSetStmt

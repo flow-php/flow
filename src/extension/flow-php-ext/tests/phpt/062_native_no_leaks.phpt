@@ -6,15 +6,16 @@ decode, value reads, take, encode and a refused appendMany leak neither PHP memo
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Column\RustBackend;
-use Flow\Floe\FrameDecoder;
+use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Values\Column\RustBackend;
+use Flow\ETL\Values\Column\Frame\NoopCodec;
 
 $schema = all_types_schema();
-$frame = php_rows($schema, all_types_values())->encodeFrame();
+$frame = (new PhpBackend())->encodeFrame(php_rows($schema, all_types_values()), new NoopCodec());
 $backend = new RustBackend();
 
 $cycle = static function () use ($schema, $frame, $backend): void {
-    $rows = (new FrameDecoder())->decode($frame, $schema, $backend);
+    $rows = $backend->decodeFrame($frame, $schema, new NoopCodec());
 
     foreach ($rows->columns() as $column) {
         $column->value(1);
@@ -24,7 +25,7 @@ $cycle = static function () use ($schema, $frame, $backend): void {
     try {
         $backend->builder($schema->get('int'))->appendMany([1, 'not an int']);
         throw new LogicException('a refused value was accepted');
-    } catch (Flow\ETL\Exception\SchemaMismatchException) {
+    } catch (Flow\ETL\Foundation\Exception\SchemaMismatchException) {
     }
 };
 

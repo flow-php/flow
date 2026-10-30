@@ -1,5 +1,5 @@
-//! Native CSV reading: records and fields from `tokenizer`, rows shaped exactly like
-//! `CSVDecoder::decode()` (`Flow\ETL\Extractor\Records`) shapes them.
+//! Native CSV reading: records and fields from `flow_csv_tokenizer`, rows shaped exactly like
+//! `CSVDecoder::decode()` (`Flow\ETL\IO\Extractor\Grid\RecordDecoder`) shapes them.
 
 pub mod columns;
 pub mod fold;
@@ -8,16 +8,16 @@ pub mod fold;
     reason = "PHP takes a parameter name from its Rust identifier: the contracts' are camelCase"
 )]
 pub mod source;
-pub mod tokenizer;
 pub mod write;
 
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::types::{ZendHashTable, ZendStr, Zval};
+use flow_batch_frame::key::array_key_index;
+use flow_csv_tokenizer::{Dialect, Field, Record, Tokenizer};
 
-use crate::ctx::{array_key_index, ht_insert_key, null_zval, zval_str, HtKey};
+use crate::ctx::{ht_insert_key, null_zval, zval_str, HtKey};
 use crate::exception::ext_exception;
-use tokenizer::{Dialect, Field, Record, Tokenizer};
 
 /// A header name resolved once into the array key `array_combine()` would use for it.
 enum HeaderKey {
@@ -75,6 +75,7 @@ impl CsvReader {
         with_header: bool,
         empty_to_null: bool,
         remove_bom: bool,
+        headers: Option<Vec<Vec<u8>>>,
     ) -> Result<Self, PhpException> {
         let [separator] = separator else {
             return Err(ext_exception("flow_php CSV separator must be exactly one byte"));
@@ -88,7 +89,13 @@ impl CsvReader {
             _ => return Err(ext_exception("flow_php CSV escape must be empty or exactly one byte")),
         };
 
-        Ok(Self {
+        if headers.is_some() && with_header {
+            return Err(ext_exception(
+                "flow_php CSV preset headers replace the header record, withHeader must be false",
+            ));
+        }
+
+        let mut reader = Self {
             tokenizer: Tokenizer::new(
                 Dialect {
                     separator: *separator,
@@ -105,11 +112,27 @@ impl CsvReader {
             first_row_pending: false,
             consumed_bytes: 0,
             finished: false,
-        })
+        };
+
+        if let Some(names) = headers {
+            reader.headers = Some(names.into_iter().map(Header::new).collect());
+            reader.resolve_cells();
+        }
+
+        Ok(reader)
     }
 
     pub fn feed(&mut self, chunk: &[u8]) {
         self.tokenizer.feed(chunk);
+    }
+
+    /// Up to `len` bytes read straight into the tokenizer's buffer by `read`; see `Tokenizer::fill_with`.
+    pub fn fill_with(
+        &mut self,
+        len: usize,
+        read: impl FnOnce(&mut [u8]) -> std::io::Result<usize>,
+    ) -> std::io::Result<usize> {
+        self.tokenizer.fill_with(len, read)
     }
 
     pub fn finish(&mut self) {
@@ -148,7 +171,7 @@ impl CsvReader {
 
     /// The current row's cell of `field`, as `Records::decode()` shapes it; `None` is null.
     pub fn cell(&self, field: usize) -> Option<&[u8]> {
-        cell_value(&self.record, field, self.empty_to_null)
+        cell_value(&self.tokenizer, &self.record, field, self.empty_to_null)
     }
 
     /// The bytes, as read, of every row `next` and `fold` produced so far: line endings included, the header
@@ -188,7 +211,7 @@ impl CsvReader {
             }
 
             batch
-                .push(row_values(headers, &self.record, self.empty_to_null))
+                .push(row_values(headers, &self.tokenizer, &self.record, self.empty_to_null))
                 .map_err(|e| ext_exception(format!("flow_php failed to collect CSV row values: {e:?}")))?;
         }
 
@@ -221,7 +244,7 @@ impl CsvReader {
                 fold.observe(
                     &headers[cell.header_index].name,
                     position,
-                    cell_value(&self.record, cell.field_index, self.empty_to_null),
+                    cell_value(&self.tokenizer, &self.record, cell.field_index, self.empty_to_null),
                 )?;
             }
 
@@ -239,12 +262,12 @@ impl CsvReader {
             return;
         }
 
-        let record = &self.record;
+        let (tokenizer, record) = (&self.tokenizer, &self.record);
 
         self.headers = Some(if self.with_header {
-            (0..record.len())
+            (0..record.field_count())
                 .map(|index| {
-                    let trimmed = php_trim(match record.field(index) {
+                    let trimmed = php_trim(match tokenizer.field(record, index) {
                         Field::Value(value) => value,
                         Field::Null | Field::Missing => b"",
                     });
@@ -259,12 +282,16 @@ impl CsvReader {
         } else {
             self.first_row_pending = true;
 
-            (0..record.len())
+            (0..record.field_count())
                 .map(|index| Header::new(format!("e{index:02}").into_bytes()))
                 .collect()
         });
 
-        let headers = self.headers.as_ref().expect("resolved above");
+        self.resolve_cells();
+    }
+
+    fn resolve_cells(&mut self) {
+        let headers = self.headers.as_ref().expect("resolved before the cells");
 
         for (index, header) in headers.iter().enumerate() {
             match self
@@ -301,8 +328,8 @@ fn next_row(
 
 /// `Records::decode()` for one cell: a cell past the record's end is null, a present `''` is null under `emptyToNull`;
 /// `None` is null.
-fn cell_value(record: &Record, index: usize, empty_to_null: bool) -> Option<&[u8]> {
-    match record.field(index) {
+fn cell_value<'a>(tokenizer: &'a Tokenizer, record: &'a Record, index: usize, empty_to_null: bool) -> Option<&'a [u8]> {
+    match tokenizer.field(record, index) {
         Field::Value(value) if !(empty_to_null && value.is_empty()) => Some(value),
         Field::Value(_) | Field::Null | Field::Missing => None,
     }
@@ -310,11 +337,11 @@ fn cell_value(record: &Record, index: usize, empty_to_null: bool) -> Option<&[u8
 
 /// `Records::decode()` for one record: one value per header, a duplicated header keeps its first position and its
 /// last value.
-fn row_values(headers: &[Header], record: &Record, empty_to_null: bool) -> Zval {
+fn row_values(headers: &[Header], tokenizer: &Tokenizer, record: &Record, empty_to_null: bool) -> Zval {
     let mut values = ZendHashTable::with_capacity(headers.len() as u32);
 
     for (index, header) in headers.iter().enumerate() {
-        let value = cell_value(record, index, empty_to_null).map_or_else(null_zval, zval_str);
+        let value = cell_value(tokenizer, record, index, empty_to_null).map_or_else(null_zval, zval_str);
 
         ht_insert_key(&mut values, &header.key(), value);
     }

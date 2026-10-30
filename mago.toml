@@ -134,36 +134,11 @@ no-fully-qualified-global-constant = { enabled = true, level = "error" }
 disallowed-functions = { enabled = true, level = "error", functions = [{ name = "var_dump", help = "Debugging only — remove before commit." }, { name = "print_r", help = "Debugging only — remove before commit." }, { name = "dd", help = "Debugging only — remove before commit." }, { name = "dj", help = "Debugging only — remove before commit." }, { name = "ddj", help = "Debugging only — remove before commit." }] }
 
 [guard]
-mode = "perimeter"
 excludes = ["src/**/tests/**"]
 # Flow\Documentation\Attribute\* is documentation metadata resolved only by bin/docs.php; exempt from "a direct import gets a direct require".
 
 [[guard.perimeter.restrictions]]
 dependency = "Flow\\ETL\\**"
-deny-from = [
-    "Flow\\ArrayDot\\**", "Flow\\Azure\\**", "Flow\\Doctrine\\Bulk\\**", "Flow\\Dremel\\**",
-    "Flow\\Parquet\\**", "Flow\\PostgreSql\\**", "Flow\\Snappy\\**", "Flow\\Telemetry\\**", "Flow\\Types\\**",
-    "Flow\\Filesystem\\**",
-]
-
-[[guard.perimeter.restrictions]]
-dependency = "Flow\\ArrayComparison\\**"
-deny-from = [
-    "Flow\\ArrayDot\\**", "Flow\\Azure\\**", "Flow\\Doctrine\\Bulk\\**", "Flow\\Dremel\\**",
-    "Flow\\Parquet\\**", "Flow\\PostgreSql\\**", "Flow\\Snappy\\**", "Flow\\Telemetry\\**", "Flow\\Types\\**",
-    "Flow\\Filesystem\\**",
-]
-
-[[guard.perimeter.restrictions]]
-dependency = "Flow\\Calculator\\**"
-deny-from = [
-    "Flow\\ArrayDot\\**", "Flow\\Azure\\**", "Flow\\Doctrine\\Bulk\\**", "Flow\\Dremel\\**",
-    "Flow\\Parquet\\**", "Flow\\PostgreSql\\**", "Flow\\Snappy\\**", "Flow\\Telemetry\\**", "Flow\\Types\\**",
-    "Flow\\Filesystem\\**",
-]
-
-[[guard.perimeter.restrictions]]
-dependency = "Flow\\Clock\\**"
 deny-from = [
     "Flow\\ArrayDot\\**", "Flow\\Azure\\**", "Flow\\Doctrine\\Bulk\\**", "Flow\\Dremel\\**",
     "Flow\\Parquet\\**", "Flow\\PostgreSql\\**", "Flow\\Snappy\\**", "Flow\\Telemetry\\**", "Flow\\Types\\**",
@@ -185,3 +160,440 @@ deny-from = [
     "Flow\\Parquet\\**", "Flow\\PostgreSql\\**", "Flow\\Snappy\\**", "Flow\\Telemetry\\**", "Flow\\Types\\**",
     "Flow\\Filesystem\\**",
 ]
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Foundation\\"
+permit = [
+    "@self", "@native", "Flow\\Types\\**", "Flow\\Filesystem\\**", "Brick\\Math\\**", "Psr\\Clock\\**",
+]
+reason = "Layer 0 foundation: math, clocks, arrays, random values, similar names, the exceptions, describe and rebuild, the telemetry attribute contract. It uses no other ETL layer."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Values\\"
+permit = [
+    "@self", "@native", "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**",
+]
+reason = "Layer 1 values: rows, schemas, definitions, columns and frames. It uses foundation only."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Storage\\"
+permit = [
+    "@self", "@native", "Flow\\ETL\\Values\\**", "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**",
+    "Flow\\Filesystem\\**", "Flow\\Telemetry\\**", "Psr\\SimpleCache\\**", "Composer\\InstalledVersions",
+]
+reason = "Layer 2 storage: keyed batch storage (cache, spill, shuffle), the Floe file encoding, serializers and the user memory. It uses values, foundation, the filesystem and telemetry libraries."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Kernels\\"
+permit = [
+    "@self", "@native", "Flow\\ETL\\Storage\\**", "Flow\\ETL\\Values\\**", "Flow\\ETL\\Foundation\\**",
+    "Flow\\Types\\**", "Flow\\Filesystem\\**",
+]
+reason = "Layer 3 kernels: key encoding, hashing, bucketing, value equality and order, sorting and the hash join. They take values and Columns, never references, expressions or the flow context, and use storage, values and foundation."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Functions\\"
+permit = [
+    "@self", "@native", "Flow\\ETL\\Kernels\\**", "Flow\\ETL\\Storage\\**", "Flow\\ETL\\Values\\**",
+    "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**", "Flow\\ArrayDot\\**", "Symfony\\Component\\String\\**",
+    "Symfony\\Component\\Uid\\**", "Ramsey\\Uuid\\**",
+]
+reason = "Layer 4 functions: scalar, aggregating and window functions, references and their resolution, join conditions. They evaluate on rows with a Backend, never the flow context, and use kernels, storage, values, foundation and the string, uuid and array-path libraries."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\IO\\"
+permit = [
+    "@self", "@native", "Flow\\ETL\\Functions\\**", "Flow\\ETL\\Kernels\\**", "Flow\\ETL\\Storage\\**",
+    "Flow\\ETL\\Values\\**", "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**", "Flow\\Filesystem\\**",
+]
+reason = "Layer 5 IO: extractors, loaders, schema inference, formatters and the Floe source and sink. They read and write rows with a Backend, never the flow context, and use functions, kernels, storage, values, foundation and the filesystem library."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Operators\\"
+permit = [
+    "@self", "@native", "Flow\\ETL\\IO\\**", "Flow\\ETL\\Functions\\**", "Flow\\ETL\\Kernels\\**",
+    "Flow\\ETL\\Storage\\**", "Flow\\ETL\\Values\\**", "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**",
+    "Flow\\Filesystem\\**",
+]
+reason = "Layer 6 operators: transformers, processors, constraints, group by, joins and the limit signal. They take a Backend, never the flow context, and use IO, functions, kernels, storage, values, foundation and the filesystem library."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Planning\\"
+permit = [
+    "@self", "@native", "Flow\\ETL\\Operators\\**", "Flow\\ETL\\IO\\**", "Flow\\ETL\\Functions\\**",
+    "Flow\\ETL\\Kernels\\**", "Flow\\ETL\\Storage\\**", "Flow\\ETL\\Values\\**", "Flow\\ETL\\Foundation\\**",
+    "Flow\\Types\\**", "Flow\\Filesystem\\**", "Flow\\Telemetry\\**",
+]
+reason = "Layer 7 planning: the logical plan, the optimizer, the physical plan values and the planner, and explain. They read the plan and lower layers, never the runtime."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Runtime\\"
+permit = [
+    "@self", "@native", "Flow\\ETL\\Planning\\**", "Flow\\ETL\\Operators\\**", "Flow\\ETL\\IO\\**",
+    "Flow\\ETL\\Functions\\**", "Flow\\ETL\\Kernels\\**", "Flow\\ETL\\Storage\\**", "Flow\\ETL\\Values\\**",
+    "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**", "Flow\\Filesystem\\**", "Flow\\Telemetry\\**", "Psr\\Clock\\**",
+]
+reason = "Layer 8 runtime: the executor, step runner, sink runs, the context, the config, error handling, run metrics, telemetry and the launcher seam. They run the physical plan and use planning and every lower layer."
+
+[[guard.perimeter.restrictions]]
+dependency = "Flow\\ETL\\DSL\\**"
+deny-from = ["Flow\\ETL\\Adapter\\**"]
+
+[[guard.perimeter.restrictions]]
+dependency = "Flow\\Filesystem\\DSL\\**"
+deny-from = [
+    "Flow\\ETL\\Foundation\\**", "Flow\\ETL\\Values\\**", "Flow\\ETL\\Kernels\\**", "Flow\\ETL\\Storage\\**",
+    "Flow\\ETL\\Functions\\**", "Flow\\ETL\\IO\\**", "Flow\\ETL\\Operators\\**", "Flow\\ETL\\Planning\\**",
+    "Flow\\ETL\\Runtime\\**", "Flow\\ETL\\API\\**", "Flow\\ETL\\Flow",
+]
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\API\\"
+permit = [
+    "@self", "@native", "Flow\\ETL\\Runtime\\**", "Flow\\ETL\\Planning\\**", "Flow\\ETL\\Operators\\**",
+    "Flow\\ETL\\IO\\**", "Flow\\ETL\\Functions\\**", "Flow\\ETL\\Kernels\\**", "Flow\\ETL\\Storage\\**",
+    "Flow\\ETL\\Values\\**", "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**", "Flow\\Filesystem\\**",
+    "Flow\\Telemetry\\**", "Psr\\Clock\\**",
+]
+reason = "Layer 9 API: DataFrame, GroupedDataFrame, the config builders, sinks and transformations. They use every layer below, never the DSL or an adapter."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\"
+permit = [
+    "@native", "Flow\\ETL\\Flow", "Flow\\ETL\\API\\**", "Flow\\ETL\\Runtime\\**", "Flow\\ETL\\Planning\\**",
+    "Flow\\ETL\\Operators\\**", "Flow\\ETL\\IO\\**", "Flow\\ETL\\Functions\\**", "Flow\\ETL\\Kernels\\**",
+    "Flow\\ETL\\Storage\\**", "Flow\\ETL\\Values\\**", "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**",
+    "Flow\\Filesystem\\**", "Flow\\Telemetry\\**", "Psr\\Clock\\**",
+]
+reason = "The Flow\\ETL root holds one class, Flow, the entry point beside the API. It uses the API and every layer below, never the DSL or an adapter."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\DSL\\"
+permit = ["@all"]
+reason = "Layer 10 DSL: the top layer, functions that construct objects of every layer below."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\Floe\\DSL\\"
+permit = ["@all"]
+reason = "Layer 10 DSL: the Floe functions, frozen in their namespace."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\Serializer\\DSL\\"
+permit = ["@all"]
+reason = "Layer 10 DSL: the serializer functions, frozen in their namespace."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Adapter\\"
+permit = ["@all"]
+reason = "The adapter package roots and Excel's DSL namespace: DSL functions only (structural rules below), the top layer. Every adapter type sits in a layer root with its own rule."
+
+[[guard.perimeter.restrictions]]
+dependency = "Flow\\ETL\\Adapter\\**"
+deny-from = [
+    "Flow\\ETL\\Foundation\\**", "Flow\\ETL\\Values\\**", "Flow\\ETL\\Storage\\**", "Flow\\ETL\\Kernels\\**",
+    "Flow\\ETL\\Functions\\**", "Flow\\ETL\\IO\\**", "Flow\\ETL\\Operators\\**", "Flow\\ETL\\Planning\\**",
+    "Flow\\ETL\\Runtime\\**", "Flow\\ETL\\API\\**", "Flow\\ETL\\Flow",
+]
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Adapter\\Doctrine\\Foundation\\"
+permit = [
+    "@self", "@native", "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**", "Flow\\Filesystem\\**", "Brick\\Math\\**",
+    "Psr\\Clock\\**", "Doctrine\\DBAL\\**", "Flow\\Doctrine\\Bulk\\**",
+]
+reason = "Doctrine adapter, foundation: etl's foundation list and the DBAL libraries."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Adapter\\Doctrine\\Values\\"
+permit = [
+    "@self", "@native", "Flow\\ETL\\Values\\**", "Flow\\ETL\\Adapter\\Doctrine\\Foundation\\**",
+    "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**", "Doctrine\\DBAL\\**", "Flow\\Doctrine\\Bulk\\**",
+]
+reason = "Doctrine adapter, values: etl's values list, the adapter's foundation and the DBAL libraries."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Adapter\\Doctrine\\IO\\"
+permit = [
+    "@self", "@native", "Flow\\ETL\\IO\\**", "Flow\\ETL\\Adapter\\Doctrine\\{Foundation,Values}\\**",
+    "Flow\\ETL\\Functions\\**", "Flow\\ETL\\Kernels\\**", "Flow\\ETL\\Storage\\**", "Flow\\ETL\\Values\\**",
+    "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**", "Flow\\Filesystem\\**", "Doctrine\\DBAL\\**",
+    "Flow\\Doctrine\\Bulk\\**",
+]
+reason = "Doctrine adapter, IO: etl's IO list, the adapter's values and foundation, and the DBAL libraries."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Adapter\\PostgreSql\\Foundation\\"
+permit = [
+    "@self", "@native", "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**", "Flow\\Filesystem\\**", "Brick\\Math\\**",
+    "Psr\\Clock\\**", "Flow\\PostgreSql\\**",
+]
+reason = "PostgreSql adapter, foundation: etl's foundation list and the PostgreSql library."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Adapter\\PostgreSql\\Values\\"
+permit = [
+    "@self", "@native", "Flow\\ETL\\Values\\**", "Flow\\ETL\\Adapter\\PostgreSql\\Foundation\\**",
+    "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**", "Flow\\PostgreSql\\**",
+]
+reason = "PostgreSql adapter, values: etl's values list, the adapter's foundation and the PostgreSql library."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Adapter\\PostgreSql\\IO\\"
+permit = [
+    "@self", "@native", "Flow\\ETL\\IO\\**", "Flow\\ETL\\Adapter\\PostgreSql\\{Foundation,Values}\\**",
+    "Flow\\ETL\\Functions\\**", "Flow\\ETL\\Kernels\\**", "Flow\\ETL\\Storage\\**", "Flow\\ETL\\Values\\**",
+    "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**", "Flow\\Filesystem\\**", "Flow\\PostgreSql\\**",
+]
+reason = "PostgreSql adapter, IO: etl's IO list, the adapter's values and foundation, and the PostgreSql library."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Adapter\\Http\\IO\\"
+permit = [
+    "@self", "@native", "Flow\\ETL\\IO\\**", "Flow\\ETL\\Functions\\**", "Flow\\ETL\\Kernels\\**",
+    "Flow\\ETL\\Storage\\**", "Flow\\ETL\\Values\\**", "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**",
+    "Flow\\Filesystem\\**", "Psr\\Http\\**", "Flow\\ArrayDot\\**",
+]
+reason = "Http adapter, IO: etl's IO list, the PSR HTTP interfaces and the array-path library."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Adapter\\GoogleSheet\\IO\\"
+permit = [
+    "@self", "@native", "Flow\\ETL\\IO\\**", "Flow\\ETL\\Functions\\**", "Flow\\ETL\\Kernels\\**",
+    "Flow\\ETL\\Storage\\**", "Flow\\ETL\\Values\\**", "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**",
+    "Flow\\Filesystem\\**", "Google\\**",
+]
+reason = "GoogleSheet adapter, IO: etl's IO list and the Google API client."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Adapter\\Logger\\IO\\"
+permit = [
+    "@self", "@native", "Flow\\ETL\\IO\\**", "Flow\\ETL\\Functions\\**", "Flow\\ETL\\Kernels\\**",
+    "Flow\\ETL\\Storage\\**", "Flow\\ETL\\Values\\**", "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**",
+    "Flow\\Filesystem\\**", "Psr\\Log\\**", "Symfony\\Component\\VarDumper\\VarDumper",
+]
+reason = "Logger adapter, IO: etl's IO list, the PSR logger and VarDumper (DumpLogger uses it only when it is installed)."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Adapter\\Seal\\Values\\"
+permit = ["@self", "@native", "Flow\\ETL\\Values\\**", "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**", "CmsIg\\Seal\\**"]
+reason = "Seal adapter, values: etl's values list and the SEAL library."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Adapter\\Seal\\IO\\"
+permit = [
+    "@self", "@native", "Flow\\ETL\\IO\\**", "Flow\\ETL\\Adapter\\Seal\\Values\\**", "Flow\\ETL\\Functions\\**",
+    "Flow\\ETL\\Kernels\\**", "Flow\\ETL\\Storage\\**", "Flow\\ETL\\Values\\**", "Flow\\ETL\\Foundation\\**",
+    "Flow\\Types\\**", "Flow\\Filesystem\\**", "CmsIg\\Seal\\**",
+]
+reason = "Seal adapter, IO: etl's IO list, the adapter's values and the SEAL library."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Adapter\\ChartJS\\IO\\"
+permit = [
+    "@self", "@native", "Flow\\ETL\\IO\\**", "Flow\\ETL\\Functions\\**", "Flow\\ETL\\Kernels\\**",
+    "Flow\\ETL\\Storage\\**", "Flow\\ETL\\Values\\**", "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**",
+    "Flow\\Filesystem\\**",
+]
+reason = "ChartJS adapter, IO: etl's IO list."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Adapter\\Avro\\IO\\"
+permit = [
+    "@self", "@native", "Flow\\ETL\\IO\\**", "Flow\\ETL\\Functions\\**", "Flow\\ETL\\Kernels\\**",
+    "Flow\\ETL\\Storage\\**", "Flow\\ETL\\Values\\**", "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**",
+    "Flow\\Filesystem\\**",
+]
+reason = "Avro adapter, IO: etl's IO list."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Adapter\\CSV\\Foundation\\"
+permit = ["@self", "@native", "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**", "Flow\\Filesystem\\**", "Brick\\Math\\**", "Psr\\Clock\\**"]
+reason = "CSV adapter, foundation: etl's foundation list."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Adapter\\CSV\\IO\\"
+permit = [
+    "@self", "@native", "Flow\\ETL\\IO\\**", "Flow\\ETL\\Adapter\\CSV\\Foundation\\**", "Flow\\ETL\\Functions\\**",
+    "Flow\\ETL\\Kernels\\**", "Flow\\ETL\\Storage\\**", "Flow\\ETL\\Values\\**", "Flow\\ETL\\Foundation\\**",
+    "Flow\\Types\\**", "Flow\\Filesystem\\**",
+]
+reason = "CSV adapter, IO: etl's IO list and the adapter's foundation."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Adapter\\Excel\\Functions\\"
+permit = [
+    "@self", "@native", "Flow\\ETL\\Functions\\**", "Flow\\ETL\\Kernels\\**", "Flow\\ETL\\Storage\\**",
+    "Flow\\ETL\\Values\\**", "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**",
+]
+reason = "Excel adapter, functions: the sheet name rule and the scalar function that evaluates it. etl's functions list."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Adapter\\Excel\\IO\\"
+permit = [
+    "@self", "@native", "Flow\\ETL\\IO\\**", "Flow\\ETL\\Adapter\\Excel\\Functions\\**", "Flow\\ETL\\Functions\\**",
+    "Flow\\ETL\\Kernels\\**", "Flow\\ETL\\Storage\\**", "Flow\\ETL\\Values\\**", "Flow\\ETL\\Foundation\\**",
+    "Flow\\Types\\**", "Flow\\Filesystem\\**", "OpenSpout\\**",
+]
+reason = "Excel adapter, IO: etl's IO list, the adapter's functions and OpenSpout."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Adapter\\JSON\\Foundation\\"
+permit = ["@self", "@native", "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**", "Flow\\Filesystem\\**", "Brick\\Math\\**", "Psr\\Clock\\**"]
+reason = "JSON adapter, foundation: etl's foundation list."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Adapter\\JSON\\Values\\"
+permit = ["@self", "@native", "Flow\\ETL\\Values\\**", "Flow\\ETL\\Adapter\\JSON\\Foundation\\**", "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**"]
+reason = "JSON adapter, values: JSON Schema values. etl's values list and the adapter's foundation."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Adapter\\JSON\\IO\\"
+permit = [
+    "@self", "@native", "Flow\\ETL\\IO\\**", "Flow\\ETL\\Adapter\\JSON\\{Foundation,Values}\\**",
+    "Flow\\ETL\\Functions\\**", "Flow\\ETL\\Kernels\\**", "Flow\\ETL\\Storage\\**", "Flow\\ETL\\Values\\**",
+    "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**", "Flow\\Filesystem\\**", "JsonMachine\\**", "Psr\\Http\\**",
+]
+reason = "JSON adapter, IO: etl's IO list, the adapter's values and foundation, JSON Machine, and PSR HTTP (JSON Schema $ref documents)."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Adapter\\Parquet\\Values\\"
+permit = ["@self", "@native", "Flow\\ETL\\Values\\**", "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**", "Flow\\Parquet\\**"]
+reason = "Parquet adapter, values: Flow schema to Parquet schema conversion. etl's values list and the Parquet library."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Adapter\\Parquet\\IO\\"
+permit = [
+    "@self", "@native", "Flow\\ETL\\IO\\**", "Flow\\ETL\\Adapter\\Parquet\\Values\\**", "Flow\\ETL\\Functions\\**",
+    "Flow\\ETL\\Kernels\\**", "Flow\\ETL\\Storage\\**", "Flow\\ETL\\Values\\**", "Flow\\ETL\\Foundation\\**",
+    "Flow\\Types\\**", "Flow\\Filesystem\\**", "Flow\\Parquet\\**",
+]
+reason = "Parquet adapter, IO: etl's IO list, the adapter's values and the Parquet library."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Adapter\\Text\\IO\\"
+permit = [
+    "@self", "@native", "Flow\\ETL\\IO\\**", "Flow\\ETL\\Functions\\**", "Flow\\ETL\\Kernels\\**",
+    "Flow\\ETL\\Storage\\**", "Flow\\ETL\\Values\\**", "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**",
+    "Flow\\Filesystem\\**",
+]
+reason = "Text adapter, IO: etl's IO list."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\Adapter\\XML\\IO\\"
+permit = [
+    "@self", "@native", "Flow\\ETL\\IO\\**", "Flow\\ETL\\Functions\\**", "Flow\\ETL\\Kernels\\**",
+    "Flow\\ETL\\Storage\\**", "Flow\\ETL\\Values\\**", "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**",
+    "Flow\\Filesystem\\**",
+]
+reason = "XML adapter, IO: etl's IO list."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\"
+permit = ["@all"]
+reason = "Packages outside flow-php/etl (libs, bridges, CLI, tools, website): no layer rule. Every etl symbol sits in a layer root or a DSL namespace with its own rule (structural rule below)."
+
+[[guard.perimeter.rules]]
+namespace = "@global"
+permit = ["@all"]
+reason = "Scripts and stubs in the global namespace: bin/, benchmarks/, polyfills and extension stubs. No layer applies."
+
+[[guard.perimeter.rules]]
+namespace = "Symfony\\"
+permit = ["@all"]
+reason = "The postgresql-messenger polyfill declares Symfony interfaces for older Messenger versions. No layer applies."
+
+[[guard.structural.rules]]
+on = "Flow\\{ETL,Floe,Serializer}\\**"
+not-on = "Flow\\{ETL\\{Flow,Foundation,Values,Storage,Kernels,Functions,IO,Operators,Planning,Runtime,API,DSL,Adapter},Floe\\DSL,Serializer\\DSL}\\**"
+must-be = []
+reason = "A namespace tells its layer: every Flow\\ETL symbol sits in a layer root and Flow\\ETL\\Flow is the one root class; Floe and Serializer keep only their DSL."
+
+[[guard.structural.rules]]
+on = "Flow\\ETL\\Adapter\\Doctrine\\**"
+not-on = "Flow\\ETL\\Adapter\\Doctrine\\{Foundation,Values,IO}\\**"
+must-be = ["function"]
+reason = "The Doctrine package root holds only its DSL functions; every type sits in a layer root with its own perimeter rule."
+
+[[guard.structural.rules]]
+on = "Flow\\ETL\\Adapter\\PostgreSql\\**"
+not-on = "Flow\\ETL\\Adapter\\PostgreSql\\{Foundation,Values,IO}\\**"
+must-be = ["function"]
+reason = "The PostgreSql package root holds only its DSL functions; every type sits in a layer root with its own perimeter rule."
+
+[[guard.structural.rules]]
+on = "Flow\\ETL\\Adapter\\Http\\**"
+not-on = "Flow\\ETL\\Adapter\\Http\\IO\\**"
+must-be = ["function"]
+reason = "The Http package root holds only its DSL functions; every type sits in a layer root with its own perimeter rule."
+
+[[guard.structural.rules]]
+on = "Flow\\ETL\\Adapter\\GoogleSheet\\**"
+not-on = "Flow\\ETL\\Adapter\\GoogleSheet\\IO\\**"
+must-be = ["function"]
+reason = "The GoogleSheet package root holds only its DSL functions; every type sits in a layer root with its own perimeter rule."
+
+[[guard.structural.rules]]
+on = "Flow\\ETL\\Adapter\\Logger\\**"
+not-on = "Flow\\ETL\\Adapter\\Logger\\IO\\**"
+must-be = ["function"]
+reason = "The Logger package root holds only its DSL functions; every type sits in a layer root with its own perimeter rule."
+
+[[guard.structural.rules]]
+on = "Flow\\ETL\\Adapter\\Seal\\**"
+not-on = "Flow\\ETL\\Adapter\\Seal\\{Values,IO}\\**"
+must-be = ["function"]
+reason = "The Seal package root holds only its DSL functions; every type sits in a layer root with its own perimeter rule."
+
+[[guard.structural.rules]]
+on = "Flow\\ETL\\Adapter\\ChartJS\\**"
+not-on = "Flow\\ETL\\Adapter\\ChartJS\\IO\\**"
+must-be = ["function"]
+reason = "The ChartJS package root holds only its DSL functions; every type sits in a layer root with its own perimeter rule."
+
+[[guard.structural.rules]]
+on = "Flow\\ETL\\Adapter\\Avro\\**"
+not-on = "Flow\\ETL\\Adapter\\Avro\\IO\\**"
+must-be = ["function"]
+reason = "The Avro package root holds no type (its DSL lives in Flow\\ETL\\DSL\\Adapter\\Avro); every type sits in a layer root with its own perimeter rule."
+
+[[guard.structural.rules]]
+on = "Flow\\ETL\\Adapter\\CSV\\**"
+not-on = "Flow\\ETL\\Adapter\\CSV\\{Foundation,IO}\\**"
+must-be = ["function"]
+reason = "The CSV package root holds only its DSL functions; every type sits in a layer root with its own perimeter rule."
+
+[[guard.structural.rules]]
+on = "Flow\\ETL\\Adapter\\Excel\\**"
+not-on = "Flow\\ETL\\Adapter\\Excel\\{Functions,IO}\\**"
+must-be = ["function"]
+reason = "The Excel package root and its DSL namespace hold only DSL functions; every type sits in a layer root with its own perimeter rule."
+
+[[guard.structural.rules]]
+on = "Flow\\ETL\\Adapter\\JSON\\**"
+not-on = "Flow\\ETL\\Adapter\\JSON\\{Foundation,Values,IO}\\**"
+must-be = ["function"]
+reason = "The JSON package root holds only its DSL functions; every type sits in a layer root with its own perimeter rule."
+
+[[guard.structural.rules]]
+on = "Flow\\ETL\\Adapter\\Parquet\\**"
+not-on = "Flow\\ETL\\Adapter\\Parquet\\{Values,IO}\\**"
+must-be = ["function"]
+reason = "The Parquet package root holds only its DSL functions; every type sits in a layer root with its own perimeter rule."
+
+[[guard.structural.rules]]
+on = "Flow\\ETL\\Adapter\\Text\\**"
+not-on = "Flow\\ETL\\Adapter\\Text\\IO\\**"
+must-be = ["function"]
+reason = "The Text package root holds only its DSL functions; every type sits in a layer root with its own perimeter rule."
+
+[[guard.structural.rules]]
+on = "Flow\\ETL\\Adapter\\XML\\**"
+not-on = "Flow\\ETL\\Adapter\\XML\\IO\\**"
+must-be = ["function"]
+reason = "The XML package root holds only its DSL functions; every type sits in a layer root with its own perimeter rule."
+
+[[guard.structural.rules]]
+on = "Flow\\**"
+not-on = "Flow\\ETL\\Functions\\ScalarFunctionChain"
+must-be = ["class", "interface", "enum", "function"]
+reason = "No traits: share behaviour through a collaborator object. ScalarFunctionChain is the one exception."

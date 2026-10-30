@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\AST\Nodes\Statement;
 
 use Flow\PostgreSql\AST\Nodes\Statement;
-use Flow\PostgreSql\AST\Nodes\StatementTrait;
 use Flow\PostgreSql\Protobuf\AST\AlterCollationStmt;
 use Flow\PostgreSql\Protobuf\AST\AlterDatabaseRefreshCollStmt;
 use Flow\PostgreSql\Protobuf\AST\AlterDatabaseSetStmt;
@@ -46,8 +45,6 @@ use Flow\PostgreSql\Protobuf\AST\RenameStmt;
  */
 final readonly class AlterStatement implements Statement
 {
-    use StatementTrait;
-
     public function __construct(
         private AlterTableStmt|AlterDomainStmt|AlterFunctionStmt|AlterRoleStmt|AlterRoleSetStmt|AlterDatabaseStmt|AlterDatabaseSetStmt|AlterDatabaseRefreshCollStmt|AlterSeqStmt|AlterOwnerStmt|AlterObjectSchemaStmt|AlterObjectDependsStmt|AlterExtensionStmt|AlterExtensionContentsStmt|AlterFdwStmt|AlterForeignServerStmt|AlterUserMappingStmt|AlterTableSpaceOptionsStmt|AlterTableMoveAllStmt|AlterPolicyStmt|AlterPublicationStmt|AlterSubscriptionStmt|AlterDefaultPrivilegesStmt|AlterCollationStmt|AlterEnumStmt|AlterOperatorStmt|AlterOpFamilyStmt|AlterTypeStmt|AlterSystemStmt|AlterEventTrigStmt|AlterStatsStmt|RenameStmt $stmt,
     ) {}

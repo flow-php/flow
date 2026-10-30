@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Tests\Unit\Telemetry;
 
 use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Mount;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\SourceStream;
@@ -304,5 +306,24 @@ final class TraceableFilesystemTest extends TestCase
         $stream = $fs->writeTo($path);
 
         static::assertInstanceOf(TraceableDestinationStream::class, $stream);
+    }
+
+    public function test_configuration_is_the_inner_filesystems(): void
+    {
+        $config = FilesystemTelemetryConfigMother::create(memory_span_processor(void_exporter()));
+
+        static::assertSame(
+            ['protocol' => 'file'],
+            (new TraceableFilesystem(new NativeLocalFilesystem(), $config))->normalize(),
+        );
+        static::assertNull((new TraceableFilesystem(memory_filesystem(), $config))->normalize());
+    }
+
+    public function test_a_traceable_filesystem_is_rebuilt_as_its_inner_filesystem(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('TraceableFilesystem is rebuilt as its inner filesystem');
+
+        TraceableFilesystem::fromArray(['protocol' => 'file']);
     }
 }

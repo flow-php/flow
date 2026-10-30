@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use DateTimeImmutable;
-use Flow\ETL\Loader;
-use Flow\ETL\Memory\ArrayMemory;
-use Flow\ETL\Rows;
+use Flow\ETL\IO\Loader;
+use Flow\ETL\Storage\Memory\ArrayMemory;
+use Flow\ETL\Tests\Context\SortedRows;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\ETL\Values\Rows;
 use Flow\Types\Value\Uuid;
 
 use function Flow\ETL\DSL\array_to_rows;
@@ -18,6 +19,7 @@ use function Flow\ETL\DSL\collect_unique;
 use function Flow\ETL\DSL\count;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\discover_pivot_values;
 use function Flow\ETL\DSL\first;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\from_all;
@@ -37,6 +39,7 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\string_agg;
 use function Flow\ETL\DSL\sum;
+use function Flow\ETL\DSL\to_array;
 use function Flow\ETL\DSL\uuid_schema;
 use function Flow\ETL\DSL\window;
 use function Flow\Types\DSL\type_datetime;
@@ -158,27 +161,6 @@ final class GroupByTest extends FlowIntegrationTestCase
         $loader = $this->createMock(Loader::class);
         $loader->expects(self::exactly(4))->method('load');
 
-        $rows = df()
-            ->read(from_rows(array_to_rows(
-                [
-                    ['id' => 1, 'country' => 'PL', 'age' => 20, 'gender' => 'male'],
-                    ['id' => 2, 'country' => 'PL', 'age' => 20, 'gender' => 'male'],
-                    ['id' => 3, 'country' => 'PL', 'age' => 25, 'gender' => 'male'],
-                    ['id' => 4, 'country' => 'PL', 'age' => 30, 'gender' => 'female'],
-                    ['id' => 5, 'country' => 'US', 'age' => 40, 'gender' => 'female'],
-                    ['id' => 6, 'country' => 'US', 'age' => 40, 'gender' => 'male'],
-                    ['id' => 7, 'country' => 'US', 'age' => 45, 'gender' => 'female'],
-                    ['id' => 9, 'country' => 'US', 'age' => 50, 'gender' => 'male'],
-                ],
-                schema(int_schema('id'), str_schema('country'), int_schema('age'), str_schema('gender')),
-            )))
-            ->groupBy(['country', 'gender'])
-            ->aggregate(average(ref('age')))
-            ->withColumn('age_avg', ref('age_avg')->round(lit(2)))
-            ->batchSize(1)
-            ->write($loader)
-            ->fetch();
-
         static::assertEquals(
             [
                 ['country' => 'PL', 'gender' => 'male', 'age_avg' => 21.67],
@@ -186,7 +168,27 @@ final class GroupByTest extends FlowIntegrationTestCase
                 ['country' => 'US', 'gender' => 'female', 'age_avg' => 42.5],
                 ['country' => 'US', 'gender' => 'male', 'age_avg' => 45],
             ],
-            $rows->toArray(),
+            df()
+                ->read(from_rows(array_to_rows(
+                    [
+                        ['id' => 1, 'country' => 'PL', 'age' => 20, 'gender' => 'male'],
+                        ['id' => 2, 'country' => 'PL', 'age' => 20, 'gender' => 'male'],
+                        ['id' => 3, 'country' => 'PL', 'age' => 25, 'gender' => 'male'],
+                        ['id' => 4, 'country' => 'PL', 'age' => 30, 'gender' => 'female'],
+                        ['id' => 5, 'country' => 'US', 'age' => 40, 'gender' => 'female'],
+                        ['id' => 6, 'country' => 'US', 'age' => 40, 'gender' => 'male'],
+                        ['id' => 7, 'country' => 'US', 'age' => 45, 'gender' => 'female'],
+                        ['id' => 9, 'country' => 'US', 'age' => 50, 'gender' => 'male'],
+                    ],
+                    schema(int_schema('id'), str_schema('country'), int_schema('age'), str_schema('gender')),
+                )))
+                ->groupBy(['country', 'gender'])
+                ->aggregate(average(ref('age')))
+                ->withColumn('age_avg', ref('age_avg')->round(lit(2)))
+                ->batchSize(1)
+                ->write($loader)
+                ->fetch()
+                ->toArray(),
         );
     }
 
@@ -258,7 +260,7 @@ final class GroupByTest extends FlowIntegrationTestCase
                 ['country' => 'PL', 'gender' => 'male', 'age_avg' => 21.67],
                 ['country' => 'US', 'gender' => 'male', 'age_avg' => 45.0],
             ],
-            $rows->sortBy(ref('gender'), ref('country'))->toArray(),
+            SortedRows::of($rows, ref('gender'), ref('country'))->toArray(),
         );
         static::assertEquals(
             schema(str_schema('country'), str_schema('gender', true), float_schema('age_avg', true)),
@@ -268,59 +270,57 @@ final class GroupByTest extends FlowIntegrationTestCase
 
     public function test_group_by_single_column(): void
     {
-        $rows = df()
-            ->read(from_rows(array_to_rows(
-                [
-                    ['id' => 1, 'country' => 'PL', 'age' => 20],
-                    ['id' => 2, 'country' => 'PL', 'age' => 20],
-                    ['id' => 3, 'country' => 'PL', 'age' => 25],
-                    ['id' => 4, 'country' => 'PL', 'age' => 30],
-                    ['id' => 5, 'country' => 'US', 'age' => 40],
-                    ['id' => 6, 'country' => 'US', 'age' => 40],
-                    ['id' => 7, 'country' => 'US', 'age' => 45],
-                    ['id' => 9, 'country' => 'US', 'age' => 50],
-                ],
-                schema(int_schema('id'), str_schema('country'), int_schema('age')),
-            )))
-            ->groupBy(['country'])
-            ->aggregate(sum(ref('age')))
-            ->fetch();
-
         static::assertEquals(
             [
                 ['country' => 'PL', 'age_sum' => 95],
                 ['country' => 'US', 'age_sum' => 175],
             ],
-            $rows->toArray(),
+            df()
+                ->read(from_rows(array_to_rows(
+                    [
+                        ['id' => 1, 'country' => 'PL', 'age' => 20],
+                        ['id' => 2, 'country' => 'PL', 'age' => 20],
+                        ['id' => 3, 'country' => 'PL', 'age' => 25],
+                        ['id' => 4, 'country' => 'PL', 'age' => 30],
+                        ['id' => 5, 'country' => 'US', 'age' => 40],
+                        ['id' => 6, 'country' => 'US', 'age' => 40],
+                        ['id' => 7, 'country' => 'US', 'age' => 45],
+                        ['id' => 9, 'country' => 'US', 'age' => 50],
+                    ],
+                    schema(int_schema('id'), str_schema('country'), int_schema('age')),
+                )))
+                ->groupBy(['country'])
+                ->aggregate(sum(ref('age')))
+                ->fetch()
+                ->toArray(),
         );
     }
 
     public function test_group_by_single_column_with_an_alias(): void
     {
-        $rows = df()
-            ->read(from_rows(array_to_rows(
-                [
-                    ['id' => 1, 'country' => 'PL', 'age' => 20],
-                    ['id' => 2, 'country' => 'PL', 'age' => 20],
-                    ['id' => 3, 'country' => 'PL', 'age' => 25],
-                    ['id' => 4, 'country' => 'PL', 'age' => 30],
-                    ['id' => 5, 'country' => 'US', 'age' => 40],
-                    ['id' => 6, 'country' => 'US', 'age' => 40],
-                    ['id' => 7, 'country' => 'US', 'age' => 45],
-                    ['id' => 9, 'country' => 'US', 'age' => 50],
-                ],
-                schema(int_schema('id'), str_schema('country'), int_schema('age')),
-            )))
-            ->groupBy(['country'])
-            ->aggregate(sum(ref('age')->as('total_age')))
-            ->fetch();
-
         static::assertSame(
             [
                 ['country' => 'PL', 'total_age' => 95.0],
                 ['country' => 'US', 'total_age' => 175.0],
             ],
-            $rows->toArray(),
+            df()
+                ->read(from_rows(array_to_rows(
+                    [
+                        ['id' => 1, 'country' => 'PL', 'age' => 20],
+                        ['id' => 2, 'country' => 'PL', 'age' => 20],
+                        ['id' => 3, 'country' => 'PL', 'age' => 25],
+                        ['id' => 4, 'country' => 'PL', 'age' => 30],
+                        ['id' => 5, 'country' => 'US', 'age' => 40],
+                        ['id' => 6, 'country' => 'US', 'age' => 40],
+                        ['id' => 7, 'country' => 'US', 'age' => 45],
+                        ['id' => 9, 'country' => 'US', 'age' => 50],
+                    ],
+                    schema(int_schema('id'), str_schema('country'), int_schema('age')),
+                )))
+                ->groupBy(['country'])
+                ->aggregate(sum(ref('age')->as('total_age')))
+                ->fetch()
+                ->toArray(),
         );
     }
 
@@ -356,31 +356,6 @@ final class GroupByTest extends FlowIntegrationTestCase
 
     public function test_group_by_twice(): void
     {
-        $dataset = [
-            ['date' => '2023-01-01', 'user' => 'user_01'],
-            ['date' => '2023-01-01', 'user' => 'user_01'],
-            ['date' => '2023-01-01', 'user' => 'user_02'],
-            ['date' => '2023-01-01', 'user' => 'user_03'],
-            ['date' => '2023-01-01', 'user' => 'user_01'],
-            ['date' => '2023-01-02', 'user' => 'user_01'],
-            ['date' => '2023-01-02', 'user' => 'user_02'],
-            ['date' => '2023-01-02', 'user' => 'user_03'],
-            ['date' => '2023-01-02', 'user' => 'user_03'],
-            ['date' => '2023-01-03', 'user' => 'user_04'],
-            ['date' => '2023-01-03', 'user' => 'user_04'],
-            ['date' => '2023-01-03', 'user' => 'user_04'],
-        ];
-
-        $rows = df()
-            ->read(from_array($dataset))
-            ->groupBy([ref('date'), ref('user')])
-            ->aggregate(count(ref('user')))
-            ->rename('user_count', 'contributions')
-            ->drop('date')
-            ->groupBy([ref('user')])
-            ->aggregate(sum(ref('contributions')))
-            ->fetch();
-
         static::assertSame(
             [
                 ['user' => 'user_01', 'contributions_sum' => 4.0],
@@ -388,7 +363,29 @@ final class GroupByTest extends FlowIntegrationTestCase
                 ['user' => 'user_03', 'contributions_sum' => 3.0],
                 ['user' => 'user_04', 'contributions_sum' => 3.0],
             ],
-            $rows->toArray(),
+            df()
+                ->read(from_array([
+                    ['date' => '2023-01-01', 'user' => 'user_01'],
+                    ['date' => '2023-01-01', 'user' => 'user_01'],
+                    ['date' => '2023-01-01', 'user' => 'user_02'],
+                    ['date' => '2023-01-01', 'user' => 'user_03'],
+                    ['date' => '2023-01-01', 'user' => 'user_01'],
+                    ['date' => '2023-01-02', 'user' => 'user_01'],
+                    ['date' => '2023-01-02', 'user' => 'user_02'],
+                    ['date' => '2023-01-02', 'user' => 'user_03'],
+                    ['date' => '2023-01-02', 'user' => 'user_03'],
+                    ['date' => '2023-01-03', 'user' => 'user_04'],
+                    ['date' => '2023-01-03', 'user' => 'user_04'],
+                    ['date' => '2023-01-03', 'user' => 'user_04'],
+                ]))
+                ->groupBy([ref('date'), ref('user')])
+                ->aggregate(count(ref('user')))
+                ->rename('user_count', 'contributions')
+                ->drop('date')
+                ->groupBy([ref('user')])
+                ->aggregate(sum(ref('contributions')))
+                ->fetch()
+                ->toArray(),
         );
     }
 
@@ -445,29 +442,6 @@ final class GroupByTest extends FlowIntegrationTestCase
 
     public function test_pivot(): void
     {
-        $dataset1 = [
-            ['date' => '2023-11-01', 'user' => 'norberttech', 'contributions' => 5],
-            ['date' => '2023-11-01', 'user' => 'stloyd', 'contributions' => 4],
-            ['date' => '2023-11-02', 'user' => 'norberttech', 'contributions' => 3],
-            ['date' => '2023-11-02', 'user' => 'stloyd', 'contributions' => 6],
-        ];
-
-        $dataset2 = [
-            ['date' => '2023-11-03', 'user' => 'norberttech', 'contributions' => 2],
-            ['date' => '2023-11-03', 'user' => 'stloyd', 'contributions' => 7],
-            ['date' => '2023-11-04', 'user' => 'norberttech', 'contributions' => 3],
-            ['date' => '2023-11-04', 'user' => 'stloyd', 'contributions' => 5],
-            ['date' => '2023-11-05', 'user' => 'norberttech', 'contributions' => 7],
-            ['date' => '2023-11-05', 'user' => 'stloyd', 'contributions' => 11],
-        ];
-
-        $rows = df()
-            ->read(from_all(from_array($dataset1), from_array($dataset2)))
-            ->groupBy([ref('date')])
-            ->pivot(ref('user'), pivot_values('norberttech', 'stloyd'))
-            ->aggregate(sum(ref('contributions')))
-            ->fetch();
-
         static::assertSame(
             [
                 [
@@ -496,35 +470,33 @@ final class GroupByTest extends FlowIntegrationTestCase
                     'stloyd' => 11.0,
                 ],
             ],
-            $rows->toArray(),
+            df()
+                ->read(from_all(
+                    from_array([
+                        ['date' => '2023-11-01', 'user' => 'norberttech', 'contributions' => 5],
+                        ['date' => '2023-11-01', 'user' => 'stloyd', 'contributions' => 4],
+                        ['date' => '2023-11-02', 'user' => 'norberttech', 'contributions' => 3],
+                        ['date' => '2023-11-02', 'user' => 'stloyd', 'contributions' => 6],
+                    ]),
+                    from_array([
+                        ['date' => '2023-11-03', 'user' => 'norberttech', 'contributions' => 2],
+                        ['date' => '2023-11-03', 'user' => 'stloyd', 'contributions' => 7],
+                        ['date' => '2023-11-04', 'user' => 'norberttech', 'contributions' => 3],
+                        ['date' => '2023-11-04', 'user' => 'stloyd', 'contributions' => 5],
+                        ['date' => '2023-11-05', 'user' => 'norberttech', 'contributions' => 7],
+                        ['date' => '2023-11-05', 'user' => 'stloyd', 'contributions' => 11],
+                    ]),
+                ))
+                ->groupBy([ref('date')])
+                ->pivot(ref('user'), pivot_values('norberttech', 'stloyd'))
+                ->aggregate(sum(ref('contributions')))
+                ->fetch()
+                ->toArray(),
         );
     }
 
     public function test_pivot_with_multiple_group_by_column(): void
     {
-        $dataset1 = [
-            ['date' => '2023-11-01', 'type' => 'admin', 'user' => 'norberttech', 'contributions' => 5],
-            ['date' => '2023-11-01', 'type' => 'contributor', 'user' => 'stloyd', 'contributions' => 4],
-            ['date' => '2023-11-02', 'type' => 'admin', 'user' => 'norberttech', 'contributions' => 3],
-            ['date' => '2023-11-02', 'type' => 'contributor', 'user' => 'stloyd', 'contributions' => 6],
-        ];
-
-        $dataset2 = [
-            ['date' => '2023-11-03', 'type' => 'admin', 'user' => 'norberttech', 'contributions' => 2],
-            ['date' => '2023-11-03', 'type' => 'contributor', 'user' => 'stloyd', 'contributions' => 7],
-            ['date' => '2023-11-04', 'type' => 'admin', 'user' => 'norberttech', 'contributions' => 3],
-            ['date' => '2023-11-04', 'type' => 'contributor', 'user' => 'stloyd', 'contributions' => 5],
-            ['date' => '2023-11-05', 'type' => 'admin', 'user' => 'norberttech', 'contributions' => 7],
-            ['date' => '2023-11-05', 'type' => 'contributor', 'user' => 'stloyd', 'contributions' => 11],
-        ];
-
-        $rows = df()
-            ->read(from_all(from_array($dataset1), from_array($dataset2)))
-            ->groupBy([ref('date'), ref('type')])
-            ->pivot(ref('user'), pivot_values('norberttech', 'stloyd'))
-            ->aggregate(sum(ref('contributions')))
-            ->fetch();
-
         static::assertSame(
             [
                 [
@@ -588,7 +560,28 @@ final class GroupByTest extends FlowIntegrationTestCase
                     'stloyd' => 11.0,
                 ],
             ],
-            $rows->toArray(),
+            df()
+                ->read(from_all(
+                    from_array([
+                        ['date' => '2023-11-01', 'type' => 'admin', 'user' => 'norberttech', 'contributions' => 5],
+                        ['date' => '2023-11-01', 'type' => 'contributor', 'user' => 'stloyd', 'contributions' => 4],
+                        ['date' => '2023-11-02', 'type' => 'admin', 'user' => 'norberttech', 'contributions' => 3],
+                        ['date' => '2023-11-02', 'type' => 'contributor', 'user' => 'stloyd', 'contributions' => 6],
+                    ]),
+                    from_array([
+                        ['date' => '2023-11-03', 'type' => 'admin', 'user' => 'norberttech', 'contributions' => 2],
+                        ['date' => '2023-11-03', 'type' => 'contributor', 'user' => 'stloyd', 'contributions' => 7],
+                        ['date' => '2023-11-04', 'type' => 'admin', 'user' => 'norberttech', 'contributions' => 3],
+                        ['date' => '2023-11-04', 'type' => 'contributor', 'user' => 'stloyd', 'contributions' => 5],
+                        ['date' => '2023-11-05', 'type' => 'admin', 'user' => 'norberttech', 'contributions' => 7],
+                        ['date' => '2023-11-05', 'type' => 'contributor', 'user' => 'stloyd', 'contributions' => 11],
+                    ]),
+                ))
+                ->groupBy([ref('date'), ref('type')])
+                ->pivot(ref('user'), pivot_values('norberttech', 'stloyd'))
+                ->aggregate(sum(ref('contributions')))
+                ->fetch()
+                ->toArray(),
         );
     }
 
@@ -614,6 +607,32 @@ final class GroupByTest extends FlowIntegrationTestCase
                 ->fetch()
                 ->toArray(),
         );
+    }
+
+    public function test_a_pivot_after_aggregate_does_not_change_the_aggregated_frame(): void
+    {
+        $grouped = df()
+            ->read(from_array([['a' => 1, 'b' => 'x', 'v' => 1], ['a' => 1, 'b' => 'y', 'v' => 2]]))
+            ->groupBy('a');
+        $aggregated = $grouped->aggregate(sum(ref('v')), count(ref('v')));
+        $grouped->pivot(ref('b'), pivot_values('x', 'y'));
+
+        static::assertSame([['a' => 1, 'v_sum' => 3.0, 'v_count' => 2]], $aggregated->fetch()->toArray());
+    }
+
+    public function test_pivot_discovery_runs_the_frame_writes_once(): void
+    {
+        $output = [];
+
+        df()
+            ->read(from_array([['a' => 1, 'b' => 'x', 'v' => 1], ['a' => 1, 'b' => 'y', 'v' => 2]]))
+            ->write(to_array($output))
+            ->groupBy('a')
+            ->pivot(ref('b'), discover_pivot_values())
+            ->aggregate(sum(ref('v')))
+            ->run();
+
+        static::assertSame([['a' => 1, 'b' => 'x', 'v' => 1], ['a' => 1, 'b' => 'y', 'v' => 2]], $output);
     }
 
     public function test_a_global_aggregate_over_an_empty_source_emits_one_row_of_typed_defaults(): void
@@ -684,27 +703,25 @@ final class GroupByTest extends FlowIntegrationTestCase
 
     public function test_standalone_avg_aggregation(): void
     {
-        $rows = df()
-            ->read(from_rows(array_to_rows(
-                [
-                    ['id' => 1, 'country' => 'PL', 'age' => 20],
-                    ['id' => 2, 'country' => 'PL', 'age' => 20],
-                    ['id' => 3, 'country' => 'PL', 'age' => 25],
-                    ['id' => 4, 'country' => 'PL', 'age' => 30],
-                    ['id' => 5, 'country' => 'US', 'age' => 40],
-                    ['id' => 6, 'country' => 'US', 'age' => 40],
-                    ['id' => 7, 'country' => 'US', 'age' => 45],
-                    ['id' => 9, 'country' => 'US', 'age' => 50],
-                ],
-                schema(int_schema('id'), str_schema('country'), int_schema('age')),
-            )))
-            ->aggregate([average(ref('age'))])
-            ->rename('age_avg', 'average_age')
-            ->fetch();
-
         static::assertEquals(
             array_to_rows([['average_age' => 33.75]], schema(float_schema('average_age', nullable: true))),
-            $rows,
+            df()
+                ->read(from_rows(array_to_rows(
+                    [
+                        ['id' => 1, 'country' => 'PL', 'age' => 20],
+                        ['id' => 2, 'country' => 'PL', 'age' => 20],
+                        ['id' => 3, 'country' => 'PL', 'age' => 25],
+                        ['id' => 4, 'country' => 'PL', 'age' => 30],
+                        ['id' => 5, 'country' => 'US', 'age' => 40],
+                        ['id' => 6, 'country' => 'US', 'age' => 40],
+                        ['id' => 7, 'country' => 'US', 'age' => 45],
+                        ['id' => 9, 'country' => 'US', 'age' => 50],
+                    ],
+                    schema(int_schema('id'), str_schema('country'), int_schema('age')),
+                )))
+                ->aggregate([average(ref('age'))])
+                ->rename('age_avg', 'average_age')
+                ->fetch(),
         );
     }
 
@@ -768,24 +785,6 @@ final class GroupByTest extends FlowIntegrationTestCase
 
     public function test_window_avg_function(): void
     {
-        $memoryPage1 = new ArrayMemory([
-            ['employee_name' => 'James', 'department' => 'Sales', 'salary' => 3000],
-            ['employee_name' => 'Michael', 'department' => 'Sales', 'salary' => 4600],
-            ['employee_name' => 'Jeff', 'department' => 'Marketing', 'salary' => 3000],
-            ['employee_name' => 'Saif', 'department' => 'Sales', 'salary' => 4100],
-            ['employee_name' => 'John', 'department' => 'Marketing', 'salary' => 3200],
-        ]);
-        $memoryPage2 = new ArrayMemory([
-            ['employee_name' => 'Emma', 'department' => 'Sales', 'salary' => 4800],
-            ['employee_name' => 'Oliver', 'department' => 'Sales', 'salary' => 2900],
-            ['employee_name' => 'Mia', 'department' => 'Finance', 'salary' => 3300],
-            ['employee_name' => 'Noah', 'department' => 'Marketing', 'salary' => 3400],
-            ['employee_name' => 'Ava', 'department' => 'Finance', 'salary' => 3800],
-            ['employee_name' => 'Isabella', 'department' => 'Marketing', 'salary' => 2100],
-            ['employee_name' => 'Ethan', 'department' => 'Sales', 'salary' => 4100],
-            ['employee_name' => 'Charlotte', 'department' => 'Marketing', 'salary' => 3000],
-        ]);
-
         static::assertSame(
             [
                 ['department' => 'Sales', 'avg_salary' => 3917.0],
@@ -793,7 +792,25 @@ final class GroupByTest extends FlowIntegrationTestCase
                 ['department' => 'Finance', 'avg_salary' => 3550.0],
             ],
             df()
-                ->from(from_all(from_memory($memoryPage1), from_memory($memoryPage2)))
+                ->read(from_all(
+                    from_memory(new ArrayMemory([
+                        ['employee_name' => 'James', 'department' => 'Sales', 'salary' => 3000],
+                        ['employee_name' => 'Michael', 'department' => 'Sales', 'salary' => 4600],
+                        ['employee_name' => 'Jeff', 'department' => 'Marketing', 'salary' => 3000],
+                        ['employee_name' => 'Saif', 'department' => 'Sales', 'salary' => 4100],
+                        ['employee_name' => 'John', 'department' => 'Marketing', 'salary' => 3200],
+                    ])),
+                    from_memory(new ArrayMemory([
+                        ['employee_name' => 'Emma', 'department' => 'Sales', 'salary' => 4800],
+                        ['employee_name' => 'Oliver', 'department' => 'Sales', 'salary' => 2900],
+                        ['employee_name' => 'Mia', 'department' => 'Finance', 'salary' => 3300],
+                        ['employee_name' => 'Noah', 'department' => 'Marketing', 'salary' => 3400],
+                        ['employee_name' => 'Ava', 'department' => 'Finance', 'salary' => 3800],
+                        ['employee_name' => 'Isabella', 'department' => 'Marketing', 'salary' => 2100],
+                        ['employee_name' => 'Ethan', 'department' => 'Sales', 'salary' => 4100],
+                        ['employee_name' => 'Charlotte', 'department' => 'Marketing', 'salary' => 3000],
+                    ])),
+                ))
                 ->withColumn('avg_salary', average(ref('salary'))->over(window()->partitionBy(ref('department'))))
                 ->select('department', 'avg_salary')
                 ->dropDuplicates(ref('department'), ref('avg_salary'))
@@ -805,33 +822,6 @@ final class GroupByTest extends FlowIntegrationTestCase
 
     public function test_window_rank_function(): void
     {
-        $memoryPage1 = new ArrayMemory([
-            ['employee_name' => 'James', 'department' => 'Sales', 'salary' => 3000],
-            ['employee_name' => 'James', 'department' => 'Sales', 'salary' => 3000],
-            ['employee_name' => 'James', 'department' => 'Sales', 'salary' => 3000],
-            ['employee_name' => 'Michael', 'department' => 'Sales', 'salary' => 4600],
-            ['employee_name' => 'Robert', 'department' => 'Sales', 'salary' => 4100],
-            ['employee_name' => 'Maria', 'department' => 'Finance', 'salary' => 3000],
-            ['employee_name' => 'Scott', 'department' => 'Finance', 'salary' => 3300],
-            ['employee_name' => 'Jen', 'department' => 'Finance', 'salary' => 3900],
-            ['employee_name' => 'Jeff', 'department' => 'Marketing', 'salary' => 3000],
-            ['employee_name' => 'Kumar', 'department' => 'Marketing', 'salary' => 2000],
-            ['employee_name' => 'Saif', 'department' => 'Sales', 'salary' => 4100],
-            ['employee_name' => 'John', 'department' => 'Marketing', 'salary' => 3200],
-        ]);
-        $memoryPage2 = new ArrayMemory([
-            ['employee_name' => 'Emma', 'department' => 'Sales', 'salary' => 4800],
-            ['employee_name' => 'Sophia', 'department' => 'Finance', 'salary' => 4200],
-            ['employee_name' => 'Oliver', 'department' => 'Sales', 'salary' => 2900],
-            ['employee_name' => 'Mia', 'department' => 'Finance', 'salary' => 3300],
-            ['employee_name' => 'Noah', 'department' => 'Marketing', 'salary' => 3400],
-            ['employee_name' => 'Ava', 'department' => 'Finance', 'salary' => 3800],
-            ['employee_name' => 'Liam', 'department' => 'Sales', 'salary' => 3100],
-            ['employee_name' => 'Isabella', 'department' => 'Marketing', 'salary' => 2100],
-            ['employee_name' => 'Ethan', 'department' => 'Sales', 'salary' => 4100],
-            ['employee_name' => 'Charlotte', 'department' => 'Marketing', 'salary' => 3000],
-        ]);
-
         static::assertSame(
             [
                 ['employee_name' => 'Emma', 'department' => 'Sales', 'salary' => 4800, 'rank' => 1],
@@ -839,7 +829,34 @@ final class GroupByTest extends FlowIntegrationTestCase
                 ['employee_name' => 'Noah', 'department' => 'Marketing', 'salary' => 3400, 'rank' => 1],
             ],
             df()
-                ->from(from_all(from_memory($memoryPage1), from_memory($memoryPage2)))
+                ->read(from_all(
+                    from_memory(new ArrayMemory([
+                        ['employee_name' => 'James', 'department' => 'Sales', 'salary' => 3000],
+                        ['employee_name' => 'James', 'department' => 'Sales', 'salary' => 3000],
+                        ['employee_name' => 'James', 'department' => 'Sales', 'salary' => 3000],
+                        ['employee_name' => 'Michael', 'department' => 'Sales', 'salary' => 4600],
+                        ['employee_name' => 'Robert', 'department' => 'Sales', 'salary' => 4100],
+                        ['employee_name' => 'Maria', 'department' => 'Finance', 'salary' => 3000],
+                        ['employee_name' => 'Scott', 'department' => 'Finance', 'salary' => 3300],
+                        ['employee_name' => 'Jen', 'department' => 'Finance', 'salary' => 3900],
+                        ['employee_name' => 'Jeff', 'department' => 'Marketing', 'salary' => 3000],
+                        ['employee_name' => 'Kumar', 'department' => 'Marketing', 'salary' => 2000],
+                        ['employee_name' => 'Saif', 'department' => 'Sales', 'salary' => 4100],
+                        ['employee_name' => 'John', 'department' => 'Marketing', 'salary' => 3200],
+                    ])),
+                    from_memory(new ArrayMemory([
+                        ['employee_name' => 'Emma', 'department' => 'Sales', 'salary' => 4800],
+                        ['employee_name' => 'Sophia', 'department' => 'Finance', 'salary' => 4200],
+                        ['employee_name' => 'Oliver', 'department' => 'Sales', 'salary' => 2900],
+                        ['employee_name' => 'Mia', 'department' => 'Finance', 'salary' => 3300],
+                        ['employee_name' => 'Noah', 'department' => 'Marketing', 'salary' => 3400],
+                        ['employee_name' => 'Ava', 'department' => 'Finance', 'salary' => 3800],
+                        ['employee_name' => 'Liam', 'department' => 'Sales', 'salary' => 3100],
+                        ['employee_name' => 'Isabella', 'department' => 'Marketing', 'salary' => 2100],
+                        ['employee_name' => 'Ethan', 'department' => 'Sales', 'salary' => 4100],
+                        ['employee_name' => 'Charlotte', 'department' => 'Marketing', 'salary' => 3000],
+                    ])),
+                ))
                 ->dropDuplicates(ref('employee_name'), ref('department'))
                 ->withColumn(
                     'rank',

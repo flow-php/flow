@@ -118,7 +118,13 @@ data_frame()
 ```
 
 A placeholder matches any file in that location and the partition value is taken from the file name
-as-is. Appended files get randomized suffixes (`sales_a1b2c3.csv`), which become part of the value.
+as-is. Appended files carry the run in their name (`sales-a1b2c3d4e5f6a7b8.csv`), which becomes part of the value.
+
+## The {part} placeholder
+
+`{part}` in a destination is not a partition placeholder: it is filled with the part number (`part-00003.parquet`).
+It is reserved - a partition column named `part` together with a `{part}` destination throws when the plan is
+built; rename the column.
 
 ## Choosing Partition Columns
 
@@ -208,7 +214,7 @@ data_frame()
     ->run();
 ```
 
-Adds files with randomized suffixes; repeated runs accumulate files.
+Adds files named after the run (`sales-<run>.csv`); repeated runs accumulate files.
 
 ### Ignore
 
@@ -268,10 +274,11 @@ it from the file schema (Parquet, Floe), so `filter(ref('date')->between(lit($fr
 
 ### Partition Pruning
 
-The optimizer moves a `filter()` into the file source, which returns only matching rows. A filter that reads only
-partition columns skips whole directories; a filter on a body column reads every file and drops the rows it does not
-match (Parquet skips row groups, see [filter pushdown](/documentation/components/adapters/parquet.md#filter-pushdown)).
-A `limit()` after the filter reaches the source with it ([filter pushdown](/documentation/components/adapters/parquet.md#filter-pushdown)). A partition column renamed
+The optimizer moves a `filter()` that reads only partition columns into the file source, which skips whole
+directories. Every format does this. A partition filter after another filter also skips directories. Parquet also
+takes a filter on a body column and skips row groups with it ([filter pushdown](/documentation/components/adapters/parquet.md#filter-pushdown)).
+For other formats, a filter on a body column stays a `Filter` step.
+If a filter moved into the source, a `limit()` after it reaches the source too ([filter pushdown](/documentation/components/adapters/parquet.md#filter-pushdown)). A partition column renamed
 with `rename()` or copied with `withColumn('day', ref('date'))` is still pruned; any other redefinition of it
 stops the push. A filter whose answer can change between two evaluations - `call()`, `now()`, `uuid()`,
 `to_date_time()` with a format that leaves fields out (`'Y-m-d'`) - still filters rows but prunes nothing.

@@ -48,10 +48,14 @@ final class StreamIndexes implements Indexes
      */
     private array $offsetIndexes = [];
 
+    private readonly BloomFilterReader $bloomFilterReader;
+
     public function __construct(
         private readonly Footer $footer,
         private readonly SourceStream $stream,
-    ) {}
+    ) {
+        $this->bloomFilterReader = new BloomFilterReader($stream);
+    }
 
     public function bloomFilter(int $rowGroup, FlatColumn $column): ?Sbbf
     {
@@ -59,9 +63,10 @@ final class StreamIndexes implements Indexes
 
         if (!array_key_exists($rowGroup, $this->bloomFilters[$path] ?? [])) {
             try {
-                $this->bloomFilters[$path][$rowGroup] = (new BloomFilterReader($this->stream))->read($this->chunks(
+                $this->bloomFilters[$path][$rowGroup] = $this->bloomFilterReader->read($this->chunks($column)->chunk(
+                    $rowGroup,
                     $column,
-                )->chunk($rowGroup, $column));
+                ));
             } catch (InvalidArgumentException|RuntimeException|TException) {
                 $this->bloomFilters[$path][$rowGroup] = null;
             }

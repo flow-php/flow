@@ -1,20 +1,27 @@
 //! flow-batch-frame refusals rendered as the exceptions `PhpBackend::decode()` throws for the same buffers: the
-//! `Flow\ETL\Exception\InvalidArgumentException` (or `OffsetOverflow`) with its exact message, a nested type named by
+//! `Flow\ETL\Foundation\Exception\InvalidArgumentException` (or `OffsetOverflow`) with its exact message, a nested type named by
 //! its PHP `toString()`.
 
+use ext_php_rs::convert::IntoZval;
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::types::Zval;
 use flow_batch_frame::error::{Of, Role, Values};
+use flow_batch_frame::frame::Failure;
 use flow_batch_frame::kind::Kind;
 use flow_batch_frame::layout::node_count;
 use flow_batch_frame::Error;
 
-use crate::ctx::{call_method, expect_object, find_class, read_property};
+use crate::backend::Definitions;
+use crate::ctx::{
+    call_method, construct, expect_object, find_class, read_property, transparent_exception, zval_long, zval_str,
+};
 use crate::exception::ext_exception;
 
-const INVALID_ARGUMENT: &str = "Flow\\ETL\\Exception\\InvalidArgumentException";
-const OFFSET_OVERFLOW: &str = "Flow\\ETL\\Exception\\OffsetOverflow";
-pub const RUNTIME: &str = "Flow\\ETL\\Exception\\RuntimeException";
+const INVALID_ARGUMENT: &str = "Flow\\ETL\\Foundation\\Exception\\InvalidArgumentException";
+const OFFSET_OVERFLOW: &str = "Flow\\ETL\\Foundation\\Exception\\OffsetOverflow";
+const FLOE_EXCEPTION: &str = "Flow\\ETL\\Values\\Column\\Frame\\FloeException";
+const FRAME_TOO_LARGE: &str = "Flow\\ETL\\Values\\Column\\Frame\\FrameTooLarge";
+pub const RUNTIME: &str = "Flow\\ETL\\Foundation\\Exception\\RuntimeException";
 
 pub fn exception(class: &str, message: String) -> PhpException {
     match find_class(class) {
@@ -32,10 +39,11 @@ pub fn runtime(message: String) -> PhpException {
 }
 
 pub fn offset_overflow(last: u64) -> PhpException {
-    exception(
-        OFFSET_OVERFLOW,
-        format!("Offsets exceed the i32 range of a batch buffer: the last offset is {last}"),
-    )
+    exception(OFFSET_OVERFLOW, offset_overflow_message(last))
+}
+
+fn offset_overflow_message(last: u64) -> String {
+    format!("Offsets exceed the i32 range of a batch buffer: the last offset is {last}")
 }
 
 fn of(of: Of) -> &'static str {
@@ -58,8 +66,16 @@ fn values(values: Values) -> &'static str {
 
 /// A `column::decode` refusal of the column typed `type_zv`, whose kind is `kind`.
 pub fn decode_exception(error: Error, type_zv: &Zval, kind: &Kind) -> PhpException {
+    match decode_refusal(error, type_zv, kind) {
+        Ok((class, message)) => exception(class, message),
+        Err(e) => e,
+    }
+}
+
+/// The exception class and message `PhpBackend::decode()` throws for `error`.
+fn decode_refusal(error: Error, type_zv: &Zval, kind: &Kind) -> Result<(&'static str, String), PhpException> {
     let message = match error {
-        Error::OffsetOverflow { last } => return offset_overflow(last),
+        Error::OffsetOverflow { last } => return Ok((OFFSET_OVERFLOW, offset_overflow_message(last))),
         Error::BuffersExhausted => "Column buffers exhausted: the column needs more buffers than given".to_string(),
         Error::OffsetsLength {
             of: layout,
@@ -87,10 +103,7 @@ pub fn decode_exception(error: Error, type_zv: &Zval, kind: &Kind) -> PhpExcepti
             format!("Column null count {declared} disagrees with its validity bitmap ({derived} nulls in {rows} rows)")
         }
         Error::NestedNulls { node, role, nulls } => {
-            let name = match type_name_at(type_zv, kind, node) {
-                Ok(name) => name,
-                Err(e) => return e,
-            };
+            let name = type_name_at(type_zv, kind, node)?;
 
             format!(
                 "{} holds {nulls} nulls in a non-nullable {name}",
@@ -106,10 +119,7 @@ pub fn decode_exception(error: Error, type_zv: &Zval, kind: &Kind) -> PhpExcepti
             buffers,
             expected,
         } => {
-            let name = match type_name_at(type_zv, kind, node) {
-                Ok(name) => name,
-                Err(e) => return e,
-            };
+            let name = type_name_at(type_zv, kind, node)?;
 
             format!("Column of type {name} holds {buffers} buffers, its layout needs {expected}")
         }
@@ -141,7 +151,105 @@ pub fn decode_exception(error: Error, type_zv: &Zval, kind: &Kind) -> PhpExcepti
         error => format!("flow_php refused the column buffers: {error}"),
     };
 
-    invalid_argument(message)
+    Ok((INVALID_ARGUMENT, message))
+}
+
+/// A `frame::decode` refusal as the `FloeException` `PhpBackend::decodeFrame()` throws for the same body; a malformed
+/// column carries its own refusal as `previous`, a codec's exception surfaces as itself.
+pub fn frame_exception(failure: Failure<PhpException>, definitions: &Definitions) -> PhpException {
+    let error = match failure {
+        Failure::Codec(e) => return e,
+        Failure::Frame(error) => error,
+    };
+    let name = |column: usize| String::from_utf8_lossy(&definitions.columns[column].key).into_owned();
+    let message = match error {
+        Error::DirectoryTruncated => "Floe BATCH frame is truncated, its directory is incomplete".to_string(),
+        Error::FrameNodeCount { frame, schema } => {
+            format!("Floe BATCH frame holds {frame} nodes, the schema describes {schema}")
+        }
+        Error::FrameBufferCount { frame, schema } => {
+            format!("Floe BATCH frame holds {frame} buffers, the schema describes {schema}")
+        }
+        Error::ColumnRows {
+            column,
+            rows,
+            frame_rows,
+        } => format!(
+            "Floe BATCH frame column \"{}\" holds {rows} rows, the frame {frame_rows}",
+            name(column)
+        ),
+        Error::ColumnNulls { column, nulls, rows } => {
+            format!(
+                "Floe BATCH frame column \"{}\" has {nulls} nulls in {rows} rows",
+                name(column)
+            )
+        }
+        Error::BufferOutsideArea { buffer, area } => {
+            format!("Floe BATCH frame buffer {buffer} lies outside the {area}-byte buffer area")
+        }
+        Error::BufferShorterThanPrefix { buffer } => {
+            format!("Floe BATCH frame buffer {buffer} is shorter than its 8-byte length prefix")
+        }
+        Error::DecodedLength {
+            buffer,
+            decoded,
+            prefix,
+        } => format!("Floe BATCH frame buffer {buffer} decodes to {decoded} bytes, its prefix declares {prefix}"),
+        Error::NodesDisagree { column } => format!(
+            "Floe BATCH frame column \"{}\" declares nodes that disagree with its buffers",
+            name(column)
+        ),
+        Error::MalformedColumn { column, error } => {
+            let plan = &definitions.columns[column].plan;
+            let (class, message) = match decode_refusal(*error, &plan.type_zv, &plan.kind) {
+                Ok(refusal) => refusal,
+                Err(e) => return e,
+            };
+            let previous = match find_class(class)
+                .and_then(|ce| construct(ce, &mut [zval_str(message.as_bytes()), zval_long(0)]))
+                .and_then(|object| {
+                    object
+                        .into_zval(false)
+                        .map_err(|e| ext_exception(format!("flow_php failed to build the previous exception: {e:?}")))
+                }) {
+                Ok(previous) => previous,
+                Err(e) => return e,
+            };
+
+            return floe_exception(
+                format!("Floe BATCH frame column \"{}\" is malformed: {message}", name(column)),
+                previous,
+            );
+        }
+        error => return ext_exception(format!("flow_php refused the frame: {error}")),
+    };
+
+    exception(FLOE_EXCEPTION, message)
+}
+
+/// A `frame::encode` refusal as the exception `PhpBackend::encodeFrame()` throws for the same rows: a column's
+/// `OffsetOverflow`, the body's `FrameTooLarge`; a codec's exception surfaces as itself.
+pub fn encode_exception(failure: Failure<PhpException>) -> PhpException {
+    match failure {
+        Failure::Codec(e) => e,
+        Failure::Frame(Error::OffsetOverflow { last }) => offset_overflow(last),
+        Failure::Frame(Error::FrameTooLarge { bytes }) => exception(
+            FRAME_TOO_LARGE,
+            format!("Floe BATCH frame body of {bytes} bytes exceeds the 4 GiB frame length"),
+        ),
+        Failure::Frame(error) => ext_exception(format!("flow_php failed to encode a frame: {error}")),
+    }
+}
+
+/// `new FloeException($message, 0, $previous)`, thrown as itself so `getPrevious()` is what PHP's walk attaches.
+pub fn floe_exception(message: String, previous: Zval) -> PhpException {
+    let built = find_class(FLOE_EXCEPTION)
+        .and_then(|ce| construct(ce, &mut [zval_str(message.as_bytes()), zval_long(0), previous]));
+
+    match built {
+        Ok(mut exception) => transparent_exception(&mut exception),
+        Err(e) => e,
+    }
 }
 
 /// `toString()` of the type at pre-order `node` of `type_zv`'s tree (the map entries node counts but has no type).

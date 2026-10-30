@@ -9,7 +9,7 @@ use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
-use Flow\Filesystem\Tests\OperatingSystem;
+use Flow\Filesystem\Tests\Context\OperatingSystem;
 
 use function count;
 use function Flow\Filesystem\DSL\memory_filesystem;
@@ -21,8 +21,6 @@ use function scandir;
 
 final class FileListingTest extends NativeLocalFilesystemTestCase
 {
-    use OperatingSystem;
-
     public function test_filter_is_applied(): void
     {
         $this->givenFileExists(__DIR__ . '/var/filter/orders.csv', "id\n1\n");
@@ -72,7 +70,7 @@ final class FileListingTest extends NativeLocalFilesystemTestCase
 
     public function test_listing_opens_no_file_descriptors(): void
     {
-        if (!$this->isUnix()) {
+        if (!OperatingSystem::isUnix()) {
             static::markTestSkipped('Open descriptors are counted through /dev/fd, which is Unix only.');
         }
 

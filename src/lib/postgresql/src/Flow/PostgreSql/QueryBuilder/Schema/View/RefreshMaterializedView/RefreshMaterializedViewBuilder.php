@@ -6,14 +6,12 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\View\RefreshMaterializedView;
 
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\Protobuf\AST\RefreshMatViewStmt;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class RefreshMaterializedViewBuilder implements RefreshMatViewFinalStep, RefreshMatViewOptionsStep
 {
-    use AstToSql;
-
     private function __construct(
         private ?string $name = null,
         private ?string $schema = null,
@@ -35,6 +33,11 @@ final readonly class RefreshMaterializedViewBuilder implements RefreshMatViewFin
     public function concurrently(): RefreshMatViewFinalStep
     {
         return new self($this->name, $this->schema, true, $this->skipData);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): RefreshMatViewStmt

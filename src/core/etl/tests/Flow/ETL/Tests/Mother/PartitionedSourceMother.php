@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Mother;
 
-use Flow\ETL\Schema;
 use Flow\ETL\Tests\Double\RecordingFileExtractor;
+use Flow\ETL\Values\Schema;
 use Flow\Filesystem\FileStatus;
 
 use function Flow\ETL\DSL\array_to_rows;

@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\Double\OneRowBatchesExtractor;
 use Flow\ETL\Tests\Double\StopIgnoringExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\RowsMother;
+use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Values\Rows;
 use PHPUnit\Framework\ExpectationFailedException;
 
 use function Flow\ETL\DSL\int_schema;
@@ -50,7 +51,7 @@ final class FlowTestCaseBatchContractTest extends FlowTestCase
         $expected = RowsMother::sequentialIds(0);
 
         foreach ($batches as $batch) {
-            $expected = $expected->concat(new PhpBackend(), $batch);
+            $expected = Rows::concat($expected->schema(), new PhpBackend(), $expected, $batch);
         }
 
         self::assertExtractorHonoursBatchContract(

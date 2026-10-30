@@ -8,7 +8,7 @@ use Flow\PostgreSql\Protobuf\AST\LimitOption;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ResTarget;
 use Flow\PostgreSql\Protobuf\AST\SelectStmt;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\Clause\LockingClause;
 use Flow\PostgreSql\QueryBuilder\Clause\OrderBy;
 use Flow\PostgreSql\QueryBuilder\Clause\WindowDefinition;
@@ -42,8 +42,6 @@ use function is_string;
 
 final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, SelectSelectStep
 {
-    use AstToSql;
-
     /**
      * @param array<Expression> $selectList
      * @param array<Expression> $distinctOn
@@ -775,6 +773,11 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
             offset: $this->offset,
             locks: $this->locks,
         );
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): SelectStmt

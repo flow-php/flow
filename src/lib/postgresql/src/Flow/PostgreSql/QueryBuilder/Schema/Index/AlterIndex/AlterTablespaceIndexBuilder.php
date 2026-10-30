@@ -10,12 +10,10 @@ use Flow\PostgreSql\Protobuf\AST\AlterTableType;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 final readonly class AlterTablespaceIndexBuilder implements AlterTablespaceIndexFinalStep
 {
-    use AstToSql;
-
     private function __construct(
         private string $index,
         private ?string $schema,
@@ -30,6 +28,11 @@ final readonly class AlterTablespaceIndexBuilder implements AlterTablespaceIndex
         bool $ifExists,
     ): AlterTablespaceIndexFinalStep {
         return new self($index, $schema, $tablespace, $ifExists);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): AlterTableStmt

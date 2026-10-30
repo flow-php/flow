@@ -1,0 +1,303 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Tests\Integration\IO\Floe;
+
+use DateTimeZone;
+use Flow\ETL\Tests\Context\LoaderEndingContext;
+use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\Filesystem\Exception\RuntimeException as FilesystemRuntimeException;
+use Flow\Filesystem\Tests\Double\FailingCloseFilesystem;
+use Flow\Types\Value\Json;
+
+use function array_keys;
+use function Flow\ETL\DSL\append;
+use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\config_builder;
+use function Flow\ETL\DSL\data_frame;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\from_sequence_number;
+use function Flow\ETL\DSL\list_schema;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\overwrite;
+use function Flow\ETL\DSL\partition_by;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\select;
+use function Flow\ETL\DSL\time_zone_schema;
+use function Flow\ETL\DSL\to_transformation;
+use function Flow\Filesystem\DSL\memory_filesystem;
+use function Flow\Filesystem\DSL\path;
+use function Flow\Floe\DSL\from_floe;
+use function Flow\Floe\DSL\to_floe;
+use function Flow\Types\DSL\type_instance_of;
+use function Flow\Types\DSL\type_json;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_time_zone;
+use function iterator_to_array;
+
+final class FloeDataFrameTest extends FlowIntegrationTestCase
+{
+    public function test_append_writes_sibling_files_read_as_union(): void
+    {
+        $dir = $this->cacheDir->path() . '/appended';
+
+        data_frame()
+            ->read(from_array([['id' => 1]]))
+            ->write(to_floe($dir . '/data.floe')->saveMode(overwrite()))
+            ->run();
+
+        data_frame()
+            ->read(from_array([['id' => 2]]))
+            ->write(to_floe($dir . '/data.floe')->saveMode(append()))
+            ->run();
+
+        static::assertSame(2, data_frame()->read(from_floe($dir . '/*.floe'))->count());
+    }
+
+    public function test_writing_and_reading_with_the_default_backend(): void
+    {
+        $path = $this->cacheDir->suffix('php-engine.floe');
+
+        data_frame(config_builder())
+            ->read(from_array([['id' => 1], ['id' => 2]]))
+            ->write(to_floe($path)->saveMode(overwrite()))
+            ->run();
+
+        static::assertSame(2, data_frame(config_builder())->read(from_floe($path))->count());
+    }
+
+    public function test_a_timezone_column_round_trips_through_floe(): void
+    {
+        $path = $this->cacheDir->suffix('timezones.floe');
+
+        data_frame()
+            ->read(from_rows(array_to_rows([
+                ['tz' => type_time_zone()->cast('Europe/Warsaw')],
+                ['tz' => type_time_zone()->cast('UTC')],
+            ], schema(time_zone_schema('tz')))))
+            ->write(to_floe($path)->saveMode(overwrite()))
+            ->run();
+
+        $read = data_frame()->read(from_floe($path))->fetch();
+
+        static::assertSame('timezone', $read->schema()->get('tz')->type()->toString());
+
+        $names = [];
+
+        foreach ($read->toArray() as $row) {
+            $names[] = type_instance_of(DateTimeZone::class)->assert($row['tz'])->getName();
+        }
+
+        static::assertSame(['Europe/Warsaw', 'UTC'], $names);
+    }
+
+    public function test_inferred_nested_arrays_are_projected_to_json_and_round_trip(): void
+    {
+        $path = $this->cacheDir->suffix('nested-arrays.floe');
+
+        data_frame()
+            ->read(from_array([
+                ['body' => ['data' => [1, 'a'], 'id' => 1]],
+                ['body' => ['data' => [], 'id' => 2]],
+            ]))
+            ->collect()
+            ->write(to_floe($path)->saveMode(overwrite()))
+            ->run();
+
+        $rows = data_frame()->read(from_floe($path))->fetch();
+
+        static::assertSame('structure{data: json, id: integer}', $rows->schema()->get('body')->type()->toString());
+        // Nullable, and round-tripped as such: from_array infers it, and 08c R2 makes every inferred
+        // column nullable - NOT NULL is a declaration, never an inference.
+        static::assertTrue($rows->schema()->get('body')->isNullable());
+
+        // @mago-ignore analysis:mixed-assignment
+        $first = $rows->column('body')->value(0);
+        static::assertIsArray($first);
+        static::assertInstanceOf(Json::class, $first['data']);
+        static::assertSame([1, 'a'], $first['data']->toArray());
+
+        // @mago-ignore analysis:mixed-assignment
+        $second = $rows->column('body')->value(1);
+        static::assertIsArray($second);
+        static::assertInstanceOf(Json::class, $second['data']);
+        static::assertSame([], $second['data']->toArray());
+    }
+
+    public function test_list_of_json_round_trip(): void
+    {
+        $path = $this->cacheDir->suffix('list-json.floe');
+
+        data_frame()
+            ->read(from_rows(array_to_rows([['json_list' => [
+                Json::fromArray(['a' => 1]),
+                Json::fromArray([1, 'b']),
+            ]]], schema(list_schema('json_list', type_list(type_json()))))))
+            ->write(to_floe($path)->saveMode(overwrite()))
+            ->run();
+
+        $rows = data_frame()->read(from_floe($path))->fetch();
+
+        static::assertSame('list<json>', $rows->schema()->get('json_list')->type()->toString());
+
+        // @mago-ignore analysis:mixed-assignment
+        $list = $rows->column('json_list')->value(0);
+        static::assertIsArray($list);
+        static::assertInstanceOf(Json::class, $list[0]);
+        static::assertSame(['a' => 1], $list[0]->toArray());
+        static::assertInstanceOf(Json::class, $list[1]);
+        static::assertSame([1, 'b'], $list[1]->toArray());
+    }
+
+    /**
+     * schema() used to never declare the column extract() adds, so the two disagreed.
+     */
+    public function test_schema_and_extract_agree_in_both_metadata_states(): void
+    {
+        $path = $this->cacheDir->suffix('metadata-agreement.floe');
+
+        data_frame()
+            ->read(from_array([['id' => 1]]))
+            ->write(to_floe($path)->saveMode(overwrite()))
+            ->run();
+
+        foreach ([false, true] as $enabled) {
+            $extractor = from_floe($path)->withMetadataColumns($enabled);
+
+            static::assertSame(
+                array_keys($extractor->schema()->definitions()),
+                array_keys(data_frame()->read($extractor)->fetch()->toArray()[0]),
+            );
+        }
+    }
+
+    public function test_input_file_uri_is_added_when_configured(): void
+    {
+        $path = $this->cacheDir->suffix('input-uri.floe');
+
+        data_frame()
+            ->read(from_array([['id' => 1]]))
+            ->write(to_floe($path)->saveMode(overwrite()))
+            ->run();
+
+        $rows = data_frame()->read(from_floe($path)->withMetadataColumns(true))->fetch();
+
+        static::assertNotNull($rows->schema()->findDefinition('_input_file_uri'));
+    }
+
+    public function test_offset_and_limit_pushdown(): void
+    {
+        $path = $this->cacheDir->suffix('pushdown.floe');
+
+        data_frame()
+            ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
+            ->write(to_floe($path)->saveMode(overwrite()))
+            ->run();
+
+        static::assertSame(2, data_frame()->read(from_floe($path))->limit(2)->fetch()->count());
+        static::assertSame(2, data_frame()->read(from_floe($path))->offset(3)->fetch()->count());
+    }
+
+    public function test_overwrite_replaces_the_dataset(): void
+    {
+        $path = $this->cacheDir->suffix('overwrite.floe');
+
+        data_frame()
+            ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]))
+            ->write(to_floe($path)->saveMode(overwrite()))
+            ->run();
+
+        data_frame()
+            ->read(from_array([['id' => 9]]))
+            ->write(to_floe($path)->saveMode(overwrite()))
+            ->run();
+
+        static::assertSame(1, data_frame()->read(from_floe($path))->count());
+    }
+
+    public function test_transformation_loader_writes_all_batches_to_floe(): void
+    {
+        $path = $this->cacheDir->suffix('transformation.floe');
+
+        data_frame()
+            ->read(from_sequence_number('id', 1, 12))
+            ->withColumn('name', lit('dropped by the transformation'))
+            ->batchSize(4)
+            ->write(to_transformation(select('id'), to_floe($path)->saveMode(overwrite())))
+            ->run();
+
+        $rows = data_frame()->read(from_floe($path))->fetch();
+
+        static::assertCount(12, $rows);
+        static::assertSame(1, $rows->schema()->count());
+    }
+
+    public function test_partitioned_round_trip_with_pruning(): void
+    {
+        $dir = $this->cacheDir->path() . '/parts';
+
+        data_frame()
+            ->read(from_array([
+                ['id' => 1, 'country' => 'PL'],
+                ['id' => 2, 'country' => 'US'],
+                ['id' => 3, 'country' => 'PL'],
+            ]))
+            ->write(to_floe($dir . '/data.floe')->saveMode(overwrite())->partitionBy(partition_by('country')))
+            ->run();
+
+        static::assertFileExists($dir . '/country=PL/data.floe');
+        static::assertFileExists($dir . '/country=US/data.floe');
+
+        static::assertSame(3, data_frame()->read(from_floe($dir . '/country=*/data.floe'))->count());
+        static::assertSame(2, data_frame()->read(from_floe($dir . '/country=PL/data.floe'))->count());
+    }
+
+    public function test_round_trip(): void
+    {
+        $path = $this->cacheDir->suffix('roundtrip.floe');
+
+        data_frame()
+            ->read(from_array([['id' => 1, 'name' => 'a'], ['id' => 2, 'name' => 'b']]))
+            ->write(to_floe($path)->saveMode(overwrite()))
+            ->run();
+
+        $result = data_frame()->read(from_floe($path))->fetch();
+
+        static::assertSame(2, $result->count());
+        static::assertSame(['id', 'name'], array_keys($result->values(0)));
+    }
+
+    public function test_a_close_that_fails_during_closure_leaves_no_file(): void
+    {
+        $memory = memory_filesystem();
+
+        try {
+            data_frame()
+                ->read(from_array([['p' => 'a', 't' => 'x'], ['p' => 'b', 't' => 'y'], ['p' => 'c', 't' => 'z']]))
+                ->write(to_floe(
+                    path('memory://var/staged/file.floe'),
+                    filesystem: new FailingCloseFilesystem($memory, failingStreams: 2),
+                )->partitionBy(partition_by('p')))
+                ->run();
+            static::fail('the run was expected to throw');
+        } catch (FilesystemRuntimeException $failure) {
+            static::assertSame('Closing "memory://var/staged/p=a/file.floe" failed', $failure->getMessage());
+        }
+
+        static::assertSame([], iterator_to_array($memory->list(path('memory://var/staged/**/*')), false));
+    }
+
+    public function test_a_close_that_fails_while_discarding_a_failed_run_leaves_no_file(): void
+    {
+        $memory = memory_filesystem();
+
+        LoaderEndingContext::failedRun(to_floe(
+            path('memory://var/failed/file.floe'),
+            filesystem: new FailingCloseFilesystem($memory),
+        )->partitionBy(partition_by('id')));
+
+        static::assertSame([], iterator_to_array($memory->list(path('memory://var/failed/**/*')), false));
+    }
+}

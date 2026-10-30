@@ -9,14 +9,12 @@ use Flow\PostgreSql\Protobuf\AST\DropStmt;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\Protobuf\AST\PBString;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 use function array_values;
 
 final readonly class DropExtensionBuilder implements DropExtensionFinalStep
 {
-    use AstToSql;
-
     /**
      * @param list<string> $names
      */
@@ -44,6 +42,11 @@ final readonly class DropExtensionBuilder implements DropExtensionFinalStep
     public function restrict(): DropExtensionFinalStep
     {
         return new self($this->names, $this->ifExists, DropBehavior::DROP_RESTRICT);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): DropStmt

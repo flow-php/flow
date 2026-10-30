@@ -10,7 +10,7 @@ use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\Protobuf\AST\ResTarget;
 use Flow\PostgreSql\Protobuf\AST\ReturningClause;
 use Flow\PostgreSql\Protobuf\AST\UpdateStmt;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\Clause\WithClause;
 use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Condition\ConditionFactory;
@@ -35,8 +35,6 @@ use function count;
  */
 final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
 {
-    use AstToSql;
-
     /**
      * @param array<string, Expression> $assignments
      * @param array<TableReference> $from
@@ -228,6 +226,11 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
             where: $this->where,
             returning: $this->returning,
         );
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): UpdateStmt

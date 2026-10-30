@@ -7,12 +7,10 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\Database;
 use Flow\PostgreSql\Protobuf\AST\DefElem;
 use Flow\PostgreSql\Protobuf\AST\DropdbStmt;
 use Flow\PostgreSql\Protobuf\AST\Node;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 final readonly class DropDatabaseBuilder implements DropDatabaseFinalStep
 {
-    use AstToSql;
-
     private function __construct(
         private string $name,
         private bool $ifExists = false,
@@ -32,6 +30,11 @@ final readonly class DropDatabaseBuilder implements DropDatabaseFinalStep
     public function ifExists(): self
     {
         return new self($this->name, true, $this->force);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): DropdbStmt

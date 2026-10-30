@@ -273,12 +273,12 @@ What is now true:
 
 - `pack()`/`unpack()` 64-bit format codes (`q`, `Q`, `J`, `P`) work. `Flow\Floe` therefore works, and
   so does **`sortBy()`** and everything else that spills runs to disk through
-  `Flow\ETL\Column\Layout\Int64Layout` (`pack('P*')`). Before this, every Floe write in the browser died with
+  `Flow\ETL\Values\Column\Layout\Int64Layout` (`pack('P*')`). Before this, every Floe write in the browser died with
   `ValueError: 64-bit format codes are not available for 32-bit versions of PHP`.
 - Large integers from Thrift/Parquet metadata no longer overflow to float. On the 32-bit build,
   reading a parquet file emitted hundreds of
   `Warning: The float 2147483648 is not representable as an int` from
-  `Flow\Parquet\Thrift\CompactProtocol` and `Flow\ETL\Bucketing\HashBucketing`; the 64-bit build
+  `Flow\Parquet\Thrift\CompactProtocol` and `Flow\ETL\Kernels\Bucketing\HashBucketing`; the 64-bit build
   emits none.
 - Hex constants like `0x80000000` are plain integers and need no `(int)` cast.
 - `DateTimePhysical` stores `getTimestamp() * 1_000_000 + µs`, which now represents dates past 2038-01-19.

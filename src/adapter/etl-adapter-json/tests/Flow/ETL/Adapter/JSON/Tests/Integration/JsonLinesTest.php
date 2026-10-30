@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\Tests\Integration;
 
-use Flow\ETL\Adapter\JSON\JsonFraming;
-use Flow\ETL\Adapter\JSON\JsonLoader;
+use Flow\ETL\Adapter\JSON\IO\JsonFraming;
+use Flow\ETL\Adapter\JSON\IO\Loader\JsonLoader;
 use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -78,23 +78,17 @@ final class JsonLinesTest extends FlowTestCase
         }
     }
 
-    public function test_jsonl_loader_loading_empty_string(): void
+    public function test_a_batch_without_rows_writes_no_file(): void
     {
         $loader = new JsonLoader(
-            path($path = __DIR__ . '/var/test_json_loader_loading_empty_string.jsonl'),
+            path($path = __DIR__ . '/var/test_a_batch_without_rows_writes_no_file.jsonl'),
             framing: JsonFraming::Lines,
         );
 
-        $loader->load(rows(schema()), $context = flow_context(config()));
+        $loader->load(rows(schema()), flow_context(config())->backend());
+        $loader->closure();
 
-        $loader->closure($context);
-
-        $content = file_get_contents($path);
-        static::assertEmpty($content);
-
-        if (file_exists($path)) {
-            unlink($path);
-        }
+        static::assertFileDoesNotExist($path);
     }
 
     public function test_jsonl_loader_overwrite_mode(): void

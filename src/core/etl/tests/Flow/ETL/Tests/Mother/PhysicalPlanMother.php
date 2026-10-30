@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Mother;
 
-use Flow\ETL\DataFrame;
-use Flow\ETL\Executor\PhysicalPlan;
-use Flow\ETL\Extractor;
-use Flow\ETL\Optimizer;
-use Flow\ETL\Planner;
+use Flow\ETL\API\DataFrame;
+use Flow\ETL\IO\Extractor;
+use Flow\ETL\Planning\Physical\PhysicalPlan;
+
+use function Flow\ETL\DSL\config;
 
 final class PhysicalPlanMother
 {
@@ -19,14 +19,11 @@ final class PhysicalPlanMother
     {
         $plan = $frame->explain();
 
-        return $plan->context->config->planner()->plan($plan->logical, $plan->context);
+        return $plan->planner->plan($plan->logical);
     }
 
     public static function reading(Extractor $extractor): PhysicalPlan
     {
-        return (new Planner(Optimizer::default()))->plan(
-            NodeMother::plan(NodeMother::read($extractor)),
-            NodeMother::context(),
-        );
+        return config()->planner()->plan(NodeMother::plan(NodeMother::read($extractor)));
     }
 }

@@ -18,9 +18,27 @@ if (extension_loaded('arrow')) {
     return;
 }
 
+/**
+ * @type RustEngineConfiguration = array{options: ParquetOptions}
+ * @import-type ParquetOptions from Options
+ *
+ */
 final class RustParquetEngine implements ParquetEngine
 {
     public function __construct(?Options $options = null)
+    {
+        throw new RuntimeException('arrow extension is not loaded');
+    }
+
+    public static function fromArray(array $configuration): static
+    {
+        throw new RuntimeException('arrow extension is not loaded');
+    }
+
+    /**
+     * @return RustEngineConfiguration
+     */
+    public function normalize(): array
     {
         throw new RuntimeException('arrow extension is not loaded');
     }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Values\Column\PhpBackend;
 
 use function Flow\ETL\DSL\{config_builder, data_frame, from_array, lit, ref};
 

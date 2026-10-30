@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use Flow\ETL\Exception\InferredSchemaException;
-use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
+use Flow\ETL\Foundation\Exception\InferredSchemaException;
+use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 use function Flow\ETL\DSL\df;

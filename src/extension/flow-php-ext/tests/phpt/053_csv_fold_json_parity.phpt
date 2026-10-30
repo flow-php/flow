@@ -6,7 +6,7 @@ native CSV narrowing matches StringTypeNarrower::narrow() on the JSON parity cas
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Schema\Inference\InferredTypes;
+use Flow\ETL\IO\Inference\InferredTypes;
 
 assert_narrow_parity('json cases', InferredTypes::default()->toArray(), array_values(json_parity_cases()));
 ?>

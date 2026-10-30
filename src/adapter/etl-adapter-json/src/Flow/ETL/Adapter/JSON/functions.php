@@ -9,10 +9,12 @@ use Flow\Documentation\Attribute\DocumentationDSL;
 use Flow\Documentation\Attribute\DocumentationExample;
 use Flow\Documentation\Attribute\Module;
 use Flow\Documentation\Attribute\Type;
-use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
-use Flow\ETL\Adapter\JSON\JSONMachine\JsonFormat;
-use Flow\ETL\Adapter\JSON\JsonSchema\ReferenceResolver;
-use Flow\ETL\Schema;
+use Flow\ETL\Adapter\JSON\IO\Extractor\JsonExtractor;
+use Flow\ETL\Adapter\JSON\IO\JsonFraming;
+use Flow\ETL\Adapter\JSON\IO\Loader\JsonLoader;
+use Flow\ETL\Adapter\JSON\IO\Schema\JsonSchema\ReferenceResolver;
+use Flow\ETL\Adapter\JSON\IO\Schema\SchemaConverter;
+use Flow\ETL\Values\Schema;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
@@ -57,7 +59,7 @@ function from_json(
 #[DocumentationExample(topic: 'reading', example: 'jsonl')]
 function from_json_lines(string|Path $path, Filesystem $filesystem = new NativeLocalFilesystem()): JsonExtractor
 {
-    return new JsonExtractor(is_string($path) ? path_real($path) : $path, $filesystem, JsonFormat::Lines);
+    return new JsonExtractor(is_string($path) ? path_real($path) : $path, $filesystem, JsonFraming::Lines);
 }
 
 /**
@@ -110,7 +112,9 @@ function schema_from_json_schema(
     ?RequestFactoryInterface $request_factory = null,
     Filesystem $filesystem = new NativeLocalFilesystem(),
 ): Schema {
-    return (new SchemaConverter(new ReferenceResolver($client, $request_factory, $filesystem)))->toFlow($json_schema);
+    return (new SchemaConverter(new ReferenceResolver($client, $request_factory, $filesystem)))->toFlowSchema(
+        $json_schema,
+    );
 }
 
 /**

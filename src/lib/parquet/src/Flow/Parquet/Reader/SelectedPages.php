@@ -13,14 +13,11 @@ use Flow\Parquet\ParquetFile\RowGroup;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Generator;
 
-use function array_fill;
 use function array_key_exists;
-use function count;
 use function sprintf;
 
 /**
  * @import-type DecodedChunk from ColumnReader
- * @import-type DecodedPage from ColumnReader
  */
 final readonly class SelectedPages
 {
@@ -77,7 +74,14 @@ final readonly class SelectedPages
         if ($offsetIndex === null) {
             $pages = $decoded['pages'] === []
                 ? $this->chunks->read($rowGroup->getColumnChunk($leaf), $leaf, $stream)
-                : self::decodedPages($leaf, $decoded);
+                : (
+                    /** @return Generator<int, ReadFlatColumnValues, mixed, ?Dictionary> */
+                    static function () use ($decoded): Generator {
+                        yield from $decoded['pages'];
+
+                        return $decoded['dictionary'];
+                    }
+                )();
 
             foreach ($pages as $firstRow => $page) {
                 $pageRows = $page->rowsCount();
@@ -126,7 +130,7 @@ final readonly class SelectedPages
 
         foreach ($selected as $firstRow => $pageSelection) {
             if (array_key_exists($firstRow, $decoded['pages'])) {
-                yield $firstRow => [self::decodedPage($leaf, $decoded['pages'][$firstRow]), $pageSelection];
+                yield $firstRow => [$decoded['pages'][$firstRow], $pageSelection];
 
                 continue;
             }
@@ -139,38 +143,5 @@ final readonly class SelectedPages
         }
 
         return $fetched === [] ? $decoded['dictionary'] : $read->getReturn();
-    }
-
-    /**
-     * @param DecodedChunk $decoded
-     *
-     * @return Generator<int, ReadFlatColumnValues, mixed, ?Dictionary>
-     */
-    private static function decodedPages(FlatColumn $leaf, array $decoded): Generator
-    {
-        foreach ($decoded['pages'] as $firstRow => $page) {
-            yield $firstRow => self::decodedPage($leaf, $page);
-        }
-
-        return $decoded['dictionary'];
-    }
-
-    /**
-     * A page of a leaf outside any list: every repetition level is 0.
-     *
-     * @param DecodedPage $page
-     */
-    private static function decodedPage(FlatColumn $leaf, array $page): ReadFlatColumnValues
-    {
-        $values = $page['values'];
-
-        return new ReadFlatColumnValues(
-            $leaf,
-            (static function () use ($values): Generator {
-                yield from $values;
-            })(),
-            array_fill(0, count($page['definitionLevels']), 0),
-            $page['definitionLevels'],
-        );
     }
 }

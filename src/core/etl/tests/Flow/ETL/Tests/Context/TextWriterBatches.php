@@ -7,10 +7,10 @@ namespace Flow\ETL\Tests\Context;
 use DateInterval;
 use DateTimeImmutable;
 use DateTimeZone;
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Schema;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
+use Flow\ETL\Values\Schema;
 use Flow\Types\Value\Uuid;
 
 use function Flow\ETL\DSL\bool_schema;

@@ -4,24 +4,27 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Function\AggregatingFunction;
-use Flow\ETL\Function\FunctionTree;
-use Flow\ETL\Function\ResolvesFromChildren;
-use Flow\ETL\Function\ScalarFunction;
-use Flow\ETL\Row\Reference;
-use Flow\ETL\Rows;
+use Flow\ETL\Foundation\Describe\Description;
+use Flow\ETL\Foundation\Describe\Rebuild;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Functions\AggregatingFunction;
+use Flow\ETL\Functions\FunctionTree;
+use Flow\ETL\Functions\Reference\Reference;
+use Flow\ETL\Functions\ScalarFunction;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Rows;
 use Flow\Types\Type;
+use Flow\Types\Type\Logical\StructureType;
+use SensitiveParameter;
 
 use function array_slice;
 use function array_values;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_structure;
 use function is_float;
 use function is_int;
-use function sprintf;
 
 /**
  * A sum that also reads function operands, so its columns cannot be enumerated - the case that disables spill
@@ -29,8 +32,6 @@ use function sprintf;
  */
 final class UnenumerableSum implements AggregatingFunction
 {
-    use ResolvesFromChildren;
-
     public ?float $total = null;
 
     /**
@@ -45,7 +46,36 @@ final class UnenumerableSum implements AggregatingFunction
         $this->operands = array_values($operands);
     }
 
-    public function aggregate(Rows $rows, array $indices, FlowContext $context): void
+    public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
+    {
+        throw InvalidArgumentException::because('%s holds live state and is never described', self::class);
+    }
+
+    public function describe(): ?Description
+    {
+        return null;
+    }
+
+    public function merge(array $partial, Backend $backend): void
+    {
+        $total = type_optional(type_float())->assert($this->partialType()->assert($partial)['total']);
+
+        if ($total !== null) {
+            $this->total = ($this->total ?? 0.0) + $total;
+        }
+    }
+
+    public function partial(): array
+    {
+        return ['total' => $this->total];
+    }
+
+    public function partialType(): StructureType
+    {
+        return type_structure(['total' => type_optional(type_float())]);
+    }
+
+    public function aggregate(Rows $rows, array $indices, Backend $backend): void
     {
         if ($rows->schema()->findDefinition($this->ref->base()) === null) {
             return;
@@ -67,15 +97,26 @@ final class UnenumerableSum implements AggregatingFunction
         return [$this->ref, ...$this->operands];
     }
 
-    public function merge(AggregatingFunction $other, FlowContext $context): void
+    public function deterministic(): bool
     {
-        if (!$other instanceof self) {
-            throw new InvalidArgumentException(sprintf('%s cannot merge %s', self::class, $other::class));
+        foreach ($this->children() as $child) {
+            if (!$child->deterministic()) {
+                return false;
+            }
         }
 
-        if ($other->total !== null) {
-            $this->total = ($this->total ?? 0.0) + $other->total;
+        return true;
+    }
+
+    public function resolved(): bool
+    {
+        foreach ($this->children() as $child) {
+            if (!$child->resolved()) {
+                return false;
+            }
         }
+
+        return true;
     }
 
     public function outputName(): string

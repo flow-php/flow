@@ -1,20 +1,19 @@
-//! `Flow\ETL\Adapter\CSV\RustCSVEncoder`: a `Rows` batch as the bytes `PhpCSVEncoder::encode()` returns, rendered
+//! `Flow\ETL\Adapter\CSV\IO\Loader\RustCSVEncoder`: a `Rows` batch as the bytes `PhpCSVEncoder::encode()` returns, rendered
 //! from the arrow arrays; the columns it does not render are the cells the held `PhpCSVEncoder::cells()` produces.
 
 use ext_php_rs::binary::Binary;
-use ext_php_rs::binary_slice::BinarySlice;
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::flags::ClassFlags;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendHashTable, Zval};
+use flow_column_text::value::Formats;
+use flow_column_text::Error;
 
-use crate::ctx::{call_method, find_class};
+use crate::ctx::{call_method, find_class, read_property};
 use crate::exception::ext_exception;
 use crate::interfaces::csv_encoder_ce;
 use crate::render::invalid_argument;
 use crate::text::batch::{batch, cells, renderer, Unrendered};
-use crate::text::value::Formats;
-use crate::text::Error;
 
 /// `json_encode()`'s refusal of a nested cell, as `JSON_THROW_ON_ERROR` throws it.
 fn json_exception(error: Error) -> PhpException {
@@ -26,9 +25,9 @@ fn json_exception(error: Error) -> PhpException {
 
 #[php_class]
 #[php(
-    name = "Flow\\ETL\\Adapter\\CSV\\RustCSVEncoder",
+    name = "Flow\\ETL\\Adapter\\CSV\\IO\\Loader\\RustCSVEncoder",
     flags = ClassFlags::Final,
-    implements(ce = csv_encoder_ce, stub = "Flow\\ETL\\Adapter\\CSV\\CSVEncoder")
+    implements(ce = csv_encoder_ce, stub = "Flow\\ETL\\Adapter\\CSV\\IO\\Loader\\CSVEncoder")
 )]
 pub struct RustCSVEncoder {
     separator: u8,
@@ -76,15 +75,21 @@ impl RustCSVEncoder {
 
 #[php_impl]
 impl RustCSVEncoder {
-    pub fn __construct(
-        separator: BinarySlice<u8>,
-        enclosure: BinarySlice<u8>,
-        escape: BinarySlice<u8>,
-        new_line_separator: BinarySlice<u8>,
-        date_time_format: BinarySlice<u8>,
-        date_format: BinarySlice<u8>,
-        php: &Zval,
-    ) -> PhpResult<Self> {
+    /// `$options` is a `CSVWriteOptions`; its public properties are read once here.
+    pub fn __construct(options: &Zval, php: &Zval) -> PhpResult<Self> {
+        let options = options
+            .object()
+            .ok_or_else(|| invalid_argument("RustCSVEncoder expects CSVWriteOptions".to_string()))?;
+        let text = |name: &str| -> PhpResult<Vec<u8>> {
+            read_property(options, name)?
+                .zend_str()
+                .map(|value| value.as_bytes().to_vec())
+                .ok_or_else(|| invalid_argument(format!("CSVWriteOptions::${name} must be a string")))
+        };
+        let (separator, enclosure, escape) = (text("separator")?, text("enclosure")?, text("escape")?);
+        let new_line_separator = text("newLineSeparator")?;
+        let (date_time_format, date_format) = (text("dateTimeFormat")?, text("dateFormat")?);
+
         if separator.len() != 1 {
             return Err(invalid_argument("Separator must be a single character".to_string()));
         }

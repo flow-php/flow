@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Transaction;
+use Flow\ETL\IO\Transaction;
 use Throwable;
 
 /**

@@ -4,16 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Pipeline;
 
-use Flow\ETL\Exception\DataDependentSchemaException;
-use Flow\ETL\Exception\InvalidLogicException;
+use Flow\ETL\Foundation\Exception\DataDependentSchemaException;
+use Flow\ETL\Foundation\Exception\InvalidLogicException;
 use Flow\ETL\Tests\Double\ReadsBackOnSecondBatch;
-use Flow\ETL\Tests\Double\StaticDataFrameFactory;
+use Flow\ETL\Tests\Double\StaticExtractorFactory;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\from_data_frame;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
@@ -24,7 +23,7 @@ final class PipelineTest extends FlowTestCase
     public function test_a_join_each_plan_refuses_to_describe_its_output(): void
     {
         $frame = df()->read(from_array([['id' => 1, 'x' => 'p']]));
-        $frame->joinEach(new StaticDataFrameFactory(df()->read(from_data_frame($frame))), join_on([
+        $frame->joinEach(new StaticExtractorFactory(from_array([['id' => 1, 'x' => 'p']])), join_on([
             'id' => 'id',
         ], 'r_'));
 
@@ -49,7 +48,7 @@ final class PipelineTest extends FlowTestCase
                 array_to_rows([['id' => 1]], schema(int_schema('id'))),
                 array_to_rows([['id' => 2]], schema(int_schema('id'))),
             ))
-            ->transform($transformer = new ReadsBackOnSecondBatch());
+            ->with($transformer = new ReadsBackOnSecondBatch());
 
         $transformer->readBackFrom($frame);
 
@@ -74,18 +73,9 @@ final class PipelineTest extends FlowTestCase
     public function test_a_plan_that_reads_back_from_itself_is_a_self_join(): void
     {
         $frame = df()->read(from_array([['id' => 1, 'x' => 'p']]));
-        $frame->join(df()->read(from_data_frame($frame)), join_on(['id' => 'id'], 'r_'));
+        $frame->join($frame, join_on(['id' => 'id'], 'r_'));
 
-        static::assertSame(['id', 'x', 'r_id', 'r_x'], $frame->schema()->references()->names());
+        static::assertSame(['id', 'x', 'r_id', 'r_x'], $frame->schema()->names());
         static::assertSame([['id' => 1, 'x' => 'p', 'r_id' => 1, 'r_x' => 'p']], $frame->fetch()->toArray());
-    }
-
-    public function test_the_same_frame_read_twice_in_one_plan_is_not_a_cycle(): void
-    {
-        $source = df()->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]));
-        $left = df()->read(from_data_frame($source));
-        $left->join(df()->read(from_data_frame($source)), join_on(['id' => 'id'], 'r_'));
-
-        static::assertSame(3, $left->fetch()->count());
     }
 }

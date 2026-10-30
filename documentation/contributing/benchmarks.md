@@ -78,5 +78,50 @@ Blackfire without any phpbench overhead. Bootstrapping through `benchmarks/boots
 environment (wipes `var/`, exports the service defaults) so the profile matches the benchmark run:
 
 ```bash
-blackfire run php -r 'require "benchmarks/bootstrap.php"; (new Flow\Benchmarks\Joining\JoinOrdersWithSellersScenario(Flow\ETL\Join\Join::left, 100000))->run();'
+blackfire run php -r 'require "benchmarks/bootstrap.php"; (new Flow\Benchmarks\Joining\JoinOrdersWithSellersScenario(Flow\ETL\Values\Join\JoinType::left, 100000))->run();'
 ```
+
+## Reference engines
+
+`benchmarks/reference/` holds one script per engine. Each script runs the same four shapes over one CSV or Parquet file:
+
+| shape            | work                                                                  |
+|------------------|-----------------------------------------------------------------------|
+| `scan`           | count the rows that pass a predicate touching every column            |
+| `to_parquet`     | write the rows as Parquet                                             |
+| `group_by`       | group by `country` with `sum(amount)`, `count(id)` and `avg(amount)`  |
+| `sort`           | sort by `amount` descending, write as Parquet                         |
+
+Every script takes `<shape> <input.csv|input.parquet> <output-dir>`. The thread count is the knob of each engine. The engines come
+from the nix shell flags `with-duckdb`, `with-polars` and `with-spark`, see the
+[Nix page](/documentation/contributing/nix.md#reference-engines-duckdb-polars-spark).
+
+```bash
+benchmarks/reference/duckdb/bench.sh group_by orders.csv var/reference 8
+POLARS_MAX_THREADS=8 python benchmarks/reference/polars/bench.py group_by orders.csv var/reference
+spark-submit --master 'local[8]' benchmarks/reference/spark/bench.py group_by orders.csv var/reference
+```
+
+Rules for a comparable number:
+
+- Time with `hyperfine` and an explicit run count. Its default run count targets three seconds in total.
+
+```bash
+hyperfine --runs 3 --warmup 1 --export-json var/reference/group_by.json 'benchmarks/reference/duckdb/bench.sh group_by orders.csv var/reference 8'
+```
+
+- Hot page cache is the default. Record one cold run per shape with a prepare command that drops the page cache.
+
+```bash
+# macOS
+hyperfine --runs 1 --prepare 'sudo purge' '...'
+# Linux
+hyperfine --runs 1 --prepare 'sync && echo 3 | sudo tee /proc/sys/vm/drop_caches' '...'
+```
+
+- Give every engine the same N. DuckDB takes `SET threads TO N`, Polars `POLARS_MAX_THREADS=N`, Spark `local[N]`
+  and Flow N workers. The Flow coordinator process is busy on top of its N workers. State that next to every table.
+- Time Flow in a `--arg with-php-benchmark true` shell, without pcov or blackfire.
+- Spark pays a JVM start on every submission. The warmup run absorbs it.
+- DuckDB and Polars infer column types from the CSV. Spark runs with `inferSchema=True`, which costs a second pass
+  over the file.

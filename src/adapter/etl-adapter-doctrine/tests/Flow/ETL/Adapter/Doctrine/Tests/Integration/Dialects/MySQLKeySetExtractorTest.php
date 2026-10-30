@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration\Dialects;
 
 use DateTimeImmutable;
-use Flow\Clock\FakeClock;
-use Flow\ETL\Adapter\Doctrine\DbalMetadata;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
-use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Adapter\Doctrine\Values\Schema\DbalMetadata;
+use Flow\ETL\Foundation\Clock\FakeClock;
+use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\IO\Extractor\Criteria;
 
 use function Flow\ETL\Adapter\Doctrine\from_dbal_key_set_qb;
 use function Flow\ETL\Adapter\Doctrine\pagination_key_asc;
@@ -40,16 +41,16 @@ final class MySQLKeySetExtractorTest extends IntegrationTestCase
             $table = 'flow_key_set_extractor_test',
         ));
 
-        $rows = data_frame()
-            ->extract(from_dbal_key_set_qb(
-                $this->mysqlDatabaseContext->connection(),
-                $this->mysqlDatabaseContext->connection()->createQueryBuilder()->from($table)->select('*'),
-                pagination_key_set(pagination_key_asc('id')),
-            ))
-            ->fetch()
-            ->toArray();
-
-        static::assertEmpty($rows);
+        static::assertEmpty(
+            data_frame()
+                ->read(from_dbal_key_set_qb(
+                    $this->mysqlDatabaseContext->connection(),
+                    $this->mysqlDatabaseContext->connection()->createQueryBuilder()->from($table)->select('*'),
+                    pagination_key_set(pagination_key_asc('id')),
+                ))
+                ->fetch()
+                ->toArray(),
+        );
     }
 
     public function test_extracting_entire_table(): void
@@ -71,14 +72,6 @@ final class MySQLKeySetExtractorTest extends IntegrationTestCase
             ]);
         }
 
-        $data = df()
-            ->read(from_dbal_key_set_qb(
-                $this->mysqlDatabaseContext->connection(),
-                $this->mysqlDatabaseContext->connection()->createQueryBuilder()->from($table)->select('*'),
-                pagination_key_set(pagination_key_asc('flow_key_set_extractor_with_a_very_long_table_name_test.id')),
-            ))
-            ->fetch();
-
         static::assertSame(
             [
                 ['id' => 1, 'name' => 'name_1', 'description' => 'description_1'],
@@ -90,7 +83,16 @@ final class MySQLKeySetExtractorTest extends IntegrationTestCase
                 ['id' => 7, 'name' => 'name_7', 'description' => 'description_7'],
                 ['id' => 8, 'name' => 'name_8', 'description' => 'description_8'],
             ],
-            $data->toArray(),
+            df()
+                ->read(from_dbal_key_set_qb(
+                    $this->mysqlDatabaseContext->connection(),
+                    $this->mysqlDatabaseContext->connection()->createQueryBuilder()->from($table)->select('*'),
+                    pagination_key_set(pagination_key_asc(
+                        'flow_key_set_extractor_with_a_very_long_table_name_test.id',
+                    )),
+                ))
+                ->fetch()
+                ->toArray(),
         );
     }
 
@@ -122,7 +124,7 @@ final class MySQLKeySetExtractorTest extends IntegrationTestCase
         $this->mysqlDatabaseContext->resetSelectQueryCounter();
 
         $rows = data_frame()
-            ->extract(
+            ->read(
                 from_dbal_key_set_qb(
                     $this->mysqlDatabaseContext->connection(),
                     $this->mysqlDatabaseContext->connection()->createQueryBuilder()->from($table)->select('*'),
@@ -168,7 +170,7 @@ final class MySQLKeySetExtractorTest extends IntegrationTestCase
         $this->mysqlDatabaseContext->resetSelectQueryCounter();
 
         $rows = data_frame()
-            ->extract(
+            ->read(
                 from_dbal_key_set_qb(
                     $this->mysqlDatabaseContext->connection(),
                     $this->mysqlDatabaseContext->connection()->createQueryBuilder()->from($table)->select('*'),
@@ -213,7 +215,7 @@ final class MySQLKeySetExtractorTest extends IntegrationTestCase
         $this->mysqlDatabaseContext->resetSelectQueryCounter();
 
         $rows = data_frame()
-            ->extract(
+            ->read(
                 from_dbal_key_set_qb(
                     $this->mysqlDatabaseContext->connection(),
                     $this->mysqlDatabaseContext->connection()->createQueryBuilder()->from($table)->select('*'),
@@ -258,7 +260,7 @@ final class MySQLKeySetExtractorTest extends IntegrationTestCase
         }
 
         $rows = data_frame()
-            ->extract(from_dbal_key_set_qb(
+            ->read(from_dbal_key_set_qb(
                 $this->mysqlDatabaseContext->connection(),
                 $this->mysqlDatabaseContext->connection()->createQueryBuilder()->from($table)->select('*'),
                 pagination_key_set(pagination_key_asc('created_at'), pagination_key_asc('id')),
@@ -308,30 +310,6 @@ final class MySQLKeySetExtractorTest extends IntegrationTestCase
             ]);
         }
 
-        $rows = data_frame()
-            ->extract(
-                from_dbal_key_set_qb(
-                    $this->mysqlDatabaseContext->connection(),
-                    $this->mysqlDatabaseContext
-                        ->connection()
-                        ->createQueryBuilder()
-                        ->from($table)
-                        ->select('flow_key_set_extractor_test_01.id as id')
-                        ->leftJoin(
-                            'flow_key_set_extractor_test_01',
-                            'flow_key_set_extractor_test_02',
-                            'flow_key_set_extractor_test_02',
-                            'flow_key_set_extractor_test_01.id = flow_key_set_extractor_test_02.id_01',
-                        ),
-                    pagination_key_set(pagination_key_desc('flow_key_set_extractor_test_01.id')),
-                )
-                    ->withSchema(schema(int_schema('id')))
-                    ->withBatchSize(5)
-                    ->withMaximum(5),
-            )
-            ->fetch()
-            ->toArray();
-
         static::assertSame(
             [
                 ['id' => 25],
@@ -340,7 +318,29 @@ final class MySQLKeySetExtractorTest extends IntegrationTestCase
                 ['id' => 22],
                 ['id' => 21],
             ],
-            $rows,
+            data_frame()
+                ->read(
+                    from_dbal_key_set_qb(
+                        $this->mysqlDatabaseContext->connection(),
+                        $this->mysqlDatabaseContext
+                            ->connection()
+                            ->createQueryBuilder()
+                            ->from($table)
+                            ->select('flow_key_set_extractor_test_01.id as id')
+                            ->leftJoin(
+                                'flow_key_set_extractor_test_01',
+                                'flow_key_set_extractor_test_02',
+                                'flow_key_set_extractor_test_02',
+                                'flow_key_set_extractor_test_01.id = flow_key_set_extractor_test_02.id_01',
+                            ),
+                        pagination_key_set(pagination_key_desc('flow_key_set_extractor_test_01.id')),
+                    )
+                        ->withSchema(schema(int_schema('id')))
+                        ->withBatchSize(5)
+                        ->withMaximum(5),
+                )
+                ->fetch()
+                ->toArray(),
         );
     }
 
@@ -373,31 +373,6 @@ final class MySQLKeySetExtractorTest extends IntegrationTestCase
             ]);
         }
 
-        $rows = data_frame()
-            ->extract(
-                from_dbal_key_set_qb(
-                    $this->mysqlDatabaseContext->connection(),
-                    $this->mysqlDatabaseContext
-                        ->connection()
-                        ->createQueryBuilder()
-                        ->from($table)
-                        ->select('flow_key_set_extractor_test_01.id as id')
-                        ->leftJoin(
-                            'flow_key_set_extractor_test_01',
-                            'flow_key_set_extractor_test_02',
-                            'flow_key_set_extractor_test_02',
-                            'flow_key_set_extractor_test_01.id = flow_key_set_extractor_test_02.id_01',
-                        ),
-                    pagination_key_set(pagination_key_desc('flow_key_set_extractor_test_01.id')),
-                )
-                    ->withKeyAliasSuffix('_something_custom')
-                    ->withSchema(schema(int_schema('id')))
-                    ->withBatchSize(5)
-                    ->withMaximum(5),
-            )
-            ->fetch()
-            ->toArray();
-
         static::assertSame(
             [
                 ['id' => 25],
@@ -406,7 +381,30 @@ final class MySQLKeySetExtractorTest extends IntegrationTestCase
                 ['id' => 22],
                 ['id' => 21],
             ],
-            $rows,
+            data_frame()
+                ->read(
+                    from_dbal_key_set_qb(
+                        $this->mysqlDatabaseContext->connection(),
+                        $this->mysqlDatabaseContext
+                            ->connection()
+                            ->createQueryBuilder()
+                            ->from($table)
+                            ->select('flow_key_set_extractor_test_01.id as id')
+                            ->leftJoin(
+                                'flow_key_set_extractor_test_01',
+                                'flow_key_set_extractor_test_02',
+                                'flow_key_set_extractor_test_02',
+                                'flow_key_set_extractor_test_01.id = flow_key_set_extractor_test_02.id_01',
+                            ),
+                        pagination_key_set(pagination_key_desc('flow_key_set_extractor_test_01.id')),
+                    )
+                        ->withKeyAliasSuffix('_something_custom')
+                        ->withSchema(schema(int_schema('id')))
+                        ->withBatchSize(5)
+                        ->withMaximum(5),
+                )
+                ->fetch()
+                ->toArray(),
         );
     }
 
@@ -451,7 +449,7 @@ final class MySQLKeySetExtractorTest extends IntegrationTestCase
             pagination_key_set(pagination_key_asc('b'), pagination_key_asc('a')),
         )
             ->withBatchSize(2)
-            ->extract(flow_context());
+            ->extract(flow_context()->backend(), new Criteria());
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(

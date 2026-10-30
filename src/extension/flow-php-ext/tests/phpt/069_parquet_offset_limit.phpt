@@ -7,10 +7,13 @@ RustParquetOpenSource reads the planned windows of an 8-row-group file, and refu
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Column\RustBackend;
-use Flow\Parquet\Engine\{RustParquetFileReader, RustParquetFileWriter};
+use Flow\ETL\Values\Column\RustBackend;
+use Flow\Parquet\Engine\{RustParquetFileReader, RustParquetFileWriter as ArrowRustParquetFileWriter};
 
-use Flow\ETL\Adapter\Parquet\{RustParquetOpenSink, RustParquetOpenSource, SchemaConverter};
+use Flow\ETL\Adapter\Parquet\IO\Loader\{ParquetSchemaConformance, RustParquetFileWriter};
+use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Adapter\Parquet\IO\Extractor\RustParquetOpenSource;
+use Flow\ETL\Adapter\Parquet\Values\Schema\SchemaConverter;
 use Flow\Parquet\Engine\Arrow\{OptionsConverter, SchemaConverter as ArrowSchemaConverter};
 use Flow\Parquet\{Option, Options, Reader};
 use Flow\Parquet\ParquetFile\Compressions;
@@ -22,13 +25,17 @@ use Flow\Parquet\Tests\Double\InMemoryIndexes;
 
 $filesystem = memory_filesystem();
 $schema = schema(int_schema('id'));
-$writer = new RustParquetOpenSink(new RustParquetFileWriter(
-    $filesystem->writeTo(path('memory://groups.parquet')),
-    ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquet($schema)),
-    Compressions::SNAPPY,
-    OptionsConverter::toExtension(Options::default()->set(Option::ROW_GROUP_SIZE_BYTES, 1)),
-    1_000,
-));
+$writer = new RustParquetFileWriter(
+    new ArrowRustParquetFileWriter(
+        $filesystem->writeTo(path('memory://groups.parquet')),
+        ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquetSchema($schema)),
+        Compressions::SNAPPY,
+        OptionsConverter::toExtension(Options::default()->set(Option::ROW_GROUP_SIZE_BYTES, 1)),
+        1_000,
+    ),
+    new ParquetSchemaConformance((new SchemaConverter())->toParquetSchema($schema)),
+    new PhpBackend(),
+);
 
 for ($group = 0; $group < 8; $group++) {
     $writer->write(array_to_rows(array_map(static fn(int $id): array => ['id' => $id], range($group * 8192, $group * 8192 + 8191)), $schema));

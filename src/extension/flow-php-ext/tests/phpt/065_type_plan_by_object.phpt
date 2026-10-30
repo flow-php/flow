@@ -6,7 +6,7 @@ a column's plan follows its Type object across the plan cache's eviction and a f
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Column\RustBackend;
+use Flow\ETL\Values\Column\RustBackend;
 use function Flow\ETL\DSL\{int_schema, str_schema};
 
 $backend = new RustBackend();

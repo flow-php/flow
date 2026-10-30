@@ -7,13 +7,11 @@ namespace Flow\PostgreSql\QueryBuilder\Utility;
 use Flow\PostgreSql\Protobuf\AST\LockStmt;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class LockBuilder implements LockFinalStep
 {
-    use AstToSql;
-
     /**
      * @param array<string> $tables
      */
@@ -76,6 +74,11 @@ final readonly class LockBuilder implements LockFinalStep
     public function shareUpdateExclusive(): LockFinalStep
     {
         return new self($this->tables, LockMode::SHARE_UPDATE_EXCLUSIVE, $this->nowait);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): LockStmt

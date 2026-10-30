@@ -25,7 +25,7 @@ final class ProgressBarLoaderTest extends TestCase
             ['id' => 1],
             ['id' => 2],
             ['id' => 3],
-        ], schema(int_schema('id'))), flow_context());
+        ], schema(int_schema('id'))), flow_context()->backend());
 
         static::assertSame(3, $progressBar->getProgress());
     }
@@ -36,8 +36,8 @@ final class ProgressBarLoaderTest extends TestCase
         $loader = new ProgressBarLoader($progressBar);
         $context = flow_context();
 
-        $loader->load(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))), $context);
-        $loader->load(array_to_rows([['id' => 3]], schema(int_schema('id'))), $context);
+        $loader->load(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))), $context->backend());
+        $loader->load(array_to_rows([['id' => 3]], schema(int_schema('id'))), $context->backend());
 
         static::assertSame(3, $progressBar->getProgress());
     }
@@ -46,7 +46,7 @@ final class ProgressBarLoaderTest extends TestCase
     {
         $progressBar = new ProgressBar(new BufferedOutput());
 
-        (new ProgressBarLoader($progressBar))->load(rows(schema(int_schema('id'))), flow_context());
+        (new ProgressBarLoader($progressBar))->load(rows(schema(int_schema('id'))), flow_context()->backend());
 
         static::assertSame(0, $progressBar->getProgress());
     }

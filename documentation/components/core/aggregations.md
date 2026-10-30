@@ -8,21 +8,90 @@ Each group created by `groupBy` function can be aggregated using one of the aggr
 
 ## Aggregation functions
 
-- [`COUNT()`](/src/core/etl/src/Flow/ETL/Function/Count.php)
-- [`AVERAGE()`](/src/core/etl/src/Flow/ETL/Function/Average.php)
-- [`SUM()`](/src/core/etl/src/Flow/ETL/Function/Sum.php)
-- [`MIN()`](/src/core/etl/src/Flow/ETL/Function/Min.php)
-- [`MAX()`](/src/core/etl/src/Flow/ETL/Function/Max.php)
-- [`COLLECT()`](/src/core/etl/src/Flow/ETL/Function/Collect.php)
-- [`COLLECT_UNIQUE()`](/src/core/etl/src/Flow/ETL/Function/CollectUnique.php)
-- [`FIRST()`](/src/core/etl/src/Flow/ETL/Function/First.php)
-- [`LAST()`](/src/core/etl/src/Flow/ETL/Function/Last.php)
-- [`STRING_AGG()`](/src/core/etl/src/Flow/ETL/Function/StringAggregate.php)
+- [`COUNT()`](/src/core/etl/src/Flow/ETL/Functions/Count.php)
+- [`AVERAGE()`](/src/core/etl/src/Flow/ETL/Functions/Average.php)
+- [`SUM()`](/src/core/etl/src/Flow/ETL/Functions/Sum.php)
+- [`MIN()`](/src/core/etl/src/Flow/ETL/Functions/Min.php)
+- [`MAX()`](/src/core/etl/src/Flow/ETL/Functions/Max.php)
+- [`COLLECT()`](/src/core/etl/src/Flow/ETL/Functions/Collect.php)
+- [`COLLECT_UNIQUE()`](/src/core/etl/src/Flow/ETL/Functions/CollectUnique.php)
+- [`FIRST()`](/src/core/etl/src/Flow/ETL/Functions/First.php)
+- [`LAST()`](/src/core/etl/src/Flow/ETL/Functions/Last.php)
+- [`STRING_AGG()`](/src/core/etl/src/Flow/ETL/Functions/StringAggregate.php)
 
-All aggregation functions implement [`AggregatingFunction`](/src/core/etl/src/Flow/ETL/Function/AggregatingFunction.php):
-`aggregate(Rows $rows, array $indices, FlowContext $context)` folds the rows of one group (`$indices` of the batch)
-into the aggregator's state, and `merge()` folds in the partial state of another aggregator of the same class, which
-group by uses after it spilled.
+All aggregation functions implement [`AggregatingFunction`](/src/core/etl/src/Flow/ETL/Functions/AggregatingFunction.php).
+`aggregate(Rows $rows, array $indices, Backend $backend)` folds the rows of one group into the state.
+`merge(array $partial, Backend $backend)` folds in the `partial()` of another aggregator of the same function.
+Group by merges after it spills.
+
+## Custom aggregators
+
+A custom aggregator also describes itself (it is rebuilt in a worker from `describe()`) and exposes its state as a
+partial, the plain values a worker hands back for the parent or a later task to merge:
+
+```php
+<?php
+
+final class LongestString implements AggregatingFunction
+{
+    private ?string $longest = null;
+
+    public function __construct(private readonly Reference $ref) {}
+
+    public static function fromDescription(array $data, Rebuild $rebuild): static
+    {
+        return new self($rebuild->of($data['ref'], Reference::class));
+    }
+
+    public function describe(): ?Description
+    {
+        return Description::compose(self::class, ['ref' => $this->ref]);
+    }
+
+    public function aggregate(Rows $rows, array $indices, Backend $backend): void
+    {
+        $column = $rows->column($this->ref->to());
+
+        foreach ($indices as $index) {
+            $value = $column->value($index);
+
+            if (is_string($value) && strlen($value) > strlen($this->longest ?? '')) {
+                $this->longest = $value;
+            }
+        }
+    }
+
+    public function partialType(): StructureType
+    {
+        return type_structure(['longest' => type_optional(type_string())]);
+    }
+
+    public function partial(): array
+    {
+        return ['longest' => $this->longest];
+    }
+
+    public function merge(array $partial, Backend $backend): void
+    {
+        $longest = $this->partialType()->assert($partial)['longest'];
+
+        if ($longest !== null && strlen($longest) > strlen($this->longest ?? '')) {
+            $this->longest = $longest;
+        }
+    }
+
+    public function withChildren(array $children): static
+    {
+        return new self($children[0]);   // a fresh instance: no state crosses
+    }
+
+    // children(), resolved(), deterministic(), references(), returns(), outputName(), value() as before
+}
+```
+
+`partialType()` is valid once the aggregator is resolved; `partial()` of a fresh instance is the initial state, and
+merging it is a no-op. Partials of two tasks merge in task order: an order-sensitive aggregator (`first()`,
+`last()`, `collect()`) relies on it. A `describe()` returning `null` keeps the group by in the parent process.
 
 ## Float arithmetic
 
@@ -43,7 +112,7 @@ df()->read(from_array([['a' => 0.1], ['a' => 0.2]]))->aggregate([sum(ref('a'), e
 ```php
 <?php
 
-use Flow\Calculator\Rounding;
+use Flow\ETL\Foundation\Calculator\Rounding;
 
 use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\DSL\{average, concat, data_frame, lit, max, min, ref, sum, to_output};

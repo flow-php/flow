@@ -10,14 +10,12 @@ use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\Protobuf\AST\ObjectWithArgs;
 use Flow\PostgreSql\Protobuf\AST\PBString;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 use function array_values;
 
 final readonly class DropProcedureBuilder implements DropProcedureFinalStep
 {
-    use AstToSql;
-
     /**
      * @param list<FunctionArgument> $arguments
      */
@@ -51,6 +49,11 @@ final readonly class DropProcedureBuilder implements DropProcedureFinalStep
     public function restrict(): DropProcedureFinalStep
     {
         return new self($this->name, $this->arguments, $this->ifExists, DropBehavior::DROP_RESTRICT);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): DropStmt

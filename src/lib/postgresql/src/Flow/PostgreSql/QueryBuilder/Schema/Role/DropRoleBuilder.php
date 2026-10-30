@@ -8,14 +8,12 @@ use Flow\PostgreSql\Protobuf\AST\DropRoleStmt;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\RoleSpec;
 use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 use function array_values;
 
 final readonly class DropRoleBuilder implements DropRoleFinalStep
 {
-    use AstToSql;
-
     /**
      * @param list<string> $names
      */
@@ -32,6 +30,11 @@ final readonly class DropRoleBuilder implements DropRoleFinalStep
     public function ifExists(): DropRoleFinalStep
     {
         return new self($this->names, true);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): DropRoleStmt

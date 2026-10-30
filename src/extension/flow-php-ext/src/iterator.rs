@@ -1,4 +1,4 @@
-//! `Flow\ETL\RustIterator`: the `\Iterator` the Rust open sources return from `batches()` / `records()` - keys 0..n,
+//! `Flow\ETL\Values\RustIterator`: the `\Iterator` the Rust open sources return from `batches()` / `records()` - keys 0..n,
 //! each value pulled from a Rust producer on demand. It behaves as the Generator it replaced: it streams once
 //! (`rewind()` after `next()` throws) and ends for good when the producer throws.
 
@@ -12,7 +12,7 @@ use crate::render::runtime;
 pub type Producer = Box<dyn FnMut() -> PhpResult<Option<Zval>>>;
 
 #[php_class]
-#[php(name = "Flow\\ETL\\RustIterator", flags = ClassFlags::Final, implements(ce = ce::iterator, stub = "\\Iterator"))]
+#[php(name = "Flow\\ETL\\Values\\RustIterator", flags = ClassFlags::Final, implements(ce = ce::iterator, stub = "\\Iterator"))]
 pub struct RustIterator {
     producer: Producer,
     current: Option<Zval>,

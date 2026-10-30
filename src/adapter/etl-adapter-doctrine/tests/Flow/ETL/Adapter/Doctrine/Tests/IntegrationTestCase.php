@@ -8,10 +8,10 @@ use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Logging\Middleware;
 use Doctrine\DBAL\Tools\DsnParser;
-use Flow\ETL\Adapter\Doctrine\Tests\Context\CommitCounter;
 use Flow\ETL\Adapter\Doctrine\Tests\Context\DatabaseContext;
-use Flow\ETL\Adapter\Doctrine\Tests\Context\InsertQueryCounter;
-use Flow\ETL\Adapter\Doctrine\Tests\Context\SelectQueryCounter;
+use Flow\ETL\Adapter\Doctrine\Tests\Double\CommitCounter;
+use Flow\ETL\Adapter\Doctrine\Tests\Double\InsertQueryCounter;
+use Flow\ETL\Adapter\Doctrine\Tests\Double\SelectQueryCounter;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\Types\DSL\type_string;

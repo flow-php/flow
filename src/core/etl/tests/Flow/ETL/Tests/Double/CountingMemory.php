@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Memory\ArrayMemory;
-use Flow\ETL\Memory\Memory;
+use Flow\ETL\Storage\Memory\ArrayMemory;
+use Flow\ETL\Storage\Memory\Memory;
 
 /**
  * Counts dump() calls so a test can assert how many times a memory is read for one run.

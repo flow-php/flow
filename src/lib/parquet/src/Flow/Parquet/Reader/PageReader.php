@@ -19,12 +19,15 @@ use function fread;
 
 final readonly class PageReader
 {
+    private Codec $codec;
+
     private ColumnDataDecoder $decoder;
 
     public function __construct(
         private ByteOrder $byteOrder,
-        private Options $options,
+        Options $options,
     ) {
+        $this->codec = new Codec($options);
         $this->decoder = new ColumnDataDecoder($this->byteOrder);
     }
 
@@ -46,7 +49,7 @@ final readonly class PageReader
                     throw new RuntimeException('DATA_PAGE header is missing data page header');
                 }
 
-                $data = (new Codec($this->options))->decompress(
+                $data = $this->codec->decompress(
                     $this->readBytes($stream, $pageHeader->compressedPageSize()),
                     $codec,
                     $pageHeader->uncompressedPageSize(),
@@ -66,11 +69,7 @@ final readonly class PageReader
 
                 $values = $this->readBytes($stream, $pageHeader->compressedPageSize() - $levelsLength);
                 $data = $dataPageHeaderV2->isCompressed()
-                    ? (new Codec($this->options))->decompress(
-                        $values,
-                        $codec,
-                        $pageHeader->uncompressedPageSize() - $levelsLength,
-                    )
+                    ? $this->codec->decompress($values, $codec, $pageHeader->uncompressedPageSize() - $levelsLength)
                     : $values;
 
                 return $this->decoder->decodeDataV2($levels . $data, $column, $dataPageHeaderV2, $dictionary);
@@ -95,7 +94,7 @@ final readonly class PageReader
         $compressed = $compressedSize === 0 ? '' : $this->readBytes($stream, $compressedSize);
 
         return $this->decoder->decodeDictionary(
-            (new Codec($this->options))->decompress($compressed, $codec, $pageHeader->uncompressedPageSize()),
+            $this->codec->decompress($compressed, $codec, $pageHeader->uncompressedPageSize()),
             $column,
             $dictionaryPageHeader,
         );

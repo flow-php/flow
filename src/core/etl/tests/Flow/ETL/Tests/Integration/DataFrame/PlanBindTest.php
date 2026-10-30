@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use DateTimeImmutable;
-use Flow\ETL\DataFrame;
-use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
-use Flow\ETL\Exception\SchemaNotDerivableException;
-use Flow\ETL\Join\Join;
-use Flow\ETL\Memory\ArrayMemory;
+use Flow\ETL\API\DataFrame;
+use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
+use Flow\ETL\Foundation\Exception\SchemaNotDerivableException;
+use Flow\ETL\Storage\Memory\ArrayMemory;
 use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\Double\RepeatableExtractor;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Values\Join\JoinType;
 use Flow\Types\Exception\InvalidArgumentException;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -24,7 +24,6 @@ use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\discover_pivot_values;
 use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\from_data_frame;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
@@ -107,7 +106,7 @@ final class PlanBindTest extends FlowTestCase
                 ->join(
                     df()->read(from_array([['group' => 'a', 'label' => 'A']])),
                     join_on(['group' => 'group']),
-                    Join::left,
+                    JoinType::left,
                 ),
         ];
 
@@ -162,7 +161,6 @@ final class PlanBindTest extends FlowTestCase
                 ->read(from_array([['a' => 1, 'b' => 2]]))
                 ->select('a')
                 ->schema()
-                ->references()
                 ->names(),
         );
     }
@@ -195,11 +193,11 @@ final class PlanBindTest extends FlowTestCase
     {
         $df = df()->read(from_array([['a' => 1, 'b' => 2]]));
 
-        static::assertSame(['a', 'b'], $df->schema()->references()->names());
+        static::assertSame(['a', 'b'], $df->schema()->names());
 
         $df->drop('b');
 
-        static::assertSame(['a'], $df->schema()->references()->names());
+        static::assertSame(['a'], $df->schema()->names());
     }
 
     public function test_an_incomparable_column_pair_is_refused_at_bind(): void
@@ -274,7 +272,7 @@ final class PlanBindTest extends FlowTestCase
         $this->expectExceptionMessage('cannot read its dataset twice');
 
         df()
-            ->read(from_data_frame(df()->read(new RepeatableExtractor(false))))
+            ->read(new RepeatableExtractor(false))
             ->groupBy([ref('product')])
             ->pivot(ref('country'), discover_pivot_values());
     }
@@ -291,23 +289,7 @@ final class PlanBindTest extends FlowTestCase
             ->pivot(ref('p'), discover_pivot_values());
     }
 
-    public function test_a_discovering_pivot_over_a_nested_repeatable_frame_is_allowed(): void
-    {
-        static::assertSame(
-            [['product' => 'Banana', 'USA' => 1000.0]],
-            df()
-                ->read(from_data_frame(df()->read(from_array([
-                    ['product' => 'Banana', 'country' => 'USA', 'amount' => 1000],
-                ]))))
-                ->groupBy([ref('product')])
-                ->pivot(ref('country'), discover_pivot_values())
-                ->aggregate(sum(ref('amount')))
-                ->fetch()
-                ->toArray(),
-        );
-    }
-
-    public function test_pivot_discovery_does_not_run_the_frames_sinks(): void
+    public function test_pivot_discovery_does_not_run_the_frames_writes(): void
     {
         $memory = new ArrayMemory();
 
@@ -336,14 +318,16 @@ final class PlanBindTest extends FlowTestCase
             ], $input),
         );
 
-        $schema = df()
-            ->read($extractor)
-            ->groupBy([ref('product')])
-            ->pivot(ref('country'), discover_pivot_values())
-            ->aggregate(sum(ref('amount')))
-            ->schema();
-
-        static::assertSame(['product', 'China', 'USA'], $schema->references()->names());
+        static::assertSame(
+            ['product', 'China', 'USA'],
+            df()
+                ->read($extractor)
+                ->groupBy([ref('product')])
+                ->pivot(ref('country'), discover_pivot_values())
+                ->aggregate(sum(ref('amount')))
+                ->schema()
+                ->names(),
+        );
         static::assertSame(1, $extractor->extractCalls);
     }
 
@@ -351,14 +335,16 @@ final class PlanBindTest extends FlowTestCase
     {
         $extractor = new CountingExtractor(schema(str_schema('product'), str_schema('country'), int_schema('amount')));
 
-        $schema = df()
-            ->read($extractor)
-            ->groupBy([ref('product')])
-            ->pivot(ref('country'), pivot_values('USA', 'China'))
-            ->aggregate(sum(ref('amount')))
-            ->schema();
-
-        static::assertSame(['product', 'USA', 'China'], $schema->references()->names());
+        static::assertSame(
+            ['product', 'USA', 'China'],
+            df()
+                ->read($extractor)
+                ->groupBy([ref('product')])
+                ->pivot(ref('country'), pivot_values('USA', 'China'))
+                ->aggregate(sum(ref('amount')))
+                ->schema()
+                ->names(),
+        );
         static::assertSame(0, $extractor->extractCalls);
     }
 
@@ -368,9 +354,8 @@ final class PlanBindTest extends FlowTestCase
 
         ob_start();
         df()->read($extractor)->printSchema();
-        $output = ob_get_clean() ?: '';
 
-        static::assertStringContainsString('|-- a: integer', $output);
+        static::assertStringContainsString('|-- a: integer', ob_get_clean() ?: '');
         static::assertSame(0, $extractor->extractCalls);
     }
 
@@ -383,7 +368,7 @@ final class PlanBindTest extends FlowTestCase
             ->withColumn('p', ref('payload')->unpack(schema(str_schema('colour'), int_schema('size'))))
             ->schema();
 
-        static::assertSame(['id', 'payload', 'p.colour', 'p.size'], $schema->references()->names());
+        static::assertSame(['id', 'payload', 'p.colour', 'p.size'], $schema->names());
         static::assertTrue($schema->get('p.colour')->isNullable());
         static::assertSame(0, $extractor->extractCalls);
     }
@@ -422,7 +407,7 @@ final class PlanBindTest extends FlowTestCase
     {
         $df = df()->read(from_array(self::ROWS))->repartition(ref('group'));
 
-        static::assertSame(['id', 'group', 'amount', 'name', 'payload'], $df->schema()->references()->names());
+        static::assertSame(['id', 'group', 'amount', 'name', 'payload'], $df->schema()->names());
         static::assertEquals($df->schema(), $df->fetch()->schema());
     }
 
@@ -435,7 +420,6 @@ final class PlanBindTest extends FlowTestCase
                 ->withColumn('b', ref('a')->plus(lit(1)))
                 ->fetch()
                 ->schema()
-                ->references()
                 ->names(),
         );
     }

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\HttpFoundation\Output;
 
 use Flow\Bridge\Symfony\HttpFoundation\Output;
-use Flow\ETL\Adapter\XML\XMLWriter;
-use Flow\ETL\Adapter\XML\XMLWriter\StringXMLWriter;
-use Flow\ETL\Loader;
+use Flow\ETL\Adapter\XML\IO\Loader\XMLWriter;
+use Flow\ETL\Adapter\XML\IO\Loader\XMLWriter\StringXMLWriter;
+use Flow\ETL\IO\Loader;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
 use RuntimeException;

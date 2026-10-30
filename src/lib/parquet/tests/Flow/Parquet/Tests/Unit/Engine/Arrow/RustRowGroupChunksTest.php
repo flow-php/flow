@@ -77,4 +77,20 @@ final class RustRowGroupChunksTest extends TestCase
 
         $chunks->chunk(1, FlatColumn::int64('id'));
     }
+
+    public function test_decoded_chunks_are_answered_as_given(): void
+    {
+        $metadata = MemoryParquetFile::read(Reader::php(), MemoryParquetFile::threeRowGroups())->metadata();
+        $id = $metadata->schema()->getFlat('id');
+        $chunk = $metadata->rowGroups()->all()[0]->getColumnChunk($id);
+        $chunks = RustRowGroupChunks::decoded([2], ['id' => [$chunk]], ['id' => ColumnOrder::TypeDefined]);
+
+        static::assertSame($chunk, $chunks->chunk(0, $id));
+        static::assertSame(ColumnOrder::TypeDefined, $chunks->columnOrder($id));
+        static::assertSame([2], $chunks->rowCounts());
+
+        $this->expectException(OutOfBoundsException::class);
+
+        $chunks->chunk(1, $id);
+    }
 }

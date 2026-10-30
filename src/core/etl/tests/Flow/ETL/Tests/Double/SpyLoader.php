@@ -4,27 +4,36 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\FlowContext;
-use Flow\ETL\Loader;
-use Flow\ETL\Loader\Closure;
-use Flow\ETL\Rows;
+use Flow\ETL\Foundation\Describe\Description;
+use Flow\ETL\Foundation\Describe\Rebuild;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\IO\Loader;
+use Flow\ETL\IO\Loader\Closure;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Rows;
+use SensitiveParameter;
 
 use function array_map;
 use function array_merge;
 
 final class SpyLoader implements Closure, Loader
 {
-    /**
-     * @var array<FlowContext>
-     */
-    public array $closureContexts = [];
+    public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
+    {
+        throw InvalidArgumentException::because('%s holds live state and is never described', self::class);
+    }
+
+    public function describe(): ?Description
+    {
+        return null;
+    }
 
     public int $closureCount = 0;
 
     /**
-     * @var array<FlowContext>
+     * @var list<Backend>
      */
-    public array $contexts = [];
+    public array $backends = [];
 
     /**
      * @var list<Rows>
@@ -33,9 +42,8 @@ final class SpyLoader implements Closure, Loader
 
     public int $loadsCount = 0;
 
-    public function closure(FlowContext $context): void
+    public function closure(): void
     {
-        $this->closureContexts[] = $context;
         $this->closureCount++;
     }
 
@@ -55,18 +63,17 @@ final class SpyLoader implements Closure, Loader
         return array_merge(...array_map(static fn(Rows $rows): array => $rows->toArray(), $this->loadedRows));
     }
 
-    public function load(Rows $rows, FlowContext $context): void
+    public function load(Rows $rows, Backend $backend): void
     {
         $this->loadedRows[] = $rows;
-        $this->contexts[] = $context;
+        $this->backends[] = $backend;
         $this->loadsCount++;
     }
 
     public function reset(): void
     {
-        $this->closureContexts = [];
         $this->closureCount = 0;
-        $this->contexts = [];
+        $this->backends = [];
         $this->loadedRows = [];
         $this->loadsCount = 0;
     }

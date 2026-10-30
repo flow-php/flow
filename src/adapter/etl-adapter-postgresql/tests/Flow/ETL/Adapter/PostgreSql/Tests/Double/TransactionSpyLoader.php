@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql\Tests\Double;
 
-use Flow\ETL\FlowContext;
-use Flow\ETL\Loader;
-use Flow\ETL\Loader\Closure;
-use Flow\ETL\Rows;
+use Flow\ETL\Foundation\Describe\Description;
+use Flow\ETL\Foundation\Describe\Rebuild;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\IO\Loader;
+use Flow\ETL\IO\Loader\Closure;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Rows;
 use Flow\PostgreSql\Client\Client;
+use SensitiveParameter;
 
 final class TransactionSpyLoader implements Closure, Loader
 {
@@ -22,12 +26,22 @@ final class TransactionSpyLoader implements Closure, Loader
         private readonly Client $client,
     ) {}
 
-    public function closure(FlowContext $context): void
+    public function closure(): void
     {
         $this->closureNestingLevels[] = $this->client->getTransactionNestingLevel();
     }
 
-    public function load(Rows $rows, FlowContext $context): void
+    public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
+    {
+        throw InvalidArgumentException::because('%s holds live state and is never described', self::class);
+    }
+
+    public function describe(): ?Description
+    {
+        return null;
+    }
+
+    public function load(Rows $rows, Backend $backend): void
     {
         $this->deliveries[] = ['rows' => $rows->count(), 'nestingLevel' => $this->client->getTransactionNestingLevel()];
     }

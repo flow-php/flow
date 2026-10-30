@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Mother;
 
-use Flow\ETL\Bucketing\Bucket;
+use Flow\ETL\Kernels\Bucketing\Bucket;
 
 final class BucketMother
 {

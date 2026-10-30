@@ -6,7 +6,7 @@ namespace Flow\Benchmarks\Joining;
 
 use Flow\Benchmarks\BenchmarkConfig;
 use Flow\Benchmarks\Datasets\Datasets;
-use Flow\ETL\Join\Join;
+use Flow\ETL\Values\Join\JoinType;
 
 use function Flow\ETL\Adapter\Parquet\from_parquet;
 use function Flow\ETL\DSL\data_frame;
@@ -18,7 +18,7 @@ use function Flow\Types\DSL\type_string;
 final readonly class JoinOrdersWithSellersScenario
 {
     public function __construct(
-        private Join $type,
+        private JoinType $type,
         private int $rows,
     ) {}
 

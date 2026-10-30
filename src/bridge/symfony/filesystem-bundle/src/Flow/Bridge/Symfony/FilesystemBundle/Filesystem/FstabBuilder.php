@@ -6,7 +6,7 @@ namespace Flow\Bridge\Symfony\FilesystemBundle\Filesystem;
 
 use Flow\Bridge\Symfony\FilesystemBundle\Exception\InvalidArgumentException;
 use Flow\Bridge\Symfony\FilesystemBundle\Exception\LogicException;
-use Flow\ETL\Exception\InvalidArgumentException as ETLInvalidArgumentException;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException as ETLInvalidArgumentException;
 use Flow\Filesystem\FilesystemTable;
 use Flow\Filesystem\Telemetry\FilesystemTelemetryConfig;
 

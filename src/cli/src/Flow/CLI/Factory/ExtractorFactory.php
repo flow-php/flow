@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\CLI\Factory;
 
 use Flow\CLI\Options\FileFormat;
-use Flow\ETL\Extractor;
+use Flow\ETL\IO\Extractor;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Input\InputInterface;
 

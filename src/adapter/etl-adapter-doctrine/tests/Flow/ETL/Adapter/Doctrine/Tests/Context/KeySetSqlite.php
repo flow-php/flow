@@ -10,7 +10,7 @@ use Doctrine\DBAL\Schema\PrimaryKeyConstraint;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
-use Flow\ETL\Schema;
+use Flow\ETL\Values\Schema;
 
 use function Flow\ETL\Adapter\Doctrine\to_dbal_schema_table;
 

@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use Flow\ETL\Config\ConfigBuilder;
+use Flow\ETL\API\Config\ConfigBuilder;
 use Flow\ETL\Tests\Double\FakeRandomOrdersExtractor;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\ETL\Values\Memory\Unit;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 use function array_map;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\average;
 use function Flow\ETL\DSL\collect;
 use function Flow\ETL\DSL\collect_unique;
@@ -18,10 +22,13 @@ use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\first;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\hash_group_by;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\last;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\sum;
 use function Flow\ETL\DSL\uuid_schema;
@@ -51,9 +58,11 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         );
 
         $default = $pipeline(config_builder());
-        $fewPartitions = $pipeline(config_builder()->groupBy(hash_group_by()->bucketsCount(3)->batchSize(2)));
 
-        static::assertSame($default, $fewPartitions);
+        static::assertSame(
+            $default,
+            $pipeline(config_builder()->groupBy(hash_group_by()->bucketsCount(3)->batchSize(2))),
+        );
         static::assertCount(3, $default);
 
         $bySeller = [];
@@ -77,15 +86,13 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
 
     public function test_multi_column_key_does_not_collide(): void
     {
-        $input = [
-            ['a' => 'x', 'b' => 'yz', 'v' => 1],
-            ['a' => 'xy', 'b' => 'z', 'v' => 1],
-            ['a' => 'x', 'b' => 'yz', 'v' => 1],
-        ];
-
         $result = iterator_to_array(
             data_frame(config_builder()->groupBy(hash_group_by()->bucketsCount(3)))
-                ->read(from_array($input))
+                ->read(from_array([
+                    ['a' => 'x', 'b' => 'yz', 'v' => 1],
+                    ['a' => 'xy', 'b' => 'z', 'v' => 1],
+                    ['a' => 'x', 'b' => 'yz', 'v' => 1],
+                ]))
                 ->groupBy([ref('a'), ref('b')])
                 ->aggregate(sum(ref('v')))
                 ->sortBy([ref('a')->asc()])
@@ -104,18 +111,50 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         static::assertSame(1.0, $byGroup['xy|z']);
     }
 
+    /**
+     * @return Generator<string, array{bool, bool}>
+     */
+    public static function drifts(): Generator
+    {
+        yield 'a column is added' => [true, false];
+        yield 'a column turns nullable' => [false, true];
+    }
+
+    #[DataProvider('drifts')]
+    public function test_a_spilled_bucket_takes_batches_whose_schema_drifts(bool $added, bool $nullable): void
+    {
+        $first = schema(int_schema('id'));
+
+        static::assertSame(
+            [['id' => 1, 'id_count' => 3]],
+            data_frame(config_builder()->groupBy(hash_group_by()->bucketsCount(1)->memoryLimit(Unit::fromBytes(1))))
+                ->read(from_rows(
+                    array_to_rows([['id' => 1]], $first),
+                    array_to_rows([['id' => 1]], $first),
+                    array_to_rows(
+                        [$added ? ['id' => 1, 'name' => null] : ['id' => 1]],
+                        $added
+                            ? schema(int_schema('id'), str_schema('name', nullable: true))
+                            : schema(int_schema('id', nullable: $nullable)),
+                    ),
+                ))
+                ->groupBy(ref('id'))
+                ->aggregate(count(ref('id')))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
     public function test_mixed_presence_columns_survive_the_filesystem_round_trip(): void
     {
-        $input = [
-            ['seller' => 'a', 'amount' => 10.5],
-            ['seller' => 'a'],
-            ['seller' => 'b', 'amount' => 2.5],
-            ['amount' => 7.0],
-        ];
-
         $result = iterator_to_array(
             data_frame(config_builder()->groupBy(hash_group_by()->bucketsCount(3)))
-                ->read(from_array($input))
+                ->read(from_array([
+                    ['seller' => 'a', 'amount' => 10.5],
+                    ['seller' => 'a'],
+                    ['seller' => 'b', 'amount' => 2.5],
+                    ['amount' => 7.0],
+                ]))
                 ->groupBy([ref('seller')])
                 ->aggregate(sum(ref('amount')))
                 ->getEachAsArray(),
@@ -137,18 +176,16 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
 
     public function test_chained_filesystem_group_by_stages_do_not_corrupt_each_other(): void
     {
-        $input = [
-            ['seller' => 'a', 'region' => 'south'],
-            ['seller' => 'b', 'region' => 'north'],
-            ['seller' => 'c', 'region' => 'south'],
-            ['seller' => 'd', 'region' => 'north'],
-            ['seller' => 'e', 'region' => 'south'],
-            ['seller' => 'f', 'region' => 'north'],
-        ];
-
         $result = iterator_to_array(
             data_frame(config_builder()->groupBy(hash_group_by()->bucketsCount(3)))
-                ->read(from_array($input))
+                ->read(from_array([
+                    ['seller' => 'a', 'region' => 'south'],
+                    ['seller' => 'b', 'region' => 'north'],
+                    ['seller' => 'c', 'region' => 'south'],
+                    ['seller' => 'd', 'region' => 'north'],
+                    ['seller' => 'e', 'region' => 'south'],
+                    ['seller' => 'f', 'region' => 'north'],
+                ]))
                 ->groupBy([ref('seller'), ref('region')])
                 ->aggregate(count(ref('seller')))
                 ->groupBy([ref('region')])
@@ -168,15 +205,13 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
 
     public function test_first_and_last_survive_the_filesystem_round_trip(): void
     {
-        $input = [
-            ['k' => 'a', 'v' => 1],
-            ['k' => 'a', 'v' => 2],
-            ['k' => 'a', 'v' => 3],
-        ];
-
         $result = iterator_to_array(
             data_frame(config_builder()->groupBy(hash_group_by()->bucketsCount(3)))
-                ->read(from_array($input))
+                ->read(from_array([
+                    ['k' => 'a', 'v' => 1],
+                    ['k' => 'a', 'v' => 2],
+                    ['k' => 'a', 'v' => 3],
+                ]))
                 ->groupBy([ref('k')])
                 ->aggregate(first(ref('v')), last(ref('v')))
                 ->sortBy([ref('k')->asc()])
@@ -208,9 +243,8 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         );
 
         $default = $pipeline(config_builder());
-        $fewPartitions = $pipeline(config_builder()->groupBy(hash_group_by()->bucketsCount(3)));
 
-        static::assertSame($default, $fewPartitions);
+        static::assertSame($default, $pipeline(config_builder()->groupBy(hash_group_by()->bucketsCount(3))));
 
         $byKey = [];
 
@@ -252,9 +286,8 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         );
 
         $default = $pipeline(config_builder());
-        $fewPartitions = $pipeline(config_builder()->groupBy(hash_group_by()->bucketsCount(3)));
 
-        static::assertSame($default, $fewPartitions);
+        static::assertSame($default, $pipeline(config_builder()->groupBy(hash_group_by()->bucketsCount(3))));
 
         $byKey = [];
 
@@ -267,12 +300,14 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
 
     public function test_partition_count_does_not_affect_a_realistic_dataset(): void
     {
-        $raw = iterator_to_array((new FakeRandomOrdersExtractor(1000))->rawData(), false);
-        $data = array_map(static fn(array $order): array => [
-            'seller_id' => $order['seller_id'],
-            'email' => $order['email'],
-            'discount' => $order['discount'],
-        ], $raw);
+        $data = array_map(
+            static fn(array $order): array => [
+                'seller_id' => $order['seller_id'],
+                'email' => $order['email'],
+                'discount' => $order['discount'],
+            ],
+            iterator_to_array((new FakeRandomOrdersExtractor(1000))->rawData(), false),
+        );
 
         // one schema per spill file: declare the source schema so a null discount carries a
         // float (nullable) definition instead of NullType, otherwise an all-null-first spill

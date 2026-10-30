@@ -6,11 +6,13 @@ namespace Flow\Bridge\Symfony\HttpFoundation\Response;
 
 use Flow\Bridge\Symfony\HttpFoundation\Output;
 use Flow\Bridge\Symfony\HttpFoundation\StreamClosure;
-use Flow\ETL\Config;
-use Flow\ETL\Config\ConfigBuilder;
-use Flow\ETL\Extractor;
-use Flow\ETL\Transformation;
-use Flow\ETL\Transformations;
+use Flow\ETL\API\Config\ConfigBuilder;
+use Flow\ETL\API\DataFrame;
+use Flow\ETL\API\Transformation;
+use Flow\ETL\API\Transformations;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\IO\Extractor;
+use Flow\ETL\Runtime\Config;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\StdOutFilesystem;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -26,9 +28,11 @@ class FlowStreamedResponse extends StreamedResponse
 
     /**
      * @param array<string, mixed> $headers
+     *
+     * @throws InvalidArgumentException when a config is given for a DataFrame source, which carries its own
      */
     public function __construct(
-        private readonly Extractor $extractor,
+        private readonly Extractor|DataFrame $source,
         private readonly Output $output,
         private readonly Transformation $transformations = new Transformations(),
         int $status = 200,
@@ -37,7 +41,11 @@ class FlowStreamedResponse extends StreamedResponse
         private readonly ?StreamClosure $streamClosure = null,
         private readonly Filesystem $filesystem = new StdOutFilesystem(),
     ) {
-        $this->config = $config ?? Config::default();
+        if ($source instanceof DataFrame && $config !== null) {
+            throw new InvalidArgumentException('A DataFrame source carries its own config');
+        }
+
+        $this->config = $config ?? (new ConfigBuilder())->build();
 
         parent::__construct($this->stream(...), $status, $headers);
 
@@ -52,8 +60,7 @@ class FlowStreamedResponse extends StreamedResponse
             'stream' => 'output',
         ]);
 
-        $report = df($this->config)
-            ->read($this->extractor)
+        $report = ($this->source instanceof DataFrame ? $this->source : df($this->config)->read($this->source))
             ->with($this->transformations)
             ->write($this->output->loader($stdoutPath, $this->filesystem))
             ->run();

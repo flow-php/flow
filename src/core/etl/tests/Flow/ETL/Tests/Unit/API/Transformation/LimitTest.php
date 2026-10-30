@@ -1,0 +1,29 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Tests\Unit\API\Transformation;
+
+use Flow\ETL\API\Transformation\Limit;
+use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\DSL\data_frame;
+use function Flow\ETL\DSL\from_array;
+
+final class LimitTest extends FlowTestCase
+{
+    public function test_limit_transformation(): void
+    {
+        $rows = data_frame()
+            ->read(from_array([
+                ['id' => 1, 'name' => 'John'],
+                ['id' => 2, 'name' => 'Doe'],
+                ['id' => 3, 'name' => 'Smith'],
+            ]))
+            ->with(new Limit(2))
+            ->fetch()
+            ->toArray();
+
+        static::assertCount(2, $rows);
+    }
+}

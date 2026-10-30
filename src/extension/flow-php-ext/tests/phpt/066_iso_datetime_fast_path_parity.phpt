@@ -6,9 +6,9 @@ ISO date-times with a Z or ±HH:MM suffix become the micros DateTimeType::cast()
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Adapter\CSV\RustCSVOpenSource;
-use Flow\ETL\Column\RustBackend;
-use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Adapter\CSV\IO\Extractor\RustCSVOpenSource;
+use Flow\ETL\Values\Column\RustBackend;
+use Flow\ETL\Values\Column\PhpBackend;
 use Flow\Filesystem\Stream\MemorySourceStream;
 
 use function Flow\ETL\DSL\{datetime_schema, schema};

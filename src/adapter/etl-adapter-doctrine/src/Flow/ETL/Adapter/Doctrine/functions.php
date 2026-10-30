@@ -20,14 +20,25 @@ use Flow\Documentation\Attribute\DocumentationDSL;
 use Flow\Documentation\Attribute\DocumentationExample;
 use Flow\Documentation\Attribute\Module;
 use Flow\Documentation\Attribute\Type as DSLType;
-use Flow\ETL\Adapter\Doctrine\Pagination\Key;
-use Flow\ETL\Adapter\Doctrine\Pagination\KeySet;
-use Flow\ETL\Adapter\Doctrine\Pagination\Order;
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Loader;
-use Flow\ETL\Schema;
-use Flow\ETL\Sink;
-use Flow\ETL\Sink\Transactional;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\DbalExtractorFactory;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\DbalKeySetExtractor;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\DbalLimitOffsetExtractor;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\DbalQueryExtractor;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\OrderBy;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\Pagination\Key;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\Pagination\KeySet;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\Pagination\Order;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\ParametersSet;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\QueryParameter;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\Table;
+use Flow\ETL\Adapter\Doctrine\IO\Loader\DbalLoader;
+use Flow\ETL\Adapter\Doctrine\IO\Loader\DbalTransaction;
+use Flow\ETL\Adapter\Doctrine\Values\Schema\SchemaConverter;
+use Flow\ETL\API\Branch;
+use Flow\ETL\API\Transactional;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\IO\Loader;
+use Flow\ETL\Values\Schema;
 
 use function is_array;
 use function is_string;
@@ -38,14 +49,14 @@ use function is_string;
  * @param QueryParameter ...$parameters
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
-function dbal_dataframe_factory(
+function dbal_extractor_factory(
     array|Connection $connection,
     string $query,
     QueryParameter ...$parameters,
-): DbalDataFrameFactory {
+): DbalExtractorFactory {
     return is_array($connection)
-        ? new DbalDataFrameFactory($connection, $query, ...$parameters)
-        : DbalDataFrameFactory::fromConnection($connection, $query, ...$parameters);
+        ? new DbalExtractorFactory($connection, $query, ...$parameters)
+        : DbalExtractorFactory::fromConnection($connection, $query, ...$parameters);
 }
 
 /**
@@ -82,7 +93,6 @@ function from_dbal_limit_offset(
  * @param Connection $connection
  * @param int $page_size - becomes the extractor's batch size: rows per page
  * @param null|int $maximum - maximum can also be taken from a query builder, $maximum however is used regardless of the query builder if it's set
- * @param int $offset - offset can also be taken from a query builder, $offset however is used regardless of the query builder if it's set to non 0 value
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::EXTRACTOR)]
 function from_dbal_limit_offset_qb(
@@ -90,11 +100,8 @@ function from_dbal_limit_offset_qb(
     QueryBuilder $queryBuilder,
     int $page_size = 1000,
     ?int $maximum = null,
-    int $offset = 0,
 ): DbalLimitOffsetExtractor {
-    $loader = (new DbalLimitOffsetExtractor($connection, $queryBuilder))
-        ->withBatchSize($page_size)
-        ->withOffset($offset);
+    $loader = (new DbalLimitOffsetExtractor($connection, $queryBuilder))->withBatchSize($page_size);
 
     if ($maximum !== null) {
         $loader->withMaximum($maximum);
@@ -240,7 +247,7 @@ function to_dbal_table_delete(array|Connection $connection, string $table): Dbal
 }
 
 /**
- * Converts a Flow\ETL\Schema to a Doctrine\DBAL\Schema\Table.
+ * Converts a Flow\ETL\Values\Schema to a Doctrine\DBAL\Schema\Table.
  *
  * @param Schema $schema
  * @param array<string, mixed> $table_options
@@ -257,7 +264,7 @@ function to_dbal_schema_table(
 }
 
 /**
- * Converts a Doctrine\DBAL\Schema\Table to a Flow\ETL\Schema.
+ * Converts a Doctrine\DBAL\Schema\Table to a Flow\ETL\Values\Schema.
  *
  * @param array<class-string<\Flow\Types\Type<mixed>>, class-string<\Doctrine\DBAL\Types\Type>> $types_map
  *
@@ -320,26 +327,26 @@ function postgresql_update_options(array $primary_key_columns = [], array $updat
 }
 
 /**
- * Write every sink within database transactions.
- * Each batch of rows is written in its own transaction; rows a sink's Transformation delivers when
+ * Write every child within database transactions.
+ * Each batch of rows is written in its own transaction; rows a branch's Transformation delivers when
  * the run ends (blocking operations drain there) are committed in one final transaction.
- * If any sink fails, the open transaction is rolled back.
- * A plain Loader child is a bare sink root; a to_transformation(...) child delivers inside the same
+ * If any write fails, the open transaction is rolled back.
+ * A plain Loader child is written directly; a to_transformation(...) child delivers inside the same
  * transaction. Every child's loader must use the same connection as the transaction: pass one live
  * Connection to both - a loader built from array params opens its own connection and escapes the
  * transaction.
  *
  * @param array<string, mixed>|Connection $connection
- * @param Loader|Sink ...$sinks - sinks written within the transaction
+ * @param Loader|Branch ...$writes - written within the transaction
  *
  * @throws InvalidArgumentException
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::LOADER)]
-function to_dbal_transaction(array|Connection $connection, Loader|Sink ...$sinks): Transactional
+function to_dbal_transaction(array|Connection $connection, Loader|Branch ...$writes): Transactional
 {
     return new Transactional(
         is_array($connection) ? new DbalTransaction($connection) : DbalTransaction::fromConnection($connection),
-        ...$sinks,
+        ...$writes,
     );
 }
 

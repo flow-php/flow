@@ -6,9 +6,9 @@ flow_php registers FLOW_PHP_ABI equal to the ABI flow-php/etl expects, so the Ad
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Column\AdaptiveBackend;
-use Flow\ETL\Column\RustColumn;
-use Flow\ETL\FlowPhpExtension;
+use Flow\ETL\Values\Column\AdaptiveBackend;
+use Flow\ETL\Values\Column\RustColumn;
+use Flow\ETL\Foundation\FlowPhpExtension;
 
 use function Flow\ETL\DSL\int_schema;
 

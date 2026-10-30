@@ -6,10 +6,14 @@ RustCSVOpenSource::batches() yields the frames or refusals of PhpCSVOpenSource::
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Adapter\CSV\{CSVDecoder, CSVLineReader, PhpCSVOpenSource, RustCSVOpenSource};
-use Flow\ETL\Column\{RustBackend, RustColumn, PhpBackend};
-use Flow\ETL\Schema;
+use Flow\ETL\Adapter\CSV\IO\Extractor\CSVDecoder;
+use Flow\ETL\Adapter\CSV\IO\Extractor\CSVLineReader;
+use Flow\ETL\Adapter\CSV\IO\Extractor\PhpCSVOpenSource;
+use Flow\ETL\Adapter\CSV\IO\Extractor\RustCSVOpenSource;
+use Flow\ETL\Values\Column\{RustBackend, RustColumn, PhpBackend};
+use Flow\ETL\Values\Schema;
 use Flow\Filesystem\Stream\StringSourceStream;
+use Flow\ETL\Values\Column\Frame\NoopCodec;
 
 use function Flow\ETL\DSL\{bool_schema, date_schema, datetime_schema, float_schema, int_schema, json_schema, schema, str_schema, uuid_schema};
 use function Flow\Filesystem\DSL\path;
@@ -25,7 +29,7 @@ $batches = static fn(object $open, Schema $schema, object $backend): string => o
             }
         }
 
-        $frames[] = bin2hex($batch->encodeFrame());
+        $frames[] = bin2hex((new PhpBackend())->encodeFrame($batch, new NoopCodec()));
     }
 
     return $frames;

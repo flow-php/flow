@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\OpenAPI\Specification\Tests\Unit;
 
 use Flow\Bridge\OpenAPI\Specification\OpenAPIMetadata;
-use Flow\ETL\Schema\Metadata;
+use Flow\ETL\Values\Schema\Metadata;
 use PHPUnit\Framework\TestCase;
 
 final class OpenAPIMetadataTest extends TestCase
@@ -127,11 +127,9 @@ final class OpenAPIMetadataTest extends TestCase
 
     public function test_metadata_can_be_combined(): void
     {
-        $description = OpenAPIMetadata::description('User email');
-        $format = OpenAPIMetadata::format('email');
-        $example = OpenAPIMetadata::example('user@example.com');
-
-        $combined = $description->merge($format)->merge($example);
+        $combined = OpenAPIMetadata::description('User email')
+            ->merge(OpenAPIMetadata::format('email'))
+            ->merge(OpenAPIMetadata::example('user@example.com'));
 
         static::assertTrue($combined->has(OpenAPIMetadata::DESCRIPTION->value));
         static::assertTrue($combined->has(OpenAPIMetadata::FORMAT->value));

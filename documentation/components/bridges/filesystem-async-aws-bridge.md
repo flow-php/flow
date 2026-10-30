@@ -14,16 +14,13 @@ through [Async AWS SDK](https://github.com/async-aws/s3).
 For detailed installation instructions, see the [installation page](/documentation/installation/packages/filesystem-async-aws-bridge.md).
 
 ```php
-use function Flow\Filesystem\Bridge\AsyncAWS\DSL\{aws_s3_client, aws_s3_filesystem};
+use function Flow\Filesystem\Bridge\AsyncAWS\DSL\aws_s3_filesystem;
 
-$aws = aws_s3_filesystem(
-    $_ENV['AWS_S3_BUCKET'],
-    aws_s3_client([
-        'region' => $_ENV['AWS_S3_REGION'],
-        'accessKeyId' => $_ENV['AWS_S3_KEY'],
-        'accessKeySecret' => $_ENV['AWS_S3_SECRET'],
-    ])
-);
+$aws = aws_s3_filesystem($_ENV['AWS_S3_BUCKET'], [
+    'region' => $_ENV['AWS_S3_REGION'],
+    'accessKeyId' => $_ENV['AWS_S3_KEY'],
+    'accessKeySecret' => $_ENV['AWS_S3_SECRET'],
+]);
 
 $fstab = fstab($aws);
 ```

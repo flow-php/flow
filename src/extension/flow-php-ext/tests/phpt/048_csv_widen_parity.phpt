@@ -6,8 +6,8 @@ the native fold widens every pair of CSV leaf types exactly like TypeWidener
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Schema\Inference\ColumnTypes;
-use Flow\ETL\Schema\Inference\InferredTypes;
+use Flow\ETL\IO\Inference\ColumnTypes;
+use Flow\ETL\IO\Inference\InferredTypes;
 use Flow\Types\Type\Native\String\StringTypeNarrower;
 use Flow\Types\Type\TypeWidener;
 

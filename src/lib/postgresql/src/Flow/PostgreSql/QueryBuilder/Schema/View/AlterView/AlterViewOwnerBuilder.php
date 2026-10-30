@@ -13,12 +13,10 @@ use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\Protobuf\AST\RoleSpec;
 use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 final readonly class AlterViewOwnerBuilder implements AlterViewOwnerFinalStep
 {
-    use AstToSql;
-
     private function __construct(
         private string $view,
         private ?string $schema,
@@ -28,6 +26,11 @@ final readonly class AlterViewOwnerBuilder implements AlterViewOwnerFinalStep
     public static function create(string $view, ?string $schema, string $owner): self
     {
         return new self($view, $schema, $owner);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): AlterTableStmt

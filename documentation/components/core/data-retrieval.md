@@ -113,7 +113,7 @@ $dataFrame->forEach(function (Rows $rows) {
 ```
 
 `forEach()` owns the streaming loop. `run(bool|Analyze $analyze = false)` takes no callback: it executes the frame's
-sinks and returns a `Report` when asked to analyze.
+writes and returns a `Report` when asked to analyze.
 
 ```php
 <?php

@@ -6,8 +6,8 @@ RustColumnBuilder casts and refuses exactly as the PHP builder through append() 
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Column\RustBackend;
-use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Values\Column\RustBackend;
+use Flow\ETL\Values\Column\PhpBackend;
 use Flow\ETL\Tests\Double\ForeignTypeDefinition;
 use Flow\ETL\Tests\Double\ThrowingType;
 

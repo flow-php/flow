@@ -1,15 +1,15 @@
 --TEST--
-CSVOpenSink writes the same bytes through RustCSVEncoder and PhpCSVEncoder: seeded random batches over every kind, nesting <= 3, random options
+CSVFileWriter writes the same bytes through RustCSVEncoder and PhpCSVEncoder: seeded random batches over every kind, nesting <= 3, random options
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 --FILE--
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Adapter\CSV\CSVOpenSink;
-use Flow\ETL\Adapter\CSV\CSVWriteOptions;
-use Flow\ETL\Adapter\CSV\RustCSVEncoder;
-use Flow\ETL\Adapter\CSV\PhpCSVEncoder;
+use Flow\ETL\Adapter\CSV\IO\Loader\CSVFileWriter;
+use Flow\ETL\Adapter\CSV\IO\Loader\CSVWriteOptions;
+use Flow\ETL\Adapter\CSV\IO\Loader\RustCSVEncoder;
+use Flow\ETL\Adapter\CSV\IO\Loader\PhpCSVEncoder;
 use Flow\Filesystem\DestinationStream;
 
 mt_srand(80);
@@ -42,20 +42,20 @@ for ($i = 0; $i < 2_000; $i++) {
 
     $header = mt_rand(0, 1) === 1;
     $recorder = new RecordingPhpCSVEncoder(new PhpCSVEncoder($options));
-    $writer = new RustCSVEncoder($options->separator, $options->enclosure, $options->escape, $options->newLineSeparator, $options->dateTimeFormat, $options->dateFormat, $recorder);
+    $writer = new RustCSVEncoder($options, $recorder);
     // a second batch proves the header is written once and the encoders hold no state across batches
     $half = intdiv(count($rows), 2);
 
     $php = written(static function (DestinationStream $stream) use ($schema, $rows, $options, $header, $half): void {
-        $sink = new CSVOpenSink($stream, new PhpCSVEncoder($options), $header);
-        $sink->write(php_rows($schema, array_slice($rows, 0, $half)));
-        $sink->write(php_rows($schema, array_slice($rows, $half)));
+        $fileWriter = new CSVFileWriter($stream, new PhpCSVEncoder($options), $header);
+        $fileWriter->write(php_rows($schema, array_slice($rows, 0, $half)));
+        $fileWriter->write(php_rows($schema, array_slice($rows, $half)));
     });
     $native = written(static function (DestinationStream $stream) use ($schema, $rows, $header, $half, $writer): void {
-        $sink = new CSVOpenSink($stream, $writer, $header);
-        $sink->write(native_rows($schema, array_slice($rows, 0, $half)));
+        $fileWriter = new CSVFileWriter($stream, $writer, $header);
+        $fileWriter->write(native_rows($schema, array_slice($rows, 0, $half)));
         // a PHP column inside the batch is adopted
-        $sink->write(php_rows($schema, array_slice($rows, $half)));
+        $fileWriter->write(php_rows($schema, array_slice($rows, $half)));
     });
 
     $refused += (int) refused($php);

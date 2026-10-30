@@ -1,0 +1,319 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Tests\Unit\Operators\Transformer;
+
+use DateTimeImmutable;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
+use Flow\ETL\Functions\WithColumn;
+use Flow\ETL\Operators\Transformer\DuplicateRowTransformer;
+use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\ListColumnsMother;
+use Flow\ETL\Values\Column\AdaptiveBackend;
+use Flow\Types\Exception\InvalidTypeException;
+
+use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\date_schema;
+use function Flow\ETL\DSL\float_schema;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\string_schema;
+use function Flow\ETL\DSL\with_column;
+use function Flow\Types\DSL\type_date;
+
+final class DuplicateRowTransformerTest extends FlowTestCase
+{
+    public function test_bind_widens_a_column_an_entry_overwrites_with_another_type(): void
+    {
+        static::assertEquals(schema(float_schema('amount')), (new DuplicateRowTransformer(lit(true), [with_column(
+            'amount',
+            lit(1.5),
+        )]))->bind(schema(int_schema('amount')))->output);
+    }
+
+    public function test_bind_refuses_an_entry_without_a_common_type_with_the_column_it_overwrites(): void
+    {
+        $this->expectException(InvalidTypeException::class);
+        $this->expectExceptionMessage(
+            'Cannot combine types "integer", "list<integer>" - an explicit cast is required.',
+        );
+
+        (new DuplicateRowTransformer(lit(true), [with_column(
+            'amount',
+            lit([1, 2]),
+        )]))->bind(schema(int_schema('amount')));
+    }
+
+    public function test_a_literal_condition_duplicates_every_row(): void
+    {
+        static::assertSame(
+            [
+                ['id' => 1, 'flag' => null],
+                ['id' => 1, 'flag' => true],
+                ['id' => 2, 'flag' => null],
+                ['id' => 2, 'flag' => true],
+            ],
+            (new DuplicateRowTransformer(true, [with_column('flag', lit(true))]))
+                ->transform(array_to_rows([
+                    ['id' => 1],
+                    ['id' => 2],
+                ], schema(int_schema('id'))), flow_context(config())->backend())
+                ->toArray(),
+        );
+    }
+
+    public function test_a_transformation_that_adds_a_column_conforms_the_untouched_rows(): void
+    {
+        $transformed = (new DuplicateRowTransformer(ref('status')->equals(lit('inactive')), [with_column(
+            'flag',
+            lit(true),
+        )]))->transform(array_to_rows([['id' => 1, 'status' => 'active'], ['id' => 2, 'status' => 'inactive']], schema(int_schema('id'), string_schema('status'))), flow_context(config())->backend());
+
+        static::assertSame(['id', 'status', 'flag'], $transformed->schema()->names());
+        static::assertSame(
+            [
+                ['id' => 1, 'status' => 'active', 'flag' => null],
+                ['id' => 2, 'status' => 'inactive', 'flag' => null],
+                ['id' => 2, 'status' => 'inactive', 'flag' => true],
+            ],
+            $transformed->toArray(),
+        );
+    }
+
+    public function test_a_transformation_that_narrows_a_column_widens_it_back(): void
+    {
+        // Multiply::returns() strips nullability, so the duplicated batch declares a narrower column than
+        // the source; the emitted batch must describe both.
+        static::assertTrue(
+            (new DuplicateRowTransformer(ref('status')->equals(lit('inactive')), [with_column(
+                'amount',
+                ref('amount')->multiply(lit(-1)),
+            )]))
+                ->transform(
+                    array_to_rows(
+                        [
+                            ['id' => 1, 'status' => 'active', 'amount' => 100],
+                            ['id' => 2, 'status' => 'inactive', 'amount' => 100],
+                        ],
+                        schema(int_schema('id'), string_schema('status'), int_schema('amount', nullable: true)),
+                    ),
+                    flow_context(config())->backend(),
+                )
+                ->schema()
+                ->get('amount')
+                ->isNullable(),
+        );
+    }
+
+    public function test_applying_two_transformations(): void
+    {
+        $rows = array_to_rows(
+            [
+                [
+                    'id' => 1,
+                    'status' => 'active',
+                    'amount' => 100,
+                    'date_created' => type_date()->cast('2025-01-01'),
+                    'date_deactivated' => null,
+                ],
+                [
+                    'id' => 2,
+                    'status' => 'inactive',
+                    'amount' => 100,
+                    'date_created' => type_date()->cast('2025-01-01'),
+                    'date_deactivated' => type_date()->cast('2025-01-03'),
+                ],
+                [
+                    'id' => 3,
+                    'status' => 'active',
+                    'amount' => 100,
+                    'date_created' => type_date()->cast('2025-01-01'),
+                    'date_deactivated' => null,
+                ],
+            ],
+            schema(
+                int_schema('id'),
+                string_schema('status'),
+                int_schema('amount'),
+                date_schema('date_created'),
+                date_schema('date_deactivated', nullable: true),
+                date_schema('date_updated', nullable: true),
+            ),
+        );
+
+        $transformedRows = (new DuplicateRowTransformer(ref('status')->equals(lit('inactive')), [
+            with_column('amount', ref('amount')->multiply(lit(-1))),
+            with_column('date_updated', ref('date_deactivated')),
+        ]))->transform($rows, flow_context()->backend());
+
+        static::assertCount(4, $transformedRows);
+
+        static::assertEquals(
+            [
+                [
+                    'id' => 1,
+                    'status' => 'active',
+                    'amount' => 100,
+                    'date_created' => new DateTimeImmutable('2025-01-01'),
+                    'date_deactivated' => null,
+                    'date_updated' => null,
+                ],
+                [
+                    'id' => 2,
+                    'status' => 'inactive',
+                    'amount' => 100,
+                    'date_created' => new DateTimeImmutable('2025-01-01'),
+                    'date_deactivated' => new DateTimeImmutable('2025-01-03'),
+                    'date_updated' => null,
+                ],
+                [
+                    'id' => 2,
+                    'status' => 'inactive',
+                    'amount' => -100,
+                    'date_created' => new DateTimeImmutable('2025-01-01'),
+                    'date_deactivated' => new DateTimeImmutable('2025-01-03'),
+                    'date_updated' => new DateTimeImmutable('2025-01-03'),
+                ],
+                [
+                    'id' => 3,
+                    'status' => 'active',
+                    'amount' => 100,
+                    'date_created' => new DateTimeImmutable('2025-01-01'),
+                    'date_deactivated' => null,
+                    'date_updated' => null,
+                ],
+            ],
+            $transformedRows->toArray(),
+        );
+    }
+
+    public function test_bind_declares_a_column_added_only_to_the_matched_rows_as_nullable(): void
+    {
+        static::assertEquals(
+            schema(int_schema('id'), string_schema('status'), bool_schema('flag', nullable: true)),
+            (new DuplicateRowTransformer(ref('status')->equals(lit('inactive')), [with_column(
+                'flag',
+                lit(true),
+            )]))->bind(schema(int_schema('id'), string_schema('status')))->output,
+        );
+    }
+
+    public function test_bind_refuses_a_condition_referencing_a_column_missing_from_the_input(): void
+    {
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+
+        (new DuplicateRowTransformer(ref('missing')->equals(lit('x')), [with_column(
+            'flag',
+            lit(true),
+        )]))->bind(schema(int_schema('id')));
+    }
+
+    public function test_doing_nothing_when_condition_is_not_satisfied(): void
+    {
+        $transformedRows = (new DuplicateRowTransformer(ref('status')->equals(lit('inactive')), [new WithColumn(
+            'amount',
+            ref('amount')->multiply(lit(-1)),
+        )]))->transform(array_to_rows([
+            ['id' => 1, 'status' => 'active', 'amount' => 100],
+            ['id' => 2, 'status' => 'active', 'amount' => 100],
+            ['id' => 3, 'status' => 'active', 'amount' => 100],
+        ], schema(int_schema('id'), string_schema('status'), int_schema('amount'))), flow_context()->backend());
+
+        static::assertCount(3, $transformedRows);
+
+        static::assertEquals(
+            [
+                ['id' => 1, 'status' => 'active', 'amount' => 100],
+                ['id' => 2, 'status' => 'active', 'amount' => 100],
+                ['id' => 3, 'status' => 'active', 'amount' => 100],
+            ],
+            $transformedRows->toArray(),
+        );
+    }
+
+    public function test_duplicating_row(): void
+    {
+        $transformedRows = (new DuplicateRowTransformer(ref('status')->equals(lit('inactive')), [new WithColumn(
+            'amount',
+            ref('amount')->multiply(lit(-1)),
+        )]))->transform(array_to_rows([
+            ['id' => 1, 'status' => 'active', 'amount' => 100],
+            ['id' => 2, 'status' => 'inactive', 'amount' => 100],
+            ['id' => 3, 'status' => 'active', 'amount' => 100],
+        ], schema(int_schema('id'), string_schema('status'), int_schema('amount'))), flow_context()->backend());
+
+        static::assertCount(4, $transformedRows);
+
+        static::assertEquals(
+            [
+                ['id' => 1, 'status' => 'active', 'amount' => 100],
+                ['id' => 2, 'status' => 'inactive', 'amount' => 100],
+                ['id' => 2, 'status' => 'inactive', 'amount' => -100],
+                ['id' => 3, 'status' => 'active', 'amount' => 100],
+            ],
+            $transformedRows->toArray(),
+        );
+    }
+
+    public function test_an_empty_batch_is_bound_against_its_own_schema(): void
+    {
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+
+        (new DuplicateRowTransformer(ref('missing')->equals(lit(1)), []))->transform(
+            rows(schema()),
+            flow_context()->backend(),
+        );
+    }
+
+    public function test_bind_refuses_an_expand_in_the_condition(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'duplicateRow() cannot contain array_expand(), it turns one row into many rows. Expand with withColumn() first, then use the new column.',
+        );
+
+        (new DuplicateRowTransformer(ref('flags')->expand()->equals(lit(true)), [with_column(
+            'flag',
+            lit(true),
+        )]))->bind(ListColumnsMother::schema());
+    }
+
+    public function test_bind_refuses_an_expand_in_an_entry(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'duplicateRow() cannot contain array_expand(), it turns one row into many rows. Expand with withColumn() first, then use the new column.',
+        );
+
+        (new DuplicateRowTransformer(lit(true), [with_column(
+            't',
+            ref('tags')->expand(),
+        )]))->bind(ListColumnsMother::schema());
+    }
+
+    public function test_an_unbound_transform_refuses_an_expand_in_an_entry(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'duplicateRow() cannot contain array_expand(), it turns one row into many rows. Expand with withColumn() first, then use the new column.',
+        );
+
+        (new DuplicateRowTransformer(lit(true), [with_column(
+            't',
+            ref('tags')->expand(),
+        )]))->transform(ListColumnsMother::rows()->matchTo(ListColumnsMother::schema(), new AdaptiveBackend()), flow_context(config())->backend());
+    }
+
+    public function test_does_not_describe(): void
+    {
+        static::assertNull((new DuplicateRowTransformer(lit(true), []))->describe());
+    }
+}

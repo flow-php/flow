@@ -1,0 +1,13 @@
+[package]
+name = "flow-column-text"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+
+[dependencies]
+arrow-array.workspace = true
+arrow-buffer.workspace = true
+arrow-schema.workspace = true
+flow-batch-frame = { path = "../flow-batch-frame" }

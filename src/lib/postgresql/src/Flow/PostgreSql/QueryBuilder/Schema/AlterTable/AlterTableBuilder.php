@@ -12,7 +12,7 @@ use Flow\PostgreSql\Protobuf\AST\DropBehavior;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnDefinition;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
@@ -20,8 +20,6 @@ use Flow\PostgreSql\QueryBuilder\Schema\Constraint\TableConstraint;
 
 final readonly class AlterTableBuilder implements AlterTableFinalStep
 {
-    use AstToSql;
-
     /**
      * @param list<AlterTableCmd> $commands
      */
@@ -313,6 +311,11 @@ final readonly class AlterTableBuilder implements AlterTableFinalStep
     public function setUnlogged(): AlterTableLoggingFinalStep
     {
         return AlterTableLoggingBuilder::createUnlogged($this->table, $this->schema, $this->ifExists);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): AlterTableStmt

@@ -49,29 +49,11 @@ final class WriteFlatColumnValues
     }
 
     /**
-     * @param null|scalar $value
-     */
-    public function addRaw(int $repetitionLevel, int $definitionLevel, bool|float|int|string|null $value): void
-    {
-        $this->repetitionLevels[] = $repetitionLevel;
-        $this->definitionLevels[] = $definitionLevel;
-
-        if ($value !== null) {
-            $this->values[] = $value;
-        }
-    }
-
-    /**
      * @return array<int>
      */
     public function definitionLevels(): array
     {
         return $this->definitionLevels;
-    }
-
-    public function definitionLevelsCount(): int
-    {
-        return count($this->definitionLevels);
     }
 
     public function flatPath(): string
@@ -158,129 +140,6 @@ final class WriteFlatColumnValues
         }
 
         return $rowsCount;
-    }
-
-    public function skipRows(?int $skipRows): self
-    {
-        if ($skipRows === null || $skipRows <= 0) {
-            return $this;
-        }
-
-        $chunk = [
-            'repetitions' => [],
-            'definitions' => [],
-            'values' => [],
-        ];
-
-        $valueIndex = 0;
-        $maxDefinitionsLevel = $this->column->maxDefinitionsLevel();
-
-        $skippedRows = 0;
-        $collect = false;
-
-        foreach ($this->definitionLevels as $index => $definitionLevel) {
-            if ($definitionLevel === $maxDefinitionsLevel) {
-                $value = $this->values[$valueIndex];
-                $valueIndex++;
-            } else {
-                $value = null;
-            }
-
-            $repetitionLevel = $this->repetitionLevels[$index];
-
-            if ($repetitionLevel === 0) {
-                if ($skippedRows < $skipRows) {
-                    $skippedRows++;
-
-                    continue;
-                }
-                $collect = true;
-            }
-
-            if ($collect) {
-                $chunk['repetitions'][] = $repetitionLevel;
-                $chunk['definitions'][] = $definitionLevel;
-
-                if ($value !== null) {
-                    $chunk['values'][] = $value;
-                }
-            }
-        }
-
-        return new self($this->column, $chunk['repetitions'], $chunk['definitions'], $chunk['values']);
-    }
-
-    /**
-     * @param int $rowsInChunk
-     *
-     * @return array<WriteFlatColumnValues>
-     */
-    public function splitByRows(int $rowsInChunk): array
-    {
-        $chunks = [];
-        $currentChunk = [
-            'repetitions' => [],
-            'definitions' => [],
-            'values' => [],
-        ];
-
-        $valueIndex = 0;
-        $maxDefinitionsLevel = $this->column->maxDefinitionsLevel();
-        $rowsInCurrentChunk = 0;
-        $pageBreakIndexes = [];
-
-        foreach ($this->definitionLevels as $index => $definitionLevel) {
-            if ($definitionLevel === $maxDefinitionsLevel) {
-                $value = $this->values[$valueIndex];
-                $valueIndex++;
-            } else {
-                $value = null;
-            }
-
-            $repetitionLevel = $this->repetitionLevels[$index];
-
-            if (
-                $repetitionLevel === 0
-                && $rowsInCurrentChunk >= $rowsInChunk
-                && count($currentChunk['repetitions']) > 0
-            ) {
-                $pageBreakIndexes[] = $index;
-                $chunks[] = new self(
-                    $this->column,
-                    $currentChunk['repetitions'],
-                    $currentChunk['definitions'],
-                    $currentChunk['values'],
-                );
-                $currentChunk = [
-                    'repetitions' => [],
-                    'definitions' => [],
-                    'values' => [],
-                ];
-                $rowsInCurrentChunk = 0;
-            }
-
-            $currentChunk['repetitions'][] = $repetitionLevel;
-            $currentChunk['definitions'][] = $definitionLevel;
-
-            if ($value !== null) {
-                $currentChunk['values'][] = $value;
-            }
-
-            if ($repetitionLevel === 0) {
-                $rowsInCurrentChunk++;
-            }
-        }
-
-        if (count($currentChunk['repetitions']) > 0) {
-            $chunks[] = new self(
-                $this->column,
-                $currentChunk['repetitions'],
-                $currentChunk['definitions'],
-                $currentChunk['values'],
-            );
-        }
-
-        return $chunks;
     }
 
     /**

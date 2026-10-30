@@ -251,11 +251,11 @@ skip the same ones and read a kept page's bytes alone. A second `where()` narrow
 
 ```php
 use Flow\Parquet\Filter\Binding\BoundFilter;
-use Flow\Parquet\Reader\ReadPlanner;
+use Flow\Parquet\Reader\ReadPlan;
 use function Flow\Parquet\DSL\parquet_column;
 
 $filter = parquet_column('id')->greaterThan(100);
-$plan = (new ReadPlanner())->plan(
+$plan = ReadPlan::forFilter(
     $file->reader()->footer(),
     $file->indexes(),
     BoundFilter::bind($filter, $file->schema(), $file->options()),
@@ -463,9 +463,9 @@ foreach ($metadata->rowGroups()->all() as $rowGroup) {
 
     $statistics?->minValue($column);        // physical value: bytes for strings, unscaled int for decimal(10, 2)
     $statistics?->maxValue($column);
-    $statistics?->isMaxValueExact();        // false when the max was truncated and incremented
-    $statistics?->nullCount();
-    $statistics?->nanCount();               // FLOAT, DOUBLE and FLOAT16 only
+    $statistics?->isMaxValueExact;          // false when the max was truncated and incremented
+    $statistics?->nullCount;
+    $statistics?->nanCount;                 // FLOAT, DOUBLE and FLOAT16 only
 }
 
 $metadata->columnOrder($column);            // ColumnOrder::TypeDefined; ColumnOrder::Absent in files written before it

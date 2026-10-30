@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\AST\Nodes\Statement;
 
 use Flow\PostgreSql\AST\Nodes\Statement;
-use Flow\PostgreSql\AST\Nodes\StatementTrait;
 use Flow\PostgreSql\Protobuf\AST\ListenStmt;
 
 /**
@@ -13,8 +12,6 @@ use Flow\PostgreSql\Protobuf\AST\ListenStmt;
  */
 final readonly class ListenStatement implements Statement
 {
-    use StatementTrait;
-
     public function __construct(
         private ListenStmt $stmt,
     ) {}

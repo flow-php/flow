@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Flow\ETL\Rows;
+use Flow\ETL\Values\Rows;
 
 use function Flow\ETL\DSL\{data_frame, from_array, int_schema, schema, str_schema};
 

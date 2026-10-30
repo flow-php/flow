@@ -1,29 +1,91 @@
 //! Parquet bytes from a `Flow\Filesystem\SourceStream` (`read(int $length, int $offset): string`, `size(): ?int`), and
-//! the PHP stream object both the source and the sink call into.
+//! the PHP stream object both the source and the sink call into. A `NativeLocalSourceStream` is reopened by its path
+//! and read with `pread`, so no byte of it crosses PHP.
 
 use std::cell::{Cell, RefCell};
+use std::ffi::OsStr;
+use std::fs::File;
 use std::io::{self, Read};
+use std::os::unix::ffi::OsStrExt;
+use std::os::unix::fs::FileExt;
 use std::sync::Arc;
 
 use bytes::{Buf, Bytes};
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::types::{ZendObject, Zval};
+use ext_php_rs::zend::ClassEntry;
 use parquet::errors::ParquetError;
 use parquet::file::reader::{ChunkReader, Length};
 
 use crate::parquet::error::Error;
-use crate::php::{call_handle_catching, ce_method_ref, expect_object, zval_long};
+use crate::php::{call_handle_catching, call_method, ce_method_ref, expect_object, zval_long};
+use crate::render::{exception, RUNTIME};
 
 /// What `get_read()` pulls from the stream per `read()` call.
 pub const WINDOW: usize = 64 * 1024;
 
+const NATIVE_LOCAL_SOURCE_STREAM: &str = "Flow\\Filesystem\\Stream\\NativeLocalSourceStream";
+
+/// A local file read with `pread`: each range in one call, without a seek and without a PHP string.
+pub struct LocalFile {
+    file: File,
+    size: u64,
+}
+
+impl ReadAt for LocalFile {
+    fn read_at(&self, offset: u64, length: usize) -> Result<Bytes, ParquetError> {
+        let mut bytes = vec![0u8; length];
+
+        // read_exact_at: a short pread is retried, never mistaken for EOF by exact()
+        self.file
+            .read_exact_at(&mut bytes, offset)
+            .map_err(|error| match error.kind() {
+                io::ErrorKind::UnexpectedEof => {
+                    ParquetError::EOF(format!("expected {length} bytes at offset {offset}"))
+                }
+                _ => ParquetError::External(Box::new(error)),
+            })?;
+
+        Ok(Bytes::from(bytes))
+    }
+}
+
+/// The file behind a `NativeLocalSourceStream`, reopened by its path; `None` for any other stream.
+fn local_file(stream: &Zval) -> Result<Option<LocalFile>, PhpException> {
+    let local = matches!(
+        (stream.object(), ClassEntry::try_find(NATIVE_LOCAL_SOURCE_STREAM)),
+        (Some(object), Some(ce)) if object.instance_of(ce)
+    );
+
+    if !local {
+        return Ok(None);
+    }
+
+    let path = call_method(stream, "path", &mut [])?;
+    let uri = call_method(&path, "uri", &mut [])?;
+    let uri = String::from_utf8_lossy(uri.zend_str().map_or(&b""[..], |uri| uri.as_bytes())).into_owned();
+    let path = call_method(&path, "path", &mut [])?;
+    let path = path
+        .zend_str()
+        .ok_or_else(|| exception(RUNTIME, "arrow expected Path::path() to return a string".to_string()))?;
+    let file = File::open(OsStr::from_bytes(path.as_bytes()))
+        .map_err(|error| exception(RUNTIME, format!("Cannot open file: {uri} ({error})")))?;
+    let size = file
+        .metadata()
+        .map_err(|error| exception(RUNTIME, format!("Cannot get file size: {uri} ({error})")))?
+        .len();
+
+    Ok(Some(LocalFile { file, size }))
+}
+
 /// A PHP stream object. An exception its method throws is kept here, for the surface to rethrow as itself once the
-/// Parquet call it broke returns.
+/// Parquet call it broke returns. A local source stream's bytes come from [`LocalFile`] instead of its `read()`.
 pub struct PhpStream {
     stream: Zval,
     thrown: RefCell<Option<ZBox<ZendObject>>>,
     detached: Cell<bool>,
+    local: Option<LocalFile>,
 }
 
 // SAFETY: the stream belongs to the request thread that built it; the parquet crate requires Send + Sync of its
@@ -39,6 +101,7 @@ impl PhpStream {
             stream: stream.shallow_clone(),
             thrown: RefCell::new(None),
             detached: Cell::new(false),
+            local: local_file(stream)?,
         })
     }
 
@@ -80,6 +143,10 @@ pub trait ReadAt {
 
 impl ReadAt for PhpStream {
     fn read_at(&self, offset: u64, length: usize) -> Result<Bytes, ParquetError> {
+        if let Some(local) = &self.local {
+            return local.read_at(offset, length);
+        }
+
         let read = self
             .call("read", &mut [zval_long(length as i64), zval_long(offset as i64)])
             .ok_or_else(|| ParquetError::External("read() threw".into()))?;
@@ -100,6 +167,12 @@ pub struct PhpSource {
 
 impl PhpSource {
     pub fn new(stream: Arc<PhpStream>) -> Result<Self, Error> {
+        if let Some(local) = &stream.local {
+            let size = local.size;
+
+            return Ok(Self { stream, size });
+        }
+
         let size = stream
             .call("size", &mut [])
             .ok_or_else(|| Error::Stream("size() threw".to_string()))?

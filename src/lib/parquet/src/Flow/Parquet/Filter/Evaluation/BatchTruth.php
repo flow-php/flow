@@ -10,8 +10,9 @@ use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Filter\All;
 use Flow\Parquet\Filter\Any;
+use Flow\Parquet\Filter\Binding\ExactLeaf;
+use Flow\Parquet\Filter\Binding\InexactLeaf;
 use Flow\Parquet\Filter\Binding\LiteralDomain;
-use Flow\Parquet\Filter\Binding\ResolvedLeaf;
 use Flow\Parquet\Filter\Comparison;
 use Flow\Parquet\Filter\FilterVisitor;
 use Flow\Parquet\Filter\In;
@@ -46,7 +47,7 @@ use function strcmp;
 final readonly class BatchTruth implements FilterVisitor
 {
     /**
-     * @param WeakMap<Comparison|In|IsNull|StartsWith, ResolvedLeaf> $leaves
+     * @param WeakMap<Comparison|In|IsNull|StartsWith, ExactLeaf|InexactLeaf> $leaves
      * @param WeakMap<In, array<int|string, true>> $keys
      * @param array<string, list<mixed>> $batch
      * @param non-negative-int $rows
@@ -266,7 +267,7 @@ final readonly class BatchTruth implements FilterVisitor
     /**
      * @return list<mixed>
      */
-    private function values(ResolvedLeaf $leaf): array
+    private function values(ExactLeaf|InexactLeaf $leaf): array
     {
         $column = $this->batch[$leaf->root] ?? throw new InvalidArgumentException(
             'The batch holds no column "' . $leaf->root . '"',

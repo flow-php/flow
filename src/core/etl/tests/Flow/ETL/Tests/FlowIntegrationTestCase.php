@@ -4,22 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests;
 
-use Flow\ETL\Column\AdaptiveBackend;
-use Flow\ETL\Config\Cache\CacheConfig;
+use Flow\ETL\Runtime\CacheConfig;
+use Flow\ETL\Storage\Floe\FloeSerializer;
+use Flow\ETL\Storage\Serializer\Serializer;
+use Flow\ETL\Tests\Context\CacheDirContext;
+use Flow\ETL\Values\Column\AdaptiveBackend;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\FilesystemTable;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Local\StdOutFilesystem;
 use Flow\Filesystem\Path;
-use Flow\Floe\FloeSerializer;
-use Flow\Serializer\Serializer;
 use RuntimeException;
 
 use function count;
 use function file_put_contents;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
-use function getcwd;
 use function getenv;
 use function in_array;
 use function ini_get;
@@ -59,13 +59,13 @@ abstract class FlowIntegrationTestCase extends FlowTestCase
 
         $this->cacheDir = path_real($cacheDirEnv);
 
-        $this->assertCacheDirIsSafe($this->cacheDir);
+        CacheDirContext::assertSafe($this->cacheDir);
 
         $this->fs = new NativeLocalFilesystem();
         $this->fstab = new FilesystemTable($this->fs, new StdOutFilesystem());
         $this->serializer = new FloeSerializer(new AdaptiveBackend());
 
-        $this->cleanupCacheDir($this->cacheDir);
+        $this->fs()->rm($this->cacheDir);
         mkdir($this->cacheDir->path(), recursive: true);
     }
 
@@ -75,7 +75,7 @@ abstract class FlowIntegrationTestCase extends FlowTestCase
             ini_set('memory_limit', $this->baseMemoryLimit);
         }
 
-        $this->cleanupCacheDir($this->cacheDir);
+        $this->fs()->rm($this->cacheDir);
         mkdir($this->cacheDir->path(), recursive: true);
     }
 
@@ -130,12 +130,12 @@ abstract class FlowIntegrationTestCase extends FlowTestCase
     {
         foreach ($datasets as $name => $content) {
             if (is_string($content)) {
-                $result = file_put_contents(
-                    $this->filesDirectory() . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . $name,
-                    $content,
-                );
-
-                if ($result === false) {
+                if (
+                    file_put_contents(
+                        $this->filesDirectory() . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . $name,
+                        $content,
+                    ) === false
+                ) {
                     throw new RuntimeException('Could not create file . ' . $name);
                 }
 
@@ -148,32 +148,6 @@ abstract class FlowIntegrationTestCase extends FlowTestCase
                 /** @var array<string,string> $content */
                 $this->setupFiles($content, $path . DIRECTORY_SEPARATOR . $name);
             }
-        }
-    }
-
-    private function cleanupCacheDir(Path $path): void
-    {
-        $this->fs()->rm($path);
-    }
-
-    private function assertCacheDirIsSafe(Path $cacheDir): void
-    {
-        $resolved = $cacheDir->path();
-
-        if ($resolved === '' || $resolved === '/' || $resolved === '\\') {
-            throw new RuntimeException(sprintf(
-                'Refusing to run integration tests with cache dir resolved to "%s" — would delete root.',
-                $resolved,
-            ));
-        }
-
-        if ($resolved === getcwd()) {
-            throw new RuntimeException(sprintf(
-                'Refusing to run integration tests with cache dir equal to the current working directory ("%s"). '
-                . 'Set %s to a dedicated temp directory.',
-                $resolved,
-                CacheConfig::CACHE_DIR_ENV,
-            ));
         }
     }
 }

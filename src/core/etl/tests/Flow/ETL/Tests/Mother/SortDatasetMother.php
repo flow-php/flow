@@ -6,9 +6,9 @@ namespace Flow\ETL\Tests\Mother;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use Flow\ETL\Row\NullsOrder;
-use Flow\ETL\Row\Reference;
-use Flow\ETL\Schema;
+use Flow\ETL\Kernels\Sort\SortColumn;
+use Flow\ETL\Values\NullsOrder;
+use Flow\ETL\Values\Schema;
 
 use function array_slice;
 use function array_splice;
@@ -28,7 +28,7 @@ use const NAN;
 /**
  * @type SortDatasetShape = array{
  *     schema: Schema,
- *     references: non-empty-list<Reference>,
+ *     columns: non-empty-list<SortColumn>,
  *     runs: list<list<array<string, mixed>>>,
  *     storedBatchSize: int<1, max>,
  *     mergeBatchSize: int<1, max>
@@ -71,12 +71,12 @@ final class SortDatasetMother
             ];
         }
 
-        $references = [];
+        $sortColumns = [];
 
         for ($k = 0, $keyCount = mt_rand(1, 3); $k < $keyCount; $k++) {
             $reference = ref(array_splice($columns, mt_rand(0, count($columns) - 1), 1)[0]);
             $nulls = mt_rand(0, 1) === 1 ? NullsOrder::FIRST : NullsOrder::LAST;
-            $references[] = mt_rand(0, 1) === 1 ? $reference->asc($nulls) : $reference->desc($nulls);
+            $sortColumns[] = mt_rand(0, 1) === 1 ? $reference->asc($nulls) : $reference->desc($nulls);
         }
 
         $runs = [];
@@ -98,7 +98,7 @@ final class SortDatasetMother
                 datetime_schema('at', nullable: true),
                 bool_schema('b', nullable: true),
             ),
-            'references' => $references,
+            'columns' => $sortColumns,
             'runs' => $runs,
             'storedBatchSize' => mt_rand(1, 7),
             'mergeBatchSize' => mt_rand(1, 10),

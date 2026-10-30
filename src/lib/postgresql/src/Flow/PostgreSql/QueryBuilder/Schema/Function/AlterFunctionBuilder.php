@@ -13,15 +13,13 @@ use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\Protobuf\AST\ObjectWithArgs;
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\RenameStmt;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidBuilderStateException;
 
 use function array_values;
 
 final readonly class AlterFunctionBuilder implements AlterFunctionArgsStep, AlterFunctionFinalStep
 {
-    use AstToSql;
-
     /**
      * @param list<FunctionArgument> $arguments
      * @param list<array{name: string, arg: ?Node}> $actions
@@ -109,6 +107,11 @@ final readonly class AlterFunctionBuilder implements AlterFunctionArgsStep, Alte
     public function stable(): AlterFunctionFinalStep
     {
         return $this->withStringOption('volatility', 'stable');
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): AlterFunctionStmt|RenameStmt

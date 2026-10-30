@@ -124,7 +124,7 @@ own escaping. A writer that only builds nodes delegates to `write()`:
 <?php
 
 use Flow\ETL\Adapter\XML\Abstraction\{XMLAttribute, XMLNode};
-use Flow\ETL\Adapter\XML\XMLWriter;
+use Flow\ETL\Adapter\XML\IO\Loader\XMLWriter;
 
 use function Flow\Types\DSL\type_string;
 

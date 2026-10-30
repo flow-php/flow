@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Benchmarks\Datasets;
 
 /**
- * Named FixtureFormat rather than Format so the short name does not collide with Flow\Floe\Format.
+ * Named FixtureFormat rather than Format so the short name does not collide with Flow\ETL\Storage\Floe\Format.
  */
 enum FixtureFormat: string
 {

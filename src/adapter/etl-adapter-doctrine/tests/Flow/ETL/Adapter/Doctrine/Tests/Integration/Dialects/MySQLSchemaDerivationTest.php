@@ -13,12 +13,13 @@ use Doctrine\DBAL\Schema\PrimaryKeyConstraint;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
-use Flow\ETL\Adapter\Doctrine\MysqliResultColumns;
-use Flow\ETL\Adapter\Doctrine\Order;
-use Flow\ETL\Adapter\Doctrine\OrderBy;
-use Flow\ETL\Adapter\Doctrine\ProbeRefusal;
+use Flow\ETL\Adapter\Doctrine\Foundation\Exception\ProbeRefusal;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\MysqliResultColumns;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\Order;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\OrderBy;
 use Flow\ETL\Adapter\Doctrine\Tests\Context\MysqlSessionStatus;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
+use Flow\ETL\IO\Extractor\Criteria;
 use mysqli;
 use mysqli_driver;
 use mysqli_sql_exception;
@@ -88,7 +89,7 @@ final class MySQLSchemaDerivationTest extends IntegrationTestCase
 
             static::assertSame(
                 ['id', 'name', 'amount', 'placed_at', 'opens_at', 'label'],
-                $extractor->schema()->references()->names(),
+                $extractor->schema()->names(),
             );
             static::assertSame(
                 ['id', 'name', 'amount', 'placed_at', 'opens_at', 'label'],
@@ -107,7 +108,7 @@ final class MySQLSchemaDerivationTest extends IntegrationTestCase
             ['min' => 1],
         );
 
-        static::assertSame(['id', 'name'], $extractor->schema()->references()->names());
+        static::assertSame(['id', 'name'], $extractor->schema()->names());
         static::assertCount(2, data_frame()->read($extractor)->fetch());
     }
 
@@ -129,10 +130,7 @@ final class MySQLSchemaDerivationTest extends IntegrationTestCase
     {
         static::assertSame(
             ['id'],
-            from_dbal_query($this->mysqlDatabaseContext->connection(), 'SELECT id FROM orders;')
-                ->schema()
-                ->references()
-                ->names(),
+            from_dbal_query($this->mysqlDatabaseContext->connection(), 'SELECT id FROM orders;')->schema()->names(),
         );
     }
 
@@ -195,7 +193,7 @@ final class MySQLSchemaDerivationTest extends IntegrationTestCase
 
         $batches = 0;
 
-        foreach ($extractor->extract(flow_context()) as $rows) {
+        foreach ($extractor->extract(flow_context()->backend(), new Criteria()) as $rows) {
             $batches++;
             static::assertTrue($rows->schema()->isSame($extractor->schema()));
         }
@@ -228,10 +226,10 @@ final class MySQLSchemaDerivationTest extends IntegrationTestCase
             pagination_key_set(pagination_key_asc('id')),
         );
 
-        static::assertSame(['id', 'name'], $extractor->schema()->references()->names());
+        static::assertSame(['id', 'name'], $extractor->schema()->names());
 
-        foreach ($extractor->extract(flow_context()) as $rows) {
-            static::assertSame(['id', 'name'], $rows->schema()->references()->names());
+        foreach ($extractor->extract(flow_context()->backend(), new Criteria()) as $rows) {
+            static::assertSame(['id', 'name'], $rows->schema()->names());
         }
     }
 

@@ -239,15 +239,14 @@ Create an index on an expression:
 ```php
 <?php
 
-use function Flow\PostgreSql\DSL\{create, index_expr};
-use Flow\PostgreSql\QueryBuilder\Expression\RawExpression;
+use function Flow\PostgreSql\DSL\{col, create, func, index_expr};
 
 $query = create()->index('idx_users_lower_email')
     ->on('users')
-    ->columns(index_expr(new RawExpression('lower(email)')));
+    ->columns(index_expr(func('lower', [col('email')])));
 
 echo $query->toSql();
-// CREATE INDEX idx_users_lower_email ON users ((lower(email)))
+// CREATE INDEX idx_users_lower_email ON users (lower(email))
 ```
 
 ### Covering Index (INCLUDE)

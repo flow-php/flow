@@ -10,7 +10,13 @@ use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
 use Flow\Filesystem\Stream\BlockFactory;
 
 use function Flow\Filesystem\DSL\path;
+use function is_bool;
+use function is_int;
+use function is_string;
 
+/**
+ * @type S3Options = array{block_location: string, file_fast_path: bool, part_size: int}
+ */
 final class Options
 {
     private BlockFactory $blockFactory;
@@ -46,6 +52,45 @@ final class Options
         return $this->partSize;
     }
 
+    /**
+     * @param array<array-key, mixed> $data the shape of normalize()
+     *
+     * @throws InvalidArgumentException
+     */
+    public static function fromArray(array $data): self
+    {
+        if (
+            !is_string($data['block_location'] ?? null)
+            || !is_bool($data['file_fast_path'] ?? null)
+            || !is_int($data['part_size'] ?? null)
+        ) {
+            throw new InvalidArgumentException(
+                'AsyncAWS options must hold block_location (string), file_fast_path (bool) and part_size (int)',
+            );
+        }
+
+        return (new self())
+            ->withBlockFactory(new NativeLocalFileBlocksFactory($data['block_location']))
+            ->withFileFastPath($data['file_fast_path'])
+            ->withBlockSize($data['part_size']);
+    }
+
+    /**
+     * @return null|S3Options null when the block factory is not the native local one
+     */
+    public function normalize(): ?array
+    {
+        if (!$this->blockFactory instanceof NativeLocalFileBlocksFactory) {
+            return null;
+        }
+
+        return [
+            'block_location' => $this->blockFactory->blockLocation(),
+            'file_fast_path' => $this->fileFastPath,
+            'part_size' => $this->partSize,
+        ];
+    }
+
     public function tmpDir(): Path
     {
         return $this->tmpDir;
@@ -60,8 +105,8 @@ final class Options
 
     public function withBlockSize(int $bytes): self
     {
-        if ($bytes <= (1024 * 1024 * 5)) {
-            throw new InvalidArgumentException('Block size must be greater than 5Mb');
+        if ($bytes < (1024 * 1024 * 5)) {
+            throw new InvalidArgumentException('Block size must be at least 5Mb');
         }
 
         $this->partSize = $bytes;

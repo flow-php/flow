@@ -7,13 +7,11 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\AlterTable;
 use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\Protobuf\AST\RenameStmt;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\Sql;
 
 final readonly class RenameTableBuilder implements Sql
 {
-    use AstToSql;
-
     private function __construct(
         private string $table,
         private ?string $schema,
@@ -46,6 +44,11 @@ final readonly class RenameTableBuilder implements Sql
     public static function renameTo(string $table, ?string $schema, string $newName, bool $ifExists): self
     {
         return new self($table, $schema, ObjectType::OBJECT_TABLE, null, $newName, $ifExists);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): RenameStmt

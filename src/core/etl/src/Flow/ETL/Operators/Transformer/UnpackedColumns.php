@@ -1,0 +1,75 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Operators\Transformer;
+
+use Flow\ETL\Foundation\Exception\InvalidLogicException;
+use Flow\ETL\Functions\ScalarFunction;
+use Flow\ETL\Values\Schema;
+use Flow\ETL\Values\Schema\Definitions;
+use Flow\Types\Type\Logical\StructureType;
+
+use function sprintf;
+
+final readonly class UnpackedColumns
+{
+    /**
+     * The columns unpack declares, read off returns() - the contract every ScalarFunction has.
+     *
+     * @throws InvalidLogicException
+     */
+    public function declared(ScalarFunction $resolved): Schema
+    {
+        $returns = $resolved->returns();
+
+        if (!$returns instanceof StructureType) {
+            throw new InvalidLogicException(sprintf(
+                '%s unpacks into N columns, so returns() must be a StructureType, got "%s".',
+                $resolved::class,
+                $returns->toString(),
+            ));
+        }
+
+        $definitions = [];
+
+        foreach ($returns->elements() as $element) {
+            $definitions[] = Definitions::of((string) $element->name, $element->type);
+        }
+
+        return new Schema(...$definitions);
+    }
+
+    /**
+     * One nullable column per declared column of $declared, named "$prefix$column", added to (or
+     * replacing in) $base in declaration order.
+     */
+    public function of(Schema $base, string $prefix, Schema $declared): Schema
+    {
+        $output = $base;
+
+        foreach ($declared->makeNullable()->definitions() as $definition) {
+            $output = $output->put($definition->rename($prefix . $definition->name()));
+        }
+
+        return $output;
+    }
+
+    /**
+     * @param array<array-key, mixed> $payload
+     *
+     * @return array<array-key, mixed> the cast values, keyed "$prefix$column"
+     */
+    public function values(string $prefix, Schema $declared, array $payload): array
+    {
+        $values = [];
+
+        foreach ($declared->definitions() as $name => $definition) {
+            // @mago-ignore analysis:mixed-assignment
+            $value = $payload[$name] ?? null;
+            $values[$prefix . $name] = $value === null ? null : $definition->type()->cast($value);
+        }
+
+        return $values;
+    }
+}

@@ -21,19 +21,19 @@ Joins each row from the left side with each row on the right side, creating `cou
 
 ### joinEach () - Streaming Join
 
-The right side is built for each left batch by `DataFrameFactory::from(Rows $rows)`, useful for large right-side
-datasets that don't fit in memory.
+The right side is read for each left batch from the extractor `ExtractorFactory::from(Rows $rows)` returns, useful for
+large right-side datasets that don't fit in memory.
 
 ## Join Types
 
 Flow PHP supports four join types with specific behaviors:
 
-| Join Type                              | Description                                                                                |
-|----------------------------------------|--------------------------------------------------------------------------------------------|
-| **Left Join** (`Join::left`)           | Returns all rows from left DataFrame with matching rows from right (or NULL) - **Default** |
-| **Inner Join** (`Join::inner`)         | Returns only rows that exist in both DataFrames                                            |
-| **Right Join** (`Join::right`)         | Returns all rows from right DataFrame with matching rows from left (or NULL)               |
-| **Left Anti Join** (`Join::left_anti`) | Returns rows from left DataFrame that have NO match in right DataFrame                     |
+| Join Type                                  | Description                                                                                |
+|--------------------------------------------|--------------------------------------------------------------------------------------------|
+| **Left Join** (`JoinType::left`)           | Returns all rows from left DataFrame with matching rows from right (or NULL) - **Default** |
+| **Inner Join** (`JoinType::inner`)         | Returns only rows that exist in both DataFrames                                            |
+| **Right Join** (`JoinType::right`)         | Returns all rows from right DataFrame with matching rows from left (or NULL)               |
+| **Left Anti Join** (`JoinType::left_anti`) | Returns rows from left DataFrame that have NO match in right DataFrame                     |
 
 Joins follow SQL semantics - every matching pair of rows produces one output row, so a left row that matches multiple
 right rows is emitted multiple times. A `null` join key never matches anything, including another `null` - rows with
@@ -49,21 +49,21 @@ right rows is emitted multiple times. A `null` join key never matches anything, 
 
 While the process stays under the memory limit, `join()` holds the right DataFrame in memory and streams the left one
 through its hash table, so left rows keep their order. Past the limit both sides are partitioned by join key into
-buckets of a `BucketsStorage` - the same abstraction used by external sort - and joined bucket pair by bucket pair:
+buckets of a `RowsStorage` - the same abstraction used by external sort - and joined bucket pair by bucket pair:
 
-| Buckets storage                   | Past the memory limit                                                                                                                       |
-|-----------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| `FilesystemBuckets` - **Default** | Both sides are spilled to disk (Floe files); the hash table is built from the smaller bucket of each pair. Left row order is not preserved. |
-| `PSRCacheBuckets`                 | Like `FilesystemBuckets`, with buckets in any PSR-16 cache.                                                                                 |
-| `MemoryBuckets`                   | Never partitions: the right DataFrame stays in memory whatever its size and left rows keep their order.                                     |
+| Buckets storage                       | Past the memory limit                                                                                                                       |
+|---------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| `FilesystemRowsStorage` - **Default** | Both sides are spilled to disk (Floe files); the hash table is built from the smaller bucket of each pair. Left row order is not preserved. |
+| `PsrRowsStorage`                      | Like `FilesystemRowsStorage`, with buckets in any PSR-16 cache.                                                                             |
+| `MemoryRowsStorage`                   | Never partitions: the right DataFrame stays in memory whatever its size and left rows keep their order.                                     |
 
 `join()` takes an optional trailing `JoinAlgorithmBuilder`, so one join can override the configured algorithm:
 
 ```php ignore
-->join($right, join_on(['id' => 'id']), Join::left, hash_join()->storage(new MemoryBuckets()))
+->join($right, join_on(['id' => 'id']), JoinType::left, hash_join()->storage(new MemoryRowsStorage()))
 ```
 
-`joinEach()` does not take one - it builds a DataFrame per left batch, so a per-call algorithm would be rebuilt per
+`joinEach()` does not take one - it reads one extractor per left batch, so a per-call algorithm would be rebuilt per
 batch too.
 
 The join algorithm is configured through `config_builder()->join(hash_join())` - all its options live on the
@@ -80,6 +80,7 @@ data_frame(
                 ->memoryLimit(Unit::fromMb(512))  // process memory past which rows go to the storage
                 ->bucketsCount(64)                // number of buckets
                 ->batchSize(1000)                 // rows per bucket frame and per batch read back
+                ->broadcastLimit(Unit::fromMb(10)) // a right side under it is broadcast instead of hashed
         )
 )
     ->read(from_parquet('orders.parquet'))
@@ -112,7 +113,7 @@ data_frame()
     ->join(
         data_frame()->read(from_array($internalProducts)),
         Expression::on(['id' => 'id']),
-        Join::left_anti
+        JoinType::left_anti
     )
     ->write(to_output())
     ->run();
@@ -122,9 +123,9 @@ Output:
 
 ```console
 +----+-----------+
-| id |       sku |
+| id | sku |
 +----+-----------+
-|  1 | PRODUCT01 |
+| 1 | PRODUCT01 |
 +----+-----------+
 1 rows
 ```

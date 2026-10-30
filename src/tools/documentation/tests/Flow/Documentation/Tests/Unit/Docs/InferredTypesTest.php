@@ -37,7 +37,7 @@ final class InferredTypesTest extends TestCase
     public function test_a_receiver_typed_through_a_fluent_chain_is_judged(): void
     {
         static::assertSame(
-            ['a.md:1' => ['Flow\ETL\DataFrame::thereIsNoSuchMethod()']],
+            ['a.md:1' => ['Flow\ETL\API\DataFrame::thereIsNoSuchMethod()']],
             (new DocumentMethodCalls())->unresolved([
                 $this->fences->php(
                     "<?php\n\nuse function Flow\\ETL\\DSL\\{data_frame, from_array};\n\n"

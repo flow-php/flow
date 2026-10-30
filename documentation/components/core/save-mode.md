@@ -72,21 +72,21 @@ Creates additional files in the same directory when destination already exists:
     ->run();
 
 // First run creates: data.csv
-// Second run creates: data_<randomized_suffix>.csv (e.g., data_5f8a3b2c.csv)
+// Second run creates: data-<run>.csv (e.g., data-5f8a3b2c0d1e2f30.csv)
 // Read them all with a glob: from_csv(__DIR__ . '/data*.csv')
 ```
 
 **How it works:**
 - If destination file doesn't exist: writes normally
-- If destination file exists: generates a new file with randomized name in the same directory
+- If destination file exists: writes `<name>-<run>.<ext>` beside it
 
 **File structure after multiple runs:**
 ```
 output/
-├── orders.csv              # First run
-├── orders_5ea42a0310.csv   # Second run
-├── orders_ceadbdb4d1.csv   # Third run
-└── orders_2140bfc5fd.csv   # Fourth run
+├── orders.csv                        # First run
+├── orders-5ea42a0310c3d4e5.csv       # Second run
+├── orders-ceadbdb4d1a2b3c4.csv       # Third run
+└── orders-2140bfc5fd6e7f80.csv       # Fourth run
 ```
 
 Reading `orders.csv` reads that one file; read `orders*.csv` to get every run.
@@ -112,10 +112,11 @@ Removes all existing files at the destination and writes fresh data:
 ```
 
 **Implementation details:**
-- Files are written to temporary files with `._flow_php_tmp.` prefix
-- After writing completes, existing files are removed
-- Temporary files are renamed to final names
-- For partitioned writes, removes all files in partition directories
+- Files are written under `.flow-tmp-<run>-<hash>/` inside the destination directory; readers skip it
+- After writing completes, they are moved to their final names, then the files they replace are removed
+- Only files Flow named are replaced: `<name>.<ext>`, `<name>-<run>.<ext>` and the `{part}` parts
+- For partitioned writes, only the partitions that received rows are replaced
+- A run without rows empties an unpartitioned destination
 
 **Use when:**
 - Regenerating reports or exports
@@ -135,6 +136,9 @@ Silently skips writing if the destination already exists:
 // If file exists: nothing happens, no error thrown
 // If file doesn't exist: data is written normally
 ```
+
+Ignore and ExceptionIfExists decide once for the whole destination: one existing file in any partition skips (or
+refuses) the whole write.
 
 **Use when:**
 - Idempotent pipelines where re-running should have no effect
@@ -165,3 +169,9 @@ When using `SaveMode::Overwrite` with partitions:
 - All files within each affected partition directory are removed
 - Only partitions being written to are affected
 - Unrelated partitions remain untouched
+
+## Part destinations
+
+A destination holding `{part}` is written as `part-00000`. The save mode is checked over every existing part of the
+destination (`orders-*.parquet`), never over one file: `ExceptionIfExists` and `Ignore` see any part, `Overwrite`
+removes every stale part before the new ones are renamed in, and `Append` names every part with the run id.

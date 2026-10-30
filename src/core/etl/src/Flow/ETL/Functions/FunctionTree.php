@@ -1,0 +1,36 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Functions;
+
+interface FunctionTree
+{
+    /**
+     * Every operand of this node that is an expression, in constructor order.
+     * Raw scalars, enums, Types and scope-introducing bodies are fields, not children.
+     *
+     * @return list<FunctionTree>
+     */
+    public function children(): array;
+
+    /**
+     * True when this node and every node in children() can answer returns().
+     */
+    public function resolved(): bool;
+
+    /**
+     * True when this node and every node in children() produce the same value for the same input row.
+     * False for a generator (now(), uuid, a random string): a caller that evaluates the tree once per FILE
+     * or per partition instead of once per row must refuse a non-deterministic one.
+     */
+    public function deterministic(): bool;
+
+    /**
+     * A copy of this node with $children in place of children(): same count, same order, same
+     * per-element narrowing. Never mutates $this.
+     *
+     * @param list<FunctionTree> $children
+     */
+    public function withChildren(array $children): static;
+}

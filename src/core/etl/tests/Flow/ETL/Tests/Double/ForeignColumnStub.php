@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Column\Column;
+use Flow\ETL\Values\Column\Column;
 use Flow\Types\Type;
 
 /**

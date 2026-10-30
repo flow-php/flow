@@ -9,9 +9,10 @@ use Doctrine\DBAL\Schema\PrimaryKeyConstraint;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
-use Flow\ETL\Adapter\Doctrine\Order;
-use Flow\ETL\Adapter\Doctrine\OrderBy;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\Order;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\OrderBy;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
+use Flow\ETL\IO\Extractor\Criteria;
 
 use function Flow\ETL\Adapter\Doctrine\from_dbal_limit_offset;
 use function Flow\ETL\DSL\data_frame;
@@ -76,7 +77,7 @@ final class SqliteSchemaDerivationTest extends IntegrationTestCase
 
         $values = [];
 
-        foreach ($extractor->extract(flow_context()) as $rows) {
+        foreach ($extractor->extract(flow_context()->backend(), new Criteria()) as $rows) {
             static::assertTrue($rows->schema()->isSame($extractor->schema()));
             $values = [...$values, ...$rows->toArray()];
         }

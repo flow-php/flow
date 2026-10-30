@@ -11,14 +11,12 @@ use Flow\PostgreSql\Protobuf\AST\PBList;
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\Protobuf\AST\RenameStmt;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidBuilderStateException;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class AlterTriggerBuilder implements AlterTriggerActionStep, AlterTriggerFinalStep, AlterTriggerOnStep
 {
-    use AstToSql;
-
     private function __construct(
         private string $name,
         private ?string $table = null,
@@ -64,6 +62,11 @@ final readonly class AlterTriggerBuilder implements AlterTriggerActionStep, Alte
     public function renameTo(string $newName): AlterTriggerFinalStep
     {
         return new self($this->name, $this->table, $this->schema, $newName, null, false);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): RenameStmt|AlterObjectDependsStmt

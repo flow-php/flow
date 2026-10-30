@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\CLI\Loader;
 
-use Flow\ETL\FlowContext;
-use Flow\ETL\Loader;
-use Flow\ETL\Rows;
+use Flow\ETL\Foundation\Describe\Description;
+use Flow\ETL\Foundation\Describe\Rebuild;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\IO\Loader;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Rows;
+use SensitiveParameter;
 use Symfony\Component\Console\Helper\ProgressBar;
 
 final readonly class ProgressBarLoader implements Loader
@@ -15,8 +19,18 @@ final readonly class ProgressBarLoader implements Loader
         private ProgressBar $progressBar,
     ) {}
 
-    public function load(Rows $rows, FlowContext $context): void
+    public function load(Rows $rows, Backend $backend): void
     {
         $this->progressBar->advance($rows->count());
+    }
+
+    public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
+    {
+        throw InvalidArgumentException::because('%s holds live state and is never described', self::class);
+    }
+
+    public function describe(): ?Description
+    {
+        return null;
     }
 }

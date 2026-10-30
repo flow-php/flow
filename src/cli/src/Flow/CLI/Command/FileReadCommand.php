@@ -5,20 +5,19 @@ declare(strict_types=1);
 namespace Flow\CLI\Command;
 
 use Flow\CLI\Arguments\FilePathArgument;
-use Flow\CLI\Command\Traits\ConfigOptions;
-use Flow\CLI\Command\Traits\CSVOptions;
-use Flow\CLI\Command\Traits\ExcelOptions;
-use Flow\CLI\Command\Traits\JSONOptions;
-use Flow\CLI\Command\Traits\ParquetOptions;
-use Flow\CLI\Command\Traits\SchemaInferenceOptions;
-use Flow\CLI\Command\Traits\XMLOptions;
 use Flow\CLI\Factory\ExtractorFactory;
 use Flow\CLI\Options\ConfigOption;
+use Flow\CLI\Options\CSVInputOptions;
+use Flow\CLI\Options\ExcelInputOptions;
 use Flow\CLI\Options\FileFormat;
 use Flow\CLI\Options\FileFormatOption;
-use Flow\ETL\Config;
-use Flow\ETL\Formatter\AsciiTableFormatter;
-use Flow\ETL\Rows;
+use Flow\CLI\Options\JSONInputOptions;
+use Flow\CLI\Options\ParquetInputOptions;
+use Flow\CLI\Options\SchemaInferenceOptions;
+use Flow\CLI\Options\XMLInputOptions;
+use Flow\ETL\IO\Formatter\AsciiTableFormatter;
+use Flow\ETL\Runtime\Config;
+use Flow\ETL\Values\Rows;
 use Flow\Filesystem\Path;
 use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -38,14 +37,6 @@ use function Flow\ETL\DSL\df;
 #[AsCommand(name: 'file:read', description: 'Read data from a file.', aliases: ['read'])]
 final class FileReadCommand extends Command
 {
-    use ConfigOptions;
-    use CSVOptions;
-    use ExcelOptions;
-    use JSONOptions;
-    use ParquetOptions;
-    use SchemaInferenceOptions;
-    use XMLOptions;
-
     private const int DEFAULT_BATCH_SIZE = 100;
 
     private ?FileFormat $fileFormat = null;
@@ -105,13 +96,13 @@ final class FileReadCommand extends Command
                 [],
             );
 
-        $this->addConfigOptions($this);
-        $this->addJSONInputOptions($this);
-        $this->addCSVInputOptions($this);
-        $this->addExcelInputOptions($this);
-        $this->addXMLInputOptions($this);
-        $this->addParquetInputOptions($this);
-        $this->addSchemaInferenceOptions($this);
+        (new ConfigOption('config'))->configure($this);
+        (new JSONInputOptions())->configure($this);
+        (new CSVInputOptions())->configure($this);
+        (new ExcelInputOptions())->configure($this);
+        (new XMLInputOptions())->configure($this);
+        (new ParquetInputOptions())->configure($this);
+        (new SchemaInferenceOptions())->configure($this);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -124,7 +115,7 @@ final class FileReadCommand extends Command
 
         $extractor = (new ExtractorFactory($this->sourcePath, $this->fileFormat))->get($input);
 
-        if (!$this->applySchemaInference($extractor, $input, $style)) {
+        if (!(new SchemaInferenceOptions())->apply($extractor, $input, $style)) {
             return Command::FAILURE;
         }
 

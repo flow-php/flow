@@ -20,25 +20,31 @@ use function array_key_exists;
 final class RustRowGroupChunks implements RowGroupChunks
 {
     /**
-     * @var array<string, array<int, ColumnChunk>>
-     */
-    private array $decoded = [];
-
-    /**
-     * @var array<string, ColumnOrder>
-     */
-    private array $decodedOrders = [];
-
-    /**
      * @param list<int> $rowCounts
      * @param array<string, list<string>> $chunks thrift ColumnChunk bytes per flat path, one per row group
      * @param array<string, null|string> $orders thrift ColumnOrder bytes per flat path, null without column_orders
+     * @param array<string, array<int, ColumnChunk>> $decoded the chunks decoded so far, per flat path
+     * @param array<string, ColumnOrder> $decodedOrders
      */
     private function __construct(
         private readonly array $rowCounts,
         private readonly array $chunks,
         private readonly array $orders,
+        private array $decoded = [],
+        private array $decodedOrders = [],
     ) {}
+
+    /**
+     * Called by name from arrow-ext RustParquetFooter::rowGroupChunks() with the chunks its footer cache decoded.
+     *
+     * @param list<int> $rowCounts
+     * @param array<string, list<ColumnChunk>> $chunks decoded ColumnChunks per flat path, one per row group
+     * @param array<string, ColumnOrder> $orders
+     */
+    public static function decoded(array $rowCounts, array $chunks, array $orders): self
+    {
+        return new self($rowCounts, [], [], $chunks, $orders);
+    }
 
     /**
      * Called by name from arrow-ext RustParquetFooter::rowGroupChunks(), pinned by phpt 056.
@@ -56,42 +62,46 @@ final class RustRowGroupChunks implements RowGroupChunks
     {
         $path = $column->flatPath();
 
-        if (!array_key_exists($path, $this->chunks)) {
+        if (array_key_exists($rowGroup, $this->decoded[$path] ?? [])) {
+            return $this->decoded[$path][$rowGroup];
+        }
+
+        if (!array_key_exists($path, $this->chunks) && !array_key_exists($path, $this->decoded)) {
             throw new InvalidArgumentException('Column "' . $path . '" was not read from the footer');
         }
 
-        if (!array_key_exists($rowGroup, $this->chunks[$path])) {
+        if (!array_key_exists($rowGroup, $this->chunks[$path] ?? [])) {
             throw new OutOfBoundsException('Row group ' . $rowGroup . ' does not exist');
         }
 
-        if (!array_key_exists($rowGroup, $this->decoded[$path] ?? [])) {
-            $thrift = new ThriftColumnChunk();
-            $thrift->read(new CompactProtocol(new MemoryBuffer($this->chunks[$path][$rowGroup])));
-            $this->decoded[$path][$rowGroup] = ColumnChunk::fromThrift($thrift);
-        }
+        $thrift = new ThriftColumnChunk();
+        $thrift->read(new CompactProtocol(new MemoryBuffer($this->chunks[$path][$rowGroup])));
 
-        return $this->decoded[$path][$rowGroup];
+        return $this->decoded[$path][$rowGroup] = ColumnChunk::fromThrift($thrift);
     }
 
     public function columnOrder(FlatColumn $column): ColumnOrder
     {
         $path = $column->flatPath();
 
+        if (array_key_exists($path, $this->decodedOrders)) {
+            return $this->decodedOrders[$path];
+        }
+
         if (!array_key_exists($path, $this->orders)) {
             throw new InvalidArgumentException('Column "' . $path . '" was not read from the footer');
         }
 
-        if ($this->orders[$path] === null) {
+        $bytes = $this->orders[$path];
+
+        if ($bytes === null) {
             return ColumnOrder::Absent;
         }
 
-        if (!array_key_exists($path, $this->decodedOrders)) {
-            $thrift = new ThriftColumnOrder();
-            $thrift->read(new CompactProtocol(new MemoryBuffer($this->orders[$path])));
-            $this->decodedOrders[$path] = ColumnOrder::fromThrift($thrift);
-        }
+        $thrift = new ThriftColumnOrder();
+        $thrift->read(new CompactProtocol(new MemoryBuffer($bytes)));
 
-        return $this->decodedOrders[$path];
+        return $this->decodedOrders[$path] = ColumnOrder::fromThrift($thrift);
     }
 
     public function rowCounts(): array

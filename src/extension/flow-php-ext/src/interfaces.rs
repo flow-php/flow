@@ -1,5 +1,5 @@
-//! `Flow\ETL\Column\{Column, ColumnBuilder, Backend}` and the CSV / JSON / Parquet adapters' encoder, open source and
-//! open sink contracts: registered at MINIT with the package
+//! `Flow\ETL\Foundation\Describe\Describable`, `Flow\ETL\Values\Column\{Column, ColumnBuilder, Backend}`, `Flow\ETL\IO\Loader\File\FileWriter` and the CSV / JSON / Parquet
+//! adapters' encoder and open source contracts: registered at MINIT with the package
 //! files' exact signatures, so the extension's classes implement them and the package files (autoloaded only without
 //! flow_php) stay unused.
 
@@ -11,25 +11,27 @@ use ext_php_rs::error::Result;
 use ext_php_rs::flags::{ClassFlags, DataType, MethodFlags};
 use ext_php_rs::zend::ClassEntry;
 
-const DEFINITION: DataType = DataType::object("Flow\\ETL\\Schema\\Definition");
+const DEFINITION: DataType = DataType::object("Flow\\ETL\\Values\\Schema\\Definition");
 const TYPE: DataType = DataType::object("Flow\\Types\\Type");
-const COLUMN: DataType = DataType::object("Flow\\ETL\\Column\\Column");
-const COLUMN_BUILDER: DataType = DataType::object("Flow\\ETL\\Column\\ColumnBuilder");
+const COLUMN: DataType = DataType::object("Flow\\ETL\\Values\\Column\\Column");
+const COLUMN_BUILDER: DataType = DataType::object("Flow\\ETL\\Values\\Column\\ColumnBuilder");
 const SELF: DataType = DataType::object("self");
-const ROWS: DataType = DataType::object("Flow\\ETL\\Rows");
-const SCHEMA: DataType = DataType::object("Flow\\ETL\\Schema");
-const BACKEND: DataType = DataType::object("Flow\\ETL\\Column\\Backend");
+const ROWS: DataType = DataType::object("Flow\\ETL\\Values\\Rows");
+const SCHEMA: DataType = DataType::object("Flow\\ETL\\Values\\Schema");
+const BACKEND: DataType = DataType::object("Flow\\ETL\\Values\\Column\\Backend");
+const CODEC: DataType = DataType::object("Flow\\ETL\\Values\\Column\\Frame\\Codec");
 const ITERATOR: DataType = DataType::object("Iterator");
 const READ_PLAN: DataType = DataType::object("Flow\\Parquet\\Reader\\ReadPlan");
-const COLUMN_TYPES: DataType = DataType::object("Flow\\ETL\\Schema\\Inference\\ColumnTypes");
-const SCHEMA_INFERENCE: DataType = DataType::object("Flow\\ETL\\Schema\\Inference\\SchemaInference");
+const COLUMN_TYPES: DataType = DataType::object("Flow\\ETL\\IO\\Inference\\ColumnTypes");
 const TYPE_NARROWER: DataType = DataType::object("Flow\\Types\\Type\\TypeNarrower");
+const REBUILD: DataType = DataType::object("Flow\\ETL\\Foundation\\Describe\\Rebuild");
 
 // ClassEntry::try_find reads EG(class_table), which MINIT has not set, so each CE is kept from its registration
 static COLUMN_CE: AtomicPtr<ClassEntry> = AtomicPtr::new(std::ptr::null_mut());
 static COLUMN_BUILDER_CE: AtomicPtr<ClassEntry> = AtomicPtr::new(std::ptr::null_mut());
 static BACKEND_CE: AtomicPtr<ClassEntry> = AtomicPtr::new(std::ptr::null_mut());
-static PARQUET_OPEN_SINK_CE: AtomicPtr<ClassEntry> = AtomicPtr::new(std::ptr::null_mut());
+static DESCRIBABLE_CE: AtomicPtr<ClassEntry> = AtomicPtr::new(std::ptr::null_mut());
+static FILE_WRITER_CE: AtomicPtr<ClassEntry> = AtomicPtr::new(std::ptr::null_mut());
 static CSV_ENCODER_CE: AtomicPtr<ClassEntry> = AtomicPtr::new(std::ptr::null_mut());
 static JSON_ENCODER_CE: AtomicPtr<ClassEntry> = AtomicPtr::new(std::ptr::null_mut());
 static CSV_OPEN_SOURCE_CE: AtomicPtr<ClassEntry> = AtomicPtr::new(std::ptr::null_mut());
@@ -51,9 +53,14 @@ fn store_backend(ce: &'static mut ClassEntry, arg_info: ArgInfoTables) {
     BACKEND_CE.store(ce, Ordering::Release);
 }
 
-fn store_parquet_open_sink(ce: &'static mut ClassEntry, arg_info: ArgInfoTables) {
+fn store_describable(ce: &'static mut ClassEntry, arg_info: ArgInfoTables) {
     keep(arg_info);
-    PARQUET_OPEN_SINK_CE.store(ce, Ordering::Release);
+    DESCRIBABLE_CE.store(ce, Ordering::Release);
+}
+
+fn store_file_writer(ce: &'static mut ClassEntry, arg_info: ArgInfoTables) {
+    keep(arg_info);
+    FILE_WRITER_CE.store(ce, Ordering::Release);
 }
 
 fn store_csv_encoder(ce: &'static mut ClassEntry, arg_info: ArgInfoTables) {
@@ -91,41 +98,45 @@ fn load(ce: &AtomicPtr<ClassEntry>, name: &str) -> &'static ClassEntry {
 }
 
 pub fn column_ce() -> &'static ClassEntry {
-    load(&COLUMN_CE, "Flow\\ETL\\Column\\Column")
+    load(&COLUMN_CE, "Flow\\ETL\\Values\\Column\\Column")
 }
 
 pub fn column_builder_ce() -> &'static ClassEntry {
-    load(&COLUMN_BUILDER_CE, "Flow\\ETL\\Column\\ColumnBuilder")
+    load(&COLUMN_BUILDER_CE, "Flow\\ETL\\Values\\Column\\ColumnBuilder")
 }
 
 pub fn backend_ce() -> &'static ClassEntry {
-    load(&BACKEND_CE, "Flow\\ETL\\Column\\Backend")
+    load(&BACKEND_CE, "Flow\\ETL\\Values\\Column\\Backend")
 }
 
-pub fn parquet_open_sink_ce() -> &'static ClassEntry {
-    load(&PARQUET_OPEN_SINK_CE, "Flow\\ETL\\Adapter\\Parquet\\ParquetOpenSink")
+pub fn describable_ce() -> &'static ClassEntry {
+    load(&DESCRIBABLE_CE, "Flow\\ETL\\Foundation\\Describe\\Describable")
+}
+
+pub fn file_writer_ce() -> &'static ClassEntry {
+    load(&FILE_WRITER_CE, "Flow\\ETL\\IO\\Loader\\File\\FileWriter")
 }
 
 pub fn csv_encoder_ce() -> &'static ClassEntry {
-    load(&CSV_ENCODER_CE, "Flow\\ETL\\Adapter\\CSV\\CSVEncoder")
+    load(&CSV_ENCODER_CE, "Flow\\ETL\\Adapter\\CSV\\IO\\Loader\\CSVEncoder")
 }
 
 pub fn json_encoder_ce() -> &'static ClassEntry {
-    load(&JSON_ENCODER_CE, "Flow\\ETL\\Adapter\\JSON\\JsonEncoder")
+    load(&JSON_ENCODER_CE, "Flow\\ETL\\Adapter\\JSON\\IO\\Loader\\JsonEncoder")
 }
 
 pub fn csv_open_source_ce() -> &'static ClassEntry {
-    load(&CSV_OPEN_SOURCE_CE, "Flow\\ETL\\Adapter\\CSV\\CSVOpenSource")
+    load(&CSV_OPEN_SOURCE_CE, "Flow\\ETL\\Adapter\\CSV\\IO\\Extractor\\CSVOpenSource")
 }
 
 pub fn json_open_source_ce() -> &'static ClassEntry {
-    load(&JSON_OPEN_SOURCE_CE, "Flow\\ETL\\Adapter\\JSON\\JsonOpenSource")
+    load(&JSON_OPEN_SOURCE_CE, "Flow\\ETL\\Adapter\\JSON\\IO\\Extractor\\JsonOpenSource")
 }
 
 pub fn parquet_open_source_ce() -> &'static ClassEntry {
     load(
         &PARQUET_OPEN_SOURCE_CE,
-        "Flow\\ETL\\Adapter\\Parquet\\ParquetOpenSource",
+        "Flow\\ETL\\Adapter\\Parquet\\IO\\Extractor\\ParquetOpenSource",
     )
 }
 
@@ -150,8 +161,23 @@ fn interface(
 }
 
 pub fn register() -> Result<()> {
+    // the return types stay undeclared: every implementation's `static` and `?Description` are covariant to none
+    ClassBuilder::new("Flow\\ETL\\Foundation\\Describe\\Describable")
+        .flags(ClassFlags::Interface)
+        .registration(store_describable)
+        .method(
+            FunctionBuilder::new_abstract("fromDescription")
+                .arg(Arg::new("data", DataType::Array))
+                .arg(Arg::new("rebuild", REBUILD)),
+            MethodFlags::Public | MethodFlags::Abstract | MethodFlags::Static,
+        )
+        .method(
+            FunctionBuilder::new_abstract("describe"),
+            MethodFlags::Public | MethodFlags::Abstract,
+        )
+        .register()?;
     interface(
-        "Flow\\ETL\\Column\\Column",
+        "Flow\\ETL\\Values\\Column\\Column",
         store_column,
         vec![
             method("type", vec![], TYPE),
@@ -174,7 +200,7 @@ pub fn register() -> Result<()> {
         ],
     )?;
     interface(
-        "Flow\\ETL\\Column\\ColumnBuilder",
+        "Flow\\ETL\\Values\\Column\\ColumnBuilder",
         store_column_builder,
         vec![
             method("append", vec![Arg::new("value", DataType::Mixed)], DataType::Void),
@@ -203,7 +229,7 @@ pub fn register() -> Result<()> {
         ],
     )?;
     interface(
-        "Flow\\ETL\\Column\\Backend",
+        "Flow\\ETL\\Values\\Column\\Backend",
         store_backend,
         vec![
             method("builder", vec![Arg::new("definition", DEFINITION)], COLUMN_BUILDER),
@@ -227,6 +253,20 @@ pub fn register() -> Result<()> {
                 COLUMN,
             ),
             method(
+                "decodeFrame",
+                vec![
+                    Arg::new("body", DataType::String),
+                    Arg::new("schema", SCHEMA),
+                    Arg::new("codec", CODEC),
+                ],
+                ROWS,
+            ),
+            method(
+                "encodeFrame",
+                vec![Arg::new("rows", ROWS), Arg::new("codec", CODEC)],
+                DataType::String,
+            ),
+            method(
                 "adopt",
                 vec![Arg::new("definition", DEFINITION), Arg::new("column", COLUMN)],
                 COLUMN,
@@ -235,15 +275,15 @@ pub fn register() -> Result<()> {
         ],
     )?;
     interface(
-        "Flow\\ETL\\Adapter\\Parquet\\ParquetOpenSink",
-        store_parquet_open_sink,
+        "Flow\\ETL\\IO\\Loader\\File\\FileWriter",
+        store_file_writer,
         vec![
             method("close", vec![], DataType::Void),
             method("write", vec![Arg::new("rows", ROWS)], DataType::Void),
         ],
     )?;
     interface(
-        "Flow\\ETL\\Adapter\\CSV\\CSVEncoder",
+        "Flow\\ETL\\Adapter\\CSV\\IO\\Loader\\CSVEncoder",
         store_csv_encoder,
         vec![
             method("encode", vec![Arg::new("rows", ROWS)], DataType::String),
@@ -255,7 +295,7 @@ pub fn register() -> Result<()> {
         ],
     )?;
     interface(
-        "Flow\\ETL\\Adapter\\JSON\\JsonEncoder",
+        "Flow\\ETL\\Adapter\\JSON\\IO\\Loader\\JsonEncoder",
         store_json_encoder,
         vec![method(
             "encode",
@@ -264,7 +304,7 @@ pub fn register() -> Result<()> {
         )],
     )?;
     interface(
-        "Flow\\ETL\\Adapter\\CSV\\CSVOpenSource",
+        "Flow\\ETL\\Adapter\\CSV\\IO\\Extractor\\CSVOpenSource",
         store_csv_open_source,
         vec![
             method("close", vec![], DataType::Void),
@@ -287,7 +327,6 @@ pub fn register() -> Result<()> {
                 vec![
                     Arg::new("names", DataType::Array),
                     Arg::new("rowBudget", DataType::Long),
-                    Arg::new("inference", SCHEMA_INFERENCE),
                     Arg::new("typer", TYPE_NARROWER),
                 ],
                 COLUMN_TYPES,
@@ -295,7 +334,7 @@ pub fn register() -> Result<()> {
         ],
     )?;
     interface(
-        "Flow\\ETL\\Adapter\\JSON\\JsonOpenSource",
+        "Flow\\ETL\\Adapter\\JSON\\IO\\Extractor\\JsonOpenSource",
         store_json_open_source,
         vec![
             method("close", vec![], DataType::Void),
@@ -311,7 +350,7 @@ pub fn register() -> Result<()> {
         ],
     )?;
     interface(
-        "Flow\\ETL\\Adapter\\Parquet\\ParquetOpenSource",
+        "Flow\\ETL\\Adapter\\Parquet\\IO\\Extractor\\ParquetOpenSource",
         store_parquet_open_source,
         vec![
             method(

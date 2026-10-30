@@ -5,7 +5,7 @@
 [TOC]
 
 Every batch (`Rows`) stores one column per schema definition. The
-[Backend](/src/core/etl/src/Flow/ETL/Column/Backend.php) decides where those columns live and builds them. A data
+[Backend](/src/core/etl/src/Flow/ETL/Values/Column/Backend.php) decides where those columns live and builds them. A data
 frame has exactly one backend, set on its config:
 
 ```php
@@ -13,7 +13,7 @@ frame has exactly one backend, set on its config:
 
 declare(strict_types=1);
 
-use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Values\Column\PhpBackend;
 
 use function Flow\ETL\DSL\{config_builder, data_frame, from_array, lit, ref};
 
@@ -22,17 +22,17 @@ $rows = data_frame(config_builder()->backend(new PhpBackend()))
     ->withColumn('double', ref('id')->multiply(lit(2)))
     ->fetch();
 
-$rows->column('double')::class; // Flow\ETL\Column\Php\ScalarColumn
+$rows->column('double')::class; // Flow\ETL\Values\Column\Php\ScalarColumn
 $rows->toArray();               // [['id' => 1, 'double' => 2], ['id' => 2, 'double' => 4]]
 ```
 
 ## Backends
 
-| Backend                                                                  | Columns                       | Requires                                                                       |
-|--------------------------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------|
-| [AdaptiveBackend](/src/core/etl/src/Flow/ETL/Column/AdaptiveBackend.php) | `RustBackend` or `PhpBackend` | nothing (the default)                                                          |
-| [PhpBackend](/src/core/etl/src/Flow/ETL/Column/PhpBackend.php)           | PHP arrays                    | nothing                                                                        |
-| `RustBackend`                                                            | Apache Arrow arrays           | the [flow_php extension](/documentation/components/extensions/flow-php-ext.md) |
+| Backend                                                                         | Columns                       | Requires                                                                       |
+|---------------------------------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------|
+| [AdaptiveBackend](/src/core/etl/src/Flow/ETL/Values/Column/AdaptiveBackend.php) | `RustBackend` or `PhpBackend` | nothing (the default)                                                          |
+| [PhpBackend](/src/core/etl/src/Flow/ETL/Values/Column/PhpBackend.php)           | PHP arrays                    | nothing                                                                        |
+| `RustBackend`                                                                   | Apache Arrow arrays           | the [flow_php extension](/documentation/components/extensions/flow-php-ext.md) |
 
 When `extension_loaded('flow_php')` is true, `AdaptiveBackend` picks `RustBackend`. Else it picks `PhpBackend`.
 Both produce the same values: `PhpBackend` is the reference implementation, the extension is an accelerator. Set
@@ -55,7 +55,7 @@ transformer or function, or any `Backend` to the DSL:
 
 declare(strict_types=1);
 
-use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Values\Column\PhpBackend;
 
 use function Flow\ETL\DSL\{array_to_rows, int_schema, schema};
 

@@ -6,8 +6,8 @@ RustColumnBuilder casts random nested values, raw and refused forms, as the PHP 
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Column\RustBackend;
-use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Values\Column\RustBackend;
+use Flow\ETL\Values\Column\PhpBackend;
 
 use function Flow\ETL\DSL\definition_from_type;
 

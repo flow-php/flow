@@ -89,6 +89,32 @@ nix-shell --arg with-blackfire true
 
 To configure blackfire, you can create a file `./.nix/php/lib/blackfire.ini` with your blackfire configuration.
 
+## Benchmarking PHP
+
+The default shell runs PHP with development settings. OPcache is off for the CLI, which keeps the JIT off.
+`zend.assertions` is `1`. pcov is loaded. To time Flow with production settings:
+
+```shell
+nix-shell --arg with-php-benchmark true
+```
+
+The flag removes pcov, xdebug and blackfire. A shell that combines the flag with one of them fails at evaluation.
+The flag appends `./.nix/php/lib/benchmark.ini.dist` to `php.ini`:
+
+```ini
+opcache.enable=1
+opcache.enable_cli=1
+opcache.jit=tracing
+opcache.jit_buffer_size=128M
+opcache.memory_consumption=256
+opcache.interned_strings_buffer=32
+opcache.max_accelerated_files=20000
+opcache.validate_timestamps=1
+zend.assertions=-1
+```
+
+On Linux the flag also sets `opcache.huge_code_pages=1`. To override a value, create `./.nix/php/lib/benchmark.ini`.
+
 ## Changing PHP Versions
 
 To change the PHP version, you can run nix shell with `--arg php-version 8.3` flag:
@@ -152,6 +178,21 @@ nix-shell --arg with-protoc true
 ```
 
 The `ext-protobuf` and `ext-grpc` PHP extensions are part of the default shell (`with-protobuf` / `with-grpc`, both default `true`); pass `false` to opt out.
+
+### Reference Engines (DuckDB, Polars, Spark)
+
+Each engine has its own flag. Enable only the engines a comparison needs:
+
+```shell
+nix-shell --arg with-duckdb true --arg with-polars true --arg with-spark true --arg with-php-benchmark true
+```
+
+- `with-duckdb` adds the `duckdb` CLI.
+- `with-polars` adds a `python3` with `polars` and `pyarrow`.
+- `with-spark` adds `spark-submit` with its JDK, without R.
+
+The scripts and the measurement rules are on the
+[Benchmarks page](/documentation/contributing/benchmarks.md#reference-engines).
 
 ### Combining Multiple Options
 

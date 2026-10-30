@@ -22,13 +22,17 @@ final class PageZoneMaps
      */
     private array $zones = [];
 
+    private readonly PhysicalCodec $codec;
+
     /**
      * @param array<string, PageIndex> $pageIndexes by flat path, a column without one has no zone
      */
     public function __construct(
         private readonly RowGroupChunks $chunks,
         private readonly array $pageIndexes,
-    ) {}
+    ) {
+        $this->codec = new PhysicalCodec();
+    }
 
     public function at(int $row): ZoneMaps
     {
@@ -62,13 +66,11 @@ final class PageZoneMaps
             return new ZoneMap(null, null, true, true, $rows, $nanCount, $rows, false);
         }
 
-        $codec = new PhysicalCodec();
-
         return ZoneMap::fromStatistics(
             column: $column,
             columnOrder: $this->chunks->columnOrder($column),
-            min: $codec->decodeStatistic($column, $columnIndex->minValues[$page]),
-            max: $codec->decodeStatistic($column, $columnIndex->maxValues[$page]),
+            min: $this->codec->decodeStatistic($column, $columnIndex->minValues[$page]),
+            max: $this->codec->decodeStatistic($column, $columnIndex->maxValues[$page]),
             minExact: null,
             maxExact: null,
             nullCount: $columnIndex->nullCounts[$page] ?? null,

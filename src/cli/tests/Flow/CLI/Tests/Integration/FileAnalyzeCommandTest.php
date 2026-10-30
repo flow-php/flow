@@ -5,15 +5,13 @@ declare(strict_types=1);
 namespace Flow\CLI\Tests\Integration;
 
 use Flow\CLI\Command\FileAnalyzeCommand;
-use Flow\ETL\Tests\CommandOutputNormalizer;
+use Flow\ETL\Tests\Context\CommandOutputNormalizer;
 use Flow\ETL\Tests\FlowTestCase;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
 final class FileAnalyzeCommandTest extends FlowTestCase
 {
-    use CommandOutputNormalizer;
-
     public function test_read_rows_csv(): void
     {
         $tester = new CommandTester(new FileAnalyzeCommand('file:analyze'));
@@ -27,14 +25,14 @@ final class FileAnalyzeCommandTest extends FlowTestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputContains(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputContains(<<<'OUTPUT'
             Analyzing File
             ==============
 
              [INFO] File path: orders.csv
             OUTPUT, $tester->getDisplay());
 
-        self::assertCommandOutputContains(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputContains(<<<'OUTPUT'
             ┌────────────┬──────────┬──────────┬──────────┐
             │ Name       │ Type     │ Nullable │ Metadata │
             ├────────────┼──────────┼──────────┼──────────┤
@@ -57,15 +55,15 @@ final class FileAnalyzeCommandTest extends FlowTestCase
             │ created_at │ datetime │ 0     │ 5               │ 2024-02-23T19:18:53+00:00 │ 2024-06-17T19:24:49+00:00 │ -          │ -          │ -                  │ -                  │
             │ updated_at │ datetime │ 0     │ 5               │ 2024-02-23T19:18:53+00:00 │ 2024-06-17T19:24:49+00:00 │ -          │ -          │ -                  │ -                  │
             │ discount   │ float    │ 2     │ 3               │ 12.45                     │ 47.10                     │ -          │ -          │ -                  │ -                  │
-            │ address    │ json     │ 0     │ 0               │ -                         │ -                         │ -          │ -          │ -                  │ -                  │
-            │ notes      │ json     │ 0     │ 0               │ -                         │ -                         │ -          │ -          │ -                  │ -                  │
-            │ items      │ json     │ 0     │ 0               │ -                         │ -                         │ -          │ -          │ -                  │ -                  │
+            │ address    │ json     │ 0     │ 5               │ -                         │ -                         │ -          │ -          │ -                  │ -                  │
+            │ notes      │ json     │ 0     │ 5               │ -                         │ -                         │ -          │ -          │ -                  │ -                  │
+            │ items      │ json     │ 0     │ 5               │ -                         │ -                         │ -          │ -          │ -                  │ -                  │
             └────────────┴──────────┴───────┴─────────────────┴───────────────────────────┴───────────────────────────┴────────────┴────────────┴────────────────────┴────────────────────┘
             OUTPUT, $tester->getDisplay());
 
-        self::assertCommandOutputContains('Analyzed Rows', $tester->getDisplay());
+        CommandOutputNormalizer::assertCommandOutputContains('Analyzed Rows', $tester->getDisplay());
 
-        self::assertCommandOutputContains('Execution Time', $tester->getDisplay());
+        CommandOutputNormalizer::assertCommandOutputContains('Execution Time', $tester->getDisplay());
     }
 
     public function test_read_rows_csv_with_all_strings(): void
@@ -81,7 +79,7 @@ final class FileAnalyzeCommandTest extends FlowTestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputContains(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputContains(<<<'OUTPUT'
             ┌────────────┬────────┬──────────┬──────────┐
             │ Name       │ Type   │ Nullable │ Metadata │
             ├────────────┼────────┼──────────┼──────────┤
@@ -108,14 +106,14 @@ final class FileAnalyzeCommandTest extends FlowTestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputContains(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputContains(<<<'OUTPUT'
             Analyzing File
             ==============
 
              [INFO] File path: orders.csv
             OUTPUT, $tester->getDisplay());
 
-        self::assertCommandOutputContains(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputContains(<<<'OUTPUT'
             Columns
             -------
 
@@ -126,15 +124,15 @@ final class FileAnalyzeCommandTest extends FlowTestCase
             │ created_at │ datetime │ 0     │ 5               │ 2024-02-23T19:18:53+00:00 │ 2024-06-17T19:24:49+00:00 │ -          │ -          │ -                  │ -                  │
             │ updated_at │ datetime │ 0     │ 5               │ 2024-02-23T19:18:53+00:00 │ 2024-06-17T19:24:49+00:00 │ -          │ -          │ -                  │ -                  │
             │ discount   │ float    │ 2     │ 3               │ 12.45                     │ 47.10                     │ -          │ -          │ -                  │ -                  │
-            │ address    │ json     │ 0     │ 0               │ -                         │ -                         │ -          │ -          │ -                  │ -                  │
-            │ notes      │ json     │ 0     │ 0               │ -                         │ -                         │ -          │ -          │ -                  │ -                  │
-            │ items      │ json     │ 0     │ 0               │ -                         │ -                         │ -          │ -          │ -                  │ -                  │
+            │ address    │ json     │ 0     │ 5               │ -                         │ -                         │ -          │ -          │ -                  │ -                  │
+            │ notes      │ json     │ 0     │ 5               │ -                         │ -                         │ -          │ -          │ -                  │ -                  │
+            │ items      │ json     │ 0     │ 5               │ -                         │ -                         │ -          │ -          │ -                  │ -                  │
             └────────────┴──────────┴───────┴─────────────────┴───────────────────────────┴───────────────────────────┴────────────┴────────────┴────────────────────┴────────────────────┘
             OUTPUT, $tester->getDisplay());
 
-        self::assertCommandOutputContains('Analyzed Rows', $tester->getDisplay());
+        CommandOutputNormalizer::assertCommandOutputContains('Analyzed Rows', $tester->getDisplay());
 
-        self::assertCommandOutputContains('Execution Time', $tester->getDisplay());
+        CommandOutputNormalizer::assertCommandOutputContains('Execution Time', $tester->getDisplay());
     }
 
     public function test_read_rows_csv_with_source_statistics(): void
@@ -148,7 +146,7 @@ final class FileAnalyzeCommandTest extends FlowTestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputContains(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputContains(<<<'OUTPUT'
             ┌──────────────┬───────────────┬───────────────┬────────────┐
             │ Extractor    │ Declared Rows │ Measured Rows │ Rows Error │
             ├──────────────┼───────────────┼───────────────┼────────────┤

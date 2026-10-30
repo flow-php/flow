@@ -5,20 +5,19 @@ declare(strict_types=1);
 namespace Flow\CLI\Command;
 
 use Flow\CLI\Arguments\FilePathArgument;
-use Flow\CLI\Command\Traits\ConfigOptions;
-use Flow\CLI\Command\Traits\CSVOptions;
-use Flow\CLI\Command\Traits\ExcelOptions;
-use Flow\CLI\Command\Traits\JSONOptions;
-use Flow\CLI\Command\Traits\ParquetOptions;
-use Flow\CLI\Command\Traits\SchemaInferenceOptions;
-use Flow\CLI\Command\Traits\XMLOptions;
 use Flow\CLI\Factory\ExtractorFactory;
 use Flow\CLI\Options\ConfigOption;
+use Flow\CLI\Options\CSVInputOptions;
+use Flow\CLI\Options\ExcelInputOptions;
 use Flow\CLI\Options\FileFormat;
 use Flow\CLI\Options\FileFormatOption;
-use Flow\ETL\Config;
-use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
-use Flow\ETL\Schema\Formatter\PHPSchemaFormatter;
+use Flow\CLI\Options\JSONInputOptions;
+use Flow\CLI\Options\ParquetInputOptions;
+use Flow\CLI\Options\SchemaInferenceOptions;
+use Flow\CLI\Options\XMLInputOptions;
+use Flow\ETL\IO\Formatter\Row\ASCIISchemaFormatter;
+use Flow\ETL\IO\Formatter\Schema\PHPSchemaFormatter;
+use Flow\ETL\Runtime\Config;
 use Flow\Filesystem\Path;
 use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -41,14 +40,6 @@ use function Flow\ETL\DSL\schema_to_json;
 )]
 final class FileSchemaCommand extends Command
 {
-    use ConfigOptions;
-    use CSVOptions;
-    use ExcelOptions;
-    use JSONOptions;
-    use ParquetOptions;
-    use SchemaInferenceOptions;
-    use XMLOptions;
-
     private ?FileFormat $fileFormat = null;
 
     private ?Config $flowConfig = null;
@@ -89,13 +80,13 @@ final class FileSchemaCommand extends Command
             ->addOption('output-table', null, InputOption::VALUE_NONE, 'Print schema as ascii table')
             ->addOption('output-ascii', null, InputOption::VALUE_NONE, 'Print schema as ascii list');
 
-        $this->addConfigOptions($this);
-        $this->addJSONInputOptions($this);
-        $this->addCSVInputOptions($this);
-        $this->addExcelInputOptions($this);
-        $this->addXMLInputOptions($this);
-        $this->addParquetInputOptions($this);
-        $this->addSchemaInferenceOptions($this);
+        (new ConfigOption('config'))->configure($this);
+        (new JSONInputOptions())->configure($this);
+        (new CSVInputOptions())->configure($this);
+        (new ExcelInputOptions())->configure($this);
+        (new XMLInputOptions())->configure($this);
+        (new ParquetInputOptions())->configure($this);
+        (new SchemaInferenceOptions())->configure($this);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -108,7 +99,7 @@ final class FileSchemaCommand extends Command
 
         $extractor = (new ExtractorFactory($this->sourcePath, $this->fileFormat))->get($input);
 
-        if (!$this->applySchemaInference($extractor, $input, $style)) {
+        if (!(new SchemaInferenceOptions())->apply($extractor, $input, $style)) {
             return Command::FAILURE;
         }
 

@@ -60,16 +60,13 @@ $rows = data_frame()
 <?php
 
 $rows = data_frame()
-    ->read(
-        from_excel('path/to/your/excel.xlsx')
-            ->withHeader(false)
-            ->withOffset(5)
-    )
+    ->read(from_excel('path/to/your/excel.xlsx')->withHeader(false))
+    ->offset(4)
     ->fetch();
 ```
 
-Row numbers count from 1 and include the header row, so `->withOffset(5)` on a sheet with a header skips rows 2-4
-and starts at row 5.
+`offset()` counts data rows, so a sheet read without a header starts at row 5 here; with a header, `->offset(3)`
+starts at row 5.
 
 ### Header and missing cells
 
@@ -159,7 +156,7 @@ data_frame()
 ```php
 <?php
 
-use Flow\ETL\Adapter\Excel\ExcelWriter;
+use Flow\ETL\Adapter\Excel\IO\Loader\ExcelWriter;
 
 data_frame()
     ->read($extractor)
@@ -242,8 +239,8 @@ data_frame()
 ```php
 <?php
 
-use Flow\ETL\Adapter\Excel\CellStyler;
-use Flow\ETL\Schema\Definition;
+use Flow\ETL\Adapter\Excel\IO\Loader\CellStyler;
+use Flow\ETL\Values\Schema\Definition;
 use OpenSpout\Common\Entity\Style\Style;
 
 $cellStyler = new class implements CellStyler {

@@ -6,9 +6,9 @@ The native writers format a datetime and a date as DateTimeInterface::format() d
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Adapter\CSV\CSVWriteOptions;
-use Flow\ETL\Adapter\CSV\RustCSVEncoder;
-use Flow\ETL\Adapter\CSV\PhpCSVEncoder;
+use Flow\ETL\Adapter\CSV\IO\Loader\CSVWriteOptions;
+use Flow\ETL\Adapter\CSV\IO\Loader\RustCSVEncoder;
+use Flow\ETL\Adapter\CSV\IO\Loader\PhpCSVEncoder;
 
 use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
@@ -63,7 +63,7 @@ foreach (['UTC', '+02:30', 'Europe/Warsaw', 'America/New_York', 'Australia/Lord_
 
         foreach ($formats as $format) {
             $recorder = new RecordingPhpCSVEncoder(new PhpCSVEncoder(new CSVWriteOptions("\x01", "\x02", '', "\n", $format, 'Y-m-d')));
-            $writer = new RustCSVEncoder("\x01", "\x02", '', "\n", $format, 'Y-m-d', $recorder);
+            $writer = new RustCSVEncoder(new CSVWriteOptions("\x01", "\x02", '', "\n", $format, 'Y-m-d'), $recorder);
             $expected = '';
 
             foreach ($values as $value) {
@@ -92,7 +92,7 @@ $days = [0, -1, 1, 20_455, -25_567, -719_528, -719_893, 2_932_896, 35_804_721];
 $different = 0;
 
 foreach ($formats as $format) {
-    $writer = new RustCSVEncoder("\x01", "\x02", '', "\n", DATE_ATOM, $format, new PhpCSVEncoder(new CSVWriteOptions("\x01", "\x02", '', "\n", DATE_ATOM, $format)));
+    $writer = new RustCSVEncoder(new CSVWriteOptions("\x01", "\x02", '', "\n", DATE_ATOM, $format), new PhpCSVEncoder(new CSVWriteOptions("\x01", "\x02", '', "\n", DATE_ATOM, $format)));
     $expected = '';
 
     foreach ($days as $day) {
@@ -111,7 +111,7 @@ echo "date: {$different} of " . count($formats) . " differ\n";
 foreach (['D, d M Y', 'Y-m-d I', 'N', 'Y\\'] as $format) {
     $recorder = new RecordingPhpCSVEncoder(new PhpCSVEncoder(new CSVWriteOptions(',', '"', '\\', "\n", $format, $format)));
     $rows = native_rows(schema(datetime_schema('at'), date_schema('on')), [['at' => new DateTimeImmutable('2024-01-02 03:04:05'), 'on' => new DateTimeImmutable('2024-01-02')]]);
-    (new RustCSVEncoder(',', '"', '\\', "\n", $format, $format, $recorder))->encode($rows);
+    (new RustCSVEncoder(new CSVWriteOptions(',', '"', '\\', "\n", $format, $format), $recorder))->encode($rows);
     printf("%s: %s\n", $format, json_encode(recorded_names($recorder->columns, $rows)));
 }
 ?>

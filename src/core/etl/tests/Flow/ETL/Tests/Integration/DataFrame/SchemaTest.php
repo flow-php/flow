@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use Flow\ETL\Rows;
+use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\ETL\Values\Rows;
 
 use function array_map;
 use function Flow\ETL\DSL\array_to_rows;
@@ -129,22 +130,22 @@ final class SchemaTest extends FlowIntegrationTestCase
 
     public function test_getting_schema(): void
     {
-        $rows = array_to_rows(
-            array_map(
-                static fn($i) => [
-                    'id' => $i,
-                    'name' => 'name_' . $i,
-                    'active' => ($i % 2) === 0,
-                ],
-                range(1, 100),
-            ),
-            schema(int_schema('id'), str_schema('name'), bool_schema('active')),
-            flow_context(config())->backend(),
-        );
-
         static::assertEquals(
             schema(int_schema('id'), str_schema('name'), bool_schema('active')),
-            df()->read(from_rows($rows))->schema(),
+            df()
+                ->read(from_rows(array_to_rows(
+                    array_map(
+                        static fn($i) => [
+                            'id' => $i,
+                            'name' => 'name_' . $i,
+                            'active' => ($i % 2) === 0,
+                        ],
+                        range(1, 100),
+                    ),
+                    schema(int_schema('id'), str_schema('name'), bool_schema('active')),
+                    flow_context(config())->backend(),
+                )))
+                ->schema(),
         );
     }
 
@@ -177,14 +178,6 @@ final class SchemaTest extends FlowIntegrationTestCase
 
     public function test_schema_when_starting_rows_are_null(): void
     {
-        $rows = df()
-            ->read(from_array([
-                ['string' => null, 'bool' => null, 'int' => null, 'float' => null],
-                ['string' => 'a', 'bool' => true, 'int' => 1, 'float' => 1.24],
-            ]))
-            ->collect()
-            ->fetch();
-
         static::assertEquals(
             schema(
                 str_schema('string', true),
@@ -192,7 +185,14 @@ final class SchemaTest extends FlowIntegrationTestCase
                 int_schema('int', true),
                 float_schema('float', true),
             ),
-            $rows->schema(),
+            df()
+                ->read(from_array([
+                    ['string' => null, 'bool' => null, 'int' => null, 'float' => null],
+                    ['string' => 'a', 'bool' => true, 'int' => 1, 'float' => 1.24],
+                ]))
+                ->collect()
+                ->fetch()
+                ->schema(),
         );
     }
 
@@ -205,7 +205,7 @@ final class SchemaTest extends FlowIntegrationTestCase
 
         // Row 1's nulls are TYPED nulls in known columns rather than untyped null columns a later
         // row contradicts.
-        $batches = iterator_to_array($extractor->extract(flow_context()));
+        $batches = iterator_to_array($extractor->extract(flow_context()->backend(), new Criteria()));
 
         static::assertSame(
             [

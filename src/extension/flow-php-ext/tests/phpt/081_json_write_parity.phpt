@@ -1,15 +1,15 @@
 --TEST--
-JsonOpenSink writes the same bytes through RustJsonEncoder and PhpJsonEncoder: seeded random batches over every kind, nesting <= 3, random flags and framings
+JsonFileWriter writes the same bytes through RustJsonEncoder and PhpJsonEncoder: seeded random batches over every kind, nesting <= 3, random flags and framings
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 --FILE--
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Adapter\JSON\JsonFraming;
-use Flow\ETL\Adapter\JSON\JsonOpenSink;
-use Flow\ETL\Adapter\JSON\RustJsonEncoder;
-use Flow\ETL\Adapter\JSON\PhpJsonEncoder;
+use Flow\ETL\Adapter\JSON\IO\JsonFraming;
+use Flow\ETL\Adapter\JSON\IO\Loader\JsonFileWriter;
+use Flow\ETL\Adapter\JSON\IO\Loader\RustJsonEncoder;
+use Flow\ETL\Adapter\JSON\IO\Loader\PhpJsonEncoder;
 use Flow\Filesystem\DestinationStream;
 
 mt_srand(81);
@@ -31,21 +31,21 @@ for ($i = 0; $i < 2_000; $i++) {
     $dateTimeFormat = $dateTimeFormats[mt_rand(0, count($dateTimeFormats) - 1)];
     $dateFormat = $dateFormats[mt_rand(0, count($dateFormats) - 1)];
     $recorder = new RecordingPhpJsonEncoder(new PhpJsonEncoder($flags, $dateTimeFormat, $dateFormat));
-    $writer = new RustJsonEncoder($flags, $dateTimeFormat, $dateFormat, $recorder);
+    $writer = new RustJsonEncoder($recorder);
     $half = intdiv(count($rows), 2);
 
     $php = written(static function (DestinationStream $stream) use ($schema, $rows, $flags, $dateTimeFormat, $dateFormat, $framing, $half): void {
-        $sink = new JsonOpenSink($stream, new PhpJsonEncoder($flags, $dateTimeFormat, $dateFormat), $framing);
-        $sink->write(php_rows($schema, array_slice($rows, 0, $half)));
-        $sink->write(php_rows($schema, array_slice($rows, $half)));
-        $sink->close();
+        $fileWriter = new JsonFileWriter($stream, new PhpJsonEncoder($flags, $dateTimeFormat, $dateFormat), $framing);
+        $fileWriter->write(php_rows($schema, array_slice($rows, 0, $half)));
+        $fileWriter->write(php_rows($schema, array_slice($rows, $half)));
+        $fileWriter->close();
     });
     $native = written(static function (DestinationStream $stream) use ($schema, $rows, $flags, $dateTimeFormat, $dateFormat, $framing, $half, $writer): void {
-        $sink = new JsonOpenSink($stream, $writer, $framing);
-        $sink->write(native_rows($schema, array_slice($rows, 0, $half)));
+        $fileWriter = new JsonFileWriter($stream, $writer, $framing);
+        $fileWriter->write(native_rows($schema, array_slice($rows, 0, $half)));
         // a PHP column inside the batch is adopted
-        $sink->write(php_rows($schema, array_slice($rows, $half)));
-        $sink->close();
+        $fileWriter->write(php_rows($schema, array_slice($rows, $half)));
+        $fileWriter->close();
     });
 
     $refused += (int) refused($php);

@@ -9,7 +9,7 @@ use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\Protobuf\AST\TriggerTransition;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
@@ -22,8 +22,6 @@ final readonly class CreateTriggerBuilder implements
     CreateTriggerOptionsStep,
     CreateTriggerTimingStep
 {
-    use AstToSql;
-
     /**
      * @param list<TriggerEvent> $events
      * @param list<string> $columns
@@ -450,6 +448,11 @@ final readonly class CreateTriggerBuilder implements
             $this->functionName,
             $this->functionArgs,
         );
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): CreateTrigStmt

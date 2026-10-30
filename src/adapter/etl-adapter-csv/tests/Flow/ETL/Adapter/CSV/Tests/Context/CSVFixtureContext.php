@@ -4,24 +4,26 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV\Tests\Context;
 
-use Flow\ETL\Adapter\CSV\AdaptiveCSVOpenSource;
-use Flow\ETL\Adapter\CSV\CSVDecoder;
-use Flow\ETL\Adapter\CSV\CSVDialect;
-use Flow\ETL\Adapter\CSV\CSVFileReader;
-use Flow\ETL\Adapter\CSV\CSVFileSample;
-use Flow\ETL\Adapter\CSV\CSVLineReader;
-use Flow\ETL\Adapter\CSV\CSVOpenSource;
-use Flow\ETL\Adapter\CSV\CSVReadOptions;
-use Flow\ETL\Adapter\CSV\PhpCSVOpenSource;
-use Flow\ETL\Adapter\CSV\RustCSVOpenSource;
-use Flow\ETL\Column\Backend;
-use Flow\ETL\Column\PhpBackend;
-use Flow\ETL\Exception\SchemaMismatchException;
-use Flow\ETL\Extractor\File\SourceFile;
-use Flow\ETL\Schema;
-use Flow\ETL\Schema\Inference\ColumnTypes;
-use Flow\ETL\Schema\Inference\SchemaInference;
-use Flow\ETL\Schema\Inference\SchemaInferrer;
+use Flow\ETL\Adapter\CSV\IO\CSVDialect;
+use Flow\ETL\Adapter\CSV\IO\Extractor\CSVDecoder;
+use Flow\ETL\Adapter\CSV\IO\Extractor\CSVFileBatches;
+use Flow\ETL\Adapter\CSV\IO\Extractor\CSVLineReader;
+use Flow\ETL\Adapter\CSV\IO\Extractor\CSVOpenSource;
+use Flow\ETL\Adapter\CSV\IO\Extractor\CSVReadOptions;
+use Flow\ETL\Adapter\CSV\IO\Extractor\CSVSourceOpener;
+use Flow\ETL\Adapter\CSV\IO\Extractor\PhpCSVOpenSource;
+use Flow\ETL\Adapter\CSV\IO\Extractor\RustCSVOpenSource;
+use Flow\ETL\Adapter\CSV\IO\Inference\CSVSniffer;
+use Flow\ETL\Foundation\Exception\SchemaMismatchException;
+use Flow\ETL\IO\Extractor\File\SourceFile;
+use Flow\ETL\IO\Inference\ColumnTypes;
+use Flow\ETL\IO\Inference\SchemaInference;
+use Flow\ETL\IO\Inference\SchemaInferrer;
+use Flow\ETL\IO\Inference\SniffedColumns;
+use Flow\ETL\Tests\Double\FakeSniffer;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Values\Schema;
 use Flow\Filesystem\FileListing;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\MemoryFilesystem;
@@ -29,16 +31,17 @@ use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Flow\Filesystem\SourceStream;
 use Flow\Types\Type\Native\String\StringTypeNarrower;
-use Flow\Types\Type\TypeNarrower;
 use Generator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;
 
+use function array_values;
 use function Flow\ETL\Adapter\CSV\csv_detect_separator;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
+use function iterator_to_array;
 use function range;
 use function serialize;
 use function sprintf;
@@ -53,20 +56,21 @@ use function substr;
 final class CSVFixtureContext
 {
     /**
-     * A reader over every file a glob under Fixtures/ lists, in listing order.
+     * A sniffer over every file a glob under Fixtures/ lists, in listing order, each source carrying its listed size.
      */
-    public static function globReader(
+    public static function globSniffer(
         string $glob,
+        SchemaInference $inference = new SchemaInference(),
         Filesystem $filesystem = new NativeLocalFilesystem(),
         CSVReadOptions $options = new CSVReadOptions(),
-    ): CSVFileReader {
+    ): CSVSniffer {
         $sources = [];
 
         foreach ((new FileListing($filesystem))->list(path(self::path($glob)), new OnlyFiles()) as $status) {
-            $sources[] = new SourceFile($status->path);
+            $sources[] = new SourceFile($status->path, $status->size);
         }
 
-        return new CSVFileReader($filesystem, $options, $sources);
+        return new CSVSniffer(new CSVSourceOpener($filesystem, $options), $sources, $inference->candidates());
     }
 
     public static function open(
@@ -74,7 +78,7 @@ final class CSVFixtureContext
         Filesystem $filesystem = new NativeLocalFilesystem(),
         CSVReadOptions $options = new CSVReadOptions(),
     ): CSVOpenSource {
-        return new AdaptiveCSVOpenSource($filesystem, self::source($fixture), $options);
+        return (new CSVSourceOpener($filesystem, $options))->open(self::source($fixture));
     }
 
     /**
@@ -100,7 +104,7 @@ final class CSVFixtureContext
     }
 
     /**
-     * The dialect AdaptiveCSVOpenSource resolves: pinned options first, detection for the rest.
+     * The dialect CSVSourceOpener resolves: pinned options first, detection for the rest.
      */
     public static function dialect(SourceStream $stream, CSVReadOptions $options = new CSVReadOptions()): CSVDialect
     {
@@ -257,16 +261,11 @@ final class CSVFixtureContext
     }
 
     /**
-     * The schema CSVExtractor infers - through CSVFileReader::samples(), native when the extension is loaded.
+     * The schema CSVExtractor infers - through CSVSniffer, native when the extension is loaded.
      */
     public static function infer(SchemaInference $inference, string ...$fixtures): Schema
     {
-        $reader = self::reader(sources: self::sources(...$fixtures));
-
-        return (new SchemaInferrer($inference, new StringTypeNarrower($inference->candidates()->toArray())))->infer(
-            $reader->header()->names,
-            $reader->samples($inference->sampleSize),
-        );
+        return (new SchemaInferrer($inference))->infer(self::sniffer(array_values($fixtures), $inference))->schema;
     }
 
     /**
@@ -286,20 +285,19 @@ final class CSVFixtureContext
             }
         }
 
-        $samples = [];
+        $units = [];
 
         foreach ($fixtures as $fixture) {
-            $samples[] = self::phpRecords($fixture);
+            $units[] = iterator_to_array(self::phpRecords($fixture), false);
         }
 
-        return (new SchemaInferrer($inference, new StringTypeNarrower($inference->candidates()->toArray())))->infer(
-            $names,
-            $samples,
-        );
+        return (new SchemaInferrer($inference))->infer(
+            new FakeSniffer($units, new StringTypeNarrower($inference->candidates()->toArray()), $names),
+        )->schema;
     }
 
     /**
-     * The PHP open source's records, opened on the first advance and closed when abandoned - a SchemaSampler unit.
+     * The PHP open source's records, opened on the first advance and closed when abandoned - one sniffed unit.
      *
      * @return Generator<int, array<array-key, mixed>>
      */
@@ -344,6 +342,26 @@ final class CSVFixtureContext
         return $content;
     }
 
+    /**
+     * Records built to trap a resync: quoted values holding newlines, separators, doubled enclosures and whole lines
+     * that look like records of the right width.
+     */
+    public static function quotedMultilineRows(int $rows): string
+    {
+        $content = "id,text,note\n";
+
+        foreach (range(1, $rows) as $id) {
+            $content .= match ($id % 4) {
+                0 => sprintf("%d,\"line one\nline, two\nline three\",plain\n", $id),
+                1 => sprintf("%d,\"a,b,c\n1,2,3\nx,y,z\",\"said \"\"hi\"\"\"\n", $id),
+                2 => sprintf("%d,short,\"\"\n", $id),
+                default => sprintf("%d,\"\n\n\",\"tail\nend\"\n", $id),
+            };
+        }
+
+        return $content;
+    }
+
     public static function memory(string $content): MemoryFilesystem
     {
         $filesystem = memory_filesystem();
@@ -365,48 +383,54 @@ final class CSVFixtureContext
     }
 
     /**
-     * A reader with an EMPTY listing - for the per-source methods (columns/sample/batches), which take the
-     * source as an argument and never walk $sources.
-     *
-     * @param list<SourceFile> $sources
+     * Batches under no inferred columns; a read's Criteria split narrows them to its window.
      */
-    public static function reader(
-        Filesystem $filesystem = new NativeLocalFilesystem(),
-        array $sources = [],
-        CSVReadOptions $options = new CSVReadOptions(),
-    ): CSVFileReader {
-        return new CSVFileReader($filesystem, $options, $sources);
-    }
-
-    public static function sample(
-        string $fixture,
+    public static function fileBatches(
         Filesystem $filesystem = new NativeLocalFilesystem(),
         CSVReadOptions $options = new CSVReadOptions(),
-    ): CSVFileSample {
-        return new CSVFileSample($filesystem, $options, self::source($fixture));
+    ): CSVFileBatches {
+        return new CSVFileBatches(new CSVSourceOpener($filesystem, $options), null);
     }
 
     /**
-     * The fixture's partial ColumnTypes observed row by row over the PHP records, and sniffed by CSVFileSample -
-     * natively when the extension is loaded.
+     * @param list<string> $fixtures
+     * @param SchemaInference $inference its candidates build the string ladder, as CSVExtractor builds it
+     */
+    public static function sniffer(
+        array $fixtures,
+        SchemaInference $inference = new SchemaInference(),
+        Filesystem $filesystem = new NativeLocalFilesystem(),
+        CSVReadOptions $options = new CSVReadOptions(),
+    ): CSVSniffer {
+        return new CSVSniffer(
+            new CSVSourceOpener($filesystem, $options),
+            self::sources(...$fixtures),
+            $inference->candidates(),
+        );
+    }
+
+    /**
+     * The fixture's fold observed row by row over the PHP records with $inference's string ladder, and sniffed by
+     * CSVSniffer - natively when the extension is loaded.
      *
      * @param int<0, max>|-1 $rowBudget
      *
-     * @return array{ColumnTypes, ColumnTypes}
+     * @return array{SniffedColumns, SniffedColumns}
      */
-    public static function sniffBothWays(
-        string $fixture,
-        int $rowBudget,
-        SchemaInference $inference,
-        TypeNarrower $typer,
-    ): array {
+    public static function sniffBothWays(string $fixture, int $rowBudget, SchemaInference $inference): array
+    {
         $open = self::openPhp($fixture);
         $names = $open->columns();
         $open->close();
 
         return [
-            (new SchemaInferrer($inference, $typer))->sniff($names, self::phpRecords($fixture), $rowBudget),
-            self::sample($fixture)->sniffColumnTypes($names, $rowBudget, $inference, $typer),
+            ColumnTypes::sniff(
+                $names,
+                self::phpRecords($fixture),
+                $rowBudget,
+                new StringTypeNarrower($inference->candidates()->toArray()),
+            )->folded(),
+            self::sniffer([$fixture], $inference)->sniff(0, $rowBudget)->columns,
         ];
     }
 

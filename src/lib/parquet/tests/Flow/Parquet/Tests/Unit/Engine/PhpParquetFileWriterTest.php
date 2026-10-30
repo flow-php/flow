@@ -115,9 +115,12 @@ final class PhpParquetFileWriterTest extends TestCase
     {
         $memory = memory_filesystem();
         $file = ParquetFileWriterMother::open(
-            new PhpParquetEngine(options: Options::default()->set(Option::ROW_GROUP_SIZE_CHECK_INTERVAL, 1)),
+            new PhpParquetEngine(),
             $memory->writeTo(path('memory://file.parquet')),
-            Options::default()->set(Option::ROW_GROUP_SIZE_BYTES, 1)->set(Option::PAGE_SIZE_CHECK_INTERVAL, 1),
+            Options::default()->set(Option::ROW_GROUP_SIZE_BYTES, 1)->set(
+                Option::ROW_GROUP_SIZE_CHECK_INTERVAL,
+                1,
+            )->set(Option::PAGE_SIZE_CHECK_INTERVAL, 1),
         );
 
         $file->writeBatch([['id' => 1], ['id' => 2], ['id' => 3]]);
@@ -134,9 +137,12 @@ final class PhpParquetFileWriterTest extends TestCase
     {
         $memory = memory_filesystem();
         $file = ParquetFileWriterMother::open(
-            new PhpParquetEngine(options: Options::default()->set(Option::ROW_GROUP_SIZE_CHECK_INTERVAL, 1)),
+            new PhpParquetEngine(),
             $memory->writeTo(path('memory://file.parquet')),
-            Options::default()->set(Option::ROW_GROUP_SIZE_BYTES, 1)->set(Option::PAGE_SIZE_CHECK_INTERVAL, 1),
+            Options::default()->set(Option::ROW_GROUP_SIZE_BYTES, 1)->set(
+                Option::ROW_GROUP_SIZE_CHECK_INTERVAL,
+                1,
+            )->set(Option::PAGE_SIZE_CHECK_INTERVAL, 1),
         );
 
         $file->writeBatch(new ArrayIterator([['id' => 1], ['id' => 2], ['id' => 3]]));

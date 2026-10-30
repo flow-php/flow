@@ -10,15 +10,13 @@ use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
 
 use function array_values;
 
 final readonly class CreateTableAsBuilder implements CreateTableAsFinalStep
 {
-    use AstToSql;
-
     /**
      * @param list<string> $columnNames
      */
@@ -51,6 +49,11 @@ final readonly class CreateTableAsBuilder implements CreateTableAsFinalStep
     public function ifNotExists(): CreateTableAsFinalStep
     {
         return new self($this->table, $this->schema, $this->query, $this->columnNames, true, $this->withNoData);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): CreateTableAsStmt

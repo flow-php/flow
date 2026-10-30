@@ -6,6 +6,10 @@ publish = false
 [lib]
 crate-type = ["cdylib"]
 
+[features]
+# arrow-data re-validates the arrays built with `build_unchecked`; `make test` builds with it
+arrow-validate = ["arrow-array/force_validate"]
+
 [dependencies]
 ext-php-rs = "0.16"
 parquet = { version = "60", default-features = false, features = ["arrow", "arrow_canonical_extension_types", "snap", "flate2", "flate2-zlib-rs", "zstd", "lz4", "brotli", "simdutf8"] }

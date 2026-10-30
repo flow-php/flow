@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Column\AdaptiveBackend;
-use Flow\ETL\Extractor;
-use Flow\ETL\Extractor\Statistics;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Rows;
-use Flow\ETL\Schema;
+use Flow\ETL\IO\Extractor;
+use Flow\ETL\IO\Extractor\Criteria;
+use Flow\ETL\IO\Extractor\Statistics;
+use Flow\ETL\Values\Column\AdaptiveBackend;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Schema;
 use Generator;
 
 final class DeclaringExtractor implements Extractor
@@ -18,7 +19,7 @@ final class DeclaringExtractor implements Extractor
         public Statistics $statistics,
     ) {}
 
-    public function extract(FlowContext $context, ?int $limit = null): Generator
+    public function extract(Backend $backend, Criteria $criteria): Generator
     {
         yield Rows::empty($this->schema(), new AdaptiveBackend());
     }
@@ -36,5 +37,10 @@ final class DeclaringExtractor implements Extractor
     public function withSchema(Schema $schema): static
     {
         return $this;
+    }
+
+    public function isRepeatable(): bool
+    {
+        return false;
     }
 }

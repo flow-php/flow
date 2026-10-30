@@ -5,17 +5,27 @@ declare(strict_types=1);
 namespace Flow\Parquet;
 
 use Flow\Filesystem\SizeUnits;
+use Flow\Parquet\BloomFilter\BloomFilterOptions;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Writer\StatisticsLevel;
 use UnitEnum;
 
+use function array_key_exists;
+use function array_map;
+use function constant;
 use function get_debug_type;
 use function gettype;
+use function is_a;
 use function is_array;
 use function is_bool;
+use function is_float;
 use function is_int;
+use function is_scalar;
 use function is_string;
 
+/**
+ * @type ParquetOptions = array<string, mixed> every option keyed by its Option case name, enums as {enum, case}
+ */
 final class Options
 {
     /**
@@ -54,6 +64,95 @@ final class Options
     public static function default(): self
     {
         return new self();
+    }
+
+    /**
+     * @param array<array-key, mixed> $data the shape of normalize(): every key an Option case name
+     *
+     * @throws InvalidArgumentException
+     */
+    public static function fromArray(array $data): self
+    {
+        $restore = static function (mixed $value) use (&$restore): mixed {
+            if ($value === null || is_scalar($value)) {
+                return $value;
+            }
+
+            if (!is_array($value)) {
+                throw new InvalidArgumentException(
+                    'Option values must be scalars, null, enums or arrays of them, got: ' . get_debug_type($value),
+                );
+            }
+
+            if (array_key_exists('enum', $value) && array_key_exists('case', $value)) {
+                if (
+                    !is_string($value['enum'])
+                    || !is_a($value['enum'], UnitEnum::class, true)
+                    || !is_string($value['case'])
+                ) {
+                    throw new InvalidArgumentException(
+                        'Option enum values must name an enum class and one of its cases',
+                    );
+                }
+
+                // @mago-ignore analysis:mixed-assignment
+                $enum = constant($value['enum'] . '::' . $value['case']);
+
+                if (!$enum instanceof UnitEnum) {
+                    throw new InvalidArgumentException(
+                        'Option enum values must name an enum class and one of its cases',
+                    );
+                }
+
+                return $enum;
+            }
+
+            if (array_key_exists('bloom_filter', $value) && is_array($value['bloom_filter'])) {
+                // @mago-ignore analysis:mixed-assignment
+                $fpp = $value['bloom_filter']['fpp'] ?? null;
+                // @mago-ignore analysis:mixed-assignment
+                $ndv = $value['bloom_filter']['ndv'] ?? null;
+
+                if (!is_float($fpp) && !is_int($fpp)) {
+                    throw new InvalidArgumentException('A bloom filter option must hold a numeric "fpp"');
+                }
+
+                if ($ndv !== null && !is_int($ndv)) {
+                    throw new InvalidArgumentException('A bloom filter option "ndv" must be an integer or null');
+                }
+
+                return new BloomFilterOptions((float) $fpp, $ndv);
+            }
+
+            return array_map($restore, $value);
+        };
+
+        $options = new self();
+
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($data as $name => $value) {
+            $option = null;
+
+            foreach (Option::cases() as $case) {
+                if ($case->name === $name) {
+                    $option = $case;
+                }
+            }
+
+            if ($option === null) {
+                throw new InvalidArgumentException("Unknown parquet option: {$name}");
+            }
+
+            $restored = $restore($value);
+
+            if ($restored instanceof BloomFilterOptions) {
+                throw new InvalidArgumentException("Option {$name} must not be a bare bloom filter option");
+            }
+
+            $options->set($option, $restored);
+        }
+
+        return $options;
     }
 
     /**
@@ -140,6 +239,32 @@ final class Options
         $value = $this->options[$option->name] ?? null;
 
         return $value !== null;
+    }
+
+    /**
+     * Every option keyed by its case name; enums as {enum, case}, bloom filter options as {bloom_filter: {fpp, ndv}}.
+     *
+     * @return ParquetOptions
+     */
+    public function normalize(): array
+    {
+        $normalize = static function (mixed $value) use (&$normalize): mixed {
+            if ($value instanceof UnitEnum) {
+                return ['enum' => $value::class, 'case' => $value->name];
+            }
+
+            if ($value instanceof BloomFilterOptions) {
+                return ['bloom_filter' => ['fpp' => $value->fpp, 'ndv' => $value->ndv]];
+            }
+
+            if (is_array($value)) {
+                return array_map($normalize, $value);
+            }
+
+            return $value;
+        };
+
+        return array_map($normalize, $this->options);
     }
 
     /**

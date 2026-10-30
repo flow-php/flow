@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Integration\OS\Windows;
 
+use Flow\Filesystem\Tests\Context\OperatingSystem;
 use Flow\Filesystem\Tests\Integration\NativeLocalFilesystemTestCase;
-use Flow\Filesystem\Tests\OperatingSystem;
 
 use function file_put_contents;
 use function Flow\Filesystem\DSL\native_local_filesystem;
@@ -19,13 +19,11 @@ use function unlink;
 
 final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 {
-    use OperatingSystem;
-
     protected function setUp(): void
     {
         parent::setUp();
 
-        if ($this->isUnix()) {
+        if (OperatingSystem::isUnix()) {
             self::markTestSkipped('Windows-specific tests should only run on Windows');
         }
     }

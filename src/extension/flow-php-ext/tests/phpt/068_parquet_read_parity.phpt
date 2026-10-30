@@ -5,10 +5,11 @@ RustParquetOpenSource reads every lib Parquet fixture as PhpParquetEngine does, 
 <?php extension_loaded('arrow') || die('skip arrow'); ?>
 --FILE--
 <?php
+use Flow\ETL\IO\Extractor\Criteria;
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Adapter\Parquet\SchemaConverter;
-use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Adapter\Parquet\Values\Schema\SchemaConverter;
+use Flow\ETL\Values\Column\PhpBackend;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Reader;
@@ -27,7 +28,7 @@ foreach ([...glob($fixtures . '/*.parquet'), ...glob($fixtures . '/EdgeCases/*.p
         $php = outcome(static function () use ($file, $batchSize, $context): array {
             $rows = [];
 
-            foreach (from_parquet($file, engine: new PhpParquetEngine())->withBatchSize($batchSize)->extract($context) as $batch) {
+            foreach (from_parquet($file, engine: new PhpParquetEngine())->withBatchSize($batchSize)->extract($context->backend(), new Criteria()) as $batch) {
                 array_push($rows, ...$batch->toArray());
             }
 
@@ -36,7 +37,7 @@ foreach ([...glob($fixtures . '/*.parquet'), ...glob($fixtures . '/EdgeCases/*.p
         $native = outcome(static function () use ($file, $batchSize, $filesystem): array {
             $reader = rust_parquet_batches(
                 $filesystem->readFrom(path($file)),
-                (new SchemaConverter())->toFlow((new Reader(engine: new PhpParquetEngine()))->read($file)->schema()),
+                (new SchemaConverter())->toFlowSchema((new Reader(engine: new PhpParquetEngine()))->read($file)->schema()),
                 $batchSize,
             );
             $rows = [];
@@ -117,6 +118,6 @@ EdgeCases/uint64_overflow.parquet 100: identical
 EdgeCases/uint64_overflow.parquet 10000: identical
 EdgeCases/unsigned.parquet 100: identical
 EdgeCases/unsigned.parquet 10000: identical
-Flow\ETL\Exception\InvalidArgumentException: Parquet column "emptylist" (List(Null)) is read as List(Null), its schema type list<integer> stores List(Int64)
-Flow\ETL\Exception\InvalidArgumentException: Parquet column "int64" (Int64) is read as Int64, its schema type string stores LargeBinary
+Flow\ETL\Foundation\Exception\InvalidArgumentException: Parquet column "emptylist" (List(Null)) is read as List(Null), its schema type list<integer> stores List(Int64)
+Flow\ETL\Foundation\Exception\InvalidArgumentException: Parquet column "int64" (Int64) is read as Int64, its schema type string stores LargeBinary
 Flow\Parquet\Exception\InvalidArgumentException: Parquet file has no column "missing"

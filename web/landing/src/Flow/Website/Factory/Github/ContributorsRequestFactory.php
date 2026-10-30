@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Website\Factory\Github;
 
-use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
+use Flow\ETL\Adapter\Http\IO\Extractor\NextRequestFactory;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;

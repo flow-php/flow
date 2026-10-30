@@ -6,7 +6,7 @@ native narrowing skips exactly the rungs a restricted candidate set leaves out
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Schema\Inference\InferredTypes;
+use Flow\ETL\IO\Inference\InferredTypes;
 
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_date;

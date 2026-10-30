@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\AST\Nodes\Statement;
 
 use Flow\PostgreSql\AST\Nodes\Statement;
-use Flow\PostgreSql\AST\Nodes\StatementTrait;
 use Flow\PostgreSql\Protobuf\AST\DoStmt;
 
 /**
@@ -13,8 +12,6 @@ use Flow\PostgreSql\Protobuf\AST\DoStmt;
  */
 final readonly class DoStatement implements Statement
 {
-    use StatementTrait;
-
     public function __construct(
         private DoStmt $stmt,
     ) {}

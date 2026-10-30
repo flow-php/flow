@@ -6,9 +6,9 @@ RustCSVOpenSource and RustJsonOpenSource hold no borrow while their stream runs:
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Adapter\CSV\RustCSVOpenSource;
-use Flow\ETL\Adapter\JSON\RustJsonOpenSource;
-use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Adapter\CSV\IO\Extractor\RustCSVOpenSource;
+use Flow\ETL\Adapter\JSON\IO\Extractor\RustJsonOpenSource;
+use Flow\ETL\Values\Column\PhpBackend;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\SourceStream;
 use Flow\Filesystem\Stream\StringSourceStream;

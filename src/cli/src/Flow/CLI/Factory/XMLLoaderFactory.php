@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\CLI\Factory;
 
-use Flow\ETL\Adapter\XML\Loader\XMLLoader;
+use Flow\ETL\Adapter\XML\IO\Loader\XMLLoader;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Input\InputInterface;
 

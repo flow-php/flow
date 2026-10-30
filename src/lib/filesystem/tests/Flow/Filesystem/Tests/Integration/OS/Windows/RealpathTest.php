@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Integration\OS\Windows;
 
-use Flow\Filesystem\Tests\OperatingSystem;
+use Flow\Filesystem\Tests\Context\OperatingSystem;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -16,8 +16,6 @@ use function str_replace;
 
 final class RealpathTest extends TestCase
 {
-    use OperatingSystem;
-
     public static function windows_backslash_normalization(): Generator
     {
         yield ['C:\\path\\to\\file.txt', 'C:/path/to/file.txt'];
@@ -29,7 +27,7 @@ final class RealpathTest extends TestCase
     {
         parent::setUp();
 
-        if ($this->isUnix()) {
+        if (OperatingSystem::isUnix()) {
             self::markTestSkipped('Windows-specific realpath tests should only run on Windows');
         }
     }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\DSL\{data_frame, schema_from_json, schema_to_json, to_output};
-use Flow\ETL\Loader\StreamLoader\Output;
+use Flow\ETL\IO\Loader\StreamLoader\Output;
 use function Flow\Filesystem\DSL\fstab;
 use function Flow\Filesystem\DSL\path;
 

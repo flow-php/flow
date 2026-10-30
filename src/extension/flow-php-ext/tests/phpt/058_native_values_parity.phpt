@@ -6,9 +6,9 @@ native columns read every row as the PHP columns read it: at(), value(), Rows::v
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Column\RustBackend;
-use Flow\ETL\Column\PhpBackend;
-use Flow\Floe\FrameDecoder;
+use Flow\ETL\Values\Column\RustBackend;
+use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Values\Column\Frame\NoopCodec;
 
 use function Flow\ETL\DSL\{datetime_schema, schema, time_schema};
 
@@ -72,12 +72,12 @@ foreach (['UTC', 'Z', 'Europe/Warsaw', 'America/New_York', 'Australia/Lord_Howe'
     }
 }
 
-$frame = php_rows(schema(datetime_schema('at')), $instants)->encodeFrame();
+$frame = (new PhpBackend())->encodeFrame(php_rows(schema(datetime_schema('at')), $instants), new NoopCodec());
 
 foreach (['UTC', 'Europe/Warsaw', '+05:30'] as $zone) {
     $zoned = schema(datetime_schema('at', zone: $zone));
-    $expected = array_map($observe, (new FrameDecoder())->decode($frame, $zoned, new PhpBackend())->column('at')->values());
-    $actual = array_map($observe, (new FrameDecoder())->decode($frame, $zoned, new RustBackend())->column('at')->values());
+    $expected = array_map($observe, (new PhpBackend())->decodeFrame($frame, $zoned, new NoopCodec())->column('at')->values());
+    $actual = array_map($observe, (new RustBackend())->decodeFrame($frame, $zoned, new NoopCodec())->column('at')->values());
 
     echo "zone {$zone}: ", serialize($expected) === serialize($actual) ? 'identical' : 'DIFF', "\n";
 }

@@ -10,7 +10,7 @@ use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\Protobuf\AST\ResTarget;
 use Flow\PostgreSql\Protobuf\AST\ReturningClause;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\Clause\WithClause;
 use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Condition\ConditionFactory;
@@ -39,8 +39,6 @@ use function count;
  */
 final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
 {
-    use AstToSql;
-
     /**
      * @param array<TableReference> $using
      * @param array<Expression> $returning
@@ -214,6 +212,11 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
             where: $this->where,
             returning: [Star::all()],
         );
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): DeleteStmt

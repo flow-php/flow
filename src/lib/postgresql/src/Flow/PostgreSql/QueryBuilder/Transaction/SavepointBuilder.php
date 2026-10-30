@@ -6,12 +6,10 @@ namespace Flow\PostgreSql\QueryBuilder\Transaction;
 
 use Flow\PostgreSql\Protobuf\AST\TransactionStmt;
 use Flow\PostgreSql\Protobuf\AST\TransactionStmtKind;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 final readonly class SavepointBuilder implements SavepointFinalStep
 {
-    use AstToSql;
-
     private function __construct(
         private string $name,
         private bool $isRelease,
@@ -25,6 +23,11 @@ final readonly class SavepointBuilder implements SavepointFinalStep
     public static function release(string $name): SavepointFinalStep
     {
         return new self($name, true);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): TransactionStmt

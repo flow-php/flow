@@ -22,7 +22,7 @@ services:
         environment:
             MYSQL_USER: mysql
             MYSQL_PASSWORD: mysql
-            MYSQL_DATABASE: mysql
+            MYSQL_DATABASE: flow
             MYSQL_ROOT_PASSWORD: root
         networks:
             - flow-php

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Benchmarks\Pipeline;
 
-use Flow\ETL\Schema;
+use Flow\ETL\Values\Schema;
 
 use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;

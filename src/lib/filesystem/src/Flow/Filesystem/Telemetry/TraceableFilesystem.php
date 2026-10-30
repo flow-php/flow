@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Telemetry;
 
 use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Mount;
@@ -15,7 +16,12 @@ use Flow\Filesystem\SourceStream;
 use Flow\Telemetry\Logger\Logger;
 use Flow\Telemetry\PackageVersion;
 use Generator;
+use SensitiveParameter;
 
+/**
+ * Rebuilt as its inner filesystem: the configuration is the inner's, whatever its shape.
+ *
+ */
 final readonly class TraceableFilesystem implements Filesystem
 {
     private Logger $logger;
@@ -30,6 +36,11 @@ final readonly class TraceableFilesystem implements Filesystem
         );
     }
 
+    public static function fromArray(#[SensitiveParameter] array $configuration): static
+    {
+        throw new InvalidArgumentException('TraceableFilesystem is rebuilt as its inner filesystem');
+    }
+
     public function appendTo(Path $path): DestinationStream
     {
         $stream = $this->filesystem->appendTo($path);
@@ -39,6 +50,11 @@ final readonly class TraceableFilesystem implements Filesystem
         }
 
         return new TraceableDestinationStream($stream, $this->telemetryConfig);
+    }
+
+    public function normalize(): ?array
+    {
+        return $this->filesystem->normalize();
     }
 
     public function getSystemTmpDir(): Path

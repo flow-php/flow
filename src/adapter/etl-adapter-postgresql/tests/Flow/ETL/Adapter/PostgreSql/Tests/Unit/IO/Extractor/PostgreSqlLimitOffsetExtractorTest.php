@@ -1,0 +1,390 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Adapter\PostgreSql\Tests\Unit\IO\Extractor;
+
+use Flow\ETL\Adapter\PostgreSql\Tests\Double\SpyClient;
+use Flow\ETL\Adapter\PostgreSql\Tests\Double\StubCursor;
+use Flow\ETL\Adapter\PostgreSql\Tests\Mother\ColumnMother;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Exception\SchemaNotDerivableException;
+use Flow\ETL\IO\Extractor\Criteria;
+use Flow\ETL\Tests\Double\SpyBackend;
+use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Values\Cardinality;
+use Flow\ETL\Values\Rows;
+use Flow\PostgreSql\AST\Transformers\ExplainConfig;
+use Flow\PostgreSql\Client\Exception\PostgreSqlError;
+use Flow\PostgreSql\Client\Exception\QueryException;
+
+use function array_map;
+use function extension_loaded;
+use function Flow\ETL\Adapter\PostgreSql\from_pgsql_limit_offset;
+use function Flow\ETL\DSL\config_builder;
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\schema;
+use function iterator_to_array;
+
+final class PostgreSqlLimitOffsetExtractorTest extends FlowTestCase
+{
+    public function test_a_failing_read_probes_once(): void
+    {
+        $client = (new SpyClient())->willRefuseDescribe(QueryException::executionFailed(
+            'SELECT id FROM t ORDER BY id',
+            PostgreSqlError::unknown('boom'),
+        ));
+
+        try {
+            df()->read(from_pgsql_limit_offset($client, 'SELECT id FROM t ORDER BY id'))->fetch();
+        } catch (SchemaNotDerivableException) {
+        }
+
+        static::assertSame(1, $client->callsTo('describe'));
+    }
+
+    public function test_a_non_select_statement_is_refused_before_any_round_trip(): void
+    {
+        $client = new SpyClient();
+
+        // the SELECT guard runs before the ORDER BY guard, so an INSERT is not told it lacks an ORDER BY
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('reads exactly one read-only SELECT or VALUES statement');
+
+        try {
+            iterator_to_array(
+                from_pgsql_limit_offset($client, 'INSERT INTO t VALUES (1) RETURNING id')
+                    ->withSchema(schema(int_schema('id', nullable: true)))
+                    ->extract(flow_context()->backend(), new Criteria()),
+            );
+        } finally {
+            static::assertSame([], $client->calls);
+        }
+    }
+
+    public function test_a_subquery_order_does_not_order_the_pages(): void
+    {
+        $client = new SpyClient();
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('LIMIT/OFFSET pagination requires ORDER BY clause for deterministic results');
+
+        try {
+            iterator_to_array(from_pgsql_limit_offset(
+                $client,
+                'SELECT * FROM (SELECT id FROM t ORDER BY id) s',
+            )->extract(flow_context()->backend(), new Criteria()));
+        } finally {
+            static::assertSame([], $client->calls);
+        }
+    }
+
+    protected function setUp(): void
+    {
+        if (!extension_loaded('pg_query')) {
+            static::markTestSkipped(
+                'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true`',
+            );
+        }
+    }
+
+    public function test_an_empty_page_is_not_yielded(): void
+    {
+        // the second page asks for the 5 rows still allowed and gets none back
+        static::assertSame(
+            [5],
+            array_map(
+                static fn(Rows $rows): int => $rows->count(),
+                iterator_to_array(from_pgsql_limit_offset((new SpyClient())
+                    ->willDescribe(ColumnMother::of(['id' => 'int8']))
+                    ->willReturnCursors(new StubCursor([
+                        ['id' => '1'],
+                        ['id' => '2'],
+                        ['id' => '3'],
+                        ['id' => '4'],
+                        ['id' => '5'],
+                    ]), new StubCursor([])), 'SELECT id FROM t ORDER BY id')->withBatchSize(5)->withMaximum(10)->extract(flow_context()->backend(), new Criteria()), false),
+            ),
+        );
+    }
+
+    public function test_a_declared_schema_runs_no_query(): void
+    {
+        $client = new SpyClient();
+
+        from_pgsql_limit_offset($client, 'SELECT id FROM t ORDER BY id')
+            ->withSchema(schema(int_schema('id')))
+            ->schema();
+
+        static::assertSame([], $client->calls);
+    }
+
+    public function test_a_declared_schema_wins_over_the_probe(): void
+    {
+        static::assertEquals(
+            schema(int_schema('id')),
+            from_pgsql_limit_offset(
+                (new SpyClient())->willDescribe(ColumnMother::of(['other' => 'text'])),
+                'SELECT id FROM t ORDER BY id',
+            )
+                ->withSchema(schema(int_schema('id')))
+                ->schema(),
+        );
+    }
+
+    public function test_every_page_sends_the_same_sql_with_new_parameters(): void
+    {
+        $client = (new SpyClient())
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willCountTotal(3)
+            ->willReturnCursors(new StubCursor([['id' => '1'], ['id' => '2']]), new StubCursor([['id' => '3']]));
+
+        iterator_to_array(
+            from_pgsql_limit_offset($client, 'SELECT id FROM t WHERE id > $1 ORDER BY id', [0])
+                ->withBatchSize(2)
+                ->extract(flow_context()->backend(), new Criteria()),
+        );
+
+        $page = 'SELECT id FROM t WHERE id > $1 ORDER BY id LIMIT $2 OFFSET $3';
+
+        static::assertSame(
+            [['sql' => $page, 'parameters' => [0, 2, 0]], ['sql' => $page, 'parameters' => [0, 2, 2]]],
+            $client->cursorQueries,
+        );
+    }
+
+    public function test_extract_casts_through_the_derived_schema(): void
+    {
+        $rows = iterator_to_array(from_pgsql_limit_offset((new SpyClient())
+            ->willDescribe(ColumnMother::of(['id' => 'int8', 'amount' => 'numeric']))
+            ->willCountTotal(1)
+            ->willReturnCursors(new StubCursor([[
+                'id' => '1',
+                'amount' => '10.5',
+            ]])), 'SELECT id, amount FROM t ORDER BY id')->extract(flow_context()->backend(), new Criteria()))[0];
+
+        static::assertSame(1, $rows->column('id')->value(0));
+        static::assertSame(10.5, $rows->column('amount')->value(0));
+    }
+
+    public function test_extract_derives_the_schema_once_and_reuses_it_across_batches(): void
+    {
+        $client = (new SpyClient())
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willCountTotal(3)
+            ->willReturnCursors(new StubCursor([['id' => '1'], ['id' => '2']]), new StubCursor([['id' => '3']]));
+
+        $extractor = from_pgsql_limit_offset($client, 'SELECT id FROM t ORDER BY id')->withBatchSize(2);
+        $batches = iterator_to_array($extractor->extract(flow_context()->backend(), new Criteria()));
+
+        static::assertSame(1, $client->callsTo('describe'));
+
+        foreach ($batches as $batch) {
+            static::assertTrue($batch->schema()->isSame($extractor->schema()));
+        }
+    }
+
+    public function test_extract_refuses_to_read_when_the_schema_cannot_be_derived(): void
+    {
+        $client = (new SpyClient())->willDescribe(ColumnMother::of(['location' => 'point']));
+
+        $this->expectException(SchemaNotDerivableException::class);
+        $this->expectExceptionMessage('column "location" has PostgreSQL type "point", which Flow has no type for');
+
+        try {
+            iterator_to_array(from_pgsql_limit_offset($client, 'SELECT location FROM t ORDER BY location')->extract(
+                flow_context()->backend(),
+                new Criteria(),
+            ));
+        } finally {
+            // The probe runs after the local ORDER BY guard and before the count query, so a refused
+            // probe costs exactly one round trip and never reaches the counting query.
+            static::assertSame(['describe'], $client->calls);
+        }
+    }
+
+    public function test_schema_is_derived_from_result_metadata(): void
+    {
+        $schema = from_pgsql_limit_offset(
+            (new SpyClient())->willDescribe(ColumnMother::of(['id' => 'int8', 'label' => 'text'])),
+            'SELECT id, label FROM t ORDER BY id',
+        )->schema();
+
+        static::assertSame(['id', 'label'], $schema->names());
+        static::assertTrue($schema->findDefinition('id')?->isNullable());
+    }
+
+    public function test_the_derived_schema_is_memoised(): void
+    {
+        $client = (new SpyClient())->willDescribe(ColumnMother::of(['id' => 'int8']));
+        $extractor = from_pgsql_limit_offset($client, 'SELECT id FROM t ORDER BY id');
+
+        $extractor->schema();
+        $extractor->schema();
+
+        static::assertSame(['describe'], $client->calls);
+    }
+
+    public function test_throws_exception_when_query_has_no_order_by(): void
+    {
+        $this->expectExceptionMessage('LIMIT/OFFSET pagination requires ORDER BY clause for deterministic results');
+
+        iterator_to_array(from_pgsql_limit_offset(new SpyClient(), 'SELECT id FROM t')->extract(
+            flow_context()->backend(),
+            new Criteria(),
+        ));
+    }
+
+    public function test_with_batch_size_returns_the_same_extractor(): void
+    {
+        $extractor = from_pgsql_limit_offset(new SpyClient(), 'SELECT id FROM t ORDER BY id');
+
+        static::assertSame($extractor, $extractor->withBatchSize(10));
+    }
+
+    public function test_with_maximum_returns_the_same_extractor(): void
+    {
+        $extractor = from_pgsql_limit_offset(new SpyClient(), 'SELECT id FROM t ORDER BY id');
+
+        static::assertSame($extractor, $extractor->withMaximum(10));
+    }
+
+    public function test_with_schema_returns_the_same_extractor(): void
+    {
+        $extractor = from_pgsql_limit_offset(new SpyClient(), 'SELECT id FROM t ORDER BY id');
+
+        static::assertSame($extractor, $extractor->withSchema(schema(int_schema('id'))));
+    }
+
+    public function test_with_maximum_validates_negative_value(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Maximum must be greater than 0, got -1');
+
+        from_pgsql_limit_offset(new SpyClient(), 'SELECT id FROM t ORDER BY id')->withMaximum(-1);
+    }
+
+    public function test_with_maximum_validates_positive_value(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Maximum must be greater than 0, got 0');
+
+        from_pgsql_limit_offset(new SpyClient(), 'SELECT id FROM t ORDER BY id')->withMaximum(0);
+    }
+
+    public function test_with_batch_size_validates_negative_value(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Batch size must be greater than 0, got -1');
+
+        from_pgsql_limit_offset(new SpyClient(), 'SELECT id FROM t ORDER BY id')->withBatchSize(-1);
+    }
+
+    public function test_with_batch_size_validates_positive_value(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Batch size must be greater than 0, got 0');
+
+        from_pgsql_limit_offset(new SpyClient(), 'SELECT id FROM t ORDER BY id')->withBatchSize(0);
+    }
+
+    public function test_pushed_limit_skips_the_count_query(): void
+    {
+        $client = (new SpyClient())
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willCountTotal(1000)
+            ->willReturnCursors(new StubCursor([['id' => '1'], ['id' => '2']]), new StubCursor([['id' => '3']]));
+
+        self::assertExtractedRowsCount(
+            3,
+            from_pgsql_limit_offset($client, 'SELECT id FROM t ORDER BY id')->withBatchSize(2),
+            criteria: new Criteria(3),
+        );
+        // the count query is the only caller of fetchScalarInt()
+        static::assertSame(0, $client->callsTo('fetchScalarInt'));
+    }
+
+    public function test_stops_issuing_pages_when_a_page_comes_back_short(): void
+    {
+        $client = (new SpyClient())
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willReturnCursors(new StubCursor([['id' => '1'], ['id' => '2']]), new StubCursor([['id' => '3']]));
+
+        self::assertExtractedRowsCount(
+            3,
+            from_pgsql_limit_offset($client, 'SELECT id FROM t ORDER BY id')->withBatchSize(2)->withMaximum(1000),
+        );
+        // bounded by the rows the table has, not by ceil(1000 / 2)
+        static::assertSame(2, $client->callsTo('cursor'));
+    }
+
+    public function test_is_repeatable(): void
+    {
+        static::assertTrue(from_pgsql_limit_offset(new SpyClient(), 'SELECT id FROM t ORDER BY id')->isRepeatable());
+    }
+
+    public function test_statistics_are_the_planner_estimate_without_analyze(): void
+    {
+        $client = (new SpyClient())->willExplain(42);
+
+        static::assertEquals(
+            Cardinality::approximately(42),
+            from_pgsql_limit_offset($client, 'SELECT * FROM t WHERE id > $1', [1])->statistics()->rows,
+        );
+        static::assertEquals(
+            [['sql' => 'SELECT * FROM t WHERE id > $1', 'parameters' => [1], 'config' => ExplainConfig::forEstimate()]],
+            $client->explained,
+        );
+    }
+
+    public function test_statistics_are_explained_once(): void
+    {
+        $client = (new SpyClient())->willExplain(42);
+        $extractor = from_pgsql_limit_offset($client, 'SELECT * FROM t WHERE id > $1', [1]);
+
+        static::assertSame($extractor->statistics(), $extractor->statistics());
+        static::assertSame(1, $client->callsTo('explain'));
+    }
+
+    public function test_a_maximum_bounds_and_caps_the_estimate_and_a_new_one_drops_the_statistics(): void
+    {
+        $extractor = from_pgsql_limit_offset(
+            (new SpyClient())->willExplain(42),
+            'SELECT * FROM t WHERE id > $1',
+            [1],
+        )->withMaximum(10);
+
+        static::assertEquals(
+            new Cardinality(atMost: 10, estimate: 10, relativeError: Cardinality::DEFAULT_RELATIVE_ERROR),
+            $extractor->statistics()->rows,
+        );
+
+        $extractor->withMaximum(100);
+
+        static::assertEquals(
+            new Cardinality(atMost: 100, estimate: 42, relativeError: Cardinality::DEFAULT_RELATIVE_ERROR),
+            $extractor->statistics()->rows,
+        );
+    }
+
+    public function test_extract_builds_through_the_config_backend(): void
+    {
+        $client = (new SpyClient())
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willCountTotal(1)
+            ->willReturnCursors(new StubCursor([['id' => '1']]));
+        $backend = new SpyBackend();
+
+        iterator_to_array(
+            from_pgsql_limit_offset($client, 'SELECT id FROM t ORDER BY id')->extract(
+                flow_context(config_builder()->backend($backend)->build())->backend(),
+                new Criteria(),
+            ),
+            false,
+        );
+
+        static::assertGreaterThanOrEqual(1, $backend->builders());
+    }
+}

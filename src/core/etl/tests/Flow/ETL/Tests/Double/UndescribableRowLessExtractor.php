@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Exception\SchemaNotDerivableException;
-use Flow\ETL\Extractor;
-use Flow\ETL\Extractor\Statistics;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Schema;
+use Flow\ETL\Foundation\Exception\SchemaNotDerivableException;
+use Flow\ETL\IO\Extractor;
+use Flow\ETL\IO\Extractor\Criteria;
+use Flow\ETL\IO\Extractor\Statistics;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Schema;
 use Generator;
 
 use function Flow\ETL\DSL\from_rows;
@@ -19,9 +20,9 @@ use function Flow\ETL\DSL\from_rows;
  */
 final class UndescribableRowLessExtractor implements Extractor
 {
-    public function extract(FlowContext $context, ?int $limit = null): Generator
+    public function extract(Backend $backend, Criteria $criteria): Generator
     {
-        return from_rows()->extract($context);
+        return from_rows()->extract($backend, new Criteria());
     }
 
     public function schema(): Schema
@@ -37,5 +38,10 @@ final class UndescribableRowLessExtractor implements Extractor
     public function statistics(): Statistics
     {
         return new Statistics();
+    }
+
+    public function isRepeatable(): bool
+    {
+        return false;
     }
 }

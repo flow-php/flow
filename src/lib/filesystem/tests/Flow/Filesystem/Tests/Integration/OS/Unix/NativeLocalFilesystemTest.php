@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Integration\OS\Unix;
 
+use Flow\Filesystem\Tests\Context\OperatingSystem;
 use Flow\Filesystem\Tests\Integration\NativeLocalFilesystemTestCase;
-use Flow\Filesystem\Tests\OperatingSystem;
 
 use function bin2hex;
 use function chmod;
@@ -33,13 +33,11 @@ use function unlink;
  */
 final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 {
-    use OperatingSystem;
-
     protected function setUp(): void
     {
         parent::setUp();
 
-        if ($this->isWindows()) {
+        if (OperatingSystem::isWindows()) {
             self::markTestSkipped('Unix-specific filesystem tests should only run on Unix systems');
         }
     }

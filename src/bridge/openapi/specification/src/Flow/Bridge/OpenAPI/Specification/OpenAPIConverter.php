@@ -7,9 +7,9 @@ namespace Flow\Bridge\OpenAPI\Specification;
 use BackedEnum;
 use Flow\Bridge\OpenAPI\Specification\Exception\InvalidArgumentException;
 use Flow\Bridge\OpenAPI\Specification\Exception\RuntimeException;
-use Flow\ETL\Schema;
-use Flow\ETL\Schema\Definition;
-use Flow\ETL\Schema\Metadata;
+use Flow\ETL\Values\Schema;
+use Flow\ETL\Values\Schema\Definition;
+use Flow\ETL\Values\Schema\Metadata;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\DateTimeType;
 use Flow\Types\Type\Logical\DateType;
@@ -123,7 +123,7 @@ final class OpenAPIConverter
         $properties = [];
 
         foreach ($schema->definitions() as $definition) {
-            $properties[$definition->reference()->name()] = $this->convertDefinitionToOpenAPI($definition);
+            $properties[$definition->name()] = $this->convertDefinitionToOpenAPI($definition);
         }
 
         return [
@@ -289,9 +289,8 @@ final class OpenAPIConverter
 
         /** @var array<string, mixed> $items */
         $items = $typeSpec['items'];
-        $itemType = $this->convertOpenAPITypeToFlowType($items);
 
-        return type_list($itemType);
+        return type_list($this->convertOpenAPITypeToFlowType($items));
     }
 
     /**
@@ -311,9 +310,8 @@ final class OpenAPIConverter
 
             /** @var array<string, mixed> $additionalProperties */
             $additionalProperties = $typeSpec['additionalProperties'];
-            $valueType = $this->convertOpenAPITypeToFlowType($additionalProperties);
 
-            return type_map(type_string(), $valueType);
+            return type_map(type_string(), $this->convertOpenAPITypeToFlowType($additionalProperties));
         }
 
         if (isset($typeSpec['properties']) && is_array($typeSpec['properties'])) {
@@ -323,11 +321,10 @@ final class OpenAPIConverter
             foreach ($properties as $propName => $propSpec) {
                 /** @var array<string, mixed> $propSpec */
                 $propType = $this->convertOpenAPITypeToFlowType($propSpec);
-                $isNullable = isset($propSpec['nullable']) && is_bool($propSpec['nullable'])
-                    ? $propSpec['nullable']
-                    : false;
 
-                $elements[$propName] = $isNullable
+                $elements[$propName] = (
+                    isset($propSpec['nullable']) && is_bool($propSpec['nullable']) ? $propSpec['nullable'] : false
+                )
                     ? structure_element($propName, $propType, optional: true)
                     : $propType;
             }
@@ -373,9 +370,12 @@ final class OpenAPIConverter
             $metadata = $metadata->add('example', $propertySpec['example']);
         }
 
-        $type = $this->convertOpenAPITypeToFlowType($propertySpec);
-
-        return definition_from_type($propertyName, $type, $nullable, $metadata);
+        return definition_from_type(
+            $propertyName,
+            $this->convertOpenAPITypeToFlowType($propertySpec),
+            $nullable,
+            $metadata,
+        );
     }
 
     /**

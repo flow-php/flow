@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Website\Service;
 
-use Flow\ETL\Cache\Implementation\PSRSimpleCache;
-use Flow\ETL\Column\AdaptiveBackend;
-use Flow\ETL\Config\ConfigBuilder;
+use Flow\ETL\API\Config\ConfigBuilder;
+use Flow\ETL\Storage\Floe\FloeSerializer;
+use Flow\ETL\Storage\PsrRowsStorage;
+use Flow\ETL\Values\Column\AdaptiveBackend;
 use Flow\Filesystem\Filesystem;
-use Flow\Floe\FloeSerializer;
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Telemetry;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
@@ -68,9 +68,9 @@ final readonly class FlowConfigFactory
         return $this->telemetry;
     }
 
-    private function cache(string $directoryName, int $ttl): PSRSimpleCache
+    private function cache(string $directoryName, int $ttl): PsrRowsStorage
     {
-        return new PSRSimpleCache(
+        return new PsrRowsStorage(
             new Psr16Cache(
                 new FilesystemAdapter(
                     'flow-contributors',

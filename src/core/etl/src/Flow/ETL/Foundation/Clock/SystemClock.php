@@ -1,0 +1,31 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Foundation\Clock;
+
+use DateTimeImmutable;
+use DateTimeZone;
+use Psr\Clock\ClockInterface;
+
+final readonly class SystemClock implements ClockInterface
+{
+    public function __construct(
+        private DateTimeZone $timezone,
+    ) {}
+
+    public static function system(): self
+    {
+        return new self(new DateTimeZone(date_default_timezone_get()));
+    }
+
+    public static function utc(): self
+    {
+        return new self(new DateTimeZone('UTC'));
+    }
+
+    public function now(): DateTimeImmutable
+    {
+        return new DateTimeImmutable('now', $this->timezone);
+    }
+}

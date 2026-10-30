@@ -211,9 +211,9 @@ final class ReadMetadataCommand extends Command
                         $minValue = $formatter->format($column, $statistics->minValue($column));
                         $maxValue = $formatter->format($column, $statistics->maxValue($column));
 
-                        $nullCountVal = $statistics->nullCount();
+                        $nullCountVal = $statistics->nullCount;
                         $nullCount = $nullCountVal ? number_format($nullCountVal) : '-';
-                        $distinctCountVal = $statistics->distinctCount();
+                        $distinctCountVal = $statistics->distinctCount;
                         $distinctCount = $distinctCountVal ? number_format($distinctCountVal) : '-';
 
                         $statisticsTable->addRow([

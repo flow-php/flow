@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV\Tests\Mother;
 
-use Flow\ETL\Adapter\CSV\CSVWriteOptions;
-use Flow\ETL\Adapter\CSV\PhpCSVEncoder;
-use Flow\ETL\Adapter\CSV\RustCSVEncoder;
+use Flow\ETL\Adapter\CSV\IO\Loader\CSVWriteOptions;
+use Flow\ETL\Adapter\CSV\IO\Loader\PhpCSVEncoder;
+use Flow\ETL\Adapter\CSV\IO\Loader\RustCSVEncoder;
 
 final class CSVEncoderMother
 {
@@ -14,15 +14,7 @@ final class CSVEncoderMother
         newLineSeparator: "\n",
     )): RustCSVEncoder
     {
-        return new RustCSVEncoder(
-            $options->separator,
-            $options->enclosure,
-            $options->escape,
-            $options->newLineSeparator,
-            $options->dateTimeFormat,
-            $options->dateFormat,
-            new PhpCSVEncoder($options),
-        );
+        return new RustCSVEncoder($options, new PhpCSVEncoder($options));
     }
 
     public static function php(CSVWriteOptions $options = new CSVWriteOptions(newLineSeparator: "\n")): PhpCSVEncoder

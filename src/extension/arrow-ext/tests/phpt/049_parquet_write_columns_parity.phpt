@@ -16,7 +16,7 @@ use Flow\Parquet\Tests\Context\WriteAcceptance;
 
 $outcome = static function (Schema $schema, array $rows, string $door, int $batchSize = 1_000): string {
     $stream = ColumnDoor::stream();
-    $file = ColumnDoor::open(new RustParquetEngine(Options::default()->set(Option::ARROW_WRITE_BATCH_SIZE, $batchSize)), $stream, $schema);
+    $file = ColumnDoor::open(new RustParquetEngine(), $stream, $schema, Options::default()->set(Option::ARROW_WRITE_BATCH_SIZE, $batchSize));
     $refusal = 'written';
 
     try {
@@ -74,11 +74,11 @@ foreach ([1_000, 3, 2, 1] as $batchSize) {
 
 $columns = ColumnDoor::columns(ColumnDoor::rows(50));
 $batch = ColumnDoor::stream();
-$file = ColumnDoor::open(new RustParquetEngine(Options::default()->set(Option::ARROW_WRITE_BATCH_SIZE, 7)), $batch, ColumnDoor::schema());
+$file = ColumnDoor::open(new RustParquetEngine(), $batch, ColumnDoor::schema(), Options::default()->set(Option::ARROW_WRITE_BATCH_SIZE, 7));
 $file->writeBatch(ColumnDoor::rows(50));
 $file->close();
 $door = ColumnDoor::stream();
-$file = ColumnDoor::open(new RustParquetEngine(Options::default()->set(Option::ARROW_WRITE_BATCH_SIZE, 7)), $door, ColumnDoor::schema());
+$file = ColumnDoor::open(new RustParquetEngine(), $door, ColumnDoor::schema(), Options::default()->set(Option::ARROW_WRITE_BATCH_SIZE, 7));
 $file->writeColumns($columns);
 $file->close();
 var_dump($batch->content() === $door->content());

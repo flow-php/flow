@@ -10,15 +10,13 @@ use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\Protobuf\AST\PBList;
 use Flow\PostgreSql\Protobuf\AST\PBString;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 use function array_values;
 
 final readonly class DropSequenceBuilder implements DropSequenceFinalStep, DropSequenceNameStep
 {
-    use AstToSql;
-
     /**
      * @param list<string> $sequences
      */
@@ -51,6 +49,11 @@ final readonly class DropSequenceBuilder implements DropSequenceFinalStep, DropS
     public function sequence(string ...$names): DropSequenceFinalStep
     {
         return new self(array_values($names), $this->ifExists, $this->behavior);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): DropStmt

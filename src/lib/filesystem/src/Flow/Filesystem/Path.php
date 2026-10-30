@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem;
 
+use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Options;
@@ -12,11 +13,20 @@ use Flow\Filesystem\Path\WindowsPath;
 use Flow\Filesystem\Stream\ResourceContext;
 use UnitEnum;
 
+use function array_key_exists;
 use function array_map;
+use function constant;
 use function Flow\Types\DSL\type_instance_of;
+use function is_a;
+use function is_array;
+use function is_scalar;
+use function is_string;
 
 use const PHP_OS_FAMILY;
 
+/**
+ * @type PathData = array{uri: string, options: array<string, mixed>, partitions: list<array{name: string, value: null|string}>}
+ */
 final readonly class Path
 {
     public function __construct(
@@ -44,6 +54,82 @@ final readonly class Path
         return new self(
             PHP_OS_FAMILY === 'Windows' ? WindowsPath::realpath($path, $options) : UnixPath::realpath($path, $options),
         );
+    }
+
+    /**
+     * @param array<array-key, mixed> $data the shape of normalize()
+     *
+     * @throws InvalidArgumentException
+     */
+    public static function fromArray(array $data): self
+    {
+        if (!array_key_exists('uri', $data) || !is_string($data['uri'])) {
+            throw new InvalidArgumentException('Path data must hold a "uri" string');
+        }
+
+        if (!array_key_exists('options', $data) || !is_array($data['options'])) {
+            throw new InvalidArgumentException('Path data must hold an "options" array');
+        }
+
+        if (!array_key_exists('partitions', $data) || !is_array($data['partitions'])) {
+            throw new InvalidArgumentException('Path data must hold a "partitions" list');
+        }
+
+        /** @var array<string, null|bool|float|int|string|UnitEnum> $options */
+        $options = [];
+
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($data['options'] as $name => $value) {
+            if (is_array($value) && array_key_exists('enum', $value) && array_key_exists('case', $value)) {
+                if (
+                    !is_string($value['enum'])
+                    || !is_a($value['enum'], UnitEnum::class, true)
+                    || !is_string($value['case'])
+                ) {
+                    throw new InvalidArgumentException("Path option \"{$name}\" names a class that is not an enum");
+                }
+
+                // @mago-ignore analysis:mixed-assignment
+                $case = constant($value['enum'] . '::' . $value['case']);
+
+                if (!$case instanceof UnitEnum) {
+                    throw new InvalidArgumentException("Path option \"{$name}\" names a class that is not an enum");
+                }
+
+                $options[(string) $name] = $case;
+
+                continue;
+            }
+
+            if ($value !== null && !is_scalar($value)) {
+                throw new InvalidArgumentException("Path option \"{$name}\" must be a scalar, null or an enum");
+            }
+
+            $options[(string) $name] = $value;
+        }
+
+        $path = self::from($data['uri'], $options);
+
+        if ($data['partitions'] === []) {
+            return $path;
+        }
+
+        $partitions = [];
+
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($data['partitions'] as $partition) {
+            if (
+                !is_array($partition)
+                || !is_string($partition['name'] ?? null)
+                || !(is_string($partition['value'] ?? null) || ($partition['value'] ?? null) === null)
+            ) {
+                throw new InvalidArgumentException('Path partitions must be a list of {name: string, value: ?string}');
+            }
+
+            $partitions[] = new Partition($partition['name'], $partition['value'] ?? null);
+        }
+
+        return $path->withPartitions(new Partitions(...$partitions));
     }
 
     public function addPartitions(Partition $partition, Partition ...$partitions): self
@@ -165,6 +251,29 @@ final readonly class Path
     public function partitionPlaceholders(): array
     {
         return $this->implementation->partitionPlaceholders();
+    }
+
+    /**
+     * The uri, its options (enum values as {enum, case}) and the EXPLICIT partitions only - the ones attached with
+     * withPartitions(), never the ones parsed from the uri.
+     *
+     * @return PathData
+     */
+    public function normalize(): array
+    {
+        $options = [];
+
+        foreach ($this->implementation->options()->toArray() as $name => $value) {
+            $options[$name] = $value instanceof UnitEnum ? ['enum' => $value::class, 'case' => $value->name] : $value;
+        }
+
+        $partitions = [];
+
+        foreach ($this->partitions->toArray() as $partition) {
+            $partitions[] = ['name' => $partition->name, 'value' => $partition->value];
+        }
+
+        return ['uri' => $this->uri(), 'options' => $options, 'partitions' => $partitions];
     }
 
     public function partitions(): Partitions

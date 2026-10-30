@@ -15,11 +15,11 @@ use parquet::arrow::arrow_reader::{
 };
 use parquet::arrow::push_decoder::{ParquetPushDecoder, ParquetPushDecoderBuilder, RowGroupSelection};
 use parquet::arrow::ProjectionMask;
-use parquet::basic::{Compression, Type};
+use parquet::basic::{Compression, ConvertedType, LogicalType, Type};
 use parquet::file::metadata::page_index::PageIndexBuilder;
 use parquet::file::metadata::ParquetMetaData;
 use parquet::file::page_index::index_reader::decode_offset_index;
-use parquet::schema::types::SchemaDescriptor;
+use parquet::schema::types::{ColumnDescriptor, SchemaDescriptor};
 use parquet::DecodeResult;
 
 use crate::parquet::canonical::{canonical, canonical_type};
@@ -171,7 +171,7 @@ impl ParquetReader {
         batch_size: usize,
     ) -> Result<Self, Error> {
         let inferred = ArrowReaderMetadata::try_new(Arc::clone(meta), ArrowReaderOptions::new())?;
-        let options = match int96_hint(inferred.schema(), meta.file_metadata().schema_descr()) {
+        let options = match canonical_hint(inferred.schema(), meta.file_metadata().schema_descr()) {
             Some(hint) => ArrowReaderOptions::new().with_schema(hint),
             None => ArrowReaderOptions::new(),
         };
@@ -435,43 +435,81 @@ fn child(array: &ArrayRef, path: &[String]) -> Result<ArrayRef, Error> {
     }))
 }
 
-/// The inferred schema with every INT96 leaf read as `Timestamp(µs, "UTC")` - exact over years 1 to 9999, where
-/// arrow-rs's default nanoseconds wrap outside 1677-2262; `None` without INT96 leaves.
-fn int96_hint(schema: &SchemaRef, descr: &SchemaDescriptor) -> Option<SchemaRef> {
+/// The inferred schema with every leaf read as the type `canonical()` retags without a copy: an INT96 leaf as
+/// `Timestamp(µs, "UTC")` (exact over years 1 to 9999, where arrow-rs's default nanoseconds wrap outside 1677-2262),
+/// a string or binary leaf - dictionary- or view-encoded in the file's `ARROW:schema` too - as `LargeUtf8` or
+/// `LargeBinary` (i64 offsets written once, no dictionary expansion into i32 offsets); `None` when no leaf changes.
+/// Every other leaf keeps its inferred type: `apply_hint` has no arm for them and refuses the whole file.
+fn canonical_hint(schema: &SchemaRef, descr: &SchemaDescriptor) -> Option<SchemaRef> {
     let mut leaf = 0;
     let mut hinted = false;
     let fields = schema
         .fields()
         .iter()
-        .map(|field| int96_hinted(field, descr, &mut leaf, &mut hinted))
+        .map(|field| canonical_hinted(field, descr, &mut leaf, &mut hinted))
         .collect::<Fields>();
 
     hinted.then(|| Arc::new(Schema::new_with_metadata(fields, schema.metadata().clone())))
 }
 
-/// `field` with its INT96 leaves hinted; `leaf` counts the Parquet leaves `field`'s arrow leaves stand for, in order.
-fn int96_hinted(field: &FieldRef, descr: &SchemaDescriptor, leaf: &mut usize, hinted: &mut bool) -> FieldRef {
-    let mut hint = |field: &FieldRef| int96_hinted(field, descr, leaf, hinted);
+/// `field` with its leaves hinted; `leaf` counts the Parquet leaves `field`'s arrow leaves stand for, in order.
+fn canonical_hinted(field: &FieldRef, descr: &SchemaDescriptor, leaf: &mut usize, hinted: &mut bool) -> FieldRef {
+    let mut hint = |field: &FieldRef| canonical_hinted(field, descr, leaf, hinted);
     let data_type = match field.data_type() {
         DataType::Struct(children) => DataType::Struct(children.iter().map(&mut hint).collect()),
         DataType::List(element) => DataType::List(hint(element)),
         DataType::LargeList(element) => DataType::LargeList(hint(element)),
         DataType::FixedSizeList(element, size) => DataType::FixedSizeList(hint(element), *size),
         DataType::Map(entries, sorted) => DataType::Map(hint(entries), *sorted),
-        _ => {
+        inferred => {
             let index = *leaf;
             *leaf += 1;
 
-            if index >= descr.num_columns() || descr.column(index).physical_type() != Type::INT96 {
+            let Some(data_type) = (index < descr.num_columns())
+                .then(|| descr.column(index))
+                .and_then(|column| leaf_hint(inferred, &column))
+            else {
                 return Arc::clone(field);
-            }
+            };
 
             *hinted = true;
-            DataType::Timestamp(TimeUnit::Microsecond, Some("UTC".into()))
+            data_type
         }
     };
 
     Arc::new(Field::clone(field).with_data_type(data_type))
+}
+
+/// The type a leaf is read as when it is not its inferred one. A dictionary of strings or binaries is read plain: the
+/// file's dictionary pages still decode once per value, into i64 offsets instead of a `Dictionary(Int32, Utf8)`
+/// arrow-rs would otherwise expand.
+fn leaf_hint(inferred: &DataType, column: &ColumnDescriptor) -> Option<DataType> {
+    if column.physical_type() == Type::INT96 {
+        let micros = DataType::Timestamp(TimeUnit::Microsecond, Some("UTC".into()));
+
+        return (inferred != &micros).then_some(micros);
+    }
+
+    match inferred {
+        DataType::Dictionary(_, value) => large_text(value, column),
+        _ => large_text(inferred, column).filter(|large| large != inferred),
+    }
+}
+
+/// `LargeUtf8` for a string leaf, `LargeBinary` for a binary one; the Parquet annotation decides for a binary type
+/// an `ARROW:schema` gave to an annotated string, as `apply_hint` reads an annotated string as nothing but a string.
+fn large_text(inferred: &DataType, column: &ColumnDescriptor) -> Option<DataType> {
+    let annotated_string = matches!(column.logical_type_ref(), Some(LogicalType::String))
+        || column.converted_type() == ConvertedType::UTF8;
+
+    match inferred {
+        DataType::Utf8 | DataType::Utf8View | DataType::LargeUtf8 => Some(DataType::LargeUtf8),
+        DataType::Binary | DataType::BinaryView | DataType::LargeBinary if annotated_string => {
+            Some(DataType::LargeUtf8)
+        }
+        DataType::Binary | DataType::BinaryView | DataType::LargeBinary => Some(DataType::LargeBinary),
+        _ => None,
+    }
 }
 
 /// A codec the parquet crate is built without, in a projected or `predicated` leaf's chunk of the planned row groups.
@@ -526,7 +564,7 @@ mod tests {
     use parquet::schema::parser::parse_message_type;
     use parquet::schema::types::SchemaDescriptor;
 
-    use super::{coalesced, int96_hint, unsupported_codec, ParquetReader, Projected, ReadPlan};
+    use super::{canonical_hint, coalesced, unsupported_codec, ParquetReader, Projected, ReadPlan};
     use crate::parquet::error::Error;
     use crate::parquet::filter::Raw;
     use crate::parquet::footer::Footer;
@@ -840,16 +878,134 @@ mod tests {
     }
 
     #[test]
-    fn int96_is_not_hinted_without_int96_leaves() {
-        let schema = parse_message_type("message s { optional int64 nanos (TIMESTAMP(NANOS,false)); }").unwrap();
+    fn nothing_is_hinted_without_a_leaf_to_hint() {
+        let schema = parse_message_type(
+            "message s { optional int64 nanos (TIMESTAMP(NANOS,false)); optional fixed_len_byte_array(16) u (UUID); \
+             optional binary s (STRING); optional int32 d (DATE); }",
+        )
+        .unwrap();
         let descr = SchemaDescriptor::new(Arc::new(schema));
-        let inferred = Arc::new(Schema::new(vec![Field::new(
-            "nanos",
-            DataType::Timestamp(TimeUnit::Nanosecond, None),
-            true,
-        )]));
+        let inferred = Arc::new(Schema::new(vec![
+            Field::new("nanos", DataType::Timestamp(TimeUnit::Nanosecond, None), true),
+            Field::new("u", DataType::FixedSizeBinary(16), true),
+            Field::new("s", DataType::LargeUtf8, true),
+            Field::new("d", DataType::Date32, true),
+        ]));
 
-        assert!(int96_hint(&inferred, &descr).is_none());
+        assert!(canonical_hint(&inferred, &descr).is_none());
+    }
+
+    fn dictionary(value: DataType) -> DataType {
+        DataType::Dictionary(Box::new(DataType::Int32), Box::new(value))
+    }
+
+    /// Every row of the hint table, flat and under a list, a struct and a map.
+    #[test]
+    fn string_binary_and_int96_leaves_are_hinted_to_the_canonical_types() {
+        let schema = parse_message_type(
+            "message s { \
+             optional binary s (STRING); optional binary b; optional binary sb (STRING); optional int96 ts; \
+             optional fixed_len_byte_array(16) u (UUID); optional fixed_len_byte_array(3) f; optional int64 i; \
+             optional group l (LIST) { repeated group list { optional binary element (STRING); } } \
+             optional group st { optional binary v; optional int96 at; } \
+             optional group m (MAP) { repeated group key_value { required binary key (STRING); optional binary value; } } }",
+        )
+        .unwrap();
+        let descr = SchemaDescriptor::new(Arc::new(schema));
+        let list = |element: DataType| DataType::List(Arc::new(Field::new("element", element, true)));
+        let structure = |v: DataType, at: DataType| {
+            DataType::Struct(Fields::from(vec![Field::new("v", v, true), Field::new("at", at, true)]))
+        };
+        let map = |key: DataType, value: DataType| {
+            DataType::Map(
+                Arc::new(Field::new(
+                    "key_value",
+                    DataType::Struct(Fields::from(vec![
+                        Field::new("key", key, false),
+                        Field::new("value", value, true),
+                    ])),
+                    false,
+                )),
+                false,
+            )
+        };
+        let micros = DataType::Timestamp(TimeUnit::Microsecond, Some("UTC".into()));
+        // (inferred string type, inferred binary type, hinted string type, hinted binary type)
+        let cases = [
+            (
+                DataType::Utf8,
+                DataType::Binary,
+                DataType::LargeUtf8,
+                DataType::LargeBinary,
+            ),
+            (
+                DataType::Utf8View,
+                DataType::BinaryView,
+                DataType::LargeUtf8,
+                DataType::LargeBinary,
+            ),
+            (
+                DataType::LargeUtf8,
+                DataType::Binary,
+                DataType::LargeUtf8,
+                DataType::LargeBinary,
+            ),
+            (
+                dictionary(DataType::Utf8),
+                dictionary(DataType::Binary),
+                DataType::LargeUtf8,
+                DataType::LargeBinary,
+            ),
+            (
+                dictionary(DataType::LargeUtf8),
+                dictionary(DataType::LargeBinary),
+                DataType::LargeUtf8,
+                DataType::LargeBinary,
+            ),
+        ];
+
+        for (string, binary, large_string, large_binary) in cases {
+            let inferred = Arc::new(Schema::new(vec![
+                Field::new("s", string.clone(), true),
+                Field::new("b", binary.clone(), true),
+                Field::new("sb", binary.clone(), true),
+                Field::new("ts", DataType::Timestamp(TimeUnit::Nanosecond, None), true),
+                Field::new("u", DataType::FixedSizeBinary(16), true),
+                Field::new("f", DataType::FixedSizeBinary(3), true),
+                Field::new("i", DataType::Int64, true),
+                Field::new("l", list(string.clone()), true),
+                Field::new(
+                    "st",
+                    structure(binary.clone(), DataType::Timestamp(TimeUnit::Nanosecond, None)),
+                    true,
+                ),
+                Field::new("m", map(string.clone(), binary.clone()), true),
+            ]));
+
+            let hinted = canonical_hint(&inferred, &descr).unwrap_or_else(|| panic!("{string} is hinted"));
+            let types = hinted
+                .fields()
+                .iter()
+                .map(|field| field.data_type().clone())
+                .collect::<Vec<_>>();
+
+            assert_eq!(
+                types,
+                vec![
+                    large_string.clone(),
+                    large_binary.clone(),
+                    DataType::LargeUtf8,
+                    micros.clone(),
+                    DataType::FixedSizeBinary(16),
+                    DataType::FixedSizeBinary(3),
+                    DataType::Int64,
+                    list(large_string.clone()),
+                    structure(large_binary.clone(), micros.clone()),
+                    map(large_string, large_binary),
+                ],
+                "{string} / {binary}"
+            );
+        }
     }
 
     fn struct_file() -> Vec<u8> {

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ParquetViewer\Tests\Integration;
 
-use Flow\ETL\Tests\CommandOutputNormalizer;
+use Flow\ETL\Tests\Context\CommandOutputNormalizer;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\Tests\Context\TestParquetFile;
@@ -19,8 +19,6 @@ use function realpath;
 
 final class ReadMetadataTest extends TestCase
 {
-    use CommandOutputNormalizer;
-
     protected function tearDown(): void
     {
         TestParquetFile::remove($this);
@@ -44,7 +42,10 @@ final class ReadMetadataTest extends TestCase
             "File \"{$path}\" is not a valid parquet file",
         ));
 
-        self::assertCommandOutputContains(self::normalizeCommandOutput($expected), $tester->getDisplay());
+        CommandOutputNormalizer::assertCommandOutputContains(
+            CommandOutputNormalizer::normalizeCommandOutput($expected),
+            $tester->getDisplay(),
+        );
         static::assertSame(1, $tester->getStatusCode());
     }
 
@@ -66,11 +67,11 @@ final class ReadMetadataTest extends TestCase
             '--statistics' => 1,
         ]);
 
-        self::assertCommandOutputContains('Metadata', $tester->getDisplay());
-        self::assertCommandOutputContains('Row Groups', $tester->getDisplay());
-        self::assertCommandOutputContains('Column Chunks', $tester->getDisplay());
-        self::assertCommandOutputContains('Column Chunks Statistics', $tester->getDisplay());
-        self::assertCommandOutputContains('Page Headers', $tester->getDisplay());
+        CommandOutputNormalizer::assertCommandOutputContains('Metadata', $tester->getDisplay());
+        CommandOutputNormalizer::assertCommandOutputContains('Row Groups', $tester->getDisplay());
+        CommandOutputNormalizer::assertCommandOutputContains('Column Chunks', $tester->getDisplay());
+        CommandOutputNormalizer::assertCommandOutputContains('Column Chunks Statistics', $tester->getDisplay());
+        CommandOutputNormalizer::assertCommandOutputContains('Page Headers', $tester->getDisplay());
         static::assertSame(0, $tester->getStatusCode());
     }
 
@@ -88,8 +89,8 @@ final class ReadMetadataTest extends TestCase
 
         $tester->run(['command' => 'read:metadata', 'file' => $path, '--statistics' => 1]);
 
-        self::assertCommandOutputContains('-3.5', $tester->getDisplay());
-        self::assertCommandOutputContains('1.25', $tester->getDisplay());
+        CommandOutputNormalizer::assertCommandOutputContains('-3.5', $tester->getDisplay());
+        CommandOutputNormalizer::assertCommandOutputContains('1.25', $tester->getDisplay());
         static::assertSame(0, $tester->getStatusCode());
     }
 
@@ -107,8 +108,14 @@ final class ReadMetadataTest extends TestCase
 
         $tester->run(['command' => 'read:metadata', 'file' => $path, '--statistics' => 1]);
 
-        self::assertCommandOutputContains('0f8fad5b-d9cb-469f-a165-70867728950e', $tester->getDisplay());
-        self::assertCommandOutputContains('7c9e6679-7425-40de-944b-e07fc1f90ae7', $tester->getDisplay());
+        CommandOutputNormalizer::assertCommandOutputContains(
+            '0f8fad5b-d9cb-469f-a165-70867728950e',
+            $tester->getDisplay(),
+        );
+        CommandOutputNormalizer::assertCommandOutputContains(
+            '7c9e6679-7425-40de-944b-e07fc1f90ae7',
+            $tester->getDisplay(),
+        );
         static::assertSame(0, $tester->getStatusCode());
     }
 }

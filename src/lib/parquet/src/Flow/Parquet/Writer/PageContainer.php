@@ -23,11 +23,6 @@ final class PageContainer
         public PageHeader $pageHeader,
     ) {}
 
-    public function dataSize(): int
-    {
-        return strlen($this->compressedData);
-    }
-
     public function headerSize(): int
     {
         return strlen($this->serializedHeader());

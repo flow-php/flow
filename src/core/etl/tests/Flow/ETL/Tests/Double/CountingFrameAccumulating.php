@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Function\FrameAccumulating;
-use Flow\ETL\Function\FunctionTree;
-use Flow\ETL\Function\ResolvesFromChildren;
-use Flow\ETL\Function\WindowFunction;
-use Flow\ETL\Row\Reference;
-use Flow\ETL\Window;
-use Flow\ETL\Window\FrameAccumulator;
-use Flow\ETL\Window\WindowContext;
+use Flow\ETL\Foundation\Describe\Description;
+use Flow\ETL\Foundation\Describe\Rebuild;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Functions\FrameAccumulating;
+use Flow\ETL\Functions\FunctionTree;
+use Flow\ETL\Functions\Reference\Reference;
+use Flow\ETL\Functions\Window;
+use Flow\ETL\Functions\Window\FrameAccumulation;
+use Flow\ETL\Functions\WindowFunction;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Rows;
 use Flow\Types\Type;
+use SensitiveParameter;
 
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_optional;
@@ -22,20 +25,16 @@ use function Flow\Types\DSL\type_optional;
 /**
  * Sums the referenced entry over the frame, counting how many accumulators WindowProcessor builds and
  * how many rows it feeds them. Pins the incremental strategy: a partition of n rows must never cost more
- * than n accumulate() calls when the frame only grows.
+ * than n rows fed through aggregate() when the frame only grows.
  *
  * over() and withChildren() return copies, so every copy routes its counts back to the instance the
  * test holds.
  */
 final class CountingFrameAccumulating implements FrameAccumulating, WindowFunction
 {
-    use ResolvesFromChildren;
-
-    public int $accumulateCalls = 0;
-
     public int $accumulatorCalls = 0;
 
-    public int $valueCalls = 0;
+    public int $fedRows = 0;
 
     public function __construct(
         private readonly Reference $ref,
@@ -43,24 +42,26 @@ final class CountingFrameAccumulating implements FrameAccumulating, WindowFuncti
         private readonly ?self $countersOwner = null,
     ) {}
 
-    public function accumulator(FlowContext $context): FrameAccumulator
+    public function accumulator(): CountingAggregate
     {
         $this->counters()->accumulatorCalls++;
 
-        return new CountingFrameAccumulator($this->ref, $this->counters());
+        return new CountingAggregate($this->ref, $this->counters());
     }
 
-    public function apply(WindowContext $window): mixed
+    public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
     {
-        $accumulator = $this->accumulator($window->flowContext());
+        throw InvalidArgumentException::because('%s holds live state and is never described', self::class);
+    }
 
-        $frame = $window->frame();
+    public function describe(): ?Description
+    {
+        return null;
+    }
 
-        for ($index = 0, $count = $frame->count(); $index < $count; $index++) {
-            $accumulator->accumulate($frame, $index);
-        }
-
-        return $accumulator->value();
+    public function values(Rows $partition, Backend $backend): array
+    {
+        return (new FrameAccumulation($this->window()->frame()))->values($this, $partition, $backend);
     }
 
     /**
@@ -69,6 +70,28 @@ final class CountingFrameAccumulating implements FrameAccumulating, WindowFuncti
     public function children(): array
     {
         return [$this->ref];
+    }
+
+    public function deterministic(): bool
+    {
+        foreach ($this->children() as $child) {
+            if (!$child->deterministic()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public function resolved(): bool
+    {
+        foreach ($this->children() as $child) {
+            if (!$child->resolved()) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function counters(): self

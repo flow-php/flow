@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\Parquet\Tests\Double;
 use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Engine\PhpParquetEngine;
+use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Compressions;
@@ -21,6 +22,18 @@ final class RecordingParquetEngine implements ParquetEngine
     public function __construct(
         private readonly ParquetEngine $engine = new PhpParquetEngine(),
     ) {}
+
+    public static function fromArray(array $configuration): static
+    {
+        throw new InvalidArgumentException(
+            'RecordingParquetEngine is a test double and cannot be rebuilt from a configuration',
+        );
+    }
+
+    public function normalize(): ?array
+    {
+        return null;
+    }
 
     public function openForRead(SourceStream $stream): ParquetFileReader
     {

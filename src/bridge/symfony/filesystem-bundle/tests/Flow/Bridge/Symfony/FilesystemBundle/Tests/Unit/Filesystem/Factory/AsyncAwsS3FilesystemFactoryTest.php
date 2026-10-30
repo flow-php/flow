@@ -195,4 +195,49 @@ final class AsyncAwsS3FilesystemFactoryTest extends TestCase
     {
         static::assertSame('aws_s3', (new AsyncAwsS3FilesystemFactory())->type());
     }
+
+    public function test_an_inline_client_configuration_builds_a_describable_filesystem(): void
+    {
+        $filesystem = (new AsyncAwsS3FilesystemFactory())->create('aws-s3', [
+            'bucket' => 'b',
+            'client' => ['region' => 'us-east-1', 'access_key_id' => 'k', 'access_key_secret' => 's'],
+        ]);
+        $configuration = $filesystem->normalize();
+
+        static::assertNotNull($configuration);
+        static::assertSame(
+            ['region' => 'us-east-1', 'accessKeyId' => 'k', 'accessKeySecret' => 's'],
+            $configuration['client'],
+        );
+        static::assertSame($configuration, AsyncAWSS3Filesystem::fromArray($configuration)->normalize());
+    }
+
+    public function test_an_injected_client_builds_a_filesystem_without_configuration(): void
+    {
+        static::assertNull(
+            (new AsyncAwsS3FilesystemFactory())
+                ->create('aws-s3', [
+                    'bucket' => 'b',
+                    'client' => new S3Client(['region' => 'us-east-1', 'accessKeyId' => 'k', 'accessKeySecret' => 's']),
+                ])
+                ->normalize(),
+        );
+    }
+
+    public function test_an_injected_http_client_builds_a_filesystem_without_configuration(): void
+    {
+        static::assertNull(
+            (new AsyncAwsS3FilesystemFactory())
+                ->create('aws-s3', [
+                    'bucket' => 'b',
+                    'client' => [
+                        'region' => 'us-east-1',
+                        'access_key_id' => 'k',
+                        'access_key_secret' => 's',
+                        'http_client' => HttpClient::create(),
+                    ],
+                ])
+                ->normalize(),
+        );
+    }
 }

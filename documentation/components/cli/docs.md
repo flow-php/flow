@@ -110,7 +110,7 @@ Options:
       --output-file-format=OUTPUT-FILE-FORMAT                        File format. When not set file format is guessed from output file path extension
       --output-overwrite[=OUTPUT-OVERWRITE]                          When set output file will be overwritten if exists
       --analyze[=ANALYZE]                                            Collect processing statistics and print them. [default: false]
-      --config=CONFIG                                                Path to a local php file that MUST return instance of: Flow\ETL\Config
+      --config=CONFIG                                                Path to a local php file that MUST return instance of: Flow\ETL\Runtime\Config
       --input-json-pointer=INPUT-JSON-POINTER                        JSON Pointer to a subtree from which schema should be extracted
       --input-json-pointer-column-name                               When set, JSON Pointer will be used as a column name in the schema
       --output-json-date-time-format=OUTPUT-JSON-DATE-TIME-FORMAT    Date time format used in JSON output
@@ -128,7 +128,6 @@ Options:
       --output-csv-date-time-format=OUTPUT-CSV-DATE-TIME-FORMAT      DateTime format for CSV output
       --input-excel-header[=INPUT-EXCEL-HEADER]                      When set, Excel header will be used as a schema
       --input-excel-sheet-name=INPUT-EXCEL-SHEET-NAME                When set, Excel sheet name will be selected for reading
-      --input-excel-offset=INPUT-EXCEL-OFFSET                        Offset to start reading from
       --input-xml-node-path=INPUT-XML-NODE-PATH                      XML node path to a subtree from which schema should be extracted, for example /root/element This is not xpath, just a node names separated by slash
       --input-xml-buffer-size=INPUT-XML-BUFFER-SIZE                  XML buffer size in bytes
       --output-xml-root-element=OUTPUT-XML-ROOT-ELEMENT              Root element name in XML output
@@ -136,7 +135,6 @@ Options:
       --output-xml-attribute-prefix=OUTPUT-XML-ATTRIBUTE-PREFIX      Attribute prefix in XML output
       --output-xml-date-time-format=OUTPUT-XML-DATE-TIME-FORMAT      Date time format used in XML output
       --input-parquet-columns=INPUT-PARQUET-COLUMNS                  Columns to read from parquet file (multiple values allowed)
-      --input-parquet-offset=INPUT-PARQUET-OFFSET                    Offset to start reading from
       --schema-sample-size=SCHEMA-SAMPLE-SIZE                        Rows read to infer the schema before it is frozen; -1 reads every row. Ignored when the source declares its own schema.
       --schema-files-to-sniff=SCHEMA-FILES-TO-SNIFF                  Sources that yielded a row count against this bound; -1 sniffs every source (leading empty files are all opened). Ignored when the source declares its own schema.
       --schema-all-strings                                           Infer every column as string instead of narrowing it.
@@ -172,7 +170,7 @@ Options:
       --output-php                                         Print schema as PHP code
       --output-table                                       Print schema as ascii table
       --output-ascii                                       Print schema as ascii list
-      --config=CONFIG                                      Path to a local php file that MUST return instance of: Flow\ETL\Config
+      --config=CONFIG                                      Path to a local php file that MUST return instance of: Flow\ETL\Runtime\Config
       --input-json-pointer=INPUT-JSON-POINTER              JSON Pointer to a subtree from which schema should be extracted
       --input-json-pointer-column-name                     When set, JSON Pointer will be used as a column name in the schema
       --input-csv-header[=INPUT-CSV-HEADER]                When set, CSV header will be used as a schema
@@ -182,11 +180,9 @@ Options:
       --input-csv-escape=INPUT-CSV-ESCAPE                  CSV escape character
       --input-excel-header[=INPUT-EXCEL-HEADER]            When set, Excel header will be used as a schema
       --input-excel-sheet-name=INPUT-EXCEL-SHEET-NAME      When set, Excel sheet name will be selected for reading
-      --input-excel-offset=INPUT-EXCEL-OFFSET              Offset to start reading from
       --input-xml-node-path=INPUT-XML-NODE-PATH            XML node path to a subtree from which schema should be extracted, for example /root/element This is not xpath, just a node names separated by slash
       --input-xml-buffer-size=INPUT-XML-BUFFER-SIZE        XML buffer size in bytes
       --input-parquet-columns=INPUT-PARQUET-COLUMNS        Columns to read from parquet file (multiple values allowed)
-      --input-parquet-offset=INPUT-PARQUET-OFFSET          Offset to start reading from
       --schema-sample-size=SCHEMA-SAMPLE-SIZE              Rows read to infer the schema before it is frozen; -1 reads every row. Ignored when the source declares its own schema.
       --schema-files-to-sniff=SCHEMA-FILES-TO-SNIFF        Sources that yielded a row count against this bound; -1 sniffs every source (leading empty files are all opened). Ignored when the source declares its own schema.
       --schema-all-strings                                 Infer every column as string instead of narrowing it.
@@ -241,7 +237,7 @@ Options:
       --input-file-batch-size=INPUT-FILE-BATCH-SIZE        Number of rows processed in one batch after reading, when set to -1 whole dataset will be displayed at once [default: 1000]
       --input-file-limit=INPUT-FILE-LIMIT                  Limit number of rows read from the file.
       --input-file-offset=INPUT-FILE-OFFSET                Number of rows to skip before starting to read data
-      --config=CONFIG                                      Path to a local php file that MUST return instance of: Flow\ETL\Config
+      --config=CONFIG                                      Path to a local php file that MUST return instance of: Flow\ETL\Runtime\Config
       --input-json-pointer=INPUT-JSON-POINTER              JSON Pointer to a subtree from which schema should be extracted
       --input-json-pointer-column-name                     When set, JSON Pointer will be used as a column name in the schema
       --input-csv-header[=INPUT-CSV-HEADER]                When set, CSV header will be used as a schema
@@ -251,11 +247,9 @@ Options:
       --input-csv-escape=INPUT-CSV-ESCAPE                  CSV escape character
       --input-excel-header[=INPUT-EXCEL-HEADER]            When set, Excel header will be used as a schema
       --input-excel-sheet-name=INPUT-EXCEL-SHEET-NAME      When set, Excel sheet name will be selected for reading
-      --input-excel-offset=INPUT-EXCEL-OFFSET              Offset to start reading from
       --input-xml-node-path=INPUT-XML-NODE-PATH            XML node path to a subtree from which schema should be extracted, for example /root/element This is not xpath, just a node names separated by slash
       --input-xml-buffer-size=INPUT-XML-BUFFER-SIZE        XML buffer size in bytes
       --input-parquet-columns=INPUT-PARQUET-COLUMNS        Columns to read from parquet file (multiple values allowed)
-      --input-parquet-offset=INPUT-PARQUET-OFFSET          Offset to start reading from
       --schema-sample-size=SCHEMA-SAMPLE-SIZE              Rows read to infer the schema before it is frozen; -1 reads every row. Ignored when the source declares its own schema.
       --schema-files-to-sniff=SCHEMA-FILES-TO-SNIFF        Sources that yielded a row count against this bound; -1 sniffs every source (leading empty files are all opened). Ignored when the source declares its own schema.
       --schema-all-strings                                 Infer every column as string instead of narrowing it.
@@ -293,7 +287,7 @@ Options:
       --input-file-offset=INPUT-FILE-OFFSET                Number of rows to skip before starting to read data
       --output-truncate=OUTPUT-TRUNCATE                    Truncate output to given number of characters, when set to -1 output is not truncated at all [default: 20]
       --output-columns=OUTPUT-COLUMNS                      Columns to include in output, when not set all columns are displayed (multiple values allowed)
-      --config=CONFIG                                      Path to a local php file that MUST return instance of: Flow\ETL\Config
+      --config=CONFIG                                      Path to a local php file that MUST return instance of: Flow\ETL\Runtime\Config
       --input-json-pointer=INPUT-JSON-POINTER              JSON Pointer to a subtree from which schema should be extracted
       --input-json-pointer-column-name                     When set, JSON Pointer will be used as a column name in the schema
       --input-csv-header[=INPUT-CSV-HEADER]                When set, CSV header will be used as a schema
@@ -303,11 +297,9 @@ Options:
       --input-csv-escape=INPUT-CSV-ESCAPE                  CSV escape character
       --input-excel-header[=INPUT-EXCEL-HEADER]            When set, Excel header will be used as a schema
       --input-excel-sheet-name=INPUT-EXCEL-SHEET-NAME      When set, Excel sheet name will be selected for reading
-      --input-excel-offset=INPUT-EXCEL-OFFSET              Offset to start reading from
       --input-xml-node-path=INPUT-XML-NODE-PATH            XML node path to a subtree from which schema should be extracted, for example /root/element This is not xpath, just a node names separated by slash
       --input-xml-buffer-size=INPUT-XML-BUFFER-SIZE        XML buffer size in bytes
       --input-parquet-columns=INPUT-PARQUET-COLUMNS        Columns to read from parquet file (multiple values allowed)
-      --input-parquet-offset=INPUT-PARQUET-OFFSET          Offset to start reading from
       --schema-sample-size=SCHEMA-SAMPLE-SIZE              Rows read to infer the schema before it is frozen; -1 reads every row. Ignored when the source declares its own schema.
       --schema-files-to-sniff=SCHEMA-FILES-TO-SNIFF        Sources that yielded a row count against this bound; -1 sniffs every source (leading empty files are all opened). Ignored when the source declares its own schema.
       --schema-all-strings                                 Infer every column as string instead of narrowing it.
@@ -339,12 +331,11 @@ Options:
       --input-file-format=INPUT-FILE-FORMAT                Source file format. When not set file format is guessed from source file path extension
       --input-file-limit=INPUT-FILE-LIMIT                  Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed
       --input-file-offset=INPUT-FILE-OFFSET                Number of rows to skip before starting to read data
-      --config=CONFIG                                      Path to a local php file that MUST return instance of: Flow\ETL\Config
+      --config=CONFIG                                      Path to a local php file that MUST return instance of: Flow\ETL\Runtime\Config
       --input-json-pointer=INPUT-JSON-POINTER              JSON Pointer to a subtree from which schema should be extracted
       --input-json-pointer-column-name                     When set, JSON Pointer will be used as a column name in the schema
       --input-excel-header[=INPUT-EXCEL-HEADER]            When set, Excel header will be used as a schema
       --input-excel-sheet-name=INPUT-EXCEL-SHEET-NAME      When set, Excel sheet name will be selected for reading
-      --input-excel-offset=INPUT-EXCEL-OFFSET              Offset to start reading from
       --input-csv-header[=INPUT-CSV-HEADER]                When set, CSV header will be used as a schema
       --input-csv-empty-to-null[=INPUT-CSV-EMPTY-TO-NULL]  When set, empty CSV values will be treated as NULL values
       --input-csv-separator=INPUT-CSV-SEPARATOR            CSV separator character
@@ -353,7 +344,6 @@ Options:
       --input-xml-node-path=INPUT-XML-NODE-PATH            XML node path to a subtree from which schema should be extracted, for example /root/element This is not xpath, just a node names separated by slash
       --input-xml-buffer-size=INPUT-XML-BUFFER-SIZE        XML buffer size in bytes
       --input-parquet-columns=INPUT-PARQUET-COLUMNS        Columns to read from parquet file (multiple values allowed)
-      --input-parquet-offset=INPUT-PARQUET-OFFSET          Offset to start reading from
   -h, --help                                               Display help for the given command. When no command is given display help for the list command
       --silent                                             Do not output any message
   -q, --quiet                                              Only errors are displayed. All other output is suppressed
@@ -407,7 +397,7 @@ Arguments:
 
 Options:
       --analyze[=ANALYZE]              Collect processing statistics and print them. [default: false]
-      --config=CONFIG                  Path to a local php file that MUST return instance of: Flow\ETL\Config
+      --config=CONFIG                  Path to a local php file that MUST return instance of: Flow\ETL\Runtime\Config
       --stats-schema[=STATS-SCHEMA]    Prints schema of executed data transformation pipeline. [default: false]
       --stats-columns[=STATS-COLUMNS]  Prints number of rows in dataset. [default: false]
       --stats-sources[=STATS-SOURCES]  Prints the rows every source declared next to the rows it yielded. [default: false]
@@ -458,7 +448,7 @@ Options:
       --output-table                           Print schema as ascii table
       --output-ascii                           Print schema as ascii list
       --db-column[=DB-COLUMN]                  Filter schema by column name(s) (multiple values allowed)
-      --config=CONFIG                          Path to a local php file that MUST return instance of: Flow\ETL\Config
+      --config=CONFIG                          Path to a local php file that MUST return instance of: Flow\ETL\Runtime\Config
   -c, --db-connection-file=DB-CONNECTION-FILE  Path to file that returns and instance of \Doctrine\DBAL\Connection
   -h, --help                                   Display help for the given command. When no command is given display help for the list command
       --silent                                 Do not output any message
@@ -485,7 +475,7 @@ Usage:
 
 Options:
       --db-namespace=DB-NAMESPACE              List of namespaces for which this command will list tables, multiple values allowed. When not set, all tables from all namespaces are listed. (multiple values allowed)
-      --config=CONFIG                          Path to a local php file that MUST return instance of: Flow\ETL\Config
+      --config=CONFIG                          Path to a local php file that MUST return instance of: Flow\ETL\Runtime\Config
   -c, --db-connection-file=DB-CONNECTION-FILE  Path to file that returns and instance of \Doctrine\DBAL\Connection
   -h, --help                                   Display help for the given command. When no command is given display help for the list command
       --silent                                 Do not output any message
@@ -521,7 +511,7 @@ Options:
       --output-php      Print schema as PHP code
       --output-table    Print schema as ascii table
       --output-ascii    Print schema as ascii list
-      --config=CONFIG   Path to a local php file that MUST return instance of: Flow\ETL\Config
+      --config=CONFIG   Path to a local php file that MUST return instance of: Flow\ETL\Runtime\Config
   -h, --help            Display help for the given command. When no command is given display help for the list command
       --silent          Do not output any message
   -q, --quiet           Only errors are displayed. All other output is suppressed

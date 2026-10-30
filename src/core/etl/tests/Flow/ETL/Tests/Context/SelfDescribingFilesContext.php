@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Context;
 
-use Flow\ETL\Extractor\File\SelfDescribingFile;
-use Flow\ETL\Extractor\File\SourceFile;
-use Flow\ETL\Schema;
+use Flow\ETL\IO\Extractor\File\SelfDescribingFile;
+use Flow\ETL\IO\Extractor\File\SourceFile;
 use Flow\ETL\Tests\Double\FakeSelfDescribingFile;
+use Flow\ETL\Values\Schema;
 use Generator;
 
 use function array_values;
@@ -74,7 +74,7 @@ final class SelfDescribingFilesContext
         }
     }
 
-    private static function source(int $index): SourceFile
+    public static function source(int $index): SourceFile
     {
         return new SourceFile(path('memory://orders/file' . $index . '.csv'));
     }

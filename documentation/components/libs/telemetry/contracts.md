@@ -12,21 +12,21 @@ implementations.
 
 ### Transport
 
-**Interface:** `Flow\Telemetry\Transport\Transport`
+**Interface:** `Flow\Bridge\Telemetry\OTLP\Transport\Transport`
 
-Sends serialized telemetry data to backends over the network. The signal type is inferred from the batch payload type
-(`LogsBatch`, `MetricsBatch`, `TracesBatch`). Single method:
+Sends telemetry to an OTLP backend. The signal type is `Signals::$type`:
 
 ```php ignore
-public function send(LogsBatch|MetricsBatch|TracesBatch $batch) : void;
+public function send(Signals $signal) : void;
 public function shutdown() : void;
 ```
 
-| Implementation  | Package                          | Description                              |
-|-----------------|----------------------------------|------------------------------------------|
-| `VoidTransport` | `flow-php/telemetry`             | No-op transport that discards all data   |
-| `GrpcTransport` | `flow-php/telemetry-otlp-bridge` | gRPC transport (requires ext-grpc)       |
-| `CurlTransport` | `flow-php/telemetry-otlp-bridge` | Async curl transport (requires ext-curl) |
+| Implementation       | Package                          | Description                                          |
+|----------------------|----------------------------------|------------------------------------------------------|
+| `GrpcTransport`      | `flow-php/telemetry-otlp-bridge` | Non-blocking gRPC transport (requires ext-grpc)      |
+| `CurlTransport`      | `flow-php/telemetry-otlp-bridge` | Synchronous HTTP transport (requires ext-curl)       |
+| `AsyncCurlTransport` | `flow-php/telemetry-otlp-bridge` | Non-blocking HTTP transport (requires ext-curl)      |
+| `StreamTransport`    | `flow-php/telemetry-otlp-bridge` | Writes JSONL to a file path or a `php://` stream     |
 
 ---
 
@@ -34,14 +34,12 @@ public function shutdown() : void;
 
 **Interface:** `Flow\Telemetry\Exporter\Exporter`
 
-Exports telemetry batches to external observability backends. A single exporter handles all three signals via
-`match(true)` instanceof dispatch on `LogsBatch | MetricsBatch | TracesBatch`.
+Exports telemetry to external observability backends. A single exporter handles all three signals with a `match` on
+`Signals::$type`.
 
 ```php ignore
-public function export(LogsBatch|MetricsBatch|TracesBatch $batch) : bool;
-
-/** @return array<Transport> */
-public function transports() : array;
+public function export(Signals $signal) : bool;
+public function shutdown() : void;
 ```
 
 | Implementation    | Package                          | Description                                       |
@@ -53,13 +51,15 @@ public function transports() : array;
 
 ---
 
-### Batch value objects
+### Signals
 
-Three small immutable value objects in `Flow\Telemetry\Batch` carry the payload across Transport / Exporter boundaries:
+`Flow\Telemetry\Signal\Signals` carries the payload of one signal type across Exporter and Transport boundaries:
 
-- `LogsBatch(array<LogEntry> $entries)`
-- `MetricsBatch(array<Metric> $metrics)`
-- `TracesBatch(array<Span> $spans)`
+- `Signals::logs(array<LogEntry>)`, read with `allLogs()`
+- `Signals::metrics(array<Metric>)`, read with `allMetrics()`
+- `Signals::traces(array<Span>)`, read with `allSpans()`
+
+`$type` is a `SignalType`: `LOGS`, `METRICS` or `TRACES`.
 
 ---
 
@@ -239,26 +239,26 @@ All contracts are designed for extension. To implement a custom exporter:
 ```php
 <?php
 
-use Flow\Telemetry\Batch\{LogsBatch, MetricsBatch, TracesBatch};
 use Flow\Telemetry\Exporter\Exporter;
-use Flow\Telemetry\Transport\{Transport, VoidTransport};
+use Flow\Telemetry\Signal\{Signals, SignalType};
+
+use function Flow\Telemetry\DSL\pass_through_span_processor;
 
 final class MyCustomExporter implements Exporter
 {
-    public function export(LogsBatch|MetricsBatch|TracesBatch $batch) : bool
+    public function export(Signals $signal) : bool
     {
-        match (true) {
-            $batch instanceof TracesBatch => $this->writeSpans($batch->spans),
-            $batch instanceof MetricsBatch => $this->writeMetrics($batch->metrics),
-            $batch instanceof LogsBatch => $this->writeLogs($batch->entries),
+        match ($signal->type) {
+            SignalType::TRACES => $this->writeSpans($signal->allSpans()),
+            SignalType::METRICS => $this->writeMetrics($signal->allMetrics()),
+            SignalType::LOGS => $this->writeLogs($signal->allLogs()),
         };
 
         return true;
     }
 
-    public function transports() : array
+    public function shutdown() : void
     {
-        return [new VoidTransport()];
     }
 
     // ... per-signal helpers

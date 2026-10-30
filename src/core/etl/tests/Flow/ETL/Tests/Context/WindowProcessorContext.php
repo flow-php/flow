@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Context;
 
-use Flow\ETL\Function\WindowFunction;
-use Flow\ETL\Processor\WindowProcessor;
-use Flow\ETL\Rows;
-use Flow\ETL\Schema\Definition;
+use Flow\ETL\Functions\WindowFunction;
+use Flow\ETL\Operators\Processor\WindowProcessor;
+use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Schema\Definition;
 
 use function Flow\ETL\DSL\flow_context;
 
@@ -28,7 +28,7 @@ final class WindowProcessorContext
 
         $batches = [];
 
-        foreach ((new WindowProcessor($column, $function))->process($input, flow_context()) as $batch) {
+        foreach ((new WindowProcessor($column, $function))->process($input, flow_context()->backend()) as $batch) {
             $batches[] = $batch;
         }
 
@@ -44,7 +44,7 @@ final class WindowProcessorContext
      */
     public static function values(string|Definition $column, WindowFunction $function, Rows $rows): array
     {
-        $name = $column instanceof Definition ? $column->reference()->name() : $column;
+        $name = $column instanceof Definition ? $column->name() : $column;
         $values = [];
 
         foreach (self::batches($column, $function, $rows) as $batch) {

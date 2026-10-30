@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\CLI\Factory;
 
-use Flow\ETL\Adapter\CSV\CSVExtractor;
+use Flow\ETL\Adapter\CSV\IO\Extractor\CSVExtractor;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Input\InputInterface;
 

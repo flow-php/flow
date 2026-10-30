@@ -6,6 +6,7 @@ namespace Flow\Parquet\Reader;
 
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Dremel\ColumnData\PagedFlatColumnValues;
+use Flow\Parquet\Dremel\ColumnData\ReadFlatColumnValues;
 use Flow\Parquet\Dremel\DremelAssembler;
 use Flow\Parquet\Dremel\ReadColumnData;
 use Flow\Parquet\Exception\InvalidArgumentException;
@@ -17,13 +18,10 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Generator;
 
-use function iterator_to_array;
-
 /**
  * One column's values in a row group, the selected rows only.
  *
- * @type DecodedPage = array{values: list<mixed>, definitionLevels: array<int>}
- * @type DecodedChunk = array{pages: array<int, DecodedPage>, dictionary: ?Dictionary}
+ * @type DecodedChunk = array{pages: array<int, ReadFlatColumnValues>, dictionary: ?Dictionary}
  */
 final readonly class ColumnReader
 {
@@ -121,9 +119,9 @@ final readonly class ColumnReader
         $pages = $this->pages->read($leaf, $rowGroup, $group, $stream, $selection, $indexes, $chunk);
 
         foreach ($pages as $firstRow => [$page, $pageSelection]) {
-            $pageValues = iterator_to_array($page->rawValues(), false);
+            $pageValues = $page->rawValues();
             $definitionLevels = $page->definitionLevels();
-            $chunk['pages'][$firstRow] = ['values' => $pageValues, 'definitionLevels' => $definitionLevels];
+            $chunk['pages'][$firstRow] = $page;
             $row = 0;
             $valueIndex = 0;
 

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
-use Flow\Parquet\ParquetFile\RowGroup\StatisticsReader;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\ConvertedType;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
@@ -15,6 +14,7 @@ use Flow\Parquet\ParquetFile\Schema\MapValue;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\ParquetFile\Schema\Repetition;
+use Flow\Parquet\ParquetFile\Statistics;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Tests\Mother\ParquetEngineMother;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -186,7 +186,7 @@ class SchemaReadingTest extends ParquetIntegrationTestCase
             ->metadata();
 
         foreach ($metadata->columnChunks() as $chunk) {
-            static::assertInstanceOf(StatisticsReader::class, $chunk->statistics());
+            static::assertInstanceOf(Statistics::class, $chunk->statistics());
         }
     }
 

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use Flow\ETL\Column\PhpBackend;
-use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Values\Rows;
 
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\df;
@@ -41,7 +41,7 @@ final class MathTest extends FlowTestCase
             )))
             ->aggregate([sum(ref('price')), sum(ref('weight'))])
             ->forEach(static function (Rows $r) use (&$rows): void {
-                $rows = $rows->isEmpty() ? $r : $rows->concat(new PhpBackend(), $r);
+                $rows = $rows->isEmpty() ? $r : Rows::concat($rows->schema(), new PhpBackend(), $rows, $r);
             });
 
         static::assertSame(
@@ -74,7 +74,7 @@ final class MathTest extends FlowTestCase
             ->withColumn('discount', ref('price')->multiply(-0.1, exact: true))
             ->withColumn('total_weight', ref('weight')->multiply(ref('quantity'), exact: true))
             ->forEach(static function (Rows $r) use (&$rows): void {
-                $rows = $rows->isEmpty() ? $r : $rows->concat(new PhpBackend(), $r);
+                $rows = $rows->isEmpty() ? $r : Rows::concat($rows->schema(), new PhpBackend(), $rows, $r);
             });
 
         static::assertEquals(

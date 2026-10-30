@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ParquetViewer\Tests\Integration;
 
-use Flow\ETL\Tests\CommandOutputNormalizer;
+use Flow\ETL\Tests\Context\CommandOutputNormalizer;
 use Flow\ParquetViewer\Parquet;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\ApplicationTester;
@@ -13,8 +13,6 @@ use function realpath;
 
 final class ReadDataCommandTest extends TestCase
 {
-    use CommandOutputNormalizer;
-
     public function test_read_data_command(): void
     {
         $application = new Parquet();
@@ -31,7 +29,7 @@ final class ReadDataCommandTest extends TestCase
         ]);
 
         static::assertSame(0, $tester->getStatusCode());
-        self::assertCommandOutputIdentical(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputIdentical(<<<'OUTPUT'
             +---------+------------+---------------------+-----------+-----------------+------------------+----------------------+----------------------+----------------------+----------------------+----------------------+----------------------+----------------------+
             | boolean |      int32 |               int64 |     float |          double |          decimal |               string |                 date |             datetime |    list_of_datetimes |          map_of_ints |      list_of_strings |          struct_flat |
             +---------+------------+---------------------+-----------+-----------------+------------------+----------------------+----------------------+----------------------+----------------------+----------------------+----------------------+----------------------+

@@ -8,7 +8,7 @@ use Flow\PostgreSql\Protobuf\AST\IndexElem;
 use Flow\PostgreSql\Protobuf\AST\IndexStmt;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Schema\Index\IndexColumn;
@@ -19,8 +19,6 @@ use function is_string;
 
 final readonly class CreateIndexBuilder implements CreateIndexColumnsStep, CreateIndexFinalStep, CreateIndexOnStep
 {
-    use AstToSql;
-
     /**
      * @param list<IndexColumn> $columns
      * @param list<string> $includeColumns
@@ -237,6 +235,11 @@ final readonly class CreateIndexBuilder implements CreateIndexColumnsStep, Creat
             $tablespace,
             $this->nullsNotDistinct,
         );
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): IndexStmt

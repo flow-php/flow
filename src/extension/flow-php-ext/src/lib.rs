@@ -9,12 +9,12 @@ mod csv;
 mod ctx;
 mod date_check;
 mod exception;
+mod frame;
 mod globals;
 mod interfaces;
 mod iterator;
 mod json;
 mod json_check;
-mod kind_builder;
 mod parquet;
 mod physical;
 mod plan;
@@ -28,9 +28,9 @@ use ext_php_rs::prelude::*;
 use ext_php_rs::zend::ModuleEntry;
 use ext_php_rs::{info_table_end, info_table_row, info_table_start};
 
-/// The contract version flow-php/etl expects (`Flow\ETL\FlowPhpExtension::ABI`); both change together whenever a
+/// The contract version flow-php/etl expects (`Flow\ETL\Foundation\FlowPhpExtension::ABI`); both change together whenever a
 /// registered class or interface changes.
-const FLOW_PHP_ABI: i64 = 2;
+const FLOW_PHP_ABI: i64 = 3;
 
 pub extern "C" fn php_module_info(_module: *mut ModuleEntry) {
     info_table_start!();
@@ -70,6 +70,6 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .class::<json::source::RustJsonOpenSource>()
         .class::<json::write::RustJsonEncoder>()
         .class::<parquet::etl::RustParquetOpenSource>()
-        .class::<parquet::etl::RustParquetOpenSink>()
+        .class::<parquet::etl::RustParquetFileWriter>()
         .class::<arrow_c::RustColumnsBatch>()
 }

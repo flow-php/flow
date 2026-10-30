@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql\Tests\Double;
 
-use Flow\ETL\Adapter\PostgreSql\Pagination\Order;
+use Flow\ETL\Adapter\PostgreSql\IO\Extractor\Pagination\Order;
 use Flow\ETL\Adapter\PostgreSql\Tests\Mother\ColumnMother;
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
 use Flow\PostgreSql\Client\Client;

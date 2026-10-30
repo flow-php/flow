@@ -94,7 +94,7 @@ final class GenerateDataFrameCompleterCommand extends Command
                         ref('element')
                             ->arrayGet('name')
                             ->equals(lit('DataFrame'))
-                            ->and(ref('element')->arrayGet('namespace')->equals(lit('Flow\\ETL'))),
+                            ->and(ref('element')->arrayGet('namespace')->equals(lit('Flow\\ETL\\API'))),
                     )
                     ->arrayKeep(true)
                     ->size()

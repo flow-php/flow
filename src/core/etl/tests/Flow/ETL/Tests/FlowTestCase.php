@@ -4,15 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests;
 
-use Flow\ETL\Column\PhpBackend;
-use Flow\ETL\Extractor;
-use Flow\ETL\Extractor\BatchableExtractor;
-use Flow\ETL\Extractor\File\FileExtractor;
-use Flow\ETL\Extractor\File\FileScan;
-use Flow\ETL\Extractor\RewindableExtractor;
-use Flow\ETL\Extractor\Signal;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Rows;
+use Flow\ETL\IO\Extractor;
+use Flow\ETL\IO\Extractor\BatchableExtractor;
+use Flow\ETL\IO\Extractor\Criteria;
+use Flow\ETL\IO\Extractor\Signal;
+use Flow\ETL\Runtime\FlowContext;
+use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Values\Rows;
 use Generator;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -43,9 +41,11 @@ abstract class FlowTestCase extends TestCase
             $collected = rows(schema());
             $extractor = $factory()->withBatchSize($size);
 
-            foreach ($extractor->extract(flow_context()) as $batch) {
+            foreach ($extractor->extract(flow_context()->backend(), new Criteria()) as $batch) {
                 static::assertLessThanOrEqual($extractor->batchSize(), $batch->count(), $message);
-                $collected = $collected->isEmpty() ? $batch : $collected->concat(new PhpBackend(), $batch);
+                $collected = $collected->isEmpty()
+                    ? $batch
+                    : Rows::concat($collected->schema(), new PhpBackend(), $collected, $batch);
             }
 
             static::assertEquals($expected->toArray(), $collected->toArray(), $message);
@@ -55,7 +55,7 @@ abstract class FlowTestCase extends TestCase
         if ($expected->count() > 1) {
             $largest = 0;
 
-            foreach ($factory()->withBatchSize(1000)->extract(flow_context()) as $batch) {
+            foreach ($factory()->withBatchSize(1000)->extract(flow_context()->backend(), new Criteria()) as $batch) {
                 $largest = max($largest, $batch->count());
             }
 
@@ -63,23 +63,25 @@ abstract class FlowTestCase extends TestCase
         }
 
         // size 1, so any fixture of two rows or more yields a second batch that STOP must prevent
-        $generator = $factory()->withBatchSize(1)->extract(flow_context());
+        $generator = $factory()->withBatchSize(1)->extract(flow_context()->backend(), new Criteria());
         static::assertTrue($generator->valid(), $message);
         $generator->send(Signal::STOP);
         static::assertFalse($generator->valid(), $message);
 
         $extractor = $factory();
 
-        if ($extractor instanceof RewindableExtractor && $extractor->isRepeatable()) {
+        if ($extractor->isRepeatable()) {
             $first = rows(schema());
             $second = rows(schema());
 
-            foreach ($extractor->extract(flow_context()) as $batch) {
-                $first = $first->isEmpty() ? $batch : $first->concat(new PhpBackend(), $batch);
+            foreach ($extractor->extract(flow_context()->backend(), new Criteria()) as $batch) {
+                $first = $first->isEmpty() ? $batch : Rows::concat($first->schema(), new PhpBackend(), $first, $batch);
             }
 
-            foreach ($extractor->extract(flow_context()) as $batch) {
-                $second = $second->isEmpty() ? $batch : $second->concat(new PhpBackend(), $batch);
+            foreach ($extractor->extract(flow_context()->backend(), new Criteria()) as $batch) {
+                $second = $second->isEmpty()
+                    ? $batch
+                    : Rows::concat($second->schema(), new PhpBackend(), $second, $batch);
             }
 
             static::assertEquals($first->toArray(), $second->toArray(), $message);
@@ -99,7 +101,7 @@ abstract class FlowTestCase extends TestCase
         $extractor = $factory($maximum)->withBatchSize(1000);
         $total = 0;
 
-        foreach ($extractor->extract(flow_context()) as $batch) {
+        foreach ($extractor->extract(flow_context()->backend(), new Criteria()) as $batch) {
             static::assertLessThanOrEqual(1000, $batch->count(), $message);
             $total += $batch->count();
         }
@@ -115,15 +117,15 @@ abstract class FlowTestCase extends TestCase
         Extractor $extractor,
         ?FlowContext $flowContext = null,
         string $message = '',
-        FileScan $scan = new FileScan(),
+        Criteria $criteria = new Criteria(),
     ): void {
         $flowContext ??= flow_context();
         $extractedRows = rows(schema());
 
-        foreach (self::extracted($extractor, $flowContext, $scan) as $nextRows) {
+        foreach (self::extracted($extractor, $flowContext, $criteria) as $nextRows) {
             $extractedRows = $extractedRows->isEmpty()
                 ? $nextRows
-                : $extractedRows->concat(new PhpBackend(), $nextRows);
+                : Rows::concat($extractedRows->schema(), new PhpBackend(), $extractedRows, $nextRows);
         }
 
         static::assertEquals($expectedArray, $extractedRows->toArray(), $message);
@@ -134,12 +136,12 @@ abstract class FlowTestCase extends TestCase
         Extractor $extractor,
         ?FlowContext $flowContext = null,
         string $message = '',
-        FileScan $scan = new FileScan(),
+        Criteria $criteria = new Criteria(),
     ): void {
         $flowContext ??= flow_context();
         $totalRows = 0;
 
-        foreach (self::extracted($extractor, $flowContext, $scan) as $rows) {
+        foreach (self::extracted($extractor, $flowContext, $criteria) as $rows) {
             $totalRows += $rows->count();
         }
 
@@ -151,15 +153,15 @@ abstract class FlowTestCase extends TestCase
         Extractor $extractor,
         ?FlowContext $flowContext = null,
         string $message = '',
-        FileScan $scan = new FileScan(),
+        Criteria $criteria = new Criteria(),
     ): void {
         $flowContext ??= flow_context();
         $extractedRows = rows(schema());
 
-        foreach (self::extracted($extractor, $flowContext, $scan) as $nextRows) {
+        foreach (self::extracted($extractor, $flowContext, $criteria) as $nextRows) {
             $extractedRows = $extractedRows->isEmpty()
                 ? $nextRows
-                : $extractedRows->concat(new PhpBackend(), $nextRows);
+                : Rows::concat($extractedRows->schema(), new PhpBackend(), $extractedRows, $nextRows);
         }
 
         static::assertEquals($expectedRows, $extractedRows, $message);
@@ -168,11 +170,9 @@ abstract class FlowTestCase extends TestCase
     /**
      * @return Generator<int, Rows>
      */
-    final public static function extracted(Extractor $extractor, FlowContext $context, FileScan $scan): Generator
+    final public static function extracted(Extractor $extractor, FlowContext $context, Criteria $criteria): Generator
     {
-        return $extractor instanceof FileExtractor
-            ? $extractor->scan($context, $scan)
-            : $extractor->extract($context, $scan->limit);
+        return $extractor->extract($context->backend(), $criteria);
     }
 
     public function repositoryRoot(): string

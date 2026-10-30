@@ -24,7 +24,7 @@ The simplest way to get started with telemetry is using console exporters for lo
 ```php
 <?php
 
-use Flow\Clock\SystemClock;
+use Flow\ETL\Foundation\Clock\SystemClock;
 use function Flow\ETL\DSL\{config_builder, df, from_array, telemetry_options, to_output};
 use function Flow\Telemetry\DSL\{
     batching_log_processor, batching_metric_processor, batching_span_processor,
@@ -60,11 +60,11 @@ df(config_builder()->withTelemetry($telemetry, telemetry_options(
 
 Flow PHP provides granular control over what telemetry data is collected through `telemetry_options()`:
 
-| Option                  | Description                                  | Performance Impact                      |
-|-------------------------|----------------------------------------------|-----------------------------------------|
-| `trace_loading`         | Creates spans for each loader execution      | Low                                     |
-| `trace_transformations` | Creates spans for each transformer execution | Medium (many transformers = many spans) |
-| `collect_metrics`       | Records counters and throughput metrics      | Low                                     |
+| Option                  | Description                                                             | Performance Impact                      |
+|-------------------------|-------------------------------------------------------------------------|-----------------------------------------|
+| `trace_loading`         | Creates spans for each loader execution                                 | Low                                     |
+| `trace_transformations` | Creates spans for each transformer execution and each processor or join | Medium (many transformers = many spans) |
+| `collect_metrics`       | Records counters and throughput metrics                                 | Low                                     |
 
 ### Selective Configuration
 
@@ -132,7 +132,7 @@ $logExporter = console_exporter(colors: true, maxLogBodyLength: 100);
 For production environments, send telemetry to an OTLP-compatible collector using the OTLP bridge:
 
 ```php
-use Flow\Clock\SystemClock;
+use Flow\ETL\Foundation\Clock\SystemClock;
 use function Flow\ETL\DSL\{config_builder, telemetry_options};
 use function Flow\Telemetry\DSL\{
     batching_log_processor, batching_metric_processor, batching_span_processor,
@@ -217,6 +217,14 @@ When `trace_transformations` is enabled, child spans are created for each transf
   `flow.etl.transformer.class`, the batch sizes in `flow.etl.transformation.input_rows` / `output_rows`
 - Parent: DataFrame span
 - Status: OK on success, ERROR on failure
+
+The same option creates one span for each processor and join (sort, group by, join, distinct):
+
+- Span name: short class name, for example `MergeSortProcessor`. The full name is in `flow.etl.operator.class`.
+- Duration: wall time from the first batch requested to the last batch yielded, including the time the steps after it
+  spend on those batches.
+- Parent: DataFrame span
+- Status: ERROR on failure, OK in every other case (an early stop included)
 
 ### Metrics
 

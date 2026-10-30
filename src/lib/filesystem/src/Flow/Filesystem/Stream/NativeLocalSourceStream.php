@@ -12,10 +12,10 @@ use Generator;
 
 use function fclose;
 use function feof;
-use function filesize;
 use function fopen;
 use function fread;
 use function fseek;
+use function fstat;
 use function gettype;
 use function is_resource;
 use function stream_get_contents;
@@ -49,7 +49,8 @@ final class NativeLocalSourceStream implements SourceStream
 
     public static function open(Path $path): self
     {
-        $resource = fopen($path->path(), 'rb', false, $path->context()->resource());
+        // the exception below reports the failure; fopen()'s own warning would report it a second time
+        $resource = @fopen($path->path(), 'rb', false, $path->context()->resource());
 
         if ($resource === false) {
             throw new RuntimeException("Cannot open file: {$path->uri()}");
@@ -172,9 +173,12 @@ final class NativeLocalSourceStream implements SourceStream
         }
     }
 
+    /**
+     * The size of the open file: a stat of the handle, not of the path, which after a rename-over names another file.
+     */
     public function size(): int
     {
-        $size = filesize($this->path->path());
+        $size = fstat($this->handle())['size'] ?? false;
 
         if ($size === false) {
             throw new RuntimeException("Cannot get file size: {$this->path->uri()}");

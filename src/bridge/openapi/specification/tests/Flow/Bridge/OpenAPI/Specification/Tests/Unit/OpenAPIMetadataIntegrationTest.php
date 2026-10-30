@@ -6,7 +6,7 @@ namespace Flow\Bridge\OpenAPI\Specification\Tests\Unit;
 
 use Flow\Bridge\OpenAPI\Specification\OpenAPIConverter;
 use Flow\Bridge\OpenAPI\Specification\OpenAPIMetadata;
-use Flow\ETL\Schema\Metadata;
+use Flow\ETL\Values\Schema\Metadata;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\ETL\DSL\int_schema;
@@ -17,51 +17,6 @@ final class OpenAPIMetadataIntegrationTest extends TestCase
 {
     public function test_complex_example_with_all_metadata_types(): void
     {
-        $converter = new OpenAPIConverter();
-        $schema = schema(
-            int_schema(
-                'id',
-                false,
-                OpenAPIMetadata::description('Unique identifier')
-                    ->merge(OpenAPIMetadata::title('ID'))
-                    ->merge(OpenAPIMetadata::example(12345))
-                    ->merge(OpenAPIMetadata::format('int64'))
-                    ->merge(OpenAPIMetadata::readOnly()),
-            ),
-            str_schema(
-                'email',
-                true,
-                OpenAPIMetadata::description('User email address')
-                    ->merge(OpenAPIMetadata::format('email'))
-                    ->merge(OpenAPIMetadata::example('user@example.com'))
-                    ->merge(OpenAPIMetadata::title('Email Address')),
-            ),
-            str_schema(
-                'password',
-                false,
-                OpenAPIMetadata::description('User password')
-                    ->merge(OpenAPIMetadata::format('password'))
-                    ->merge(OpenAPIMetadata::writeOnly())
-                    ->merge(OpenAPIMetadata::title('Password')),
-            ),
-            str_schema(
-                'status',
-                false,
-                OpenAPIMetadata::description('Account status')
-                    ->merge(OpenAPIMetadata::deprecated(true))
-                    ->merge(OpenAPIMetadata::default('active'))
-                    ->merge(OpenAPIMetadata::examples([
-                        'active' => 'active',
-                        'inactive' => 'inactive',
-                        'suspended' => 'suspended',
-                    ]))
-                    ->merge(OpenAPIMetadata::title('Status')),
-            ),
-            str_schema('optional_field', true, OpenAPIMetadata::nullable(false)), // Override schema nullability
-        );
-
-        $result = $converter->toOpenAPI($schema);
-
         static::assertSame(
             [
                 'type' => 'object',
@@ -110,24 +65,58 @@ final class OpenAPIMetadataIntegrationTest extends TestCase
                     ],
                 ],
             ],
-            $result,
+            (new OpenAPIConverter())->toOpenAPI(schema(
+                int_schema(
+                    'id',
+                    false,
+                    OpenAPIMetadata::description('Unique identifier')
+                        ->merge(OpenAPIMetadata::title('ID'))
+                        ->merge(OpenAPIMetadata::example(12345))
+                        ->merge(OpenAPIMetadata::format('int64'))
+                        ->merge(OpenAPIMetadata::readOnly()),
+                ),
+                str_schema(
+                    'email',
+                    true,
+                    OpenAPIMetadata::description('User email address')
+                        ->merge(OpenAPIMetadata::format('email'))
+                        ->merge(OpenAPIMetadata::example('user@example.com'))
+                        ->merge(OpenAPIMetadata::title('Email Address')),
+                ),
+                str_schema(
+                    'password',
+                    false,
+                    OpenAPIMetadata::description('User password')
+                        ->merge(OpenAPIMetadata::format('password'))
+                        ->merge(OpenAPIMetadata::writeOnly())
+                        ->merge(OpenAPIMetadata::title('Password')),
+                ),
+                str_schema(
+                    'status',
+                    false,
+                    OpenAPIMetadata::description('Account status')
+                        ->merge(OpenAPIMetadata::deprecated(true))
+                        ->merge(OpenAPIMetadata::default('active'))
+                        ->merge(OpenAPIMetadata::examples([
+                            'active' => 'active',
+                            'inactive' => 'inactive',
+                            'suspended' => 'suspended',
+                        ]))
+                        ->merge(OpenAPIMetadata::title('Status')),
+                ),
+                str_schema('optional_field', true, OpenAPIMetadata::nullable(false)), // Override schema nullability
+            )),
         );
     }
 
     public function test_converter_falls_back_to_legacy_metadata_when_openapi_not_present(): void
     {
-        $converter = new OpenAPIConverter();
-        $metadata = Metadata::with('description', 'Legacy description')->merge(Metadata::with(
-            'example',
-            'Legacy example',
-        ));
-
-        $schema = schema(str_schema('name', false, $metadata));
-
-        $result = $converter->toOpenAPI($schema);
-
         /** @var array<string, mixed> $properties */
-        $properties = $result['properties'];
+        $properties = (new OpenAPIConverter())->toOpenAPI(schema(str_schema(
+            'name',
+            false,
+            Metadata::with('description', 'Legacy description')->merge(Metadata::with('example', 'Legacy example')),
+        )))['properties'];
         /** @var array<string, mixed> $nameProperty */
         $nameProperty = $properties['name'];
 
@@ -137,17 +126,14 @@ final class OpenAPIMetadataIntegrationTest extends TestCase
 
     public function test_converter_handles_mixed_legacy_and_openapi_metadata(): void
     {
-        $converter = new OpenAPIConverter();
-        $metadata = Metadata::with('description', 'Legacy description')
-            ->merge(OpenAPIMetadata::format('email')) // Only format is OpenAPI-specific
-            ->merge(Metadata::with('example', 'Legacy example'));
-
-        $schema = schema(str_schema('mixed', false, $metadata));
-
-        $result = $converter->toOpenAPI($schema);
-
         /** @var array<string, mixed> $properties */
-        $properties = $result['properties'];
+        $properties = (new OpenAPIConverter())->toOpenAPI(schema(str_schema(
+            'mixed',
+            false,
+            Metadata::with('description', 'Legacy description')
+                ->merge(OpenAPIMetadata::format('email')) // Only format is OpenAPI-specific
+                ->merge(Metadata::with('example', 'Legacy example')),
+        )))['properties'];
         /** @var array<string, mixed> $mixedProperty */
         $mixedProperty = $properties['mixed'];
 
@@ -158,18 +144,15 @@ final class OpenAPIMetadataIntegrationTest extends TestCase
 
     public function test_converter_handles_multiple_openapi_metadata(): void
     {
-        $converter = new OpenAPIConverter();
-        $metadata = OpenAPIMetadata::description('User email address')
-            ->merge(OpenAPIMetadata::format('email'))
-            ->merge(OpenAPIMetadata::example('user@example.com'))
-            ->merge(OpenAPIMetadata::title('Email Address'));
-
-        $schema = schema(str_schema('email', false, $metadata));
-
-        $result = $converter->toOpenAPI($schema);
-
         /** @var array<string, mixed> $properties */
-        $properties = $result['properties'];
+        $properties = (new OpenAPIConverter())->toOpenAPI(schema(str_schema(
+            'email',
+            false,
+            OpenAPIMetadata::description('User email address')
+                ->merge(OpenAPIMetadata::format('email'))
+                ->merge(OpenAPIMetadata::example('user@example.com'))
+                ->merge(OpenAPIMetadata::title('Email Address')),
+        )))['properties'];
         /** @var array<string, mixed> $emailProperty */
         $emailProperty = $properties['email'];
 
@@ -181,13 +164,12 @@ final class OpenAPIMetadataIntegrationTest extends TestCase
 
     public function test_converter_handles_openapi_default_metadata(): void
     {
-        $converter = new OpenAPIConverter();
-        $schema = schema(str_schema('status', false, OpenAPIMetadata::default('active')));
-
-        $result = $converter->toOpenAPI($schema);
-
         /** @var array<string, mixed> $properties */
-        $properties = $result['properties'];
+        $properties = (new OpenAPIConverter())->toOpenAPI(schema(str_schema(
+            'status',
+            false,
+            OpenAPIMetadata::default('active'),
+        )))['properties'];
         /** @var array<string, mixed> $statusProperty */
         $statusProperty = $properties['status'];
         static::assertSame('active', $statusProperty['default']);
@@ -195,13 +177,12 @@ final class OpenAPIMetadataIntegrationTest extends TestCase
 
     public function test_converter_handles_openapi_deprecated_metadata(): void
     {
-        $converter = new OpenAPIConverter();
-        $schema = schema(str_schema('old_field', false, OpenAPIMetadata::deprecated()));
-
-        $result = $converter->toOpenAPI($schema);
-
         /** @var array<string, mixed> $properties */
-        $properties = $result['properties'];
+        $properties = (new OpenAPIConverter())->toOpenAPI(schema(str_schema(
+            'old_field',
+            false,
+            OpenAPIMetadata::deprecated(),
+        )))['properties'];
         /** @var array<string, mixed> $oldFieldProperty */
         $oldFieldProperty = $properties['old_field'];
         static::assertTrue($oldFieldProperty['deprecated']);
@@ -209,13 +190,12 @@ final class OpenAPIMetadataIntegrationTest extends TestCase
 
     public function test_converter_handles_openapi_description_metadata(): void
     {
-        $converter = new OpenAPIConverter();
-        $schema = schema(str_schema('name', false, OpenAPIMetadata::description('User full name')));
-
-        $result = $converter->toOpenAPI($schema);
-
         /** @var array<string, mixed> $properties */
-        $properties = $result['properties'];
+        $properties = (new OpenAPIConverter())->toOpenAPI(schema(str_schema(
+            'name',
+            false,
+            OpenAPIMetadata::description('User full name'),
+        )))['properties'];
         /** @var array<string, mixed> $nameProperty */
         $nameProperty = $properties['name'];
         static::assertSame('User full name', $nameProperty['description']);
@@ -223,13 +203,12 @@ final class OpenAPIMetadataIntegrationTest extends TestCase
 
     public function test_converter_handles_openapi_example_metadata(): void
     {
-        $converter = new OpenAPIConverter();
-        $schema = schema(str_schema('email', false, OpenAPIMetadata::example('user@example.com')));
-
-        $result = $converter->toOpenAPI($schema);
-
         /** @var array<string, mixed> $properties */
-        $properties = $result['properties'];
+        $properties = (new OpenAPIConverter())->toOpenAPI(schema(str_schema(
+            'email',
+            false,
+            OpenAPIMetadata::example('user@example.com'),
+        )))['properties'];
         /** @var array<string, mixed> $emailProperty */
         $emailProperty = $properties['email'];
         static::assertSame('user@example.com', $emailProperty['example']);
@@ -243,12 +222,13 @@ final class OpenAPIMetadataIntegrationTest extends TestCase
             'inactive' => 'inactive',
             'pending' => 'pending',
         ];
-        $schema = schema(str_schema('status', false, OpenAPIMetadata::examples($examples)));
-
-        $result = $converter->toOpenAPI($schema);
 
         /** @var array<string, mixed> $properties */
-        $properties = $result['properties'];
+        $properties = $converter->toOpenAPI(schema(str_schema(
+            'status',
+            false,
+            OpenAPIMetadata::examples($examples),
+        )))['properties'];
         /** @var array<string, mixed> $statusProperty */
         $statusProperty = $properties['status'];
         static::assertSame($examples, $statusProperty['examples']);
@@ -256,13 +236,12 @@ final class OpenAPIMetadataIntegrationTest extends TestCase
 
     public function test_converter_handles_openapi_format_metadata(): void
     {
-        $converter = new OpenAPIConverter();
-        $schema = schema(str_schema('email', false, OpenAPIMetadata::format('email')));
-
-        $result = $converter->toOpenAPI($schema);
-
         /** @var array<string, mixed> $properties */
-        $properties = $result['properties'];
+        $properties = (new OpenAPIConverter())->toOpenAPI(schema(str_schema(
+            'email',
+            false,
+            OpenAPIMetadata::format('email'),
+        )))['properties'];
         /** @var array<string, mixed> $emailProperty */
         $emailProperty = $properties['email'];
         static::assertSame('email', $emailProperty['format']);
@@ -270,10 +249,13 @@ final class OpenAPIMetadataIntegrationTest extends TestCase
 
     public function test_converter_handles_openapi_nullable_metadata_override(): void
     {
-        $converter = new OpenAPIConverter();
-        $schema = schema(str_schema('optional_field', false, OpenAPIMetadata::nullable(true))); // non-nullable schema definition but nullable in OpenAPI
+        // non-nullable schema definition but nullable in OpenAPI
 
-        $result = $converter->toOpenAPI($schema);
+        $result = (new OpenAPIConverter())->toOpenAPI(schema(str_schema(
+            'optional_field',
+            false,
+            OpenAPIMetadata::nullable(true),
+        )));
 
         /** @var array<string, mixed> $properties */
         $properties = $result['properties'];
@@ -284,13 +266,12 @@ final class OpenAPIMetadataIntegrationTest extends TestCase
 
     public function test_converter_handles_openapi_read_only_metadata(): void
     {
-        $converter = new OpenAPIConverter();
-        $schema = schema(str_schema('created_at', false, OpenAPIMetadata::readOnly()));
-
-        $result = $converter->toOpenAPI($schema);
-
         /** @var array<string, mixed> $properties */
-        $properties = $result['properties'];
+        $properties = (new OpenAPIConverter())->toOpenAPI(schema(str_schema(
+            'created_at',
+            false,
+            OpenAPIMetadata::readOnly(),
+        )))['properties'];
         /** @var array<string, mixed> $createdAtProperty */
         $createdAtProperty = $properties['created_at'];
         static::assertTrue($createdAtProperty['readOnly']);
@@ -298,13 +279,12 @@ final class OpenAPIMetadataIntegrationTest extends TestCase
 
     public function test_converter_handles_openapi_title_metadata(): void
     {
-        $converter = new OpenAPIConverter();
-        $schema = schema(int_schema('id', false, OpenAPIMetadata::title('User ID')));
-
-        $result = $converter->toOpenAPI($schema);
-
         /** @var array<string, mixed> $properties */
-        $properties = $result['properties'];
+        $properties = (new OpenAPIConverter())->toOpenAPI(schema(int_schema(
+            'id',
+            false,
+            OpenAPIMetadata::title('User ID'),
+        )))['properties'];
         /** @var array<string, mixed> $idProperty */
         $idProperty = $properties['id'];
         static::assertSame('User ID', $idProperty['title']);
@@ -312,13 +292,12 @@ final class OpenAPIMetadataIntegrationTest extends TestCase
 
     public function test_converter_handles_openapi_write_only_metadata(): void
     {
-        $converter = new OpenAPIConverter();
-        $schema = schema(str_schema('password', false, OpenAPIMetadata::writeOnly()));
-
-        $result = $converter->toOpenAPI($schema);
-
         /** @var array<string, mixed> $properties */
-        $properties = $result['properties'];
+        $properties = (new OpenAPIConverter())->toOpenAPI(schema(str_schema(
+            'password',
+            false,
+            OpenAPIMetadata::writeOnly(),
+        )))['properties'];
         /** @var array<string, mixed> $passwordProperty */
         $passwordProperty = $properties['password'];
         static::assertTrue($passwordProperty['writeOnly']);
@@ -326,18 +305,15 @@ final class OpenAPIMetadataIntegrationTest extends TestCase
 
     public function test_converter_prioritizes_openapi_metadata_over_legacy(): void
     {
-        $converter = new OpenAPIConverter();
-        $metadata = Metadata::with('description', 'Legacy description') // Legacy metadata
-            ->merge(OpenAPIMetadata::description('OpenAPI description')) // OpenAPI metadata should take priority
-            ->merge(Metadata::with('example', 'Legacy example'))
-            ->merge(OpenAPIMetadata::example('OpenAPI example'));
-
-        $schema = schema(str_schema('name', false, $metadata));
-
-        $result = $converter->toOpenAPI($schema);
-
         /** @var array<string, mixed> $properties */
-        $properties = $result['properties'];
+        $properties = (new OpenAPIConverter())->toOpenAPI(schema(str_schema(
+            'name',
+            false,
+            Metadata::with('description', 'Legacy description') // Legacy metadata
+                ->merge(OpenAPIMetadata::description('OpenAPI description')) // OpenAPI metadata should take priority
+                ->merge(Metadata::with('example', 'Legacy example'))
+                ->merge(OpenAPIMetadata::example('OpenAPI example')),
+        )))['properties'];
         /** @var array<string, mixed> $nameProperty */
         $nameProperty = $properties['name'];
 
@@ -347,8 +323,8 @@ final class OpenAPIMetadataIntegrationTest extends TestCase
 
     public function test_openapi_metadata_usage_with_converter(): void
     {
-        $converter = new OpenAPIConverter();
-        $schema = schema(
+        /** @var array<string, mixed> $properties */
+        $properties = (new OpenAPIConverter())->toOpenAPI(schema(
             str_schema(
                 'user_email',
                 false,
@@ -385,12 +361,7 @@ final class OpenAPIMetadataIntegrationTest extends TestCase
                         'suspended' => 'suspended',
                     ])),
             ),
-        );
-
-        $result = $converter->toOpenAPI($schema);
-
-        /** @var array<string, mixed> $properties */
-        $properties = $result['properties'];
+        ))['properties'];
 
         /** @var array<string, mixed> $email */
         $email = $properties['user_email'];

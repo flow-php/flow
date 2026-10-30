@@ -6,16 +6,17 @@ native and PHP columns build into each other: appendFrom/appendTake, Rows::conca
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Column\RustBackend;
-use Flow\ETL\Column\RustColumn;
-use Flow\ETL\Column\PhpBackend;
-use Flow\ETL\Rows;
+use Flow\ETL\Values\Column\RustBackend;
+use Flow\ETL\Values\Column\RustColumn;
+use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Column\Frame\NoopCodec;
 
 $schema = all_types_schema();
 $php = php_rows($schema, all_types_values());
 $native = native_rows($schema, all_types_values());
 $same = static fn(string $label, Rows $expected, Rows $actual) => print(
-    $label . ': ' . ($expected->encodeFrame() === $actual->encodeFrame() && comparable($expected->toArray()) === comparable($actual->toArray()) ? 'identical' : 'DIFF') . "\n"
+    $label . ': ' . ((new PhpBackend())->encodeFrame($expected, new NoopCodec()) === (new PhpBackend())->encodeFrame($actual, new NoopCodec()) && comparable($expected->toArray()) === comparable($actual->toArray()) ? 'identical' : 'DIFF') . "\n"
 );
 $rebuilt = static function (Rows $from, object $backend, bool $take) use ($schema): Rows {
     $columns = [];
@@ -40,8 +41,8 @@ $rebuilt = static function (Rows $from, object $backend, bool $take) use ($schem
 $same('native appendTake of a PHP column', $php->gather([5, 0, 3, 3]), $rebuilt($php, new RustBackend(), true));
 $same('native appendFrom of a PHP column', $php->gather([5, 0, 3, 3]), $rebuilt($php, new RustBackend(), false));
 $same('PHP appendTake of a native column', $php->gather([5, 0, 3, 3]), $rebuilt($native, new PhpBackend(), true));
-$same('Rows::concat PHP + native', $php->concat(new PhpBackend(), $php), $php->concat(new RustBackend(), $native));
-$same('Rows::concat native + PHP', $php->concat(new PhpBackend(), $php), $native->concat(new PhpBackend(), $php));
+$same('Rows::concat PHP + native', Rows::concat($php->schema(), new PhpBackend(), $php, $php), Rows::concat($php->schema(), new RustBackend(), $php, $native));
+$same('Rows::concat native + PHP', Rows::concat($php->schema(), new PhpBackend(), $php, $php), Rows::concat($native->schema(), new PhpBackend(), $native, $php));
 $same('Rows::gather over both', $php->gather([1, 4]), $native->gather([1, 4]));
 
 foreach ($schema->definitions() as $name => $definition) {

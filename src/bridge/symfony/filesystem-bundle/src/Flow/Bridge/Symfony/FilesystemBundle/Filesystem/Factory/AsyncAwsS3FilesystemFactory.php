@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\FilesystemBundle\Filesystem\Factory;
 
+use AsyncAws\Core\Configuration;
 use AsyncAws\S3\S3Client;
 use Flow\Bridge\Symfony\FilesystemBundle\Exception\InvalidArgumentException;
 use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\FilesystemFactory;
@@ -15,7 +16,6 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 use function array_diff;
 use function array_key_exists;
 use function array_keys;
-use function Flow\Filesystem\Bridge\AsyncAWS\DSL\aws_s3_client;
 use function Flow\Filesystem\Bridge\AsyncAWS\DSL\aws_s3_filesystem;
 use function get_debug_type;
 use function implode;
@@ -78,8 +78,10 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
 
     /**
      * @param array<array-key, mixed> $clientConfig
+     *
+     * @return array<Configuration::OPTION_*, string>|S3Client the mapped configuration when no service is injected (describable for another process), a built client otherwise
      */
-    private function buildClient(array $clientConfig): S3Client
+    private function buildClient(array $clientConfig): S3Client|array
     {
         $allowed = [
             'region',
@@ -130,6 +132,7 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
             unset($clientConfig['logger']);
         }
 
+        /** @var array<string, Configuration::OPTION_*> $keyMap */
         $keyMap = [
             'region' => 'region',
             'access_key_id' => 'accessKeyId',
@@ -143,6 +146,7 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
             'debug' => 'debug',
         ];
 
+        /** @var array<Configuration::OPTION_*, string> $asyncConfig */
         $asyncConfig = [];
 
         foreach ($keyMap as $from => $to) {
@@ -151,13 +155,11 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
             }
         }
 
-        $client = aws_s3_client($asyncConfig);
-
         if ($httpClient !== null || $logger !== null) {
             return new S3Client($asyncConfig, null, $httpClient, $logger);
         }
 
-        return $client;
+        return $asyncConfig;
     }
 
     private function buildOptions(mixed $optionsConfig): Options

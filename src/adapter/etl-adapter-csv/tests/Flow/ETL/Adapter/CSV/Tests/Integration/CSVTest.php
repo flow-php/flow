@@ -61,7 +61,7 @@ final class CSVTest extends FlowTestCase
                 [['name' => 'a', 'id' => 1], ['id' => 2, 'name' => 'b']],
                 schema(int_schema('id'), str_schema('name')),
             )))
-            ->load(to_csv($path = __DIR__ . '/var/test_schema_order.csv')->saveMode(overwrite()))
+            ->write(to_csv($path = __DIR__ . '/var/test_schema_order.csv')->saveMode(overwrite()))
             ->run();
 
         static::assertSame(implode(PHP_EOL, ['id,name', '1,a', '2,b', '']), file_get_contents($path));
@@ -81,7 +81,7 @@ final class CSVTest extends FlowTestCase
                 ['id' => 4, 'value' => 'd'],
             ]))
             ->batchSize(2)
-            ->load(
+            ->write(
                 to_csv($path = __DIR__ . '/var/test_loading_csv_rows_of_decreasing_length.csv')->saveMode(overwrite()),
             )
             ->run();
@@ -102,7 +102,7 @@ final class CSVTest extends FlowTestCase
             ->read(new FakeExtractor(100))
             ->drop('array', 'list', 'map', 'struct', 'object', 'enum', 'list_of_datetimes')
             ->withColumn('datetime', ref('datetime')->dateFormat('Y-m-d H:i:s'))
-            ->load(to_csv($path = __DIR__ . '/var/test_loading_csv_files.csv')->saveMode(overwrite()))
+            ->write(to_csv($path = __DIR__ . '/var/test_loading_csv_files.csv')->saveMode(overwrite()))
             ->run();
 
         static::assertEquals(100, df()->read(from_csv($path))->count());
@@ -128,7 +128,7 @@ final class CSVTest extends FlowTestCase
         }
     }
 
-    public function test_a_transformation_sink_writes_all_batches_to_csv(): void
+    public function test_a_transformation_branch_writes_all_batches_to_csv(): void
     {
         df()
             ->read(from_sequence_number('id', 1, 12))
@@ -160,7 +160,7 @@ final class CSVTest extends FlowTestCase
                 ['year' => '2024', 'name' => '789-DE', 'total' => 200],
                 ['year' => '2025', 'name' => '555-FR', 'total' => 300],
             ]))
-            ->load(to_csv($dir . '/{name}.csv')->saveMode(overwrite())->partitionBy(partition_by('year', 'name')))
+            ->write(to_csv($dir . '/{name}.csv')->saveMode(overwrite())->partitionBy(partition_by('year', 'name')))
             ->run();
 
         static::assertFileExists($dir . '/year=2024/123456-PL.csv');
@@ -173,8 +173,8 @@ final class CSVTest extends FlowTestCase
             ->fetch();
 
         static::assertCount(3, $rows);
-        static::assertEquals(['2024', '2024', '2025'], $rows->reduceToArray(ref('year')));
-        static::assertEquals(['123456-PL', '789-DE', '555-FR'], $rows->reduceToArray(ref('name')));
+        static::assertEquals(['2024', '2024', '2025'], $rows->reduceToArray(ref('year')->base()));
+        static::assertEquals(['123456-PL', '789-DE', '555-FR'], $rows->reduceToArray(ref('name')->base()));
 
         $prunedRows = df()
             ->read(from_csv($dir . '/year=*/{name}.csv'))
@@ -182,7 +182,7 @@ final class CSVTest extends FlowTestCase
             ->fetch();
 
         static::assertCount(1, $prunedRows);
-        static::assertEquals(['789-DE'], $prunedRows->reduceToArray(ref('name')));
+        static::assertEquals(['789-DE'], $prunedRows->reduceToArray(ref('name')->base()));
     }
 
     /**
@@ -198,7 +198,7 @@ final class CSVTest extends FlowTestCase
                 ['order-year' => '2024', 'order-month' => '03', 'order-name' => '789-DE', 'total' => 200],
                 ['order-year' => '2025', 'order-month' => '01', 'order-name' => '555-FR', 'total' => 300],
             ]))
-            ->load(
+            ->write(
                 to_csv($output . '/{order-name}.csv')
                     ->saveMode(overwrite())
                     ->partitionBy(partition_by('order-year', 'order-month', 'order-name')),

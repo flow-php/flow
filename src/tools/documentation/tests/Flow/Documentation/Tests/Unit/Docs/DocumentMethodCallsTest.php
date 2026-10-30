@@ -19,11 +19,12 @@ final class DocumentMethodCallsTest extends TestCase
 
     public function test_it_reports_a_method_the_receiver_does_not_declare(): void
     {
-        $unresolved = (new DocumentMethodCalls())->unresolved([
-            $this->fences->php("<?php\n\$s = new \\Flow\\ETL\\Schema(); \$s->thereIsNoSuchMethod();"),
-        ]);
-
-        static::assertSame(['a.md:1' => ['Flow\ETL\Schema::thereIsNoSuchMethod()']], $unresolved);
+        static::assertSame(
+            ['a.md:1' => ['Flow\ETL\Values\Schema::thereIsNoSuchMethod()']],
+            (new DocumentMethodCalls())->unresolved([
+                $this->fences->php("<?php\n\$s = new \\Flow\\ETL\\Values\\Schema(); \$s->thereIsNoSuchMethod();"),
+            ]),
+        );
     }
 
     public function test_it_accepts_a_method_the_receiver_declares(): void
@@ -31,7 +32,7 @@ final class DocumentMethodCallsTest extends TestCase
         static::assertSame(
             [],
             (new DocumentMethodCalls())->unresolved([
-                $this->fences->php("<?php\n\$s = new \\Flow\\ETL\\Schema(); \$s->definitions();"),
+                $this->fences->php("<?php\n\$s = new \\Flow\\ETL\\Values\\Schema(); \$s->definitions();"),
             ]),
         );
     }
@@ -51,7 +52,7 @@ final class DocumentMethodCallsTest extends TestCase
         static::assertSame(
             [],
             (new DocumentMethodCalls())->unresolved([
-                $this->fences->php("<?php\n\$s = new \\Flow\\ETL\\Schema(); \$s = \$s->definitions();"),
+                $this->fences->php("<?php\n\$s = new \\Flow\\ETL\\Values\\Schema(); \$s = \$s->definitions();"),
             ]),
         );
     }
@@ -61,7 +62,7 @@ final class DocumentMethodCallsTest extends TestCase
         static::assertSame(
             [],
             (new DocumentMethodCalls())->unresolved([
-                $this->fences->php("<?php\n\$s = new \\Flow\\ETL\\Schema();"),
+                $this->fences->php("<?php\n\$s = new \\Flow\\ETL\\Values\\Schema();"),
                 $this->fences->php("<?php\n\$s->thereIsNoSuchMethod();"),
             ]),
         );
@@ -72,7 +73,7 @@ final class DocumentMethodCallsTest extends TestCase
         static::assertSame(
             [],
             (new DocumentMethodCalls())->unresolved([
-                $this->fences->php('$s = new \\Flow\\ETL\\Schema(); $s->definitions()'),
+                $this->fences->php('$s = new \\Flow\\ETL\\Values\\Schema(); $s->definitions()'),
             ]),
         );
     }

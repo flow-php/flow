@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Comparator;
 
-use Flow\ETL\Column\PhpBackend;
-use Flow\ETL\Rows;
 use Flow\ETL\Tests\Comparator\RowsComparator;
+use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Values\Rows;
 use PHPUnit\Framework\TestCase;
 use SebastianBergmann\Comparator\ComparisonFailure;
 use SebastianBergmann\Comparator\Factory;

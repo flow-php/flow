@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\Benchmarks\Window;
 
 use Flow\Benchmarks\Partitioning\PartitionCardinality;
-use Flow\ETL\DataFrame;
-use Flow\ETL\Row\Reference;
+use Flow\ETL\API\DataFrame;
+use Flow\ETL\Functions\Reference\Reference;
 
 /**
  * Both arms derive the key even though only the high-cardinality one partitions by it, so the pair

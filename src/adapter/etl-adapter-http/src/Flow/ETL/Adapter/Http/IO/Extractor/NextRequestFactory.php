@@ -1,0 +1,13 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Adapter\Http\IO\Extractor;
+
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
+
+interface NextRequestFactory
+{
+    public function create(?ResponseInterface $previousResponse = null): ?RequestInterface;
+}

@@ -11,12 +11,10 @@ use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\TransactionStmt;
 use Flow\PostgreSql\Protobuf\AST\TransactionStmtKind;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 final readonly class BeginBuilder implements BeginOptionsStep
 {
-    use AstToSql;
-
     private function __construct(
         private ?IsolationLevel $isolationLevel = null,
         private ?bool $readOnly = null,
@@ -51,6 +49,11 @@ final readonly class BeginBuilder implements BeginOptionsStep
     public function readWrite(): BeginOptionsStep
     {
         return new self($this->isolationLevel, false, $this->deferrable);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): TransactionStmt

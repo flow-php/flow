@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Benchmarks\Partitioning;
 
-use Flow\ETL\DataFrame;
-use Flow\ETL\Row\Reference;
+use Flow\ETL\API\DataFrame;
+use Flow\ETL\Functions\Reference\Reference;
 
 use function Flow\ETL\DSL\ref;
 

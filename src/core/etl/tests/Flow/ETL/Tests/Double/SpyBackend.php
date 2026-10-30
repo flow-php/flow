@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Column\Backend;
-use Flow\ETL\Column\Column;
-use Flow\ETL\Column\ColumnBuilder;
-use Flow\ETL\Column\PhpBackend;
-use Flow\ETL\Schema\Definition;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Column\Column;
+use Flow\ETL\Values\Column\ColumnBuilder;
+use Flow\ETL\Values\Column\Frame\Codec;
+use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Schema;
+use Flow\ETL\Values\Schema\Definition;
 
 final class SpyBackend implements Backend
 {
@@ -19,6 +22,10 @@ final class SpyBackend implements Backend
     private int $constants = 0;
 
     private int $decodes = 0;
+
+    private int $decodeFrames = 0;
+
+    private int $encodeFrames = 0;
 
     private readonly PhpBackend $php;
 
@@ -60,6 +67,30 @@ final class SpyBackend implements Backend
     public function decodes(): int
     {
         return $this->decodes;
+    }
+
+    public function decodeFrame(string $body, Schema $schema, Codec $codec): Rows
+    {
+        $this->decodeFrames++;
+
+        return $this->php->decodeFrame($body, $schema, $codec);
+    }
+
+    public function decodeFrames(): int
+    {
+        return $this->decodeFrames;
+    }
+
+    public function encodeFrame(Rows $rows, Codec $codec): string
+    {
+        $this->encodeFrames++;
+
+        return $this->php->encodeFrame($rows, $codec);
+    }
+
+    public function encodeFrames(): int
+    {
+        return $this->encodeFrames;
     }
 
     public function constant(Definition $definition, mixed $value, int $count): Column

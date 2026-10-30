@@ -25,12 +25,12 @@ use function substr;
 use function trim;
 
 /**
- * @implements Type<int<0, max>>
+ * @implements Type<int<1, max>>
  */
 final readonly class PositiveIntegerType implements Type
 {
     /**
-     * @return int<0, max>
+     * @return int<1, max>
      */
     public function assert(mixed $value): int
     {
@@ -42,7 +42,7 @@ final readonly class PositiveIntegerType implements Type
     }
 
     /**
-     * @return int<0, max>
+     * @return int<1, max>
      */
     public function cast(mixed $value): int
     {

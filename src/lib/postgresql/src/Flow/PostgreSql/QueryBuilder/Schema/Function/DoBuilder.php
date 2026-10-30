@@ -8,12 +8,10 @@ use Flow\PostgreSql\Protobuf\AST\DefElem;
 use Flow\PostgreSql\Protobuf\AST\DoStmt;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\PBString;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 final readonly class DoBuilder implements DoFinalStep
 {
-    use AstToSql;
-
     private function __construct(
         private string $code,
         private string $language = 'plpgsql',
@@ -27,6 +25,11 @@ final readonly class DoBuilder implements DoFinalStep
     public function language(string $language): DoFinalStep
     {
         return new self($this->code, $language);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): DoStmt

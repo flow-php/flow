@@ -30,7 +30,7 @@ jobs:
         env:
           MYSQL_USER: mysql
           MYSQL_PASSWORD: mysql
-          MYSQL_DATABASE: mysql
+          MYSQL_DATABASE: flow
           MYSQL_ROOT_PASSWORD: root
       elasticsearch:
         image: elasticsearch:8.19.0
@@ -143,7 +143,7 @@ jobs:
         run: "just test --exclude-group grpc --log-junit ./var/phpunit/logs/junit.xml ${{ (matrix.php-version == '8.3' && matrix.dependencies == 'locked') && '--coverage-clover=./var/phpunit/coverage/clover/coverage.xml' || '' }}"
         env: &test-env
           PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/postgres?serverVersion=18&charset=utf8
-          MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports['3306'] }}/mysql
+          MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports['3306'] }}/flow
           ELASTICSEARCH_URL: http://127.0.0.1:${{ job.services.elasticsearch.ports['9200'] }}
           SQLITE_DATABASE_URL: "sqlite:///:memory:"
           AZURITE_HOST: "localhost"

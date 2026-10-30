@@ -5,15 +5,13 @@ declare(strict_types=1);
 namespace Flow\CLI\Tests\Integration;
 
 use Flow\CLI\Command\SchemaFormatCommand;
-use Flow\ETL\Tests\CommandOutputNormalizer;
+use Flow\ETL\Tests\Context\CommandOutputNormalizer;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
 final class SchemaFormatCommandTest extends TestCase
 {
-    use CommandOutputNormalizer;
-
     public function test_run_schema_format(): void
     {
         $tester = new CommandTester(new SchemaFormatCommand('schema:format'));
@@ -22,7 +20,7 @@ final class SchemaFormatCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputIdentical(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputIdentical(<<<'OUTPUT'
             [
                 {
                     "ref": "order_id",
@@ -170,7 +168,7 @@ final class SchemaFormatCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputIdentical(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputIdentical(<<<'OUTPUT'
             schema
             |-- order_id: uuid
             |-- created_at: datetime
@@ -197,7 +195,7 @@ final class SchemaFormatCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputIdentical(<<<'PHP'
+        CommandOutputNormalizer::assertCommandOutputIdentical(<<<'PHP'
             \Flow\ETL\DSL\schema(
                 \Flow\ETL\DSL\uuid_schema("order_id", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
                 \Flow\ETL\DSL\datetime_schema("created_at", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
@@ -221,7 +219,7 @@ final class SchemaFormatCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputIdentical(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputIdentical(<<<'OUTPUT'
             +------------+--------------+----------+----------+
             |       name |         type | nullable | metadata |
             +------------+--------------+----------+----------+

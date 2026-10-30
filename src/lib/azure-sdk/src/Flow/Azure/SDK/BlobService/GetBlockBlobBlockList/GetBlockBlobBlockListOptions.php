@@ -6,11 +6,10 @@ namespace Flow\Azure\SDK\BlobService\GetBlockBlobBlockList;
 
 use Flow\Azure\SDK\BlobService;
 use Flow\Azure\SDK\EndpointOptions;
-use Flow\Azure\SDK\Endpoints\UserAgentHeader;
 
 final class GetBlockBlobBlockListOptions implements EndpointOptions
 {
-    use UserAgentHeader;
+    private string $userAgentHeader = 'flow-php/azure-sdk';
 
     private BlockListType $blockListType = BlockListType::ALL;
 
@@ -111,5 +110,15 @@ final class GetBlockBlobBlockListOptions implements EndpointOptions
         $this->versionId = $versionId;
 
         return $this;
+    }
+
+    public function userAgentHeader(): string
+    {
+        return $this->userAgentHeader;
+    }
+
+    public function withUserAgent(string $userAgentHeader): void
+    {
+        $this->userAgentHeader = $userAgentHeader;
     }
 }

@@ -21,27 +21,22 @@ interface Transformation
 
 ## Using Transformations
 
-Transformations can be applied to DataFrames using two methods:
-
-- `with()` - Applies one or more transformations
-- `transform()` - Alias for `with()`, provides semantic clarity
-
-Both methods accept `Transformation` objects directly or through convenient DSL functions.
+`with()` applies a transformation to a DataFrame. It accepts `Transformation` objects directly or through DSL functions.
 
 ```php
 use function Flow\ETL\DSL\{df, from_array, select, drop, to_output};
 
-// Using with()
+// Keeping columns
 df()
     ->read(from_array([['id' => 1, 'name' => 'Alice', 'temporary_column' => 'x']]))
     ->with(select('id', 'name'))
     ->write(to_output())
     ->run();
 
-// Using transform() - identical behavior
+// Dropping a column
 df()
     ->read(from_array([['id' => 1, 'name' => 'Alice', 'temporary_column' => 'x']]))
-    ->transform(drop('temporary_column'))
+    ->with(drop('temporary_column'))
     ->write(to_output())
     ->run();
 ```
@@ -116,13 +111,31 @@ df()
     ->run();
 ```
 
+### Batch By
+
+Keep all rows with the same value of a column in one batch. The optional minimum size joins small groups into one batch.
+
+```php
+use function Flow\ETL\DSL\{df, from_array, batch_by, to_output};
+
+df()
+    ->read(from_array([
+        ['order_id' => 1, 'item' => 'Widget'],
+        ['order_id' => 1, 'item' => 'Gadget'],
+        ['order_id' => 2, 'item' => 'Gizmo'],
+    ]))
+    ->with(batch_by('order_id', 2))
+    ->write(to_output())
+    ->run();
+```
+
 ### Add Row Index
 
 Add an index column to each row, useful for tracking row position or creating unique identifiers.
 
 ```php
 use function Flow\ETL\DSL\{df, from_array, add_row_index, to_output};
-use Flow\ETL\Transformation\AddRowIndex\StartFrom;
+use Flow\ETL\Operators\Transformer\AddRowIndex\StartFrom;
 
 // Add default index starting from 0
 df()
@@ -144,7 +157,7 @@ df()
 ```
 
 The index starts again on every run of the frame. A custom `Transformer` that keeps state between batches does the
-same by implementing `Flow\ETL\Transformer\Stateful`: its `fresh()` returns a new instance in its constructed state,
+same by implementing `Flow\ETL\Operators\Transformer\Stateful`: its `fresh()` returns a new instance in its constructed state,
 and every run uses that instance.
 
 ### Limit
@@ -216,9 +229,9 @@ df()
     ->run();
 ```
 
-## Transformations as Sinks
+## Transformations as Branches
 
-`to_transformation()` and `to_branch()` are sinks: each becomes its own root of the plan, fed the rows of the node it
+`to_transformation()` and `to_branch()` are branches: each becomes its own root of the plan, fed the rows of the node it
 was written at, and planned and bound together with the rest of the frame.
 
 ```php
@@ -232,21 +245,20 @@ df()
     ->run();
 ```
 
-A branch filters first; `withTransformation()`, called before `write()`, transforms what passed the condition. Sinks
-nest - wherever a sink takes a loader, it also takes another sink:
+A branch filters first; a `to_transformation()` inside it transforms what passed the condition. Branches nest - wherever
+a branch takes a loader, it also takes another branch or a transaction:
 
 ```php
-to_branch(ref('active')->equals(lit(true)), to_csv('active.csv'))->withTransformation($sortById);
 to_branch(ref('active')->equals(lit(true)), to_transformation($sortById, to_csv('active.csv')));
 ```
 
 The `Transformation` runs once per run over the whole stream it is fed, so `limit()` and `add_row_index()` apply across
 the stream, not per batch. A triggering verb (`fetch()`, `count()`, `schema()`, ...) inside it executes the prefix plan,
-as `from_data_frame()` executes a frame. `onError()` inside it throws `InvalidLogicException` at `write()` - set the
+as a terminal verb does. `onError()` inside it throws `InvalidLogicException` at `write()` - set the
 error handler on the outer frame.
 
 ```php
-use Flow\ETL\{DataFrame, Transformation};
+use Flow\ETL\API\{DataFrame, Transformation};
 
 use function Flow\ETL\DSL\{df, from_array, ref, to_output, to_transformation};
 
@@ -266,7 +278,7 @@ df()
 ### Memory Cost
 
 Correctness is the same everywhere; what differs between operations is how much they hold, and they hold it inside the
-sink. Three groups:
+branch. Three groups:
 
 | Cost                                   | Operations                                                                                                                            |
 |----------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
@@ -280,7 +292,7 @@ batch as it passes. They need the whole stream to answer correctly, not to accum
 
 ### Chunk Shape and Order
 
-`batch_size()`, `batchBy()` and `repartition()` change only which rows are grouped into the `Rows` handed to the sink's
+`batch_size()`, `batchBy()` and `repartition()` change only which rows are grouped into the `Rows` handed to the branch's
 loader. No row is lost or mis-assigned.
 
 `repartition()` and `join()` also change the **order** the rows arrive in: both group their output by key rather than
@@ -290,16 +302,16 @@ emitting it in input order. `batchBy()` preserves input order and only cuts the 
 arrives together, so it belongs in the first group above, alongside `sortBy()` and `join()`. Writing one directory per
 key is a separate thing, declared on the loader: `to_csv(...)->partitionBy('region')`.
 
-To re-batch the pipeline itself rather than what reaches the sink's loader, call `$df->batchSize(...)` on the frame.
+To re-batch the pipeline itself rather than what reaches the branch's loader, call `$df->batchSize(...)` on the frame.
 
 ### Failure Behaviour
 
-A sink runs under the frame's `->onError(...)` handler, and each failure is offered to it exactly once:
+A branch runs under the frame's `->onError(...)` handler, and each failure is offered to it exactly once:
 
 ```php
 df()
     ->read(from_array([['id' => 2], ['id' => 1]]))
-    ->onError(skip_rows_handler())                // a failing step inside the sink skips that batch
+    ->onError(skip_rows_handler())                // a failing step inside the branch skips that batch
     ->write(to_transformation($sortById, to_csv('sorted.csv')))
     ->run();
 ```
@@ -310,7 +322,7 @@ everything it had buffered. Under the default handler the failure propagates and
 A loader whose `closure()` fails is never offered to the handler: its own exception surfaces from `run()`.
 
 None of this is durability or atomicity: `closure()` both commits and closes, so a destination written up to the point
-of failure can be left behind. For all-or-nothing batches wrap the sinks in a transaction -
+of failure can be left behind. For all-or-nothing batches wrap the writes in a transaction -
 `to_dbal_transaction()`, `to_pgsql_transaction()`.
 
 ## Creating Custom Transformations
@@ -318,7 +330,7 @@ of failure can be left behind. For all-or-nothing batches wrap the sinks in a tr
 You can create custom transformations by implementing the `Transformation` interface:
 
 ```php
-use Flow\ETL\{DataFrame, Transformation};
+use Flow\ETL\API\{DataFrame, Transformation};
 
 use function Flow\ETL\DSL\{df, from_array, ref, to_output};
 

@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Rows;
-use Flow\ETL\Window\WindowFrame;
+use Flow\ETL\Foundation\Describe\Description;
+use Flow\ETL\Foundation\Describe\Rebuild;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Functions\Window\WindowFrame;
+use Flow\ETL\Values\Rows;
+use SensitiveParameter;
 
 final class CountingWindowFrame implements WindowFrame
 {
@@ -23,5 +27,15 @@ final class CountingWindowFrame implements WindowFrame
         $this->calls++;
 
         return $this->bounds;
+    }
+
+    public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
+    {
+        throw InvalidArgumentException::because('%s holds live state and is never described', self::class);
+    }
+
+    public function describe(): ?Description
+    {
+        return null;
     }
 }

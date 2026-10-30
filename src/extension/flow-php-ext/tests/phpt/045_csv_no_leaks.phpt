@@ -6,7 +6,7 @@ repeated native CSV reading does not leak memory
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Adapter\CSV\RustCSVOpenSource;
+use Flow\ETL\Adapter\CSV\IO\Extractor\RustCSVOpenSource;
 use Flow\Filesystem\Stream\MemorySourceStream;
 
 $raw = "\xEF\xBB\xBFid,name,5,id\n1,\"multi\nline\",x,\n2,,\"a\"\"b\",y\n\n3\n";
@@ -26,7 +26,7 @@ $cycle = static function () use ($raw): void {
     try {
         new RustCSVOpenSource(new MemorySourceStream($raw), ',,', '"', '\\', true, true, true);
         throw new LogicException('an invalid separator was accepted');
-    } catch (Flow\ETL\Exception\RuntimeException) {
+    } catch (Flow\ETL\Foundation\Exception\RuntimeException) {
     }
 };
 

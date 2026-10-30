@@ -164,13 +164,9 @@ final readonly class ColumnChunk
         return min($offsets);
     }
 
-    public function statistics(): ?StatisticsReader
+    public function statistics(): ?Statistics
     {
-        if ($this->statistics === null) {
-            return null;
-        }
-
-        return new StatisticsReader($this->statistics);
+        return $this->statistics;
     }
 
     public function totalCompressedSize(): int

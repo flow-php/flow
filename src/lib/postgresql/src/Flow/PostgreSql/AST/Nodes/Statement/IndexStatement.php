@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\AST\Nodes\Statement;
 
 use Flow\PostgreSql\AST\Nodes\Statement;
-use Flow\PostgreSql\AST\Nodes\StatementTrait;
 use Flow\PostgreSql\Protobuf\AST\IndexStmt;
 
 /**
@@ -15,8 +14,6 @@ use Flow\PostgreSql\Protobuf\AST\IndexStmt;
  */
 final readonly class IndexStatement implements Statement
 {
-    use StatementTrait;
-
     public function __construct(
         private IndexStmt $stmt,
     ) {}

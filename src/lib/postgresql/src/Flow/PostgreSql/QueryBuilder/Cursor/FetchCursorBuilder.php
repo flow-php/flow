@@ -6,12 +6,10 @@ namespace Flow\PostgreSql\QueryBuilder\Cursor;
 
 use Flow\PostgreSql\Protobuf\AST\FetchDirection;
 use Flow\PostgreSql\Protobuf\AST\FetchStmt;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 final class FetchCursorBuilder implements FetchCursorFinalStep
 {
-    use AstToSql;
-
     private int $count = 1;
 
     private int $direction = FetchDirection::FETCH_FORWARD;
@@ -63,6 +61,11 @@ final class FetchCursorBuilder implements FetchCursorFinalStep
         $this->direction = FetchDirection::FETCH_BACKWARD;
 
         return $this;
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): FetchStmt

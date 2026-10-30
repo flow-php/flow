@@ -4,15 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Column\Column;
-use Flow\ETL\Exception\SchemaNotDerivableException;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Function\Evaluation\ResultColumn;
-use Flow\ETL\Function\FunctionTree;
-use Flow\ETL\Function\ScalarFunction;
-use Flow\ETL\Function\ScalarFunctionChain;
-use Flow\ETL\Rows;
+use Flow\ETL\Foundation\Describe\Description;
+use Flow\ETL\Foundation\Describe\Rebuild;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Exception\SchemaNotDerivableException;
+use Flow\ETL\Functions\Evaluation\ResultColumn;
+use Flow\ETL\Functions\FunctionTree;
+use Flow\ETL\Functions\ScalarFunction;
+use Flow\ETL\Functions\ScalarFunctionChain;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Column\Column;
+use Flow\ETL\Values\Rows;
 use Flow\Types\Type;
+use SensitiveParameter;
 
 use function array_fill;
 use function Flow\Types\DSL\type_integer;
@@ -39,13 +43,20 @@ final class ReturnsSpyFunction implements ScalarFunction
         return [];
     }
 
-    public function eval(Rows $rows, FlowContext $context): Column
+    public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
+    {
+        throw InvalidArgumentException::because('%s holds live state and is never described', self::class);
+    }
+
+    public function describe(): ?Description
+    {
+        return null;
+    }
+
+    public function eval(Rows $rows, Backend $backend): Column
     {
         // @mago-ignore analysis:possibly-invalid-argument
-        return (new ResultColumn($context->backend()))->of(
-            $this,
-            $rows->isEmpty() ? [] : array_fill(0, $rows->count(), 1),
-        );
+        return (new ResultColumn($backend))->of($this, $rows->isEmpty() ? [] : array_fill(0, $rows->count(), 1));
     }
 
     /**

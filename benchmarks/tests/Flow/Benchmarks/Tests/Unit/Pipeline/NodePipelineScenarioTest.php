@@ -21,7 +21,7 @@ final class NodePipelineScenarioTest extends TestCase
     public const ROWS = 100;
 
     /**
-     * The sink is line-oriented but an XML node stringifies to many lines, so the row count is
+     * The loader is line-oriented but an XML node stringifies to many lines, so the row count is
      * counted by a per-row marker rather than by lines.
      */
     public static function sources(): Generator

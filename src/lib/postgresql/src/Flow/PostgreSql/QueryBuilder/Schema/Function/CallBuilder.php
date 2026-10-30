@@ -12,7 +12,7 @@ use Flow\PostgreSql\Protobuf\AST\Integer;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\PBFloat;
 use Flow\PostgreSql\Protobuf\AST\PBString;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 use function array_filter;
 use function array_map;
@@ -25,8 +25,6 @@ use function is_string;
 
 final readonly class CallBuilder implements CallFinalStep
 {
-    use AstToSql;
-
     /**
      * @param list<Node> $arguments
      */
@@ -38,6 +36,11 @@ final readonly class CallBuilder implements CallFinalStep
     public static function create(string $procedure): CallFinalStep
     {
         return new self($procedure);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): CallStmt

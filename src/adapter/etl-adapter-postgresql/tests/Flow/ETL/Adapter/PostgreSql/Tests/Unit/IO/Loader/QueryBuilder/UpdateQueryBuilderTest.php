@@ -1,0 +1,109 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Adapter\PostgreSql\Tests\Unit\IO\Loader\QueryBuilder;
+
+use Flow\ETL\Adapter\PostgreSql\IO\Loader\LoaderOptions\UpdateOptions;
+use Flow\ETL\Adapter\PostgreSql\IO\Loader\QueryBuilder\UpdateQueryBuilder;
+use Flow\ETL\Adapter\PostgreSql\Values\Schema\TypesMap;
+use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\PostgreSql\Client\TypedValue;
+use Flow\PostgreSql\Client\Types\ValueType;
+use PHPUnit\Framework\TestCase;
+
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+
+final class UpdateQueryBuilderTest extends TestCase
+{
+    public function test_build_returns_null_when_no_columns_to_update(): void
+    {
+        $builder = new UpdateQueryBuilder('users', new TypesMap());
+
+        [$query, $params] = $builder->build(['id' => 1], schema(int_schema('id')), new UpdateOptions(['id']));
+
+        static::assertNull($query);
+        static::assertEmpty($params);
+    }
+
+    public function test_build_returns_typed_values(): void
+    {
+        $builder = new UpdateQueryBuilder('users', new TypesMap());
+
+        [$_query, $params] = $builder->build(
+            ['id' => 1, 'name' => 'Alice'],
+            schema(int_schema('id'), str_schema('name')),
+            new UpdateOptions(['id']),
+        );
+
+        static::assertCount(2, $params);
+        static::assertInstanceOf(TypedValue::class, $params[0]);
+        static::assertSame('Alice', $params[0]->value);
+        static::assertSame(ValueType::TEXT, $params[0]->targetType);
+        static::assertInstanceOf(TypedValue::class, $params[1]);
+        static::assertSame(1, $params[1]->value);
+        static::assertSame(ValueType::INT8, $params[1]->targetType);
+    }
+
+    public function test_build_simple_update(): void
+    {
+        $builder = new UpdateQueryBuilder('users', new TypesMap());
+
+        [$query, $params] = $builder->build(
+            ['id' => 1, 'name' => 'Alice'],
+            schema(int_schema('id'), str_schema('name')),
+            new UpdateOptions(['id']),
+        );
+
+        static::assertNotNull($query);
+        $sql = $query->toSql();
+        static::assertStringContainsString('UPDATE users', $sql);
+        static::assertStringContainsString('SET name = $1', $sql);
+        static::assertStringContainsString('WHERE id = $2', $sql);
+        static::assertCount(2, $params);
+    }
+
+    public function test_build_throws_when_no_primary_keys(): void
+    {
+        $builder = new UpdateQueryBuilder('users', new TypesMap());
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Primary keys must be specified for UPDATE operation');
+
+        $builder->build(
+            ['id' => 1, 'name' => 'Alice'],
+            schema(int_schema('id'), str_schema('name')),
+            new UpdateOptions([]),
+        );
+    }
+
+    public function test_build_throws_when_primary_key_not_in_row(): void
+    {
+        $builder = new UpdateQueryBuilder('users', new TypesMap());
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Primary key "id" not found in row');
+
+        $builder->build(['name' => 'Alice'], schema(str_schema('name')), new UpdateOptions(['id']));
+    }
+
+    public function test_build_with_multiple_primary_keys(): void
+    {
+        $builder = new UpdateQueryBuilder('order_items', new TypesMap());
+
+        [$query, $params] = $builder->build(
+            ['order_id' => 1, 'product_id' => 2, 'quantity' => 5],
+            schema(int_schema('order_id'), int_schema('product_id'), int_schema('quantity')),
+            new UpdateOptions(['order_id', 'product_id']),
+        );
+
+        static::assertNotNull($query);
+        $sql = $query->toSql();
+        static::assertStringContainsString('SET quantity = $1', $sql);
+        static::assertStringContainsString('order_id = $2', $sql);
+        static::assertStringContainsString('product_id = $3', $sql);
+        static::assertCount(3, $params);
+    }
+}

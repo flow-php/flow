@@ -312,17 +312,24 @@ Annotate a class implementing `CatalogProvider` with `#[AsCatalogProvider]` for 
 namespace App\Database;
 
 use Flow\Bridge\Symfony\PostgreSqlBundle\Attribute\AsCatalogProvider;
-use Flow\PostgreSql\Catalog\Catalog;
-use Flow\PostgreSql\Catalog\CatalogProvider;
+use Flow\PostgreSql\Schema\Catalog;
+use Flow\PostgreSql\Schema\CatalogProvider;
+
+use function Flow\PostgreSql\DSL\{schema, schema_column_integer, schema_column_text, schema_table};
 
 #[AsCatalogProvider]
 final class UsersCatalogProvider implements CatalogProvider
 {
     public function get(): Catalog
     {
-        return Catalog::create(
-            // Define your tables, columns, indexes...
-        );
+        return new Catalog([
+            schema('public', [
+                schema_table('users', [
+                    schema_column_integer('id', nullable: false),
+                    schema_column_text('email'),
+                ]),
+            ]),
+        ]);
     }
 }
 ```

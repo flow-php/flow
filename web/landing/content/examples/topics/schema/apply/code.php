@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use function Flow\ETL\DSL\{bool_schema, data_frame, from_array, int_schema, schema, str_schema, to_output};
-use Flow\ETL\Loader\StreamLoader\Output;
-use Flow\ETL\Schema\Metadata;
+use Flow\ETL\IO\Loader\StreamLoader\Output;
+use Flow\ETL\Values\Schema\Metadata;
 
 require __DIR__ . '/vendor/autoload.php';
 

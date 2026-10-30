@@ -13,12 +13,10 @@ use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\Protobuf\AST\RoleSpec;
 use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 final readonly class AlterSequenceOwnerBuilder implements AlterSequenceOwnerFinalStep
 {
-    use AstToSql;
-
     private function __construct(
         private string $sequence,
         private ?string $schema,
@@ -29,6 +27,11 @@ final readonly class AlterSequenceOwnerBuilder implements AlterSequenceOwnerFina
     public static function create(string $sequence, ?string $schema, string $owner, bool $ifExists): self
     {
         return new self($sequence, $schema, $owner, $ifExists);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): AlterTableStmt

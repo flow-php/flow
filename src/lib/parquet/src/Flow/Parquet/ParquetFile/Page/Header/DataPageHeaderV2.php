@@ -6,7 +6,6 @@ namespace Flow\Parquet\ParquetFile\Page\Header;
 
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Encodings;
-use Flow\Parquet\ParquetFile\RowGroup\StatisticsReader;
 use Flow\Parquet\ParquetFile\Statistics;
 use Flow\Parquet\ThriftModel\DataPageHeaderV2 as ThriftDataPageHeaderV2;
 
@@ -57,13 +56,9 @@ final readonly class DataPageHeaderV2
         return $this->repetitionsByteLength;
     }
 
-    public function statistics(): ?StatisticsReader
+    public function statistics(): ?Statistics
     {
-        if ($this->statistics === null) {
-            return null;
-        }
-
-        return new StatisticsReader($this->statistics);
+        return $this->statistics;
     }
 
     public function toThrift(): ThriftDataPageHeaderV2

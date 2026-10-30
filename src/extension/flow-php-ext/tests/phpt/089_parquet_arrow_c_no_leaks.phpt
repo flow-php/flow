@@ -8,9 +8,11 @@ Batches crossing to and from arrow-ext through the Arrow C Data Interface leak n
 require __DIR__ . '/bootstrap.php';
 
 use Flow\Arrow\Parquet\RustBatchReader;
-use Flow\Parquet\Engine\{RustParquetFileReader, RustParquetFileWriter};
-use Flow\ETL\Adapter\Parquet\{RustParquetOpenSink, SchemaConverter};
-use Flow\ETL\Column\RustBackend;
+use Flow\Parquet\Engine\{RustParquetFileReader, RustParquetFileWriter as ArrowRustParquetFileWriter};
+use Flow\ETL\Adapter\Parquet\IO\Loader\{ParquetSchemaConformance, RustParquetFileWriter};
+use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Adapter\Parquet\Values\Schema\SchemaConverter;
+use Flow\ETL\Values\Column\RustBackend;
 use Flow\Parquet\Engine\Arrow\{OptionsConverter, SchemaConverter as ArrowSchemaConverter};
 use Flow\Parquet\Options;
 use Flow\Parquet\Reader\ReadPlan;
@@ -22,7 +24,9 @@ use function Flow\Types\DSL\{type_integer, type_list, type_optional};
 use Flow\Parquet\Tests\Double\InMemoryIndexes;
 
 $schema = schema(int_schema('id'), str_schema('name', nullable: true), list_schema('tags', type_list(type_optional(type_integer())), nullable: true));
-$extension = ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquet($schema));
+$parquetSchema = (new SchemaConverter())->toParquetSchema($schema);
+$extension = ArrowSchemaConverter::toExtension($parquetSchema);
+$conformance = new ParquetSchemaConformance($parquetSchema);
 $options = OptionsConverter::toExtension(Options::default());
 $values = array_map(static fn(int $i): array => ['id' => $i, 'name' => $i % 3 ? "name {$i}" : null, 'tags' => $i % 4 ? [$i, null] : null], range(0, 99));
 // built once: a fresh Type object per cycle would grow flow_php's type-plan cache, which is bounded, not leaked
@@ -30,9 +34,9 @@ $rows = native_rows($schema, $values);
 $invalid = native_rows($schema, [['id' => 1, 'name' => "\xff", 'tags' => null]]);
 $mismatched = schema(str_schema('id'));
 
-$cycle = static function () use ($schema, $extension, $options, $rows, $invalid, $mismatched): void {
+$cycle = static function () use ($schema, $extension, $conformance, $options, $rows, $invalid, $mismatched): void {
     $filesystem = memory_filesystem();
-    $writer = new RustParquetOpenSink(new RustParquetFileWriter($filesystem->writeTo(path('memory://leaks.parquet')), $extension, Compressions::SNAPPY, $options, 30));
+    $writer = new RustParquetFileWriter(new ArrowRustParquetFileWriter($filesystem->writeTo(path('memory://leaks.parquet')), $extension, Compressions::SNAPPY, $options, 30), $conformance, new PhpBackend());
     $writer->write($rows);
     $writer->write($rows);
     $writer->close();
@@ -50,7 +54,7 @@ $cycle = static function () use ($schema, $extension, $options, $rows, $invalid,
     $batches = new RustBatchReader($file, ['id', 'name', 'tags'], 30, ReadPlan::window($file->footer()->rowsNumber(), new InMemoryIndexes()));
     $batches->next();
     $twice = $batches->next();
-    $copy = new RustParquetFileWriter($filesystem->writeTo(path('memory://copy.parquet')), $extension, Compressions::SNAPPY, $options, 30);
+    $copy = new ArrowRustParquetFileWriter($filesystem->writeTo(path('memory://copy.parquet')), $extension, Compressions::SNAPPY, $options, 30);
     $copy->writeArrowBatch($twice);
 
     try {
@@ -64,10 +68,10 @@ $cycle = static function () use ($schema, $extension, $options, $rows, $invalid,
     try {
         rust_parquet_batches($filesystem->readFrom(path('memory://leaks.parquet')), $mismatched, 30);
         throw new LogicException('a string schema read an int column');
-    } catch (Flow\ETL\Exception\InvalidArgumentException) {
+    } catch (Flow\ETL\Foundation\Exception\InvalidArgumentException) {
     }
 
-    $refused = new RustParquetOpenSink(new RustParquetFileWriter($filesystem->writeTo(path('memory://refused.parquet')), $extension, Compressions::SNAPPY, $options, 30));
+    $refused = new RustParquetFileWriter(new ArrowRustParquetFileWriter($filesystem->writeTo(path('memory://refused.parquet')), $extension, Compressions::SNAPPY, $options, 30), $conformance, new PhpBackend());
 
     try {
         $refused->write($invalid);
@@ -75,7 +79,7 @@ $cycle = static function () use ($schema, $extension, $options, $rows, $invalid,
     } catch (Flow\Parquet\Exception\RuntimeException) {
     }
 
-    $unclosed = new RustParquetOpenSink(new RustParquetFileWriter($filesystem->writeTo(path('memory://unclosed.parquet')), $extension, Compressions::SNAPPY, $options, 30));
+    $unclosed = new RustParquetFileWriter(new ArrowRustParquetFileWriter($filesystem->writeTo(path('memory://unclosed.parquet')), $extension, Compressions::SNAPPY, $options, 30), $conformance, new PhpBackend());
     $unclosed->write($rows);
 };
 

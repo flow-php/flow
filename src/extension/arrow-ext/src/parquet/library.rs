@@ -25,7 +25,8 @@ use crate::parquet::error::Error;
 use crate::parquet::filter::Raw;
 use crate::parquet::footer::Footer;
 use crate::parquet::lib_calls::{
-    call_static, METADATA_FROM_THRIFT, READ_PLAN_TO_EXTENSION, ROW_GROUP_CHUNKS_FROM_THRIFT, SCHEMA_FROM_THRIFT,
+    call_static, METADATA_FROM_THRIFT, READ_PLAN_TO_EXTENSION, ROW_GROUP_CHUNKS_DECODED, ROW_GROUP_CHUNKS_FROM_THRIFT,
+    SCHEMA_FROM_THRIFT,
 };
 use crate::parquet::options;
 use crate::parquet::read::{ParquetReader, ReadPlan};
@@ -338,6 +339,7 @@ impl RustParquetFileReader {
             leaves: Arc::clone(&self.leaves),
             metadata: None,
             schema: None,
+            chunks: HashMap::new(),
             thrift: None,
         })
         .into_zval(false)?;
@@ -370,6 +372,8 @@ pub struct RustParquetFooter {
     metadata: Option<Zval>,
     schema: Option<Zval>,
     thrift: Option<Zval>,
+    /// Per flat path: the decoded `ColumnChunk` of every row group and the `ColumnOrder`, decoded once.
+    chunks: HashMap<String, (Vec<Zval>, Zval)>,
 }
 
 impl RustParquetFooter {
@@ -393,13 +397,11 @@ impl RustParquetFooter {
         Ok(MetadataObject(metadata))
     }
 
-    /// `$columns` (`FlatColumn`s) as `RustRowGroupChunks`: each leaf's column chunks and column order sliced from
-    /// the footer, decoded by PHP on first access.
+    /// `$columns` (`FlatColumn`s) as `RustRowGroupChunks`: each leaf's column chunks and column order, decoded once
+    /// per flat path and kept for the next call.
     #[php(name = "rowGroupChunks")]
-    pub fn row_group_chunks(&self, columns: &ZendHashTable) -> PhpResult<RowGroupChunksObject> {
-        let meta = self.footer.meta();
-        let mut paths = Vec::with_capacity(columns.len());
-        let mut leaves = Vec::with_capacity(columns.len());
+    pub fn row_group_chunks(&mut self, columns: &ZendHashTable) -> PhpResult<RowGroupChunksObject> {
+        let mut requested = Vec::with_capacity(columns.len());
 
         ht_for_each(columns, |_, _, column| {
             let path = call_method(column, "flatPath", &mut [])?
@@ -410,44 +412,99 @@ impl RustParquetFooter {
                 .leaves
                 .get(&path)
                 .ok_or_else(|| exception(INVALID_ARGUMENT, format!("Parquet file has no leaf column \"{path}\"")))?;
-            paths.push(path);
-            leaves.push(leaf);
+            requested.push((path, leaf, column.shallow_clone()));
 
             Ok::<(), PhpException>(())
         })?;
 
-        let bytes = self.footer.bytes();
-        let spans = chunk_spans(bytes, &leaves).map_err(|error| parquet_exception(error, &self.stream, Side::Read))?;
-        let mut row_counts = ZendHashTable::with_capacity(meta.num_row_groups() as u32);
+        let counts: Vec<i64> = self
+            .footer
+            .meta()
+            .row_groups()
+            .iter()
+            .map(|group| group.num_rows())
+            .collect();
+        let groups = counts.len();
+        let row_counts = || {
+            let mut table = ZendHashTable::with_capacity(counts.len() as u32);
 
-        for (index, group) in meta.row_groups().iter().enumerate() {
-            ht_insert_long(&mut row_counts, index as i64, zval_long(group.num_rows()));
+            for (index, rows) in counts.iter().enumerate() {
+                ht_insert_long(&mut table, index as i64, zval_long(*rows));
+            }
+
+            zval_array(table)
+        };
+
+        let missing: Vec<&(String, usize, Zval)> = requested
+            .iter()
+            .filter(|(path, _, _)| !self.chunks.contains_key(path))
+            .collect();
+
+        if !missing.is_empty() {
+            let bytes = self.footer.bytes();
+            let leaves: Vec<usize> = missing.iter().map(|(_, leaf, _)| *leaf).collect();
+            let spans =
+                chunk_spans(bytes, &leaves).map_err(|error| parquet_exception(error, &self.stream, Side::Read))?;
+            let mut encoded = ZendHashTable::with_capacity(missing.len() as u32);
+            let mut orders = ZendHashTable::with_capacity(missing.len() as u32);
+
+            for (position, ((path, _, _), ranges)) in missing.iter().zip(spans.chunks).enumerate() {
+                let mut list = ZendHashTable::with_capacity(ranges.len() as u32);
+
+                for (group, range) in ranges.into_iter().enumerate() {
+                    ht_insert_long(&mut list, group as i64, zval_str(&bytes[range]));
+                }
+
+                ht_insert(&mut encoded, path.as_bytes(), zval_array(list));
+                ht_insert(
+                    &mut orders,
+                    path.as_bytes(),
+                    spans
+                        .orders
+                        .as_ref()
+                        .map_or_else(Zval::new, |orders| zval_str(&bytes[orders[position].clone()])),
+                );
+            }
+
+            let thrift = call_static(
+                ROW_GROUP_CHUNKS_FROM_THRIFT,
+                &mut [row_counts(), zval_array(encoded), zval_array(orders)],
+            )?;
+
+            for (path, _, column) in missing {
+                let mut decoded = Vec::with_capacity(groups);
+
+                for group in 0..groups {
+                    decoded.push(call_method(
+                        &thrift,
+                        "chunk",
+                        &mut [zval_long(group as i64), column.shallow_clone()],
+                    )?);
+                }
+
+                let order = call_method(&thrift, "columnOrder", &mut [column.shallow_clone()])?;
+                self.chunks.insert(path.clone(), (decoded, order));
+            }
         }
 
-        let mut chunks = ZendHashTable::with_capacity(paths.len() as u32);
-        let mut orders = ZendHashTable::with_capacity(paths.len() as u32);
+        let mut chunks = ZendHashTable::with_capacity(requested.len() as u32);
+        let mut orders = ZendHashTable::with_capacity(requested.len() as u32);
 
-        for (position, (path, ranges)) in paths.iter().zip(spans.chunks).enumerate() {
-            let mut list = ZendHashTable::with_capacity(ranges.len() as u32);
+        for (path, _, _) in &requested {
+            let (decoded, order) = &self.chunks[path];
+            let mut list = ZendHashTable::with_capacity(decoded.len() as u32);
 
-            for (group, range) in ranges.into_iter().enumerate() {
-                ht_insert_long(&mut list, group as i64, zval_str(&bytes[range]));
+            for (group, chunk) in decoded.iter().enumerate() {
+                ht_insert_long(&mut list, group as i64, chunk.shallow_clone());
             }
 
             ht_insert(&mut chunks, path.as_bytes(), zval_array(list));
-            ht_insert(
-                &mut orders,
-                path.as_bytes(),
-                spans
-                    .orders
-                    .as_ref()
-                    .map_or_else(Zval::new, |orders| zval_str(&bytes[orders[position].clone()])),
-            );
+            ht_insert(&mut orders, path.as_bytes(), order.shallow_clone());
         }
 
         Ok(RowGroupChunksObject(call_static(
-            ROW_GROUP_CHUNKS_FROM_THRIFT,
-            &mut [zval_array(row_counts), zval_array(chunks), zval_array(orders)],
+            ROW_GROUP_CHUNKS_DECODED,
+            &mut [row_counts(), zval_array(chunks), zval_array(orders)],
         )?))
     }
 

@@ -54,7 +54,7 @@ final class SelectedPagesTest extends TestCase
         static::assertSame(
             [2 => [[2, 3], 1], 4 => [[4, 5], 1]],
             array_map(static fn(array $page): array => [
-                iterator_to_array($page[0]->rawValues(), false),
+                $page[0]->rawValues(),
                 $page[1]->rowCount(),
             ], $pages),
         );
@@ -77,7 +77,7 @@ final class SelectedPagesTest extends TestCase
         static::assertSame(
             [[3], [4]],
             array_map(
-                static fn(ReadFlatColumnValues $page): array => iterator_to_array($page->rawValues(), false),
+                static fn(ReadFlatColumnValues $page): array => $page->rawValues(),
                 iterator_to_array((new SelectedPages(
                     new ColumnChunkReader(new PageReader(ByteOrder::LITTLE_ENDIAN, new Options()), new Options()),
                 ))->trimmed(
@@ -108,7 +108,7 @@ final class SelectedPagesTest extends TestCase
         static::assertSame(
             [[50], [6]],
             array_map(
-                static fn(ReadFlatColumnValues $page): array => iterator_to_array($page->rawValues(), false),
+                static fn(ReadFlatColumnValues $page): array => $page->rawValues(),
                 iterator_to_array((new SelectedPages(
                     new ColumnChunkReader(new PageReader(ByteOrder::LITTLE_ENDIAN, new Options()), new Options()),
                 ))->trimmed(
@@ -118,7 +118,7 @@ final class SelectedPagesTest extends TestCase
                     $stream,
                     RowSelection::window(12, 5, 2),
                     $indexes,
-                    ['pages' => [4 => ['values' => [40, 50], 'definitionLevels' => [1, 1]]], 'dictionary' => null],
+                    ['pages' => [4 => new ReadFlatColumnValues($id, [40, 50], [0, 0], [1, 1])], 'dictionary' => null],
                 ), false),
             ),
         );
@@ -147,7 +147,15 @@ final class SelectedPagesTest extends TestCase
             $stream,
             RowSelection::window(12, 2, 2),
             new StreamIndexes($footer, new MemorySourceStream($bytes)),
-            ['pages' => [2 => ['values' => ['a', 'b'], 'definitionLevels' => [1, 1]]], 'dictionary' => null],
+            [
+                'pages' => [2 => new ReadFlatColumnValues(
+                    $footer->metadata()->schema()->getFlat('word'),
+                    ['a', 'b'],
+                    [0, 0],
+                    [1, 1],
+                )],
+                'dictionary' => null,
+            ],
         );
 
         static::assertSame([2], array_keys(iterator_to_array($pages)));
@@ -166,7 +174,7 @@ final class SelectedPagesTest extends TestCase
         static::assertSame(
             [[40, 50], [60]],
             array_map(
-                static fn(ReadFlatColumnValues $page): array => iterator_to_array($page->rawValues(), false),
+                static fn(ReadFlatColumnValues $page): array => $page->rawValues(),
                 iterator_to_array((new SelectedPages(
                     new ColumnChunkReader(new PageReader(ByteOrder::LITTLE_ENDIAN, new Options()), new Options()),
                 ))->trimmed(
@@ -178,8 +186,8 @@ final class SelectedPagesTest extends TestCase
                     new InMemoryIndexes(),
                     [
                         'pages' => [
-                            4 => ['values' => [40, 50], 'definitionLevels' => [1, 1]],
-                            6 => ['values' => [60, 70], 'definitionLevels' => [1, 1]],
+                            4 => new ReadFlatColumnValues($metadata->schema()->getFlat('id'), [40, 50], [0, 0], [1, 1]),
+                            6 => new ReadFlatColumnValues($metadata->schema()->getFlat('id'), [60, 70], [0, 0], [1, 1]),
                         ],
                         'dictionary' => null,
                     ],

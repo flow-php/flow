@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Double;
 
 use ArrayObject;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Optimizer\Rule;
-use Flow\ETL\Plan\LogicalPlan;
+use Flow\ETL\Planning\Logical\LogicalPlan;
+use Flow\ETL\Planning\Optimizer\Rule;
+use Flow\ETL\Values\Column\Backend;
 
 /**
  * Records into a log shared between rules, so a test can read the order the planner applied them in.
@@ -22,7 +22,7 @@ final readonly class RecordingRule implements Rule
         private ArrayObject $log,
     ) {}
 
-    public function apply(LogicalPlan $plan, FlowContext $context): LogicalPlan
+    public function apply(LogicalPlan $plan, Backend $backend): LogicalPlan
     {
         $this->log[] = $this->name;
 

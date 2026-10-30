@@ -51,4 +51,29 @@ final class RustParquetEngineTest extends TestCase
             new Options(),
         );
     }
+
+    public function test_configuration_round_trips_the_options(): void
+    {
+        $engine = new RustParquetEngine(Options::default()->set(Option::INT_96_AS_DATETIME, false)->set(
+            Option::ARROW_WRITE_BATCH_SIZE,
+            7,
+        ));
+
+        static::assertSame(false, $engine->normalize()['options']['INT_96_AS_DATETIME']);
+        static::assertSame(7, $engine->normalize()['options']['ARROW_WRITE_BATCH_SIZE']);
+        static::assertSame($engine->normalize(), RustParquetEngine::fromArray($engine->normalize())->normalize());
+    }
+
+    public function test_a_default_engine_describes_the_default_options(): void
+    {
+        static::assertSame(Options::default()->normalize(), (new RustParquetEngine())->normalize()['options']);
+    }
+
+    public function test_a_configuration_without_options_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Parquet engine configuration must hold an "options" array');
+
+        RustParquetEngine::fromArray([]);
+    }
 }

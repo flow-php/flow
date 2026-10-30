@@ -39,7 +39,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
                 ['id' => 1, 'name' => 'Name One'],
                 ['id' => 2, 'name' => 'Name Two'],
             ]))
-            ->load(to_dbal_table_insert($this->sqliteConnectionParams(), $table))
+            ->write(to_dbal_table_insert($this->sqliteConnectionParams(), $table))
             ->run();
 
         static::assertEquals(2, $this->sqliteDatabaseContext->tableCount($table));
@@ -49,7 +49,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
                 ['id' => 3],
                 ['id' => 4],
             ]))
-            ->load(to_dbal_table_delete($this->sqliteConnectionParams(), $table))
+            ->write(to_dbal_table_delete($this->sqliteConnectionParams(), $table))
             ->run();
 
         static::assertEquals(2, $this->sqliteDatabaseContext->tableCount($table));
@@ -80,7 +80,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
                 ['id' => 2, 'name' => 'Name Two'],
                 ['id' => 3, 'name' => 'Name Three'],
             ]))
-            ->load(to_dbal_table_insert($this->sqliteDatabaseContext->connection(), $table))
+            ->write(to_dbal_table_insert($this->sqliteDatabaseContext->connection(), $table))
             ->run();
 
         static::assertEquals(3, $this->sqliteDatabaseContext->tableCount($table));
@@ -89,7 +89,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
             ->read(from_array([
                 ['id' => 2],
             ]))
-            ->load(to_dbal_table_delete($this->sqliteDatabaseContext->connection(), $table))
+            ->write(to_dbal_table_delete($this->sqliteDatabaseContext->connection(), $table))
             ->run();
 
         static::assertEquals(2, $this->sqliteDatabaseContext->tableCount($table));
@@ -124,7 +124,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
                 ['id' => 1, 'group_id' => 2, 'name' => 'Group 2 - Item 1'],
                 ['id' => 2, 'group_id' => 2, 'name' => 'Group 2 - Item 2'],
             ]))
-            ->load(to_dbal_table_insert($this->sqliteConnectionParams(), $table))
+            ->write(to_dbal_table_insert($this->sqliteConnectionParams(), $table))
             ->run();
 
         static::assertEquals(4, $this->sqliteDatabaseContext->tableCount($table));
@@ -134,7 +134,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
                 ['id' => 1, 'group_id' => 2],
                 ['id' => 2, 'group_id' => 1],
             ]))
-            ->load(to_dbal_table_delete($this->sqliteConnectionParams(), $table))
+            ->write(to_dbal_table_delete($this->sqliteConnectionParams(), $table))
             ->run();
 
         static::assertEquals(2, $this->sqliteDatabaseContext->tableCount($table));
@@ -167,7 +167,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
                 ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
                 ['id' => 4, 'name' => 'Name Four', 'description' => 'Description Four'],
             ]))
-            ->load(to_dbal_table_insert($this->sqliteConnectionParams(), $table))
+            ->write(to_dbal_table_insert($this->sqliteConnectionParams(), $table))
             ->run();
 
         static::assertEquals(4, $this->sqliteDatabaseContext->tableCount($table));
@@ -177,7 +177,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
                 ['id' => 2],
                 ['id' => 4],
             ]))
-            ->load(to_dbal_table_delete($this->sqliteConnectionParams(), $table))
+            ->write(to_dbal_table_delete($this->sqliteConnectionParams(), $table))
             ->run();
 
         static::assertEquals(2, $this->sqliteDatabaseContext->tableCount($table));
@@ -213,7 +213,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
             ]))
             ->collect()
             ->filter(ref('id')->equals(0))
-            ->load($loader)
+            ->write($loader)
             ->run();
 
         static::assertEquals(0, $this->sqliteDatabaseContext->tableCount($table));
@@ -240,7 +240,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
                 ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
             ]))
-            ->load($loader)
+            ->write($loader)
             ->run();
 
         static::assertEquals(3, $this->sqliteDatabaseContext->tableCount($table));
@@ -267,7 +267,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
                 ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
             ]))
-            ->load($loader)
+            ->write($loader)
             ->run();
 
         static::assertEquals(3, $this->sqliteDatabaseContext->tableCount($table));
@@ -293,7 +293,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
                 ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
             ]))
-            ->load(to_dbal_table_insert($this->sqliteConnectionParams(), $table))
+            ->write(to_dbal_table_insert($this->sqliteConnectionParams(), $table))
             ->run();
 
         static::assertEquals(3, $this->sqliteDatabaseContext->tableCount($table));
@@ -317,7 +317,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
                 ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
             ]))
-            ->load(to_dbal_table_insert($this->sqliteConnectionParams(), $table))
+            ->write(to_dbal_table_insert($this->sqliteConnectionParams(), $table))
             ->run();
 
         data_frame()
@@ -326,7 +326,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
                 ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three'],
                 ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Three'],
             ]))
-            ->load(to_dbal_table_insert(
+            ->write(to_dbal_table_insert(
                 $this->sqliteConnectionParams(),
                 $table,
                 SqliteInsertOptions::new()->skipConflicts(),
@@ -364,16 +364,16 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
                 ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
             ]))
-            ->load(to_dbal_table_insert($this->sqliteConnectionParams(), $table))
+            ->write(to_dbal_table_insert($this->sqliteConnectionParams(), $table))
             ->run();
 
         data_frame()
-            ->extract(from_array([
+            ->read(from_array([
                 ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two'],
                 ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three'],
                 ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Three'],
             ]))
-            ->load(to_dbal_table_update($this->sqliteConnectionParams(), $table))
+            ->write(to_dbal_table_update($this->sqliteConnectionParams(), $table))
             ->run();
 
         static::assertEquals(4, $this->sqliteDatabaseContext->tableCount($table));
@@ -418,7 +418,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
                 ['id' => 2, 'name' => 'Name Two', 'description' => $documentB->getElementsByTagName('xml')[0]],
                 ['id' => 3, 'name' => 'Name Three', 'description' => $documentC->getElementsByTagName('xml')[0]],
             ]))
-            ->load($loader)
+            ->write($loader)
             ->run();
 
         static::assertEquals(3, $this->sqliteDatabaseContext->tableCount($table));
@@ -462,7 +462,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
                 ['id' => 2, 'name' => 'Name Two', 'description' => $documentB],
                 ['id' => 3, 'name' => 'Name Three', 'description' => $documentC],
             ]))
-            ->load($loader)
+            ->write($loader)
             ->run();
 
         static::assertEquals(3, $this->sqliteDatabaseContext->tableCount($table));
@@ -493,12 +493,12 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
         $updateLoader = to_dbal_table_update($this->sqliteConnectionParams(), $table);
 
         data_frame()
-            ->extract(from_array([
+            ->read(from_array([
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
                 ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
             ]))
-            ->load($insertLoader)
+            ->write($insertLoader)
             ->run();
 
         data_frame()
@@ -507,7 +507,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
                 ['id' => 3, 'name' => 'Changed Name Three', 'description' => 'Description Three'],
             ]))
-            ->load($updateLoader)
+            ->write($updateLoader)
             ->run();
 
         static::assertSame(

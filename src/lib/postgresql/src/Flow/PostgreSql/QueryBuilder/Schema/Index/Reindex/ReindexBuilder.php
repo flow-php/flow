@@ -10,13 +10,11 @@ use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\Protobuf\AST\ReindexObjectType;
 use Flow\PostgreSql\Protobuf\AST\ReindexStmt;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class ReindexBuilder implements ReindexFinalStep
 {
-    use AstToSql;
-
     private function __construct(
         private int $kind,
         private string $name,
@@ -58,6 +56,11 @@ final readonly class ReindexBuilder implements ReindexFinalStep
     public function tablespace(string $tablespace): ReindexFinalStep
     {
         return new self($this->kind, $this->name, $this->concurrent, $tablespace, $this->verbose);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): ReindexStmt

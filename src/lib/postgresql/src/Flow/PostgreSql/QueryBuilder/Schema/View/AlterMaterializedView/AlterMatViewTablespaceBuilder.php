@@ -11,12 +11,10 @@ use Flow\PostgreSql\Protobuf\AST\DropBehavior;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 final readonly class AlterMatViewTablespaceBuilder implements AlterMatViewTablespaceFinalStep
 {
-    use AstToSql;
-
     private function __construct(
         private string $view,
         private ?string $schema,
@@ -27,6 +25,11 @@ final readonly class AlterMatViewTablespaceBuilder implements AlterMatViewTables
     public static function create(string $view, ?string $schema, string $tablespace, bool $ifExists): self
     {
         return new self($view, $schema, $tablespace, $ifExists);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): AlterTableStmt

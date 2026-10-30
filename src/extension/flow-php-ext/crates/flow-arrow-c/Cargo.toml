@@ -1,0 +1,11 @@
+[package]
+name = "flow-arrow-c"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+
+[dependencies]
+arrow-array.workspace = true
+arrow-schema.workspace = true

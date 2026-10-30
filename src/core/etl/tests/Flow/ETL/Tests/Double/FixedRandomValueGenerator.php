@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\RandomValueGenerator;
+use Flow\ETL\Foundation\RandomValueGenerator;
 
 final readonly class FixedRandomValueGenerator implements RandomValueGenerator
 {

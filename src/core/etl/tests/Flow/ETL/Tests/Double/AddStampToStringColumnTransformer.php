@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\BoundStep;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Rows;
-use Flow\ETL\Schema;
-use Flow\ETL\Transformer;
+use Flow\ETL\Foundation\Describe\Description;
+use Flow\ETL\Foundation\Describe\Rebuild;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Operators\BoundStep;
+use Flow\ETL\Operators\Transformer;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Schema;
+use SensitiveParameter;
 
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\Types\DSL\type_string;
@@ -27,12 +31,22 @@ final readonly class AddStampToStringColumnTransformer implements Transformer
         return new BoundStep($this, $input);
     }
 
+    public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
+    {
+        throw InvalidArgumentException::because('%s holds live state and is never described', self::class);
+    }
+
+    public function describe(): ?Description
+    {
+        return null;
+    }
+
     public static function divideBySemicolon(string $columnName, string $stamp): self
     {
         return new self($columnName, $stamp, ':');
     }
 
-    public function transform(Rows $rows, FlowContext $context): Rows
+    public function transform(Rows $rows, Backend $backend): Rows
     {
         $stamped = [];
 

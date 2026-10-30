@@ -12,7 +12,7 @@ use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\Protobuf\AST\ResTarget;
 use Flow\PostgreSql\Protobuf\AST\ReturningClause;
 use Flow\PostgreSql\Protobuf\AST\SelectStmt;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\Clause\ConflictTarget;
 use Flow\PostgreSql\QueryBuilder\Clause\OnConflictClause;
 use Flow\PostgreSql\QueryBuilder\Clause\WithClause;
@@ -30,8 +30,6 @@ use function count;
 
 final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateStep, InsertIntoStep
 {
-    use AstToSql;
-
     /**
      * @param list<string> $columns
      * @param list<list<Expression>> $valuesList
@@ -136,8 +134,6 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
                         $defaultValues = true;
                     } else {
                         $selectQuery = new readonly class($selectStmt) implements SelectFinalStep {
-                            use AstToSql;
-
                             public function __construct(
                                 private SelectStmt $stmt,
                             ) {}
@@ -151,6 +147,11 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
                                 }
 
                                 return new self($selectStmt);
+                            }
+
+                            public function toSql(): string
+                            {
+                                return (new AstDeparser())->deparse($this->toAst());
                             }
 
                             public function toAst(): SelectStmt
@@ -373,6 +374,11 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
             $this->returning,
             $this->returningAll,
         );
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): InsertStmt

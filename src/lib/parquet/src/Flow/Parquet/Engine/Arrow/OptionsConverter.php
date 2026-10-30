@@ -19,16 +19,11 @@ final class OptionsConverter
     /**
      * The options the arrow engine itself reads, which Rust cannot read off the Option enum.
      *
-     * @return array{INT_96_AS_DATETIME: bool, ARROW_WRITE_BATCH_SIZE: int}
+     * @return array{INT_96_AS_DATETIME: bool}
      */
     public static function toEngine(?Options $options): array
     {
-        $options ??= new Options();
-
-        return [
-            'INT_96_AS_DATETIME' => $options->getBool(Option::INT_96_AS_DATETIME),
-            'ARROW_WRITE_BATCH_SIZE' => $options->getInt(Option::ARROW_WRITE_BATCH_SIZE),
-        ];
+        return ['INT_96_AS_DATETIME' => ($options ?? new Options())->getBool(Option::INT_96_AS_DATETIME)];
     }
 
     // called by name from arrow-ext RustParquetEngine::openForWrite(), pinned by phpts 047, 052
@@ -39,29 +34,28 @@ final class OptionsConverter
     {
         $result = [];
 
-        $mappings = [
-            [Option::GZIP_COMPRESSION_LEVEL,       'GZIP_COMPRESSION_LEVEL'],
-            [Option::BROTLI_COMPRESSION_LEVEL,     'BROTLI_COMPRESSION_LEVEL'],
-            [Option::ZSTD_COMPRESSION_LEVEL,       'ZSTD_COMPRESSION_LEVEL'],
-            [Option::ROW_GROUP_SIZE_BYTES,         'ROW_GROUP_SIZE_BYTES'],
-            [Option::PAGE_SIZE_BYTES,              'PAGE_SIZE_BYTES'],
-            [Option::PAGE_MAXIMUM_ROWS_COUNT,      'PAGE_MAXIMUM_ROWS_COUNT'],
-            [Option::DICTIONARY_ENABLED,           'DICTIONARY_ENABLED'],
-            [Option::DICTIONARY_PAGE_SIZE,         'DICTIONARY_PAGE_SIZE'],
-            [Option::WRITER_VERSION,               'WRITER_VERSION'],
-            [Option::STATISTICS_TRUNCATE_LENGTH,   'STATISTICS_TRUNCATE_LENGTH'],
-            [Option::COLUMN_INDEX_TRUNCATE_LENGTH, 'COLUMN_INDEX_TRUNCATE_LENGTH'],
-            [Option::PAGE_HEADER_STATISTICS,       'PAGE_HEADER_STATISTICS'],
-        ];
-
-        foreach ($mappings as [$option, $extensionKey]) {
+        foreach ([
+            Option::GZIP_COMPRESSION_LEVEL,
+            Option::BROTLI_COMPRESSION_LEVEL,
+            Option::ZSTD_COMPRESSION_LEVEL,
+            Option::ROW_GROUP_SIZE_BYTES,
+            Option::PAGE_SIZE_BYTES,
+            Option::PAGE_MAXIMUM_ROWS_COUNT,
+            Option::DICTIONARY_ENABLED,
+            Option::DICTIONARY_PAGE_SIZE,
+            Option::WRITER_VERSION,
+            Option::STATISTICS_TRUNCATE_LENGTH,
+            Option::COLUMN_INDEX_TRUNCATE_LENGTH,
+            Option::PAGE_HEADER_STATISTICS,
+        ] as $option) {
             $value = $options->get($option);
 
             if ($value !== null) {
-                $result[$extensionKey] = $value;
+                $result[$option->name] = $value;
             }
         }
 
+        $result['ARROW_WRITE_BATCH_SIZE'] = $options->getInt(Option::ARROW_WRITE_BATCH_SIZE);
         $result['STATISTICS_LEVEL'] = $options->getEnum(Option::STATISTICS_LEVEL, StatisticsLevel::class)->name;
 
         $columnsCompressions = $options->getArray(Option::COLUMNS_COMPRESSIONS);

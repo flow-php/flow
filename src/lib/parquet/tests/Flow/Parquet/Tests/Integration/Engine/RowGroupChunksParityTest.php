@@ -74,4 +74,16 @@ final class RowGroupChunksParityTest extends TestCase
             static::assertNull((new RowGroupZoneMaps($chunks, 0))->zone($column)?->max);
         }
     }
+
+    public function test_each_column_chunk_is_decoded_once_per_footer(): void
+    {
+        $bytes = FilterRows::bytes('row_groups_php');
+        $columns = array_values(MemoryParquetFile::read(Reader::php(), $bytes)->schema()->columnsFlat());
+        $footer = (new RustParquetFileReader(new MemorySourceStream($bytes)))->footer();
+
+        static::assertSame(
+            $footer->rowGroupChunks($columns)->chunk(0, $columns[0]),
+            $footer->rowGroupChunks([$columns[0]])->chunk(0, $columns[0]),
+        );
+    }
 }

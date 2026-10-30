@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\AST\Nodes\Statement;
 
 use Flow\PostgreSql\AST\Nodes\Statement;
-use Flow\PostgreSql\AST\Nodes\StatementTrait;
 use Flow\PostgreSql\Protobuf\AST\ConstraintsSetStmt;
 use Flow\PostgreSql\Protobuf\AST\VariableSetStmt;
 
@@ -17,8 +16,6 @@ use Flow\PostgreSql\Protobuf\AST\VariableSetStmt;
  */
 final readonly class SetStatement implements Statement
 {
-    use StatementTrait;
-
     public function __construct(
         private VariableSetStmt|ConstraintsSetStmt $stmt,
     ) {}

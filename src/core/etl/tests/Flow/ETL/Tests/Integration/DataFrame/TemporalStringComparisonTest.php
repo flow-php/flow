@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use DateTimeImmutable;
-use Flow\ETL\Exception\EvaluationException;
-use Flow\ETL\Function\Between\Boundary;
+use Flow\ETL\Foundation\Exception\EvaluationException;
+use Flow\ETL\Functions\Between\Boundary;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 use function Flow\ETL\DSL\datetime_schema;

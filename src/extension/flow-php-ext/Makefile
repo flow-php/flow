@@ -24,15 +24,19 @@ LOAD_ARROW := $(if $(ARROW_SO),-d extension=$(realpath $(ARROW_SO)),)
 
 all: build
 
+# `make test` builds with arrow-validate (arrow-data re-validates every array built with build_unchecked); `make build` alone is the release layout
+CARGO_FEATURES ?=
+
 # Build extension via cargo
 build:
 	@echo "Building flow_php extension (Rust)..."
-	cargo build --release
+	cargo build --release $(CARGO_FEATURES)
 	@mkdir -p $(MODULE_DIR)
 	@cp $(CARGO_OUTPUT) $(EXTENSION_SO)
 	@echo "Extension built: $(EXTENSION_SO)"
 
 # Run PHPT tests
+test: CARGO_FEATURES := --features arrow-validate
 test: build
 	@echo "Running PHPT tests..."
 	@failed=0; total=0; passed=0; skipped=0; \

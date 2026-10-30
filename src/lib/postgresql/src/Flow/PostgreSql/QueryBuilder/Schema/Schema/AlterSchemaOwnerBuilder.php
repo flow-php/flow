@@ -10,12 +10,10 @@ use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\RoleSpec;
 use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 final readonly class AlterSchemaOwnerBuilder implements AlterSchemaOwnerFinalStep
 {
-    use AstToSql;
-
     private function __construct(
         private string $name,
         private string $owner,
@@ -24,6 +22,11 @@ final readonly class AlterSchemaOwnerBuilder implements AlterSchemaOwnerFinalSte
     public static function create(string $name, string $owner): self
     {
         return new self($name, $owner);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): AlterOwnerStmt

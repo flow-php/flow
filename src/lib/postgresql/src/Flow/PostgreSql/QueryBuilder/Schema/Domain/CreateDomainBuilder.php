@@ -10,7 +10,7 @@ use Flow\PostgreSql\Protobuf\AST\ConstrType;
 use Flow\PostgreSql\Protobuf\AST\CreateDomainStmt;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\PBString;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
@@ -18,8 +18,6 @@ use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 
 final readonly class CreateDomainBuilder implements CreateDomainOptionsStep, CreateDomainTypeStep
 {
-    use AstToSql;
-
     /**
      * @param list<Constraint> $constraints
      */
@@ -135,6 +133,11 @@ final readonly class CreateDomainBuilder implements CreateDomainOptionsStep, Cre
             $newConstraints,
             $this->currentConstraintName,
         );
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): CreateDomainStmt

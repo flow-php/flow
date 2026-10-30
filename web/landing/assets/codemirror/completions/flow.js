@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP Flow Methods
  *
- * Flow methods: 5
+ * Flow methods: 3
  * Flow-returning functions: 2
  *
  * This completer triggers after Flow-returning functions: df()->, data_frame()->
@@ -31,36 +31,6 @@ const flowMethods = [
         apply: snippet("setUp(" + "$" + "{" + "1:config" + "}" + ")"),
         boost: 10
     },                {
-        label: "extract",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\Flow",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">extract</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Extractor</span> <span class=\"fn-param\">$extractor</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataFrame</span>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("extract(" + "$" + "{" + "1:extractor" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "from",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\Flow",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Extractor</span> <span class=\"fn-param\">$extractor</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataFrame</span>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("from(" + "$" + "{" + "1:extractor" + "}" + ")"),
-        boost: 10
-    },                {
         label: "process",
         type: "method",
         detail: "Flow\\\\ETL\\\\Flow",
@@ -84,9 +54,6 @@ const flowMethods = [
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
                     <span class=\"fn-name\">read</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Extractor</span> <span class=\"fn-param\">$extractor</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataFrame</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Alias for Flow::extract function.
                 </div>
                             `
             return div

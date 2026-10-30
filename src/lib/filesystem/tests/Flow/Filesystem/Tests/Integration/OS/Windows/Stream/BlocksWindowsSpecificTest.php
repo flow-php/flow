@@ -7,7 +7,7 @@ namespace Flow\Filesystem\Tests\Integration\OS\Windows\Stream;
 use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\SizeUnits;
 use Flow\Filesystem\Stream\Blocks;
-use Flow\Filesystem\Tests\OperatingSystem;
+use Flow\Filesystem\Tests\Context\OperatingSystem;
 use PHPUnit\Framework\TestCase;
 use Throwable;
 
@@ -29,13 +29,11 @@ use function unlink;
  */
 final class BlocksWindowsSpecificTest extends TestCase
 {
-    use OperatingSystem;
-
     protected function setUp(): void
     {
         parent::setUp();
 
-        if ($this->isUnix()) {
+        if (OperatingSystem::isUnix()) {
             self::markTestSkipped('Windows-specific stream tests should only run on Windows');
         }
     }

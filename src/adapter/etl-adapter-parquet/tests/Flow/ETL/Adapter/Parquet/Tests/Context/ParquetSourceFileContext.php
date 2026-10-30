@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Context;
 
-use Flow\ETL\Adapter\Parquet\ParquetSourceFile;
-use Flow\ETL\Adapter\Parquet\SchemaConverter;
-use Flow\ETL\Extractor\File\SourceFile;
+use Flow\ETL\Adapter\Parquet\IO\Extractor\ParquetSourceFile;
+use Flow\ETL\Adapter\Parquet\Values\Schema\SchemaConverter;
+use Flow\ETL\Foundation\FlowPhpExtension;
+use Flow\ETL\IO\Extractor\File\SourceFile;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
 use Flow\Parquet\Engine\PhpParquetEngine;
@@ -14,13 +15,19 @@ use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile;
 
+use function dirname;
 use function Flow\Filesystem\DSL\path;
 
 final class ParquetSourceFileContext
 {
     public static function fixture(): Path
     {
-        return path(__DIR__ . '/../Integration/Fixtures/Pagination/partitioned/date=2024-01-01/01_1000.parquet');
+        return path(self::pagination() . '/partitioned/date=2024-01-01/01_1000.parquet');
+    }
+
+    public static function pagination(): string
+    {
+        return dirname(__DIR__) . '/Fixtures/Pagination';
     }
 
     /**
@@ -30,6 +37,7 @@ final class ParquetSourceFileContext
         Filesystem $filesystem,
         array $columns = [],
         ParquetEngine $engine = new PhpParquetEngine(),
+        ?FlowPhpExtension $extension = null,
     ): ParquetSourceFile {
         $stream = $filesystem->readFrom(self::fixture());
 
@@ -38,6 +46,7 @@ final class ParquetSourceFileContext
             new SourceFile(self::fixture()),
             new SchemaConverter(),
             $columns,
+            $extension,
         );
     }
 }

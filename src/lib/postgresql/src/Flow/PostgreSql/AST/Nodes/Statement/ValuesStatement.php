@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\AST\Nodes\Statement;
 
 use Flow\PostgreSql\AST\Nodes\Statement;
-use Flow\PostgreSql\AST\Nodes\StatementTrait;
 use Flow\PostgreSql\Protobuf\AST\SelectStmt;
 
 /**
@@ -16,8 +15,6 @@ use Flow\PostgreSql\Protobuf\AST\SelectStmt;
  */
 final readonly class ValuesStatement implements Statement
 {
-    use StatementTrait;
-
     public function __construct(
         private SelectStmt $stmt,
     ) {}

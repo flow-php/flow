@@ -46,6 +46,21 @@ final class ObjectExtractorTest extends TestCase
     {
         static::assertSame('A', ObjectExtractor::shortName(new A()));
     }
+
+    public function test_a_namespaced_class_name_gives_its_short_name(): void
+    {
+        static::assertSame('ObjectExtractorTest', ObjectExtractor::shortName(self::class));
+    }
+
+    public function test_a_global_class_name_is_its_own_short_name(): void
+    {
+        static::assertSame('stdClass', ObjectExtractor::shortName(stdClass::class));
+    }
+
+    public function test_an_anonymous_class_name_gives_class_at_anonymous(): void
+    {
+        static::assertSame('class@anonymous', ObjectExtractor::shortName((new class {})::class));
+    }
 }
 
 class HTTPClient {}

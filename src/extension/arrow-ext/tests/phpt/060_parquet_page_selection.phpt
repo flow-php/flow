@@ -10,7 +10,7 @@ use Flow\Parquet\Engine\RustParquetEngine;
 use Flow\Parquet\Filter\Binding\BoundFilter;
 use Flow\Parquet\Options;
 use Flow\Parquet\Reader;
-use Flow\Parquet\Reader\ReadPlanner;
+use Flow\Parquet\Reader\ReadPlan;
 
 use function Flow\Parquet\DSL\parquet_column;
 
@@ -19,7 +19,7 @@ $columns = ['int32_column', 'int64_column', 'float_column'];
 
 foreach ([parquet_column('int64_column')->lessThan(300), parquet_column('float_column')->lessThan(400.0)] as $filter) {
     $php = Reader::php()->read($path);
-    $plan = (new ReadPlanner())->plan(
+    $plan = ReadPlan::forFilter(
         $php->reader()->footer(),
         $php->indexes(),
         BoundFilter::bind($filter, $php->schema(), new Options()),

@@ -8,12 +8,13 @@ use Flow\Bridge\Symfony\HttpFoundation\Output\CSVOutput;
 use Flow\Bridge\Symfony\HttpFoundation\Output\JsonOutput;
 use Flow\Bridge\Symfony\HttpFoundation\Output\ParquetOutput;
 use Flow\Bridge\Symfony\HttpFoundation\Output\XMLOutput;
-use Flow\ETL\Dataset\Report;
-use Flow\ETL\Extractor;
+use Flow\ETL\API\DataFrame;
+use Flow\ETL\IO\Extractor;
+use Flow\ETL\Runtime\Metrics\Report;
 
-function http_stream_open(Extractor $extractor): DataStream
+function http_stream_open(Extractor|DataFrame $source): DataStream
 {
-    return DataStream::open($extractor);
+    return DataStream::open($source);
 }
 
 function http_json_output(): JsonOutput

@@ -6,7 +6,6 @@ namespace Flow\PostgreSql\AST\Nodes\Statement;
 
 use Flow\PostgreSql\AST\Nodes\From;
 use Flow\PostgreSql\AST\Nodes\Statement;
-use Flow\PostgreSql\AST\Nodes\StatementTrait;
 use Flow\PostgreSql\Protobuf\AST\SelectStmt;
 use Flow\PostgreSql\Protobuf\AST\SetOperation;
 
@@ -19,8 +18,6 @@ use function iterator_to_array;
  */
 final readonly class SelectStatement implements Statement
 {
-    use StatementTrait;
-
     public function __construct(
         private SelectStmt $stmt,
     ) {}

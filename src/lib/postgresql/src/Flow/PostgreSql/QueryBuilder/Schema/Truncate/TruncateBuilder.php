@@ -8,15 +8,13 @@ use Flow\PostgreSql\Protobuf\AST\DropBehavior;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\Protobuf\AST\TruncateStmt;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 use function array_values;
 
 final readonly class TruncateBuilder implements TruncateFinalStep
 {
-    use AstToSql;
-
     /**
      * @param list<string> $tables
      */
@@ -49,6 +47,11 @@ final readonly class TruncateBuilder implements TruncateFinalStep
     public function restrict(): TruncateFinalStep
     {
         return new self($this->tables, $this->restartIdentity, DropBehavior::DROP_RESTRICT);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): TruncateStmt

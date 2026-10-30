@@ -4,25 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use Flow\ETL\ErrorHandler\IgnoreError;
-use Flow\ETL\Extractor\File\FileScan;
-use Flow\ETL\Memory\ArrayMemory;
-use Flow\ETL\Optimizer;
+use Flow\ETL\IO\Extractor\Criteria;
+use Flow\ETL\Operators\Transformer\AddRowIndex\StartFrom;
+use Flow\ETL\Operators\Transformer\AddRowIndexTransformer;
+use Flow\ETL\Planning\Optimizer\Optimizer;
+use Flow\ETL\Runtime\ErrorHandler\IgnoreError;
+use Flow\ETL\Storage\Memory\ArrayMemory;
 use Flow\ETL\Tests\Double\RecordingFileExtractor;
 use Flow\ETL\Tests\Double\ThrowingTransformer;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\PartitionedSourceMother;
-use Flow\ETL\Transformation\AddRowIndex\StartFrom;
-use Flow\ETL\Transformer\AddRowIndexTransformer;
 use RuntimeException;
 
 use function array_filter;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_all;
 use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\from_data_frame;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\lit;
@@ -32,55 +30,35 @@ use function Flow\ETL\DSL\to_memory;
 
 final class SinglePlanTest extends FlowTestCase
 {
-    public function test_a_sink_inside_a_joined_frame_writes_every_row_of_that_frame(): void
+    public function test_a_branch_inside_a_joined_frame_writes_every_row_of_that_frame(): void
     {
         $memory = new ArrayMemory();
         $right = df()->read(from_array([['id' => 1, 'n' => 'a'], ['id' => 2, 'n' => 'b']]))->write(to_memory($memory));
 
-        $rows = df()
-            ->read(from_array([['id' => 1]]))
-            ->join($right, join_on(['id' => 'id'], 'r_'))
-            ->fetch();
-
-        static::assertSame(1, $rows->count());
+        static::assertSame(
+            1,
+            df()
+                ->read(from_array([['id' => 1]]))
+                ->join($right, join_on(['id' => 'id'], 'r_'))
+                ->fetch()
+                ->count(),
+        );
         static::assertCount(2, $memory->dump());
     }
 
-    public function test_a_read_frame_wrapped_in_another_extractor_still_reads(): void
-    {
-        $a = df()->read(from_array([['id' => 1]]));
-        $b = df()->read(from_array([['id' => 2]]));
-
-        static::assertSame(
-            [['id' => 1], ['id' => 2]],
-            df()
-                ->read(from_all(from_data_frame($a), from_data_frame($b)))
-                ->fetch()
-                ->toArray(),
-        );
-    }
-
-    public function test_a_declared_schema_re_types_the_read_frames_rows(): void
-    {
-        $inner = df()->read(from_array([['id' => '1']]));
-
-        static::assertSame(
-            [['id' => 1]],
-            df()
-                ->read(from_data_frame($inner)->withSchema(schema(int_schema('id'))))
-                ->fetch()
-                ->toArray(),
-        );
-    }
-
-    public function test_a_sink_inside_a_read_frame_receives_every_row_under_an_outer_limit(): void
+    public function test_a_loader_before_a_limit_receives_every_row(): void
     {
         $memory = new ArrayMemory();
-        $inner = df()->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]))->write(to_memory($memory));
 
-        $rows = df()->read(from_data_frame($inner))->limit(1)->fetch();
-
-        static::assertSame(1, $rows->count());
+        static::assertSame(
+            1,
+            df()
+                ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]))
+                ->write(to_memory($memory))
+                ->limit(1)
+                ->fetch()
+                ->count(),
+        );
         static::assertCount(3, $memory->dump());
     }
 
@@ -97,15 +75,15 @@ final class SinglePlanTest extends FlowTestCase
             ->join($right, join_on(['id' => 'id'], 'r_'))
             ->fetch();
 
-        static::assertCount(1, $source->scans);
-        static::assertSame(1, $source->scans[0]->limit);
+        static::assertCount(1, $source->criteria);
+        static::assertSame(1, $source->criteria[0]->limit);
     }
 
     public function test_a_joined_frames_own_error_handler_is_ignored(): void
     {
         $right = df()
             ->read(from_array([['id' => 1]]))
-            ->transform(new ThrowingTransformer(new RuntimeException('right boom')))
+            ->with(new ThrowingTransformer(new RuntimeException('right boom')))
             ->onError(new IgnoreError());
 
         $this->expectException(RuntimeException::class);
@@ -121,7 +99,7 @@ final class SinglePlanTest extends FlowTestCase
     {
         $frame = df()
             ->read(from_array([['id' => 1], ['id' => 2]]))
-            ->transform(new AddRowIndexTransformer('index', StartFrom::ZERO));
+            ->with(new AddRowIndexTransformer('index', StartFrom::ZERO));
 
         static::assertSame(
             [
@@ -146,11 +124,12 @@ final class SinglePlanTest extends FlowTestCase
             ->crossJoin($joined, 'j_')
             ->fetch();
 
-        $accepts2024 = static fn(FileScan $scan): bool => $scan->pathFilter->accept(PartitionedSourceMother::file(
-            'year=2024/month=08',
-        ));
+        $accepts2024 =
+            static fn(Criteria $criteria): bool => $criteria->pathFilter->accept(PartitionedSourceMother::file(
+                'year=2024/month=08',
+            ));
 
-        static::assertCount(2, $source->scans);
-        static::assertCount(1, array_filter($source->scans, $accepts2024));
+        static::assertCount(2, $source->criteria);
+        static::assertCount(1, array_filter($source->criteria, $accepts2024));
     }
 }

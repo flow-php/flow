@@ -131,11 +131,11 @@ http_request_option_body('cursor', $psr17Factory);  // set a JSON body path, re-
 http_request_option_uri();                          // the token *is* the next URL, resolved relative to the base
 ```
 
-### Stop conditions - `http_stop_when_*`, composable with `->or()` / `->and()`
+### Stop conditions - `http_stop_when_*`, composed with `http_stop_when_any_of()` / `http_stop_when_all_of()`
 
 ```php
 // path_missing · empty_path · flag_false · flag_true · total_reached · max_pages · max_results
-stop_when: http_stop_when_flag_false('has_more')->or(http_stop_when_max_pages(1000));
+stop_when: http_stop_when_any_of(http_stop_when_flag_false('has_more'), http_stop_when_max_pages(1000));
 ```
 
 ## Extractor - PsrHttpClientStaticExtractor
@@ -195,7 +195,7 @@ receives the previous response and returns the next request, or `null` to stop.
 ```php
 <?php
 
-use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
+use Flow\ETL\Adapter\Http\IO\Extractor\NextRequestFactory;
 use Http\Client\Curl\Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Http\Message\{RequestInterface, ResponseInterface};

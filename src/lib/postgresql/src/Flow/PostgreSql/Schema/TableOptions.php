@@ -9,7 +9,7 @@ use Flow\PostgreSql\Schema\Constraint\ExcludeConstraint;
 use Flow\PostgreSql\Schema\Constraint\ForeignKey;
 
 /**
- * Table-level options the {@see \Flow\ETL\Adapter\PostgreSql\SchemaConverter} does not derive from a
+ * Table-level options the {@see \Flow\ETL\Adapter\PostgreSql\Values\Schema\SchemaConverter} does not derive from a
  * Flow Schema: storage options plus the schema-element collections that have no Flow-Schema equivalent.
  */
 final readonly class TableOptions

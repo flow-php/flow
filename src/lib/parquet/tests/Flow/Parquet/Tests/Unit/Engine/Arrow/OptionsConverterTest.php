@@ -18,23 +18,29 @@ final class OptionsConverterTest extends TestCase
 {
     public function test_engine_options_default_without_options(): void
     {
-        static::assertSame(
-            [
-                'INT_96_AS_DATETIME' => true,
-                'ARROW_WRITE_BATCH_SIZE' => (new Options())->getInt(Option::ARROW_WRITE_BATCH_SIZE),
-            ],
-            OptionsConverter::toEngine(null),
-        );
+        static::assertSame(['INT_96_AS_DATETIME' => true], OptionsConverter::toEngine(null));
     }
 
     public function test_engine_options_are_read_from_the_options(): void
     {
         static::assertSame(
-            ['INT_96_AS_DATETIME' => false, 'ARROW_WRITE_BATCH_SIZE' => 7],
-            OptionsConverter::toEngine((new Options())->set(Option::INT_96_AS_DATETIME, false)->set(
+            ['INT_96_AS_DATETIME' => false],
+            OptionsConverter::toEngine((new Options())->set(Option::INT_96_AS_DATETIME, false)),
+        );
+    }
+
+    public function test_arrow_write_batch_size_is_a_write_option(): void
+    {
+        static::assertSame(
+            7,
+            OptionsConverter::toExtension((new Options())->set(
                 Option::ARROW_WRITE_BATCH_SIZE,
                 7,
-            )),
+            ))['ARROW_WRITE_BATCH_SIZE'],
+        );
+        static::assertSame(
+            (new Options())->getInt(Option::ARROW_WRITE_BATCH_SIZE),
+            OptionsConverter::toExtension(new Options())['ARROW_WRITE_BATCH_SIZE'],
         );
     }
 

@@ -47,7 +47,7 @@ Every Flow pipeline has three stages:
 - **Extract** - `->read(...)` pulls rows from a source (file, API, database).
 - **Transform** - `->filter()`, `->withColumn()`, `->join()`, `->groupBy()`,
   `->window()`, and friends shape the rows.
-- **Load** - `->write(...)` streams the result into a sink; `->run()` executes
+- **Load** - `->write(...)` streams the result into a loader; `->run()` executes
   the whole thing.
 
 Data moves through the pipeline as **DataFrame → Rows** batches of columns. Every `Rows`
@@ -68,7 +68,7 @@ batch carries the schema that types its columns.
 - [DSL Reference](/documentation/dsl/core) - every function in the DSL, with
   signatures and examples.
 
-**Working with a specific source or sink**
+**Working with a specific source or destination**
 
 - Browse [Adapters](/documentation/components/adapters/csv) - CSV, JSON, XML,
   Parquet, Avro, Excel, HTTP, PostgreSQL, Doctrine, SEAL, ChartJS.

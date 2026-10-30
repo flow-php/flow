@@ -6,8 +6,8 @@ RustColumnBuilder::appendPhysicals() appends physicals as they are: nulls with o
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Column\RustBackend;
-use Flow\ETL\Exception\SchemaMismatchException;
+use Flow\ETL\Values\Column\RustBackend;
+use Flow\ETL\Foundation\Exception\SchemaMismatchException;
 
 use function Flow\ETL\DSL\int_schema;
 
@@ -38,5 +38,5 @@ try {
 [1,null,3,null] 2
 [1,null,3,null] 2
 0
-Flow\ETL\Exception\SchemaMismatchException row 1 kept 0
-Flow\ETL\Exception\InvalidArgumentException kept 0
+Flow\ETL\Foundation\Exception\SchemaMismatchException row 1 kept 0
+Flow\ETL\Foundation\Exception\InvalidArgumentException kept 0

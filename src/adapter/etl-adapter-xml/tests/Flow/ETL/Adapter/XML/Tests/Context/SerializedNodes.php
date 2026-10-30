@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\XML\Tests\Context;
 
 use DOMDocument;
-use Flow\ETL\Adapter\XML\XMLNodes;
+use Flow\ETL\Adapter\XML\IO\Extractor\XMLNodes;
 use Flow\Filesystem\Stream\StringSourceStream;
 
 use function array_map;

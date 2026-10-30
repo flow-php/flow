@@ -11,12 +11,10 @@ use Flow\PostgreSql\Protobuf\AST\DropBehavior;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 final readonly class AlterSequenceLoggingBuilder implements AlterSequenceLoggingFinalStep
 {
-    use AstToSql;
-
     private function __construct(
         private string $sequence,
         private ?string $schema,
@@ -32,6 +30,11 @@ final readonly class AlterSequenceLoggingBuilder implements AlterSequenceLogging
     public static function createUnlogged(string $sequence, ?string $schema, bool $ifExists): self
     {
         return new self($sequence, $schema, false, $ifExists);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): AlterTableStmt

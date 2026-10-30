@@ -7,6 +7,7 @@ use arrow_array::ArrayRef;
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendHashTable, Zval};
+use flow_column_text::value::{renders, Formats, Renderer};
 
 use crate::backend::native_column;
 use crate::column::RustColumn;
@@ -14,7 +15,7 @@ use crate::ctx::{call_method, ht_get, ht_insert, zval_str};
 use crate::exception::ext_exception;
 use crate::plan::{type_plan, TypePlan};
 use crate::render::invalid_argument;
-use crate::text::value::{renders, Formats, Renderer};
+use crate::text::PhpTransitions;
 
 pub struct Column {
     pub name: Vec<u8>,
@@ -144,7 +145,7 @@ pub fn renderer<'a>(plan: &'a TypePlan, data: &'a ArrayRef, formats: &'a Formats
     let mut renderer = Renderer::new(&plan.values, &plan.kind, data.as_ref(), formats)
         .ok_or_else(|| ext_exception(format!("flow_php cannot render a column stored as {:?}", plan.kind)))?;
 
-    renderer.resolve()?;
+    renderer.resolve(&PhpTransitions)?;
 
     Ok(renderer)
 }

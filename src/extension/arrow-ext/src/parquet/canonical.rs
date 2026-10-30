@@ -251,20 +251,6 @@ fn large_binary(array: &ArrayRef) -> Result<ArrayRef, Error> {
     )))
 }
 
-/// Binary or Utf8 as LargeBinary over the same value buffer: the offsets widened to i64.
-fn widened_binary(array: &ArrayRef) -> ArrayRef {
-    let data = array.to_data();
-    let offsets = &data.buffers()[0].typed_data::<i32>()[data.offset()..data.offset() + data.len() + 1];
-
-    Arc::new(LargeBinaryArray::new(
-        OffsetBuffer::new(ScalarBuffer::from(
-            offsets.iter().map(|offset| i64::from(*offset)).collect::<Vec<i64>>(),
-        )),
-        data.buffers()[1].clone(),
-        data.nulls().cloned(),
-    ))
-}
-
 /// Fixed-size values as LargeBinary over the same value buffer: offsets `n·i`.
 fn fixed_binary(array: &ArrayRef) -> ArrayRef {
     let fixed = array.as_fixed_size_binary();
@@ -295,7 +281,6 @@ fn cast(array: &ArrayRef) -> Result<ArrayRef, Error> {
         DataType::UInt32 => widened::<UInt32Type>(array),
         DataType::UInt64 => decimal_text(array),
         DataType::Float32 => Arc::new(array.as_primitive::<Float32Type>().unary::<_, Float64Type>(f64::from)),
-        DataType::Utf8 | DataType::Binary => widened_binary(array),
         DataType::LargeUtf8 | DataType::LargeBinary => retagged(array, DataType::LargeBinary),
         DataType::FixedSizeBinary(_) => fixed_binary(array),
         DataType::Timestamp(TimeUnit::Microsecond, _) => retagged(array, timestamp()),
@@ -639,7 +624,7 @@ fn utf8(array: &ArrayRef) -> Result<ArrayRef, Error> {
 mod tests {
     use std::sync::Arc;
 
-    use arrow_array::builder::{Int32Builder, ListBuilder, MapBuilder, StringBuilder};
+    use arrow_array::builder::{Int32Builder, LargeStringBuilder, ListBuilder, MapBuilder};
     use arrow_array::cast::AsArray;
     use arrow_array::types::{
         Date32Type, Decimal128Type, DurationMicrosecondType, Float32Type, Float64Type, Int64Type, Int8Type,
@@ -786,35 +771,32 @@ mod tests {
         );
     }
 
+    /// The reader hints every string and binary leaf to the large type, so those are the ones `cast` retags; a
+    /// `Utf8` or `Binary` array is one the hint missed and is refused.
     #[test]
-    fn strings_and_binaries_are_large_binary() {
+    fn large_strings_and_binaries_are_large_binary_and_the_i32_offset_types_are_refused() {
         let expected: Vec<Option<&[u8]>> = vec![Some(b"a"), None, Some(b"")];
 
         for array in [
-            Arc::new(StringArray::from(vec![Some("a"), None, Some("")])) as ArrayRef,
-            Arc::new(BinaryArray::from(expected.clone())),
-            Arc::new(LargeStringArray::from(vec![Some("a"), None, Some("")])),
+            Arc::new(LargeStringArray::from(vec![Some("a"), None, Some("")])) as ArrayRef,
             Arc::new(LargeBinaryArray::from(expected.clone())),
         ] {
             let canonical = read(array);
 
             assert_eq!(canonical.as_binary::<i64>().iter().collect::<Vec<_>>(), expected);
         }
+
+        for array in [
+            Arc::new(StringArray::from(vec![Some("a"), None, Some("")])) as ArrayRef,
+            Arc::new(BinaryArray::from(expected.clone())),
+        ] {
+            assert!(matches!(refusal(array), Error::Unsupported { .. }));
+        }
     }
 
     #[test]
     fn a_sliced_large_string_keeps_its_rows() {
         let array = LargeStringArray::from(vec!["skipped", "kept", "too"]).slice(1, 2);
-
-        assert_eq!(
-            read(Arc::new(array)).as_binary::<i64>().iter().collect::<Vec<_>>(),
-            vec![Some(&b"kept"[..]), Some(&b"too"[..])]
-        );
-    }
-
-    #[test]
-    fn a_sliced_string_is_widened_to_its_rows() {
-        let array = StringArray::from(vec!["skipped", "kept", "too"]).slice(1, 2);
 
         assert_eq!(
             read(Arc::new(array)).as_binary::<i64>().iter().collect::<Vec<_>>(),
@@ -965,7 +947,7 @@ mod tests {
 
     #[test]
     fn maps_are_renamed_to_the_kind_layout() {
-        let mut builder = MapBuilder::new(None, StringBuilder::new(), Int32Builder::new());
+        let mut builder = MapBuilder::new(None, LargeStringBuilder::new(), Int32Builder::new());
         builder.keys().append_value("a");
         builder.values().append_value(1);
         builder.append(true).unwrap();
@@ -985,8 +967,8 @@ mod tests {
                 Arc::new(Int32Array::from(vec![1, 2])) as ArrayRef,
             ),
             (
-                Arc::new(Field::new("name", DataType::Utf8, false)),
-                Arc::new(StringArray::from(vec!["a", "b"])) as ArrayRef,
+                Arc::new(Field::new("name", DataType::LargeUtf8, false)),
+                Arc::new(LargeStringArray::from(vec!["a", "b"])) as ArrayRef,
             ),
         ]);
         let canonical = read(Arc::new(array));
@@ -1398,7 +1380,7 @@ mod tests {
     #[test]
     fn to_parquet_renames_nested_children_to_the_target() {
         let map = read({
-            let mut builder = MapBuilder::new(None, StringBuilder::new(), Int32Builder::new());
+            let mut builder = MapBuilder::new(None, LargeStringBuilder::new(), Int32Builder::new());
             builder.keys().append_value("a");
             builder.values().append_value(1);
             builder.append(true).unwrap();

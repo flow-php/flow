@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use function Flow\ETL\DSL\{data_frame, from_array, join_on, to_output};
-use Flow\ETL\Join\Join;
+use Flow\ETL\Values\Join\JoinType;
 
 require __DIR__ . '/vendor/autoload.php';
 
@@ -25,7 +25,7 @@ data_frame()
     ->join(
         data_frame()->read(from_array($emails)),
         join_on(['id' => 'id'], join_prefix: 'joined_'),
-        Join::left
+        JoinType::left
     )
     ->collect()
     ->write(to_output(truncate: false))

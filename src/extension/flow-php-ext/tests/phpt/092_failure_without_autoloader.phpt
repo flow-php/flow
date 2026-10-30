@@ -5,8 +5,8 @@ without an autoloader flow_php fails with a plain Exception, never recursing on 
 --FILE--
 <?php
 foreach ([
-    static fn() => new Flow\ETL\Adapter\CSV\RustCSVOpenSource(new stdClass(), ',,', '"', '\\', true, true, true),
-    static fn() => new Flow\ETL\Column\RustColumn(),
+    static fn() => new Flow\ETL\Adapter\CSV\IO\Extractor\RustCSVOpenSource(new stdClass(), ',,', '"', '\\', true, true, true),
+    static fn() => new Flow\ETL\Values\Column\RustColumn(),
 ] as $fn) {
     try {
         $fn();
@@ -16,9 +16,9 @@ foreach ([
     }
 }
 
-var_dump(class_exists('Flow\ETL\Exception\RuntimeException', false));
+var_dump(class_exists('Flow\ETL\Foundation\Exception\RuntimeException', false));
 ?>
 --EXPECT--
 Exception: flow_php CSV separator must be exactly one byte
-Exception: Flow\ETL\Column\RustColumn is built by RustBackend
+Exception: Flow\ETL\Values\Column\RustColumn is built by RustBackend
 bool(false)

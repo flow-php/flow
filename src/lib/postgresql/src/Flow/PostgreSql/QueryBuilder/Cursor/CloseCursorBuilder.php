@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Cursor;
 
 use Flow\PostgreSql\Protobuf\AST\ClosePortalStmt;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 final readonly class CloseCursorBuilder implements CloseCursorFinalStep
 {
-    use AstToSql;
-
     private function __construct(
         private string $cursorName,
     ) {}
@@ -23,6 +21,11 @@ final readonly class CloseCursorBuilder implements CloseCursorFinalStep
     public static function closeAll(): CloseCursorFinalStep
     {
         return new self('');
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): ClosePortalStmt

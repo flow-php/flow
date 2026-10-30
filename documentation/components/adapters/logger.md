@@ -22,7 +22,7 @@ Logs each row as one record: the row's values are the log context. `TestLogger` 
 ```php
 <?php
 
-use Flow\ETL\Adapter\Logger\PsrLoggerLoader;
+use Flow\ETL\Adapter\Logger\IO\Loader\PsrLoggerLoader;
 use Psr\Log\LogLevel;
 use Psr\Log\Test\TestLogger;
 

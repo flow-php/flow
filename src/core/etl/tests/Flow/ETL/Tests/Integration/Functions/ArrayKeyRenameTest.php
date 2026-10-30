@@ -1,0 +1,38 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Tests\Integration\Functions;
+
+use Flow\ETL\Storage\Memory\ArrayMemory;
+use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\DSL\array_key_rename;
+use function Flow\ETL\DSL\data_frame;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\optional;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\to_memory;
+
+final class ArrayKeyRenameTest extends FlowTestCase
+{
+    public function test_array_key_rename(): void
+    {
+        data_frame()
+            ->read(from_array([
+                ['id' => 1, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]],
+                ['id' => 2],
+            ]))
+            ->withColumn('array', optional(array_key_rename(ref('array'), 'a', 'd')))
+            ->write(to_memory($memory = new ArrayMemory()))
+            ->run();
+
+        static::assertSame(
+            [
+                ['id' => 1, 'array' => ['b' => 2, 'c' => 3, 'd' => 1]],
+                ['id' => 2, 'array' => null],
+            ],
+            $memory->dump(),
+        );
+    }
+}

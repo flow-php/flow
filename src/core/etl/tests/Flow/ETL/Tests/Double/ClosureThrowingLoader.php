@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\FlowContext;
-use Flow\ETL\Loader;
-use Flow\ETL\Loader\Closure;
-use Flow\ETL\Loader\Discardable;
-use Flow\ETL\Rows;
+use Flow\ETL\Foundation\Describe\Description;
+use Flow\ETL\Foundation\Describe\Rebuild;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\IO\Loader;
+use Flow\ETL\IO\Loader\Closure;
+use Flow\ETL\IO\Loader\Discardable;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Rows;
+use SensitiveParameter;
 use Throwable;
 
 final class ClosureThrowingLoader implements Closure, Discardable, Loader
@@ -22,12 +26,22 @@ final class ClosureThrowingLoader implements Closure, Discardable, Loader
         private readonly ?Throwable $discardFailure = null,
     ) {}
 
-    public function closure(FlowContext $context): void
+    public function closure(): void
     {
         throw $this->throwable;
     }
 
-    public function discard(FlowContext $context): void
+    public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
+    {
+        throw InvalidArgumentException::because('%s holds live state and is never described', self::class);
+    }
+
+    public function describe(): ?Description
+    {
+        return null;
+    }
+
+    public function discard(): void
     {
         $this->discarded++;
 
@@ -36,7 +50,7 @@ final class ClosureThrowingLoader implements Closure, Discardable, Loader
         }
     }
 
-    public function load(Rows $rows, FlowContext $context): void
+    public function load(Rows $rows, Backend $backend): void
     {
         $this->loadsCount++;
     }

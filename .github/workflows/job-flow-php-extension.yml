@@ -51,7 +51,6 @@ jobs:
           key: php${{ matrix.php }}
           workspaces: |
             src/extension/flow-php-ext -> target
-            src/extension/flow-php-ext/crates/flow-batch-frame -> target
             src/extension/arrow-ext -> target
 
       - name: Build arrow extension
@@ -66,10 +65,15 @@ jobs:
         env: *rust-env
         run: make build
 
-      - name: Test flow-batch-frame crate
-        working-directory: src/extension/flow-php-ext/crates/flow-batch-frame
+      - name: Test flow_php workspace
+        working-directory: src/extension/flow-php-ext
         env: *rust-env
-        run: cargo test --locked
+        run: cargo test --workspace --locked --features arrow-validate
+
+      - name: Lint flow_php workspace
+        working-directory: src/extension/flow-php-ext
+        env: *rust-env
+        run: cargo fmt --all --check && cargo clippy --workspace --locked --all-targets -- -D warnings
 
       - name: Install Composer Dependencies
         uses: ./.github/actions/composer-install
@@ -84,7 +88,9 @@ jobs:
 
       - name: Install extension and verify
         working-directory: src/extension/flow-php-ext
+        env: *rust-env
         run: |
+          make build
           EXT_DIR=$(php -r 'echo ini_get("extension_dir");')
           sudo cp ext/modules/flow_php.so "$EXT_DIR/"
           echo "extension=flow_php.so" | sudo tee -a "$(php -r 'echo php_ini_loaded_file();')"

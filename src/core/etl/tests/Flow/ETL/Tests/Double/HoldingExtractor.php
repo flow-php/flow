@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Extractor;
-use Flow\ETL\Extractor\Signal;
-use Flow\ETL\Extractor\Statistics;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Rows;
-use Flow\ETL\Schema;
+use Flow\ETL\IO\Extractor;
+use Flow\ETL\IO\Extractor\Criteria;
+use Flow\ETL\IO\Extractor\Signal;
+use Flow\ETL\IO\Extractor\Statistics;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Schema;
 use Generator;
 
 /**
@@ -27,7 +28,7 @@ final class HoldingExtractor implements Extractor
         public readonly array $batches,
     ) {}
 
-    public function extract(FlowContext $context, ?int $limit = null): Generator
+    public function extract(Backend $backend, Criteria $criteria): Generator
     {
         foreach ($this->batches as $batch) {
             $this->backend->reported += $this->bytesPerBatch;
@@ -53,5 +54,10 @@ final class HoldingExtractor implements Extractor
     public function withSchema(Schema $schema): static
     {
         return $this;
+    }
+
+    public function isRepeatable(): bool
+    {
+        return false;
     }
 }

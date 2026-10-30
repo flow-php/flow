@@ -4,19 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Integration\OS\Unix;
 
-use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Filesystem\Path\UnixPath;
-use Flow\Filesystem\Tests\OperatingSystem;
+use Flow\Filesystem\Tests\Context\OperatingSystem;
+use PHPUnit\Framework\TestCase;
 
-final class PathTest extends FlowIntegrationTestCase
+final class PathTest extends TestCase
 {
-    use OperatingSystem;
-
     protected function setUp(): void
     {
-        parent::setUp();
-
-        if ($this->isWindows()) {
+        if (OperatingSystem::isWindows()) {
             self::markTestSkipped('Unix-specific filesystem tests should only run on Unix systems');
         }
     }

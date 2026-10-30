@@ -4,13 +4,27 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem;
 
+use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Generator;
+use SensitiveParameter;
 
 interface Filesystem
 {
+    /**
+     * @param array<array-key, mixed> $configuration untrusted: decoded from another process, validated here
+     *
+     * @throws InvalidArgumentException on a configuration this class cannot rebuild from
+     */
+    public static function fromArray(#[SensitiveParameter] array $configuration): static;
+
     public function appendTo(Path $path): DestinationStream;
+
+    /**
+     * @return null|array<string, mixed> null when this instance holds live state (a client, memory) and cannot be rebuilt
+     */
+    public function normalize(): ?array;
 
     public function getSystemTmpDir(): Path;
 

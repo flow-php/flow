@@ -16,6 +16,7 @@ runs:
       uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable
       with:
         toolchain: stable
+        components: clippy, rustfmt
 
     - name: "Install build dependencies (Ubuntu)"
       if: runner.os == 'Linux'

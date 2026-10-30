@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\CLI;
 
-use Flow\ETL\DataFrame;
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\InvalidFileFormatException;
+use Flow\ETL\API\DataFrame;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Exception\InvalidFileFormatException;
 use Flow\Filesystem\Path;
 
 final readonly class PipelineFactory

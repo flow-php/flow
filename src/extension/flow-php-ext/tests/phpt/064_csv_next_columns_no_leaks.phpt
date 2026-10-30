@@ -6,8 +6,8 @@ RustCSVOpenSource::batches() leaks neither PHP memory nor native allocations
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Adapter\CSV\RustCSVOpenSource;
-use Flow\ETL\Column\RustBackend;
+use Flow\ETL\Adapter\CSV\IO\Extractor\RustCSVOpenSource;
+use Flow\ETL\Values\Column\RustBackend;
 use Flow\Filesystem\Stream\MemorySourceStream;
 
 use function Flow\ETL\DSL\{datetime_schema, int_schema, schema, str_schema};
@@ -25,7 +25,7 @@ $cycle = static function () use ($raw, $schema, $refusing): void {
         }
 
         throw new LogicException('a refused cell was accepted');
-    } catch (Flow\ETL\Exception\SchemaMismatchException) {
+    } catch (Flow\ETL\Foundation\Exception\SchemaMismatchException) {
     }
 };
 

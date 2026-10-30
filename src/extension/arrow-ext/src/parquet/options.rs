@@ -36,9 +36,11 @@ pub fn properties(
         return Ok(WriterProperties::builder().set_compression(codec).build());
     }
 
-    Ok(apply_writer_options(WriterProperties::builder(), options, compression, leaves)
-        .map_err(Error::Options)?
-        .build())
+    Ok(
+        apply_writer_options(WriterProperties::builder(), options, compression, leaves)
+            .map_err(Error::Options)?
+            .build(),
+    )
 }
 
 fn parse_time_unit(entry_ht: &ZendHashTable, name: &str) -> Result<TimeUnit, String> {

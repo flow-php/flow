@@ -7,9 +7,9 @@ publish = false
 [lib]
 
 [dependencies]
-arrow-array = "59"
-arrow-buffer = "59"
-arrow-data = "59"
-arrow-schema = "59"
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+arrow-array.workspace = true
+arrow-buffer.workspace = true
+arrow-data.workspace = true
+arrow-schema.workspace = true
+serde.workspace = true
+serde_json.workspace = true

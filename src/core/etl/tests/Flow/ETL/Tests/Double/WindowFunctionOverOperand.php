@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Function\FunctionTree;
-use Flow\ETL\Function\ResolvesFromChildren;
-use Flow\ETL\Function\ScalarFunction;
-use Flow\ETL\Function\WindowFunction;
-use Flow\ETL\Window;
-use Flow\ETL\Window\WindowContext;
+use Flow\ETL\Foundation\Describe\Description;
+use Flow\ETL\Foundation\Describe\Rebuild;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Functions\FunctionTree;
+use Flow\ETL\Functions\ScalarFunction;
+use Flow\ETL\Functions\Window;
+use Flow\ETL\Functions\WindowFunction;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Rows;
 use Flow\Types\Type;
+use SensitiveParameter;
 
 use function Flow\Types\DSL\type_optional;
 
@@ -20,16 +24,27 @@ use function Flow\Types\DSL\type_optional;
  */
 final class WindowFunctionOverOperand implements WindowFunction
 {
-    use ResolvesFromChildren;
-
     public function __construct(
         public readonly ScalarFunction $operand,
         public readonly ?Window $window = null,
     ) {}
 
-    public function apply(WindowContext $window): mixed
+    /**
+     * @return list<mixed>
+     */
+    public function values(Rows $partition, Backend $backend): array
     {
-        return $this->operand->eval($window->frame(), $window->flowContext())->value(0);
+        return $this->operand->eval($partition, $backend)->values();
+    }
+
+    public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
+    {
+        throw InvalidArgumentException::because('%s holds live state and is never described', self::class);
+    }
+
+    public function describe(): ?Description
+    {
+        return null;
     }
 
     /**
@@ -38,6 +53,28 @@ final class WindowFunctionOverOperand implements WindowFunction
     public function children(): array
     {
         return [$this->operand];
+    }
+
+    public function deterministic(): bool
+    {
+        foreach ($this->children() as $child) {
+            if (!$child->deterministic()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public function resolved(): bool
+    {
+        foreach ($this->children() as $child) {
+            if (!$child->resolved()) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function over(Window $window): static

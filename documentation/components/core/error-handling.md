@@ -3,7 +3,7 @@
 [DOC_LINK:/documentation/components/core/core.md]
 
 By default an exception thrown while reading, transforming or loading stops the pipeline. An
-[ErrorHandler](/src/core/etl/src/Flow/ETL/ErrorHandler.php) decides per failure instead:
+[ErrorHandler](/src/core/etl/src/Flow/ETL/Runtime/ErrorHandler.php) decides per failure instead:
 
 | Method                                                        | Error carries                  | Action other than `propagate` (rethrow)                                            |
 |---------------------------------------------------------------|--------------------------------|------------------------------------------------------------------------------------|
@@ -22,13 +22,24 @@ Built-in handlers:
 ```php
 <?php
 
-use Flow\ETL\ErrorHandler;
-use Flow\ETL\ErrorHandler\{ExtractionAction, ExtractionError, LoadingAction, LoadingError, TransformationAction, TransformationError};
+use Flow\ETL\Foundation\Describe\{Description, Rebuild};
+use Flow\ETL\Runtime\ErrorHandler;
+use Flow\ETL\Runtime\ErrorHandler\{ExtractionAction, ExtractionError, LoadingAction, LoadingError, TransformationAction, TransformationError};
 
 use function Flow\ETL\DSL\{data_frame, from_array, ignore_error_handler, to_stream};
 
 final class SkipBrokenBatches implements ErrorHandler
 {
+    public static function fromDescription(array $data, Rebuild $rebuild): static
+    {
+        return new self();
+    }
+
+    public function describe(): ?Description
+    {
+        return new Description(self::class, []);
+    }
+
     public function onExtraction(ExtractionError $error): ExtractionAction
     {
         return ExtractionAction::propagate;
@@ -90,8 +101,8 @@ For fine-grained error handling during row processing operations:
 ```php
 <?php
 
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Rows;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Values\Rows;
 
 use function Flow\ETL\DSL\{data_frame, from_array};
 

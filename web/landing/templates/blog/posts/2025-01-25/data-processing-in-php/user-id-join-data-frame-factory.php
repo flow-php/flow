@@ -2,7 +2,7 @@
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
-use Flow\ETL\DataFrame;
+use Flow\ETL\API\DataFrame;
 use Flow\ETL\DataFrameFactory;
 use Flow\ETL\Rows;
 use function Flow\ETL\Adapter\Doctrine\from_dbal_query;

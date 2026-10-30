@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\AST\Nodes\Statement;
 
 use Flow\PostgreSql\AST\Nodes\Statement;
-use Flow\PostgreSql\AST\Nodes\StatementTrait;
 use Flow\PostgreSql\Protobuf\AST\CommentStmt;
 
 /**
@@ -13,8 +12,6 @@ use Flow\PostgreSql\Protobuf\AST\CommentStmt;
  */
 final readonly class CommentStatement implements Statement
 {
-    use StatementTrait;
-
     public function __construct(
         private CommentStmt $stmt,
     ) {}

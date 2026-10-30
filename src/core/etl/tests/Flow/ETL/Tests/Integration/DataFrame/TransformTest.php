@@ -22,8 +22,8 @@ final class TransformTest extends FlowTestCase
                 ['id' => 2, 'status' => 'inactive', 'amount' => 250],
                 ['id' => 3, 'status' => 'active', 'amount' => 1_000],
             ]))
-            ->transform(with_column('amount', ref('amount')->divide(100, scale: 2)))
-            ->transform(with_column('currency', lit('PLN')))
+            ->with(with_column('amount', ref('amount')->divide(100, scale: 2)))
+            ->with(with_column('currency', lit('PLN')))
             ->fetch()
             ->toArray();
 

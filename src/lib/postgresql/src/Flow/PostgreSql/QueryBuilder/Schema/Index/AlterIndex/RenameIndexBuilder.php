@@ -7,12 +7,10 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\Index\AlterIndex;
 use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\Protobuf\AST\RenameStmt;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 final readonly class RenameIndexBuilder implements RenameIndexFinalStep
 {
-    use AstToSql;
-
     private function __construct(
         private string $index,
         private ?string $schema,
@@ -23,6 +21,11 @@ final readonly class RenameIndexBuilder implements RenameIndexFinalStep
     public static function create(string $index, ?string $schema, string $newName, bool $ifExists): RenameIndexFinalStep
     {
         return new self($index, $schema, $newName, $ifExists);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): RenameStmt

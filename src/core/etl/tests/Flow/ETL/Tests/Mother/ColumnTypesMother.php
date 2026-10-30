@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Mother;
 
-use Flow\ETL\Schema\Inference\ColumnTypes;
-use Flow\ETL\Schema\Inference\InferredTypes;
-use Flow\ETL\Schema\Inference\TypeFloor;
+use Flow\ETL\IO\Inference\ColumnTypes;
+use Flow\ETL\IO\Inference\InferredTypes;
+use Flow\ETL\IO\Inference\TypeFloor;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\InstanceOfTypeNarrower;
 use Flow\Types\Type\Native\String\StringTypeNarrower;

@@ -10,15 +10,13 @@ use Flow\PostgreSql\Protobuf\AST\ConstrType;
 use Flow\PostgreSql\Protobuf\AST\DropBehavior;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\PBString;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class AlterDomainBuilder implements AlterDomainActionStep, AlterDomainFinalStep
 {
-    use AstToSql;
-
     private function __construct(
         private string $name,
         private ?string $schema = null,
@@ -103,6 +101,11 @@ final readonly class AlterDomainBuilder implements AlterDomainActionStep, AlterD
     public function setNotNull(): AlterDomainFinalStep
     {
         return new self($this->name, $this->schema, 'O', null, null, $this->behavior, $this->missingOk);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): AlterDomainStmt

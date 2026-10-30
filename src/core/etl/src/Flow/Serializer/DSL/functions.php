@@ -7,10 +7,10 @@ namespace Flow\Serializer\DSL;
 use Flow\Documentation\Attribute\DocumentationDSL;
 use Flow\Documentation\Attribute\Module;
 use Flow\Documentation\Attribute\Type as DSLType;
-use Flow\ETL\Rows;
+use Flow\ETL\Storage\Serializer\Serializer;
+use Flow\ETL\Values\Rows;
 use Flow\Filesystem\Stream\StringDestinationStream;
 use Flow\Filesystem\Stream\StringSourceStream;
-use Flow\Serializer\Serializer;
 
 use function Flow\Filesystem\DSL\path;
 

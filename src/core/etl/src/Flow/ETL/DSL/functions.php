@@ -8,257 +8,228 @@ use DateInterval;
 use DatePeriod;
 use DateTimeInterface;
 use DateTimeZone;
-use Flow\Calculator\Rounding;
-use Flow\Clock\SystemClock;
 use Flow\Documentation\Attribute\DocumentationDSL;
 use Flow\Documentation\Attribute\DocumentationExample;
 use Flow\Documentation\Attribute\Module;
 use Flow\Documentation\Attribute\Type as DSLType;
-use Flow\ETL\Analyze;
-use Flow\ETL\Cache;
-use Flow\ETL\Cache\Implementation\FilesystemCache;
-use Flow\ETL\Column\AdaptiveBackend;
-use Flow\ETL\Column\Backend;
-use Flow\ETL\Config;
-use Flow\ETL\Config\ConfigBuilder;
-use Flow\ETL\Config\Grouping\HashGroupByBuilder;
-use Flow\ETL\Config\Join\HashJoinBuilder;
-use Flow\ETL\Config\Repartition\HashRepartitionBuilder;
-use Flow\ETL\Config\Sort\ExternalSortBuilder;
-use Flow\ETL\Config\Sort\MemorySortBuilder;
-use Flow\ETL\Config\Telemetry\TelemetryOptions;
-use Flow\ETL\Constraint\SortedByConstraint;
-use Flow\ETL\Constraint\UniqueConstraint;
-use Flow\ETL\DataFrame;
-use Flow\ETL\ErrorHandler\IgnoreError;
-use Flow\ETL\ErrorHandler\SkipRows;
-use Flow\ETL\ErrorHandler\ThrowError;
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Exception\UnsupportedUnionTypeException;
-use Flow\ETL\Extractor;
-use Flow\ETL\Extractor\ArrayExtractor;
-use Flow\ETL\Extractor\BatchByExtractor;
-use Flow\ETL\Extractor\BatchExtractor;
-use Flow\ETL\Extractor\CacheExtractor;
-use Flow\ETL\Extractor\ChainExtractor;
-use Flow\ETL\Extractor\DataFrameExtractor;
-use Flow\ETL\Extractor\File\PartitionTypes;
-use Flow\ETL\Extractor\FilesExtractor;
-use Flow\ETL\Extractor\MemoryExtractor;
-use Flow\ETL\Extractor\PathPartitionsExtractor;
-use Flow\ETL\Extractor\RowsExtractor;
-use Flow\ETL\Extractor\SequenceExtractor;
-use Flow\ETL\Extractor\SequenceGenerator\DatePeriodSequenceGenerator;
-use Flow\ETL\Extractor\SequenceGenerator\NumberSequenceGenerator;
-use Flow\ETL\Filesystem\SaveMode;
+use Flow\ETL\API\Branch;
+use Flow\ETL\API\Config\Bucketing\BucketingConfigBuilder;
+use Flow\ETL\API\Config\ConfigBuilder;
+use Flow\ETL\API\Config\Join\HashJoinBuilder;
+use Flow\ETL\API\Config\Sort\ExternalSortBuilder;
+use Flow\ETL\API\Config\Sort\MemorySortBuilder;
+use Flow\ETL\API\FilteredBranch;
+use Flow\ETL\API\Transactional;
+use Flow\ETL\API\Transformation;
+use Flow\ETL\API\Transformation\AddRowIndex;
+use Flow\ETL\API\Transformation\BatchBy;
+use Flow\ETL\API\Transformation\BatchSize;
+use Flow\ETL\API\Transformation\Drop;
+use Flow\ETL\API\Transformation\Limit;
+use Flow\ETL\API\Transformation\MaskColumns;
+use Flow\ETL\API\Transformation\Select;
+use Flow\ETL\API\TransformedBranch;
 use Flow\ETL\Flow;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Formatter;
-use Flow\ETL\Formatter\AsciiTableFormatter;
-use Flow\ETL\Function\All;
-use Flow\ETL\Function\Any;
-use Flow\ETL\Function\ArrayExpand as ArrayExpandFunction;
-use Flow\ETL\Function\ArrayExpand\ArrayExpand;
-use Flow\ETL\Function\ArrayGet;
-use Flow\ETL\Function\ArrayGetCollection;
-use Flow\ETL\Function\ArrayKeyRename;
-use Flow\ETL\Function\ArrayKeysStyleConvert;
-use Flow\ETL\Function\ArrayMerge;
-use Flow\ETL\Function\ArrayMergeCollection;
-use Flow\ETL\Function\ArrayPathExists;
-use Flow\ETL\Function\ArrayReverse;
-use Flow\ETL\Function\ArraySort;
-use Flow\ETL\Function\ArraySort\Sort;
-use Flow\ETL\Function\ArrayUnpack;
-use Flow\ETL\Function\Average;
-use Flow\ETL\Function\Between;
-use Flow\ETL\Function\Between\Boundary;
-use Flow\ETL\Function\CallUserFunc;
-use Flow\ETL\Function\Capitalize;
-use Flow\ETL\Function\Cast;
-use Flow\ETL\Function\Coalesce;
-use Flow\ETL\Function\Collect;
-use Flow\ETL\Function\CollectUnique;
-use Flow\ETL\Function\Combine;
-use Flow\ETL\Function\Concat;
-use Flow\ETL\Function\ConcatWithSeparator;
-use Flow\ETL\Function\Count;
-use Flow\ETL\Function\DateTimeFormat;
-use Flow\ETL\Function\DenseRank;
-use Flow\ETL\Function\EnumName;
-use Flow\ETL\Function\EnumValue;
-use Flow\ETL\Function\Exists;
-use Flow\ETL\Function\First;
-use Flow\ETL\Function\Greatest;
-use Flow\ETL\Function\Hash;
-use Flow\ETL\Function\Last;
-use Flow\ETL\Function\Least;
-use Flow\ETL\Function\ListFunctions;
-use Flow\ETL\Function\Literal;
-use Flow\ETL\Function\MatchCases;
-use Flow\ETL\Function\MatchCases\MatchCondition;
-use Flow\ETL\Function\Max;
-use Flow\ETL\Function\Min;
-use Flow\ETL\Function\Not;
-use Flow\ETL\Function\Now;
-use Flow\ETL\Function\NumberFormat;
-use Flow\ETL\Function\Optional;
-use Flow\ETL\Function\RandomString;
-use Flow\ETL\Function\Rank;
-use Flow\ETL\Function\Regex;
-use Flow\ETL\Function\RegexAll;
-use Flow\ETL\Function\RegexMatch;
-use Flow\ETL\Function\RegexMatchAll;
-use Flow\ETL\Function\RegexReplace;
-use Flow\ETL\Function\Round;
-use Flow\ETL\Function\RowNumber;
-use Flow\ETL\Function\Sanitize;
-use Flow\ETL\Function\ScalarFunction;
-use Flow\ETL\Function\Size;
-use Flow\ETL\Function\Split;
-use Flow\ETL\Function\Sprintf;
-use Flow\ETL\Function\StringAggregate;
-use Flow\ETL\Function\Structure;
-use Flow\ETL\Function\StructureFunctions;
-use Flow\ETL\Function\Sum;
-use Flow\ETL\Function\ToDate;
-use Flow\ETL\Function\ToDateTime;
-use Flow\ETL\Function\ToLower;
-use Flow\ETL\Function\ToTimeZone;
-use Flow\ETL\Function\ToUpper;
-use Flow\ETL\Function\Ulid;
-use Flow\ETL\Function\Uuid;
-use Flow\ETL\Function\When;
-use Flow\ETL\GroupBy\DeclaredPivotValues;
-use Flow\ETL\GroupBy\DiscoveredPivotValues;
-use Flow\ETL\Hash\Algorithm;
-use Flow\ETL\Hash\NativePHPHash;
-use Flow\ETL\Join\Comparison;
-use Flow\ETL\Join\Comparison\Equal;
-use Flow\ETL\Join\Comparison\Identical;
-use Flow\ETL\Join\Expression;
-use Flow\ETL\Loader;
-use Flow\ETL\Loader\ArrayLoader;
-use Flow\ETL\Loader\MemoryLoader;
-use Flow\ETL\Loader\Partitioning;
-use Flow\ETL\Loader\StreamLoader;
-use Flow\ETL\Loader\StreamLoader\Output;
-use Flow\ETL\Memory\Memory;
-use Flow\ETL\NativePHPRandomValueGenerator;
-use Flow\ETL\RandomValueGenerator;
-use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
-use Flow\ETL\Row\Reference;
-use Flow\ETL\Row\References;
-use Flow\ETL\Row\SortOrder;
-use Flow\ETL\Row\UnresolvedReference;
-use Flow\ETL\Rows;
-use Flow\ETL\Rows\RowsBuilder;
-use Flow\ETL\Schema;
-use Flow\ETL\Schema\Definition;
-use Flow\ETL\Schema\Definition\BooleanDefinition;
-use Flow\ETL\Schema\Definition\DateDefinition;
-use Flow\ETL\Schema\Definition\DateTimeDefinition;
-use Flow\ETL\Schema\Definition\EnumDefinition;
-use Flow\ETL\Schema\Definition\FloatDefinition;
-use Flow\ETL\Schema\Definition\HTMLDefinition;
-use Flow\ETL\Schema\Definition\HTMLElementDefinition;
-use Flow\ETL\Schema\Definition\IntegerDefinition;
-use Flow\ETL\Schema\Definition\JsonDefinition;
-use Flow\ETL\Schema\Definition\ListDefinition;
-use Flow\ETL\Schema\Definition\MapDefinition;
-use Flow\ETL\Schema\Definition\NullDefinition;
-use Flow\ETL\Schema\Definition\StringDefinition;
-use Flow\ETL\Schema\Definition\StructureDefinition;
-use Flow\ETL\Schema\Definition\TimeDefinition;
-use Flow\ETL\Schema\Definition\TimeZoneDefinition;
-use Flow\ETL\Schema\Definition\UuidDefinition;
-use Flow\ETL\Schema\Definition\XMLDefinition;
-use Flow\ETL\Schema\Definition\XMLElementDefinition;
-use Flow\ETL\Schema\Formatter\JsonSchemaFormatter;
-use Flow\ETL\Schema\Formatter\PHPFormatter\TypeFormatter;
-use Flow\ETL\Schema\Formatter\PHPFormatter\ValueFormatter;
-use Flow\ETL\Schema\Formatter\PHPSchemaFormatter;
-use Flow\ETL\Schema\Inference\SchemaInferenceBuilder;
-use Flow\ETL\Schema\Metadata;
-use Flow\ETL\Schema\SchemaFormatter;
-use Flow\ETL\Schema\SortingStrategy;
-use Flow\ETL\Schema\SortingStrategy\AlphabeticalStrategy;
-use Flow\ETL\Schema\SortingStrategy\CombinedStrategy;
-use Flow\ETL\Schema\SortingStrategy\MetadataStrategy;
-use Flow\ETL\Schema\SortingStrategy\TypeStrategy;
-use Flow\ETL\Schema\SortingStrategy\TypeStrategy\TypePriorities as SchemaTypePriorities;
-use Flow\ETL\Schema\Validator\EvolvingValidator;
-use Flow\ETL\Schema\Validator\SelectiveValidator;
-use Flow\ETL\Schema\Validator\StrictValidator;
-use Flow\ETL\Schema\Validator\ValidationContext;
-use Flow\ETL\SchemaValidator;
-use Flow\ETL\Sink;
-use Flow\ETL\Sink\Branched;
-use Flow\ETL\Sink\Transformed;
-use Flow\ETL\String\StringStyles;
-use Flow\ETL\Transformation;
-use Flow\ETL\Transformation\AddRowIndex;
-use Flow\ETL\Transformation\AddRowIndex\StartFrom;
-use Flow\ETL\Transformation\BatchSize;
-use Flow\ETL\Transformation\Drop;
-use Flow\ETL\Transformation\Limit;
-use Flow\ETL\Transformation\MaskColumns;
-use Flow\ETL\Transformation\Select;
-use Flow\ETL\Transformer;
-use Flow\ETL\Transformer\Rename\RenameCaseColumnStrategy;
-use Flow\ETL\Transformer\Rename\RenameMapColumnStrategy;
-use Flow\ETL\Transformer\Rename\RenameReplaceColumnStrategy;
-use Flow\ETL\Window;
-use Flow\ETL\Window\FrameBound;
-use Flow\ETL\Window\FrameBoundType;
-use Flow\ETL\WithColumn;
+use Flow\ETL\Foundation\Calculator\Rounding;
+use Flow\ETL\Foundation\Clock\SystemClock;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
+use Flow\ETL\Foundation\RandomValueGenerator;
+use Flow\ETL\Functions\All;
+use Flow\ETL\Functions\Any;
+use Flow\ETL\Functions\ArrayExpand as ArrayExpandFunction;
+use Flow\ETL\Functions\ArrayExpand\ArrayExpand;
+use Flow\ETL\Functions\ArrayGet;
+use Flow\ETL\Functions\ArrayGetCollection;
+use Flow\ETL\Functions\ArrayKeyRename;
+use Flow\ETL\Functions\ArrayKeysStyleConvert;
+use Flow\ETL\Functions\ArrayMerge;
+use Flow\ETL\Functions\ArrayMergeCollection;
+use Flow\ETL\Functions\ArrayPathExists;
+use Flow\ETL\Functions\ArrayReverse;
+use Flow\ETL\Functions\ArraySort;
+use Flow\ETL\Functions\ArraySort\Sort;
+use Flow\ETL\Functions\ArrayUnpack;
+use Flow\ETL\Functions\Average;
+use Flow\ETL\Functions\Between;
+use Flow\ETL\Functions\Between\Boundary;
+use Flow\ETL\Functions\CallUserFunc;
+use Flow\ETL\Functions\Capitalize;
+use Flow\ETL\Functions\Cast;
+use Flow\ETL\Functions\Coalesce;
+use Flow\ETL\Functions\Collect;
+use Flow\ETL\Functions\CollectUnique;
+use Flow\ETL\Functions\Combine;
+use Flow\ETL\Functions\Concat;
+use Flow\ETL\Functions\ConcatWithSeparator;
+use Flow\ETL\Functions\Count;
+use Flow\ETL\Functions\DateTimeFormat;
+use Flow\ETL\Functions\DenseRank;
+use Flow\ETL\Functions\EnumName;
+use Flow\ETL\Functions\EnumValue;
+use Flow\ETL\Functions\Exists;
+use Flow\ETL\Functions\First;
+use Flow\ETL\Functions\Greatest;
+use Flow\ETL\Functions\Hash;
+use Flow\ETL\Functions\Join\Condition;
+use Flow\ETL\Functions\Join\Condition\Equal;
+use Flow\ETL\Functions\Join\Condition\Identical;
+use Flow\ETL\Functions\Join\Expression;
+use Flow\ETL\Functions\Last;
+use Flow\ETL\Functions\Least;
+use Flow\ETL\Functions\ListFunctions;
+use Flow\ETL\Functions\Literal;
+use Flow\ETL\Functions\MatchCases;
+use Flow\ETL\Functions\MatchCases\MatchCondition;
+use Flow\ETL\Functions\Max;
+use Flow\ETL\Functions\Min;
+use Flow\ETL\Functions\Not;
+use Flow\ETL\Functions\Now;
+use Flow\ETL\Functions\NumberFormat;
+use Flow\ETL\Functions\Optional;
+use Flow\ETL\Functions\RandomString;
+use Flow\ETL\Functions\Rank;
+use Flow\ETL\Functions\Reference\Reference;
+use Flow\ETL\Functions\Reference\References;
+use Flow\ETL\Functions\Reference\UnresolvedReference;
+use Flow\ETL\Functions\Regex;
+use Flow\ETL\Functions\RegexAll;
+use Flow\ETL\Functions\RegexMatch;
+use Flow\ETL\Functions\RegexMatchAll;
+use Flow\ETL\Functions\RegexReplace;
+use Flow\ETL\Functions\Round;
+use Flow\ETL\Functions\RowNumber;
+use Flow\ETL\Functions\Sanitize;
+use Flow\ETL\Functions\ScalarFunction;
+use Flow\ETL\Functions\Size;
+use Flow\ETL\Functions\Split;
+use Flow\ETL\Functions\Sprintf;
+use Flow\ETL\Functions\String\StringStyles;
+use Flow\ETL\Functions\StringAggregate;
+use Flow\ETL\Functions\Structure;
+use Flow\ETL\Functions\StructureFunctions;
+use Flow\ETL\Functions\Sum;
+use Flow\ETL\Functions\ToDate;
+use Flow\ETL\Functions\ToDateTime;
+use Flow\ETL\Functions\ToLower;
+use Flow\ETL\Functions\ToTimeZone;
+use Flow\ETL\Functions\ToUpper;
+use Flow\ETL\Functions\Ulid;
+use Flow\ETL\Functions\Uuid;
+use Flow\ETL\Functions\When;
+use Flow\ETL\Functions\Window;
+use Flow\ETL\Functions\Window\FrameBound;
+use Flow\ETL\Functions\Window\FrameBoundType;
+use Flow\ETL\Functions\WithColumn;
+use Flow\ETL\IO\Extractor;
+use Flow\ETL\IO\Extractor\ArrayExtractor;
+use Flow\ETL\IO\Extractor\CacheExtractor;
+use Flow\ETL\IO\Extractor\ChainExtractor;
+use Flow\ETL\IO\Extractor\File\FileMetadataRow;
+use Flow\ETL\IO\Extractor\File\PartitionTypes;
+use Flow\ETL\IO\Extractor\File\PathPartitionsRow;
+use Flow\ETL\IO\Extractor\FileListingExtractor;
+use Flow\ETL\IO\Extractor\RowsExtractor;
+use Flow\ETL\IO\Extractor\SequenceExtractor;
+use Flow\ETL\IO\Extractor\SequenceGenerator\DatePeriodSequenceGenerator;
+use Flow\ETL\IO\Extractor\SequenceGenerator\NumberSequenceGenerator;
+use Flow\ETL\IO\Filesystem\SaveMode;
+use Flow\ETL\IO\Formatter;
+use Flow\ETL\IO\Formatter\AsciiTableFormatter;
+use Flow\ETL\IO\Formatter\Row\ASCIISchemaFormatter;
+use Flow\ETL\IO\Formatter\Schema\JsonSchemaFormatter;
+use Flow\ETL\IO\Formatter\Schema\PHPFormatter\TypeFormatter;
+use Flow\ETL\IO\Formatter\Schema\PHPFormatter\ValueFormatter;
+use Flow\ETL\IO\Formatter\Schema\PHPSchemaFormatter;
+use Flow\ETL\IO\Formatter\Schema\SchemaFormatter;
+use Flow\ETL\IO\Inference\SchemaInferenceBuilder;
+use Flow\ETL\IO\Loader;
+use Flow\ETL\IO\Loader\ArrayLoader;
+use Flow\ETL\IO\Loader\MemoryLoader;
+use Flow\ETL\IO\Loader\Partitioning;
+use Flow\ETL\IO\Loader\StreamLoader;
+use Flow\ETL\IO\Loader\StreamLoader\Output;
+use Flow\ETL\Kernels\Hash\Algorithm;
+use Flow\ETL\Kernels\Hash\NativePHPHash;
+use Flow\ETL\Kernels\Sort\SortColumn;
+use Flow\ETL\Operators\Constraint\SortedByConstraint;
+use Flow\ETL\Operators\Constraint\UniqueConstraint;
+use Flow\ETL\Operators\GroupBy\DeclaredPivotValues;
+use Flow\ETL\Operators\GroupBy\DiscoveredPivotValues;
+use Flow\ETL\Operators\Transformer;
+use Flow\ETL\Operators\Transformer\AddRowIndex\StartFrom;
+use Flow\ETL\Operators\Transformer\Rename\RenameCaseColumnStrategy;
+use Flow\ETL\Operators\Transformer\Rename\RenameMapColumnStrategy;
+use Flow\ETL\Operators\Transformer\Rename\RenameReplaceColumnStrategy;
+use Flow\ETL\Runtime\Analyze;
+use Flow\ETL\Runtime\Config;
+use Flow\ETL\Runtime\ErrorHandler\IgnoreError;
+use Flow\ETL\Runtime\ErrorHandler\SkipRows;
+use Flow\ETL\Runtime\ErrorHandler\ThrowError;
+use Flow\ETL\Runtime\FlowContext;
+use Flow\ETL\Runtime\Telemetry\TelemetryOptions;
+use Flow\ETL\Storage\FilesystemRowsStorage;
+use Flow\ETL\Storage\Memory\Memory;
+use Flow\ETL\Storage\RowsStorage;
+use Flow\ETL\Values\BatchSize as RowsBatchSize;
+use Flow\ETL\Values\Column\AdaptiveBackend;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Rows\RowsBuilder;
+use Flow\ETL\Values\Schema;
+use Flow\ETL\Values\Schema\Definition;
+use Flow\ETL\Values\Schema\Definition\BooleanDefinition;
+use Flow\ETL\Values\Schema\Definition\DateDefinition;
+use Flow\ETL\Values\Schema\Definition\DateTimeDefinition;
+use Flow\ETL\Values\Schema\Definition\EnumDefinition;
+use Flow\ETL\Values\Schema\Definition\FloatDefinition;
+use Flow\ETL\Values\Schema\Definition\HTMLDefinition;
+use Flow\ETL\Values\Schema\Definition\HTMLElementDefinition;
+use Flow\ETL\Values\Schema\Definition\IntegerDefinition;
+use Flow\ETL\Values\Schema\Definition\JsonDefinition;
+use Flow\ETL\Values\Schema\Definition\ListDefinition;
+use Flow\ETL\Values\Schema\Definition\MapDefinition;
+use Flow\ETL\Values\Schema\Definition\NullDefinition;
+use Flow\ETL\Values\Schema\Definition\StringDefinition;
+use Flow\ETL\Values\Schema\Definition\StructureDefinition;
+use Flow\ETL\Values\Schema\Definition\TimeDefinition;
+use Flow\ETL\Values\Schema\Definition\TimeZoneDefinition;
+use Flow\ETL\Values\Schema\Definition\UuidDefinition;
+use Flow\ETL\Values\Schema\Definition\XMLDefinition;
+use Flow\ETL\Values\Schema\Definition\XMLElementDefinition;
+use Flow\ETL\Values\Schema\Definitions;
+use Flow\ETL\Values\Schema\Metadata;
+use Flow\ETL\Values\Schema\SortingStrategy;
+use Flow\ETL\Values\Schema\SortingStrategy\AlphabeticalStrategy;
+use Flow\ETL\Values\Schema\SortingStrategy\CombinedStrategy;
+use Flow\ETL\Values\Schema\SortingStrategy\MetadataStrategy;
+use Flow\ETL\Values\Schema\SortingStrategy\TypeStrategy;
+use Flow\ETL\Values\Schema\SortingStrategy\TypeStrategy\TypePriorities as SchemaTypePriorities;
+use Flow\ETL\Values\Schema\Validator\EvolvingValidator;
+use Flow\ETL\Values\Schema\Validator\SelectiveValidator;
+use Flow\ETL\Values\Schema\Validator\StrictValidator;
+use Flow\ETL\Values\Schema\Validator\ValidationContext;
+use Flow\ETL\Values\SchemaValidator;
+use Flow\ETL\Values\SortOrder;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Stream\Mode;
-use Flow\Serializer\Serializer;
 use Flow\Types\Type;
-use Flow\Types\Type\Logical\DateTimeType;
-use Flow\Types\Type\Logical\DateType;
-use Flow\Types\Type\Logical\HTMLElementType;
-use Flow\Types\Type\Logical\HTMLType;
-use Flow\Types\Type\Logical\JsonType;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
-use Flow\Types\Type\Logical\NumericStringType;
-use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Logical\StructureType;
-use Flow\Types\Type\Logical\TimeType;
-use Flow\Types\Type\Logical\TimeZoneType;
-use Flow\Types\Type\Logical\UuidType;
-use Flow\Types\Type\Logical\XMLElementType;
-use Flow\Types\Type\Logical\XMLType;
-use Flow\Types\Type\Native\ArrayType;
-use Flow\Types\Type\Native\BooleanType;
-use Flow\Types\Type\Native\EmptyArrayType;
-use Flow\Types\Type\Native\EnumType;
-use Flow\Types\Type\Native\FloatType;
-use Flow\Types\Type\Native\IntegerType;
-use Flow\Types\Type\Native\NullType;
-use Flow\Types\Type\Native\StringType;
-use Flow\Types\Type\Native\UnionType;
-use Flow\Types\Type\TypeFactory;
 use Psr\Clock\ClockInterface;
-use UnitEnum;
 
 use function array_is_list;
-use function array_key_exists;
-use function array_map;
 use function class_exists;
 use function enum_exists;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_datetime;
-use function Flow\Types\DSL\type_null;
 use function is_array;
-use function is_bool;
 use function is_float;
 use function is_int;
 use function is_object;
@@ -309,8 +280,8 @@ function from_rows(Rows ...$rows): RowsExtractor
 function from_path_partitions(
     Path|string $path,
     Filesystem $filesystem = new NativeLocalFilesystem(),
-): PathPartitionsExtractor {
-    return new PathPartitionsExtractor(is_string($path) ? path($path) : $path, $filesystem);
+): FileListingExtractor {
+    return new FileListingExtractor(is_string($path) ? path($path) : $path, new PathPartitionsRow(), $filesystem);
 }
 
 /**
@@ -347,7 +318,7 @@ function from_cache(
     string $id,
     ?Extractor $fallback_extractor = null,
     bool $clear = false,
-    ?Cache $cache = null,
+    ?RowsStorage $cache = null,
 ): CacheExtractor {
     $extractor = new CacheExtractor($id, $cache);
 
@@ -369,53 +340,28 @@ function from_all(Extractor ...$extractors): ChainExtractor
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-function from_memory(Memory $memory): MemoryExtractor
+function from_memory(Memory $memory): ArrayExtractor
 {
-    return new MemoryExtractor($memory);
+    return new ArrayExtractor($memory);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-function files(string|Path $directory, Filesystem $filesystem = new NativeLocalFilesystem()): FilesExtractor
+function files(string|Path $directory, Filesystem $filesystem = new NativeLocalFilesystem()): FileListingExtractor
 {
-    return new FilesExtractor(is_string($directory) ? path($directory) : $directory, $filesystem);
+    return new FileListingExtractor(
+        is_string($directory) ? path($directory) : $directory,
+        new FileMetadataRow(),
+        $filesystem,
+    );
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function filesystem_cache(
-    Serializer $serializer,
     Path|string|null $cache_dir = null,
     Filesystem $filesystem = new NativeLocalFilesystem(),
-): FilesystemCache {
-    return new FilesystemCache($filesystem, $serializer, is_string($cache_dir) ? path_real($cache_dir) : $cache_dir);
-}
-
-/**
- * @param null|int<1, max> $min_size
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-function batched_by(Extractor $extractor, string|Reference $column, ?int $min_size = null): BatchByExtractor
-{
-    // @mago-ignore analysis:invalid-operand,impossible-condition,redundant-comparison,redundant-logical-operation
-    if ($min_size !== null && $min_size <= 0) {
-        throw new InvalidArgumentException('Minimum batch size must be greater than 0, given: ' . $min_size);
-    }
-
-    return new BatchByExtractor($extractor, UnresolvedReference::init($column), $min_size);
-}
-
-/**
- * @param int<1, max> $size
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-function batches(Extractor $extractor, int $size): BatchExtractor
-{
-    return new BatchExtractor($extractor, $size);
-}
-
-#[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-function from_data_frame(DataFrame $data_frame): DataFrameExtractor
-{
-    return new DataFrameExtractor($data_frame);
+    Backend $backend = new AdaptiveBackend(),
+): FilesystemRowsStorage {
+    return new FilesystemRowsStorage($filesystem, is_string($cache_dir) ? path_real($cache_dir) : $cache_dir, $backend);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
@@ -529,15 +475,17 @@ function to_stream(
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
-function to_transformation(Transformer|Transformation $transformer, Loader|Sink $sink): Transformed
-{
-    return new Transformed($transformer, $sink);
+function to_transformation(
+    Transformer|Transformation $transformer,
+    Loader|Branch|Transactional $write,
+): TransformedBranch {
+    return new TransformedBranch($transformer, $write);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
-function to_branch(ScalarFunction $condition, Loader|Sink $sink): Branched
+function to_branch(ScalarFunction $condition, Loader|Branch|Transactional $write): FilteredBranch
 {
-    return new Branched($condition, $sink);
+    return new FilteredBranch($condition, $write);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
@@ -636,12 +584,18 @@ function add_row_index(string $column = 'index', StartFrom $startFrom = StartFro
 }
 
 /**
- * @param int<1, max> $size
+ * @param null|int<1, max> $min_size
  */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function batch_by(string|Reference $column, ?int $min_size = null): BatchBy
+{
+    return new BatchBy($column, $min_size);
+}
+
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
 function batch_size(int $size): BatchSize
 {
-    return new BatchSize($size);
+    return new BatchSize(new RowsBatchSize($size));
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
@@ -1569,27 +1523,7 @@ function time_zone_schema(string $name, bool $nullable = false, ?Metadata $metad
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
 function definition_from_array(array $definition): Definition
 {
-    if (!array_key_exists('ref', $definition) || !is_string($definition['ref'])) {
-        throw new RuntimeException('Definition array must have a string "ref" key');
-    }
-
-    if (!array_key_exists('type', $definition) || !is_array($definition['type'])) {
-        throw new RuntimeException('Definition array must have an array "type" key');
-    }
-
-    $ref = $definition['ref'];
-
-    /** @var array<string, mixed> $typeData */
-    $typeData = $definition['type'];
-    $type = TypeFactory::fromArray($typeData);
-
-    $nullable = isset($definition['nullable']) && is_bool($definition['nullable']) ? $definition['nullable'] : false;
-
-    /** @var array<string, array<mixed>|bool|float|int|string> $metadataData */
-    $metadataData = isset($definition['metadata']) && is_array($definition['metadata']) ? $definition['metadata'] : [];
-    $metadata = Metadata::fromArray($metadataData);
-
-    return definition_from_type($ref, $type, $nullable, $metadata);
+    return Definitions::fromArray($definition);
 }
 
 /**
@@ -1606,50 +1540,7 @@ function definition_from_type(
     bool $nullable = false,
     ?Metadata $metadata = null,
 ): Definition {
-    return match (true) {
-        $type instanceof BooleanType => new BooleanDefinition($ref, $nullable, $metadata),
-        $type instanceof IntegerType => new IntegerDefinition($ref, $nullable, $metadata),
-        $type instanceof FloatType => new FloatDefinition($ref, $nullable, $metadata),
-        $type instanceof StringType => new StringDefinition($ref, $nullable, $metadata),
-        $type instanceof NumericStringType => new StringDefinition($ref, $nullable, $metadata, $type),
-        $type instanceof DateType => new DateDefinition($ref, $nullable, $metadata),
-        $type instanceof DateTimeType => new DateTimeDefinition($ref, $type, $nullable, $metadata),
-        $type instanceof TimeType => new TimeDefinition($ref, $nullable, $metadata),
-        $type instanceof JsonType => new JsonDefinition($ref, $nullable, $metadata),
-        $type instanceof ArrayType => new JsonDefinition($ref, $nullable, $metadata),
-        // @mago-expect linter:no-fully-qualified-global-function
-        $type instanceof EmptyArrayType => throw new RuntimeException(\sprintf(
-            'Column "%s" cannot be typed as array{} - an empty array is a value, not a column type. '
-            . 'Declare the element type, e.g. type_list(type_string()).',
-            UnresolvedReference::init($ref)->name(),
-        )),
-        $type instanceof UuidType => new UuidDefinition($ref, $nullable, $metadata),
-        $type instanceof TimeZoneType => new TimeZoneDefinition($ref, $nullable, $metadata),
-        $type instanceof ListType => new ListDefinition($ref, $type, $nullable, $metadata),
-        $type instanceof MapType => new MapDefinition($ref, $type, $nullable, $metadata),
-        $type instanceof StructureType => new StructureDefinition($ref, $type, $nullable, $metadata),
-        // Iceberg's rule: ["null", T] is the one legal union and it means ?T, not a sum type.
-        $type instanceof UnionType => $type->isOptionalType()
-            ? definition_from_type(
-                $ref,
-                $type->types()->without(type_null())->first() ?? throw UnsupportedUnionTypeException::forColumn(
-                    UnresolvedReference::init($ref),
-                    $type,
-                ),
-                nullable: true,
-                metadata: $metadata,
-            )
-            : throw UnsupportedUnionTypeException::forColumn(UnresolvedReference::init($ref), $type),
-        $type instanceof EnumType => new EnumDefinition($ref, $type->class, $nullable, $metadata),
-        $type instanceof HTMLType => new HTMLDefinition($ref, $nullable, $metadata),
-        $type instanceof HTMLElementType => new HTMLElementDefinition($ref, $nullable, $metadata),
-        $type instanceof XMLType => new XMLDefinition($ref, $nullable, $metadata),
-        $type instanceof XMLElementType => new XMLElementDefinition($ref, $nullable, $metadata),
-        $type instanceof NullType => new NullDefinition($ref, $metadata),
-        $type instanceof OptionalType => definition_from_type($ref, $type->base(), nullable: true, metadata: $metadata),
-        // @mago-expect linter:no-fully-qualified-global-function
-        default => throw new RuntimeException(\sprintf('Cannot create Definition from type: %s', $type::class)),
-    };
+    return Definitions::of(is_string($ref) ? $ref : $ref->name(), $type, $nullable, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
@@ -1661,7 +1552,7 @@ function infer_schema(): SchemaInferenceBuilder
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function execution_context(?Config $config = null): FlowContext
 {
-    return new FlowContext($config ?? Config::default());
+    return new FlowContext($config ?? (new ConfigBuilder())->build());
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
@@ -1673,7 +1564,7 @@ function flow_context(?Config $config = null): FlowContext
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function config(): Config
 {
-    return Config::default();
+    return (new ConfigBuilder())->build();
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
@@ -1701,15 +1592,15 @@ function hash_join(): HashJoinBuilder
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function hash_group_by(): HashGroupByBuilder
+function hash_group_by(): BucketingConfigBuilder
 {
-    return new HashGroupByBuilder();
+    return BucketingConfigBuilder::groupBy();
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function hash_repartition(): HashRepartitionBuilder
+function hash_repartition(): BucketingConfigBuilder
 {
-    return new HashRepartitionBuilder();
+    return BucketingConfigBuilder::repartition();
 }
 
 /**
@@ -1826,24 +1717,24 @@ function equal(Reference|string $left, Reference|string $right): Equal
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::COMPARISON)]
-function compare_all(Comparison $comparison, Comparison ...$comparisons): Comparison\All
+function compare_all(Condition $comparison, Condition ...$comparisons): Condition\All
 {
-    return new Comparison\All($comparison, ...$comparisons);
+    return new Condition\All($comparison, ...$comparisons);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::COMPARISON)]
-function compare_any(Comparison $comparison, Comparison ...$comparisons): Comparison\Any
+function compare_any(Condition $comparison, Condition ...$comparisons): Condition\Any
 {
-    return new Comparison\Any($comparison, ...$comparisons);
+    return new Condition\Any($comparison, ...$comparisons);
 }
 
 /**
- * @param array<Comparison|string>|Comparison $comparisons
+ * @param array<Condition|string>|Condition $comparisons
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 #[DocumentationExample(topic: 'joins', example: 'join')]
 #[DocumentationExample(topic: 'joins', example: 'join_each')]
-function join_on(array|Comparison $comparisons, string $join_prefix = ''): Expression
+function join_on(array|Condition $comparisons, string $join_prefix = ''): Expression
 {
     return Expression::on($comparisons, $join_prefix);
 }
@@ -2012,13 +1903,11 @@ function constraint_unique(string $reference, string ...$references): UniqueCons
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
-function constraint_sorted_by(string|Reference $column, string|Reference ...$columns): SortedByConstraint
-{
-    $references = array_map(static fn(string|Reference $ref) => UnresolvedReference::init(
-        $ref,
-    ), [$column, ...$columns]);
-
-    return new SortedByConstraint(...$references);
+function constraint_sorted_by(
+    string|Reference|SortColumn $column,
+    string|Reference|SortColumn ...$columns,
+): SortedByConstraint {
+    return new SortedByConstraint($column, ...$columns);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]

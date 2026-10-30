@@ -6,17 +6,20 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\Session;
 
 use Flow\PostgreSql\Protobuf\AST\VariableSetKind;
 use Flow\PostgreSql\Protobuf\AST\VariableSetStmt;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 final readonly class ResetRoleBuilder implements ResetRoleFinalStep
 {
-    use AstToSql;
-
     private function __construct() {}
 
     public static function create(): ResetRoleFinalStep
     {
         return new self();
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): VariableSetStmt

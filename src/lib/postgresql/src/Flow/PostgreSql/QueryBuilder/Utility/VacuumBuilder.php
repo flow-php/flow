@@ -11,13 +11,11 @@ use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\Protobuf\AST\VacuumRelation as VacuumRelationAST;
 use Flow\PostgreSql\Protobuf\AST\VacuumStmt;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class VacuumBuilder implements VacuumFinalStep
 {
-    use AstToSql;
-
     /**
      * @param array<VacuumRelation> $relations
      */
@@ -243,6 +241,11 @@ final readonly class VacuumBuilder implements VacuumFinalStep
             $this->truncate,
             $this->parallel,
         );
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): VacuumStmt

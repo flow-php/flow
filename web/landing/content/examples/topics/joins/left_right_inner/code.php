@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Flow\ETL\Join\Join;
+use Flow\ETL\Values\Join\JoinType;
 
 use function Flow\ETL\DSL\{data_frame, equal, from_array, int_schema, join_on, schema, str_schema, to_output};
 
@@ -12,7 +12,7 @@ $left = schema(int_schema('id'), str_schema('name'));
 $right = schema(int_schema('id'), str_schema('country'));
 
 // the same two frames, three ways; the row count is the lesson
-foreach ([Join::inner, Join::left, Join::right] as $type) {
+foreach ([JoinType::inner, JoinType::left, JoinType::right] as $type) {
     echo "\n{$type->value}:\n";
 
     data_frame()

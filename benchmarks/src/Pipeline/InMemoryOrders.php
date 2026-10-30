@@ -35,7 +35,7 @@ final class InMemoryOrders
         $data = [];
 
         foreach (data_frame()->read(from_parquet(Datasets::orders($rows)->parquet()))->get() as $batch) {
-            $names = $batch->schema()->references()->names();
+            $names = $batch->schema()->names();
 
             // Rows::toArray() is declared array<array-key, mixed>; names() is array<string>, so
             // recombining them is what makes the string keys ArrayMemory requires provable.

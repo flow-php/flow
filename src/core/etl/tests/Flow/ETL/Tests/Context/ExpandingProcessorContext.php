@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Context;
 
-use Flow\ETL\FlowContext;
-use Flow\ETL\Processor;
-use Flow\ETL\Rows;
-use Flow\ETL\Transformer;
+use Flow\ETL\Operators\Processor;
+use Flow\ETL\Operators\Transformer;
+use Flow\ETL\Runtime\FlowContext;
+use Flow\ETL\Values\Rows;
 use Generator;
 
 use function Flow\Types\DSL\type_instance_of;
@@ -26,7 +26,7 @@ final class ExpandingProcessorContext
         })();
 
         return iterator_to_array(
-            type_instance_of(Processor::class)->assert($processor)->process($generator, $context),
+            type_instance_of(Processor::class)->assert($processor)->process($generator, $context->backend()),
             false,
         );
     }

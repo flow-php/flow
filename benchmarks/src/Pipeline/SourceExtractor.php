@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\Benchmarks\Pipeline;
 
 use Flow\Benchmarks\Datasets\Datasets;
-use Flow\ETL\Extractor;
-use Flow\ETL\Memory\ArrayMemory;
+use Flow\ETL\IO\Extractor;
+use Flow\ETL\Storage\Memory\ArrayMemory;
 
 use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\Adapter\Excel\DSL\from_excel;

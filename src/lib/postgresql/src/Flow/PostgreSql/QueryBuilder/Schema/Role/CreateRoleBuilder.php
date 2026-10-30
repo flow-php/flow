@@ -13,15 +13,13 @@ use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\RoleSpec;
 use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
 use Flow\PostgreSql\Protobuf\AST\RoleStmtType;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use SensitiveParameter;
 
 use function array_values;
 
 final readonly class CreateRoleBuilder implements CreateRoleFinalStep, CreateRoleOptionsStep
 {
-    use AstToSql;
-
     /**
      * @param list<array{name: string, arg: ?Node}> $options
      * @param list<string> $inRoles
@@ -115,6 +113,11 @@ final readonly class CreateRoleBuilder implements CreateRoleFinalStep, CreateRol
     public function superuser(): CreateRoleOptionsStep
     {
         return $this->withBooleanOption(RoleOption::SUPERUSER->value, true);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): CreateRoleStmt

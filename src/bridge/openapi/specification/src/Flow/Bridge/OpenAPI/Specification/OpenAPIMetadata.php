@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\OpenAPI\Specification;
 
-use Flow\ETL\Schema\Metadata;
+use Flow\ETL\Values\Schema\Metadata;
 
 enum OpenAPIMetadata: string
 {

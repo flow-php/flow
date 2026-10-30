@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\Parquet\Tests\Double;
 
 use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\SourceStream;
+use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
@@ -16,9 +17,22 @@ use Flow\Parquet\ParquetFileWriter;
 
 /**
  * Refuses every stream, as an engine does for a file that is not Parquet.
+ *
  */
 final class RefusingParquetEngine implements ParquetEngine
 {
+    public static function fromArray(array $configuration): static
+    {
+        throw new InvalidArgumentException(
+            'RefusingParquetEngine is a test double and cannot be rebuilt from a configuration',
+        );
+    }
+
+    public function normalize(): ?array
+    {
+        return null;
+    }
+
     public function openForRead(SourceStream $stream): ParquetFileReader
     {
         throw new RuntimeException('not a Parquet file');

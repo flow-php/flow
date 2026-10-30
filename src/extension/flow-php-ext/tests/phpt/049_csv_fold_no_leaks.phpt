@@ -6,9 +6,8 @@ repeated native CSV folding - including every PHP callback and a rejected time z
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Adapter\CSV\RustCSVOpenSource;
-use Flow\ETL\Schema\Inference\InferredTypes;
-use Flow\ETL\Schema\Inference\SchemaInference;
+use Flow\ETL\Adapter\CSV\IO\Extractor\RustCSVOpenSource;
+use Flow\ETL\IO\Inference\InferredTypes;
 use Flow\Filesystem\Stream\MemorySourceStream;
 use Flow\Types\Type\Native\String\StringTypeNarrower;
 
@@ -17,7 +16,7 @@ $raw = "id,json,at,zone,offset,dup,dup\n1,\"{\"\"a\"\":1}\",2024-01-01 10:00:00,
 
 $cycle = static function () use ($typer, $raw): void {
     (new RustCSVOpenSource(new MemorySourceStream($raw), ',', '"', '\\', true, true, true))
-        ->sniff(['id', 'json'], -1, new SchemaInference(), $typer);
+        ->sniff(['id', 'json'], -1, $typer);
     rust_sniff_column(['+99:60', '{"a":[1,2]}', '2024-01-01', ...json_leak_cells()], $typer);
 };
 

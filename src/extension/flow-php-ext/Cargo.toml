@@ -6,21 +6,42 @@ publish = false
 [lib]
 crate-type = ["cdylib"]
 
+[features]
+# arrow-data re-validates the arrays the builders hand over with `build_unchecked`; `make test` builds with it
+arrow-validate = ["arrow-data/force_validate"]
+
 [dependencies]
-arrow-array = { version = "59", features = ["ffi"] }
-arrow-buffer = "59"
-arrow-data = "59"
-arrow-schema = { version = "59", features = ["canonical_extension_types"] }
+arrow-array.workspace = true
+arrow-buffer.workspace = true
+arrow-data.workspace = true
+arrow-schema.workspace = true
 arrow-select = "59"
 bytes = "1"
 ext-php-rs = "0.16"
+flow-arrow-c = { path = "crates/flow-arrow-c" }
 flow-batch-frame = { path = "crates/flow-batch-frame" }
-memchr = "2"
-serde = { version = "1", features = ["derive"] }
-serde_json = { version = "1", features = ["raw_value", "unbounded_depth"] }
+flow-column-text = { path = "crates/flow-column-text" }
+flow-csv-tokenizer = { path = "crates/flow-csv-tokenizer" }
+flow-json-records = { path = "crates/flow-json-records" }
+flow-numeric-string = { path = "crates/flow-numeric-string" }
+memchr.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 
 [build-dependencies]
 ext-php-rs-build = "0.1"
 
 [profile.release]
 strip = true
+
+[workspace]
+members = ["crates/*"]
+
+[workspace.dependencies]
+arrow-array = { version = "59", features = ["ffi"] }
+arrow-buffer = "59"
+arrow-data = "59"
+arrow-schema = { version = "59", features = ["canonical_extension_types"] }
+memchr = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["raw_value", "unbounded_depth"] }

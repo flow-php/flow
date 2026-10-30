@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Extractor\File\FileExtractor;
-use Flow\ETL\Extractor\File\FileScan;
-use Flow\ETL\Extractor\File\Scanning;
-use Flow\ETL\Extractor\Statistics;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Function\Evaluation\Filter;
-use Flow\ETL\Rows;
-use Flow\ETL\Schema;
+use Flow\ETL\Functions\Evaluation\Filter;
+use Flow\ETL\Functions\ScalarFunction;
+use Flow\ETL\IO\Extractor\Criteria;
+use Flow\ETL\IO\Extractor\File\FileExtractor;
+use Flow\ETL\IO\Extractor\File\ReadWindow;
+use Flow\ETL\IO\Extractor\Statistics;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Schema;
 use Flow\Filesystem\Path;
 use Generator;
 
@@ -19,17 +20,16 @@ use function array_values;
 use function Flow\Filesystem\DSL\path;
 
 /**
- * A file source that records the scan of every read, so a test can prove what the planner pushed reached the
- * read - and that the instance itself was left alone. It returns only the rows matching the scan's filter.
+ * A file source that records the criteria of every read, so a test can prove what the planner pushed reached the
+ * read - and that the instance itself was left alone. It returns only the rows matching the criteria's filter, past its
+ * offset, and prunes with every conjunct or with none.
  */
 final class RecordingFileExtractor implements FileExtractor
 {
-    use Scanning;
-
     /**
-     * @var list<FileScan>
+     * @var list<Criteria>
      */
-    public array $scans = [];
+    public array $criteria = [];
 
     /**
      * @var list<Rows>
@@ -37,6 +37,8 @@ final class RecordingFileExtractor implements FileExtractor
     private readonly array $batches;
 
     private Schema $partitions;
+
+    private bool $prunes = false;
 
     public function __construct(
         private readonly Schema $schema,
@@ -46,13 +48,19 @@ final class RecordingFileExtractor implements FileExtractor
         $this->partitions = new Schema();
     }
 
-    public function scan(FlowContext $context, FileScan $scan): Generator
+    public function extract(Backend $backend, Criteria $criteria): Generator
     {
-        $this->scans[] = $scan;
-        $filter = Filter::bind($this->schema, ...$scan->conjuncts);
+        $this->criteria[] = $criteria;
+        $filter = Filter::bind($this->schema, ...$criteria->conjuncts);
+        $window = new ReadWindow($criteria->offset);
+        $skipped = 0;
 
         foreach ($this->batches as $rows) {
-            yield $filter->filter($rows, $context);
+            $filtered = $filter->filter($rows, $backend);
+            $kept = $window->skip($filtered, $skipped);
+            $skipped += $filtered->count() - $kept->count();
+
+            yield $kept;
         }
     }
 
@@ -61,10 +69,17 @@ final class RecordingFileExtractor implements FileExtractor
         return $this->partitions;
     }
 
+    public function prunes(ScalarFunction $conjunct): bool
+    {
+        return $this->prunes;
+    }
+
     public function schema(): Schema
     {
         return $this->schema;
     }
+
+    public function refresh(): void {}
 
     public function source(): Path
     {
@@ -75,6 +90,16 @@ final class RecordingFileExtractor implements FileExtractor
     {
         $self = new self($this->schema, ...$this->batches);
         $self->partitions = $partitions;
+        $self->prunes = $this->prunes;
+
+        return $self;
+    }
+
+    public function withPruning(): self
+    {
+        $self = new self($this->schema, ...$this->batches);
+        $self->partitions = $this->partitions;
+        $self->prunes = true;
 
         return $self;
     }
@@ -87,5 +112,10 @@ final class RecordingFileExtractor implements FileExtractor
     public function statistics(): Statistics
     {
         return new Statistics();
+    }
+
+    public function isRepeatable(): bool
+    {
+        return false;
     }
 }

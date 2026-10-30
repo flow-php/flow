@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Mother;
 
-use Flow\ETL\Plan\Explain\Entry;
+use Flow\ETL\Planning\Explain\Entry;
 use stdClass;
 
 final class EntryMother

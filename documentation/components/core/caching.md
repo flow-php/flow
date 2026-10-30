@@ -4,13 +4,11 @@
 
 ## Cache
 
-The goal of cache is to serialize and save on disk (or in another location defined by Cache implementation)
+The goal of cache is to serialize and save on disk (or in another location defined by the cache storage)
 already transformed dataset.
 
-Cache runs the pipeline and saves each batch (`Rows`) into the cache, from where it can be read later.
-
-Each batch is stored under its own cache key, and the pipeline's cache id points at an index - a batch with `key`
-and `rows` columns listing those chunk keys and their row counts in insertion order.
+Cache runs the pipeline and appends each batch (`Rows`) under the cache id, from where it can be read later in the
+same order.
 
 Another interesting use case for caching would be to share the dataset between multiple data processing pipelines.
 So instead of going to datasource multiple times and then repeating all transformations, only one ETL would
@@ -45,11 +43,9 @@ data_frame()
 3 rows
 ```
 
-By default, Flow is using Filesystem Cache, location of the cache storage can be adjusted through
-the `FLOW_LOCAL_FILESYSTEM_CACHE_DIR` environment variable.
-
-To only move the cache directory, set it on the config - the default cache keeps the pipeline's serializer
-and backend:
+By default, Flow writes the cache as [Floe](/documentation/components/core/floe.md) files on the local filesystem, in
+the pipeline's backend. The location can be adjusted through the `FLOW_LOCAL_FILESYSTEM_CACHE_DIR` environment
+variable, or on the config:
 
 ```php
 <?php
@@ -59,14 +55,14 @@ use function Flow\ETL\DSL\config_builder;
 config_builder()->cacheDir(__DIR__ . '/var/cache');
 ```
 
-To use different cache implementation please use `ConfigBuilder`
+To use a different cache, pass a `RowsStorage` to `ConfigBuilder`:
 
 ```php
 <?php
 
-use Flow\ETL\Cache\Implementation\PSRSimpleCache;
-use Flow\ETL\Column\AdaptiveBackend;
-use Flow\Floe\FloeSerializer;
+use Flow\ETL\Storage\Floe\FloeSerializer;
+use Flow\ETL\Storage\PsrRowsStorage;
+use Flow\ETL\Values\Column\AdaptiveBackend;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\Cache\Psr16Cache;
 
@@ -74,7 +70,7 @@ use function Flow\ETL\DSL\config_builder;
 
 config_builder()
     ->cache(
-        new PSRSimpleCache(
+        new PsrRowsStorage(
             new Psr16Cache(new ArrayAdapter()),
             new FloeSerializer(new AdaptiveBackend()),
         )
@@ -83,28 +79,18 @@ config_builder()
 
 The following implementations are available out of the box:
 
-* [InMemory](/src/core/etl/src/Flow/ETL/Cache/Implementation/InMemoryCache.php)
-* [LocalFilesystem](/src/core/etl/src/Flow/ETL/Cache/Implementation/FilesystemCache.php)
-* [PSRSimpleCache](/src/core/etl/src/Flow/ETL/Cache/Implementation/PSRSimpleCache.php)
-* [ApcuCache](/src/core/etl/src/Flow/ETL/Cache/Implementation/ApcuCache.php) - `new ApcuCache($serializer, $namespace)`,
+* [MemoryRowsStorage](/src/core/etl/src/Flow/ETL/Storage/MemoryRowsStorage.php)
+* [FilesystemRowsStorage](/src/core/etl/src/Flow/ETL/Storage/FilesystemRowsStorage.php) - the default,
+  `filesystem_cache($dir, $filesystem, $backend)`
+* [PsrRowsStorage](/src/core/etl/src/Flow/ETL/Storage/PsrRowsStorage.php) - any
+  [psr/simple-cache implementation](https://packagist.org/providers/psr/simple-cache-implementation)
+* [ApcuRowsStorage](/src/core/etl/src/Flow/ETL/Storage/ApcuRowsStorage.php) - `new ApcuRowsStorage($serializer, $namespace)`,
   requires `ext-apcu`
 
-PSRSimpleCache makes possible to use any of
-the [psr/simple-cache-implementation](https://packagist.org/providers/psr/simple-cache-implementation)
-but it does not come with any out of the box.
+## Batches and Serialization
 
-## Serialization
-
-Persisting caches (`FilesystemCache`, `PSRSimpleCache`, `ApcuCache`) turn `Rows` into bytes through a
-[`Serializer`](/src/core/etl/src/Flow/Serializer/Serializer.php). The default is
-[`FloeSerializer`](/src/core/etl/src/Flow/Floe/FloeSerializer.php), which writes each batch as one
-[Floe](/documentation/components/core/floe.md) BATCH frame and reads it back into the
-[column backend](/documentation/components/core/column-backend.md) it was built with -
-`new FloeSerializer($backend, $batchSize = 1000)`.
-
-`Cache::get()` returns one fully materialized `Rows` per key. The caching processor writes exactly
-one batch per cache key, so each key holds a single batch bounded by `DataFrame::cache(cacheBatchSize:)`
-(falling back to `DataFrame::batchSize()`):
+`RowsStorage::get()` yields the cached batches one by one. Each one holds at most `DataFrame::cache(cacheBatchSize:)`
+rows (falling back to `DataFrame::batchSize()`):
 
 ```php
 <?php
@@ -117,22 +103,11 @@ data_frame()
     ->run();
 ```
 
-A `Serializer` writes to and reads from streams, so the default `FilesystemCache` streams the payload
-directly to and from the cache file. `PSRSimpleCache` materializes the payload string - its PSR-16
-backend stores string values - bounded by `cacheBatchSize`.
+`FilesystemRowsStorage` writes one Floe file per cache id, `<dir>/flow-php-rows/<xxh128 of the id>/<id>.floe`, and
+reads it back in the backend it was given. A file without a footer - a write cut short by a killed process - counts
+as missing, so the next run writes it again.
 
-The default `FilesystemCache` shares the serializer of the rest of the pipeline (so it decodes into the configured
-backend). Build one with `filesystem_cache()` only for a custom serializer or filesystem - a cache you build takes
-its serializer from you:
-
-```php
-<?php
-
-use function Flow\ETL\DSL\filesystem_cache;
-
-filesystem_cache(new MyCustomSerializer());
-```
-
-`FilesystemCache` stores each entry in a file named after the cache key, with no extension, under hash-prefixed
-subdirectories, and its schema the same way under `<key>.schema` - the entry bytes are whatever the configured serializer
-produced.
+`PsrRowsStorage` and `ApcuRowsStorage` store each batch as a string, made by the
+[`Serializer`](/src/core/etl/src/Flow/ETL/Storage/Serializer/Serializer.php) they are given -
+[`FloeSerializer`](/src/core/etl/src/Flow/ETL/Storage/Floe/FloeSerializer.php) writes it as one Floe BATCH frame
+and reads it back into its [column backend](/documentation/components/core/column-backend.md).

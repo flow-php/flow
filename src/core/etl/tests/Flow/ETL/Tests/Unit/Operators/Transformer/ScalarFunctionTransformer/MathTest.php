@@ -1,0 +1,232 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Tests\Unit\Operators\Transformer\ScalarFunctionTransformer;
+
+use Flow\ETL\Foundation\Calculator\Rounding;
+use Flow\ETL\Operators\Transformer\ScalarFunctionTransformer;
+use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Values\Schema\Definition;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
+
+use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\float_schema;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\integer_schema;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\schema;
+
+final class MathTest extends FlowTestCase
+{
+    public static function divide_data_provider(): Generator
+    {
+        yield [
+            float_schema('a'),
+            0.3,
+            float_schema('b'),
+            -0.1,
+            null,
+            null,
+            ['result' => -3, 'a' => 0.3, 'b' => -0.1],
+        ];
+
+        yield [
+            float_schema('a'),
+            0.0003,
+            float_schema('b'),
+            0.00000017,
+            6,
+            Rounding::HALF_UP,
+            ['result' => 1764.705882, 'a' => 0.0003, 'b' => 0.00000017],
+        ];
+    }
+
+    public static function minus_data_provider(): Generator
+    {
+        yield [
+            float_schema('a'),
+            0.3,
+            float_schema('b'),
+            0.1,
+            ['result' => 0.19999999999999998, 'a' => 0.3, 'b' => 0.1],
+        ];
+
+        yield [
+            float_schema('a'),
+            0.0000003,
+            float_schema('b'),
+            0.0000001,
+            ['result' => 0.0000002, 'a' => 0.0000003, 'b' => 0.0000001],
+        ];
+
+        yield [
+            float_schema('a'),
+            0.3,
+            float_schema('b'),
+            0.1,
+            ['result' => 0.19999999999999998, 'a' => 0.3_0000_0000_0000_000, 'b' => 0.1_0000_0000_0000_000],
+        ];
+    }
+
+    public static function multiply_data_provider(): Generator
+    {
+        yield [
+            float_schema('a'),
+            0.3,
+            float_schema('b'),
+            -0.1,
+            ['result' => -0.03, 'a' => 0.3, 'b' => -0.1],
+        ];
+
+        yield [
+            float_schema('a'),
+            0.0000003,
+            float_schema('b'),
+            -0.0000001,
+            ['result' => -0.00000000000003, 'a' => 0.0000003, 'b' => -0.0000001],
+        ];
+    }
+
+    public static function plus_data_provider(): Generator
+    {
+        yield [
+            float_schema('a'),
+            0.3,
+            float_schema('b'),
+            -0.1,
+            ['result' => 0.19999999999999998, 'a' => 0.3, 'b' => -0.1],
+        ];
+
+        yield [
+            float_schema('a'),
+            0.0000003,
+            float_schema('b'),
+            -0.0000001,
+            ['result' => 0.0000002, 'a' => 0.0000003, 'b' => -0.0000001],
+        ];
+    }
+
+    public static function power_data_provider(): Generator
+    {
+        yield [
+            float_schema('a'),
+            -0.3,
+            int_schema('b'),
+            1,
+            ['result' => -0.3, 'a' => -0.3, 'b' => 1],
+        ];
+
+        yield [
+            float_schema('a'),
+            -0.3,
+            integer_schema('b'),
+            10,
+            ['result' => 5.9048999999999975E-6, 'a' => -0.3, 'b' => 10],
+        ];
+    }
+
+    /**
+     * @param Definition<mixed> $a
+     * @param Definition<mixed> $b
+     * @param array<string, mixed> $result
+     */
+    #[DataProvider('divide_data_provider')]
+    public function test_divide(
+        Definition $a,
+        mixed $aValue,
+        Definition $b,
+        mixed $bValue,
+        ?int $scale,
+        ?Rounding $rounding,
+        array $result,
+    ): void {
+        static::assertEquals(
+            [$result],
+            (new ScalarFunctionTransformer('result', ref($a->name())->divide(ref($b->name()), $scale, $rounding)))
+                ->transform(
+                    array_to_rows([[$a->name() => $aValue, $b->name() => $bValue]], schema($a, $b)),
+                    flow_context()->backend(),
+                )
+                ->toArray(),
+        );
+    }
+
+    /**
+     * @param Definition<mixed> $a
+     * @param Definition<mixed> $b
+     * @param array<string, mixed> $result
+     */
+    #[DataProvider('minus_data_provider')]
+    public function test_minus(Definition $a, mixed $aValue, Definition $b, mixed $bValue, array $result): void
+    {
+        static::assertEquals(
+            [$result],
+            (new ScalarFunctionTransformer('result', ref($a->name())->minus(ref($b->name()))))
+                ->transform(
+                    array_to_rows([[$a->name() => $aValue, $b->name() => $bValue]], schema($a, $b)),
+                    flow_context()->backend(),
+                )
+                ->toArray(),
+        );
+    }
+
+    /**
+     * @param Definition<mixed> $a
+     * @param Definition<mixed> $b
+     * @param array<string, mixed> $result
+     */
+    #[DataProvider('multiply_data_provider')]
+    public function test_multiply(Definition $a, mixed $aValue, Definition $b, mixed $bValue, array $result): void
+    {
+        static::assertEquals(
+            [$result],
+            (new ScalarFunctionTransformer('result', ref($a->name())->multiply(ref($b->name()))))
+                ->transform(
+                    array_to_rows([[$a->name() => $aValue, $b->name() => $bValue]], schema($a, $b)),
+                    flow_context()->backend(),
+                )
+                ->toArray(),
+        );
+    }
+
+    /**
+     * @param Definition<mixed> $a
+     * @param Definition<mixed> $b
+     * @param array<string, mixed> $result
+     */
+    #[DataProvider('plus_data_provider')]
+    public function test_plus(Definition $a, mixed $aValue, Definition $b, mixed $bValue, array $result): void
+    {
+        static::assertEquals(
+            [$result],
+            (new ScalarFunctionTransformer('result', ref($a->name())->plus(ref($b->name()))))
+                ->transform(
+                    array_to_rows([[$a->name() => $aValue, $b->name() => $bValue]], schema($a, $b)),
+                    flow_context()->backend(),
+                )
+                ->toArray(),
+        );
+    }
+
+    /**
+     * @param Definition<mixed> $a
+     * @param Definition<mixed> $b
+     * @param array<string, mixed> $result
+     */
+    #[DataProvider('power_data_provider')]
+    public function test_power(Definition $a, mixed $aValue, Definition $b, mixed $bValue, array $result): void
+    {
+        static::assertEquals(
+            [$result],
+            (new ScalarFunctionTransformer('result', ref($a->name())->power(ref($b->name()))))
+                ->transform(
+                    array_to_rows([[$a->name() => $aValue, $b->name() => $bValue]], schema($a, $b)),
+                    flow_context()->backend(),
+                )
+                ->toArray(),
+        );
+    }
+}

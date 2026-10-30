@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Unit;
 
+use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Partition;
 use Flow\Filesystem\Partitions;
+use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
+use Flow\Filesystem\Tests\Double\Flavour;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestWith;
@@ -371,5 +374,74 @@ final class PathTest extends TestCase
             ['year', 'region'],
             array_map(static fn(Partition $p): string => $p->name, $path->partitions()->toArray()),
         );
+    }
+
+    public function test_normalize_round_trips_an_enum_option(): void
+    {
+        $path = path('/data/file.csv', [
+            'content-type' => ContentType::CSV,
+            'flavour' => Flavour::SOUR,
+            'retries' => 3,
+        ]);
+
+        static::assertSame(
+            [
+                'uri' => 'file:///data/file.csv',
+                'options' => [
+                    'content-type' => ['enum' => ContentType::class, 'case' => 'CSV'],
+                    'flavour' => ['enum' => Flavour::class, 'case' => 'SOUR'],
+                    'retries' => 3,
+                ],
+                'partitions' => [],
+            ],
+            $path->normalize(),
+        );
+        static::assertEquals($path, Path::fromArray($path->normalize()));
+        static::assertSame(Flavour::SOUR, Path::fromArray($path->normalize())->options()['flavour']);
+    }
+
+    public function test_normalize_carries_only_the_explicit_partitions(): void
+    {
+        $path = path('/data/year=2024/file.csv')->withPartitions(new Partitions(new Partition('region', 'eu')));
+
+        static::assertSame([['name' => 'region', 'value' => 'eu']], $path->normalize()['partitions']);
+        static::assertEquals($path->partitions(), Path::fromArray($path->normalize())->partitions());
+    }
+
+    public function test_a_key_value_uri_path_round_trips_with_no_explicit_partitions(): void
+    {
+        $path = path('/data/year=2024/file.csv');
+
+        static::assertSame([], $path->normalize()['partitions']);
+        static::assertEquals($path, Path::fromArray($path->normalize()));
+        static::assertEquals(partitions(partition('year', '2024')), Path::fromArray($path->normalize())->partitions());
+    }
+
+    public function test_from_array_refuses_an_option_naming_a_class_that_is_not_an_enum(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Path option "x" names a class that is not an enum');
+
+        Path::fromArray([
+            'uri' => 'file:///a.csv',
+            'options' => ['x' => ['enum' => Path::class, 'case' => 'A']],
+            'partitions' => [],
+        ]);
+    }
+
+    public function test_from_array_refuses_a_missing_uri(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Path data must hold a "uri" string');
+
+        Path::fromArray(['options' => [], 'partitions' => []]);
+    }
+
+    public function test_from_array_refuses_a_malformed_partition(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Path partitions must be a list of {name: string, value: ?string}');
+
+        Path::fromArray(['uri' => 'file:///a.csv', 'options' => [], 'partitions' => [['name' => 1]]]);
     }
 }

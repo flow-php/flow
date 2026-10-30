@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Comparator;
 
-use Flow\ETL\Column\AdaptiveBackend;
-use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Tests\Comparator\ColumnComparator;
 use Flow\ETL\Tests\Mother\ColumnMother;
+use Flow\ETL\Values\Column\AdaptiveBackend;
+use Flow\ETL\Values\Column\PhpBackend;
 use PHPUnit\Framework\TestCase;
 use SebastianBergmann\Comparator\ComparisonFailure;
 use SebastianBergmann\Comparator\Factory;

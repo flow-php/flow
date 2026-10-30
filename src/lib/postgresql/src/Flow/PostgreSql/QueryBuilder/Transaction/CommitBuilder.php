@@ -6,12 +6,10 @@ namespace Flow\PostgreSql\QueryBuilder\Transaction;
 
 use Flow\PostgreSql\Protobuf\AST\TransactionStmt;
 use Flow\PostgreSql\Protobuf\AST\TransactionStmtKind;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 final readonly class CommitBuilder implements CommitOptionsStep
 {
-    use AstToSql;
-
     private function __construct(
         private ?bool $chain = null,
     ) {}
@@ -29,6 +27,11 @@ final readonly class CommitBuilder implements CommitOptionsStep
     public function andNoChain(): CommitFinalStep
     {
         return new self(false);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): TransactionStmt
