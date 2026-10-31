@@ -9,6 +9,7 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\ColumnMother;
 use InvalidArgumentException;
 
+use function array_column;
 use function Flow\ETL\DSL\integer_schema;
 use function Flow\ETL\DSL\string_schema;
 
@@ -37,5 +38,14 @@ final class ColumnsTest extends FlowTestCase
         $this->expectExceptionMessage('Column "non_existing" does not exist.');
 
         $columns->get('non_existing');
+    }
+
+    public function test_normalize_lists_every_column(): void
+    {
+        $columns = new Columns();
+        $columns->add(integer_schema('a'), ColumnMother::of(integer_schema('a'), [1]));
+        $columns->add(string_schema('b'), ColumnMother::of(string_schema('b'), ['x']));
+
+        static::assertSame(['a', 'b'], array_column($columns->normalize(), 'name'));
     }
 }

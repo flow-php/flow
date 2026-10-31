@@ -69,4 +69,12 @@ final class Consumption
     {
         return $this->min()->diff($this->initial());
     }
+
+    /**
+     * @return array{initial: int, min: int, max: int} in bytes
+     */
+    public function normalize(): array
+    {
+        return ['initial' => $this->initial->inBytes(), 'min' => $this->min->inBytes(), 'max' => $this->max->inBytes()];
+    }
 }

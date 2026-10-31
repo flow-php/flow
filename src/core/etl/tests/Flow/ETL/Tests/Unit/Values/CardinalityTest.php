@@ -13,6 +13,9 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use function str_repeat;
 use function strlen;
 
+use const INF;
+use const NAN;
+
 final class CardinalityTest extends FlowTestCase
 {
     public function test_a_bound_survives_only_if_both_sides_have_one(): void
@@ -164,5 +167,23 @@ final class CardinalityTest extends FlowTestCase
         // str_repeat() takes int<0, max>: the analyzer accepts these properties only because the guard narrowed them
         static::assertSame(5, strlen(str_repeat('x', Cardinality::atMost(5)->atMost ?? 0)));
         static::assertSame(7, strlen(str_repeat('x', Cardinality::approximately(7)->estimate ?? 0)));
+    }
+
+    public function test_normalize(): void
+    {
+        static::assertSame(
+            ['at_most' => 10, 'estimate' => 5, 'relative_error' => 0.25],
+            (new Cardinality(10, 5, 0.25))->normalize(),
+        );
+        static::assertSame(
+            ['at_most' => null, 'estimate' => null, 'relative_error' => 0.5],
+            Cardinality::unknown()->normalize(),
+        );
+    }
+
+    public function test_normalize_gives_no_relative_error_when_it_is_not_finite(): void
+    {
+        static::assertNull((new Cardinality(null, 5, INF))->normalize()['relative_error']);
+        static::assertNull((new Cardinality(null, 5, NAN))->normalize()['relative_error']);
     }
 }

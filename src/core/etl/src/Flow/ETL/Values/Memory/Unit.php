@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Values\Memory;
 
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Exception\RuntimeException;
 
 use function abs;
 use function ctype_digit;
+use function getrusage;
 use function round;
 use function str_replace;
 use function strtoupper;
@@ -56,6 +58,17 @@ final readonly class Unit
                     "Can't extract memory limit in bytes from php ini value: {$limit}",
                 ),
         };
+    }
+
+    /**
+     * The peak resident set size of this process so far, as the OS counts it: Rust allocations and shared libraries
+     * included. getrusage() reports it in bytes on macOS and in KiB elsewhere.
+     */
+    public static function processPeak(): self
+    {
+        $maxRss = (getrusage() ?: throw new RuntimeException('getrusage() failed'))['ru_maxrss'];
+
+        return new self(PHP_OS_FAMILY === 'Darwin' ? $maxRss : $maxRss * 1024);
     }
 
     public function absolute(): self

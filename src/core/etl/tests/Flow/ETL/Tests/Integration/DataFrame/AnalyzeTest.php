@@ -12,13 +12,19 @@ use Flow\ETL\Runtime\Metrics\Report;
 use Flow\ETL\Runtime\Metrics\SourceStatistics;
 use Flow\ETL\Runtime\Metrics\Statistics\Columns;
 use Flow\ETL\Tests\Context\FloeFilesContext;
+use Flow\ETL\Tests\Context\MemoryTelemetryContext;
 use Flow\ETL\Tests\Double\InlineLoader;
+use Flow\ETL\Tests\Double\RecordingSplittableExtractor;
+use Flow\ETL\Tests\Double\StubLauncher;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\ETL\Tests\Mother\MarketRowsMother;
+use Flow\ETL\Tests\Mother\RowsMother;
 use Flow\ETL\Values\Cardinality;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Join\JoinType;
+use Flow\ETL\Values\Memory\Unit;
 use Flow\ETL\Values\Rows;
+use Flow\Telemetry\Logger\Severity;
 
 use function Flow\ETL\DSL\analyze;
 use function Flow\ETL\DSL\config_builder;
@@ -64,7 +70,7 @@ final class AnalyzeTest extends FlowIntegrationTestCase
             $report->schema(),
         );
         static::assertSame(7, $report->schema()?->count());
-        static::assertGreaterThan(0, $report->statistics()->memory->max()->inBytes());
+        static::assertGreaterThan(0, $report->statistics()->heap->max()->inBytes());
         static::assertInstanceOf(DateTimeImmutable::class, $report->statistics()->executionTime->startedAt);
         static::assertInstanceOf(DateTimeImmutable::class, $report->statistics()->executionTime->finishedAt);
         static::assertGreaterThanOrEqual(
@@ -75,6 +81,49 @@ final class AnalyzeTest extends FlowIntegrationTestCase
         static::assertInstanceOf(HighResolutionTime::class, $report->statistics()->executionTime->highResolutionTime);
         static::assertgreaterThan(0, $report->statistics()->executionTime->highResolutionTime->toSeconds());
         static::assertInstanceOf(Columns::class, $report->statistics()->columns);
+    }
+
+    public function test_analyzing_without_telemetry_reports_the_rows_and_heap_of_each_run(): void
+    {
+        $dataFrame = df(config_builder()->build())->read(from_array([['id' => 1], ['id' => 2]]));
+
+        $first = $dataFrame->run(analyze());
+        $second = $dataFrame->run(analyze());
+
+        static::assertSame(2, $first->statistics()->totalRows());
+        static::assertSame(2, $second->statistics()->totalRows());
+        static::assertGreaterThan(0, $first->statistics()->heap->max()->inBytes());
+        static::assertGreaterThan(0, $second->statistics()->heap->max()->inBytes());
+        static::assertNotSame($first->statistics()->heap, $second->statistics()->heap);
+    }
+
+    public function test_a_launched_run_reports_the_peak_of_every_worker(): void
+    {
+        $report = df(config_builder()->launcher(new StubLauncher(workers: [
+            101 => 40_000_000,
+            102 => 41_000_000,
+        ]))->build())->read(new RecordingSplittableExtractor(schema(int_schema('id')), [RowsMother::sequentialIds(
+            3,
+        )]))->run(analyze());
+
+        static::assertSame(3, $report->statistics()->totalRows());
+        static::assertEquals(Unit::fromBytes(41_000_000), $report->statistics()->processes->workerPeak());
+        static::assertSame(
+            $report->statistics()->processes->parent->inBytes() + 81_000_000,
+            $report->statistics()->processes->peakSum()->inBytes(),
+        );
+    }
+
+    public function test_a_launched_run_that_collects_the_schema_warns_once_and_still_reports_it(): void
+    {
+        $telemetry = new MemoryTelemetryContext();
+
+        $report = df(config_builder()->withTelemetry($telemetry->telemetry)->launcher(new StubLauncher())->build())
+            ->read(new RecordingSplittableExtractor(schema(int_schema('id')), [RowsMother::sequentialIds(3)]))
+            ->run(analyze()->withSchema());
+
+        static::assertCount(1, $telemetry->logs->entriesWithSeverity(Severity::WARN));
+        static::assertSame(1, $report->schema()?->count());
     }
 
     public function test_analyzing_csv_file_with_limit(): void

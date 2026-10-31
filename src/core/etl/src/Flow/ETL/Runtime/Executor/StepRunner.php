@@ -54,7 +54,7 @@ final readonly class StepRunner
      * @param Generator<CorruptedRecordException|Rows> $input
      * @param null|Extractor|Reader $source the source $input comes from directly, so its failures reach the error
      *                                      handler and its corrupted records its reject loader
-     * @param null|SourceCounts $sources counts the rows the sources of a join's right plan yield
+     * @param null|RunCounts $counts counts the rows the sources of a join's right plan yield
      *
      * @return Generator<int, Rows, null|Signal, void>
      */
@@ -63,7 +63,7 @@ final readonly class StepRunner
         Generator $input,
         FlowContext $context,
         Extractor|Reader|null $source = null,
-        ?SourceCounts $sources = null,
+        ?RunCounts $counts = null,
     ): Generator {
         $run = [];
 
@@ -77,7 +77,7 @@ final readonly class StepRunner
                         $step->join::class,
                         $step->join->join(
                             $upstream,
-                            $context->config->executor()->executePlan($step->right, $context, $sources),
+                            $context->config->executor()->executePlan($step->right, $context, $counts),
                             $context->backend(),
                         ),
                         $context,

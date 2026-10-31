@@ -8,13 +8,19 @@ use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\IO\Extractor;
 use Flow\ETL\IO\Extractor\Signal;
 use Flow\ETL\IO\Extractor\Statistics;
+use Flow\ETL\Runtime\Metrics\Processes;
 use Flow\ETL\Runtime\Metrics\SourceStatistics;
+use Flow\ETL\Values\Memory\Unit;
 use Flow\ETL\Values\Rows;
 use Flow\Telemetry\ObjectExtractor;
 use Generator;
 use SplObjectStorage;
 
-final class SourceCounts
+use function array_map;
+use function array_values;
+use function max;
+
+final class RunCounts
 {
     /**
      * @var SplObjectStorage<Extractor, SourceCount>
@@ -28,6 +34,11 @@ final class SourceCounts
      * @var SplObjectStorage<Extractor, Statistics>
      */
     private SplObjectStorage $declared;
+
+    /**
+     * @var array<int, int> the peak bytes of each worker, by pid, in the order worker() first saw them
+     */
+    private array $workers = [];
 
     public function __construct()
     {
@@ -87,6 +98,29 @@ final class SourceCounts
 
             $this->reads[$extractor]->absorb($other->reads[$extractor]);
         }
+
+        $this->absorbWorkers($other);
+    }
+
+    /**
+     * Takes over the worker peaks $other saw and none of its reads: an abandoned attempt's workers used that memory,
+     * while its source is read again.
+     */
+    public function absorbWorkers(self $other): void
+    {
+        foreach ($other->workers as $pid => $peakBytes) {
+            $this->worker($pid, $peakBytes);
+        }
+    }
+
+    public function worker(int $pid, int $peakBytes): void
+    {
+        $this->workers[$pid] = max($this->workers[$pid] ?? 0, $peakBytes);
+    }
+
+    public function processes(Unit $parent): Processes
+    {
+        return new Processes($parent, array_map(Unit::fromBytes(...), array_values($this->workers)));
     }
 
     /**

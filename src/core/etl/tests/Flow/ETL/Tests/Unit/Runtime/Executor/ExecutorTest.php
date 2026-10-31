@@ -27,7 +27,7 @@ use Flow\ETL\Planning\Physical\PhysicalPlan;
 use Flow\ETL\Planning\Physical\Pipeline;
 use Flow\ETL\Planning\Physical\PipelineSteps;
 use Flow\ETL\Runtime\Executor\Executor;
-use Flow\ETL\Runtime\Executor\SourceCounts;
+use Flow\ETL\Runtime\Executor\RunCounts;
 use Flow\ETL\Tests\Context\ExecutedPlan;
 use Flow\ETL\Tests\Context\GroupByContext;
 use Flow\ETL\Tests\Context\MemoryTelemetryContext;
@@ -791,7 +791,7 @@ final class ExecutorTest extends FlowTestCase
     {
         $extractor = new RecordingSplittableExtractor(schema(int_schema('id')), [RowsMother::sequentialIds(4)]);
         $filter = new ScalarFunctionFilterTransformer(ref('id')->greaterThan(lit(2)));
-        $sources = new SourceCounts();
+        $sources = new RunCounts();
         $launcher = new RecordingLauncher(new StubLauncher(new PipelineSteps([$filter])));
 
         $rows = iterator_to_array((new Executor())->executePlan(
@@ -829,7 +829,7 @@ final class ExecutorTest extends FlowTestCase
 
     public function test_only_the_pipeline_that_reads_the_source_counts_its_rows(): void
     {
-        $sources = new SourceCounts();
+        $sources = new RunCounts();
         $context = NodeMother::context();
 
         iterator_to_array((new Executor())->execute(

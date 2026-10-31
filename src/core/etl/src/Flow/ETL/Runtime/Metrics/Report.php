@@ -6,6 +6,8 @@ namespace Flow\ETL\Runtime\Metrics;
 
 use Flow\ETL\Values\Schema;
 
+use function array_map;
+
 final readonly class Report
 {
     /**
@@ -16,6 +18,22 @@ final readonly class Report
         private Statistics $statistics,
         private ?array $sources,
     ) {}
+
+    /**
+     * The JSON form for CI: the same values as the typed getters, memory in bytes.
+     *
+     * @return array{schema: null|array<array-key, mixed>, statistics: array<string, mixed>, sources: null|list<array<string, mixed>>}
+     */
+    public function normalize(): array
+    {
+        return [
+            'schema' => $this->schema?->normalize(),
+            'statistics' => $this->statistics->normalize(),
+            'sources' => $this->sources === null
+                ? null
+                : array_map(static fn(SourceStatistics $source): array => $source->normalize(), $this->sources),
+        ];
+    }
 
     /**
      * @return null|list<SourceStatistics>

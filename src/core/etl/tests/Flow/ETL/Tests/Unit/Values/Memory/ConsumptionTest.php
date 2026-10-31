@@ -29,4 +29,18 @@ final class ConsumptionTest extends FlowTestCase
         static::assertSame(1_048_576, $native->initial()->inBytes() - $php->initial()->inBytes());
         static::assertSame(1_048_576, $native->capture()->inBytes() - $php->capture()->inBytes());
     }
+
+    public function test_normalize_gives_every_figure_in_bytes(): void
+    {
+        $consumption = new Consumption(new SpyBackend(1_048_576));
+
+        static::assertSame(
+            [
+                'initial' => $consumption->initial()->inBytes(),
+                'min' => $consumption->min()->inBytes(),
+                'max' => $consumption->max()->inBytes(),
+            ],
+            $consumption->normalize(),
+        );
+    }
 }

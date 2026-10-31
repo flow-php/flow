@@ -6,6 +6,8 @@ namespace Flow\ETL\Values;
 
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 
+use function is_finite;
+
 final readonly class Cardinality
 {
     public const float DEFAULT_RELATIVE_ERROR = 0.5;
@@ -104,5 +106,19 @@ final readonly class Cardinality
             estimate: $this->estimate !== null && $other->estimate !== null ? $this->estimate + $other->estimate : null,
             relativeError: max($this->relativeError, $other->relativeError),
         );
+    }
+
+    /**
+     * relative_error is null when it is not a finite number.
+     *
+     * @return array{at_most: null|int<0, max>, estimate: null|int<0, max>, relative_error: null|float}
+     */
+    public function normalize(): array
+    {
+        return [
+            'at_most' => $this->atMost,
+            'estimate' => $this->estimate,
+            'relative_error' => is_finite($this->relativeError) ? $this->relativeError : null,
+        ];
     }
 }

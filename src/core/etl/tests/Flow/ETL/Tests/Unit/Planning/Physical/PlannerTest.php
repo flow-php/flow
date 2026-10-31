@@ -51,7 +51,7 @@ use Flow\ETL\Planning\Physical\PlannedNodes;
 use Flow\ETL\Planning\Physical\Planner;
 use Flow\ETL\Planning\Physical\TransactionGroup;
 use Flow\ETL\Runtime\Executor\Executor;
-use Flow\ETL\Runtime\Executor\SourceCounts;
+use Flow\ETL\Runtime\Executor\RunCounts;
 use Flow\ETL\Runtime\Metrics\SourceStatistics;
 use Flow\ETL\Storage\Memory\ArrayMemory;
 use Flow\ETL\Storage\MemoryRowsStorage;
@@ -354,7 +354,7 @@ final class PlannerTest extends FlowTestCase
             'r_',
         );
         $context = NodeMother::context(config());
-        $sources = new SourceCounts();
+        $sources = new RunCounts();
 
         $plan = $context->config->planner()->plan(new LogicalPlan(new Result($node)));
         iterator_to_array($context->config->executor()->executePlan($plan, $context, $sources));

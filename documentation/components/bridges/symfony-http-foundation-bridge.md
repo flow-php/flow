@@ -184,7 +184,8 @@ final class ReportsController extends AbstractController
                 $this->logger->info('Stream completed', [
                     'total_rows' => $report->statistics()->totalRows(),
                     'execution_time_seconds' => $report->statistics()->executionTime->inSeconds(),
-                    'memory_peak_mb' => $report->statistics()->memory->max()->inMb(),
+                    'heap_peak_mb' => $report->statistics()->heap->max()->inMb(),
+                    'process_peak_mb' => $report->statistics()->processes->parent->inMb(),
                 ]);
             }))
             ->as('orders.json')
@@ -218,6 +219,7 @@ The `Report` object provides access to:
 - `$report->statistics()->executionTime->inSeconds()` - Execution duration
 - `$report->statistics()->executionTime->startedAt` - Start timestamp
 - `$report->statistics()->executionTime->finishedAt` - End timestamp
-- `$report->statistics()->memory->max()` - Peak memory usage
+- `$report->statistics()->heap->max()` - Peak PHP heap plus backend memory, sampled once per batch
+- `$report->statistics()->processes` - OS peak of the process and of every worker: `workerPeak()`, `peakSum()`
 - `$report->schema()` - Dataset schema (when `withSchema()` is enabled)
 - `$report->statistics()->columns` - Column statistics (when `withColumnStatistics()` is enabled)

@@ -8,7 +8,7 @@ use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\SplittableExtractor;
 use Flow\ETL\IO\Inference\Sniffs;
 use Flow\ETL\Planning\Physical\PhysicalPlan;
-use Flow\ETL\Runtime\Executor\SourceCounts;
+use Flow\ETL\Runtime\Executor\RunCounts;
 use Flow\ETL\Runtime\FlowContext;
 
 interface Launcher extends Sniffs
@@ -16,13 +16,13 @@ interface Launcher extends Sniffs
     /**
      * Decides before the first batch whether launching the head of $plan's chain pays; null when it does not and the
      * executor reads $source. Otherwise the launch: its rows are identical to the launched steps run over the source's
-     * own scan of $criteria, with the source's rows counted into $sources.
+     * own scan of $criteria, with the source's rows and the workers' peaks counted into $counts.
      */
     public function read(
         PhysicalPlan $plan,
         SplittableExtractor $source,
         Criteria $criteria,
         FlowContext $context,
-        ?SourceCounts $sources = null,
+        ?RunCounts $counts = null,
     ): ?Launch;
 }

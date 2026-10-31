@@ -42,13 +42,14 @@ final readonly class Executor
     /**
      * Plans and runs a whole plan inside one DataFrame span of $context: a planning failure closes the span as failed.
      *
-     * @param null|SourceCounts $sources counts the rows every source yields, a joined frame's included
+     * @param null|RunCounts $counts counts the rows every source yields, a joined frame's included, and the peak of
+     *                                every launched worker
      *
      * @throws InvalidLogicException when $context is already being advanced
      *
      * @return Generator<int, Rows, mixed, PhysicalPlan> returns the physical plan it ran
      */
-    public function execute(LogicalPlan $logical, FlowContext $context, ?SourceCounts $sources = null): Generator
+    public function execute(LogicalPlan $logical, FlowContext $context, ?RunCounts $counts = null): Generator
     {
         if ($this->advancing->offsetExists($context)) {
             throw InvalidLogicException::cyclicPlanOnRun();
@@ -61,7 +62,7 @@ final readonly class Executor
         try {
             $plan = $context->config->planner()->plan($logical);
 
-            foreach ($this->executePlan($plan, $context, $sources) as $rows) {
+            foreach ($this->executePlan($plan, $context, $counts) as $rows) {
                 // disarmed across our own yield: while parked we are not advancing, so a second read
                 // arriving here is another reader of the same plan, not recursion
                 $this->advancing->offsetUnset($context);
@@ -133,13 +134,13 @@ final readonly class Executor
      * Drives a plan with no DataFrame span - $context belongs to whoever runs it. The config's launcher may launch the
      * head of the plan's chain; without one, or when the launch does not pay, the plan runs here.
      *
-     * @param null|SourceCounts $sources counts the rows the plan's source yields
+     * @param null|RunCounts $counts counts the rows the plan's source yields and the peak of every launched worker
      *
      * @return Generator<int, Rows>
      */
-    public function executePlan(PhysicalPlan $plan, FlowContext $context, ?SourceCounts $sources = null): Generator
+    public function executePlan(PhysicalPlan $plan, FlowContext $context, ?RunCounts $counts = null): Generator
     {
-        return $this->run($plan->root(), $context, $plan, $sources, null, new StepRunner());
+        return $this->run($plan->root(), $context, $plan, $counts, null, new StepRunner());
     }
 
     /**
@@ -170,7 +171,7 @@ final readonly class Executor
         Pipeline $pipeline,
         FlowContext $context,
         ?PhysicalPlan $plan,
-        ?SourceCounts $sources,
+        ?RunCounts $counts,
         ?Extractor $fed,
         StepRunner $runner,
     ): Generator {
@@ -183,7 +184,7 @@ final readonly class Executor
             default => $fed ?? throw InvalidLogicException::because('A pipeline that reads no source must be fed'),
         };
         $criteria = $read instanceof Read ? $read->criteria() : new Criteria();
-        $counted = $read instanceof Read ? $sources : null;
+        $counted = $read instanceof Read ? $counts : null;
         $launch =
             $plan !== null && $source instanceof SplittableExtractor
                 ? $context->config->launcher()?->read($plan, $source, $criteria, $context, $counted)
@@ -207,8 +208,8 @@ final readonly class Executor
 
             $generator =
                 $position === $last && $launch !== null
-                    ? $runner->steps($launch->rest, $generator, $context, sources: $sources)
-                    : $runner->steps($stage->steps, $generator, $context, $position === 0 ? $source : null, $sources);
+                    ? $runner->steps($launch->rest, $generator, $context, counts: $counts)
+                    : $runner->steps($stage->steps, $generator, $context, $position === 0 ? $source : null, $counts);
         }
 
         // a foreach, never `yield from`: the re-yield must not forward the consumer's sent signal; every stage routes
