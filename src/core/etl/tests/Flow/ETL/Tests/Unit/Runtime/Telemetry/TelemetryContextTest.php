@@ -48,6 +48,38 @@ use function Flow\ETL\DSL\telemetry_options;
 
 final class TelemetryContextTest extends FlowTestCase
 {
+    public function test_a_finished_dataframe_keeps_its_rows_and_memory_until_the_next_one_starts(): void
+    {
+        $context = new MemoryTelemetryContext();
+
+        $context->telemetryContext->dataFrameStarted([]);
+        $context->telemetryContext->dataFrameBatchProcessed(array_to_rows([
+            ['id' => 1],
+            ['id' => 2],
+        ], schema(int_schema('id'))));
+        $finished = $context->telemetryContext->memory();
+        $context->telemetryContext->dataFrameCompleted();
+
+        static::assertSame(2, $context->telemetryContext->totalRows());
+        static::assertSame($finished, $context->telemetryContext->memory());
+
+        $context->telemetryContext->dataFrameStarted([]);
+
+        static::assertSame(0, $context->telemetryContext->totalRows());
+        static::assertNotSame($finished, $context->telemetryContext->memory());
+    }
+
+    public function test_a_failed_dataframe_keeps_its_rows_until_the_next_one_starts(): void
+    {
+        $context = new MemoryTelemetryContext();
+
+        $context->telemetryContext->dataFrameStarted([]);
+        $context->telemetryContext->dataFrameBatchProcessed(array_to_rows([['id' => 1]], schema(int_schema('id'))));
+        $context->telemetryContext->dataFrameFailed(new RuntimeException('failed'));
+
+        static::assertSame(1, $context->telemetryContext->totalRows());
+    }
+
     public function test_dataframe_batch_processed_drains_abandoned_spans(): void
     {
         $context = new MemoryTelemetryContext(telemetry_options(trace_transformations: true));

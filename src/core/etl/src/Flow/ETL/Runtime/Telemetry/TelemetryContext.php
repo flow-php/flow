@@ -137,9 +137,7 @@ final class TelemetryContext
         }
 
         $this->dataFrameExecutionTime = null;
-        $this->totalRowsProcessed = 0;
         $this->dataFrameSpan = null;
-        $this->memory = new Consumption($this->backend);
     }
 
     /**
@@ -195,9 +193,7 @@ final class TelemetryContext
         }
 
         $this->dataFrameExecutionTime = null;
-        $this->totalRowsProcessed = 0;
         $this->dataFrameSpan = null;
-        $this->memory = new Consumption($this->backend);
     }
 
     /**
@@ -242,6 +238,7 @@ final class TelemetryContext
 
         $this->dataFrameExecutionTime = HighResolutionTime::now();
         $this->totalRowsProcessed = 0;
+        $this->memory = new Consumption($this->backend);
     }
 
     /**
@@ -255,6 +252,22 @@ final class TelemetryContext
     public function logger(): Logger
     {
         return $this->logger;
+    }
+
+    /**
+     * The heap of the data frame started last, sampled once per batch; it stays readable after the data frame ends.
+     */
+    public function memory(): Consumption
+    {
+        return $this->memory;
+    }
+
+    /**
+     * The rows that reached the end of the data frame started last; it stays readable after the data frame ends.
+     */
+    public function totalRows(): int
+    {
+        return $this->totalRowsProcessed;
     }
 
     /**

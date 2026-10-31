@@ -115,5 +115,6 @@ $report = data_frame()
     ->write($loader)
     ->run(analyze: analyze());
 
-echo "Peak memory usage: " . $report->statistics()->memory->max()->inMb() . " MB\n";
+echo "Peak heap: " . $report->statistics()->heap->max()->inMb() . " MB\n";
+echo "Process peak: " . $report->statistics()->processes->parent->inMb() . " MB\n";
 ```

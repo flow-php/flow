@@ -24,6 +24,9 @@ data_frame()
     ->write(to_branch(not($valid), to_json('rejects/invalid.json')))
     ->run();
 
+// count: fail CI above a limit
+$rejected = data_frame()->read(from_json_lines('rejects/broken.jsonl'))->count();
+
 // report
 data_frame()
     ->read(from_json_lines('rejects/broken.jsonl'))

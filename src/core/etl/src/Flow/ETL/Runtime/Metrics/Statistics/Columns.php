@@ -10,6 +10,7 @@ use Flow\ETL\Values\Schema\Definition;
 use InvalidArgumentException;
 
 use function array_key_exists;
+use function array_map;
 use function array_values;
 use function sprintf;
 
@@ -57,5 +58,13 @@ final class Columns
         }
 
         return $this->columns[$ref];
+    }
+
+    /**
+     * @return list<array<string, null|bool|float|int|string>>
+     */
+    public function normalize(): array
+    {
+        return array_map(static fn(Column $column): array => $column->normalize(), array_values($this->columns));
     }
 }

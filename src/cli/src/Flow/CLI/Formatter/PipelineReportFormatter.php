@@ -120,12 +120,23 @@ final readonly class PipelineReportFormatter
                 ->render();
         }
 
+        $statistics = $this->report->statistics();
+        $workerPeak = $statistics->processes->workerPeak();
+
         $this->style->newLine();
         $this->style->definitionList(
             'Statistics',
             new TableSeparator(),
-            ['Analyzed Rows' => number_format($this->report->statistics()->totalRows())],
-            ['Execution Time' => $this->report->statistics()->executionTime->highResolutionTime->toString()],
+            ['Analyzed Rows' => number_format($statistics->totalRows())],
+            ['Execution Time' => $statistics->executionTime->highResolutionTime->toString()],
+            ['Heap Peak' => $statistics->heap->max()->inMb() . ' MB'],
+            ['Process Peak' => $statistics->processes->parent->inMb() . ' MB'],
+            ...$workerPeak === null
+                ? []
+                : [
+                    ['Worker Peak' => $workerPeak->inMb() . ' MB'],
+                    ['Peak Sum' => $statistics->processes->peakSum()->inMb() . ' MB'],
+                ],
         );
     }
 }

@@ -8,7 +8,7 @@ use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\SplittableExtractor;
 use Flow\ETL\IO\Inference\Sniffer;
 use Flow\ETL\Planning\Physical\PhysicalPlan;
-use Flow\ETL\Runtime\Executor\SourceCounts;
+use Flow\ETL\Runtime\Executor\RunCounts;
 use Flow\ETL\Runtime\FlowContext;
 use Flow\ETL\Runtime\Launcher\Launch;
 use Flow\ETL\Runtime\Launcher\Launcher;
@@ -19,7 +19,7 @@ use Flow\ETL\Runtime\Launcher\Launcher;
 final class RecordingLauncher implements Launcher
 {
     /**
-     * @var list<array{PhysicalPlan, SplittableExtractor, Criteria, FlowContext, null|SourceCounts}>
+     * @var list<array{PhysicalPlan, SplittableExtractor, Criteria, FlowContext, null|RunCounts}>
      */
     public array $reads = [];
 
@@ -40,11 +40,11 @@ final class RecordingLauncher implements Launcher
         SplittableExtractor $source,
         Criteria $criteria,
         FlowContext $context,
-        ?SourceCounts $sources = null,
+        ?RunCounts $counts = null,
     ): ?Launch {
-        $this->reads[] = [$plan, $source, $criteria, $context, $sources];
+        $this->reads[] = [$plan, $source, $criteria, $context, $counts];
 
-        return $this->delegate?->read($plan, $source, $criteria, $context, $sources);
+        return $this->delegate?->read($plan, $source, $criteria, $context, $counts);
     }
 
     public function sniff(Sniffer $sniffer, int $units): ?array

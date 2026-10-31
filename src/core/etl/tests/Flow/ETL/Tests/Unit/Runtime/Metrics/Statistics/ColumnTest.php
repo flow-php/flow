@@ -30,6 +30,7 @@ use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_time_zone;
 
+use const INF;
 use const NAN;
 
 final class ColumnTest extends FlowTestCase
@@ -256,5 +257,59 @@ final class ColumnTest extends FlowTestCase
             2,
             (new Column($definition, ColumnMother::of($definition, [NAN, NAN, 1.0])))->distinctCount(),
         );
+    }
+
+    public function test_nan_is_never_a_bound_whatever_its_position(): void
+    {
+        $definition = float_schema('f', true);
+
+        $first = new Column($definition, ColumnMother::of($definition, [NAN, 1.0]));
+        $last = new Column($definition, ColumnMother::of($definition, [1.0, NAN]));
+        $onlyNan = new Column($definition, ColumnMother::of($definition, [NAN, null, NAN]));
+
+        static::assertSame([1.0, 1.0], [$first->min(), $first->max()]);
+        static::assertSame([1.0, 1.0], [$last->min(), $last->max()]);
+        static::assertSame([null, null], [$onlyNan->min(), $onlyNan->max()]);
+    }
+
+    public function test_normalize_gives_every_statistic_and_dates_as_text(): void
+    {
+        $definition = datetime_schema('at', true);
+
+        static::assertSame(
+            [
+                'name' => 'at',
+                'nulls_count' => 1,
+                'distinct_count' => 2,
+                'min' => '2024-01-01T00:00:00.000+00:00',
+                'max' => '2024-01-02T00:00:00.000+00:00',
+                'min_length' => null,
+                'max_length' => null,
+                'min_elements_count' => null,
+                'max_elements_count' => null,
+            ],
+            (new Column($definition, ColumnMother::of($definition, [
+                new DateTimeImmutable('2024-01-02 00:00:00 UTC'),
+                null,
+                new DateTimeImmutable('2024-01-01 00:00:00 UTC'),
+            ])))->normalize(),
+        );
+    }
+
+    public function test_normalize_keeps_scalar_bounds(): void
+    {
+        $definition = str_schema('name');
+        $normalized = (new Column($definition, ColumnMother::of($definition, ['a', 'abc'])))->normalize();
+
+        static::assertSame([1, 3], [$normalized['min_length'], $normalized['max_length']]);
+    }
+
+    public function test_normalize_names_float_bounds_json_cannot_hold(): void
+    {
+        $definition = float_schema('f');
+
+        $infinite = (new Column($definition, ColumnMother::of($definition, [INF, NAN, -INF, 1.0])))->normalize();
+
+        static::assertSame(['-INF', 'INF'], [$infinite['min'], $infinite['max']]);
     }
 }

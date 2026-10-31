@@ -7,8 +7,19 @@ namespace Flow\ETL\Tests\Unit\Values\Memory;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Memory\Unit;
 
+use function memory_get_peak_usage;
+
 final class UnitTest extends FlowTestCase
 {
+    public function test_the_process_peak_is_in_bytes_on_every_system(): void
+    {
+        $peak = Unit::processPeak()->inBytes();
+
+        // the resident set holds the whole PHP heap; a KiB value read as bytes, or bytes scaled as KiB, misses by 1024x
+        static::assertGreaterThanOrEqual(memory_get_peak_usage(true), $peak);
+        static::assertLessThan(memory_get_peak_usage(true) * 64, $peak);
+    }
+
     public function test_calculating_percentage_from_value(): void
     {
         static::assertEquals(Unit::fromString('10M'), Unit::fromString('100M')->percentage(10));

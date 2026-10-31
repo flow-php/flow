@@ -76,4 +76,40 @@ final class SourceStatisticsTest extends FlowTestCase
             (new SourceStatistics('Source', new Statistics(Cardinality::approximately(500)), 0, true))->rowsError(),
         );
     }
+
+    public function test_normalize(): void
+    {
+        static::assertSame(
+            [
+                'extractor' => 'Source',
+                'declared' => [
+                    'rows' => ['at_most' => 5, 'estimate' => 5, 'relative_error' => 0.0],
+                    'size' => ['at_most' => null, 'estimate' => null, 'relative_error' => 0.5],
+                ],
+                'rows' => 5,
+                'complete' => true,
+                'rows_error' => 0.0,
+            ],
+            (new SourceStatistics('Source', new Statistics(Cardinality::exact(5)), 5, true))->normalize(),
+        );
+    }
+
+    public function test_normalize_gives_no_rows_error_when_it_is_infinite_or_unknown(): void
+    {
+        static::assertNull(
+            (new SourceStatistics('Source', new Statistics(Cardinality::exact(5)), 0, true))->normalize()['rows_error'],
+        );
+        static::assertNull(
+            (new SourceStatistics(
+                'Source',
+                new Statistics(Cardinality::exact(5)),
+                2,
+                false,
+            ))->normalize()['rows_error'],
+        );
+        static::assertSame(
+            0.5,
+            (new SourceStatistics('Source', new Statistics(Cardinality::exact(3)), 2, true))->normalize()['rows_error'],
+        );
+    }
 }

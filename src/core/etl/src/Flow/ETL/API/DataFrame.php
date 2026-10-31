@@ -665,7 +665,7 @@ final class DataFrame
             ->execute(
                 ($collector->readsColumns() ? Trigger::rows : Trigger::run)->plan($this->root, $this->writes),
                 $this->context,
-                $collector->sources(),
+                $collector->counts(),
             ) as $rows) {
             $collector->capture($rows);
         }

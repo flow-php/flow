@@ -29,7 +29,9 @@ use function Flow\Types\DSL\type_instance_of;
 use function is_bool;
 use function is_countable;
 use function is_float;
+use function is_infinite;
 use function is_int;
+use function is_nan;
 use function is_string;
 use function max;
 use function mb_strlen;
@@ -141,6 +143,32 @@ final class Column
         return $this->reference->name();
     }
 
+    /**
+     * A date bound is RFC 3339 text; an infinite float bound, which JSON cannot hold, is "INF" or "-INF".
+     *
+     * @return array<string, null|bool|float|int|string>
+     */
+    public function normalize(): array
+    {
+        $bound = static fn(int|float|DateTimeInterface|bool|null $value): int|float|string|bool|null => match (true) {
+            $value instanceof DateTimeInterface => $value->format(DateTimeInterface::RFC3339_EXTENDED),
+            is_float($value) && is_infinite($value) => $value > 0 ? 'INF' : '-INF',
+            default => $value,
+        };
+
+        return [
+            'name' => $this->name(),
+            'nulls_count' => $this->nullsCount,
+            'distinct_count' => $this->distinctCount(),
+            'min' => $bound($this->min),
+            'max' => $bound($this->max),
+            'min_length' => $this->minLength,
+            'max_length' => $this->maxLength,
+            'min_elements_count' => $this->minElementsCount,
+            'max_elements_count' => $this->maxElementsCount,
+        ];
+    }
+
     public function nullCount(): int
     {
         return $this->nullsCount;
@@ -191,7 +219,8 @@ final class Column
     {
         // @mago-ignore analysis:mixed-assignment
         foreach ($physicals as $value) {
-            if (is_int($value) || is_float($value) || is_bool($value)) {
+            // NaN is unordered: as in Parquet statistics and arrow-rs, it is never a bound
+            if (is_int($value) || is_float($value) && !is_nan($value) || is_bool($value)) {
                 $this->min = min($this->min ?? $value, $value);
                 $this->max = max($this->max ?? $value, $value);
             }
