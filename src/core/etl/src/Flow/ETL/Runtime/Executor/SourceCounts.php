@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Runtime\Executor;
 
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\IO\Extractor;
 use Flow\ETL\IO\Extractor\Signal;
 use Flow\ETL\IO\Extractor\Statistics;
@@ -42,10 +43,12 @@ final class SourceCounts
      * Passes $batches through unchanged. A stop is forwarded and ends the count: the consumer that sent it reads no
      * further batch, so that read never closes.
      *
-     * @param Generator<int, Rows, null|Signal, void> $batches what $extractor yields
+     * @template T of CorruptedRecordException|Rows
+     *
+     * @param Generator<T> $batches what $extractor yields
      * @param bool $narrowed a limit or a partition filter was pushed into this read
      *
-     * @return Generator<int, Rows, null|Signal, void>
+     * @return Generator<int, T, null|Signal, void>
      */
     public function count(Extractor $extractor, Generator $batches, bool $narrowed): Generator
     {

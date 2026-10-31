@@ -18,7 +18,7 @@ use ext_php_rs::flags::{ClassFlags, DataType};
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendHashTable, Zval};
 
-use crate::batch_columns::{batch_size_of, HeldBatch};
+use crate::batch_columns::batch_size_of;
 use crate::csv::columns::{next_columns, CsvColumns};
 use crate::csv::fold::{string_values, Fold};
 use crate::csv::CsvReader;
@@ -27,12 +27,11 @@ use crate::exception::ext_exception;
 use crate::interfaces::csv_open_source_ce;
 use crate::iterator::RustIterator;
 use crate::render::runtime;
-use crate::source::{self, reading, Fed, CHUNK};
+use crate::source::{self, reading, window_start, Fed, Fetched, CHUNK, RANGE_SOURCE_STREAM};
 
 const CLASS: &str = "RustCSVOpenSource";
 const RECORDS_BATCH: usize = 1000;
 const NATIVE_LOCAL_SOURCE_STREAM: &str = "Flow\\Filesystem\\Stream\\NativeLocalSourceStream";
-const RANGE_SOURCE_STREAM: &str = "Flow\\Filesystem\\Stream\\RangeSourceStream";
 /// One pread of a local file (DuckDB's CSV buffers are 2 MB): about 512 per GiB. `CHUNK` stays the PHP arm's.
 const NATIVE_CHUNK: usize = 2 << 20;
 const STRING_TYPE_NARROWER: &str = "Flow\\Types\\Type\\Native\\String\\StringTypeNarrower";
@@ -164,12 +163,9 @@ impl Shared {
         let mut reading = reading(&self.reading, CLASS)?;
         let result = f(&mut reading);
         self.produced_bytes.set(reading.reader.consumed_bytes());
+        self.produced_rows.set(reading.reader.consumed_rows());
 
         result
-    }
-
-    fn produced(&self, rows: u64) {
-        self.produced_rows.set(self.produced_rows.get() + rows);
     }
 
     /// `$stream->iterate($chunkSize)`, the generator one consuming method feeds from; `None` on the native arm, which
@@ -247,19 +243,22 @@ struct CsvFeed {
     chunks: Option<Zval>,
     schema: Zval,
     batch_size: usize,
+    uri: Zval,
+    sample_size: Option<i64>,
 }
 
 impl Fed for CsvFeed {
-    fn next_batch(&self) -> PhpResult<Option<HeldBatch>> {
-        let batch = self
-            .shared
-            .with(|reading| next_columns(&mut reading.reader, &mut reading.columns, &self.schema, self.batch_size))?;
-
-        if let Some(batch) = &batch {
-            self.shared.produced(batch.count as u64);
-        }
-
-        Ok(batch)
+    fn next_batch(&self) -> PhpResult<Option<Fetched>> {
+        self.shared.with(|reading| {
+            next_columns(
+                &mut reading.reader,
+                &mut reading.columns,
+                &self.schema,
+                self.batch_size,
+                &self.uri,
+                self.sample_size,
+            )
+        })
     }
 
     fn feed(&self) -> PhpResult<bool> {
@@ -296,7 +295,6 @@ impl RustCSVOpenSource {
             let batch = shared.with(|reading| reading.reader.next(RECORDS_BATCH))?;
 
             if !batch.is_empty() {
-                shared.produced(batch.len() as u64);
                 pending.extend(batch.values().map(Zval::shallow_clone));
 
                 continue;
@@ -327,6 +325,7 @@ impl RustCSVOpenSource {
         removeBOM: bool,
         charactersReadInLine: Option<i64>,
         headers: Option<&ZendHashTable>,
+        missingColumnsAsNull: Option<bool>,
     ) -> PhpResult<Self> {
         // a local file is read by Rust and ignores the read length, as NativeLocalSourceStream::readLines() does on
         // the PHP path; for S3/Azure it is the range-request size - and from_csv() defaults it to 10 MB
@@ -343,6 +342,8 @@ impl RustCSVOpenSource {
                         emptyToNull,
                         removeBOM,
                         headers.map(string_values),
+                        missingColumnsAsNull.unwrap_or(false),
+                        window_start(stream)?,
                     )?,
                     columns: CsvColumns::default(),
                 }),
@@ -382,14 +383,22 @@ impl RustCSVOpenSource {
         self.headers()
     }
 
-    /// Exactly `$batchSize` rows keyed and ordered by `$schema` (the last may be shorter), every column adopted by
-    /// `$backend`; refusals are `RowsBuilder::appendRows()`'s, row indexes relative to the source.
-    pub fn batches(&self, schema: &Zval, batchSize: i64, backend: &Zval) -> PhpResult<RustIterator> {
+    /// `PhpCSVOpenSource::batches()`: `$batchSize` records keyed and ordered by `$schema` at a time, every column
+    /// adopted by `$backend`, corrupted records handed out as they are read.
+    pub fn batches(
+        &self,
+        schema: &Zval,
+        batchSize: i64,
+        backend: &Zval,
+        sampleSize: Option<i64>,
+    ) -> PhpResult<RustIterator> {
         let fed = CsvFeed {
             shared: Rc::clone(&self.shared),
             chunks: self.shared.chunks()?,
             schema: schema.shallow_clone(),
             batch_size: batch_size_of(batchSize, "CSV")?,
+            uri: call_method(&call_method(&self.shared.stream, "path", &mut [])?, "uri", &mut [])?,
+            sample_size: sampleSize,
         };
 
         source::batches(fed, schema, backend)
@@ -451,8 +460,7 @@ impl RustCSVOpenSource {
 
         while self.shared.feed(&chunks)? {
             let limit = remaining(&fold);
-            let folded = self.shared.with(|reading| reading.reader.fold(&mut fold, limit))?;
-            self.shared.produced(folded);
+            self.shared.with(|reading| reading.reader.fold(&mut fold, limit))?;
 
             if rowBudget != -1 && fold.rows() >= rowBudget as u64 {
                 break;
@@ -462,8 +470,7 @@ impl RustCSVOpenSource {
         if rowBudget == -1 || fold.rows() < rowBudget as u64 {
             self.shared.finish()?;
             let limit = remaining(&fold);
-            let folded = self.shared.with(|reading| reading.reader.fold(&mut fold, limit))?;
-            self.shared.produced(folded);
+            self.shared.with(|reading| reading.reader.fold(&mut fold, limit))?;
         }
 
         let mut types = ZendHashTable::new();

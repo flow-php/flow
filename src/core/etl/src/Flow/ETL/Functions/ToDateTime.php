@@ -145,8 +145,14 @@ final class ToDateTime implements ScalarFunction
                 $format = $formats[$i];
                 $timeZone = $timeZones[$i];
 
-                if ($value === null || $format === null || $timeZone === null) {
-                    throw new InvalidArgumentException('ToDateTime function requires non-null values');
+                if ($value === null) {
+                    $results[] = null;
+
+                    continue;
+                }
+
+                if ($format === null || $timeZone === null) {
+                    throw new InvalidArgumentException('ToDateTime function requires a non-null format and time zone');
                 }
 
                 if (is_object($value)) {

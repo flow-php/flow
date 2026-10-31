@@ -1,5 +1,5 @@
 --TEST--
-native CSV rows pad and truncate to the header like Records, under both emptyToNull settings
+native CSV leaves out ragged records like RecordDecoder, under both emptyToNull settings
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 --FILE--
@@ -19,7 +19,7 @@ foreach ([true, false] as $emptyToNull) {
 
 [$headers, $rows] = csv_native_rows($raw, ',', '"', '\\');
 var_dump($headers);
-var_dump($rows[0]);
+var_dump($rows);
 ?>
 --EXPECT--
 emptyToNull=1 withHeader=1: identical
@@ -38,13 +38,5 @@ array(5) {
   [4]=>
   string(2) "id"
 }
-array(4) {
-  ["id"]=>
-  NULL
-  ["name"]=>
-  NULL
-  ["e02"]=>
-  NULL
-  [5]=>
-  NULL
+array(0) {
 }

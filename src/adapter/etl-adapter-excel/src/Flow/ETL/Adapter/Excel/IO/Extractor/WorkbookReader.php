@@ -76,7 +76,11 @@ final readonly class WorkbookReader implements Describable
         return new OpenSheet(
             $reader,
             (new SheetCells($sheet, $this->options->withHeader))->rows(),
-            new RecordDecoder(withHeader: $this->options->withHeader, emptyToNull: $this->options->convertEmptyToNull),
+            new RecordDecoder(
+                withHeader: $this->options->withHeader,
+                emptyToNull: $this->options->convertEmptyToNull,
+                missingColumnsAsNull: $this->options->missingColumnsAsNull,
+            ),
         );
     }
 

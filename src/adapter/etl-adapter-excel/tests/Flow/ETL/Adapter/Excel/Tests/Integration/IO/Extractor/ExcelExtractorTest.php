@@ -8,10 +8,12 @@ use Closure;
 use DateTimeImmutable;
 use Flow\ETL\Adapter\Excel\IO\Extractor\ExcelExtractor;
 use Flow\ETL\Adapter\Excel\IO\Extractor\ExcelReader;
+use Flow\ETL\Adapter\Excel\Tests\Context\CraftedWorkbook;
 use Flow\ETL\Adapter\Excel\Tests\Context\ExcelFixtureContext;
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
-use Flow\ETL\Foundation\Exception\SchemaMismatchException;
+use Flow\ETL\Foundation\Exception\SchemaValidationException;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\File\FileSplit;
 use Flow\ETL\IO\Extractor\Signal;
@@ -30,6 +32,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestWith;
 
 use function array_keys;
+use function array_map;
 use function count;
 use function Flow\ETL\Adapter\Excel\DSL\from_excel;
 use function Flow\ETL\Adapter\Excel\DSL\is_valid_excel_sheet_name;
@@ -51,6 +54,7 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\string_schema;
+use function Flow\ETL\DSL\to_array;
 use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_datetime;
@@ -77,6 +81,52 @@ final class ExcelExtractorTest extends FlowTestCase
     {
         yield 'ods' => [__DIR__ . '/../../../Fixtures/nullable_fixture.ods'];
         yield 'xlsx' => [__DIR__ . '/../../../Fixtures/nullable_fixture.xlsx'];
+    }
+
+    public function test_a_row_with_more_cells_than_the_header_is_refused(): void
+    {
+        $file = CraftedWorkbook::with(CraftedWorkbook::sheet(
+            '<row r="1"><c r="A1" t="inlineStr"><is><t>a</t></is></c><c r="B1" t="inlineStr"><is><t>b</t></is></c><c r="C1" t="inlineStr"><is><t>c</t></is></c></row><row r="2"><c r="A2" t="inlineStr"><is><t>1</t></is></c><c r="B2" t="inlineStr"><is><t>2</t></is></c><c r="C2" t="inlineStr"><is><t>3</t></is></c></row><row r="3"><c r="A3" t="inlineStr"><is><t>4</t></is></c><c r="B3" t="inlineStr"><is><t>5</t></is></c><c r="C3" t="inlineStr"><is><t>6</t></is></c><c r="D3" t="inlineStr"><is><t>7</t></is></c><c r="E3" t="inlineStr"><is><t>8</t></is></c></row>',
+        ));
+
+        try {
+            ExtractedRows::of(from_excel($file));
+            static::fail('Expected the corrupted record to be refused');
+        } catch (CorruptedRecordException $e) {
+            static::assertSame([path_real($file)->uri(), 3, null, ['4', '5', '6', '7', '8']], [
+                $e->uri,
+                $e->offset,
+                $e->lineNumber,
+                $e->fields,
+            ]);
+        }
+    }
+
+    public function test_a_corrupted_row_after_skipped_empty_rows_reports_its_sheet_row_number(): void
+    {
+        $file = CraftedWorkbook::with(CraftedWorkbook::sheet(
+            '<row r="1"><c r="A1" t="inlineStr"><is><t>a</t></is></c><c r="B1" t="inlineStr"><is><t>b</t></is></c><c r="C1" t="inlineStr"><is><t>c</t></is></c></row><row r="2"><c r="A2" t="inlineStr"><is><t>1</t></is></c><c r="B2" t="inlineStr"><is><t>2</t></is></c><c r="C2" t="inlineStr"><is><t>3</t></is></c></row><row r="5"><c r="A5" t="inlineStr"><is><t>4</t></is></c><c r="B5" t="inlineStr"><is><t>5</t></is></c><c r="C5" t="inlineStr"><is><t>6</t></is></c><c r="D5" t="inlineStr"><is><t>7</t></is></c></row>',
+        ));
+
+        try {
+            ExtractedRows::of(from_excel($file));
+            static::fail('Expected the corrupted record to be refused');
+        } catch (CorruptedRecordException $e) {
+            static::assertSame([5, ['4', '5', '6', '7']], [$e->offset, $e->fields]);
+        }
+    }
+
+    public function test_a_declared_column_the_header_lacks_is_a_schema_error(): void
+    {
+        $this->expectException(SchemaValidationException::class);
+        $this->expectExceptionMessage('"x"');
+
+        ExtractedRows::of(
+            from_excel(CraftedWorkbook::with(CraftedWorkbook::sheet(
+                '<row r="1"><c r="A1" t="inlineStr"><is><t>a</t></is></c><c r="B1" t="inlineStr"><is><t>b</t></is></c><c r="C1" t="inlineStr"><is><t>c</t></is></c></row><row r="2"><c r="A2" t="inlineStr"><is><t>1</t></is></c><c r="B2" t="inlineStr"><is><t>2</t></is></c><c r="C2" t="inlineStr"><is><t>3</t></is></c></row>',
+            )))
+                ->withSchema(schema(str_schema('a'), str_schema('b'), str_schema('x', true))),
+        );
     }
 
     public function test_an_empty_glob_refuses_to_infer_a_schema(): void
@@ -110,7 +160,7 @@ final class ExcelExtractorTest extends FlowTestCase
         static::assertEquals(schema(int_schema('id')), $extractor->schema());
         static::assertSame(
             [],
-            iterator_to_array($extractor->extract(flow_context()->backend(), new Criteria()), false),
+            iterator_to_array(FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()), false),
         );
     }
 
@@ -226,22 +276,19 @@ final class ExcelExtractorTest extends FlowTestCase
     }
 
     #[DataProvider('provide_fixtures')]
-    public function test_extract_excel_puts_null_in_a_declared_nullable_column_the_sheet_lacks(string $fixtureName): void
+    public function test_extract_excel_refuses_a_declared_nullable_column_the_sheet_lacks(string $fixtureName): void
     {
-        $rows = df()
+        $this->expectException(SchemaValidationException::class);
+        $this->expectExceptionMessage('Columns "missing" declared by the schema are not in the header of');
+
+        df()
             ->read(from_excel($fixtureName)->withSchema(schema(
                 int_schema('id'),
                 string_schema('name'),
                 string_schema('email', nullable: true),
                 string_schema('missing', nullable: true),
             )))
-            ->fetch()
-            ->toArray();
-
-        foreach ($rows as $row) {
-            static::assertNotSame([], $row);
-            static::assertNull($row['missing']);
-        }
+            ->fetch();
     }
 
     /**
@@ -249,10 +296,10 @@ final class ExcelExtractorTest extends FlowTestCase
      * declaration. Declare the column nullable if that is what the data is.
      */
     #[DataProvider('provide_fixtures')]
-    public function test_extract_excel_refuses_a_not_null_column_the_sheet_lacks(string $fixtureName): void
+    public function test_extract_excel_refuses_a_declared_column_the_sheet_lacks(string $fixtureName): void
     {
-        $this->expectException(SchemaMismatchException::class);
-        $this->expectExceptionMessage('column "missing" (row 0) declared by the schema is missing from the row');
+        $this->expectException(SchemaValidationException::class);
+        $this->expectExceptionMessage('Columns "missing" declared by the schema are not in the header of');
 
         df()
             ->read(from_excel($fixtureName)->withSchema(schema(
@@ -383,7 +430,11 @@ final class ExcelExtractorTest extends FlowTestCase
         $emails = [];
         $sizes = [];
 
-        foreach ($extractor->withBatchSize(2)->extract(flow_context()->backend(), new Criteria()) as $rows) {
+        foreach (FlowTestCase::extracted(
+            $extractor->withBatchSize(2),
+            flow_context()->backend(),
+            new Criteria(),
+        ) as $rows) {
             static::assertEquals($extractor->schema(), $rows->schema());
             $sizes[] = $rows->count();
 
@@ -466,7 +517,7 @@ final class ExcelExtractorTest extends FlowTestCase
 
         static::assertEquals(schema(int_schema('v', nullable: true)), $extractor->schema());
 
-        $this->expectException(SchemaMismatchException::class);
+        $this->expectException(InferredSchemaException::class);
         $this->expectExceptionMessage('column "v"');
 
         df()->read($extractor)->fetch();
@@ -515,7 +566,7 @@ final class ExcelExtractorTest extends FlowTestCase
 
         static::assertSame(
             [],
-            iterator_to_array($extractor->extract(flow_context()->backend(), new Criteria()), false),
+            iterator_to_array(FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()), false),
         );
 
         $this->expectException(InferredSchemaException::class);
@@ -589,7 +640,7 @@ final class ExcelExtractorTest extends FlowTestCase
 
         $count = 0;
 
-        foreach ($extractor->extract(flow_context(config())->backend(), new Criteria()) as $rows) {
+        foreach (FlowTestCase::extracted($extractor, flow_context(config())->backend(), new Criteria()) as $rows) {
             static::assertEquals($extractor->schema(), $rows->schema());
             static::assertContains('group', $rows->schema()->names());
 
@@ -671,8 +722,11 @@ final class ExcelExtractorTest extends FlowTestCase
     {
         $before = ExcelFixtureContext::sharedStringsFolders();
 
-        $generator = from_excel(ExcelFixtureContext::path('orders_flow.xlsx'))
-            ->extract(flow_context(config())->backend(), new Criteria());
+        $generator = FlowTestCase::extracted(
+            from_excel(ExcelFixtureContext::path('orders_flow.xlsx')),
+            flow_context(config())->backend(),
+            new Criteria(),
+        );
         $generator->current();
         $generator->send(Signal::STOP);
         unset($generator);
@@ -685,7 +739,7 @@ final class ExcelExtractorTest extends FlowTestCase
     {
         $extractor = from_excel($fixtureName);
 
-        $generator = $extractor->extract(flow_context(config())->backend(), new Criteria());
+        $generator = FlowTestCase::extracted($extractor, flow_context(config())->backend(), new Criteria());
         $generator->current();
         $generator->next();
         $generator->send(Signal::STOP);
@@ -793,9 +847,11 @@ final class ExcelExtractorTest extends FlowTestCase
 
     public function test_signal_stop(): void
     {
-        $generator = from_excel(path_real(__DIR__ . '/../../../Fixtures/fixture.xlsx'))
-            ->withBatchSize(1)
-            ->extract(flow_context(config())->backend(), new Criteria());
+        $generator = FlowTestCase::extracted(
+            from_excel(path_real(__DIR__ . '/../../../Fixtures/fixture.xlsx'))->withBatchSize(1),
+            flow_context(config())->backend(),
+            new Criteria(),
+        );
 
         static::assertTrue($generator->valid());
         $generator->next();
@@ -808,9 +864,11 @@ final class ExcelExtractorTest extends FlowTestCase
 
     public function test_signal_stop_on_the_first_file_tail_batch_skips_the_remaining_files(): void
     {
-        $generator = from_excel(ExcelFixtureContext::file('cross_stream/*/*.xlsx'))
-            ->withBatchSize(10)
-            ->extract(flow_context(config())->backend(), new Criteria());
+        $generator = FlowTestCase::extracted(
+            from_excel(ExcelFixtureContext::file('cross_stream/*/*.xlsx'))->withBatchSize(10),
+            flow_context(config())->backend(),
+            new Criteria(),
+        );
 
         static::assertTrue($generator->valid());
         $generator->send(Signal::STOP);
@@ -889,7 +947,7 @@ final class ExcelExtractorTest extends FlowTestCase
     {
         $extractor = from_excel(ExcelFixtureContext::path('sniff/a'));
 
-        iterator_to_array($extractor->extract(flow_context()->backend(), new Criteria()), false);
+        iterator_to_array(FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()), false);
 
         static::assertEquals(Cardinality::exact(10), $extractor->statistics()->rows);
     }
@@ -939,9 +997,13 @@ final class ExcelExtractorTest extends FlowTestCase
         $filtered = from_excel(ExcelFixtureContext::path('sniff/*'));
         $whole = from_excel(ExcelFixtureContext::path('sniff/*'));
 
-        iterator_to_array($filtered->extract(flow_context()->backend(), new Criteria(pathFilter: new KeepPaths([
-            ExcelFixtureContext::path('sniff/a'),
-        ]))), false);
+        iterator_to_array(FlowTestCase::extracted(
+            $filtered,
+            flow_context()->backend(),
+            new Criteria(pathFilter: new KeepPaths([
+                ExcelFixtureContext::path('sniff/a'),
+            ])),
+        ), false);
         $whole->schema();
 
         static::assertEquals($whole->statistics()->rows, $filtered->statistics()->rows);
@@ -1006,7 +1068,8 @@ final class ExcelExtractorTest extends FlowTestCase
         $backend = new SpyBackend();
 
         iterator_to_array(
-            from_excel(__DIR__ . '/../../../Fixtures/fixture.xlsx')->extract(
+            FlowTestCase::extracted(
+                from_excel(__DIR__ . '/../../../Fixtures/fixture.xlsx'),
                 flow_context(config_builder()->backend($backend)->build())->backend(),
                 new Criteria(),
             ),
@@ -1052,7 +1115,8 @@ final class ExcelExtractorTest extends FlowTestCase
     {
         $extractor = from_excel(__DIR__ . '/../../../Fixtures/orders_1k.xlsx');
         $extractor->withBatchSize(1);
-        $generator = $extractor->extract(
+        $generator = FlowTestCase::extracted(
+            $extractor,
             flow_context()->backend(),
             (new Criteria())->withSplit($extractor->splits(new Criteria(), 1)[0]),
         );
@@ -1122,6 +1186,27 @@ final class ExcelExtractorTest extends FlowTestCase
         static::assertEquals(
             [new FileSplit($extractor->source(), 0, null)],
             $extractor->splits((new Criteria())->withPathFilter(new RejectingFilter()), 1),
+        );
+    }
+
+    public function test_corrupted_records_are_routed_to_the_reject_loader(): void
+    {
+        $rejects = [];
+        $file = CraftedWorkbook::with(CraftedWorkbook::sheet(
+            '<row r="1"><c r="A1" t="inlineStr"><is><t>a</t></is></c></row><row r="2"><c r="A2" t="inlineStr"><is><t>1</t></is></c></row><row r="3"><c r="A3" t="inlineStr"><is><t>2</t></is></c><c r="B3" t="inlineStr"><is><t>x</t></is></c></row><row r="4"><c r="A4" t="inlineStr"><is><t>3</t></is></c></row>',
+        ));
+
+        $rows = df()->read(from_excel($file)->withCorruptedRecords(to_array($rejects)))->fetch();
+
+        static::assertSame(['1', '3'], $rows->reduceToArray('a'));
+        static::assertSame(
+            [[path_real($file)->uri(), 3, null, ['2', 'x']]],
+            array_map(static fn(array $reject): array => [
+                $reject['uri'],
+                $reject['offset'],
+                $reject['line'],
+                $reject['fields'],
+            ], $rejects),
         );
     }
 }

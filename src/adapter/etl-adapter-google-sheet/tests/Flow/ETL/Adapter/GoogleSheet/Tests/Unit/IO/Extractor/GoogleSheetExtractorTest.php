@@ -9,9 +9,10 @@ use Flow\ETL\Adapter\GoogleSheet\IO\Extractor\GoogleSheetExtractor;
 use Flow\ETL\Adapter\GoogleSheet\Tests\Context\GoogleSheetFixtureContext;
 use Flow\ETL\Adapter\GoogleSheet\Tests\Double\StubSpreadsheetsResource;
 use Flow\ETL\Adapter\GoogleSheet\Tests\Mother\SheetValuesMother;
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
-use Flow\ETL\Foundation\Exception\SchemaMismatchException;
+use Flow\ETL\Foundation\Exception\SchemaValidationException;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\Statistics;
 use Flow\ETL\Tests\Context\ExtractedRows;
@@ -21,14 +22,18 @@ use Flow\ETL\Values\Cardinality;
 use Flow\ETL\Values\Rows;
 use Google\Service\Sheets;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 
+use function array_map;
 use function array_sum;
 use function Flow\ETL\DSL\config_builder;
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\infer_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\to_array;
 use function iterator_to_array;
 use function max;
 
@@ -43,7 +48,9 @@ final class GoogleSheetExtractorTest extends FlowTestCase
     public static function memo_resetting_setters(): iterable
     {
         yield 'withHeader' => [static fn(GoogleSheetExtractor $e): mixed => $e->withHeader(false)];
-        yield 'withDropExtraColumns' => [static fn(GoogleSheetExtractor $e): mixed => $e->withDropExtraColumns(false)];
+        yield 'withMissingColumnsAsNull' => [
+            static fn(GoogleSheetExtractor $e): mixed => $e->withMissingColumnsAsNull(true),
+        ];
         yield 'withOptions' => [
             static fn(GoogleSheetExtractor $e): mixed => $e->withOptions(['valueRenderOption' => 'UNFORMATTED_VALUE']),
         ];
@@ -64,8 +71,8 @@ final class GoogleSheetExtractorTest extends FlowTestCase
             ->withSchema($userSchema)
             ->withMetadataColumns(true);
 
-        iterator_to_array($extractor->extract(flow_context()->backend(), new Criteria()));
-        iterator_to_array($extractor->extract(flow_context()->backend(), new Criteria()));
+        iterator_to_array(FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()));
+        iterator_to_array(FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()));
 
         static::assertNull($userSchema->findDefinition('_spread_sheet_id'));
         static::assertNull($userSchema->findDefinition('_sheet_name'));
@@ -83,7 +90,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Max rows "0" must be greater than 0');
 
-        iterator_to_array($extractor->extract(flow_context()->backend(), new Criteria()));
+        iterator_to_array(FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()));
     }
 
     public function test_schema_fails_the_same_way_for_a_missing_sheet(): void
@@ -106,6 +113,33 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         )
             ->inferSchema(infer_schema()->sampleSize(-1))
             ->schema();
+    }
+
+    /**
+     * @param list<string> $cells
+     */
+    #[TestWith([['4', '5', '6', '7', '8']])]
+    #[TestWith([['4', '5']])]
+    public function test_a_row_whose_cell_count_differs_from_the_header_is_refused(array $cells): void
+    {
+        try {
+            ExtractedRows::of(GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(100, GoogleSheetFixtureContext::valuesAndBatches([], [
+                SheetValuesMother::batch([[['a', 'b', 'c'], ['1', '2', '3'], $cells]]),
+            ])))->withSchema(schema(str_schema('a'), str_schema('b'), str_schema('c', true))));
+            static::fail('Expected the corrupted record to be refused');
+        } catch (CorruptedRecordException $e) {
+            static::assertSame([3, null, $cells], [$e->offset, $e->lineNumber, $e->fields]);
+        }
+    }
+
+    public function test_a_declared_column_the_header_lacks_is_a_schema_error(): void
+    {
+        $this->expectException(SchemaValidationException::class);
+        $this->expectExceptionMessage('"x"');
+
+        ExtractedRows::of(GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(100, GoogleSheetFixtureContext::valuesAndBatches([], [
+            SheetValuesMother::batch([[['a', 'b', 'c'], ['1', '2', '3']]]),
+        ])))->withSchema(schema(str_schema('a'), str_schema('b'), str_schema('x', true))));
     }
 
     public function test_its_stop_fetching_data_if_processed_row_count_is_less_then_last_range_end_row(): void
@@ -225,7 +259,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
 
         $extractor->schema();
         $extractor->schema();
-        iterator_to_array($extractor->extract(flow_context()->backend(), new Criteria()));
+        iterator_to_array(FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()));
 
         static::assertCount(1, $values->getCalls);
 
@@ -305,7 +339,11 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         $sizes = [];
         $first = null;
 
-        foreach ($extractor->withBatchSize(2)->extract(flow_context()->backend(), new Criteria()) as $rows) {
+        foreach (FlowTestCase::extracted(
+            $extractor->withBatchSize(2),
+            flow_context()->backend(),
+            new Criteria(),
+        ) as $rows) {
             static::assertTrue($rows->schema()->isSame($extractor->schema()));
             $sizes[] = $rows->count();
             $first ??= $rows->toArray()[0];
@@ -331,24 +369,27 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         $this->expectExceptionMessageMatches('/spreadsheet "spread-id" sheet "sheet"/');
         $this->expectExceptionMessageMatches('/unexpected \[title\], missing \[name\]/');
 
-        iterator_to_array(GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(
-            500,
-            $values,
-        ))->extract(flow_context()->backend(), new Criteria()));
+        iterator_to_array(FlowTestCase::extracted(
+            GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(500, $values)),
+            flow_context()->backend(),
+            new Criteria(),
+        ));
     }
 
     public function test_union_by_name_skips_the_divergence_check(): void
     {
         static::assertCount(
             1,
-            iterator_to_array(
+            iterator_to_array(FlowTestCase::extracted(
                 GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(100, GoogleSheetFixtureContext::valuesAndBatches([SheetValuesMother::range([
                     ['id', 'name'],
                     ['1', 'a'],
-                ])], [SheetValuesMother::batch([[['id', 'title'], ['1', 'a']]])])))
-                    ->inferSchema(infer_schema()->unionByName())
-                    ->extract(flow_context()->backend(), new Criteria()),
-            ),
+                ])], [SheetValuesMother::batch([[['id', 'title'], ['1', 'a']]])])))->inferSchema(
+                    infer_schema()->unionByName(),
+                ),
+                flow_context()->backend(),
+                new Criteria(),
+            )),
         );
     }
 
@@ -362,10 +403,11 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         $this->expectException(InferredSchemaException::class);
         $this->expectExceptionMessageMatches('/unexpected \[\], missing \[name\]/');
 
-        iterator_to_array(GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(
-            500,
-            $values,
-        ))->extract(flow_context()->backend(), new Criteria()));
+        iterator_to_array(FlowTestCase::extracted(
+            GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(500, $values)),
+            flow_context()->backend(),
+            new Criteria(),
+        ));
     }
 
     public function test_extract_refuses_a_batch_with_a_column_the_sample_never_saw(): void
@@ -381,23 +423,24 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         $this->expectException(InferredSchemaException::class);
         $this->expectExceptionMessageMatches('/unexpected \[extra\], missing \[\]/');
 
-        iterator_to_array(GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(
-            500,
-            $values,
-        ))->extract(flow_context()->backend(), new Criteria()));
+        iterator_to_array(FlowTestCase::extracted(
+            GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(500, $values)),
+            flow_context()->backend(),
+            new Criteria(),
+        ));
     }
 
     public function test_metadata_columns_keep_a_numeric_column_name(): void
     {
         /** @var array<Rows> $rowsArray */
-        $rowsArray = iterator_to_array(
+        $rowsArray = iterator_to_array(FlowTestCase::extracted(
             GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(100, GoogleSheetFixtureContext::valuesAndBatches([SheetValuesMother::range([
                 ['3', '7'],
                 ['a', 'b'],
-            ])], [SheetValuesMother::batch([[['3', '7'], ['a', 'b']]])])))
-                ->withMetadataColumns(true)
-                ->extract(flow_context()->backend(), new Criteria()),
-        );
+            ])], [SheetValuesMother::batch([[['3', '7'], ['a', 'b']]])])))->withMetadataColumns(true),
+            flow_context()->backend(),
+            new Criteria(),
+        ));
 
         static::assertSame(
             ['3' => 'a', '7' => 'b', '_spread_sheet_id' => 'spread-id', '_sheet_name' => 'sheet'],
@@ -409,10 +452,11 @@ final class GoogleSheetExtractorTest extends FlowTestCase
     {
         static::assertCount(
             1,
-            iterator_to_array(GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(100, GoogleSheetFixtureContext::valuesAndBatches([SheetValuesMother::range([
-                ['id', 'name'],
-                ['1', 'a'],
-            ])], [SheetValuesMother::batch([[['name', 'id'], ['a', '1']]])])))->extract(
+            iterator_to_array(FlowTestCase::extracted(
+                GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(100, GoogleSheetFixtureContext::valuesAndBatches([SheetValuesMother::range([
+                    ['id', 'name'],
+                    ['1', 'a'],
+                ])], [SheetValuesMother::batch([[['name', 'id'], ['a', '1']]])]))),
                 flow_context()->backend(),
                 new Criteria(),
             )),
@@ -428,11 +472,14 @@ final class GoogleSheetExtractorTest extends FlowTestCase
 
         static::assertCount(
             1,
-            iterator_to_array(
-                GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(100, $values))
-                    ->withSchema(schema(str_schema('id')))
-                    ->extract(flow_context()->backend(), new Criteria()),
-            ),
+            iterator_to_array(FlowTestCase::extracted(
+                GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(
+                    100,
+                    $values,
+                ))->withSchema(schema(str_schema('id'))),
+                flow_context()->backend(),
+                new Criteria(),
+            )),
         );
         static::assertSame([], $values->getCalls);
     }
@@ -440,14 +487,14 @@ final class GoogleSheetExtractorTest extends FlowTestCase
     public function test_empty_cells_are_null_by_default(): void
     {
         /** @var array<Rows> $rowsArray */
-        $rowsArray = iterator_to_array(
+        $rowsArray = iterator_to_array(FlowTestCase::extracted(
             GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(100, GoogleSheetFixtureContext::valuesAndBatches([], [SheetValuesMother::batch([[
                 ['id', 'name'],
                 ['1', ''],
-            ]])])))
-                ->withSchema(schema(str_schema('id'), str_schema('name', nullable: true)))
-                ->extract(flow_context()->backend(), new Criteria()),
-        );
+            ]])])))->withSchema(schema(str_schema('id'), str_schema('name', nullable: true))),
+            flow_context()->backend(),
+            new Criteria(),
+        ));
 
         static::assertNull($rowsArray[0]->toArray()[0]['name']);
     }
@@ -455,15 +502,16 @@ final class GoogleSheetExtractorTest extends FlowTestCase
     public function test_empty_cells_stay_strings_when_asked(): void
     {
         /** @var array<Rows> $rowsArray */
-        $rowsArray = iterator_to_array(
+        $rowsArray = iterator_to_array(FlowTestCase::extracted(
             GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(100, GoogleSheetFixtureContext::valuesAndBatches([], [SheetValuesMother::batch([[
                 ['id', 'name'],
                 ['1', ''],
             ]])])))
                 ->withEmptyToNull(false)
-                ->withSchema(schema(str_schema('id'), str_schema('name', nullable: true)))
-                ->extract(flow_context()->backend(), new Criteria()),
-        );
+                ->withSchema(schema(str_schema('id'), str_schema('name', nullable: true))),
+            flow_context()->backend(),
+            new Criteria(),
+        ));
 
         static::assertSame('', $rowsArray[0]->toArray()[0]['name']);
     }
@@ -475,15 +523,18 @@ final class GoogleSheetExtractorTest extends FlowTestCase
             ['1'],
         ])], [SheetValuesMother::batch([[['id'], ['1'], ['n/a']]])]);
 
-        $this->expectException(SchemaMismatchException::class);
+        $this->expectException(InferredSchemaException::class);
         $this->expectExceptionMessageMatches('/column "id"/');
-        $this->expectExceptionMessageMatches('/row 1/');
+        $this->expectExceptionMessageMatches('/offset 3 of google-sheet:\/\/spread-id\/sheet/');
 
-        iterator_to_array(
-            GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(500, $values))
-                ->inferSchema(infer_schema()->sampleSize(1))
-                ->extract(flow_context()->backend(), new Criteria()),
-        );
+        iterator_to_array(FlowTestCase::extracted(
+            GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(
+                500,
+                $values,
+            ))->inferSchema(infer_schema()->sampleSize(1)),
+            flow_context()->backend(),
+            new Criteria(),
+        ));
     }
 
     public function test_a_leading_blank_row_without_a_header_is_not_a_divergence(): void
@@ -505,7 +556,10 @@ final class GoogleSheetExtractorTest extends FlowTestCase
             null,
         )], [SheetValuesMother::batch([null])])))->withRowsPerPage(20);
 
-        static::assertCount(0, iterator_to_array($extractor->extract(flow_context()->backend(), new Criteria())));
+        static::assertCount(
+            0,
+            iterator_to_array(FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria())),
+        );
 
         $this->expectException(InferredSchemaException::class);
         $this->expectExceptionMessage(
@@ -593,7 +647,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
             ['2'],
         ])], [])));
 
-        iterator_to_array($extractor->extract(flow_context()->backend(), new Criteria()), false);
+        iterator_to_array(FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()), false);
 
         static::assertEquals(Cardinality::atMost(3), $extractor->statistics()->rows);
     }
@@ -618,15 +672,42 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         $backend = new SpyBackend();
 
         iterator_to_array(
-            GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(100, GoogleSheetFixtureContext::valuesAndBatches([], [SheetValuesMother::batch([[
-                ['header'],
-                ['row1'],
-            ]])])))
-                ->withSchema(schema(str_schema('header')))
-                ->extract(flow_context(config_builder()->backend($backend)->build())->backend(), new Criteria()),
+            FlowTestCase::extracted(
+                GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(100, GoogleSheetFixtureContext::valuesAndBatches([], [SheetValuesMother::batch([[
+                    ['header'],
+                    ['row1'],
+                ]])])))->withSchema(schema(str_schema('header'))),
+                flow_context(config_builder()->backend($backend)->build())->backend(),
+                new Criteria(),
+            ),
             false,
         );
 
         static::assertGreaterThanOrEqual(1, $backend->builders());
+    }
+
+    public function test_corrupted_records_are_routed_to_the_reject_loader(): void
+    {
+        $rejects = [];
+
+        $rows = df()
+            ->read(
+                GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(100, GoogleSheetFixtureContext::valuesAndBatches([], [
+                    SheetValuesMother::batch([[['a', 'b'], ['1', '2'], ['3', '4', '5'], ['6', '7']]]),
+                ])))
+                    ->withSchema(schema(str_schema('a'), str_schema('b')))
+                    ->withCorruptedRecords(to_array($rejects)),
+            )
+            ->fetch();
+
+        static::assertSame(['1', '6'], $rows->reduceToArray('a'));
+        static::assertSame(
+            [[3, '3 fields, the header has 2', ['3', '4', '5']]],
+            array_map(static fn(array $reject): array => [
+                $reject['offset'],
+                $reject['reason'],
+                $reject['fields'],
+            ], $rejects),
+        );
     }
 }

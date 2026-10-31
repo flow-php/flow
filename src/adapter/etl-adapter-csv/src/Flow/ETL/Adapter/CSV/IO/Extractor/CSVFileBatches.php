@@ -6,7 +6,9 @@ namespace Flow\ETL\Adapter\CSV\IO\Extractor;
 
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
+use Flow\ETL\Foundation\Exception\SchemaValidationException;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\File\FileBatches;
 use Flow\ETL\IO\Extractor\File\FileRead;
@@ -20,6 +22,7 @@ use Generator;
 use SensitiveParameter;
 
 use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_optional;
 
 final readonly class CSVFileBatches implements FileBatches
@@ -27,9 +30,13 @@ final readonly class CSVFileBatches implements FileBatches
     /**
      * @param null|InferredColumns $inferred the columns every file must carry; null when declared or union by name
      */
+    /**
+     * @param null|int $sampleSize the inference's sample size when the schema was inferred; null when it was declared
+     */
     public function __construct(
         private CSVSourceOpener $opener,
         private ?InferredColumns $inferred,
+        private ?int $sampleSize = null,
     ) {}
 
     public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
@@ -39,6 +46,7 @@ final readonly class CSVFileBatches implements FileBatches
         return new self(
             $rebuild->of($data['opener'] ?? null, CSVSourceOpener::class),
             $inferred === null ? null : InferredColumns::fromArray($inferred),
+            type_optional(type_integer())->assert($data['sample_size'] ?? null),
         );
     }
 
@@ -47,6 +55,7 @@ final readonly class CSVFileBatches implements FileBatches
         return Description::compose(self::class, [
             'opener' => $this->opener,
             'inferred' => $this->inferred?->normalize(),
+            'sample_size' => $this->sampleSize,
         ]);
     }
 
@@ -55,9 +64,9 @@ final readonly class CSVFileBatches implements FileBatches
      * the file's first batch is built, so a cell the inferred types refuse cannot hide a file whose columns diverge.
      * A split reads only its byte window of the file.
      *
-     * @throws InferredSchemaException
+     * @throws InferredSchemaException|SchemaValidationException
      *
-     * @return Generator<int, Rows, mixed, int>
+     * @return Generator<int, CorruptedRecordException|Rows, mixed, int>
      */
     public function batches(
         FileRead $read,
@@ -72,7 +81,25 @@ final readonly class CSVFileBatches implements FileBatches
             : $this->opener->openSplit($source, $criteria->split, $this->inferred);
 
         try {
-            yield from $open->batches($body, $read->batchSize, $backend);
+            // the header is resolved by the time the first batch or corrupted record is handed out
+            $checked = $this->sampleSize !== null;
+
+            foreach ($open->batches($body, $read->batchSize, $backend, $this->sampleSize) as $batch) {
+                if (!$checked) {
+                    $checked = true;
+                    $missing = $body->missingFrom($open->headers());
+
+                    if ($missing !== []) {
+                        throw SchemaValidationException::declaredColumnsMissing(
+                            $source->uri(),
+                            $missing,
+                            $open->headers(),
+                        );
+                    }
+                }
+
+                yield $batch;
+            }
         } finally {
             $open->close();
         }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\IO\Extractor\File;
 
 use Flow\ETL\Foundation\Describe\Describable;
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
@@ -24,9 +25,10 @@ interface FileBatches extends Describable
      * FileReadLoop counts. FileReadLoop applies the conjuncts to every row returned; a format given them when built may
      * skip what they prove cannot match.
      *
-     * A file's own resources are released by the generator (finally); those that span files go at close().
+     * A file's own resources are released by the generator (finally); those that span files go at close(). A corrupted
+     * record is handed up as its CorruptedRecordException, in record order, never thrown.
      *
-     * @return Generator<int, Rows, mixed, int>
+     * @return Generator<int, CorruptedRecordException|Rows, mixed, int>
      */
     public function batches(
         FileRead $read,

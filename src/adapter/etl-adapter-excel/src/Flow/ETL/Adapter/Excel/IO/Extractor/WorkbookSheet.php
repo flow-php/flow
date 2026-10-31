@@ -11,7 +11,7 @@ use Generator;
 final class WorkbookSheet
 {
     /**
-     * @var list<array<array-key, mixed>>
+     * @var array<int, array<array-key, mixed>> raw cells by their row number
      */
     private array $buffered = [];
 
@@ -41,11 +41,16 @@ final class WorkbookSheet
 
         if (!$this->headerResolved) {
             $this->headerResolved = true;
-            $row = $sheet->cells->current();
+            $cells = $sheet->cells->current();
 
-            if ($row !== null) {
-                $this->buffered = $sheet->decoder->decode([$row]);
+            if ($cells !== null) {
+                $number = $sheet->cells->key();
                 $sheet->cells->next();
+
+                // a sheet without a header row sizes its names by its first row, which stays a row
+                if ($sheet->decoder->decode($cells) !== null) {
+                    $this->buffered[$number] = $cells;
+                }
             }
         }
 
@@ -53,36 +58,46 @@ final class WorkbookSheet
     }
 
     /**
+     * @param array<array-key, mixed> $cells a row rows() or sample() yielded
+     *
+     * @return null|array<string, mixed>|string see RecordDecoder::decode()
+     */
+    public function decode(array $cells): array|string|null
+    {
+        $sheet = $this->sheet ??= $this->reader->open($this->path);
+
+        return $sheet->decoder->decode($cells);
+    }
+
+    /**
      * rows() for a bounded schema sample: every row it hands out stays buffered and the sheet stays open, so the
      * rows() that follows replays the sample and parses on from where the sample stopped, instead of parsing the
      * sample a second time. Closing the sheet stays with its owner.
      *
-     * @return Generator<int, array<array-key, mixed>>
+     * @return Generator<int, array<array-key, mixed>> raw cells by their row number
      */
     public function sample(): Generator
     {
         $sheet = $this->sheet ??= $this->reader->open($this->path);
         $this->columns();
 
-        foreach ($this->buffered as $rowValues) {
-            yield $rowValues;
+        foreach ($this->buffered as $number => $cells) {
+            yield $number => $cells;
         }
 
-        while (($row = $sheet->cells->current()) !== null) {
+        while (($cells = $sheet->cells->current()) !== null) {
+            $number = $sheet->cells->key();
             // advanced before the row is handed out: a sampler that stops here leaves the cursor past everything
             // buffered, so rows() neither repeats nor skips a row
             $sheet->cells->next();
+            $this->buffered[$number] = $cells;
 
-            foreach ($sheet->decoder->decode([$row]) as $rowValues) {
-                $this->buffered[] = $rowValues;
-
-                yield $rowValues;
-            }
+            yield $number => $cells;
         }
     }
 
     /**
-     * @return Generator<int, array<array-key, mixed>>
+     * @return Generator<int, array<array-key, mixed>> raw cells by their row number, the header row excluded
      */
     public function rows(): Generator
     {
@@ -93,16 +108,14 @@ final class WorkbookSheet
         try {
             $this->columns();
 
-            foreach ($this->buffered as $rowValues) {
-                yield $rowValues;
+            foreach ($this->buffered as $number => $cells) {
+                yield $number => $cells;
             }
 
             $this->buffered = [];
 
-            while (($row = $sheet->cells->current()) !== null) {
-                foreach ($sheet->decoder->decode([$row]) as $rowValues) {
-                    yield $rowValues;
-                }
+            while (($cells = $sheet->cells->current()) !== null) {
+                yield $sheet->cells->key() => $cells;
 
                 $sheet->cells->next();
             }

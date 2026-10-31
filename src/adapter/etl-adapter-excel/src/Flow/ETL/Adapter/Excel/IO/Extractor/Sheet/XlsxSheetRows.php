@@ -76,7 +76,7 @@ final readonly class XlsxSheetRows
     /**
      * Each non-empty row's cell values by column index, as OpenSpout's RowIterator yields them with the default
      * options Flow opens every workbook with: a row is padded to its spans, else to the sheet's dimension, and a
-     * sheet that declares no dimension gets the gaps below its cell count filled.
+     * sheet that declares no dimension gets the gaps below its cell count filled. Keyed by the row's 1-based number.
      *
      * @return Generator<int, array<int, SheetCellValue>>
      */
@@ -100,6 +100,7 @@ final readonly class XlsxSheetRows
             $dimension = 0;
             $values = [];
             $column = -1;
+            $rowNumber = 0;
             $moved = $reader->read();
 
             while ($moved) {
@@ -127,6 +128,8 @@ final readonly class XlsxSheetRows
                     $width = $spans !== null && $spans !== '' ? (int) (explode(':', $spans)[1] ?? 0) : $dimension;
                     $values = $width > 0 ? array_fill(0, $width, '') : [];
                     $column = -1;
+                    $reference = $reader->getAttribute('r');
+                    $rowNumber = $reference === null || $reference === '' ? $rowNumber + 1 : (int) $reference;
                 } elseif ($reader->nodeType === XMLReader::ELEMENT && $reader->localName === 'dimension') {
                     $match = [];
 
@@ -141,7 +144,7 @@ final readonly class XlsxSheetRows
                     if (!self::isEmpty($values)) {
                         libxml_use_internal_errors($internalErrors);
 
-                        yield $dimension === 0 ? self::filled($values) : $values;
+                        yield $rowNumber => $dimension === 0 ? self::filled($values) : $values;
 
                         $internalErrors = libxml_use_internal_errors(true);
                         libxml_clear_errors();

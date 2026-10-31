@@ -400,7 +400,9 @@ function csv_php_rows(
     foreach ($lines->readLines(
         new Flow\Filesystem\Stream\StringSourceStream(Flow\Filesystem\DSL\path('memory://phpt.csv'), $raw),
     ) as $line) {
-        foreach ($decoder->decode([$line]) as $values) {
+        $values = $decoder->decode($decoder->cells($line));
+
+        if (is_array($values)) {
             $rows[] = $values;
         }
     }
@@ -647,8 +649,8 @@ function csv_narrow_corpus(): array
 }
 
 /**
- * RustCSVOpenSource::sniff() of one CSV column "v" (no names seeded), one row per value - a null value is an empty cell,
- * read as null with $emptyToNull.
+ * RustCSVOpenSource::sniff() of one CSV column "v" (no names seeded), one row per value - a null value is a quoted empty
+ * cell (a blank line is no record), read as null with $emptyToNull.
  *
  * @param list<?string> $values
  */
@@ -657,7 +659,7 @@ function rust_sniff_column(array $values, Flow\Types\Type\TypeNarrower $typer, b
     $csv = "v\n";
 
     foreach ($values as $value) {
-        $csv .= ($value === null ? '' : '"' . str_replace('"', '""', $value) . '"') . "\n";
+        $csv .= '"' . str_replace('"', '""', $value ?? '') . '"' . "\n";
     }
 
     return (new RustCSVOpenSource(

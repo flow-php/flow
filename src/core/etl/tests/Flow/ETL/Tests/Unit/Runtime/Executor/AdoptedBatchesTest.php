@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Runtime\Executor;
 
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\Signal;
 use Flow\ETL\Runtime\Executor\AdoptedBatches;
@@ -56,15 +57,34 @@ final class AdoptedBatchesTest extends FlowTestCase
             array_to_rows([['id' => 1], ['id' => 2], ['id' => 3]], schema(int_schema('id'))),
         );
         $extractor->withBatchSize(1);
-        $adopted = (new AdoptedBatches(new PhpBackend()))->of($extractor->extract(
+        $adopted = (new AdoptedBatches(new PhpBackend()))->of(FlowTestCase::extracted(
+            $extractor,
             flow_context()->backend(),
             new Criteria(),
         ));
 
-        static::assertCount(1, $adopted->current());
+        $batch = $adopted->current();
+
+        static::assertInstanceOf(Rows::class, $batch);
+        static::assertCount(1, $batch);
         $adopted->send(Signal::STOP);
 
         static::assertFalse($adopted->valid());
         static::assertSame(1, $extractor->batchesYielded);
+    }
+
+    public function test_a_corrupted_record_passes_through_unchanged(): void
+    {
+        $corrupted = new CorruptedRecordException('file:///a.csv', 4, 2, 'reason', 'x');
+        $rows = array_to_rows([['id' => 1]], schema(int_schema('id')), new PhpBackend());
+        /** @var Generator<int, CorruptedRecordException|Rows, null|Signal, void> $source */
+        $source = (static function () use ($corrupted, $rows) {
+            yield $corrupted;
+            yield $rows;
+        })();
+
+        $adopted = iterator_to_array((new AdoptedBatches(new PhpBackend()))->of($source), false);
+
+        static::assertSame([$corrupted, $rows], $adopted);
     }
 }

@@ -117,4 +117,12 @@ final class ColumnMismatchExceptionTest extends FlowTestCase
             $exception->getMessage(),
         );
     }
+
+    public function test_the_reason_is_the_column_and_its_detail(): void
+    {
+        static::assertSame(
+            'column "id": could not convert \'x\' (string) to integer',
+            ColumnMismatchException::valueDoesNotMatch('id', 'integer', 'x')->reason(),
+        );
+    }
 }

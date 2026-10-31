@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\GoogleSheet\Tests\Integration\IO\Extractor;
 
 use Flow\ETL\Adapter\GoogleSheet\Tests\Context\GoogleSheetsContext;
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
-use Flow\ETL\Foundation\Exception\InvalidArgumentException;
-use Flow\ETL\Foundation\Exception\SchemaMismatchException;
+use Flow\ETL\Foundation\Exception\SchemaValidationException;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Rows;
+use PHPUnit\Framework\Attributes\TestWith;
 
 use function array_map;
 use function Flow\ETL\Adapter\GoogleSheet\from_google_sheet;
@@ -47,7 +48,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
                 ),
                 '1234567890',
                 'Sheet',
-            ))
+            )->withMissingColumnsAsNull(true))
             ->fetch()
             ->toArray();
 
@@ -58,45 +59,21 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         }
     }
 
-    public function test_extract_puts_null_in_a_declared_nullable_column_the_sheet_lacks(): void
+    #[TestWith([true])]
+    #[TestWith([false])]
+    public function test_extract_refuses_a_declared_column_the_sheet_lacks(bool $nullable): void
     {
-        $rows = df()
-            ->read(from_google_sheet(
-                $this->context->sheets(__DIR__ . '/../../../Fixtures/extra-empty-rows.json'),
-                '1234567890',
-                'Sheet',
-            )->withSchema(schema(
-                string_schema('Header 1'),
-                string_schema('Header 2'),
-                int_schema('id', nullable: true),
-            )))
-            ->fetch()
-            ->toArray();
-
-        static::assertCount(10, $rows);
-
-        foreach ($rows as $row) {
-            static::assertNotSame([], $row);
-            static::assertArrayNotHasKey('Header 3', $row);
-            static::assertNull($row['id']);
-        }
-    }
-
-    /**
-     * b57: the sheet has no such column, so every row would carry a null under a NOT NULL
-     * declaration. Declare the column nullable if that is what the data is.
-     */
-    public function test_extract_refuses_a_not_null_column_the_sheet_lacks(): void
-    {
-        $this->expectException(SchemaMismatchException::class);
-        $this->expectExceptionMessage('column "id" (row 0) declared by the schema is missing from the row');
+        $this->expectException(SchemaValidationException::class);
+        $this->expectExceptionMessage(
+            'Columns "id" declared by the schema are not in the header of google-sheet://1234567890/Sheet',
+        );
 
         df()
             ->read(from_google_sheet(
                 $this->context->sheets(__DIR__ . '/../../../Fixtures/extra-empty-rows.json'),
                 '1234567890',
                 'Sheet',
-            )->withSchema(schema(string_schema('Header 1'), string_schema('Header 2'), int_schema('id'))))
+            )->withSchema(schema(string_schema('Header 1'), string_schema('Header 2'), int_schema('id', $nullable))))
             ->fetch();
     }
 
@@ -167,9 +144,12 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         static::assertCount(20, df()->read($extractor)->fetch()->toArray());
     }
 
-    public function test_extract_with_cut_extra_columns(): void
+    public function test_extract_refuses_a_row_with_an_extra_cell(): void
     {
-        $rows = df()
+        $this->expectException(CorruptedRecordException::class);
+        $this->expectExceptionMessage('4 fields, the header has 3');
+
+        df()
             ->read(from_google_sheet(
                 $this->context->sheets(
                     __DIR__ . '/../../../Fixtures/sample-extra-columns.json',
@@ -178,14 +158,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
                 '1234567890',
                 'Sheet',
             ))
-            ->fetch()
-            ->toArray();
-
-        static::assertCount(10, $rows);
-
-        foreach ($rows as $row) {
-            static::assertCount(3, $row);
-        }
+            ->fetch();
     }
 
     public function test_extract_with_limit(): void
@@ -203,10 +176,10 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         static::assertCount(2, df()->read($extractor)->limit(2)->fetch()->toArray());
     }
 
-    public function test_extract_without_cut_extra_columns(): void
+    public function test_missing_columns_as_null_still_refuses_a_row_with_an_extra_cell(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Row has more columns (4) than headers (3)');
+        $this->expectException(CorruptedRecordException::class);
+        $this->expectExceptionMessage('4 fields, the header has 3');
 
         df()
             ->read(from_google_sheet(
@@ -216,9 +189,8 @@ final class GoogleSheetExtractorTest extends FlowTestCase
                 ),
                 '1234567890',
                 'Sheet',
-            )->withDropExtraColumns(false))
-            ->fetch()
-            ->toArray();
+            )->withMissingColumnsAsNull(true))
+            ->fetch();
     }
 
     public function test_schema_is_inferred_before_any_row_is_read(): void
@@ -362,9 +334,9 @@ final class GoogleSheetExtractorTest extends FlowTestCase
 
     public function test_a_value_past_the_sample_that_does_not_fit_is_refused(): void
     {
-        $this->expectException(SchemaMismatchException::class);
+        $this->expectException(InferredSchemaException::class);
         $this->expectExceptionMessageMatches('/column "price"/');
-        $this->expectExceptionMessageMatches('/row 3/');
+        $this->expectExceptionMessageMatches('/offset 5 of google-sheet:\/\/1234567890\/Sheet/');
 
         df()
             ->read(from_google_sheet(

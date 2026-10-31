@@ -9,6 +9,7 @@ use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use function array_fill;
 use function array_values;
 use function count;
+use function sprintf;
 
 /**
  * Decodes the records of one file or stream: the header it resolves from the first record is that source's.
@@ -29,7 +30,7 @@ final class RecordDecoder
     public function __construct(
         private readonly bool $withHeader,
         private readonly bool $emptyToNull,
-        private readonly bool $dropExtraColumns = true,
+        private readonly bool $missingColumnsAsNull = false,
         ?array $headers = null,
     ) {
         if ($headers !== null && $withHeader) {
@@ -40,56 +41,52 @@ final class RecordDecoder
     }
 
     /**
-     * Records before the header is resolved that hold no cell are skipped. A cell a record lacks is null; a present
-     * '' cell is null under emptyToNull.
+     * An extra empty cell ('' or null) loses nothing, so only a non-empty one makes a record corrupted. A missing cell
+     * makes it corrupted unless missingColumnsAsNull; a present '' cell is null under emptyToNull.
      *
-     * @param list<array<array-key, mixed>> $batch
+     * @param array<array-key, mixed> $cells
      *
-     * @throws InvalidArgumentException a record with more cells than headers, unless extra columns are dropped
-     *
-     * @return list<array<string, mixed>>
+     * @return null|array<string, mixed>|string null for a record that is no row (the header, an empty record), why
+     *                                          the record is corrupted, or the row's values
      */
-    public function decode(array $batch): array
+    public function decode(array $cells): array|string|null
     {
-        $decoded = [];
+        $cells = array_values($cells);
 
-        foreach ($batch as $record) {
-            $cells = array_values($record);
-
-            if ($this->headers === null) {
-                if ($cells === []) {
-                    continue;
-                }
-
-                $this->headers = (new HeaderNames())->of(
-                    $this->withHeader ? $cells : array_fill(0, count($cells), null),
-                );
-
-                if ($this->withHeader) {
-                    continue;
-                }
-            }
-
-            if (!$this->dropExtraColumns && count($cells) > count($this->headers)) {
-                throw InvalidArgumentException::because(
-                    'Row has more columns (%d) than headers (%d)',
-                    count($cells),
-                    count($this->headers),
-                );
-            }
-
-            $values = [];
-
-            foreach ($this->headers as $index => $name) {
-                // @mago-ignore analysis:mixed-assignment
-                $cell = $cells[$index] ?? null;
-                $values[$name] = $this->emptyToNull && $cell === '' ? null : $cell;
-            }
-
-            $decoded[] = $values;
+        if ($cells === [] || $cells === [null]) {
+            return null;
         }
 
-        return $decoded;
+        if ($this->headers === null) {
+            $this->headers = (new HeaderNames())->of($this->withHeader ? $cells : array_fill(0, count($cells), null));
+
+            if ($this->withHeader) {
+                return null;
+            }
+        }
+
+        $headers = count($this->headers);
+        $fields = count($cells);
+
+        $corrupted = $fields < $headers && !$this->missingColumnsAsNull;
+
+        for ($index = $headers; !$corrupted && $index < $fields; $index++) {
+            $corrupted = $cells[$index] !== null && $cells[$index] !== '';
+        }
+
+        if ($corrupted) {
+            return sprintf('%d fields, the header has %d', $fields, $headers);
+        }
+
+        $values = [];
+
+        foreach ($this->headers as $index => $name) {
+            // @mago-ignore analysis:mixed-assignment
+            $cell = $cells[$index] ?? null;
+            $values[$name] = $this->emptyToNull && $cell === '' ? null : $cell;
+        }
+
+        return $values;
     }
 
     /**

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\IO;
 
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\SchemaNotDerivableException;
 use Flow\ETL\IO\Extractor\Criteria;
@@ -29,9 +30,10 @@ interface Extractor
      * $criteria->conjuncts; only a FileExtractor ever receives any. The limit and the path filter are hints: the plan
      * still enforces the limit, and the predicate of every path filter is also one of the conjuncts or stays in a
      * Filter node, so a source that reads or lists more is still correct. Batches built on another backend than
-     * $backend are adopted by the runtime.
+     * $backend are adopted by the runtime. A record that cannot become a row is yielded as its
+     * CorruptedRecordException, in source order; the runtime routes or refuses it.
      *
-     * @return Generator<int, Rows, Signal|null, void>
+     * @return Generator<int, CorruptedRecordException|Rows, Signal|null, void>
      */
     public function extract(Backend $backend, Criteria $criteria): Generator;
 

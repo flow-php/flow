@@ -11,6 +11,8 @@ By default an exception thrown while reading, transforming or loading stops the 
 | `onTransformation(TransformationError): TransformationAction` | `cause`, `transformer`, `rows` | `skipBatch` - drop the batch, continue with the next one                           |
 | `onLoading(LoadingError): LoadingAction`                      | `cause`, `loader`, `rows`      | `skipLoader` - the failing loader misses this batch, the remaining steps still run |
 
+A corrupted record never reaches the `ErrorHandler`, see [Corrupted Records](/documentation/components/core/corrupted-records.md).
+
 Built-in handlers:
 
 | Handler                           | Extraction  | Transformation | Loading      |

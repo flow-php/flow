@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Context;
 
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Values\Rows;
 use Generator;
 
@@ -33,7 +34,7 @@ final class IdRows
     }
 
     /**
-     * @param Generator<Rows> $batches
+     * @param Generator<CorruptedRecordException|Rows> $batches
      *
      * @return list<mixed>
      */
@@ -42,7 +43,7 @@ final class IdRows
         $ids = [];
 
         foreach ($batches as $batch) {
-            $ids = array_merge($ids, $batch->reduceToArray('id'));
+            $ids = array_merge($ids, ($batch instanceof Rows ? $batch : throw $batch)->reduceToArray('id'));
         }
 
         return $ids;

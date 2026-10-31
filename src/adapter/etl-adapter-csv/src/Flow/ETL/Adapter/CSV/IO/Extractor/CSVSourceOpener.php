@@ -204,6 +204,7 @@ final readonly class CSVSourceOpener implements Describable
                 $removeBOM,
                 $charactersReadInLine,
                 $headers,
+                $this->options->missingColumnsAsNull,
             );
         }
 
@@ -216,6 +217,7 @@ final readonly class CSVSourceOpener implements Describable
                 escape: $dialect->escape,
                 emptyToNull: $this->options->emptyToNull,
                 headers: $headers,
+                missingColumnsAsNull: $this->options->missingColumnsAsNull,
             ),
             new CSVLineReader(
                 $dialect->enclosure,

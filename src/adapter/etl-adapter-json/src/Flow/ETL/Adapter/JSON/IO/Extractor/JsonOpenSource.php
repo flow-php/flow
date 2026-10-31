@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\IO\Extractor;
 
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
+use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\SchemaMismatchException;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
@@ -21,14 +23,22 @@ interface JsonOpenSource
     public function close(): void;
 
     /**
-     * Batches of exactly $batchSize rows (the last may be shorter), keyed and ordered by $schema; row indexes in
-     * refusals are relative to the source. This instance is consumed afterwards.
+     * Batches of exactly $batchSize rows (the last may be shorter), keyed and ordered by $schema, and every corrupted
+     * record handed up in record order. This instance is consumed afterwards.
      *
      * @param int<1, max> $batchSize
+     * @param null|int $sampleSize the inference's sample size when $schema was inferred; null when it was declared
+     * @param null|Schema $known the schema the user sees, $schema plus the file's own columns
      *
-     * @throws SchemaMismatchException
+     * @throws InferredSchemaException|SchemaMismatchException a refused record under an inferred schema
      *
-     * @return Iterator<int, Rows>
+     * @return Iterator<int, CorruptedRecordException|Rows>
      */
-    public function batches(Schema $schema, int $batchSize, Backend $backend): Iterator;
+    public function batches(
+        Schema $schema,
+        int $batchSize,
+        Backend $backend,
+        ?int $sampleSize = null,
+        ?Schema $known = null,
+    ): Iterator;
 }

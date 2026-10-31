@@ -12,6 +12,7 @@ use Flow\ETL\Runtime\Metrics\SourceStatistics;
 use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Cardinality;
+use Flow\ETL\Values\Rows;
 
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\flow_context;
@@ -28,12 +29,16 @@ final class SourceCountsTest extends FlowTestCase
         $sources = new SourceCounts();
 
         $batches = iterator_to_array(
-            $sources->count($extractor, $extractor->extract(flow_context()->backend(), new Criteria()), false),
+            $sources->count(
+                $extractor,
+                FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()),
+                false,
+            ),
             false,
         );
 
         static::assertEquals(
-            iterator_to_array($extractor->extract(flow_context()->backend(), new Criteria()), false),
+            iterator_to_array(FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()), false),
             $batches,
         );
         static::assertEquals(
@@ -49,7 +54,7 @@ final class SourceCountsTest extends FlowTestCase
         $sources = new SourceCounts();
         iterator_to_array($attempt->count(
             $extractor,
-            $extractor->extract(flow_context()->backend(), new Criteria()),
+            FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()),
             false,
         ));
 
@@ -68,12 +73,12 @@ final class SourceCountsTest extends FlowTestCase
         $sources = new SourceCounts();
         iterator_to_array($sources->count(
             $extractor,
-            $extractor->extract(flow_context()->backend(), new Criteria()),
+            FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()),
             false,
         ));
         iterator_to_array($attempt->count(
             $extractor,
-            $extractor->extract(flow_context()->backend(), new Criteria()),
+            FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()),
             false,
         ));
 
@@ -93,7 +98,7 @@ final class SourceCountsTest extends FlowTestCase
         $attempt->open($open, false)->counted(1);
         iterator_to_array($attempt->count(
             $narrowed,
-            $narrowed->extract(flow_context()->backend(), new Criteria()),
+            FlowTestCase::extracted($narrowed, flow_context()->backend(), new Criteria()),
             true,
         ));
 
@@ -111,9 +116,16 @@ final class SourceCountsTest extends FlowTestCase
         );
         $extractor->withBatchSize(1);
         $sources = new SourceCounts();
-        $counted = $sources->count($extractor, $extractor->extract(flow_context()->backend(), new Criteria()), false);
+        $counted = $sources->count(
+            $extractor,
+            FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()),
+            false,
+        );
 
-        static::assertCount(1, $counted->current());
+        $batch = $counted->current();
+
+        static::assertInstanceOf(Rows::class, $batch);
+        static::assertCount(1, $batch);
         $counted->send(Signal::STOP);
 
         static::assertFalse($counted->valid());
@@ -129,7 +141,7 @@ final class SourceCountsTest extends FlowTestCase
 
         iterator_to_array($sources->count(
             $extractor,
-            $extractor->extract(flow_context()->backend(), new Criteria()),
+            FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()),
             true,
         ));
 
@@ -144,12 +156,12 @@ final class SourceCountsTest extends FlowTestCase
 
         iterator_to_array($sources->count(
             $extractor,
-            $extractor->extract(flow_context()->backend(), new Criteria()),
+            FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()),
             false,
         ));
         iterator_to_array($sources->count(
             $extractor,
-            $extractor->extract(flow_context()->backend(), new Criteria()),
+            FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()),
             true,
         ));
 
@@ -160,8 +172,16 @@ final class SourceCountsTest extends FlowTestCase
     {
         $extractor = from_array([['id' => 1], ['id' => 2]])->withBatchSize(1);
         $sources = new SourceCounts();
-        $first = $sources->count($extractor, $extractor->extract(flow_context()->backend(), new Criteria()), false);
-        $second = $sources->count($extractor, $extractor->extract(flow_context()->backend(), new Criteria()), false);
+        $first = $sources->count(
+            $extractor,
+            FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()),
+            false,
+        );
+        $second = $sources->count(
+            $extractor,
+            FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()),
+            false,
+        );
 
         $first->current();
         iterator_to_array($second);
@@ -181,12 +201,12 @@ final class SourceCountsTest extends FlowTestCase
 
         iterator_to_array($sources->count(
             $extractor,
-            $extractor->extract(flow_context()->backend(), new Criteria()),
+            FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()),
             false,
         ));
         iterator_to_array($sources->count(
             $extractor,
-            $extractor->extract(flow_context()->backend(), new Criteria()),
+            FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()),
             false,
         ));
 
@@ -200,8 +220,16 @@ final class SourceCountsTest extends FlowTestCase
         $second = from_array([['id' => 1], ['id' => 2]]);
         $sources = new SourceCounts();
 
-        iterator_to_array($sources->count($second, $second->extract(flow_context()->backend(), new Criteria()), false));
-        iterator_to_array($sources->count($first, $first->extract(flow_context()->backend(), new Criteria()), false));
+        iterator_to_array($sources->count(
+            $second,
+            FlowTestCase::extracted($second, flow_context()->backend(), new Criteria()),
+            false,
+        ));
+        iterator_to_array($sources->count(
+            $first,
+            FlowTestCase::extracted($first, flow_context()->backend(), new Criteria()),
+            false,
+        ));
 
         static::assertSame([2, 1], [$sources->statistics()[0]->rows, $sources->statistics()[1]->rows]);
     }
@@ -213,7 +241,7 @@ final class SourceCountsTest extends FlowTestCase
 
         iterator_to_array($sources->count(
             $extractor,
-            $extractor->extract(flow_context()->backend(), new Criteria()),
+            FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()),
             false,
         ));
 
@@ -225,7 +253,11 @@ final class SourceCountsTest extends FlowTestCase
         $extractor = from_array([['id' => 1]]);
         $sources = new SourceCounts();
 
-        $sources->count($extractor, $extractor->extract(flow_context()->backend(), new Criteria()), false);
+        $sources->count(
+            $extractor,
+            FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()),
+            false,
+        );
 
         static::assertSame([], $sources->statistics());
     }

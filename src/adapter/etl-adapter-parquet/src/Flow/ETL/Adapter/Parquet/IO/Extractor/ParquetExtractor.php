@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\Parquet\IO\Extractor;
 
 use Flow\ETL\Adapter\Parquet\IO\Extractor\Pushdown\FilterTranslator;
 use Flow\ETL\Adapter\Parquet\Values\Schema\SchemaConverter;
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Functions\ScalarFunction;
@@ -123,7 +124,7 @@ final class ParquetExtractor implements
     }
 
     /**
-     * @return Generator<int, Rows, Signal|null, void>
+     * @return Generator<int, CorruptedRecordException|Rows, Signal|null, void>
      */
     public function extract(Backend $backend, Criteria $criteria): Generator
     {

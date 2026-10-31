@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Runtime\Executor;
 
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\Operators\Join\CrossJoin;
 use Flow\ETL\Operators\Processor\BatchingProcessor;
@@ -14,7 +15,9 @@ use Flow\ETL\Operators\Transformer\LimitTransformer;
 use Flow\ETL\Operators\Transformer\UntilTransformer;
 use Flow\ETL\Planning\Physical\JoinStep;
 use Flow\ETL\Planning\Physical\PipelineSteps;
+use Flow\ETL\Runtime\ErrorHandler;
 use Flow\ETL\Runtime\ErrorHandler\ExtractionError;
+use Flow\ETL\Runtime\ErrorHandler\IgnoreError;
 use Flow\ETL\Runtime\ErrorHandler\LoadingError;
 use Flow\ETL\Runtime\ErrorHandler\SkipRows;
 use Flow\ETL\Runtime\ErrorHandler\ThrowError;
@@ -35,6 +38,7 @@ use Flow\ETL\Values\BatchSize;
 use Flow\ETL\Values\Rows;
 use Flow\Telemetry\Logger\LogEntry;
 use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
 
 use function array_map;
@@ -43,6 +47,7 @@ use function array_slice;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
@@ -467,5 +472,164 @@ final class StepRunnerTest extends FlowTestCase
 
         static::assertSame(1, $spy->closureCount);
         static::assertSame([['id' => 1], ['id' => 2], ['id' => 3]], $steps->current()->toArray());
+    }
+
+    public function test_a_corrupted_record_is_loaded_into_the_sources_reject_loader_before_its_batch_rows(): void
+    {
+        $rejects = new SpyLoader();
+        $loader = new SpyLoader();
+        $extractor = from_array([['id' => 1], ['id' => 'x'], ['id' => 3]], schema(int_schema('id')))
+            ->withBatchSize(2)
+            ->withCorruptedRecords($rejects);
+
+        iterator_to_array((new StepRunner())->steps(
+            new PipelineSteps([$loader]),
+            $extractor->extract(flow_context()->backend(), new Criteria()),
+            flow_context(config()),
+            $extractor,
+        ));
+
+        static::assertSame([['id' => 1], ['id' => 3]], $loader->loadedRowsToArray());
+        static::assertSame(
+            [[
+                'uri' => null,
+                'offset' => 2,
+                'line' => null,
+                'reason' => 'column "id": could not convert \'x\' (string) to integer',
+                'record' => '{"id":"x"}',
+                'fields' => null,
+            ]],
+            $rejects->loadedRowsToArray(),
+        );
+        static::assertSame(1, $rejects->closureCount);
+    }
+
+    public function test_corrupted_records_left_after_the_last_rows_are_loaded_before_the_reject_loader_closes(): void
+    {
+        $rejects = new RecordingLoader();
+        $extractor = from_array([['id' => 'x'], ['id' => 'y']], schema(int_schema('id')))
+            ->withBatchSize(10)
+            ->withCorruptedRecords($rejects);
+
+        static::assertSame(
+            [],
+            iterator_to_array((new StepRunner())->steps(
+                new PipelineSteps(),
+                $extractor->extract(flow_context()->backend(), new Criteria()),
+                flow_context(config()),
+                $extractor,
+            )),
+        );
+        static::assertSame(['load#1(2)', 'closure'], $rejects->log);
+    }
+
+    public function test_without_a_reject_loader_a_corrupted_record_is_thrown_as_an_extraction_error(): void
+    {
+        $extractor = from_array([['id' => 'x']], schema(int_schema('id')));
+
+        $this->expectException(CorruptedRecordException::class);
+
+        iterator_to_array((new StepRunner())->steps(
+            new PipelineSteps(),
+            $extractor->extract(flow_context()->backend(), new Criteria()),
+            flow_context(config())->withErrorHandler(new ThrowError()),
+            $extractor,
+        ));
+    }
+
+    /**
+     * @return Generator<string, array{ErrorHandler}>
+     */
+    public static function skipping_error_handlers(): Generator
+    {
+        yield 'skip rows' => [new SkipRows()];
+        yield 'ignore error' => [new IgnoreError()];
+    }
+
+    #[DataProvider('skipping_error_handlers')]
+    public function test_without_a_reject_loader_a_corrupted_record_fails_the_run_whatever_the_error_handler(ErrorHandler $decides): void
+    {
+        $handler = new RecordingErrorHandler($decides);
+        $extractor = from_array([['id' => 'x'], ['id' => 2]], schema(int_schema('id')));
+        $thrown = null;
+
+        try {
+            iterator_to_array((new StepRunner())->steps(
+                new PipelineSteps(),
+                $extractor->extract(flow_context()->backend(), new Criteria()),
+                flow_context(config())->withErrorHandler($handler),
+                $extractor,
+            ));
+        } catch (CorruptedRecordException $e) {
+            $thrown = $e;
+        }
+
+        static::assertInstanceOf(CorruptedRecordException::class, $thrown);
+        static::assertSame([], $handler->errors);
+    }
+
+    public function test_a_failed_run_discards_the_reject_loader(): void
+    {
+        $rejects = new RecordingLoader();
+        $extractor = from_array([['id' => 'x'], ['id' => 2]], schema(int_schema('id')))
+            ->withBatchSize(2)
+            ->withCorruptedRecords($rejects);
+
+        try {
+            iterator_to_array((new StepRunner())->steps(
+                new PipelineSteps([new RecordingLoader(new RuntimeException('write failed'))]),
+                $extractor->extract(flow_context()->backend(), new Criteria()),
+                flow_context(config())->withErrorHandler(new ThrowError()),
+                $extractor,
+            ));
+            static::fail('Expected the write to fail the run');
+        } catch (RuntimeException) {
+        }
+
+        static::assertSame(['load#1(1)', 'discard'], $rejects->log);
+    }
+
+    public function test_a_failing_reject_loader_reaches_the_loading_handler(): void
+    {
+        $handler = new RecordingErrorHandler();
+        $rejects = new RecordingLoader(new RuntimeException('rejects failed'));
+        $extractor = from_array([['id' => 'x'], ['id' => 2]], schema(int_schema('id')))
+            ->withBatchSize(2)
+            ->withCorruptedRecords($rejects);
+
+        static::assertCount(
+            1,
+            iterator_to_array((new StepRunner())->steps(
+                new PipelineSteps(),
+                $extractor->extract(flow_context()->backend(), new Criteria()),
+                flow_context(config())->withErrorHandler($handler),
+                $extractor,
+            )),
+        );
+        static::assertCount(1, $handler->errors);
+        static::assertInstanceOf(LoadingError::class, $handler->errors[0]);
+        static::assertSame($rejects, $handler->errors[0]->loader);
+    }
+
+    public function test_a_run_that_routed_records_logs_how_many_and_where(): void
+    {
+        $telemetry = new MemoryTelemetryContext();
+        $extractor = from_array([
+            ['id' => 'x'],
+            ['id' => 2],
+            ['id' => 'y'],
+        ], schema(int_schema('id')))->withCorruptedRecords(new SpyLoader());
+
+        iterator_to_array((new StepRunner())->steps(
+            new PipelineSteps(),
+            $extractor->extract(flow_context()->backend(), new Criteria()),
+            $telemetry->flowContext,
+            $extractor,
+        ));
+
+        static::assertCount(
+            1,
+            $telemetry->logs->entriesContaining('Routed 2 corrupted records to ' . SpyLoader::class . '.'),
+        );
     }
 }

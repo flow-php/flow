@@ -9,13 +9,13 @@ use ext_php_rs::flags::ClassFlags;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::Zval;
 
-use crate::batch_columns::{batch_size_of, HeldBatch};
-use crate::ctx::{call_method, zval_long};
+use crate::batch_columns::batch_size_of;
+use crate::ctx::{call_method, ht_for_each, zval_long};
 use crate::exception::ext_exception;
 use crate::interfaces::json_open_source_ce;
 use crate::iterator::RustIterator;
 use crate::json::read::JsonReader;
-use crate::source::{self, reading, Fed, CHUNK};
+use crate::source::{self, reading, window_start, Fed, Fetched, CHUNK};
 
 const CLASS: &str = "RustJsonOpenSource";
 
@@ -32,11 +32,14 @@ struct JsonFeed {
     shared: Rc<Shared>,
     schema: Zval,
     batch_size: usize,
+    sample_size: Option<i64>,
+    /// The names a record may hold under an inferred schema.
+    known: Vec<Vec<u8>>,
 }
 
 impl Fed for JsonFeed {
-    fn next_batch(&self) -> PhpResult<Option<HeldBatch>> {
-        reading(&self.shared.reader, CLASS)?.next_columns(&self.schema, self.batch_size)
+    fn next_batch(&self) -> PhpResult<Option<Fetched>> {
+        reading(&self.shared.reader, CLASS)?.next_columns(&self.schema, self.batch_size, self.sample_size, &self.known)
     }
 
     /// `SourceStream::read()` runs with no borrow held: the stream may call back into the source.
@@ -88,24 +91,54 @@ pub struct RustJsonOpenSource {
 impl RustJsonOpenSource {
     /// `$head`: the chunk the opener already read at `$offset` ('' for none); the bytes before it are JSON whitespace
     /// after an optional BOM, which the reader would skip. `$uri` names the file in refusals.
-    pub fn __construct(stream: &Zval, lines: bool, uri: BinarySlice<u8>, head: BinarySlice<u8>, offset: i64) -> Self {
-        Self {
+    pub fn __construct(
+        stream: &Zval,
+        lines: bool,
+        uri: BinarySlice<u8>,
+        head: BinarySlice<u8>,
+        offset: i64,
+    ) -> PhpResult<Self> {
+        Ok(Self {
             shared: Rc::new(Shared {
                 stream: stream.shallow_clone(),
-                reader: RefCell::new(JsonReader::new(lines, &uri)),
+                reader: RefCell::new(JsonReader::new(lines, &uri, window_start(stream)?)),
                 head: RefCell::new(head.to_vec()),
                 offset: Cell::new(offset),
             }),
-        }
+        })
     }
 
-    /// Exactly `$batchSize` rows keyed and ordered by `$schema` (the last may be shorter), every column adopted by
-    /// `$backend`; refusals are `RowsBuilder::appendRows()`'s, row indexes relative to the source.
-    pub fn batches(&self, schema: &Zval, batchSize: i64, backend: &Zval) -> PhpResult<RustIterator> {
+    /// `PhpJsonOpenSource::batches()`: `$batchSize` records keyed and ordered by `$schema` at a time, every column
+    /// adopted by `$backend`, a batch's corrupted records handed out before its rows.
+    pub fn batches(
+        &self,
+        schema: &Zval,
+        batchSize: i64,
+        backend: &Zval,
+        sampleSize: Option<i64>,
+        known: Option<&Zval>,
+    ) -> PhpResult<RustIterator> {
+        let mut names = Vec::new();
+
+        if sampleSize.is_some() {
+            let definitions = call_method(known.unwrap_or(schema), "definitions", &mut [])?;
+            let definitions = definitions
+                .array()
+                .ok_or_else(|| ext_exception("flow_php expected Schema::definitions() to return an array"))?;
+
+            ht_for_each(definitions, |name, index, _| {
+                names.push(name.map_or_else(|| index.to_string().into_bytes(), |name| name.as_bytes().to_vec()));
+
+                Ok(())
+            })?;
+        }
+
         let fed = JsonFeed {
             shared: Rc::clone(&self.shared),
             schema: schema.shallow_clone(),
             batch_size: batch_size_of(batchSize, "JSON")?,
+            sample_size: sampleSize,
+            known: names,
         };
 
         source::batches(fed, schema, backend)

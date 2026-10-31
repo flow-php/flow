@@ -7,7 +7,7 @@ use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
 use std::fmt;
 
-use flow_batch_frame::key::Key;
+use flow_batch_frame::key::{array_key_index, Key};
 use flow_batch_frame::kind::Field;
 use serde::de::{self, DeserializeSeed, Deserializer as _, IgnoredAny, MapAccess, SeqAccess, Visitor};
 use serde::Deserialize;
@@ -39,6 +39,8 @@ pub struct Record {
     pub start: usize,
     pub end: usize,
     pub ordinal: usize,
+    /// Where the record begins among every byte fed, a BOM before the first line included.
+    pub offset: u64,
 }
 
 /// The document scanner: where the element being framed stands.
@@ -144,6 +146,10 @@ pub struct Framing {
     /// The next line (1-based) or element (0-based).
     ordinal: usize,
     finished: bool,
+    /// The bytes fed before `input`'s first.
+    drained: u64,
+    /// The length of the BOM skipped before the first line.
+    bom_len: usize,
 }
 
 impl Framing {
@@ -158,12 +164,15 @@ impl Framing {
             bom: true,
             ordinal: usize::from(lines),
             finished: false,
+            drained: 0,
+            bom_len: 0,
         }
     }
 
     pub fn feed(&mut self, chunk: &[u8]) {
         if self.start > 0 && self.start * 2 >= self.input.len() {
             self.input.drain(..self.start);
+            self.drained += self.start as u64;
             self.start = 0;
         }
 
@@ -195,6 +204,7 @@ impl Framing {
 
             if pending.starts_with(BOM) {
                 self.start += BOM.len();
+                self.bom_len = BOM.len();
             }
 
             self.bom = false;
@@ -220,10 +230,13 @@ impl Framing {
                 });
             }
 
+            let first_line = self.lines && ordinal == 1;
+
             bounds.push(Record {
                 start: records.len(),
                 end: records.len() + bytes.len(),
                 ordinal,
+                offset: self.drained + (start - if first_line { self.bom_len } else { 0 }) as u64,
             });
             records.extend_from_slice(bytes);
 
@@ -459,6 +472,8 @@ impl<'de> DeserializeSeed<'de> for Text {
 pub struct MemberColumns {
     names: HashMap<Vec<u8>, usize>,
     positions: Vec<Option<usize>>,
+    /// The names a record may hold, when a member outside them is to be reported.
+    known: Option<HashSet<Vec<u8>>>,
 }
 
 impl MemberColumns {
@@ -480,6 +495,23 @@ impl MemberColumns {
 
         columns
     }
+
+    /// `map_record()` reports a record's first member none of `names` names: as a key, or as the positional name
+    /// (`e00`, `e01`, ...) of an int key.
+    pub fn knowing(mut self, names: impl Iterator<Item = Vec<u8>>) -> Self {
+        self.known = Some(names.collect());
+
+        self
+    }
+
+    fn unknown(&self, name: &[u8]) -> bool {
+        let Some(known) = &self.known else {
+            return false;
+        };
+
+        !known.contains(name)
+            && array_key_index(name).is_none_or(|index| !known.contains(format!("e{index:02}").as_bytes()))
+    }
 }
 
 /// A record's members, each stored as the span of its value in `slots[column]`.
@@ -487,10 +519,15 @@ struct Members<'a> {
     columns: &'a MemberColumns,
     slots: &'a mut [Option<(usize, usize)>],
     base: usize,
+    unknown: &'a mut Option<String>,
 }
 
 impl Members<'_> {
-    fn store(&mut self, column: Option<usize>, value: &RawValue) {
+    fn store(&mut self, name: &[u8], column: Option<usize>, value: &RawValue) {
+        if self.unknown.is_none() && self.columns.unknown(name) {
+            *self.unknown = Some(String::from_utf8_lossy(name).into_owned());
+        }
+
         if let Some(column) = column {
             let start = value.get().as_ptr() as usize - self.base;
 
@@ -510,7 +547,7 @@ impl<'de> Visitor<'de> for Members<'_> {
         while let Some(name) = map.next_key_seed(Text)? {
             let value: &'de RawValue = map.next_value()?;
 
-            self.store(self.columns.names.get(name.as_bytes()).copied(), value);
+            self.store(name.as_bytes(), self.columns.names.get(name.as_bytes()).copied(), value);
         }
 
         Ok(())
@@ -520,7 +557,11 @@ impl<'de> Visitor<'de> for Members<'_> {
         let mut position = 0;
 
         while let Some(value) = seq.next_element::<&'de RawValue>()? {
-            self.store(self.columns.positions.get(position).copied().flatten(), value);
+            self.store(
+                position.to_string().as_bytes(),
+                self.columns.positions.get(position).copied().flatten(),
+                value,
+            );
             position += 1;
         }
 
@@ -528,22 +569,30 @@ impl<'de> Visitor<'de> for Members<'_> {
     }
 }
 
-/// Maps one record's members onto `slots`, spans relative to `base` (the address of the batch's first byte).
+/// Maps one record's members onto `slots`, spans relative to `base` (the address of the batch's first byte); the first
+/// member outside the columns' known names, when they know any.
 pub fn map_record(
     record: &[u8],
     columns: &MemberColumns,
     slots: &mut [Option<(usize, usize)>],
     base: usize,
-) -> Result<(), RecordError> {
+) -> Result<Option<String>, RecordError> {
     let malformed = |e: serde_json::Error| RecordError::Malformed(e.to_string());
 
     if let Some(b'{' | b'[') = record.iter().find(|byte| !is_whitespace(byte)) {
+        let mut unknown = None;
         let mut deserializer = deserializer(record);
         deserializer
-            .deserialize_any(Members { columns, slots, base })
+            .deserialize_any(Members {
+                columns,
+                slots,
+                base,
+                unknown: &mut unknown,
+            })
             .map_err(malformed)?;
+        deserializer.end().map_err(malformed)?;
 
-        return deserializer.end().map_err(malformed);
+        return Ok(unknown);
     }
 
     let mut deserializer = deserializer(record);
@@ -961,5 +1010,46 @@ mod tests {
 
             assert_eq!(deduplicated(&object(&members)), expected, "{size} keys and k1 again");
         }
+    }
+
+    #[test]
+    fn a_line_offset_counts_every_byte_fed_and_the_first_line_its_bom() {
+        let mut framing = Framing::new(true);
+        let mut records = Vec::new();
+        let mut bounds: Vec<Record> = Vec::new();
+
+        for chunk in [&b"\xEF\xBB\xBF{\"a\":1}\n\n{\"a\":"[..], b"2}\r\n", b"{\"a\":3}"] {
+            framing.feed(chunk);
+
+            while framing.next(&mut records, &mut bounds).unwrap() {}
+        }
+
+        framing.finish();
+
+        while framing.next(&mut records, &mut bounds).unwrap() {}
+
+        assert_eq!(
+            bounds
+                .iter()
+                .map(|record| (record.offset, record.ordinal))
+                .collect::<Vec<_>>(),
+            vec![(0, 1), (12, 3), (21, 4)],
+        );
+    }
+
+    #[test]
+    fn a_member_outside_the_known_names_is_reported_first_one_wins() {
+        let known = |names: &[&str]| columns(&["a"]).knowing(names.iter().map(|name| name.as_bytes().to_vec()));
+        let unknown = |record: &str, columns: &MemberColumns| {
+            let mut slots = vec![None; 1];
+
+            map_record(record.as_bytes(), columns, &mut slots, record.as_ptr() as usize).unwrap()
+        };
+
+        assert_eq!(unknown(r#"{"a":1,"c":2,"d":3}"#, &known(&["a"])), Some("c".to_string()));
+        assert_eq!(unknown(r#"{"a":1,"group":2}"#, &known(&["a", "group"])), None);
+        assert_eq!(unknown(r#"[1,2]"#, &known(&["a", "e01"])), Some("0".to_string()));
+        assert_eq!(unknown(r#"{"5":1}"#, &known(&["e05"])), None);
+        assert_eq!(unknown(r#"{"a":1,"c":2}"#, &columns(&["a"])), None);
     }
 }

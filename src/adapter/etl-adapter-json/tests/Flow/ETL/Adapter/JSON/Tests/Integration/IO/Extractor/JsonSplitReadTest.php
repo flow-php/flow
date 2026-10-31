@@ -73,7 +73,8 @@ final class JsonSplitReadTest extends FlowTestCase
         $rows = [];
 
         foreach ($splits as $split) {
-            foreach (DescribeRoundTrip::rebuilt($extractor->reader())->extract(
+            foreach (FlowTestCase::extracted(
+                DescribeRoundTrip::rebuilt($extractor->reader()),
                 flow_context()->backend(),
                 (new Criteria())->withSplit(type_instance_of(FileSplit::class)->assert($split)),
             ) as $batch) {

@@ -20,7 +20,7 @@ final readonly class GoogleSheetReadOptions
      */
     public function __construct(
         public bool $withHeader = true,
-        public bool $dropExtraColumns = true,
+        public bool $missingColumnsAsNull = false,
         public bool $emptyToNull = true,
         public array $options = [],
     ) {}
@@ -30,7 +30,7 @@ final readonly class GoogleSheetReadOptions
      */
     public function decoder(): RecordDecoder
     {
-        return new RecordDecoder($this->withHeader, $this->emptyToNull, $this->dropExtraColumns);
+        return new RecordDecoder($this->withHeader, $this->emptyToNull, $this->missingColumnsAsNull);
     }
 
     /**
@@ -44,19 +44,19 @@ final readonly class GoogleSheetReadOptions
             : new InstanceOfTypeNarrower();
     }
 
-    public function withDropExtraColumns(bool $dropExtraColumns): self
-    {
-        return new self($this->withHeader, $dropExtraColumns, $this->emptyToNull, $this->options);
-    }
-
     public function withEmptyToNull(bool $emptyToNull): self
     {
-        return new self($this->withHeader, $this->dropExtraColumns, $emptyToNull, $this->options);
+        return new self($this->withHeader, $this->missingColumnsAsNull, $emptyToNull, $this->options);
     }
 
     public function withHeader(bool $withHeader): self
     {
-        return new self($withHeader, $this->dropExtraColumns, $this->emptyToNull, $this->options);
+        return new self($withHeader, $this->missingColumnsAsNull, $this->emptyToNull, $this->options);
+    }
+
+    public function withMissingColumnsAsNull(bool $missingColumnsAsNull): self
+    {
+        return new self($this->withHeader, $missingColumnsAsNull, $this->emptyToNull, $this->options);
     }
 
     /**
@@ -64,6 +64,6 @@ final readonly class GoogleSheetReadOptions
      */
     public function withOptions(array $options): self
     {
-        return new self($this->withHeader, $this->dropExtraColumns, $this->emptyToNull, $options);
+        return new self($this->withHeader, $this->missingColumnsAsNull, $this->emptyToNull, $options);
     }
 }

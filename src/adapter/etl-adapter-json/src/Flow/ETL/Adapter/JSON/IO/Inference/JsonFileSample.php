@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\JSON\IO\Inference;
 
 use Flow\ETL\Adapter\JSON\IO\Extractor\JsonFileReader;
-use Flow\ETL\Adapter\JSON\IO\Extractor\JsonReadBytes;
+use Flow\ETL\Adapter\JSON\IO\Extractor\JsonReadProgress;
 use Flow\ETL\IO\Extractor\File\FileSplit;
 use Flow\ETL\IO\Extractor\File\SourceFile;
 use Generator;
@@ -52,7 +52,7 @@ final class JsonFileSample implements IteratorAggregate
      */
     public function getIterator(): Generator
     {
-        $read = new JsonReadBytes();
+        $read = new JsonReadProgress();
 
         try {
             foreach ($this->reader->sample($this->source, $read, $this->window) as $row) {

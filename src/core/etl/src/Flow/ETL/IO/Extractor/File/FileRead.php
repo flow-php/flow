@@ -6,6 +6,7 @@ namespace Flow\ETL\IO\Extractor\File;
 
 use Flow\ETL\Foundation\Describe\ConfiguredFilesystem;
 use Flow\ETL\Foundation\Describe\Rebuild;
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\Signal;
 use Flow\ETL\Values\Column\Backend;
@@ -63,7 +64,7 @@ final readonly class FileRead
     /**
      * The files $criteria reads, through $batches.
      *
-     * @return Generator<int, Rows, null|Signal, void>
+     * @return Generator<int, CorruptedRecordException|Rows, null|Signal, void>
      */
     public function scan(Backend $backend, Criteria $criteria, FileBatches $batches): Generator
     {

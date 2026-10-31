@@ -73,4 +73,18 @@ final class SchemaValidationExceptionTest extends FlowTestCase
             (new SchemaValidationException("  Unexpected Definitions: \n"))->getMessage(),
         );
     }
+
+    public function test_declared_columns_missing_names_them_the_source_its_header_and_the_fix(): void
+    {
+        static::assertSame(
+            "Schema validation failed: \n"
+            . 'Columns "id", "at" declared by the schema are not in the header of file:///a.csv (name, price). Correct '
+            . 'their names, or remove them from ->withSchema(...).',
+            SchemaValidationException::declaredColumnsMissing(
+                'file:///a.csv',
+                ['id', 'at'],
+                ['name', 'price'],
+            )->getMessage(),
+        );
+    }
 }

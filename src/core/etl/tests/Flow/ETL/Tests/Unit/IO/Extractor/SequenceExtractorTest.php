@@ -16,9 +16,11 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\RowsMother;
 use Flow\ETL\Values\Cardinality;
 
+use function array_map;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\date_schema;
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_sequence_date_period;
@@ -28,6 +30,8 @@ use function Flow\ETL\DSL\infer_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\to_array;
+use function Flow\ETL\DSL\uuid_schema;
 use function iterator_to_array;
 
 final class SequenceExtractorTest extends FlowTestCase
@@ -67,12 +71,16 @@ final class SequenceExtractorTest extends FlowTestCase
         static::assertSame(
             [],
             iterator_to_array(
-                from_sequence_date_period(
-                    'id',
-                    new DateTimeImmutable('2024-01-01'),
-                    new DateInterval('P1D'),
-                    new DateTimeImmutable('2024-01-01'),
-                )->extract(flow_context()->backend(), new Criteria()),
+                FlowTestCase::extracted(
+                    from_sequence_date_period(
+                        'id',
+                        new DateTimeImmutable('2024-01-01'),
+                        new DateInterval('P1D'),
+                        new DateTimeImmutable('2024-01-01'),
+                    ),
+                    flow_context()->backend(),
+                    new Criteria(),
+                ),
                 false,
             ),
         );
@@ -177,7 +185,7 @@ final class SequenceExtractorTest extends FlowTestCase
         $this->expectException(InferredSchemaException::class);
         $this->expectExceptionMessage('Row 1 of the sequence does not fit the schema inferred from its first 1 rows');
 
-        iterator_to_array($extractor->extract(flow_context(config())->backend(), new Criteria()));
+        iterator_to_array(FlowTestCase::extracted($extractor, flow_context(config())->backend(), new Criteria()));
     }
 
     public function test_a_numeric_entry_name_yields_one_column(): void
@@ -252,7 +260,7 @@ final class SequenceExtractorTest extends FlowTestCase
     {
         $extractor = new SequenceExtractor(new MixedSequenceGenerator(), 'code');
 
-        foreach ($extractor->extract(flow_context(config())->backend(), new Criteria()) as $rows) {
+        foreach (FlowTestCase::extracted($extractor, flow_context(config())->backend(), new Criteria()) as $rows) {
             static::assertEquals($extractor->schema(), $rows->schema());
         }
 
@@ -269,6 +277,29 @@ final class SequenceExtractorTest extends FlowTestCase
         self::assertExtractorHonoursBatchContract(
             static fn(): SequenceExtractor => from_sequence_number('id', 1, 5),
             RowsMother::sequentialIds(5),
+        );
+    }
+
+    public function test_corrupted_records_are_routed_to_the_reject_loader(): void
+    {
+        $rejects = [];
+
+        $rows = df()
+            ->read(
+                from_sequence_number('id', 1, 3)
+                    ->withSchema(schema(uuid_schema('id')))
+                    ->withCorruptedRecords(to_array($rejects)),
+            )
+            ->fetch();
+
+        static::assertSame(0, $rows->count());
+        static::assertSame(
+            [[null, 1, '{"id":1}'], [null, 2, '{"id":2}'], [null, 3, '{"id":3}']],
+            array_map(static fn(array $reject): array => [
+                $reject['uri'],
+                $reject['offset'],
+                $reject['record'],
+            ], $rejects),
         );
     }
 }

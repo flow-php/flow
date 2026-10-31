@@ -37,10 +37,14 @@ final class BatchingByProcessorTest extends FlowTestCase
 
         iterator_to_array(
             (new BatchingByProcessor(ref('g')))->process(
-                (new VaryingBatchesExtractor(
-                    array_to_rows([['g' => 1]], schema(int_schema('g'))),
-                    array_to_rows([['g' => 1, 'extra' => 'x']], schema(int_schema('g'), str_schema('extra'))),
-                ))->extract(flow_context()->backend(), new Criteria()),
+                FlowTestCase::extracted(
+                    new VaryingBatchesExtractor(
+                        array_to_rows([['g' => 1]], schema(int_schema('g'))),
+                        array_to_rows([['g' => 1, 'extra' => 'x']], schema(int_schema('g'), str_schema('extra'))),
+                    ),
+                    flow_context()->backend(),
+                    new Criteria(),
+                ),
                 flow_context()->backend(),
             ),
             false,
@@ -51,7 +55,7 @@ final class BatchingByProcessorTest extends FlowTestCase
     {
         $upstream = (new CountingExtractor(schema(int_schema('id')), RowsMother::sequentialIds(5)))->withBatchSize(1);
         $processed = (new BatchingByProcessor(ref('id')))->process(
-            $upstream->extract(flow_context()->backend(), new Criteria()),
+            FlowTestCase::extracted($upstream, flow_context()->backend(), new Criteria()),
             flow_context()->backend(),
         );
 

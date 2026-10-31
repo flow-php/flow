@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\JSON\Tests\Unit\IO\Extractor;
 use Flow\ETL\Adapter\JSON\IO\Extractor\JsonFileBatches;
 use Flow\ETL\Adapter\JSON\IO\Extractor\JsonFileReader;
 use Flow\ETL\Adapter\JSON\IO\JsonFraming;
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\File\ReadWindow;
 use Flow\ETL\IO\Extractor\File\SourceFile;
@@ -44,7 +45,9 @@ final class JsonFileBatchesTest extends FlowTestCase
         static::assertSame(
             [['id' => 1], ['id' => 2], ['id' => 3]],
             array_merge(...array_map(
-                static fn(Rows $rows): array => $rows->toArray(),
+                static fn(CorruptedRecordException|Rows $rows): array => (
+                    $rows instanceof Rows ? $rows->toArray() : [$rows->getMessage()]
+                ),
                 iterator_to_array($file, false),
             )),
         );
@@ -59,7 +62,9 @@ final class JsonFileBatchesTest extends FlowTestCase
         static::assertSame(
             [[['id' => 1], ['id' => 2]]],
             array_map(
-                static fn(Rows $rows): array => $rows->toArray(),
+                static fn(CorruptedRecordException|Rows $rows): array => (
+                    $rows instanceof Rows ? $rows->toArray() : [$rows->getMessage()]
+                ),
                 iterator_to_array(
                     (new JsonFileBatches(
                         $filesystem,

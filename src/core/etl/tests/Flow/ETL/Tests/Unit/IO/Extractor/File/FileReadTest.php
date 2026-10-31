@@ -15,6 +15,7 @@ use Flow\ETL\Tests\Context\MemoryFiles;
 use Flow\ETL\Tests\Double\Described;
 use Flow\ETL\Tests\Double\InMemoryUnskippableFileBatches;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Values\Rows;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 
 use function Flow\ETL\DSL\flow_context;
@@ -44,21 +45,20 @@ final class FileReadTest extends FlowTestCase
 
     public function test_a_read_skips_the_offset_of_its_criteria(): void
     {
-        static::assertSame(
-            [['id' => 3]],
-            (new FileRead(
-                new SourceFiles(MemoryFiles::with(['memory://a.csv' => 'abcd']), path('memory://a.csv')),
-                FileColumnsContext::discovering([]),
-                schema(int_schema('id')),
-                10,
-            ))
-                ->scan(
-                    flow_context()->backend(),
-                    new Criteria(offset: 2),
-                    new InMemoryUnskippableFileBatches(['memory://a.csv' => [1, 2, 3]]),
-                )
-                ->current()
-                ->toArray(),
-        );
+        $rows = (new FileRead(
+            new SourceFiles(MemoryFiles::with(['memory://a.csv' => 'abcd']), path('memory://a.csv')),
+            FileColumnsContext::discovering([]),
+            schema(int_schema('id')),
+            10,
+        ))
+            ->scan(
+                flow_context()->backend(),
+                new Criteria(offset: 2),
+                new InMemoryUnskippableFileBatches(['memory://a.csv' => [1, 2, 3]]),
+            )
+            ->current();
+
+        static::assertInstanceOf(Rows::class, $rows);
+        static::assertSame([['id' => 3]], $rows->toArray());
     }
 }

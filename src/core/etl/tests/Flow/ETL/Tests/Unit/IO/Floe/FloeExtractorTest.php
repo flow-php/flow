@@ -62,7 +62,8 @@ final class FloeExtractorTest extends FlowTestCase
             . '    |-- extra<string>',
         );
 
-        iterator_to_array(from_floe(path('memory://glob/*.floe'), filesystem: $memory)->extract(
+        iterator_to_array(FlowTestCase::extracted(
+            from_floe(path('memory://glob/*.floe'), filesystem: $memory),
             flow_context(config())->backend(),
             new Criteria(),
         ));
@@ -79,7 +80,8 @@ final class FloeExtractorTest extends FlowTestCase
         $this->expectException(InferredSchemaException::class);
         $this->expectExceptionMessage('|-- expected: id<integer>, given: id<string>');
 
-        iterator_to_array(from_floe(path('memory://glob/*.floe'), filesystem: $memory)->extract(
+        iterator_to_array(FlowTestCase::extracted(
+            from_floe(path('memory://glob/*.floe'), filesystem: $memory),
             flow_context(config())->backend(),
             new Criteria(),
         ));
@@ -147,11 +149,11 @@ final class FloeExtractorTest extends FlowTestCase
         $loader->load(array_to_rows([['id' => 1]], schema(int_schema('id'))), $context->backend());
         $loader->closure();
 
-        $batches = iterator_to_array(
-            from_floe($path, filesystem: $memory)
-                ->withMetadataColumns(true)
-                ->extract($context->backend(), new Criteria()),
-        );
+        $batches = iterator_to_array(FlowTestCase::extracted(
+            from_floe($path, filesystem: $memory)->withMetadataColumns(true),
+            $context->backend(),
+            new Criteria(),
+        ));
 
         static::assertSame($path->uri(), $batches[0]->column('_input_file_uri')->value(0));
     }
@@ -172,7 +174,8 @@ final class FloeExtractorTest extends FlowTestCase
 
         $ids = [];
 
-        foreach (from_floe($path, filesystem: $memory)->extract(
+        foreach (FlowTestCase::extracted(
+            from_floe($path, filesystem: $memory),
             $context->backend(),
             new Criteria(offset: 1),
         ) as $batch) {
@@ -202,7 +205,7 @@ final class FloeExtractorTest extends FlowTestCase
 
         $ids = [];
 
-        foreach ($extractor->extract($context->backend(), new Criteria(limit: 2)) as $batch) {
+        foreach (FlowTestCase::extracted($extractor, $context->backend(), new Criteria(limit: 2)) as $batch) {
             foreach ($batch->toArray() as $extractedRow) {
                 $ids[] = $extractedRow['id'];
             }
@@ -223,7 +226,8 @@ final class FloeExtractorTest extends FlowTestCase
 
         static::assertSame(
             ['id'],
-            array_keys(iterator_to_array(from_floe($path, filesystem: $memory)->extract(
+            array_keys(iterator_to_array(FlowTestCase::extracted(
+                from_floe($path, filesystem: $memory),
                 $context->backend(),
                 new Criteria(),
             ))[0]->values(0)),
@@ -242,7 +246,11 @@ final class FloeExtractorTest extends FlowTestCase
 
         $ids = [];
 
-        foreach (from_floe($path, filesystem: $memory)->extract($context->backend(), new Criteria()) as $batch) {
+        foreach (FlowTestCase::extracted(
+            from_floe($path, filesystem: $memory),
+            $context->backend(),
+            new Criteria(),
+        ) as $batch) {
             foreach ($batch->toArray() as $extractedRow) {
                 $ids[] = $extractedRow['id'];
             }
@@ -267,7 +275,8 @@ final class FloeExtractorTest extends FlowTestCase
 
         $ids = [];
 
-        foreach (from_floe(path('memory://skip-files/*.floe'), filesystem: $memory)->extract(
+        foreach (FlowTestCase::extracted(
+            from_floe(path('memory://skip-files/*.floe'), filesystem: $memory),
             $context->backend(),
             new Criteria(offset: 2),
         ) as $batch) {
@@ -289,7 +298,11 @@ final class FloeExtractorTest extends FlowTestCase
         $loader->load(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))), $context->backend());
         $loader->closure();
 
-        $generator = from_floe($path, filesystem: $memory)->extract($context->backend(), new Criteria());
+        $generator = FlowTestCase::extracted(
+            from_floe($path, filesystem: $memory),
+            $context->backend(),
+            new Criteria(),
+        );
         $batches = 0;
 
         foreach ($generator as $_batch) {
@@ -312,7 +325,7 @@ final class FloeExtractorTest extends FlowTestCase
 
         $extractor = from_floe($path, filesystem: $memory)->withMetadataColumns(true);
 
-        $batches = iterator_to_array($extractor->extract($context->backend(), new Criteria()));
+        $batches = iterator_to_array(FlowTestCase::extracted($extractor, $context->backend(), new Criteria()));
 
         static::assertSame($extractor->schema()->names(), array_keys($batches[0]->values(0)));
         static::assertSame($path->uri(), $batches[0]->column('_input_file_uri')->value(0));
@@ -340,7 +353,8 @@ final class FloeExtractorTest extends FlowTestCase
 
         $backend = new SpyBackend();
 
-        iterator_to_array(from_floe($path, filesystem: $memory)->extract(
+        iterator_to_array(FlowTestCase::extracted(
+            from_floe($path, filesystem: $memory),
             flow_context(config_builder()->backend($backend)->build())->backend(),
             new Criteria(),
         ));
@@ -380,7 +394,7 @@ final class FloeExtractorTest extends FlowTestCase
         $extractor = from_floe(path('memory://parts/*/*.floe'), filesystem: $memory);
         $values = [];
 
-        foreach ($extractor->extract(flow_context(config())->backend(), new Criteria()) as $rows) {
+        foreach (FlowTestCase::extracted($extractor, flow_context(config())->backend(), new Criteria()) as $rows) {
             foreach ($rows->toArray() as $row) {
                 $values[] = $row;
             }
@@ -439,7 +453,7 @@ final class FloeExtractorTest extends FlowTestCase
             partition_types(year: type_integer()),
         );
 
-        foreach ($extractor->extract(flow_context(config())->backend(), new Criteria()) as $rows) {
+        foreach (FlowTestCase::extracted($extractor, flow_context(config())->backend(), new Criteria()) as $rows) {
             static::assertEquals($extractor->schema(), $rows->schema());
             static::assertSame(2024, $rows->column('year')->value(0));
 
@@ -454,7 +468,8 @@ final class FloeExtractorTest extends FlowTestCase
         $counting = new CountingFilesystem($memory = memory_filesystem());
         FloeFilesContext::writePartitionedFiles($memory);
 
-        $generator = from_floe(path('memory://parts/*/*.floe'), filesystem: $counting)->extract(
+        $generator = FlowTestCase::extracted(
+            from_floe(path('memory://parts/*/*.floe'), filesystem: $counting),
             flow_context(config())->backend(),
             new Criteria(),
         );
@@ -469,7 +484,8 @@ final class FloeExtractorTest extends FlowTestCase
         $counting = new CountingFilesystem($memory = memory_filesystem());
         FloeFilesContext::writePartitionedFiles($memory);
 
-        foreach (from_floe(path('memory://parts/*/*.floe'), filesystem: $counting)->extract(
+        foreach (FlowTestCase::extracted(
+            from_floe(path('memory://parts/*/*.floe'), filesystem: $counting),
             flow_context(config())->backend(),
             new Criteria(),
         ) as $_rows) {
@@ -483,7 +499,8 @@ final class FloeExtractorTest extends FlowTestCase
         $counting = new CountingFilesystem($memory = memory_filesystem());
         FloeFilesContext::writePartitionedFiles($memory);
 
-        foreach (from_floe(path('memory://parts/*/*.floe'), filesystem: $counting)->extract(
+        foreach (FlowTestCase::extracted(
+            from_floe(path('memory://parts/*/*.floe'), filesystem: $counting),
             flow_context(config())->backend(),
             new Criteria(offset: 1),
         ) as $_rows) {
@@ -497,7 +514,8 @@ final class FloeExtractorTest extends FlowTestCase
         $counting = new CountingFilesystem($memory = memory_filesystem());
         FloeFilesContext::writePartitionedFiles($memory);
 
-        $generator = from_floe(path('memory://parts/*/*.floe'), filesystem: $counting)->extract(
+        $generator = FlowTestCase::extracted(
+            from_floe(path('memory://parts/*/*.floe'), filesystem: $counting),
             flow_context(config())->backend(),
             new Criteria(),
         );
@@ -518,7 +536,8 @@ final class FloeExtractorTest extends FlowTestCase
 
         static::assertSame(
             [],
-            iterator_to_array($extractor->extract(
+            iterator_to_array(FlowTestCase::extracted(
+                $extractor,
                 flow_context(config())->backend(),
                 new Criteria(pathFilter: new RejectingFilter()),
             )),
@@ -568,9 +587,11 @@ final class FloeExtractorTest extends FlowTestCase
 
         $sizes = [];
 
-        foreach (from_floe($path, filesystem: $memory)
-            ->withBatchSize(7)
-            ->extract($context->backend(), new Criteria()) as $rows) {
+        foreach (FlowTestCase::extracted(
+            from_floe($path, filesystem: $memory)->withBatchSize(7),
+            $context->backend(),
+            new Criteria(),
+        ) as $rows) {
             $sizes[] = $rows->count();
         }
 
@@ -615,7 +636,8 @@ final class FloeExtractorTest extends FlowTestCase
         $extractor->withBatchSize(10);
         $total = 0;
 
-        foreach ($extractor->extract(
+        foreach (FlowTestCase::extracted(
+            $extractor,
             flow_context()->backend(),
             (new Criteria(25))->withSplit($extractor->splits(new Criteria(), 100_000)[0]),
         ) as $rows) {
@@ -631,7 +653,8 @@ final class FloeExtractorTest extends FlowTestCase
         FloeFilesContext::writeSections($memory, 'memory://split/a.floe', 3, 100);
         $extractor = from_floe(path('memory://split/a.floe'), filesystem: $memory);
         $extractor->withBatchSize(1);
-        $generator = $extractor->extract(
+        $generator = FlowTestCase::extracted(
+            $extractor,
             flow_context()->backend(),
             (new Criteria())->withSplit($extractor->splits(new Criteria(), 100_000)[0]),
         );
@@ -649,12 +672,11 @@ final class FloeExtractorTest extends FlowTestCase
     {
         $memory = memory_filesystem();
         FloeFilesContext::writeSections($memory, 'memory://split/a.floe', 3, 100);
-        $generator = from_floe(path('memory://split/a.floe'), filesystem: $memory)
-            ->withBatchSize(1)
-            ->extract(
-                flow_context()->backend(),
-                (new Criteria())->withSplit(new FileSplit(path('memory://split/a.floe'), 0, null)),
-            );
+        $generator = FlowTestCase::extracted(
+            from_floe(path('memory://split/a.floe'), filesystem: $memory)->withBatchSize(1),
+            flow_context()->backend(),
+            (new Criteria())->withSplit(new FileSplit(path('memory://split/a.floe'), 0, null)),
+        );
         $totalRows = 0;
 
         foreach ($generator as $rows) {

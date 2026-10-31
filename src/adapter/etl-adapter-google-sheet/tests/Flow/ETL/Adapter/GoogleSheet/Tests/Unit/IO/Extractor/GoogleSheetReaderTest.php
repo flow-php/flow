@@ -162,7 +162,7 @@ final class GoogleSheetReaderTest extends FlowTestCase
         )->sample(-1);
     }
 
-    public function test_batches_page_the_sheet_by_rows_per_page(): void
+    public function test_rows_page_the_sheet_by_rows_per_page(): void
     {
         $values = GoogleSheetFixtureContext::valuesAndBatches([], [SheetValuesMother::batch([
             [['id'], ['1']],
@@ -170,67 +170,60 @@ final class GoogleSheetReaderTest extends FlowTestCase
             [['4']],
         ])]);
 
-        iterator_to_array(
-            GoogleSheetFixtureContext::reader(GoogleSheetFixtureContext::service(5, $values))->batches(2, 100),
-            false,
-        );
+        iterator_to_array(GoogleSheetFixtureContext::reader(GoogleSheetFixtureContext::service(5, $values))->rows(2));
 
         static::assertSame(['sheet!A1:B2', 'sheet!A3:B4', 'sheet!A5:B5'], $values->batchGetCalls[0][1]['ranges']);
     }
 
-    public function test_batches_forward_the_render_options(): void
+    public function test_rows_forward_the_render_options(): void
     {
         $values = GoogleSheetFixtureContext::valuesAndBatches([], [SheetValuesMother::batch([[['id'], ['1']]])]);
 
-        iterator_to_array(
-            GoogleSheetFixtureContext::reader(
-                GoogleSheetFixtureContext::service(2, $values),
-                new GoogleSheetReadOptions(options: ['valueRenderOption' => 'UNFORMATTED_VALUE']),
-            )->batches(2, 100),
-            false,
-        );
+        iterator_to_array(GoogleSheetFixtureContext::reader(
+            GoogleSheetFixtureContext::service(2, $values),
+            new GoogleSheetReadOptions(options: ['valueRenderOption' => 'UNFORMATTED_VALUE']),
+        )->rows(2));
 
         static::assertSame('UNFORMATTED_VALUE', $values->batchGetCalls[0][1]['valueRenderOption']);
         static::assertSame(['sheet!A1:B2'], $values->batchGetCalls[0][1]['ranges']);
     }
 
-    public function test_batches_are_cut_at_the_batch_size_across_pages(): void
+    public function test_rows_are_keyed_by_their_number_in_the_sheet_across_pages(): void
     {
         $values = GoogleSheetFixtureContext::valuesAndBatches([], [SheetValuesMother::batch([
-            [['id'], ['1'], ['2'], ['3']],
-            [['4'], ['5'], ['6']],
+            [['id'], ['1'], ['2']],
+            [['4'], ['5']],
         ])]);
 
-        $batches = iterator_to_array(
-            GoogleSheetFixtureContext::reader(GoogleSheetFixtureContext::service(10, $values))->batches(10, 4),
-            false,
+        static::assertSame(
+            [1 => ['id'], 2 => ['1'], 3 => ['2'], 5 => ['4'], 6 => ['5']],
+            iterator_to_array(GoogleSheetFixtureContext::reader(GoogleSheetFixtureContext::service(8, $values))->rows(
+                4,
+            )),
         );
-
-        static::assertSame([4, 2], array_map('count', $batches));
     }
 
-    public function test_batches_skip_pages_without_values(): void
+    public function test_rows_skip_pages_without_values(): void
     {
         $values = GoogleSheetFixtureContext::valuesAndBatches([], [SheetValuesMother::batch([[['id'], ['1']], null])]);
 
-        $batches = iterator_to_array(
-            GoogleSheetFixtureContext::reader(GoogleSheetFixtureContext::service(4, $values))->batches(2, 100),
-            false,
+        static::assertSame(
+            [1 => ['id'], 2 => ['1']],
+            iterator_to_array(GoogleSheetFixtureContext::reader(GoogleSheetFixtureContext::service(4, $values))->rows(
+                2,
+            )),
         );
-
-        static::assertSame([1], array_map('count', $batches));
     }
 
-    public function test_batches_yield_nothing_for_an_empty_sheet(): void
+    public function test_rows_yield_nothing_for_an_empty_sheet(): void
     {
         $values = GoogleSheetFixtureContext::valuesAndBatches([], [SheetValuesMother::batch([null])]);
 
         static::assertSame(
             [],
-            iterator_to_array(
-                GoogleSheetFixtureContext::reader(GoogleSheetFixtureContext::service(2, $values))->batches(2, 100),
-                false,
-            ),
+            iterator_to_array(GoogleSheetFixtureContext::reader(GoogleSheetFixtureContext::service(2, $values))->rows(
+                2,
+            )),
         );
     }
 

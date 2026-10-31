@@ -14,6 +14,7 @@ use Flow\ETL\Tests\Context\MemoryFiles;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\RustIterator;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Generator;
@@ -54,6 +55,7 @@ final class JsonFileBatchesTest extends FlowTestCase
         $open = JsonFixtureContext::open($format, JsonFixtureContext::source($fixture), $counting);
 
         foreach ($open->batches(schema(int_schema('id')), 2, new PhpBackend()) as $rows) {
+            static::assertInstanceOf(Rows::class, $rows);
             static::assertCount(2, $rows);
 
             break;

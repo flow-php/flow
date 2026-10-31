@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\IO\Extractor;
 
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\IO\Extractor\File\FileSplit;
 use Flow\ETL\IO\Extractor\File\SourceFile;
 use Flow\ETL\Values\Column\Backend;
@@ -21,25 +22,23 @@ final readonly class PhpJsonOpenSource implements JsonOpenSource
     ) {}
 
     /**
-     * @return Generator<int, Rows>
+     * @return Generator<int, CorruptedRecordException|Rows>
      */
-    public function batches(Schema $schema, int $batchSize, Backend $backend): Generator
-    {
-        $batch = new RecordBatch($schema, $backend, $batchSize);
+    public function batches(
+        Schema $schema,
+        int $batchSize,
+        Backend $backend,
+        ?int $sampleSize = null,
+        ?Schema $known = null,
+    ): Generator {
+        $batch = new RecordBatch($schema, $backend, $batchSize, $this->source->uri(), $sampleSize, $known ?? $schema);
+        $read = new JsonReadProgress();
 
-        foreach ($this->reader->sample($this->source, window: $this->window) as $values) {
-            $rows = $batch->add($values);
-
-            if ($rows !== null) {
-                yield $rows;
-            }
+        foreach ($this->reader->sample($this->source, $read, $this->window) as $values) {
+            yield from $batch->add($values, $read->lastOffset(), $read->lastLine(), $read->lastRecord());
         }
 
-        $rest = $batch->flush();
-
-        if ($rest !== null) {
-            yield $rest;
-        }
+        yield from $batch->flush();
     }
 
     /**

@@ -211,9 +211,10 @@ final readonly class Executor
                     : $runner->steps($stage->steps, $generator, $context, $position === 0 ? $source : null, $sources);
         }
 
-        // a foreach, never `yield from`: the re-yield must not forward the consumer's sent signal
+        // a foreach, never `yield from`: the re-yield must not forward the consumer's sent signal; every stage routes
+        // or refuses a corrupted record, so one left here had no stage to meet
         foreach ($generator as $rows) {
-            yield $rows;
+            yield $rows instanceof Rows ? $rows : throw $rows;
         }
     }
 }

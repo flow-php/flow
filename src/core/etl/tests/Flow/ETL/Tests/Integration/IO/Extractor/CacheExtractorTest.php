@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\IO\Extractor;
 
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\SchemaNotDerivableException;
 use Flow\ETL\IO\Extractor\Criteria;
@@ -13,6 +14,7 @@ use Flow\ETL\Storage\MemoryRowsStorage;
 use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\Double\RepeatableExtractor;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\RowsMother;
 use Flow\ETL\Values\Cardinality;
 use Flow\ETL\Values\Column\PhpBackend;
@@ -96,7 +98,11 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
 
         static::assertCount(
             3,
-            iterator_to_array(from_cache('key')->boundTo($cache)->extract(flow_context()->backend(), new Criteria())),
+            iterator_to_array(FlowTestCase::extracted(
+                from_cache('key')->boundTo($cache),
+                flow_context()->backend(),
+                new Criteria(),
+            )),
         );
         static::assertTrue($cache->has('key'));
     }
@@ -109,12 +115,11 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
 
         static::assertCount(
             2,
-            iterator_to_array(
-                from_cache('key')
-                    ->withClearOnFinish(true)
-                    ->boundTo($cache)
-                    ->extract(flow_context()->backend(), new Criteria()),
-            ),
+            iterator_to_array(FlowTestCase::extracted(
+                from_cache('key')->withClearOnFinish(true)->boundTo($cache),
+                flow_context()->backend(),
+                new Criteria(),
+            )),
         );
         static::assertFalse($cache->has('key'));
     }
@@ -135,9 +140,11 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
         ], schema(int_schema('id'))));
         $cache->close('key');
 
-        $rows = iterator_to_array(
-            from_cache('key')->boundTo($cache)->extract(flow_context()->backend(), new Criteria()),
-        );
+        $rows = iterator_to_array(FlowTestCase::extracted(
+            from_cache('key')->boundTo($cache),
+            flow_context()->backend(),
+            new Criteria(),
+        ));
 
         static::assertCount(1, $rows);
         static::assertEquals(
@@ -152,10 +159,11 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
         $cache->append('key', array_to_rows([['id' => 1]], schema(int_schema('id'))));
         $cache->append('key', array_to_rows([['id' => 2]], schema(int_schema('id'))));
 
-        $generator = from_cache('key')
-            ->withClearOnFinish(true)
-            ->boundTo($cache)
-            ->extract(flow_context()->backend(), new Criteria());
+        $generator = FlowTestCase::extracted(
+            from_cache('key')->withClearOnFinish(true)->boundTo($cache),
+            flow_context()->backend(),
+            new Criteria(),
+        );
 
         static::assertTrue($generator->valid());
 
@@ -167,10 +175,13 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
 
     public function test_stop_signal_stops_fallback_extractor(): void
     {
-        $generator = from_cache('missing')
-            ->withFallbackExtractor(from_array([['id' => 1], ['id' => 2]]))
-            ->boundTo(new MemoryRowsStorage())
-            ->extract(flow_context()->backend(), new Criteria());
+        $generator = FlowTestCase::extracted(
+            from_cache('missing')
+                ->withFallbackExtractor(from_array([['id' => 1], ['id' => 2]]))
+                ->boundTo(new MemoryRowsStorage()),
+            flow_context()->backend(),
+            new Criteria(),
+        );
 
         static::assertTrue($generator->valid());
 
@@ -255,8 +266,8 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
         $cache = new MemoryRowsStorage();
         $extractor = from_cache('key')->withFallbackExtractor($fallback)->boundTo($cache);
 
-        iterator_to_array($extractor->extract(flow_context()->backend(), new Criteria()), false);
-        iterator_to_array($extractor->extract(flow_context()->backend(), new Criteria()), false);
+        iterator_to_array(FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()), false);
+        iterator_to_array(FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()), false);
 
         static::assertSame(2, $fallback->extractCalls);
         static::assertFalse($cache->has('key'));
@@ -266,5 +277,20 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
     {
         static::assertFalse(from_cache('key')->withFallbackExtractor(new RepeatableExtractor(false))->isRepeatable());
         static::assertTrue(from_cache('key')->withFallbackExtractor(new RepeatableExtractor(true))->isRepeatable());
+    }
+
+    public function test_a_corrupted_record_of_the_fallback_passes_through_unchanged(): void
+    {
+        $batches = iterator_to_array(
+            from_cache(
+                'missing',
+                from_array([['id' => 'x']], schema(int_schema('id'))),
+                cache: new MemoryRowsStorage(),
+            )->extract(flow_context()->backend(), new Criteria()),
+            false,
+        );
+
+        static::assertCount(1, $batches);
+        static::assertInstanceOf(CorruptedRecordException::class, $batches[0]);
     }
 }

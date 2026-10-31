@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\IO\Extractor;
 
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\InvalidLogicException;
 use Flow\ETL\Foundation\Exception\SchemaNotDerivableException;
@@ -38,7 +39,7 @@ final class CacheExtractor implements Extractor, Refreshable
     ) {}
 
     /**
-     * @return Generator<int, Rows, Signal|null, void>
+     * @return Generator<int, CorruptedRecordException|Rows, Signal|null, void>
      */
     public function extract(Backend $backend, Criteria $criteria): Generator
     {
@@ -56,8 +57,11 @@ final class CacheExtractor implements Extractor, Refreshable
 
         if (!$cache->has($this->id)) {
             if ($this->fallbackExtractor !== null) {
+                // a corrupted record passes through: the cache's read has no reject loader, so it is refused
                 foreach ($this->fallbackExtractor->extract($backend, new Criteria()) as $rows) {
-                    $signal = yield $declared === null ? $rows : $rows->matchTo($declared, $backend);
+                    $signal = yield $declared === null || !$rows instanceof Rows
+                        ? $rows
+                        : $rows->matchTo($declared, $backend);
 
                     if ($signal === Signal::STOP) {
                         return;

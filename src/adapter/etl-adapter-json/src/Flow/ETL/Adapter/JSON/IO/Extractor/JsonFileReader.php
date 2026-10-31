@@ -14,6 +14,7 @@ use Flow\ETL\IO\Extractor\File\FileSplit;
 use Flow\ETL\IO\Extractor\File\SourceFile;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\SourceStream;
+use Flow\Filesystem\Stream\RangeSourceStream;
 use Generator;
 use JsonMachine\Items;
 use JsonMachine\JsonDecoder\ExtJsonDecoder;
@@ -153,15 +154,27 @@ final readonly class JsonFileReader implements Describable
      *
      * @return Generator<mixed, mixed>
      */
-    public function lineItems(SourceStream $stream, JsonReadBytes $read = new JsonReadBytes()): Generator
+    public function lineItems(SourceStream $stream, JsonReadProgress $read = new JsonReadProgress()): Generator
     {
+        $offset = $stream instanceof RangeSourceStream ? $stream->start() : 0;
+        // a window cut past the file's start cannot know how many lines came before it
+        $number = $offset === 0 ? 0 : null;
+
         foreach ($stream->readLines() as $line) {
+            $start = $offset;
             // readLines() strips the "\n" and hides whether the last line had one, so that line counts 1 byte more
+            $offset += strlen($line) + 1;
             $read->add(strlen($line) + 1);
+
+            if ($number !== null) {
+                $number++;
+            }
 
             if (trim($line, self::C_ISSPACE) === '') {
                 continue;
             }
+
+            $read->recordAt($start, $number, $line);
 
             if ($this->pointer === null) {
                 // json_decode is an order of magnitude faster and agrees with JSON Machine on every object or
@@ -188,7 +201,7 @@ final readonly class JsonFileReader implements Describable
      */
     public function sample(
         SourceFile $source,
-        JsonReadBytes $read = new JsonReadBytes(),
+        JsonReadProgress $read = new JsonReadProgress(),
         ?FileSplit $window = null,
     ): Generator {
         $stream = $this->filesystem->readFrom($source->path);
@@ -208,8 +221,14 @@ final readonly class JsonFileReader implements Describable
                 JsonFraming::Lines => $this->lineItems($stream, $read),
             };
 
+            $element = 0;
+
             // @mago-ignore analysis:mixed-assignment
             foreach ($items as $row) {
+                if ($this->format !== JsonFraming::Lines) {
+                    $read->recordAt(++$element, null, null);
+                }
+
                 if ($this->pointer !== null && $this->pointerToColumnName) {
                     $row = [$this->pointer => $row];
                 }

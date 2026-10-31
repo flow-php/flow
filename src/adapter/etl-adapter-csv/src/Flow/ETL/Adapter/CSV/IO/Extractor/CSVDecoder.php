@@ -6,7 +6,6 @@ namespace Flow\ETL\Adapter\CSV\IO\Extractor;
 
 use Flow\ETL\IO\Extractor\Grid\RecordDecoder;
 
-use function array_map;
 use function str_getcsv;
 
 final class CSVDecoder
@@ -23,24 +22,29 @@ final class CSVDecoder
         private string $escape = '\\',
         bool $emptyToNull = true,
         ?array $headers = null,
+        bool $missingColumnsAsNull = false,
     ) {
-        $this->records = new RecordDecoder($withHeader, $emptyToNull, headers: $headers);
+        $this->records = new RecordDecoder($withHeader, $emptyToNull, $missingColumnsAsNull, $headers);
     }
 
     /**
-     * @param list<string> $batch
-     *
-     * @return list<array<string, ?string>>
+     * @return list<?string>
      */
-    public function decode(array $batch): array
+    public function cells(string $line): array
     {
-        /** @var list<array<string, ?string>> */
-        return $this->records->decode(array_map(fn(string $line): array => str_getcsv(
-            $line,
-            $this->separator,
-            $this->enclosure,
-            $this->escape,
-        ), $batch));
+        /** @var list<?string> */
+        return str_getcsv($line, $this->separator, $this->enclosure, $this->escape);
+    }
+
+    /**
+     * @param list<?string> $cells
+     *
+     * @return null|array<string, ?string>|string see RecordDecoder::decode()
+     */
+    public function decode(array $cells): array|string|null
+    {
+        /** @var null|array<string, ?string>|string */
+        return $this->records->decode($cells);
     }
 
     /**

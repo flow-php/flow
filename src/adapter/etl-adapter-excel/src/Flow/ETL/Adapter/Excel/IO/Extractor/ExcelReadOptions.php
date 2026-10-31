@@ -17,6 +17,7 @@ final readonly class ExcelReadOptions
         public bool $convertEmptyToNull = true,
         public ?string $sheetName = null,
         public ?ExcelReader $format = null,
+        public bool $missingColumnsAsNull = true,
     ) {
         if ($sheetName !== null) {
             SheetNameAssertion::assert($sheetName);
@@ -35,11 +36,12 @@ final readonly class ExcelReadOptions
             type_boolean()->assert($data['convert_empty_to_null'] ?? null),
             type_optional(type_string())->assert($data['sheet_name'] ?? null),
             $format === null ? null : ExcelReader::from($format),
+            type_boolean()->assert($data['missing_columns_as_null'] ?? null),
         );
     }
 
     /**
-     * @return array{with_header: bool, convert_empty_to_null: bool, sheet_name: null|string, format: null|string}
+     * @return array{with_header: bool, convert_empty_to_null: bool, sheet_name: null|string, format: null|string, missing_columns_as_null: bool}
      */
     public function normalize(): array
     {
@@ -48,6 +50,7 @@ final readonly class ExcelReadOptions
             'convert_empty_to_null' => $this->convertEmptyToNull,
             'sheet_name' => $this->sheetName,
             'format' => $this->format?->value,
+            'missing_columns_as_null' => $this->missingColumnsAsNull,
         ];
     }
 
@@ -58,6 +61,7 @@ final readonly class ExcelReadOptions
             convertEmptyToNull: $convertEmptyToNull,
             sheetName: $this->sheetName,
             format: $this->format,
+            missingColumnsAsNull: $this->missingColumnsAsNull,
         );
     }
 
@@ -68,6 +72,7 @@ final readonly class ExcelReadOptions
             convertEmptyToNull: $this->convertEmptyToNull,
             sheetName: $this->sheetName,
             format: $format,
+            missingColumnsAsNull: $this->missingColumnsAsNull,
         );
     }
 
@@ -78,6 +83,18 @@ final readonly class ExcelReadOptions
             convertEmptyToNull: $this->convertEmptyToNull,
             sheetName: $this->sheetName,
             format: $this->format,
+            missingColumnsAsNull: $this->missingColumnsAsNull,
+        );
+    }
+
+    public function withMissingColumnsAsNull(bool $missingColumnsAsNull): self
+    {
+        return new self(
+            withHeader: $this->withHeader,
+            convertEmptyToNull: $this->convertEmptyToNull,
+            sheetName: $this->sheetName,
+            format: $this->format,
+            missingColumnsAsNull: $missingColumnsAsNull,
         );
     }
 
@@ -88,6 +105,7 @@ final readonly class ExcelReadOptions
             convertEmptyToNull: $this->convertEmptyToNull,
             sheetName: $sheetName,
             format: $this->format,
+            missingColumnsAsNull: $this->missingColumnsAsNull,
         );
     }
 }

@@ -130,7 +130,7 @@ final class ExcelSniffer implements Describable, Sniffer
     public function sniff(int $unit, int $rowBudget): Sample
     {
         $sheet = $this->sheets[$unit] ??= $this->workbook->sheet($this->files[$unit]);
-        $sample = new WorkbookSheetSample($rowBudget === -1 ? $sheet->rows() : $sheet->sample());
+        $sample = new WorkbookSheetSample($sheet, $rowBudget === -1 ? $sheet->rows() : $sheet->sample());
 
         return new Sample(
             ColumnTypes::sniff($this->names(), $sample, $rowBudget, $this->typer)->folded(),

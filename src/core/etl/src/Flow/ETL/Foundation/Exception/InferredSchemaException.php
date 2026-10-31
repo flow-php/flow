@@ -63,6 +63,33 @@ final class InferredSchemaException extends InvalidArgumentException
     }
 
     /**
+     * A file's record that does not fit a schema inferred from a sample - the sample can span files, so no position
+     * in this file places the record inside it.
+     */
+    public static function outsideTheSample(
+        string $uri,
+        int $offset,
+        ?int $line,
+        int $sampleSize,
+        SchemaMismatchException $mismatch,
+    ): self {
+        return new self(
+            sprintf(
+                'Record at offset %d%s of %s does not fit the schema inferred from a sample of %s rows: %s. '
+                . 'Infer from more rows and files with ->inferSchema(infer_schema()->sampleSize(...)->filesToSniff(...)), '
+                . 'or declare the schema with ->withSchema(...).',
+                $offset,
+                $line === null ? '' : ", line {$line},",
+                $uri,
+                $sampleSize === -1 ? 'all' : (string) $sampleSize,
+                $mismatch->cause->reason(),
+            ),
+            0,
+            $mismatch,
+        );
+    }
+
+    /**
      * The refusal to raise for $mismatch, a row at its 0-based position in the whole source: past a bounded sample it
      * becomes the way out, within the sample (or with no inference behind the schema) it stays the gate's own.
      *
@@ -79,14 +106,13 @@ final class InferredSchemaException extends InvalidArgumentException
 
         return new self(
             sprintf(
-                'Row %d of %s does not fit the schema inferred from its first %d rows: column "%s"%s. Infer from '
+                'Row %d of %s does not fit the schema inferred from its first %d rows: %s. Infer from '
                 . 'every row with ->inferSchema(infer_schema()->sampleSize(-1)), or declare the schema with '
                 . '->withSchema(...).',
                 $mismatch->rowIndex,
                 $source,
                 $sampleSize,
-                $mismatch->cause->column,
-                $mismatch->cause->detail,
+                $mismatch->cause->reason(),
             ),
             0,
             $mismatch,

@@ -83,7 +83,13 @@ final readonly class JoinEachRowsTransformer implements Transformer, SpanAttribu
     public function transform(Rows $rows, Backend $backend): Rows
     {
         $right = $this->factory->from($rows);
-        $batches = iterator_to_array($right->extract($backend, new Criteria()), false);
+        $batches = [];
+
+        // a join has no reject loader: a corrupted record of the right side is refused
+        foreach ($right->extract($backend, new Criteria()) as $batch) {
+            $batches[] = $batch instanceof Rows ? $batch : throw $batch;
+        }
+
         $rightRows = $batches === []
             ? Rows::empty($right->schema(), $backend)
             : Rows::concat($batches[0]->schema(), $backend, ...$batches);

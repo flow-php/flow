@@ -7,8 +7,10 @@ namespace Flow\ETL\Tests;
 use Flow\ETL\IO\Extractor;
 use Flow\ETL\IO\Extractor\BatchableExtractor;
 use Flow\ETL\IO\Extractor\Criteria;
+use Flow\ETL\IO\Extractor\Reader;
 use Flow\ETL\IO\Extractor\Signal;
 use Flow\ETL\Runtime\FlowContext;
+use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Column\PhpBackend;
 use Flow\ETL\Values\Rows;
 use Generator;
@@ -41,7 +43,7 @@ abstract class FlowTestCase extends TestCase
             $collected = rows(schema());
             $extractor = $factory()->withBatchSize($size);
 
-            foreach ($extractor->extract(flow_context()->backend(), new Criteria()) as $batch) {
+            foreach (self::extracted($extractor, flow_context()->backend()) as $batch) {
                 static::assertLessThanOrEqual($extractor->batchSize(), $batch->count(), $message);
                 $collected = $collected->isEmpty()
                     ? $batch
@@ -55,7 +57,7 @@ abstract class FlowTestCase extends TestCase
         if ($expected->count() > 1) {
             $largest = 0;
 
-            foreach ($factory()->withBatchSize(1000)->extract(flow_context()->backend(), new Criteria()) as $batch) {
+            foreach (self::extracted($factory()->withBatchSize(1000), flow_context()->backend()) as $batch) {
                 $largest = max($largest, $batch->count());
             }
 
@@ -74,11 +76,11 @@ abstract class FlowTestCase extends TestCase
             $first = rows(schema());
             $second = rows(schema());
 
-            foreach ($extractor->extract(flow_context()->backend(), new Criteria()) as $batch) {
+            foreach (self::extracted($extractor, flow_context()->backend()) as $batch) {
                 $first = $first->isEmpty() ? $batch : Rows::concat($first->schema(), new PhpBackend(), $first, $batch);
             }
 
-            foreach ($extractor->extract(flow_context()->backend(), new Criteria()) as $batch) {
+            foreach (self::extracted($extractor, flow_context()->backend()) as $batch) {
                 $second = $second->isEmpty()
                     ? $batch
                     : Rows::concat($second->schema(), new PhpBackend(), $second, $batch);
@@ -101,7 +103,7 @@ abstract class FlowTestCase extends TestCase
         $extractor = $factory($maximum)->withBatchSize(1000);
         $total = 0;
 
-        foreach ($extractor->extract(flow_context()->backend(), new Criteria()) as $batch) {
+        foreach (self::extracted($extractor, flow_context()->backend()) as $batch) {
             static::assertLessThanOrEqual(1000, $batch->count(), $message);
             $total += $batch->count();
         }
@@ -122,7 +124,7 @@ abstract class FlowTestCase extends TestCase
         $flowContext ??= flow_context();
         $extractedRows = rows(schema());
 
-        foreach (self::extracted($extractor, $flowContext, $criteria) as $nextRows) {
+        foreach (self::extracted($extractor, $flowContext->backend(), $criteria) as $nextRows) {
             $extractedRows = $extractedRows->isEmpty()
                 ? $nextRows
                 : Rows::concat($extractedRows->schema(), new PhpBackend(), $extractedRows, $nextRows);
@@ -141,7 +143,7 @@ abstract class FlowTestCase extends TestCase
         $flowContext ??= flow_context();
         $totalRows = 0;
 
-        foreach (self::extracted($extractor, $flowContext, $criteria) as $rows) {
+        foreach (self::extracted($extractor, $flowContext->backend(), $criteria) as $rows) {
             $totalRows += $rows->count();
         }
 
@@ -158,7 +160,7 @@ abstract class FlowTestCase extends TestCase
         $flowContext ??= flow_context();
         $extractedRows = rows(schema());
 
-        foreach (self::extracted($extractor, $flowContext, $criteria) as $nextRows) {
+        foreach (self::extracted($extractor, $flowContext->backend(), $criteria) as $nextRows) {
             $extractedRows = $extractedRows->isEmpty()
                 ? $nextRows
                 : Rows::concat($extractedRows->schema(), new PhpBackend(), $extractedRows, $nextRows);
@@ -168,11 +170,27 @@ abstract class FlowTestCase extends TestCase
     }
 
     /**
-     * @return Generator<int, Rows>
+     * The batches of $extractor, a stop forwarded to it; a corrupted record is refused, as a read without a reject
+     * loader refuses it.
+     *
+     * @return Generator<int, Rows, null|Signal, void>
      */
-    final public static function extracted(Extractor $extractor, FlowContext $context, Criteria $criteria): Generator
-    {
-        return $extractor->extract($context->backend(), $criteria);
+    final public static function extracted(
+        Extractor|Reader $extractor,
+        Backend $backend,
+        Criteria $criteria = new Criteria(),
+    ): Generator {
+        $batches = $extractor->extract($backend, $criteria);
+
+        foreach ($batches as $batch) {
+            $signal = yield $batch instanceof Rows ? $batch : throw $batch;
+
+            if ($signal === Signal::STOP) {
+                $batches->send(Signal::STOP);
+
+                return;
+            }
+        }
     }
 
     public function repositoryRoot(): string

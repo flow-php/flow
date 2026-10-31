@@ -19,6 +19,7 @@ final class ExcelReadOptionsTest extends FlowTestCase
         static::assertTrue($options->convertEmptyToNull);
         static::assertNull($options->sheetName);
         static::assertNull($options->format);
+        static::assertTrue($options->missingColumnsAsNull);
     }
 
     public function test_an_invalid_sheet_name_is_refused(): void
@@ -45,6 +46,10 @@ final class ExcelReadOptionsTest extends FlowTestCase
         static::assertEquals(new ExcelReadOptions(convertEmptyToNull: false), $options->withConvertEmptyToNull(false));
         static::assertEquals(new ExcelReadOptions(sheetName: 'Sheet2'), $options->withSheetName('Sheet2'));
         static::assertEquals(new ExcelReadOptions(format: ExcelReader::ODS), $options->withFormat(ExcelReader::ODS));
+        static::assertEquals(
+            new ExcelReadOptions(missingColumnsAsNull: false),
+            $options->withMissingColumnsAsNull(false),
+        );
     }
 
     public function test_withers_compose_without_losing_earlier_knobs(): void
@@ -69,6 +74,7 @@ final class ExcelReadOptionsTest extends FlowTestCase
                 'convert_empty_to_null' => true,
                 'sheet_name' => 'Data',
                 'format' => 'xlsx',
+                'missing_columns_as_null' => true,
             ],
             $xlsx->normalize(),
         );

@@ -10,7 +10,7 @@ use Google\Service\Sheets;
 
 use function array_merge;
 use function array_values;
-use function count;
+use function is_array;
 
 final readonly class GoogleSheetReader
 {
@@ -22,9 +22,9 @@ final readonly class GoogleSheetReader
     ) {}
 
     /**
-     * @return Generator<int, list<array<array-key, mixed>>>
+     * @return Generator<int, list<mixed>> the raw cells of every row, keyed by its 1-based number in the sheet
      */
-    public function batches(int $rowsPerPage, int $batchSize): Generator
+    public function rows(int $rowsPerPage): Generator
     {
         $range = new SheetRange($this->columns, 1, $rowsPerPage, $this->rowCount());
         $ranges = [];
@@ -36,25 +36,15 @@ final readonly class GoogleSheetReader
 
         /** @var Sheets\Resource\SpreadsheetsValues $values */
         $values = $this->service->spreadsheets_values;
-        $decoder = $this->readOptions->decoder();
-        $batch = [];
 
-        foreach ($values->batchGet($this->spreadsheetId, array_merge($this->readOptions->options, [
+        foreach (array_values($values->batchGet($this->spreadsheetId, array_merge($this->readOptions->options, [
             'ranges' => $ranges,
-        ]))->getValueRanges() as $valueRange) {
+        ]))->getValueRanges()) as $page => $valueRange) {
             // @mago-ignore analysis:redundant-null-coalesce
-            foreach ($decoder->decode(array_values($valueRange->getValues() ?? [])) as $rowValues) {
-                $batch[] = $rowValues;
-
-                if (count($batch) >= $batchSize) {
-                    yield $batch;
-                    $batch = [];
-                }
+            foreach (array_values($valueRange->getValues() ?? []) as $index => $cells) {
+                // page $page covers the rows from 1 + $page * $rowsPerPage on; the API leaves out a page's trailing empty rows
+                yield 1 + ($page * $rowsPerPage) + $index => array_values($cells);
             }
-        }
-
-        if ($batch !== []) {
-            yield $batch;
         }
     }
 
@@ -90,11 +80,27 @@ final readonly class GoogleSheetReader
         /** @var Sheets\Resource\SpreadsheetsValues $values */
         $values = $this->service->spreadsheets_values;
         $decoder = $this->readOptions->decoder();
-        // @mago-ignore analysis:redundant-null-coalesce
-        $decoded = $decoder->decode(array_values(
-            $values->get($this->spreadsheetId, $range->toString(), $this->readOptions->options)->getValues() ?? [],
-        ));
+        $cells = [];
+        $decoded = [];
 
-        return new GoogleSheetSample($decoder->headers() ?? [], $decoded, $range->endRow >= $rowCount, $rowCount);
+        // @mago-ignore analysis:redundant-null-coalesce
+        foreach (array_values(
+            $values->get($this->spreadsheetId, $range->toString(), $this->readOptions->options)->getValues() ?? [],
+        ) as $index => $row) {
+            $cells[$index + 1] = array_values($row);
+            $rowValues = $decoder->decode($cells[$index + 1]);
+
+            if (is_array($rowValues)) {
+                $decoded[] = $rowValues;
+            }
+        }
+
+        return new GoogleSheetSample(
+            $decoder->headers() ?? [],
+            $decoded,
+            $cells,
+            $range->endRow >= $rowCount,
+            $rowCount,
+        );
     }
 }

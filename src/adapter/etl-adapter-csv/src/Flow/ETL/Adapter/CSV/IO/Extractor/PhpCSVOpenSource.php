@@ -4,14 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV\IO\Extractor;
 
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\IO\Inference\ColumnTypes;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Rows\RecordBatch;
 use Flow\ETL\Values\Schema;
 use Flow\Filesystem\SourceStream;
+use Flow\Filesystem\Stream\RangeSourceStream;
 use Flow\Types\Type\TypeNarrower;
 use Generator;
+
+use function is_array;
+use function is_string;
+use function substr_count;
 
 final class PhpCSVOpenSource implements CSVOpenSource
 {
@@ -32,25 +38,52 @@ final class PhpCSVOpenSource implements CSVOpenSource
     ) {}
 
     /**
-     * @return Generator<int, Rows>
+     * @return Generator<int, CorruptedRecordException|Rows>
      */
-    public function batches(Schema $schema, int $batchSize, Backend $backend): Generator
+    public function batches(Schema $schema, int $batchSize, Backend $backend, ?int $sampleSize = null): Generator
     {
-        $batch = new RecordBatch($schema, $backend, $batchSize);
+        $uri = $this->stream->path()->uri();
+        $position = $this->stream instanceof RangeSourceStream ? $this->stream->start() : 0;
+        // a window cut past the file's start cannot know how many lines came before it
+        $line = $position === 0 ? 1 : null;
+        $batch = new RecordBatch($schema, $backend, $batchSize, $uri, $sampleSize);
 
-        foreach ($this->records() as $values) {
-            $rows = $batch->add($values);
+        foreach ($this->lineReader->readLines($this->stream) as $record) {
+            $offset = $position;
+            $recordLine = $line;
+            $position += $this->lineReader->lastRecordBytes();
 
-            if ($rows !== null) {
-                yield $rows;
+            if ($line !== null) {
+                $line += 1 + substr_count($record, "\n");
             }
+
+            $cells = $this->decoder->cells($record);
+            $values = $this->decoder->decode($cells);
+
+            if ($values === null) {
+                continue;
+            }
+
+            if (is_string($values)) {
+                yield from $batch->refuse(CorruptedRecordException::fromCells(
+                    $uri,
+                    $offset,
+                    $recordLine,
+                    $values,
+                    $cells,
+                    $record,
+                ));
+
+                continue;
+            }
+
+            $this->producedBytes += $this->lineReader->lastRecordBytes();
+            $this->producedRows++;
+
+            yield from $batch->add($values, $offset, $recordLine, $record, $cells);
         }
 
-        $rest = $batch->flush();
-
-        if ($rest !== null) {
-            yield $rest;
-        }
+        yield from $batch->flush();
     }
 
     public function close(): void
@@ -66,9 +99,11 @@ final class PhpCSVOpenSource implements CSVOpenSource
     public function columns(): array
     {
         foreach ($this->lineReader->readLines($this->stream) as $line) {
-            $this->decoder->decode([$line]);
+            $this->decoder->decode($this->decoder->cells($line));
 
-            break;
+            if ($this->decoder->headers() !== null) {
+                break;
+            }
         }
 
         return $this->decoder->headers() ?? [];
@@ -88,12 +123,16 @@ final class PhpCSVOpenSource implements CSVOpenSource
     public function records(): Generator
     {
         foreach ($this->lineReader->readLines($this->stream) as $line) {
-            foreach ($this->decoder->decode([$line]) as $values) {
-                $this->producedBytes += $this->lineReader->lastRecordBytes();
-                $this->producedRows++;
+            $values = $this->decoder->decode($this->decoder->cells($line));
 
-                yield $values;
+            if (!is_array($values)) {
+                continue;
             }
+
+            $this->producedBytes += $this->lineReader->lastRecordBytes();
+            $this->producedRows++;
+
+            yield $values;
         }
     }
 

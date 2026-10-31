@@ -8,6 +8,7 @@ use Flow\ETL\IO\Extractor;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\Reader;
 use Flow\ETL\Runtime\FlowContext;
+use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Path;
 use RuntimeException;
 
@@ -29,7 +30,7 @@ final class ReaderRoundTrip
     {
         $sizes = [];
 
-        foreach ($reader->extract($context->backend(), $criteria) as $rows) {
+        foreach (FlowTestCase::extracted($reader, $context->backend(), $criteria) as $rows) {
             $sizes[] = $rows->count();
         }
 
@@ -45,7 +46,7 @@ final class ReaderRoundTrip
     {
         $sizes = [];
 
-        foreach ($extractor->extract($context->backend(), new Criteria()) as $rows) {
+        foreach (FlowTestCase::extracted($extractor, $context->backend(), new Criteria()) as $rows) {
             $sizes[] = $rows->count();
         }
 
@@ -61,7 +62,7 @@ final class ReaderRoundTrip
     {
         $rows = [];
 
-        foreach ($reader->extract($context->backend(), $criteria) as $batch) {
+        foreach (FlowTestCase::extracted($reader, $context->backend(), $criteria) as $batch) {
             foreach ($batch->toArray() as $row) {
                 $rows[] = $row;
             }

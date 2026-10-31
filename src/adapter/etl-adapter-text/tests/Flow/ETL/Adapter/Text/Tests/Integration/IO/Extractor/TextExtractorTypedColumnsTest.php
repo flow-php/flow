@@ -21,7 +21,11 @@ final class TextExtractorTypedColumnsTest extends FlowTestCase
 
         $actual = [];
 
-        foreach ($extractor->extract(flow_context(config_builder()->build())->backend(), new Criteria()) as $rows) {
+        foreach (FlowTestCase::extracted(
+            $extractor,
+            flow_context(config_builder()->build())->backend(),
+            new Criteria(),
+        ) as $rows) {
             static::assertEquals(type_string(), $rows->schema()->get('text')->type());
 
             foreach ($rows->toArray() as $row) {
@@ -39,7 +43,11 @@ final class TextExtractorTypedColumnsTest extends FlowTestCase
 
         $actual = [];
 
-        foreach ($extractor->extract(flow_context(config_builder()->build())->backend(), new Criteria()) as $rows) {
+        foreach (FlowTestCase::extracted(
+            $extractor,
+            flow_context(config_builder()->build())->backend(),
+            new Criteria(),
+        ) as $rows) {
             foreach ($rows->toArray() as $row) {
                 $actual[] = $row;
             }

@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Functions;
 use DateTime;
 use DateTimeImmutable;
 use DateTimeZone;
+use Flow\ETL\Foundation\Exception\EvaluationException;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Functions\ToDateTime;
 use Flow\ETL\Tests\Context\DescribeRoundTrip;
@@ -110,6 +111,37 @@ final class ToDateTimeTest extends FlowTestCase
                 schema(str_schema('string')),
             ),
         );
+    }
+
+    public function test_a_null_value_is_null(): void
+    {
+        static::assertNull((new FunctionContext(flow_context()))->eval(
+            to_date_time(ref('string'), 'Y-m-d H:i:s'),
+            [
+                'string' => null,
+            ],
+            schema(str_schema('string', nullable: true)),
+        ));
+    }
+
+    public function test_a_null_format_is_refused(): void
+    {
+        try {
+            (new FunctionContext(flow_context()))->eval(
+                to_date_time(ref('string'), ref('format')),
+                [
+                    'string' => '2020-01-01',
+                    'format' => null,
+                ],
+                schema(str_schema('string'), str_schema('format', nullable: true)),
+            );
+            static::fail('Expected a null format to be refused');
+        } catch (EvaluationException $e) {
+            static::assertSame(
+                'ToDateTime function requires a non-null format and time zone',
+                $e->getPrevious()?->getMessage(),
+            );
+        }
     }
 
     public function test_unparseable_string_to_date_time_is_null(): void

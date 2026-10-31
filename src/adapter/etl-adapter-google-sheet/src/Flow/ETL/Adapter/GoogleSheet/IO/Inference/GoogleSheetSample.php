@@ -8,7 +8,8 @@ final readonly class GoogleSheetSample
 {
     /**
      * @param list<string> $names the header (or generated names) - known even when no data row follows
-     * @param list<array<array-key, mixed>> $rows
+     * @param list<array<array-key, mixed>> $rows the rows of the records that are not corrupted
+     * @param array<int, list<mixed>> $cells the raw cells of every row, keyed by its 1-based number in the sheet
      * @param bool $wholeSheet the range reached the last row of the grid, so $rows IS the sheet and a read can be
      *                         served from it instead of fetching the same rows again
      * @param int $gridRowCount the rows the grid allocates - an upper bound on the rows it holds
@@ -16,6 +17,7 @@ final readonly class GoogleSheetSample
     public function __construct(
         public array $names,
         public array $rows,
+        public array $cells,
         public bool $wholeSheet,
         public int $gridRowCount,
     ) {}

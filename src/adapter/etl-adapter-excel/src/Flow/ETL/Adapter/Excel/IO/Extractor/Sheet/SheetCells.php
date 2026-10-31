@@ -28,6 +28,8 @@ final readonly class SheetCells
     ) {}
 
     /**
+     * Keyed by the row's 1-based number in the sheet.
+     *
      * @return Generator<int, array<int, SheetCellValue>>
      */
     public function rows(): Generator
@@ -35,11 +37,11 @@ final readonly class SheetCells
         $previousWidth = 0;
         $index = 0;
 
-        foreach ($this->values() as $row) {
+        foreach ($this->values() as $number => $row) {
             $index++;
 
             if ($index === 1 && $this->withHeader) {
-                yield $row;
+                yield $number => $row;
 
                 continue;
             }
@@ -51,7 +53,7 @@ final readonly class SheetCells
 
             $previousWidth = count($row);
 
-            yield $row;
+            yield $number => $row;
         }
     }
 
@@ -68,8 +70,9 @@ final readonly class SheetCells
 
         static $utc = new DateTimeZone('UTC');
 
-        foreach ($this->sheet->getRowIterator() as $sheetRow) {
-            yield array_map(static fn(Cell $cell) => $cell instanceof DateTimeCell
+        /** @var int $number */
+        foreach ($this->sheet->getRowIterator() as $number => $sheetRow) {
+            yield $number => array_map(static fn(Cell $cell) => $cell instanceof DateTimeCell
                 ? new DateTimeImmutable($cell->getValue()->format('Y-m-d H:i:s.u'), $utc)
                 : $cell->getValue(), $sheetRow->cells);
         }

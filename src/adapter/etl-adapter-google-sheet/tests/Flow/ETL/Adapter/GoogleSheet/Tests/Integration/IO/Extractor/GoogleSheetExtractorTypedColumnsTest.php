@@ -34,7 +34,11 @@ final class GoogleSheetExtractorTypedColumnsTest extends FlowTestCase
 
         $rows = [];
 
-        foreach ($extractor->extract(flow_context(config_builder()->build())->backend(), new Criteria()) as $batch) {
+        foreach (FlowTestCase::extracted(
+            $extractor,
+            flow_context(config_builder()->build())->backend(),
+            new Criteria(),
+        ) as $batch) {
             foreach ($batch->toArray() as $row) {
                 $rows[] = $row;
             }
@@ -62,7 +66,11 @@ final class GoogleSheetExtractorTypedColumnsTest extends FlowTestCase
 
         $rows = [];
 
-        foreach ($extractor->extract(flow_context(config_builder()->build())->backend(), new Criteria()) as $batch) {
+        foreach (FlowTestCase::extracted(
+            $extractor,
+            flow_context(config_builder()->build())->backend(),
+            new Criteria(),
+        ) as $batch) {
             static::assertTrue(
                 $batch
                     ->schema()

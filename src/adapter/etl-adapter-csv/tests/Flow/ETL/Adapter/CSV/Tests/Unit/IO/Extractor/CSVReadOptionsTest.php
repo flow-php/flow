@@ -84,7 +84,9 @@ final class CSVReadOptionsTest extends TestCase
 
     public function test_normalize_round_trips_a_null_separator_and_a_set_escape(): void
     {
-        $options = (new CSVReadOptions(separator: null, escape: '\\'))->withCharactersReadInLine(64);
+        $options = (new CSVReadOptions(separator: null, escape: '\\'))
+            ->withCharactersReadInLine(64)
+            ->withMissingColumnsAsNull(true);
 
         static::assertSame(
             [
@@ -95,6 +97,7 @@ final class CSVReadOptionsTest extends TestCase
                 'enclosure' => null,
                 'escape' => '\\',
                 'characters_read_in_line' => 64,
+                'missing_columns_as_null' => true,
             ],
             $options->normalize(),
         );

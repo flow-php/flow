@@ -6,12 +6,14 @@ namespace Flow\ETL\Tests\Unit\IO\Extractor;
 
 use ArrayIterator;
 use ArrayObject;
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\InvalidLogicException;
 use Flow\ETL\IO\Extractor\ArrayExtractor;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\Statistics;
 use Flow\ETL\Storage\Memory\ArrayMemory;
+use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Double\CountingMemory;
 use Flow\ETL\Tests\Double\FixedTmpDirFilesystem;
 use Flow\ETL\Tests\Double\FreshRowsAggregate;
@@ -32,6 +34,7 @@ use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\execution_context;
+use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_memory;
@@ -47,6 +50,38 @@ use function range;
 
 final class ArrayExtractorTest extends FlowTestCase
 {
+    public function test_a_key_first_seen_after_the_inference_sample_is_a_schema_error(): void
+    {
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage('"c"');
+
+        ExtractedRows::of(from_array([
+            ['a' => 1, 'b' => 2],
+            ['a' => 3, 'b' => 4],
+            ['a' => 5, 'b' => 6, 'c' => 7],
+        ])->inferSchema(infer_schema()->sampleSize(2)));
+    }
+
+    public function test_a_value_that_does_not_cast_to_the_declared_type_is_a_corrupted_record(): void
+    {
+        try {
+            ExtractedRows::of(from_array(
+                [['id' => 1, 'amount' => 10.5], ['id' => 2, 'amount' => 'N/A']],
+                schema(int_schema('id'), float_schema('amount', true)),
+            ));
+            static::fail('Expected the corrupted record to be refused');
+        } catch (CorruptedRecordException $e) {
+            static::assertSame([null, 2, null, '{"id":2,"amount":"N/A"}', null], [
+                $e->uri,
+                $e->offset,
+                $e->lineNumber,
+                $e->record,
+                $e->fields,
+            ]);
+            static::assertStringContainsString('"amount"', $e->reason);
+        }
+    }
+
     public function test_an_empty_source_refuses_to_infer_a_schema(): void
     {
         $this->expectException(InferredSchemaException::class);

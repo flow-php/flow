@@ -65,7 +65,8 @@ final class FloeSplitReadTest extends FlowTestCase
             array_sum(array_map(
                 static fn($rows): int => $rows->count(),
                 iterator_to_array(
-                    $reader->extract(
+                    FlowTestCase::extracted(
+                        $reader,
                         flow_context()->backend(),
                         (new Criteria())->withSplit(new FileSplit($file, 0, null, $size)),
                     ),
@@ -86,7 +87,8 @@ final class FloeSplitReadTest extends FlowTestCase
         $reader = from_floe(path('memory://a.floe'), filesystem: $counting)->reader();
         $listedBySchema = $counting->listCalls;
 
-        iterator_to_array($reader->extract(
+        iterator_to_array(FlowTestCase::extracted(
+            $reader,
             flow_context()->backend(),
             (new Criteria())->withSplit(new FileSplit(path('memory://a.floe'), 0, null)),
         ));
@@ -126,12 +128,11 @@ final class FloeSplitReadTest extends FlowTestCase
         static::assertSame(
             3,
             iterator_to_array(
-                from_floe(path('memory://a.floe'), filesystem: $memory)
-                    ->reader()
-                    ->extract(
-                        flow_context()->backend(),
-                        (new Criteria(3))->withSplit(new FileSplit(path('memory://a.floe'), 0, null)),
-                    ),
+                FlowTestCase::extracted(
+                    from_floe(path('memory://a.floe'), filesystem: $memory)->reader(),
+                    flow_context()->backend(),
+                    (new Criteria(3))->withSplit(new FileSplit(path('memory://a.floe'), 0, null)),
+                ),
                 false,
             )[0]->count(),
         );

@@ -14,6 +14,7 @@ use Flow\ETL\IO\Loader\File\Part;
 use Flow\ETL\Planning\Optimizer\Optimizer;
 use Flow\ETL\Planning\Optimizer\Rule\PushFilterIntoSource;
 use Flow\ETL\Tests\Double\ThrowWhenRowMatches;
+use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Rows;
 use Flow\Filesystem\Path;
 use PHPUnit\Framework\Assert;
@@ -196,7 +197,8 @@ final readonly class FileFormatContract
         $read = 0;
 
         foreach ($extractor->splits(new Criteria(), 1) as $split) {
-            foreach ($extractor->reader()->extract(
+            foreach (FlowTestCase::extracted(
+                $extractor->reader(),
                 flow_context()->backend(),
                 (new Criteria())->withSplit(type_instance_of(FileSplit::class)->assert($split)),
             ) as $rows) {

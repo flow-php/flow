@@ -25,7 +25,11 @@ final class ExcelExtractorTypedColumnsTest extends FlowTestCase
 
         $count = 0;
 
-        foreach ($extractor->extract(flow_context(config_builder()->build())->backend(), new Criteria()) as $rows) {
+        foreach (FlowTestCase::extracted(
+            $extractor,
+            flow_context(config_builder()->build())->backend(),
+            new Criteria(),
+        ) as $rows) {
             static::assertEquals(type_integer(), $rows->schema()->get('id')->type());
 
             $count += $rows->count();
@@ -40,7 +44,11 @@ final class ExcelExtractorTypedColumnsTest extends FlowTestCase
             ->withSchema(schema(int_schema('id'), string_schema('name'), string_schema('email', nullable: true)))
             ->withMetadataColumns(true);
 
-        foreach ($extractor->extract(flow_context(config_builder()->build())->backend(), new Criteria()) as $rows) {
+        foreach (FlowTestCase::extracted(
+            $extractor,
+            flow_context(config_builder()->build())->backend(),
+            new Criteria(),
+        ) as $rows) {
             static::assertSame([$path->uri()], array_values(array_unique($rows->column('_input_file_uri')->values())));
         }
     }

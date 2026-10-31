@@ -15,6 +15,7 @@ use Flow\ETL\Tests\Context\FloeFilesContext;
 use Flow\ETL\Tests\Context\FloeStreamReaderContext;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Cardinality;
 use Flow\ETL\Values\Rows;
 
@@ -350,7 +351,10 @@ final class FloeExtractorTest extends FlowIntegrationTestCase
         $extractor = from_floe('memory://window/*.floe', filesystem: $filesystem);
         $read = static fn(): array => array_merge(...array_map(
             static fn(Rows $rows): array => $rows->column('id')->values(),
-            iterator_to_array($extractor->extract(flow_context()->backend(), new Criteria(limit: 4, offset: 4)), false),
+            iterator_to_array(
+                FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria(limit: 4, offset: 4)),
+                false,
+            ),
         ));
 
         static::assertSame([5, 6, 7, 8], $read());

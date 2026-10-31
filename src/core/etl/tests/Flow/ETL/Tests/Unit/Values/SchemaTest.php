@@ -961,4 +961,13 @@ final class SchemaTest extends FlowTestCase
             schema(int_schema('a'), int_schema('b'), int_schema('c'))->put(str_schema('b')),
         );
     }
+
+    public function test_missing_from_names_the_columns_a_header_lacks_in_schema_order(): void
+    {
+        static::assertSame(
+            ['id', 'at'],
+            schema(int_schema('id'), str_schema('name'), str_schema('at'))->missingFrom(['name', 'extra']),
+        );
+        static::assertSame([], schema(int_schema('id'))->missingFrom(['id']));
+    }
 }

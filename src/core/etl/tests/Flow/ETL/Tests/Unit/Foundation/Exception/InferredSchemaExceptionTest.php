@@ -102,4 +102,34 @@ final class InferredSchemaExceptionTest extends FlowTestCase
             $mismatch,
         ));
     }
+
+    public function test_a_file_record_outside_the_sample_names_its_uri_offset_line_and_both_ways_out(): void
+    {
+        $mismatch = new SchemaMismatchException(0, ColumnMismatchException::unexpectedColumn('c'));
+        $exception = InferredSchemaException::outsideTheSample('file:///a.jsonl', 23, 2, 1000, $mismatch);
+
+        static::assertSame(
+            'Record at offset 23, line 2, of file:///a.jsonl does not fit the schema inferred from a sample of 1000 rows: '
+            . 'column "c" is not declared by the schema. Infer from more rows and files with '
+            . '->inferSchema(infer_schema()->sampleSize(...)->filesToSniff(...)), or declare the schema with ->withSchema(...).',
+            $exception->getMessage(),
+        );
+        static::assertSame($mismatch, $exception->getPrevious());
+    }
+
+    public function test_a_record_outside_the_sample_without_a_line_and_an_unbounded_sample(): void
+    {
+        $exception = InferredSchemaException::outsideTheSample(
+            'file:///a.xlsx',
+            7,
+            null,
+            -1,
+            new SchemaMismatchException(0, ColumnMismatchException::missingColumn('id')),
+        );
+
+        static::assertStringStartsWith(
+            'Record at offset 7 of file:///a.xlsx does not fit the schema inferred from a sample of all rows',
+            $exception->getMessage(),
+        );
+    }
 }

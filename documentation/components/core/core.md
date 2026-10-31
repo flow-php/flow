@@ -343,6 +343,7 @@ For detailed information about specific DataFrame operations, see the following 
 - **[Schema](/documentation/components/core/schema.md)** - Schema management and validation
 - **[Constraints](/documentation/components/core/constraints.md)** - Data integrity constraints and business rules
 - **[Error Handling](/documentation/components/core/error-handling.md)** - Error management strategies
+- **[Corrupted Records](/documentation/components/core/corrupted-records.md)** - Routing records that cannot become rows
 
 ### Observability
 - **[Telemetry](/documentation/components/core/telemetry.md)** - Distributed tracing, metrics, and logging integration

@@ -757,7 +757,7 @@ final class HashJoinTest extends FlowTestCase
     {
         $upstream = (new CountingExtractor(schema(int_schema('id')), RowsMother::sequentialIds(5)))->withBatchSize(1);
         $joined = HashJoinMother::resident(Expression::on(['id' => 'id']), JoinType::inner, batchSize: 1)->join(
-            $upstream->extract(flow_context()->backend(), new Criteria()),
+            FlowTestCase::extracted($upstream, flow_context()->backend(), new Criteria()),
             (static function () {
                 yield RowsMother::sequentialIds(5);
             })(),

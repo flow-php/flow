@@ -10,6 +10,8 @@ use Flow\ETL\Adapter\JSON\IO\Extractor\JsonFileReader;
 use Flow\ETL\Adapter\JSON\IO\Extractor\JsonOpenSource;
 use Flow\ETL\Adapter\JSON\IO\Inference\JsonSniffer;
 use Flow\ETL\Adapter\JSON\IO\JsonFraming;
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
+use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\SchemaMismatchException;
 use Flow\ETL\IO\Extractor\File\SourceFile;
 use Flow\ETL\IO\Inference\SchemaInference;
@@ -129,8 +131,8 @@ final class JsonFixtureContext
     }
 
     /**
-     * The rows of every batch (of the first $batches when given) as one string, or the refusal's class, message, row
-     * and cause - consumes and closes the source.
+     * The rows of every batch (of the first $batches when given) and every corrupted record as one string, or the
+     * refusal's class, message, row and cause - consumes and closes the source.
      *
      * @param int<1, max> $batchSize
      * @param null|int<1, max> $batches
@@ -141,12 +143,22 @@ final class JsonFixtureContext
         int $batchSize,
         Backend $backend = new PhpBackend(),
         ?int $batches = null,
+        ?int $sampleSize = null,
     ): string {
         $read = [];
 
         try {
-            foreach ($open->batches($schema, $batchSize, $backend) as $batch) {
-                $read[] = $batch->toArray();
+            foreach ($open->batches($schema, $batchSize, $backend, $sampleSize) as $batch) {
+                $read[] = $batch instanceof CorruptedRecordException
+                    ? ['corrupted' => [
+                        $batch->uri,
+                        $batch->offset,
+                        $batch->lineNumber,
+                        $batch->reason,
+                        $batch->record,
+                        $batch->fields,
+                    ]]
+                    : $batch->toArray();
 
                 if (count($read) === $batches) {
                     break;
@@ -154,6 +166,8 @@ final class JsonFixtureContext
             }
 
             return serialize($read);
+        } catch (InferredSchemaException $e) {
+            return $e::class . ': ' . $e->getMessage();
         } catch (SchemaMismatchException $e) {
             return (
                 $e::class
