@@ -11,8 +11,10 @@ final class SpyBranch implements Branch
 {
     public ?DataFrame $prefix = null;
 
-    public function write(DataFrame $prefix): void
+    public function write(DataFrame $prefix): DataFrame
     {
         $this->prefix = $prefix;
+
+        return $prefix;
     }
 }

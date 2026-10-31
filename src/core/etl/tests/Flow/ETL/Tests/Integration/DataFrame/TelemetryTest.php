@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use Flow\ETL\API\DataFrame;
 use Flow\ETL\API\Transactional;
 use Flow\ETL\Foundation\Clock\FakeClock;
 use Flow\ETL\Operators\Processor\BatchingProcessor;
@@ -17,6 +16,7 @@ use Flow\ETL\Tests\Double\RecordingTransaction;
 use Flow\ETL\Tests\Double\ThrowingLoader;
 use Flow\ETL\Tests\Double\ThrowingTransformer;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\DataFrameMother;
 use Flow\ETL\Tests\Mother\RowsMother;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
@@ -638,8 +638,8 @@ final class TelemetryTest extends FlowTestCase
     public function test_a_join_over_frames_sharing_one_flow_context_builds_one_balanced_dataframe_span(): void
     {
         $context = new MemoryTelemetryContext();
-        (new DataFrame(from_array([['id' => 1]]), $context->flowContext))->join(
-            new DataFrame(from_array([['id' => 1, 'x' => 'a']]), $context->flowContext),
+        DataFrameMother::over(from_array([['id' => 1]]), $context->flowContext)->join(
+            DataFrameMother::over(from_array([['id' => 1, 'x' => 'a']]), $context->flowContext),
             join_on([
                 'id' => 'id',
             ], 'r_'),

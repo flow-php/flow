@@ -6,6 +6,7 @@ paths = [
     "bin",
     "src",
     "web/landing/bin",
+    "web/landing/content/examples",
     "web/landing/src",
     "web/landing/tests",
 ]
@@ -51,7 +52,10 @@ excludes = [
     # PHPStan extension bridge: implements PHPStan's type API + tests via TypeInferenceTestCase; not analyzable by Mago.
     "src/bridge/phpstan/types/**",
     # Marketing website is analyzed in its own Mago run (see web/landing/mago.toml) so its separate vendor resolves without duplicating root packages; the root run only lints it.
-    "web/landing/**",
+    # Its examples are analyzed here: they run against the monorepo's packages, which the landing vendor lacks.
+    "web/landing/bin/**",
+    "web/landing/src/**",
+    "web/landing/tests/**",
     "src/bridge/symfony/filesystem-bundle/tests/Flow/Bridge/Symfony/FilesystemBundle/Tests/Unit/FlowFilesystemBundleTest.php",
     "src/bridge/symfony/filesystem-bundle/tests/Flow/Bridge/Symfony/FilesystemBundle/Tests/Unit/ConfigurationTest.php",
     "src/bridge/symfony/postgresql-bundle/tests/Flow/Bridge/Symfony/PostgreSqlBundle/Tests/Unit/DependencyInjection/ConfigurationTest.php",
@@ -68,6 +72,8 @@ excludes = [
     "**/otlp/src/Opentelemetry/**",
     "**/otlp/src/GPBMetadata/**",
     "**/lib/postgresql/src/Flow/PostgreSql/Protobuf/**",
+    # website examples are written for reading, analyzed only
+    "web/landing/content/examples/**",
 ]
 
 [linter.rules]
@@ -133,8 +139,11 @@ no-fully-qualified-global-class-like = { enabled = true, level = "error" }
 no-fully-qualified-global-constant = { enabled = true, level = "error" }
 disallowed-functions = { enabled = true, level = "error", functions = [{ name = "var_dump", help = "Debugging only — remove before commit." }, { name = "print_r", help = "Debugging only — remove before commit." }, { name = "dd", help = "Debugging only — remove before commit." }, { name = "dj", help = "Debugging only — remove before commit." }, { name = "ddj", help = "Debugging only — remove before commit." }] }
 
+[formatter]
+excludes = ["web/landing/content/examples/**"]
+
 [guard]
-excludes = ["src/**/tests/**"]
+excludes = ["src/**/tests/**", "web/landing/content/examples/**"]
 # Flow\Documentation\Attribute\* is documentation metadata resolved only by bin/docs.php; exempt from "a direct import gets a direct require".
 
 [[guard.perimeter.restrictions]]

@@ -23,7 +23,7 @@ final class PipelineTest extends FlowTestCase
     public function test_a_join_each_plan_refuses_to_describe_its_output(): void
     {
         $frame = df()->read(from_array([['id' => 1, 'x' => 'p']]));
-        $frame->joinEach(new StaticExtractorFactory(from_array([['id' => 1, 'x' => 'p']])), join_on([
+        $frame = $frame->joinEach(new StaticExtractorFactory(from_array([['id' => 1, 'x' => 'p']])), join_on([
             'id' => 'id',
         ], 'r_'));
 
@@ -73,7 +73,7 @@ final class PipelineTest extends FlowTestCase
     public function test_a_plan_that_reads_back_from_itself_is_a_self_join(): void
     {
         $frame = df()->read(from_array([['id' => 1, 'x' => 'p']]));
-        $frame->join($frame, join_on(['id' => 'id'], 'r_'));
+        $frame = $frame->join($frame, join_on(['id' => 'id'], 'r_'));
 
         static::assertSame(['id', 'x', 'r_id', 'r_x'], $frame->schema()->names());
         static::assertSame([['id' => 1, 'x' => 'p', 'r_id' => 1, 'r_x' => 'p']], $frame->fetch()->toArray());

@@ -8,7 +8,10 @@ use Flow\ETL\API\Config\ConfigBuilder;
 use Flow\ETL\API\DataFrame;
 use Flow\ETL\IO\Extractor;
 use Flow\ETL\IO\Extractor\RowsExtractor;
+use Flow\ETL\Planning\Logical\Node\Read;
+use Flow\ETL\Planning\Logical\Writes;
 use Flow\ETL\Runtime\Config;
+use Flow\ETL\Runtime\FlowContext;
 use Flow\ETL\Values\Rows;
 
 final readonly class Flow
@@ -31,11 +34,11 @@ final readonly class Flow
 
     public function process(Rows ...$rows): DataFrame
     {
-        return new DataFrame(new RowsExtractor(...$rows), $this->config);
+        return $this->read(new RowsExtractor(...$rows));
     }
 
     public function read(Extractor $extractor): DataFrame
     {
-        return new DataFrame($extractor, $this->config);
+        return new DataFrame(new Read($extractor), new Writes(), new FlowContext($this->config));
     }
 }

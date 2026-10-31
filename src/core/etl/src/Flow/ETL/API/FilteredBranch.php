@@ -14,8 +14,8 @@ final readonly class FilteredBranch implements Branch
         private Loader|Branch|Transactional $write,
     ) {}
 
-    public function write(DataFrame $prefix): void
+    public function write(DataFrame $prefix): DataFrame
     {
-        $prefix->filter($this->condition)->write($this->write);
+        return $prefix->filter($this->condition)->write($this->write);
     }
 }

@@ -169,7 +169,8 @@ final class TransactionalTest extends FlowTestCase
                         new Transactional(new RecordingTransaction(), to_memory(new ArrayMemory())),
                     ),
                 ),
-            );
+            )
+            ->run();
     }
 
     public function test_a_transaction_inside_a_filtered_branch_commits_the_rows_the_filter_keeps(): void
@@ -200,7 +201,7 @@ final class TransactionalTest extends FlowTestCase
                         new Transactional(new RecordingTransaction(), to_memory(new ArrayMemory())),
                     ),
                 ),
-            );
+            )->run();
 
             static::fail('Expected the nested transaction to be refused.');
         } catch (InvalidLogicException) {
@@ -244,7 +245,7 @@ final class TransactionalTest extends FlowTestCase
     {
         $dataFrame = df()->read(from_array([['id' => 1]]));
 
-        $dataFrame->write(new Transactional(new RecordingTransaction(), to_memory(new ArrayMemory())));
+        $dataFrame = $dataFrame->write(new Transactional(new RecordingTransaction(), to_memory(new ArrayMemory())));
 
         static::assertSame(<<<'PLAN'
             Outputs  preserving · opaque

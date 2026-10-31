@@ -48,6 +48,7 @@ use Flow\ETL\Tests\Double\ThrowingLoader;
 use Flow\ETL\Tests\Double\ThrowingTransformer;
 use Flow\ETL\Tests\Double\UndescribableRowLessExtractor;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\DataFrameMother;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
@@ -87,10 +88,13 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\string_schema;
+use function Flow\ETL\DSL\sum;
 use function Flow\ETL\DSL\to_memory;
 use function Flow\ETL\DSL\to_transformation;
 use function Flow\Types\DSL\type_json;
 use function iterator_to_array;
+use function ob_get_clean;
+use function ob_start;
 
 final class DataFrameTest extends FlowTestCase
 {
@@ -1111,7 +1115,7 @@ final class DataFrameTest extends FlowTestCase
             ->write(new FilteredBranch(ref('id')->equals(lit(1)), new ThrowingLoader(new RuntimeException('boom'))));
 
         $dataFrame->schema();
-        $dataFrame->onError($handler);
+        $dataFrame = $dataFrame->onError($handler);
         $dataFrame->run();
 
         static::assertCount(1, $handler->errors);
@@ -1121,7 +1125,8 @@ final class DataFrameTest extends FlowTestCase
     {
         $context = flow_context();
 
-        (new DataFrame(from_array([['id' => 1]]), $context))->onError(new IgnoreError());
+        $guarded = DataFrameMother::over(from_array([['id' => 1]]), $context)->onError(new IgnoreError());
+        $guarded->run();
 
         static::assertInstanceOf(ThrowError::class, $context->errorHandler());
     }
@@ -1129,10 +1134,13 @@ final class DataFrameTest extends FlowTestCase
     public function test_on_error_on_one_frame_leaves_a_frame_over_the_same_flow_context_unchanged(): void
     {
         $context = flow_context();
-        $guarded = new DataFrame(from_array([['id' => 1]]), $context);
-        $other = new DataFrame(from_array([['id' => 1]]), $context);
+        $guarded = DataFrameMother::over(from_array([['id' => 1]]), $context);
+        $other = DataFrameMother::over(from_array([['id' => 1]]), $context);
 
-        $guarded->onError(new IgnoreError());
+        $guarded
+            ->onError(new IgnoreError())
+            ->with(new ThrowingTransformer(new RuntimeException('boom')))
+            ->run();
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('boom');
@@ -1146,7 +1154,10 @@ final class DataFrameTest extends FlowTestCase
         $guarded = df($config)->read(from_array([['id' => 1]]));
         $other = df($config)->read(from_array([['id' => 1]]));
 
-        $guarded->onError(new IgnoreError());
+        $guarded
+            ->onError(new IgnoreError())
+            ->with(new ThrowingTransformer(new RuntimeException('boom')))
+            ->run();
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('boom');
@@ -1258,15 +1269,42 @@ final class DataFrameTest extends FlowTestCase
     {
         $this->expectException(InvalidLogicException::class);
         $this->expectExceptionMessage(
-            'onError() inside a branch cannot apply, because a plan runs under one error handler: call onError() on '
-            . 'the frame, not inside '
-            . TransformedBranch::class,
+            'A branch must return a frame built from the prefix it was given: '
+            . TransformedBranch::class
+            . ' returned another frame. Build on $prefix, and call onError() on the frame you write to, not inside '
+            . 'the branch',
         );
 
-        df()->read(from_array([['id' => 1]]))->write(new TransformedBranch(
-            new CallbackTransformation(static fn(DataFrame $prefix): DataFrame => $prefix->onError(new IgnoreError())),
-            to_memory(new ArrayMemory()),
-        ));
+        df()
+            ->read(from_array([['id' => 1]]))
+            ->write(new TransformedBranch(
+                new CallbackTransformation(static fn(DataFrame $prefix): DataFrame => $prefix->onError(
+                    new IgnoreError(),
+                )),
+                to_memory(new ArrayMemory()),
+            ))
+            ->run();
+    }
+
+    public function test_a_branch_returning_a_frame_not_built_from_its_prefix_is_refused(): void
+    {
+        $this->expectException(InvalidLogicException::class);
+        $this->expectExceptionMessage(
+            'A branch must return a frame built from the prefix it was given: '
+            . TransformedBranch::class
+            . ' returned another frame. Build on $prefix, and call onError() on the frame you write to, not inside '
+            . 'the branch',
+        );
+
+        df()
+            ->read(from_array([['id' => 1]]))
+            ->write(new TransformedBranch(
+                new CallbackTransformation(static fn(DataFrame $prefix): DataFrame => df()->read(from_array([
+                    ['x' => 1],
+                ]))),
+                to_memory(new ArrayMemory()),
+            ))
+            ->run();
     }
 
     public function test_a_branch_without_on_error_is_not_refused(): void
@@ -1463,7 +1501,10 @@ final class DataFrameTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Cache batch size must be greater than 0');
 
-        df()->read(from_array([['id' => 1]]))->cache(cacheBatchSize: 0);
+        df()
+            ->read(from_array([['id' => 1]]))
+            ->cache(cacheBatchSize: 0)
+            ->fetch();
     }
 
     public function test_join_takes_the_join_type_as_a_string(): void
@@ -1485,7 +1526,8 @@ final class DataFrameTest extends FlowTestCase
 
         df()
             ->read(from_array([['id' => 1]]))
-            ->joinEach(new StaticExtractorFactory(from_array([['id' => 1]])), join_on(['id' => 'id']), 'nope');
+            ->joinEach(new StaticExtractorFactory(from_array([['id' => 1]])), join_on(['id' => 'id']), 'nope')
+            ->fetch();
     }
 
     public function test_with_applies_every_transformation_of_a_transformations_group(): void
@@ -1506,8 +1548,8 @@ final class DataFrameTest extends FlowTestCase
         $right = df()
             ->read(from_array([['id' => 1, 'x' => 'a']]))
             ->with(new ThrowingTransformer(new RuntimeException('right boom')));
-        $left->join($right, join_on(['id' => 'id'], 'r_'));
-        $right->onError(new IgnoreError());
+        $left = $left->join($right, join_on(['id' => 'id'], 'r_'));
+        $right->onError(new IgnoreError())->fetch();
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('right boom');
@@ -1521,8 +1563,8 @@ final class DataFrameTest extends FlowTestCase
         $right = df()
             ->read(from_array([['x' => 'a']]))
             ->with(new ThrowingTransformer(new RuntimeException('right boom')));
-        $left->crossJoin($right, 'r_');
-        $right->onError(new IgnoreError());
+        $left = $left->crossJoin($right, 'r_');
+        $right->onError(new IgnoreError())->fetch();
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('right boom');
@@ -1534,7 +1576,7 @@ final class DataFrameTest extends FlowTestCase
     {
         $spy = new SpyBranch();
 
-        df()
+        $frame = df()
             ->read(from_array([['id' => 1]]))
             ->write(to_memory(new ArrayMemory()))
             ->write(to_memory(new ArrayMemory()))
@@ -1542,6 +1584,7 @@ final class DataFrameTest extends FlowTestCase
 
         static::assertInstanceOf(DataFrame::class, $spy->prefix);
         static::assertStringStartsWith('#2 Result', $spy->prefix->explain()->toString());
+        static::assertStringStartsWith('Outputs', $frame->explain()->toString());
     }
 
     public function test_a_branch_is_handed_a_frame_other_than_the_caller(): void
@@ -1549,10 +1592,11 @@ final class DataFrameTest extends FlowTestCase
         $frame = df()->read(from_array([['id' => 1]]));
         $spy = new SpyBranch();
 
-        $frame->write($spy);
+        $written = $frame->write($spy);
 
         static::assertInstanceOf(DataFrame::class, $spy->prefix);
         static::assertNotSame($frame, $spy->prefix);
+        static::assertNotSame($written, $spy->prefix);
     }
 
     public function test_two_branches_share_the_chain_and_do_not_alias(): void
@@ -1657,8 +1701,112 @@ final class DataFrameTest extends FlowTestCase
         $right = df()->read(from_array([['id' => 1, 'n' => 'a']]));
         $outer = df()->read(from_array([['id' => 1]]))->join($right, join_on(['id' => 'id'], 'r_'));
 
-        $right->filter(ref('id')->equals(lit(2)));
+        static::assertSame(
+            [],
+            $right
+                ->filter(ref('id')->equals(lit(2)))
+                ->fetch()
+                ->toArray(),
+        );
 
         static::assertSame([['id' => 1, 'r_id' => 1, 'r_n' => 'a']], $outer->fetch()->toArray());
+    }
+
+    public function test_a_frame_reused_for_a_grouped_query_keeps_its_own_rows(): void
+    {
+        $df = df()
+            ->read(from_array([
+                ['date' => '2023-01-01', 'user' => 'user_01', 'commits' => 1, 'active' => false],
+                ['date' => '2023-01-01', 'user' => 'user_02', 'commits' => 2, 'active' => true],
+                ['date' => '2023-01-01', 'user' => 'user_03', 'commits' => 3, 'active' => true],
+                ['date' => '2023-01-02', 'user' => 'user_01', 'commits' => 4, 'active' => true],
+                ['date' => '2023-01-02', 'user' => 'user_02', 'commits' => 5, 'active' => true],
+                ['date' => '2023-01-02', 'user' => 'user_03', 'commits' => 6, 'active' => true],
+            ]))
+            ->filter(ref('active')->isTrue());
+
+        static::assertSame(
+            [
+                ['date' => '2023-01-01', 'commits_sum' => 5.0],
+                ['date' => '2023-01-02', 'commits_sum' => 15.0],
+            ],
+            $df
+                ->groupBy(ref('date'))
+                ->aggregate(sum(ref('commits')))
+                ->fetch()
+                ->toArray(),
+        );
+        static::assertSame(
+            [
+                ['date' => '2023-01-01', 'user' => 'user_02', 'commits' => 2, 'active' => true],
+                ['date' => '2023-01-01', 'user' => 'user_03', 'commits' => 3, 'active' => true],
+                ['date' => '2023-01-02', 'user' => 'user_01', 'commits' => 4, 'active' => true],
+                ['date' => '2023-01-02', 'user' => 'user_02', 'commits' => 5, 'active' => true],
+                ['date' => '2023-01-02', 'user' => 'user_03', 'commits' => 6, 'active' => true],
+            ],
+            $df->fetch()->toArray(),
+        );
+    }
+
+    public function test_select_returns_another_frame_and_leaves_the_original_columns(): void
+    {
+        $df = df()->read(from_array([['id' => 1, 'name' => 'a']]));
+
+        static::assertNotSame($df, $df->select('id'));
+        static::assertSame([['id' => 1, 'name' => 'a']], $df->fetch()->toArray());
+    }
+
+    public function test_fetch_with_a_limit_leaves_the_frame_unlimited(): void
+    {
+        $df = df()->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]));
+
+        static::assertCount(2, $df->fetch(2));
+        static::assertCount(3, $df->fetch());
+    }
+
+    public function test_display_leaves_the_frame_unlimited(): void
+    {
+        $df = df()->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]));
+
+        $df->display(1);
+
+        static::assertCount(3, $df->fetch());
+    }
+
+    public function test_print_rows_leaves_no_output_write_on_the_frame(): void
+    {
+        $df = df()->read(from_array([['id' => 1], ['id' => 2]]));
+
+        ob_start();
+        $df->printRows(1);
+        ob_get_clean();
+        ob_start();
+        $df->run();
+
+        static::assertSame('', ob_get_clean());
+    }
+
+    public function test_on_error_returns_another_frame_and_the_original_keeps_its_handler(): void
+    {
+        $df = df()->read(from_array([['id' => 1]]))->with(new ThrowingTransformer(new RuntimeException('boom')));
+        $guarded = $df->onError(new IgnoreError());
+
+        static::assertNotSame($df, $guarded);
+        $guarded->run();
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('boom');
+
+        $df->run();
+    }
+
+    public function test_the_same_join_built_twice_on_one_frame_gives_the_same_rows(): void
+    {
+        $extractor = from_array([['id' => 1, 'g' => 0], ['id' => 2, 'g' => 1], ['id' => 4, 'g' => 0]]);
+        $even = df()->read($extractor)->filter(ref('g')->equals(lit(0)));
+        $all = df()->read($extractor)->select('id');
+
+        static::assertCount(2, $even->join($all, join_on(['id' => 'id'], 'r_'))->fetch());
+        static::assertCount(2, $even->join($all, join_on(['id' => 'id'], 'r_'))->fetch());
     }
 }

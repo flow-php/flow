@@ -108,13 +108,13 @@ final class FileSchemaCommand extends Command
         $limit = option_int_nullable('input-file-limit', $input);
 
         if ($limit !== null && $limit > 0) {
-            $df->limit($limit);
+            $df = $df->limit($limit);
         }
 
         $offset = option_int_nullable('input-file-offset', $input);
 
         if ($offset !== null && $offset > 0) {
-            $df->offset($offset);
+            $df = $df->offset($offset);
         }
 
         $schema = $df->schema();
