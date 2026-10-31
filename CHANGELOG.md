@@ -1,6 +1,7 @@
 ## [Unreleased] - 2026-10-31
 
 ### Added
+- [#2714](https://github.com/flow-php/flow/pull/2714) - **flow-php/etl - #[NoDiscard] on every DataFrame verb** - [@norberttech](https://github.com/norberttech)
 - [#2713](https://github.com/flow-php/flow/pull/2713) - **flow-php/etl - Statistics::$processes with the OS peak memory of the parent and of every worker** - [@norberttech](https://github.com/norberttech)
 - [#2713](https://github.com/flow-php/flow/pull/2713) - **flow-php/etl - Report::normalize() for a JSON form of the run report** - [@norberttech](https://github.com/norberttech)
 - [#2713](https://github.com/flow-php/flow/pull/2713) - **flow-php/etl - warning when withSchema() or withColumnStatistics() stop parallel writes** - [@norberttech](https://github.com/norberttech)
@@ -44,6 +45,10 @@
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/arrow-ext - page-range reads and row filtering through arrow-rs** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2714](https://github.com/flow-php/flow/pull/2714) - **flow-php/etl - DataFrame is immutable, every verb returns a new frame** - [@norberttech](https://github.com/norberttech)
+- [#2714](https://github.com/flow-php/flow/pull/2714) - **flow-php/etl - DataFrame constructor takes Node, Writes and FlowContext** - [@norberttech](https://github.com/norberttech)
+- [#2714](https://github.com/flow-php/flow/pull/2714) - **flow-php/etl - onError() returns a new frame** - [@norberttech](https://github.com/norberttech)
+- [#2714](https://github.com/flow-php/flow/pull/2714) - **flow-php/etl - Branch::write() returns DataFrame** - [@norberttech](https://github.com/norberttech)
 - [#2713](https://github.com/flow-php/flow/pull/2713) - **flow-php/etl - Statistics::$memory renamed to $heap** - [@norberttech](https://github.com/norberttech)
 - [#2713](https://github.com/flow-php/flow/pull/2713) - **flow-php/etl - SourceCounts renamed to RunCounts, it also collects worker peaks** - [@norberttech](https://github.com/norberttech)
 - [#2713](https://github.com/flow-php/flow/pull/2713) - **flow-php/etl - the run report reads memory and row count from telemetry instead of measuring them twice** - [@norberttech](https://github.com/norberttech)
@@ -120,6 +125,10 @@
 - [#2687](https://github.com/flow-php/flow/pull/2687) - **flow-php/flow - updated dev dependencies, mago 1.57 and GitHub Actions** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2714](https://github.com/flow-php/flow/pull/2714) - **flow-php/etl - fetch($limit), display() and printRows() no longer change the frame** - [@norberttech](https://github.com/norberttech)
+- [#2714](https://github.com/flow-php/flow/pull/2714) - **flow-php/etl - a frame reused for several queries returns correct results** - [@norberttech](https://github.com/norberttech)
+- [#2714](https://github.com/flow-php/flow/pull/2714) - **flow-php/etl - bloom filter fpp error prints NAN without a PHP 8.5 warning** - [@norberttech](https://github.com/norberttech)
+- [#2714](https://github.com/flow-php/flow/pull/2714) - **flow-php/cli - file commands keep the frames they build** - [@norberttech](https://github.com/norberttech)
 - [#2713](https://github.com/flow-php/flow/pull/2713) - **flow-php/etl - column statistics min and max skip NaN** - [@norberttech](https://github.com/norberttech)
 - [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl-adapter-csv - extra fields of a line are no longer dropped silently** - [@norberttech](https://github.com/norberttech)
 - [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl-adapter-excel - extra cells of a row are no longer dropped silently** - [@norberttech](https://github.com/norberttech)
@@ -154,6 +163,7 @@
 - [b5d097](https://github.com/flow-php/flow/commit/b5d097c5cabde914624be59774dd8a8d6fafe294) - **bump setup-php to 2.40.0 in extension release workflows** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2714](https://github.com/flow-php/flow/pull/2714) - **flow-php/etl - InvalidLogicException::transformationReturnedAnotherFrame()** - [@norberttech](https://github.com/norberttech)
 - [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl-adapter-google-sheet - withDropExtraColumns()** - [@norberttech](https://github.com/norberttech)
 - [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - LimitReachedException, replaced by the Limiting contract** - [@norberttech](https://github.com/norberttech)
 - [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - FilteredBranch::withTransformation()** - [@norberttech](https://github.com/norberttech)
