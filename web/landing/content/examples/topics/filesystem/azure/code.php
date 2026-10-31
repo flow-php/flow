@@ -23,12 +23,12 @@ if ($fs->status(path(__DIR__ . '/.env')) === null) {
 $dotenv = new Dotenv();
 $dotenv->load(__DIR__ . '/.env');
 
-$azureAccount = $_ENV['AZURE_ACCOUNT'];
-$azureContainer = $_ENV['AZURE_CONTAINER'];
-$azureAccountKey = $_ENV['AZURE_ACCOUNT_KEY'];
+$azureAccount = $_ENV['AZURE_ACCOUNT'] ?? null;
+$azureContainer = $_ENV['AZURE_CONTAINER'] ?? null;
+$azureAccountKey = $_ENV['AZURE_ACCOUNT_KEY'] ?? null;
 
-if (!\is_string($azureAccount) || !\is_string($azureContainer) || !\is_string($azureAccountKey)) {
-    print 'Example skipped. Azure credentials must be strings.' . PHP_EOL;
+if ($azureAccount === null || $azureContainer === null || $azureAccountKey === null) {
+    print 'Example skipped. Please set AZURE_ACCOUNT, AZURE_CONTAINER and AZURE_ACCOUNT_KEY in the .env file.' . PHP_EOL;
 
     return;
 }

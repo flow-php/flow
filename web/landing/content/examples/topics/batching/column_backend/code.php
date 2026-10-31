@@ -16,5 +16,5 @@ $rows = data_frame(config_builder()->backend(new PhpBackend()))
 foreach (['id', 'double'] as $name) {
     $column = $rows->column($name);
 
-    echo $name . ': ' . $column::class . ' ' . json_encode($column->values()) . "\n";
+    echo $name . ': ' . $column::class . ' ' . json_encode($column->values(), JSON_THROW_ON_ERROR) . "\n";
 }
