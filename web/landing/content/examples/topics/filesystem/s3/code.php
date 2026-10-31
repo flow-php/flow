@@ -26,13 +26,13 @@ if ($fs->status(path(__DIR__ . '/.env')) === null) {
 $dotenv = new Dotenv();
 $dotenv->load(__DIR__ . '/.env');
 
-$awsBucket = $_ENV['AWS_S3_BUCKET'];
-$awsRegion = $_ENV['AWS_S3_REGION'];
-$awsKey = $_ENV['AWS_S3_KEY'];
-$awsSecret = $_ENV['AWS_S3_SECRET'];
+$awsBucket = $_ENV['AWS_S3_BUCKET'] ?? null;
+$awsRegion = $_ENV['AWS_S3_REGION'] ?? null;
+$awsKey = $_ENV['AWS_S3_KEY'] ?? null;
+$awsSecret = $_ENV['AWS_S3_SECRET'] ?? null;
 
-if (!\is_string($awsBucket) || !\is_string($awsRegion) || !\is_string($awsKey) || !\is_string($awsSecret)) {
-    print 'Example skipped. AWS credentials must be strings.' . PHP_EOL;
+if ($awsBucket === null || $awsRegion === null || $awsKey === null || $awsSecret === null) {
+    print 'Example skipped. Please set AWS_S3_BUCKET, AWS_S3_REGION, AWS_S3_KEY and AWS_S3_SECRET in the .env file.' . PHP_EOL;
 
     return;
 }

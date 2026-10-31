@@ -17,6 +17,7 @@ use function Flow\Telemetry\DSL\{
     w3c_baggage,
     w3c_trace_context
 };
+use function Flow\Types\DSL\type_string;
 use function Flow\ETL\DSL\clock;
 
 require __DIR__ . '/vendor/autoload.php';
@@ -54,8 +55,8 @@ if ($extractedContext->spanContext !== null) {
 }
 
 if ($extractedContext->baggage !== null) {
-    echo "User ID: " . $extractedContext->baggage->get('userId') . "\n";
-    echo "Request ID: " . $extractedContext->baggage->get('requestId') . "\n";
+    echo "User ID: " . type_string()->assert($extractedContext->baggage->get('userId')) . "\n";
+    echo "Request ID: " . type_string()->assert($extractedContext->baggage->get('requestId')) . "\n";
 }
 
 // Create a span as child of the extracted context
