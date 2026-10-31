@@ -1,6 +1,12 @@
-## [Unreleased] - 2026-10-30
+## [Unreleased] - 2026-10-31
 
 ### Added
+- [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl - CorruptedRecordException for a record that cannot become a row** - [@norberttech](https://github.com/norberttech)
+- [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl - withCorruptedRecords($loader) routes corrupted records to a loader (CorruptedRecordsRouter)** - [@norberttech](https://github.com/norberttech)
+- [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl-adapter-csv - withMissingColumnsAsNull() pads short records** - [@norberttech](https://github.com/norberttech)
+- [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl-adapter-excel - withMissingColumnsAsNull(), true by default** - [@norberttech](https://github.com/norberttech)
+- [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl-adapter-google-sheet - withMissingColumnsAsNull() pads short rows** - [@norberttech](https://github.com/norberttech)
+- [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/flow-php-ext - native CSV and JSON readers report corrupted records like the PHP readers** - [@norberttech](https://github.com/norberttech)
 - [#2711](https://github.com/flow-php/flow/pull/2711) - **flow-php/filesystem - Filesystem::create() exclusive create, visible at close, throws FileExistsException** - [@norberttech](https://github.com/norberttech)
 - [#2711](https://github.com/flow-php/flow/pull/2711) - **flow-php/filesystem - Local\Permissions for local files, directories and block files** - [@norberttech](https://github.com/norberttech)
 - [#2711](https://github.com/flow-php/flow/pull/2711) - **flow-php/filesystem-async-aws-bridge - exclusive create() with If-None-Match** - [@norberttech](https://github.com/norberttech)
@@ -34,6 +40,12 @@
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/arrow-ext - page-range reads and row filtering through arrow-rs** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl - a value that does not cast to a declared schema is a corrupted record** - [@norberttech](https://github.com/norberttech)
+- [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl - a record past the inference sample throws InferredSchemaException with its offset and line** - [@norberttech](https://github.com/norberttech)
+- [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl - extract() may yield CorruptedRecordException beside Rows** - [@norberttech](https://github.com/norberttech)
+- [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl - to_date_time(null) returns null** - [@norberttech](https://github.com/norberttech)
+- [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl-adapter-csv - an empty line is skipped** - [@norberttech](https://github.com/norberttech)
+- [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl-adapter-json - JsonReadBytes renamed to JsonReadProgress** - [@norberttech](https://github.com/norberttech)
 - [#2711](https://github.com/flow-php/flow/pull/2711) - **flow-php/filesystem - rm() takes $recursive, false refuses a non-empty directory** - [@norberttech](https://github.com/norberttech)
 - [#2711](https://github.com/flow-php/flow/pull/2711) - **flow-php/filesystem - mv() replaces files atomically instead of delete then rename** - [@norberttech](https://github.com/norberttech)
 - [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - every namespace sits in one layer root, guarded per layer** - [@norberttech](https://github.com/norberttech)
@@ -101,6 +113,10 @@
 - [#2687](https://github.com/flow-php/flow/pull/2687) - **flow-php/flow - updated dev dependencies, mago 1.57 and GitHub Actions** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl-adapter-csv - extra fields of a line are no longer dropped silently** - [@norberttech](https://github.com/norberttech)
+- [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl-adapter-excel - extra cells of a row are no longer dropped silently** - [@norberttech](https://github.com/norberttech)
+- [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl-adapter-json - a key first seen after the inference sample is a schema error, not dropped** - [@norberttech](https://github.com/norberttech)
+- [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl-adapter-csv - a declared column missing from the header is a schema error, not null** - [@norberttech](https://github.com/norberttech)
 - [#2711](https://github.com/flow-php/flow/pull/2711) - **flow-php/filesystem - mv() warning and leftover directory on a missing source** - [@norberttech](https://github.com/norberttech)
 - [#2711](https://github.com/flow-php/flow/pull/2711) - **flow-php/filesystem-azure-bridge - empty blob visible before close() on multi-block writes** - [@norberttech](https://github.com/norberttech)
 - [#2711](https://github.com/flow-php/flow/pull/2711) - **flow-php/filesystem-async-aws-bridge - stray key on an empty append** - [@norberttech](https://github.com/norberttech)
@@ -130,6 +146,7 @@
 - [b5d097](https://github.com/flow-php/flow/commit/b5d097c5cabde914624be59774dd8a8d6fafe294) - **bump setup-php to 2.40.0 in extension release workflows** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl-adapter-google-sheet - withDropExtraColumns()** - [@norberttech](https://github.com/norberttech)
 - [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - LimitReachedException, replaced by the Limiting contract** - [@norberttech](https://github.com/norberttech)
 - [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - FilteredBranch::withTransformation()** - [@norberttech](https://github.com/norberttech)
 - [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - window frame accumulators, windows reuse aggregate functions** - [@norberttech](https://github.com/norberttech)
