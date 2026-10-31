@@ -1,6 +1,10 @@
 ## [Unreleased] - 2026-10-31
 
 ### Added
+- [#2713](https://github.com/flow-php/flow/pull/2713) - **flow-php/etl - Statistics::$processes with the OS peak memory of the parent and of every worker** - [@norberttech](https://github.com/norberttech)
+- [#2713](https://github.com/flow-php/flow/pull/2713) - **flow-php/etl - Report::normalize() for a JSON form of the run report** - [@norberttech](https://github.com/norberttech)
+- [#2713](https://github.com/flow-php/flow/pull/2713) - **flow-php/etl - warning when withSchema() or withColumnStatistics() stop parallel writes** - [@norberttech](https://github.com/norberttech)
+- [#2713](https://github.com/flow-php/flow/pull/2713) - **flow-php/cli - heap, process, worker and summed memory peaks in the run statistics** - [@norberttech](https://github.com/norberttech)
 - [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl - CorruptedRecordException for a record that cannot become a row** - [@norberttech](https://github.com/norberttech)
 - [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl - withCorruptedRecords($loader) routes corrupted records to a loader (CorruptedRecordsRouter)** - [@norberttech](https://github.com/norberttech)
 - [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl-adapter-csv - withMissingColumnsAsNull() pads short records** - [@norberttech](https://github.com/norberttech)
@@ -40,6 +44,9 @@
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/arrow-ext - page-range reads and row filtering through arrow-rs** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2713](https://github.com/flow-php/flow/pull/2713) - **flow-php/etl - Statistics::$memory renamed to $heap** - [@norberttech](https://github.com/norberttech)
+- [#2713](https://github.com/flow-php/flow/pull/2713) - **flow-php/etl - SourceCounts renamed to RunCounts, it also collects worker peaks** - [@norberttech](https://github.com/norberttech)
+- [#2713](https://github.com/flow-php/flow/pull/2713) - **flow-php/etl - the run report reads memory and row count from telemetry instead of measuring them twice** - [@norberttech](https://github.com/norberttech)
 - [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl - a value that does not cast to a declared schema is a corrupted record** - [@norberttech](https://github.com/norberttech)
 - [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl - a record past the inference sample throws InferredSchemaException with its offset and line** - [@norberttech](https://github.com/norberttech)
 - [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl - extract() may yield CorruptedRecordException beside Rows** - [@norberttech](https://github.com/norberttech)
@@ -113,6 +120,7 @@
 - [#2687](https://github.com/flow-php/flow/pull/2687) - **flow-php/flow - updated dev dependencies, mago 1.57 and GitHub Actions** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2713](https://github.com/flow-php/flow/pull/2713) - **flow-php/etl - column statistics min and max skip NaN** - [@norberttech](https://github.com/norberttech)
 - [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl-adapter-csv - extra fields of a line are no longer dropped silently** - [@norberttech](https://github.com/norberttech)
 - [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl-adapter-excel - extra cells of a row are no longer dropped silently** - [@norberttech](https://github.com/norberttech)
 - [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl-adapter-json - a key first seen after the inference sample is a schema error, not dropped** - [@norberttech](https://github.com/norberttech)
