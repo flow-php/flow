@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Runtime\Executor;
 
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\IO\Extractor\Signal;
 use Flow\ETL\Runtime\Executor\SourceCount;
 use Flow\ETL\Tests\Context\IdRows;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Values\Rows;
+use Generator;
+
+use function iterator_to_array;
 
 final class SourceCountTest extends FlowTestCase
 {
@@ -118,5 +123,23 @@ final class SourceCountTest extends FlowTestCase
         static::assertFalse($counted->valid());
         static::assertSame(2, $read->rows());
         static::assertFalse($read->isComplete());
+    }
+
+    public function test_a_corrupted_record_passes_through_and_counts_no_rows(): void
+    {
+        $read = new SourceCount();
+        $read->opened(false);
+        $corrupted = new CorruptedRecordException('file:///a.csv', 4, 2, 'reason', 'x');
+        /** @var Generator<int, CorruptedRecordException|Rows, null|Signal, void> $batches */
+        $batches = (static function () use ($corrupted) {
+            yield $corrupted;
+            yield from IdRows::batches([1, 2]);
+        })();
+
+        $counted = iterator_to_array($read->count($batches), false);
+
+        static::assertSame($corrupted, $counted[0]);
+        static::assertSame(2, $read->rows());
+        static::assertTrue($read->isComplete());
     }
 }

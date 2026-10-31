@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\JSON\Tests\Integration\IO\Extractor;
 use Closure;
 use Flow\ETL\Adapter\JSON\IO\Extractor\JsonExtractor;
 use Flow\ETL\Adapter\JSON\Tests\Context\JsonFixtureContext;
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\SchemaMismatchException;
@@ -36,6 +37,7 @@ use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\infer_schema;
 use function Flow\ETL\DSL\int_schema;
@@ -43,6 +45,7 @@ use function Flow\ETL\DSL\partition_types;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\schema_to_ascii;
 use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\to_array;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
@@ -55,6 +58,41 @@ use function str_repeat;
 
 final class JsonLinesExtractorTest extends FlowTestCase
 {
+    public function test_a_key_first_seen_after_the_inference_sample_is_a_schema_error(): void
+    {
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage('"c"');
+
+        ExtractedRows::of(from_json_lines(
+            path('memory://source.jsonl'),
+            MemoryFiles::with([
+                'memory://source.jsonl' => "{\"a\":1,\"b\":2}\n{\"a\":3,\"b\":4}\n{\"a\":5,\"b\":6,\"c\":7}\n",
+            ]),
+        )->inferSchema(infer_schema()->sampleSize(2)));
+    }
+
+    public function test_a_value_that_does_not_cast_to_the_declared_type_is_a_corrupted_record(): void
+    {
+        try {
+            ExtractedRows::of(from_json_lines(
+                path('memory://source.jsonl'),
+                MemoryFiles::with([
+                    'memory://source.jsonl' => "{\"id\":1,\"amount\":10.5}\n{\"id\":2,\"amount\":\"N/A\"}\n",
+                ]),
+            )->withSchema(schema(int_schema('id'), float_schema('amount', true))));
+            static::fail('Expected the corrupted record to be refused');
+        } catch (CorruptedRecordException $e) {
+            static::assertSame(['memory://source.jsonl', 23, 2, '{"id":2,"amount":"N/A"}', null], [
+                $e->uri,
+                $e->offset,
+                $e->lineNumber,
+                $e->record,
+                $e->fields,
+            ]);
+            static::assertStringContainsString('"amount"', $e->reason);
+        }
+    }
+
     public function test_extracting_jsonl_from_local_file_stream(): void
     {
         $rows = data_frame(config_builder())
@@ -158,7 +196,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
 
         $total = 0;
 
-        foreach ($extractor->extract(flow_context(config())->backend(), new Criteria()) as $rows) {
+        foreach (FlowTestCase::extracted($extractor, flow_context(config())->backend(), new Criteria()) as $rows) {
             foreach ($rows->toArray() as $row) {
                 static::assertSame(
                     [
@@ -238,9 +276,11 @@ final class JsonLinesExtractorTest extends FlowTestCase
 
     public function test_signal_stop(): void
     {
-        $generator = from_json_lines(path(__DIR__ . '/../../../Fixtures/timezones.jsonl'))
-            ->withBatchSize(100)
-            ->extract(flow_context(config())->backend(), new Criteria());
+        $generator = FlowTestCase::extracted(
+            from_json_lines(path(__DIR__ . '/../../../Fixtures/timezones.jsonl'))->withBatchSize(100),
+            flow_context(config())->backend(),
+            new Criteria(),
+        );
 
         static::assertTrue($generator->valid());
         $generator->next();
@@ -257,7 +297,11 @@ final class JsonLinesExtractorTest extends FlowTestCase
         $expected = $extractor->schema();
         $sizes = [];
 
-        foreach ($extractor->withBatchSize(3)->extract(flow_context()->backend(), new Criteria()) as $rows) {
+        foreach (FlowTestCase::extracted(
+            $extractor->withBatchSize(3),
+            flow_context()->backend(),
+            new Criteria(),
+        ) as $rows) {
             static::assertTrue($rows->schema()->isSame($expected));
             $sizes[] = $rows->count();
         }
@@ -276,7 +320,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
         $extractor = from_json_lines(JsonFixtureContext::path('five_rows.jsonl'), filesystem: $counting);
 
         $extractor->schema();
-        iterator_to_array($extractor->extract(flow_context(config())->backend(), new Criteria()));
+        iterator_to_array(FlowTestCase::extracted($extractor, flow_context(config())->backend(), new Criteria()));
 
         static::assertSame(2, $counting->readFromCalls, 'sample + read');
         static::assertSame(2, $counting->closedStreams());
@@ -292,7 +336,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
         )->withSchema(schema(int_schema('id')));
 
         $extractor->schema();
-        iterator_to_array($extractor->extract(flow_context(config())->backend(), new Criteria()));
+        iterator_to_array(FlowTestCase::extracted($extractor, flow_context(config())->backend(), new Criteria()));
 
         static::assertSame(1, $counting->readFromCalls);
     }
@@ -402,7 +446,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
 
     public function test_a_value_past_the_sample_is_reported(): void
     {
-        $this->expectException(SchemaMismatchException::class);
+        $this->expectException(InferredSchemaException::class);
 
         df(config())
             ->read(
@@ -427,18 +471,17 @@ final class JsonLinesExtractorTest extends FlowTestCase
         static::assertSame(1, $counting->readFromCalls);
     }
 
-    public function test_a_key_first_seen_past_the_sample_is_dropped(): void
+    public function test_a_key_first_seen_past_the_sample_is_a_schema_error(): void
     {
-        static::assertSame(
-            [['id' => 1, 'name' => 'a'], ['id' => 2, 'name' => 'b'], ['id' => 3, 'name' => 'c']],
-            df(config())
-                ->read(
-                    from_json_lines(JsonFixtureContext::path('extra_key/*.jsonl'))
-                        ->inferSchema(infer_schema()->filesToSniff(1)),
-                )
-                ->fetch()
-                ->toArray(),
-        );
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage('column "extra" is not declared by the schema');
+
+        df(config())
+            ->read(
+                from_json_lines(JsonFixtureContext::path('extra_key/*.jsonl'))
+                    ->inferSchema(infer_schema()->filesToSniff(1)),
+            )
+            ->fetch();
     }
 
     public function test_union_by_name_reads_diverging_columns_as_one_wider_schema(): void
@@ -477,7 +520,10 @@ final class JsonLinesExtractorTest extends FlowTestCase
 
         static::assertSame(
             [],
-            iterator_to_array($extractor->extract(flow_context(config())->backend(), new Criteria()), false),
+            iterator_to_array(
+                FlowTestCase::extracted($extractor, flow_context(config())->backend(), new Criteria()),
+                false,
+            ),
         );
 
         $this->expectException(InferredSchemaException::class);
@@ -571,21 +617,29 @@ final class JsonLinesExtractorTest extends FlowTestCase
         }
 
         if ($mode === 'limit') {
-            iterator_to_array($extractor->extract(flow_context(config())->backend(), new Criteria(limit: 2)));
+            iterator_to_array(FlowTestCase::extracted(
+                $extractor,
+                flow_context(config())->backend(),
+                new Criteria(limit: 2),
+            ));
         }
 
         if ($mode === 'stop') {
-            $generator = $extractor->extract(flow_context(config())->backend(), new Criteria());
+            $generator = FlowTestCase::extracted($extractor, flow_context(config())->backend(), new Criteria());
             static::assertTrue($generator->valid());
             $generator->send(Signal::STOP);
         }
 
         if ($mode === 'hydrator-throws') {
             try {
-                iterator_to_array($extractor->extract(flow_context(config())->backend(), new Criteria()));
+                iterator_to_array(FlowTestCase::extracted(
+                    $extractor,
+                    flow_context(config())->backend(),
+                    new Criteria(),
+                ));
 
                 static::fail('expected ' . SchemaMismatchException::class);
-            } catch (SchemaMismatchException) {
+            } catch (InferredSchemaException) {
             }
         }
 
@@ -706,7 +760,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
     {
         $extractor = from_json_lines(JsonFixtureContext::path('five_rows.jsonl'));
 
-        iterator_to_array($extractor->extract(flow_context()->backend(), new Criteria()), false);
+        iterator_to_array(FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()), false);
 
         static::assertEquals(Cardinality::exact(5), $extractor->statistics()->rows);
     }
@@ -778,7 +832,8 @@ final class JsonLinesExtractorTest extends FlowTestCase
         $backend = new SpyBackend();
 
         iterator_to_array(
-            from_json_lines(__DIR__ . '/../../../Fixtures/timezones.jsonl')->extract(
+            FlowTestCase::extracted(
+                from_json_lines(__DIR__ . '/../../../Fixtures/timezones.jsonl'),
                 flow_context(config_builder()->backend($backend)->build())->backend(),
                 new Criteria(),
             ),
@@ -792,7 +847,8 @@ final class JsonLinesExtractorTest extends FlowTestCase
     {
         $extractor = from_json_lines(__DIR__ . '/../../../Fixtures/timezones.jsonl');
         $extractor->withBatchSize(1);
-        $generator = $extractor->extract(
+        $generator = FlowTestCase::extracted(
+            $extractor,
             flow_context()->backend(),
             (new Criteria())->withSplit($extractor->splits(new Criteria(), 1)[0]),
         );
@@ -850,6 +906,37 @@ final class JsonLinesExtractorTest extends FlowTestCase
         static::assertEquals(
             [new FileSplit($extractor->source(), 0, null)],
             $extractor->splits((new Criteria())->withPathFilter(new RejectingFilter()), 1),
+        );
+    }
+
+    public function test_corrupted_records_are_routed_to_the_reject_loader(): void
+    {
+        $rejects = [];
+
+        $rows = df()
+            ->read(
+                from_json_lines(
+                    path('memory://source.jsonl'),
+                    MemoryFiles::with([
+                        'memory://source.jsonl' => "{\"id\":1}\n{\"id\":\"x\"}\n{\"id\":3}\n",
+                    ]),
+                )
+                    ->withSchema(schema(int_schema('id')))
+                    ->withCorruptedRecords(to_array($rejects)),
+            )
+            ->fetch();
+
+        static::assertSame([1, 3], $rows->reduceToArray('id'));
+        static::assertSame(
+            [[
+                'uri' => 'memory://source.jsonl',
+                'offset' => 9,
+                'line' => 2,
+                'reason' => 'column "id": could not convert \'x\' (string) to integer',
+                'record' => '{"id":"x"}',
+                'fields' => null,
+            ]],
+            $rejects,
         );
     }
 }

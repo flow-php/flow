@@ -10,7 +10,7 @@ use Flow\Filesystem\Exception\FileExistsException;
 use Flow\Filesystem\Exception\RuntimeException;
 use PHPUnit\Framework\TestCase;
 
-use function array_key_last;
+use function end;
 use function Flow\Filesystem\DSL\path;
 
 final class AsyncAWSS3DestinationStreamTest extends TestCase
@@ -34,7 +34,7 @@ final class AsyncAWSS3DestinationStreamTest extends TestCase
             static::assertStringContainsString('call create() again', $e->getMessage());
         }
 
-        static::assertSame('DELETE uploadId=upload-1', $calls[array_key_last($calls)]);
+        static::assertSame('DELETE uploadId=upload-1', end($calls));
     }
 
     public function test_exclusive_stream_aborts_and_refuses_an_existing_key(): void
@@ -53,6 +53,6 @@ final class AsyncAWSS3DestinationStreamTest extends TestCase
         } catch (FileExistsException) {
         }
 
-        static::assertSame('DELETE uploadId=upload-1', $calls[array_key_last($calls)]);
+        static::assertSame('DELETE uploadId=upload-1', end($calls));
     }
 }

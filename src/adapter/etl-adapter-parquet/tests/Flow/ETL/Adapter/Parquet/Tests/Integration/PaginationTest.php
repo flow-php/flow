@@ -27,8 +27,11 @@ final class PaginationTest extends FlowTestCase
     {
         $extractedRows = 0;
 
-        foreach (from_parquet(path_real(__DIR__ . '/../Fixtures/Pagination/*.parquet'))
-            ->extract(flow_context(config())->backend(), new Criteria()) as $batch) {
+        foreach (FlowTestCase::extracted(
+            from_parquet(path_real(__DIR__ . '/../Fixtures/Pagination/*.parquet')),
+            flow_context(config())->backend(),
+            new Criteria(),
+        ) as $batch) {
             $extractedRows += $batch->count();
         }
 
@@ -39,8 +42,11 @@ final class PaginationTest extends FlowTestCase
     {
         $extractedRows = 0;
 
-        foreach (from_parquet(path_real(__DIR__ . '/../Fixtures/Pagination/*.parquet'))
-            ->extract(flow_context(config())->backend(), new Criteria(offset: 2500)) as $batch) {
+        foreach (FlowTestCase::extracted(
+            from_parquet(path_real(__DIR__ . '/../Fixtures/Pagination/*.parquet')),
+            flow_context(config())->backend(),
+            new Criteria(offset: 2500),
+        ) as $batch) {
             $extractedRows += $batch->count();
         }
 
@@ -51,8 +57,11 @@ final class PaginationTest extends FlowTestCase
     {
         $extractedRows = 0;
 
-        foreach (from_parquet(path_real(__DIR__ . '/../Fixtures/Pagination/partitioned/date=*/*.parquet'))
-            ->extract(flow_context(config())->backend(), new Criteria(offset: 2500)) as $batch) {
+        foreach (FlowTestCase::extracted(
+            from_parquet(path_real(__DIR__ . '/../Fixtures/Pagination/partitioned/date=*/*.parquet')),
+            flow_context(config())->backend(),
+            new Criteria(offset: 2500),
+        ) as $batch) {
             $extractedRows += $batch->count();
         }
 
@@ -63,8 +72,11 @@ final class PaginationTest extends FlowTestCase
     {
         $extractedRows = 0;
 
-        foreach (from_parquet(path_real(__DIR__ . '/../Fixtures/Pagination/*.parquet'))
-            ->extract(flow_context(config())->backend(), new Criteria(offset: 10_000)) as $batch) {
+        foreach (FlowTestCase::extracted(
+            from_parquet(path_real(__DIR__ . '/../Fixtures/Pagination/*.parquet')),
+            flow_context(config())->backend(),
+            new Criteria(offset: 10_000),
+        ) as $batch) {
             $extractedRows += $batch->count();
         }
 
@@ -75,11 +87,14 @@ final class PaginationTest extends FlowTestCase
     {
         $extractedRows = 0;
 
-        foreach (from_parquet(path_real(__DIR__ . '/../Fixtures/orders_1k.parquet'))
-            ->extract(flow_context(config())->backend(), new Criteria(offset: (new Reader())
+        foreach (FlowTestCase::extracted(
+            from_parquet(path_real(__DIR__ . '/../Fixtures/orders_1k.parquet')),
+            flow_context(config())->backend(),
+            new Criteria(offset: (new Reader())
                 ->read(__DIR__ . '/../Fixtures/orders_1k.parquet')
                 ->metadata()
-                ->rowsNumber() - 100)) as $batch) {
+                ->rowsNumber() - 100),
+        ) as $batch) {
             $extractedRows += $batch->count();
         }
 
@@ -100,7 +115,10 @@ final class PaginationTest extends FlowTestCase
         $extractor = from_parquet('memory://window/*.parquet', filesystem: $filesystem);
         $read = static fn(): array => array_merge(...array_map(
             static fn(Rows $rows): array => $rows->column('id')->values(),
-            iterator_to_array($extractor->extract(flow_context()->backend(), new Criteria(limit: 4, offset: 4)), false),
+            iterator_to_array(
+                FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria(limit: 4, offset: 4)),
+                false,
+            ),
         ));
 
         static::assertSame([5, 6, 7, 8], $read());

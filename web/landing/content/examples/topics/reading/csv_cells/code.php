@@ -11,6 +11,6 @@ require __DIR__ . '/vendor/autoload.php';
 file_put_contents(__DIR__ . '/input.csv', " id ,,name\n1,a,Norbert\n2,,Jane\n3\n");
 
 // json_encode() keeps an empty string and a null apart, a table would not
-foreach (data_frame()->read(from_csv(__DIR__ . '/input.csv', empty_to_null: false))->fetch()->toArray() as $row) {
+foreach (data_frame()->read(from_csv(__DIR__ . '/input.csv', empty_to_null: false)->withMissingColumnsAsNull(true))->fetch()->toArray() as $row) {
     echo json_encode($row) . "\n";
 }

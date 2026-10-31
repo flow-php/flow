@@ -7,13 +7,13 @@ namespace Flow\ETL\Adapter\CSV\Tests\Integration\IO\Extractor;
 use Flow\ETL\Adapter\CSV\IO\Extractor\CSVReadOptions;
 use Flow\ETL\Adapter\CSV\Tests\Context\CSVFixtureContext;
 use Flow\ETL\Foundation\Exception\ColumnMismatchException;
-use Flow\ETL\Foundation\Exception\SchemaMismatchException;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 
-use function array_keys;
+use function array_key_exists;
 use function array_map;
+use function array_slice;
 use function count;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
@@ -90,18 +90,12 @@ final class PhpCSVOpenSourceTest extends FlowTestCase
         }
     }
 
-    public function test_records_yields_every_row_with_the_full_key_set(): void
+    public function test_records_yields_only_the_rows_of_records_that_are_not_corrupted(): void
     {
         $open = CSVFixtureContext::openPhp('ragged.csv');
 
         try {
-            $records = iterator_to_array($open->records(), false);
-
-            static::assertCount(3, $records);
-
-            foreach ($records as $record) {
-                static::assertSame(['id', 'name', 'v'], array_keys($record));
-            }
+            static::assertSame([['id' => '1', 'name' => 'a', 'v' => '10']], iterator_to_array($open->records(), false));
         } finally {
             $open->close();
         }
@@ -171,80 +165,123 @@ final class PhpCSVOpenSourceTest extends FlowTestCase
         );
     }
 
-    public function test_batches_refuse_a_missing_not_null_column(): void
+    public function test_batches_hand_up_a_record_missing_a_not_null_column(): void
     {
-        $refusal = CSVFixtureContext::batches(
+        $batches = CSVFixtureContext::batches(
             CSVFixtureContext::openPhpStream(CSVFixtureContext::content("id\n1\n")),
             schema(int_schema('id'), str_schema('name')),
             10,
         );
 
-        static::assertInstanceOf(SchemaMismatchException::class, $refusal);
+        static::assertIsArray($batches);
         static::assertSame(
-            (new SchemaMismatchException(0, ColumnMismatchException::missingColumn('name')))->getMessage(),
-            $refusal->getMessage(),
+            [[
+                3,
+                2,
+                'column "'
+                    . ColumnMismatchException::missingColumn('name')->column
+                    . '"'
+                    . ColumnMismatchException::missingColumn('name')->detail,
+                '1',
+                ['1'],
+            ]],
+            array_map(static fn(array $batch): array => array_key_exists('corrupted', $batch)
+                ? array_slice($batch['corrupted'], 1)
+                : $batch, $batches),
         );
-        static::assertSame(0, $refusal->rowIndex);
     }
 
-    public function test_batches_refused_value_wins_over_absence(): void
+    public function test_batches_hand_up_corrupted_records_in_source_order(): void
     {
-        $refusal = CSVFixtureContext::batches(
+        $batches = CSVFixtureContext::batches(
             CSVFixtureContext::openPhpStream(CSVFixtureContext::content("id\n1\nx\n")),
             schema(int_schema('id'), str_schema('name')),
             10,
         );
 
-        static::assertInstanceOf(SchemaMismatchException::class, $refusal);
+        static::assertIsArray($batches);
         static::assertSame(
-            (new SchemaMismatchException(1, ColumnMismatchException::valueDoesNotMatch(
-                'id',
-                'integer',
-                'x',
-            )))->getMessage(),
-            $refusal->getMessage(),
+            [
+                [
+                    3,
+                    2,
+                    'column "'
+                        . ColumnMismatchException::missingColumn('name')->column
+                        . '"'
+                        . ColumnMismatchException::missingColumn('name')->detail,
+                    '1',
+                    ['1'],
+                ],
+                [
+                    5,
+                    3,
+                    'column "'
+                        . ColumnMismatchException::valueDoesNotMatch('id', 'integer', 'x')->column
+                        . '"'
+                        . ColumnMismatchException::valueDoesNotMatch('id', 'integer', 'x')->detail,
+                    'x',
+                    ['x'],
+                ],
+            ],
+            array_map(static fn(array $batch): array => array_key_exists('corrupted', $batch)
+                ? array_slice($batch['corrupted'], 1)
+                : $batch, $batches),
         );
-        static::assertSame(1, $refusal->rowIndex);
     }
 
     public function test_batches_refusal_tie_goes_to_the_first_definition(): void
     {
-        $refusal = CSVFixtureContext::batches(
+        $batches = CSVFixtureContext::batches(
             CSVFixtureContext::openPhpStream(CSVFixtureContext::content("a,b\nx,y\n")),
             schema(int_schema('b'), int_schema('a')),
             10,
         );
 
-        static::assertInstanceOf(SchemaMismatchException::class, $refusal);
+        static::assertIsArray($batches);
         static::assertSame(
-            (new SchemaMismatchException(0, ColumnMismatchException::valueDoesNotMatch(
-                'b',
-                'integer',
-                'y',
-            )))->getMessage(),
-            $refusal->getMessage(),
+            [[
+                4,
+                2,
+                'column "'
+                    . ColumnMismatchException::valueDoesNotMatch('b', 'integer', 'y')->column
+                    . '"'
+                    . ColumnMismatchException::valueDoesNotMatch('b', 'integer', 'y')->detail,
+                'x,y',
+                ['x', 'y'],
+            ]],
+            array_map(static fn(array $batch): array => array_key_exists('corrupted', $batch)
+                ? array_slice($batch['corrupted'], 1)
+                : $batch, $batches),
         );
-        static::assertSame(0, $refusal->rowIndex);
     }
 
-    public function test_batches_refuse_an_empty_to_null_null_under_not_null(): void
+    public function test_batches_hand_up_an_empty_to_null_null_under_not_null(): void
     {
-        $refusal = CSVFixtureContext::batches(
+        $batches = CSVFixtureContext::batches(
             CSVFixtureContext::openPhpStream(CSVFixtureContext::content("id,name\n1,a\n2,\n")),
             schema(int_schema('id'), str_schema('name')),
             10,
         );
 
-        static::assertInstanceOf(SchemaMismatchException::class, $refusal);
+        static::assertIsArray($batches);
         static::assertSame(
-            (new SchemaMismatchException(1, ColumnMismatchException::valueDoesNotMatch(
-                'name',
-                'string',
-                null,
-            )))->getMessage(),
-            $refusal->getMessage(),
+            [
+                [
+                    12,
+                    3,
+                    'column "'
+                        . ColumnMismatchException::valueDoesNotMatch('name', 'string', null)->column
+                        . '"'
+                        . ColumnMismatchException::valueDoesNotMatch('name', 'string', null)->detail,
+                    '2,',
+                    ['2', ''],
+                ],
+                [['id' => 1, 'name' => 'a']],
+            ],
+            array_map(static fn(array $batch): array => array_key_exists('corrupted', $batch)
+                ? array_slice($batch['corrupted'], 1)
+                : $batch, $batches),
         );
-        static::assertSame(1, $refusal->rowIndex);
     }
 
     public function test_batches_of_a_header_only_source_are_empty(): void

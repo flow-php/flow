@@ -7,7 +7,7 @@ namespace Flow\ETL\Adapter\JSON\Tests\Integration\IO\Extractor;
 use Flow\ETL\Adapter\JSON\IO\Extractor\PhpJsonOpenSource;
 use Flow\ETL\Adapter\JSON\IO\JsonFraming;
 use Flow\ETL\Adapter\JSON\Tests\Context\JsonFixtureContext;
-use Flow\ETL\Foundation\Exception\SchemaMismatchException;
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Column\PhpBackend;
@@ -32,25 +32,32 @@ final class PhpJsonOpenSourceTest extends FlowTestCase
             false,
         );
 
-        static::assertSame([2, 2, 1], array_map(static fn(Rows $rows): int => $rows->count(), $batches));
-        static::assertSame([['id' => 5]], $batches[2]->toArray());
+        static::assertContainsOnlyInstancesOf(Rows::class, $batches);
+        static::assertSame(
+            [[['id' => 1], ['id' => 2]], [['id' => 3], ['id' => 4]], [['id' => 5]]],
+            array_map(static fn(CorruptedRecordException|Rows $rows): array => (
+                $rows instanceof Rows ? $rows->toArray() : [$rows->getMessage()]
+            ), $batches),
+        );
     }
 
-    public function test_a_refusal_carries_its_row_in_the_whole_source(): void
+    public function test_under_a_declared_schema_a_refused_element_is_a_corrupted_record_numbered_in_the_document(): void
     {
         $batches = (new PhpJsonOpenSource(
             JsonFixtureContext::reader(JsonFraming::Array),
             JsonFixtureContext::source('misfit.json'),
         ))->batches(schema(int_schema('id')), 2, new PhpBackend());
 
-        static::assertSame([['id' => 1], ['id' => 2]], $batches->current()->toArray());
+        $rows = $batches->current();
 
-        try {
-            $batches->next();
-            static::fail('the second batch holds "n/a"');
-        } catch (SchemaMismatchException $e) {
-            static::assertSame(3, $e->rowIndex);
-        }
+        static::assertInstanceOf(Rows::class, $rows);
+        static::assertSame([['id' => 1], ['id' => 2]], $rows->toArray());
+
+        $batches->next();
+        $corrupted = $batches->current();
+
+        static::assertInstanceOf(CorruptedRecordException::class, $corrupted);
+        static::assertSame([4, null], [$corrupted->offset, $corrupted->lineNumber]);
     }
 
     #[TestWith([JsonFraming::Array, 'five_rows.json'])]
@@ -63,7 +70,10 @@ final class PhpJsonOpenSourceTest extends FlowTestCase
             JsonFixtureContext::source($fixture),
         ))->batches(schema(int_schema('id')), 2, new PhpBackend());
 
-        static::assertSame(2, $batches->current()->count());
+        $rows = $batches->current();
+
+        static::assertInstanceOf(Rows::class, $rows);
+        static::assertSame(2, $rows->count());
         unset($batches);
 
         static::assertSame(1, $counting->readFromCalls);

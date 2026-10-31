@@ -96,8 +96,11 @@ final class TextExtractorTest extends FlowTestCase
 
     public function test_signal_stop(): void
     {
-        $generator = from_text(path_real(__DIR__ . '/../../../Fixtures/orders_flow.csv'))
-            ->extract(flow_context(config())->backend(), new Criteria());
+        $generator = FlowTestCase::extracted(
+            from_text(path_real(__DIR__ . '/../../../Fixtures/orders_flow.csv')),
+            flow_context(config())->backend(),
+            new Criteria(),
+        );
 
         static::assertTrue($generator->valid());
         $generator->next();
@@ -110,9 +113,11 @@ final class TextExtractorTest extends FlowTestCase
 
     public function test_signal_stop_on_the_first_file_tail_batch_skips_the_remaining_files(): void
     {
-        $generator = from_text(__DIR__ . '/../../../Fixtures/cross_stream/*/data.txt')
-            ->withBatchSize(10)
-            ->extract(flow_context(config())->backend(), new Criteria());
+        $generator = FlowTestCase::extracted(
+            from_text(__DIR__ . '/../../../Fixtures/cross_stream/*/data.txt')->withBatchSize(10),
+            flow_context(config())->backend(),
+            new Criteria(),
+        );
 
         static::assertTrue($generator->valid());
         $generator->send(Signal::STOP);
@@ -147,11 +152,13 @@ final class TextExtractorTest extends FlowTestCase
     {
         $filesystem = new RecordingFilesystem(native_local_filesystem());
 
-        iterator_to_array(
-            (new TextExtractor(path_real(__DIR__ . '/../../../Fixtures/parity_lines.txt'), $filesystem))
-                ->withBatchSize(1)
-                ->extract(flow_context(config())->backend(), new Criteria(limit: 1)),
-        );
+        iterator_to_array(FlowTestCase::extracted(
+            (new TextExtractor(path_real(__DIR__ . '/../../../Fixtures/parity_lines.txt'), $filesystem))->withBatchSize(
+                1,
+            ),
+            flow_context(config())->backend(),
+            new Criteria(limit: 1),
+        ));
 
         static::assertContains('closeSource', $filesystem->calls);
     }
@@ -159,9 +166,13 @@ final class TextExtractorTest extends FlowTestCase
     public function test_a_stopped_read_closes_its_stream(): void
     {
         $filesystem = new RecordingFilesystem(native_local_filesystem());
-        $generator = (new TextExtractor(path_real(__DIR__ . '/../../../Fixtures/parity_lines.txt'), $filesystem))
-            ->withBatchSize(1)
-            ->extract(flow_context(config())->backend(), new Criteria());
+        $generator = FlowTestCase::extracted(
+            (new TextExtractor(path_real(__DIR__ . '/../../../Fixtures/parity_lines.txt'), $filesystem))->withBatchSize(
+                1,
+            ),
+            flow_context(config())->backend(),
+            new Criteria(),
+        );
 
         static::assertTrue($generator->valid());
 
@@ -214,8 +225,11 @@ final class TextExtractorTest extends FlowTestCase
         $backend = new SpyBackend();
 
         iterator_to_array(
-            from_text(path_real(__DIR__ . '/../../../Fixtures/orders_flow.csv'))
-                ->extract(flow_context(config_builder()->backend($backend)->build())->backend(), new Criteria()),
+            FlowTestCase::extracted(
+                from_text(path_real(__DIR__ . '/../../../Fixtures/orders_flow.csv')),
+                flow_context(config_builder()->backend($backend)->build())->backend(),
+                new Criteria(),
+            ),
             false,
         );
 
@@ -287,7 +301,8 @@ final class TextExtractorTest extends FlowTestCase
     {
         $extractor = from_text(__DIR__ . '/../../../Fixtures/orders_1k.csv');
         $extractor->withBatchSize(1);
-        $generator = $extractor->extract(
+        $generator = FlowTestCase::extracted(
+            $extractor,
             flow_context()->backend(),
             (new Criteria())->withSplit($extractor->splits(new Criteria(), 1)[0]),
         );

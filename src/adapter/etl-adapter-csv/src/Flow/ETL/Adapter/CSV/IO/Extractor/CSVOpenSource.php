@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV\IO\Extractor;
 
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
+use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\SchemaMismatchException;
 use Flow\ETL\IO\Inference\ColumnTypes;
 use Flow\ETL\Values\Column\Backend;
@@ -44,16 +46,17 @@ interface CSVOpenSource
     public function columns(): array;
 
     /**
-     * Batches of exactly $batchSize rows (the last may be shorter), keyed and ordered by $schema; row indexes in
-     * refusals are relative to the source. This instance is consumed afterwards.
+     * Batches of exactly $batchSize rows (the last may be shorter), keyed and ordered by $schema, and every corrupted
+     * record handed up in record order. This instance is consumed afterwards.
      *
      * @param int<1, max> $batchSize
+     * @param null|int $sampleSize the inference's sample size when $schema was inferred; null when it was declared
      *
-     * @throws SchemaMismatchException
+     * @throws InferredSchemaException|SchemaMismatchException a refused record under an inferred schema
      *
-     * @return Iterator<int, Rows>
+     * @return Iterator<int, CorruptedRecordException|Rows>
      */
-    public function batches(Schema $schema, int $batchSize, Backend $backend): Iterator;
+    public function batches(Schema $schema, int $batchSize, Backend $backend, ?int $sampleSize = null): Iterator;
 
     /**
      * The header records() resolved; [] before it ran or for a 0-byte source.
@@ -63,7 +66,7 @@ interface CSVOpenSource
     public function headers(): array;
 
     /**
-     * This instance is consumed afterwards.
+     * The rows of the records that are not corrupted. This instance is consumed afterwards.
      *
      * @return Iterator<int, array<array-key, ?string>>
      */

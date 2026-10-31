@@ -27,7 +27,7 @@ final class ColumnMismatchException extends InvalidArgumentException
         public readonly string $detail,
         ?Throwable $previous = null,
     ) {
-        parent::__construct('Row does not match its schema: column "' . $column . '"' . $detail, 0, $previous);
+        parent::__construct('Row does not match its schema: ' . $this->reason(), 0, $previous);
     }
 
     public static function missingColumn(string $column): self
@@ -93,5 +93,10 @@ final class ColumnMismatchException extends InvalidArgumentException
             $value instanceof DateTimeInterface => $value->format('Y-m-d\TH:i:s.uP'),
             default => get_debug_type($value),
         };
+    }
+
+    public function reason(): string
+    {
+        return 'column "' . $this->column . '"' . $this->detail;
     }
 }

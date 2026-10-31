@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\IO\Floe;
 
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Functions\ScalarFunction;
@@ -90,7 +91,7 @@ final class FloeExtractor implements
     }
 
     /**
-     * @return Generator<int, Rows, Signal|null, void>
+     * @return Generator<int, CorruptedRecordException|Rows, Signal|null, void>
      */
     public function extract(Backend $backend, Criteria $criteria): Generator
     {

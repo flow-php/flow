@@ -11,8 +11,6 @@ use Flow\ETL\IO\Inference\Sniffer;
 use Flow\Types\Type\TypeNarrower;
 use Generator;
 
-use function count;
-
 final class GoogleSheetSniffer implements Sniffer
 {
     private ?GoogleSheetSample $sample = null;
@@ -27,34 +25,20 @@ final class GoogleSheetSniffer implements Sniffer
     ) {}
 
     /**
-     * The rows the sample already holds, batched, when its range covered the whole grid - so a read does not fetch
-     * the same rows a second time. Null when it did not, and the caller must read the sheet itself.
+     * The raw rows the sample already holds, keyed by their number in the sheet, when its range covered the whole
+     * grid - so a read does not fetch the same rows a second time. Null when it did not, and the caller must read the
+     * sheet itself.
      *
-     * @param int<1, max> $batchSize
-     *
-     * @return null|Generator<int, list<array<array-key, mixed>>>
+     * @return null|Generator<int, list<mixed>>
      */
-    public function batches(int $batchSize): ?Generator
+    public function rows(): ?Generator
     {
         if (!$this->sample()->wholeSheet) {
             return null;
         }
 
-        return (function () use ($batchSize): Generator {
-            $batch = [];
-
-            foreach ($this->sample()->rows as $rowValues) {
-                $batch[] = $rowValues;
-
-                if (count($batch) >= $batchSize) {
-                    yield $batch;
-                    $batch = [];
-                }
-            }
-
-            if ($batch !== []) {
-                yield $batch;
-            }
+        return (function (): Generator {
+            yield from $this->sample()->cells;
         })();
     }
 

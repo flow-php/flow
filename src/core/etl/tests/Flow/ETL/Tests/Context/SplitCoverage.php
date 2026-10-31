@@ -9,6 +9,7 @@ use Flow\ETL\IO\Extractor\File\FileExtractor;
 use Flow\ETL\IO\Extractor\File\FileSplit;
 use Flow\ETL\IO\Extractor\SplittableExtractor;
 use Flow\ETL\Runtime\FlowContext;
+use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Rows;
 
 use function Flow\ETL\DSL\rows;
@@ -33,7 +34,8 @@ final class SplitCoverage
         $extracted = null;
 
         foreach ($extractor->splits($criteria, $targetSplitBytes) as $split) {
-            foreach ($extractor->extract(
+            foreach (FlowTestCase::extracted(
+                $extractor,
                 $context->backend(),
                 $criteria->withSplit(type_instance_of(FileSplit::class)->assert($split)),
             ) as $batch) {
@@ -65,7 +67,8 @@ final class SplitCoverage
         foreach ($extractor->splits($criteria, $targetSplitBytes) as $split) {
             $count = 0;
 
-            foreach ($extractor->extract(
+            foreach (FlowTestCase::extracted(
+                $extractor,
                 $context->backend(),
                 $criteria->withSplit(type_instance_of(FileSplit::class)->assert($split)),
             ) as $batch) {

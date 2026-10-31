@@ -6,9 +6,11 @@ namespace Flow\ETL\Adapter\JSON\IO\Extractor;
 
 use Flow\ETL\Adapter\JSON\IO\Inference\JsonSniffer;
 use Flow\ETL\Adapter\JSON\IO\JsonFraming;
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Functions\ScalarFunction;
+use Flow\ETL\IO\CorruptedRecordsRouter;
 use Flow\ETL\IO\Extractor;
 use Flow\ETL\IO\Extractor\BatchableExtractor;
 use Flow\ETL\IO\Extractor\Criteria;
@@ -29,6 +31,7 @@ use Flow\ETL\IO\Inference\SampledUnits;
 use Flow\ETL\IO\Inference\SchemaInference;
 use Flow\ETL\IO\Inference\SchemaInferenceBuilder;
 use Flow\ETL\IO\Inference\SchemaInferrer;
+use Flow\ETL\IO\Loader;
 use Flow\ETL\Values\BatchSize;
 use Flow\ETL\Values\Cardinality;
 use Flow\ETL\Values\Column\Backend;
@@ -47,6 +50,7 @@ final class JsonExtractor implements
     FileExtractor,
     InfersSchema,
     MetadataColumnsExtractor,
+    CorruptedRecordsRouter,
     SplittableExtractor
 {
     private BatchSize $batchSize;
@@ -63,10 +67,19 @@ final class JsonExtractor implements
 
     private bool $pointerToColumnName = false;
 
+    public function withCorruptedRecords(?Loader $loader): static
+    {
+        $this->corruptedRecordsLoader = $loader;
+
+        return $this;
+    }
+
     /**
      * What the last schema inference sampled; null until one ran.
      */
     private ?SampledUnits $sampled = null;
+
+    private ?Loader $corruptedRecordsLoader = null;
 
     private ?Schema $schema = null;
 
@@ -107,8 +120,13 @@ final class JsonExtractor implements
         return true;
     }
 
+    public function corruptedRecordsLoader(): ?Loader
+    {
+        return $this->corruptedRecordsLoader;
+    }
+
     /**
-     * @return Generator<int, Rows, Signal|null, void>
+     * @return Generator<int, CorruptedRecordException|Rows, Signal|null, void>
      */
     public function extract(Backend $backend, Criteria $criteria): Generator
     {
@@ -122,7 +140,9 @@ final class JsonExtractor implements
             new JsonFileBatches(
                 $this->files->filesystem,
                 new JsonFileReader($this->files->filesystem, $this->format, $this->pointer, $this->pointerToColumnName),
+                sampleSize: $this->schema === null ? $this->inference->sampleSize : null,
             ),
+            $this->corruptedRecordsLoader,
         );
     }
 

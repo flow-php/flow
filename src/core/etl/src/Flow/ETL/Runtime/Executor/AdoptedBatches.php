@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Runtime\Executor;
 
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\IO\Extractor\Signal;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
@@ -16,16 +17,20 @@ final readonly class AdoptedBatches
     ) {}
 
     /**
-     * Every batch of $batches in the backend's storage, a stop forwarded to $batches.
+     * Every batch of $batches in the backend's storage, a corrupted record as it is, a stop forwarded to $batches.
      *
-     * @param Generator<int, Rows, null|Signal, void> $batches what an extractor yields
+     * @template T of CorruptedRecordException|Rows
      *
-     * @return Generator<int, Rows, null|Signal, void>
+     * @param Generator<T> $batches what an extractor yields
+     *
+     * @return Generator<int, T, null|Signal, void>
      */
     public function of(Generator $batches): Generator
     {
         foreach ($batches as $batch) {
-            $signal = yield $batch->adoptedBy($this->backend);
+            /** @var T $adopted Rows adopted are Rows: T is kept */
+            $adopted = $batch instanceof Rows ? $batch->adoptedBy($this->backend) : $batch;
+            $signal = yield $adopted;
 
             if ($signal === Signal::STOP) {
                 $batches->send(Signal::STOP);

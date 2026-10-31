@@ -27,7 +27,11 @@ final class XMLExtractorTypedColumnsTest extends FlowTestCase
 
         $rows = [];
 
-        foreach ($extractor->extract(flow_context(config_builder()->build())->backend(), new Criteria()) as $batch) {
+        foreach (FlowTestCase::extracted(
+            $extractor,
+            flow_context(config_builder()->build())->backend(),
+            new Criteria(),
+        ) as $batch) {
             static::assertEquals(type_xml(), $batch->schema()->get('node')->type());
 
             $rows = [...$rows, ...$batch->toArray()];
@@ -42,7 +46,11 @@ final class XMLExtractorTypedColumnsTest extends FlowTestCase
             ->withXMLNodePath('root/items/item')
             ->withMetadataColumns(true);
 
-        foreach ($extractor->extract(flow_context(config_builder()->build())->backend(), new Criteria()) as $batch) {
+        foreach (FlowTestCase::extracted(
+            $extractor,
+            flow_context(config_builder()->build())->backend(),
+            new Criteria(),
+        ) as $batch) {
             static::assertSame([$path->uri()], array_values(array_unique($batch->column('_input_file_uri')->values())));
         }
     }
@@ -51,9 +59,11 @@ final class XMLExtractorTypedColumnsTest extends FlowTestCase
     {
         $physicals = [];
 
-        foreach (from_xml(path_real(__DIR__ . '/../../../Fixtures/simple_items.xml'))
-            ->withXMLNodePath('root/items/item')
-            ->extract(flow_context()->backend(), new Criteria()) as $batch) {
+        foreach (FlowTestCase::extracted(
+            from_xml(path_real(__DIR__ . '/../../../Fixtures/simple_items.xml'))->withXMLNodePath('root/items/item'),
+            flow_context()->backend(),
+            new Criteria(),
+        ) as $batch) {
             $physicals = [...$physicals, ...$batch->column('node')->physicals()];
         }
 
@@ -69,10 +79,13 @@ final class XMLExtractorTypedColumnsTest extends FlowTestCase
     {
         $rows = [];
 
-        foreach (from_xml(path_real(__DIR__ . '/../../../Fixtures/simple_items.xml'))
-            ->withXMLNodePath('root/items/item')
-            ->withSchema(schema(str_schema('node')))
-            ->extract(flow_context()->backend(), new Criteria()) as $batch) {
+        foreach (FlowTestCase::extracted(
+            from_xml(path_real(__DIR__ . '/../../../Fixtures/simple_items.xml'))
+                ->withXMLNodePath('root/items/item')
+                ->withSchema(schema(str_schema('node'))),
+            flow_context()->backend(),
+            new Criteria(),
+        ) as $batch) {
             $rows = [...$rows, ...$batch->toArray()];
         }
 
@@ -87,10 +100,13 @@ final class XMLExtractorTypedColumnsTest extends FlowTestCase
     {
         $nodes = [];
 
-        foreach (from_xml(path_real(__DIR__ . '/../../../Fixtures/simple_items.xml'))
-            ->withXMLNodePath('root/items/item')
-            ->withSchema(schema(xml_schema('node'), str_schema('missing', nullable: true)))
-            ->extract(flow_context()->backend(), new Criteria()) as $batch) {
+        foreach (FlowTestCase::extracted(
+            from_xml(path_real(__DIR__ . '/../../../Fixtures/simple_items.xml'))
+                ->withXMLNodePath('root/items/item')
+                ->withSchema(schema(xml_schema('node'), str_schema('missing', nullable: true))),
+            flow_context()->backend(),
+            new Criteria(),
+        ) as $batch) {
             $nodes = [...$nodes, ...$batch->column('node')->values()];
         }
 

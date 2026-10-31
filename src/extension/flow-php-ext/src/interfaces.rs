@@ -323,9 +323,11 @@ pub fn register() -> Result<()> {
                     Arg::new("schema", SCHEMA),
                     Arg::new("batchSize", DataType::Long),
                     Arg::new("backend", BACKEND),
+                    Arg::new("sampleSize", DataType::Long).allow_null().default("null"),
                 ],
                 ITERATOR,
-            ),
+            )
+            .required_args(3),
             method("headers", vec![], DataType::Array),
             method("records", vec![], ITERATOR),
             method(
@@ -350,9 +352,12 @@ pub fn register() -> Result<()> {
                     Arg::new("schema", SCHEMA),
                     Arg::new("batchSize", DataType::Long),
                     Arg::new("backend", BACKEND),
+                    Arg::new("sampleSize", DataType::Long).allow_null().default("null"),
+                    Arg::new("known", SCHEMA).allow_null().default("null"),
                 ],
                 ITERATOR,
-            ),
+            )
+            .required_args(3),
         ],
     )?;
     interface(

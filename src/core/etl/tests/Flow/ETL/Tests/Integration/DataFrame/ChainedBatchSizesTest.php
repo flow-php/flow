@@ -35,14 +35,15 @@ final class ChainedBatchSizesTest extends FlowTestCase
 
         $firstRows = 0;
 
-        foreach ($first->extract(flow_context()->backend(), new Criteria()) as $rows) {
+        foreach (FlowTestCase::extracted($first, flow_context()->backend(), new Criteria()) as $rows) {
             $firstRows += $rows->count();
         }
 
         $read = 0;
         $largestFromSecond = 0;
 
-        foreach (from_all($first->withBatchSize(10), $second->withBatchSize(500))->extract(
+        foreach (FlowTestCase::extracted(
+            from_all($first->withBatchSize(10), $second->withBatchSize(500)),
             flow_context()->backend(),
             new Criteria(),
         ) as $rows) {

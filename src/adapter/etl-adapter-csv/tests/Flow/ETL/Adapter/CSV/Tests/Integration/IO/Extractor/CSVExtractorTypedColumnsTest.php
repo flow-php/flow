@@ -22,6 +22,7 @@ final class CSVExtractorTypedColumnsTest extends FlowTestCase
     public function test_hydrates_typed_columns_with_empty_to_null_and_input_uri(): void
     {
         $extractor = from_csv($path = path_real(__DIR__ . '/../../../Fixtures/file_with_empty_columns.csv'))
+            ->withMissingColumnsAsNull(true)
             ->withSchema(schema(
                 int_schema('id', nullable: true),
                 str_schema('name', nullable: true),
@@ -31,7 +32,11 @@ final class CSVExtractorTypedColumnsTest extends FlowTestCase
 
         $actual = [];
 
-        foreach ($extractor->extract(flow_context(config_builder()->build())->backend(), new Criteria()) as $rows) {
+        foreach (FlowTestCase::extracted(
+            $extractor,
+            flow_context(config_builder()->build())->backend(),
+            new Criteria(),
+        ) as $rows) {
             foreach ($rows->toArray() as $row) {
                 $actual[] = $row;
             }
@@ -56,7 +61,11 @@ final class CSVExtractorTypedColumnsTest extends FlowTestCase
 
         $actual = [];
 
-        foreach ($extractor->extract(flow_context(config_builder()->build())->backend(), new Criteria()) as $rows) {
+        foreach (FlowTestCase::extracted(
+            $extractor,
+            flow_context(config_builder()->build())->backend(),
+            new Criteria(),
+        ) as $rows) {
             foreach ($rows->toArray() as $row) {
                 $actual[] = $row;
             }
@@ -88,7 +97,11 @@ final class CSVExtractorTypedColumnsTest extends FlowTestCase
 
         $actual = [];
 
-        foreach ($extractor->extract(flow_context(config_builder()->build())->backend(), new Criteria()) as $rows) {
+        foreach (FlowTestCase::extracted(
+            $extractor,
+            flow_context(config_builder()->build())->backend(),
+            new Criteria(),
+        ) as $rows) {
             foreach ($rows->toArray() as $row) {
                 $actual[] = $row;
             }

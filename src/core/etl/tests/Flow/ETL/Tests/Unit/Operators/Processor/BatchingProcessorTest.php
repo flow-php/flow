@@ -54,10 +54,14 @@ final class BatchingProcessorTest extends FlowTestCase
 
         iterator_to_array(
             (new BatchingProcessor(new BatchSize(2)))->process(
-                (new VaryingBatchesExtractor(
-                    array_to_rows([['id' => 1]], schema(int_schema('id'))),
-                    array_to_rows([['id' => 1, 'extra' => 'x']], schema(int_schema('id'), str_schema('extra'))),
-                ))->extract(flow_context()->backend(), new Criteria()),
+                FlowTestCase::extracted(
+                    new VaryingBatchesExtractor(
+                        array_to_rows([['id' => 1]], schema(int_schema('id'))),
+                        array_to_rows([['id' => 1, 'extra' => 'x']], schema(int_schema('id'), str_schema('extra'))),
+                    ),
+                    flow_context()->backend(),
+                    new Criteria(),
+                ),
                 flow_context()->backend(),
             ),
             false,
@@ -68,7 +72,7 @@ final class BatchingProcessorTest extends FlowTestCase
     {
         $upstream = (new CountingExtractor(schema(int_schema('id')), RowsMother::sequentialIds(5)))->withBatchSize(1);
         $processed = (new BatchingProcessor(new BatchSize(1)))->process(
-            $upstream->extract(flow_context()->backend(), new Criteria()),
+            FlowTestCase::extracted($upstream, flow_context()->backend(), new Criteria()),
             flow_context()->backend(),
         );
 
@@ -93,7 +97,11 @@ final class BatchingProcessorTest extends FlowTestCase
 
         $windows = iterator_to_array(
             (new BatchingProcessor(new BatchSize(1_000)))->process(
-                (new VaryingBatchesExtractor(...$children))->extract(flow_context()->backend(), new Criteria()),
+                FlowTestCase::extracted(
+                    new VaryingBatchesExtractor(...$children),
+                    flow_context()->backend(),
+                    new Criteria(),
+                ),
                 flow_context()->backend(),
             ),
             false,

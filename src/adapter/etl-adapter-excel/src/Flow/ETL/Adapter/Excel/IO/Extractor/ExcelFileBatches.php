@@ -7,7 +7,9 @@ namespace Flow\ETL\Adapter\Excel\IO\Extractor;
 use Flow\ETL\Adapter\Excel\IO\Inference\ExcelSniffer;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
+use Flow\ETL\Foundation\Exception\SchemaValidationException;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\File\FileBatches;
 use Flow\ETL\IO\Extractor\File\FileRead;
@@ -22,7 +24,9 @@ use Generator;
 use SensitiveParameter;
 
 use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_optional;
+use function is_string;
 
 final readonly class ExcelFileBatches implements FileBatches
 {
@@ -30,11 +34,13 @@ final readonly class ExcelFileBatches implements FileBatches
      * @param null|ExcelSniffer $sample the open sheets of the inference this read follows, read on from where the
      *                                     sample stopped; null to parse every sheet afresh; never described
      * @param null|InferredColumns $inferred the columns every sheet must carry; null when declared or union by name
+     * @param null|int $sampleSize the inference's sample size when the schema was inferred; null when it was declared
      */
     public function __construct(
         private WorkbookReader $workbook,
         private ?ExcelSniffer $sample,
         private ?InferredColumns $inferred,
+        private ?int $sampleSize = null,
     ) {}
 
     public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
@@ -45,6 +51,7 @@ final readonly class ExcelFileBatches implements FileBatches
             $rebuild->of($data['workbook'] ?? null, WorkbookReader::class),
             null,
             $inferred === null ? null : InferredColumns::fromArray($inferred),
+            type_optional(type_integer())->assert($data['sample_size'] ?? null),
         );
     }
 
@@ -53,6 +60,7 @@ final readonly class ExcelFileBatches implements FileBatches
         return Description::compose(self::class, [
             'workbook' => $this->workbook,
             'inferred' => $this->inferred?->normalize(),
+            'sample_size' => $this->sampleSize,
         ]);
     }
 
@@ -62,7 +70,7 @@ final readonly class ExcelFileBatches implements FileBatches
      *
      * @throws InferredSchemaException
      *
-     * @return Generator<int, Rows, mixed, int>
+     * @return Generator<int, CorruptedRecordException|Rows, mixed, int>
      */
     public function batches(
         FileRead $read,
@@ -75,23 +83,39 @@ final readonly class ExcelFileBatches implements FileBatches
         $sheet = $this->sample?->take($source) ?? $this->workbook->sheet($source);
 
         try {
-            $this->inferred?->refuseDivergence($source->uri(), $sheet->columns());
+            $columns = $sheet->columns();
+            $this->inferred?->refuseDivergence($source->uri(), $columns);
+            $missing = $this->sampleSize === null ? $body->missingFrom($columns) : [];
 
-            $batch = new RecordBatch($body, $backend, $read->batchSize);
+            if ($columns !== [] && $missing !== []) {
+                throw SchemaValidationException::declaredColumnsMissing($source->uri(), $missing, $columns);
+            }
 
-            foreach ($sheet->rows() as $rowValues) {
-                $rows = $batch->add($rowValues);
+            $batch = new RecordBatch($body, $backend, $read->batchSize, $source->uri(), $this->sampleSize);
 
-                if ($rows !== null) {
-                    yield $rows;
+            foreach ($sheet->rows() as $number => $cells) {
+                $values = $sheet->decode($cells);
+
+                if ($values === null) {
+                    continue;
                 }
+
+                if (is_string($values)) {
+                    yield from $batch->refuse(CorruptedRecordException::fromCells(
+                        $source->uri(),
+                        $number,
+                        null,
+                        $values,
+                        $cells,
+                    ));
+
+                    continue;
+                }
+
+                yield from $batch->add($values, $number, fields: $cells);
             }
 
-            $rest = $batch->flush();
-
-            if ($rest !== null) {
-                yield $rest;
-            }
+            yield from $batch->flush();
         } finally {
             $sheet->close();
         }

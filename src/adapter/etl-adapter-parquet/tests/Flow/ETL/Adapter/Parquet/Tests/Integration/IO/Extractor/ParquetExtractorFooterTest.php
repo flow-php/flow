@@ -59,7 +59,7 @@ final class ParquetExtractorFooterTest extends FlowTestCase
         $extractor = from_parquet(path(ParquetSourceFileContext::pagination() . '/*.parquet'), filesystem: $filesystem);
 
         $extractor->schema();
-        iterator_to_array($extractor->extract(flow_context()->backend(), new Criteria()));
+        iterator_to_array(FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()));
 
         static::assertSame([1, 1, 1, 1, 1], array_values(ParquetFilesContext::opensPerFile($filesystem)));
         static::assertSame(5, $filesystem->closedStreams());
@@ -75,7 +75,7 @@ final class ParquetExtractorFooterTest extends FlowTestCase
 
         static::assertSame(1, $filesystem->closedStreams());
 
-        iterator_to_array($extractor->extract(flow_context()->backend(), new Criteria()));
+        iterator_to_array(FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()));
 
         static::assertSame([2, 1, 1, 1, 1], array_values(ParquetFilesContext::opensPerFile($filesystem)));
         static::assertSame(6, $filesystem->closedStreams());
@@ -86,8 +86,8 @@ final class ParquetExtractorFooterTest extends FlowTestCase
         $filesystem = new CountingFilesystem(new NativeLocalFilesystem());
         $extractor = from_parquet(path(ParquetSourceFileContext::pagination() . '/*.parquet'), filesystem: $filesystem);
 
-        iterator_to_array($extractor->extract(flow_context()->backend(), new Criteria()));
-        iterator_to_array($extractor->extract(flow_context()->backend(), new Criteria()));
+        iterator_to_array(FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()));
+        iterator_to_array(FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()));
 
         static::assertSame([2, 2, 2, 2, 2], array_values(ParquetFilesContext::opensPerFile($filesystem)));
         static::assertSame(10, $filesystem->closedStreams());
@@ -120,12 +120,13 @@ final class ParquetExtractorFooterTest extends FlowTestCase
             500,
             array_sum(array_map(
                 static fn(Rows $batch): int => $batch->count(),
-                iterator_to_array(
-                    $extractor->extract(flow_context()->backend(), new Criteria(pathFilter: new KeepPaths([path(
+                iterator_to_array(FlowTestCase::extracted(
+                    $extractor,
+                    flow_context()->backend(),
+                    new Criteria(pathFilter: new KeepPaths([path(
                         ParquetSourceFileContext::pagination() . '/02_500.parquet',
-                    )]))),
-                    false,
-                ),
+                    )])),
+                ), false),
             )),
         );
         static::assertSame(

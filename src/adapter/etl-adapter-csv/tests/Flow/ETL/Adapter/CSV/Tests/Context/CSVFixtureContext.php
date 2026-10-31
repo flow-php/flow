@@ -14,6 +14,8 @@ use Flow\ETL\Adapter\CSV\IO\Extractor\CSVSourceOpener;
 use Flow\ETL\Adapter\CSV\IO\Extractor\PhpCSVOpenSource;
 use Flow\ETL\Adapter\CSV\IO\Extractor\RustCSVOpenSource;
 use Flow\ETL\Adapter\CSV\IO\Inference\CSVSniffer;
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
+use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\SchemaMismatchException;
 use Flow\ETL\IO\Extractor\File\SourceFile;
 use Flow\ETL\IO\Inference\ColumnTypes;
@@ -41,6 +43,7 @@ use function Flow\ETL\Adapter\CSV\csv_detect_separator;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
+use function in_array;
 use function iterator_to_array;
 use function range;
 use function serialize;
@@ -104,6 +107,32 @@ final class CSVFixtureContext
     }
 
     /**
+     * fixtures() without the ones holding a corrupted record, which a read refuses.
+     *
+     * @return Generator<string, array{string}>
+     */
+    public static function wellFormedFixtures(): Generator
+    {
+        foreach (self::fixtures() as $name => $fixture) {
+            if (!in_array(
+                $name,
+                [
+                    'corrupted_row.csv',
+                    'file_with_empty_columns.csv',
+                    'file_with_empty_headers.csv',
+                    'more_columns_than_headers.csv',
+                    'more_headers_than_columns.csv',
+                    'ragged.csv',
+                    'single_quotes_csv.csv',
+                ],
+                true,
+            )) {
+                yield $name => $fixture;
+            }
+        }
+    }
+
+    /**
      * The dialect CSVSourceOpener resolves: pinned options first, detection for the rest.
      */
     public static function dialect(SourceStream $stream, CSVReadOptions $options = new CSVReadOptions()): CSVDialect
@@ -146,6 +175,7 @@ final class CSVFixtureContext
             $options->emptyToNull,
             $options->removeBOM,
             $options->charactersReadInLine,
+            missingColumnsAsNull: $options->missingColumnsAsNull,
         );
     }
 
@@ -171,6 +201,7 @@ final class CSVFixtureContext
                 enclosure: $dialect->enclosure,
                 escape: $dialect->escape,
                 emptyToNull: $options->emptyToNull,
+                missingColumnsAsNull: $options->missingColumnsAsNull,
             ),
             new CSVLineReader(
                 $dialect->enclosure,
@@ -195,23 +226,34 @@ final class CSVFixtureContext
      *
      * @param int<1, max> $batchSize
      *
-     * @return list<array<array-key, mixed>>|SchemaMismatchException
+     * @return InferredSchemaException|list<array{corrupted: list<mixed>}|array<int, array<array-key, mixed>>>|SchemaMismatchException
+     *         rows, and a corrupted record as ['corrupted' => its identity]
      */
     public static function batches(
         CSVOpenSource $open,
         Schema $schema,
         int $batchSize,
         Backend $backend = new PhpBackend(),
-    ): array|SchemaMismatchException {
+        ?int $sampleSize = null,
+    ): array|InferredSchemaException|SchemaMismatchException {
         $batches = [];
 
         try {
-            foreach ($open->batches($schema, $batchSize, $backend) as $batch) {
-                $batches[] = $batch->toArray();
+            foreach ($open->batches($schema, $batchSize, $backend, $sampleSize) as $batch) {
+                $batches[] = $batch instanceof CorruptedRecordException
+                    ? ['corrupted' => [
+                        $batch->uri,
+                        $batch->offset,
+                        $batch->lineNumber,
+                        $batch->reason,
+                        $batch->record,
+                        $batch->fields,
+                    ]]
+                    : $batch->toArray();
             }
 
             return $batches;
-        } catch (SchemaMismatchException $e) {
+        } catch (InferredSchemaException|SchemaMismatchException $e) {
             return $e;
         } finally {
             $open->close();
@@ -228,8 +270,13 @@ final class CSVFixtureContext
         Schema $schema,
         int $batchSize,
         Backend $backend = new PhpBackend(),
+        ?int $sampleSize = null,
     ): string {
-        $batches = self::batches($open, $schema, $batchSize, $backend);
+        $batches = self::batches($open, $schema, $batchSize, $backend, $sampleSize);
+
+        if ($batches instanceof InferredSchemaException) {
+            return $batches::class . ': ' . $batches->getMessage();
+        }
 
         return $batches instanceof SchemaMismatchException
             ? $batches::class

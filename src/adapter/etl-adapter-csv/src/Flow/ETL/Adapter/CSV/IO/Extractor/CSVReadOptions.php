@@ -25,6 +25,7 @@ final readonly class CSVReadOptions
         public ?string $enclosure = null,
         public ?string $escape = null,
         public ?int $charactersReadInLine = null,
+        public bool $missingColumnsAsNull = false,
     ) {
         CSVDialect::assertParts($separator, $enclosure, $escape);
     }
@@ -42,6 +43,7 @@ final readonly class CSVReadOptions
             type_optional(type_string())->assert($data['enclosure'] ?? null),
             type_optional(type_string())->assert($data['escape'] ?? null),
             self::positive(type_optional(type_integer())->assert($data['characters_read_in_line'] ?? null)),
+            type_boolean()->assert($data['missing_columns_as_null'] ?? null),
         );
     }
 
@@ -54,7 +56,7 @@ final readonly class CSVReadOptions
     }
 
     /**
-     * @return array{with_header: bool, empty_to_null: bool, remove_bom: bool, separator: null|string, enclosure: null|string, escape: null|string, characters_read_in_line: null|int}
+     * @return array{with_header: bool, empty_to_null: bool, remove_bom: bool, separator: null|string, enclosure: null|string, escape: null|string, characters_read_in_line: null|int, missing_columns_as_null: bool}
      */
     public function normalize(): array
     {
@@ -66,6 +68,7 @@ final readonly class CSVReadOptions
             'enclosure' => $this->enclosure,
             'escape' => $this->escape,
             'characters_read_in_line' => $this->charactersReadInLine,
+            'missing_columns_as_null' => $this->missingColumnsAsNull,
         ];
     }
 
@@ -82,6 +85,7 @@ final readonly class CSVReadOptions
             enclosure: $this->enclosure,
             escape: $this->escape,
             charactersReadInLine: $charactersReadInLine,
+            missingColumnsAsNull: $this->missingColumnsAsNull,
         );
     }
 
@@ -95,6 +99,7 @@ final readonly class CSVReadOptions
             enclosure: $this->enclosure,
             escape: $this->escape,
             charactersReadInLine: $this->charactersReadInLine,
+            missingColumnsAsNull: $this->missingColumnsAsNull,
         );
     }
 
@@ -108,6 +113,7 @@ final readonly class CSVReadOptions
             enclosure: $enclosure,
             escape: $this->escape,
             charactersReadInLine: $this->charactersReadInLine,
+            missingColumnsAsNull: $this->missingColumnsAsNull,
         );
     }
 
@@ -121,6 +127,7 @@ final readonly class CSVReadOptions
             enclosure: $this->enclosure,
             escape: $escape,
             charactersReadInLine: $this->charactersReadInLine,
+            missingColumnsAsNull: $this->missingColumnsAsNull,
         );
     }
 
@@ -134,6 +141,21 @@ final readonly class CSVReadOptions
             enclosure: $this->enclosure,
             escape: $this->escape,
             charactersReadInLine: $this->charactersReadInLine,
+            missingColumnsAsNull: $this->missingColumnsAsNull,
+        );
+    }
+
+    public function withMissingColumnsAsNull(bool $missingColumnsAsNull): self
+    {
+        return new self(
+            withHeader: $this->withHeader,
+            emptyToNull: $this->emptyToNull,
+            removeBOM: $this->removeBOM,
+            separator: $this->separator,
+            enclosure: $this->enclosure,
+            escape: $this->escape,
+            charactersReadInLine: $this->charactersReadInLine,
+            missingColumnsAsNull: $missingColumnsAsNull,
         );
     }
 
@@ -147,6 +169,7 @@ final readonly class CSVReadOptions
             enclosure: $this->enclosure,
             escape: $this->escape,
             charactersReadInLine: $this->charactersReadInLine,
+            missingColumnsAsNull: $this->missingColumnsAsNull,
         );
     }
 
@@ -160,6 +183,7 @@ final readonly class CSVReadOptions
             enclosure: $this->enclosure,
             escape: $this->escape,
             charactersReadInLine: $this->charactersReadInLine,
+            missingColumnsAsNull: $this->missingColumnsAsNull,
         );
     }
 }

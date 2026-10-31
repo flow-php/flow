@@ -29,7 +29,7 @@ final class CachingProcessorTest extends FlowTestCase
         $cache = new MemoryRowsStorage();
         $upstream = (new CountingExtractor(schema(int_schema('id')), RowsMother::sequentialIds(5)))->withBatchSize(1);
         $processed = (new CachingProcessor('stop-cache', $cache))->process(
-            $upstream->extract(flow_context()->backend(), new Criteria()),
+            FlowTestCase::extracted($upstream, flow_context()->backend(), new Criteria()),
             flow_context()->backend(),
         );
 

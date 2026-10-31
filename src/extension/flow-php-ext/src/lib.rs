@@ -5,6 +5,7 @@ mod batch_columns;
 mod builder;
 mod cast;
 mod column;
+mod corrupted;
 mod csv;
 mod ctx;
 mod date_check;

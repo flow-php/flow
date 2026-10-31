@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Operators\Transformer;
 
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\DataDependentSchemaException;
 use Flow\ETL\Foundation\Exception\SchemaDefinitionNotUniqueException;
 use Flow\ETL\Functions\Join\Expression;
@@ -17,6 +18,7 @@ use Flow\ETL\Values\Rows;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
@@ -673,5 +675,15 @@ final class JoinEachRowsTransformerTest extends FlowTestCase
                 )
                 ->toArray(),
         );
+    }
+
+    public function test_a_corrupted_record_of_the_right_side_is_refused(): void
+    {
+        $this->expectException(CorruptedRecordException::class);
+
+        JoinEachRowsTransformer::inner(
+            new StaticExtractorFactory(from_array([['code' => 'x']], schema(int_schema('code')))),
+            Expression::on(['id' => 'code']),
+        )->transform(array_to_rows([['id' => 1]], schema(int_schema('id'))), flow_context(config())->backend());
     }
 }

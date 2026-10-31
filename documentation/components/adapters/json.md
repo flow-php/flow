@@ -54,6 +54,10 @@ holding a top-level array are read natively, as strict JSON: malformed input thr
 `RuntimeException('Malformed JSON in "<uri>" at line N: ...')` (`at element N` in a document). A pointer, or a document
 that is not an array, is read by the PHP reader.
 
+A value that does not cast to the type `->withSchema()` declares throws `CorruptedRecordException`, or goes to
+`->withCorruptedRecords($loader)`, see [Corrupted Records](/documentation/components/core/corrupted-records.md). Under an
+inferred schema, a key first seen after the inference sample throws `InferredSchemaException`.
+
 ## Loader
 
 ```php

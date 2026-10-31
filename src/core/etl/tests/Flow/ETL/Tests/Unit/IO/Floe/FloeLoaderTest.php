@@ -17,6 +17,7 @@ use Flow\ETL\Tests\Context\DescribeRoundTrip;
 use Flow\ETL\Tests\Context\FloeFilesContext;
 use Flow\ETL\Tests\Context\ReaderRoundTrip;
 use Flow\ETL\Tests\Context\StepRoundTrip;
+use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Column\Frame\Codec;
 use Flow\ETL\Values\Schema\Metadata;
 use PHPUnit\Framework\TestCase;
@@ -52,7 +53,11 @@ final class FloeLoaderTest extends TestCase
 
         $ids = [];
 
-        foreach (from_floe($path, filesystem: $memory)->extract($context->backend(), new Criteria()) as $batch) {
+        foreach (FlowTestCase::extracted(
+            from_floe($path, filesystem: $memory),
+            $context->backend(),
+            new Criteria(),
+        ) as $batch) {
             foreach ($batch->toArray() as $extractedRow) {
                 $ids[] = $extractedRow['id'];
             }
@@ -153,7 +158,8 @@ final class FloeLoaderTest extends TestCase
 
         $ids = [];
 
-        foreach (from_floe(path('memory://parts/**/*.floe'), filesystem: $memory)->extract(
+        foreach (FlowTestCase::extracted(
+            from_floe(path('memory://parts/**/*.floe'), filesystem: $memory),
             $context->backend(),
             new Criteria(),
         ) as $batch) {
@@ -181,7 +187,11 @@ final class FloeLoaderTest extends TestCase
         $ids = [];
 
         // reading the concrete (non-pattern) path proves all rows landed in one file
-        foreach (from_floe($path, filesystem: $memory)->extract($context->backend(), new Criteria()) as $batch) {
+        foreach (FlowTestCase::extracted(
+            from_floe($path, filesystem: $memory),
+            $context->backend(),
+            new Criteria(),
+        ) as $batch) {
             foreach ($batch->toArray() as $extractedRow) {
                 $ids[] = $extractedRow['id'];
             }

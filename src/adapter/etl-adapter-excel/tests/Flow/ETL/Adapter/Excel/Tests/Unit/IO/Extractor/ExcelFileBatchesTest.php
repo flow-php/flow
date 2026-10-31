@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\Excel\Tests\Unit\IO\Extractor;
 
 use Flow\ETL\Adapter\Excel\IO\Extractor\ExcelFileBatches;
 use Flow\ETL\Adapter\Excel\Tests\Context\ExcelFixtureContext;
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\File\InferredColumns;
@@ -39,7 +40,9 @@ final class ExcelFileBatchesTest extends FlowTestCase
             new ReadWindow(),
         );
         $rows = array_merge(...array_map(
-            static fn(Rows $batch): array => $batch->toArray(),
+            static fn(CorruptedRecordException|Rows $rows): array => (
+                $rows instanceof Rows ? $rows->toArray() : [$rows->getMessage()]
+            ),
             iterator_to_array($fromSample, false),
         ));
         $sampled->close();
@@ -49,7 +52,9 @@ final class ExcelFileBatchesTest extends FlowTestCase
         static::assertSame(
             $rows,
             array_merge(...array_map(
-                static fn(Rows $batch): array => $batch->toArray(),
+                static fn(CorruptedRecordException|Rows $rows): array => (
+                    $rows instanceof Rows ? $rows->toArray() : [$rows->getMessage()]
+                ),
                 iterator_to_array(
                     $fresh->batches(
                         FileReadMother::of($schema, null, 2),

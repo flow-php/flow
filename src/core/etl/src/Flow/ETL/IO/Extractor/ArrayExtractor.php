@@ -4,19 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\ETL\IO\Extractor;
 
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\InvalidLogicException;
 use Flow\ETL\Foundation\Exception\SchemaMismatchException;
+use Flow\ETL\IO\CorruptedRecordsRouter;
 use Flow\ETL\IO\Extractor;
 use Flow\ETL\IO\Extractor\Memory\InMemoryRows;
 use Flow\ETL\IO\Extractor\Memory\SpilledRows;
 use Flow\ETL\IO\Inference\SchemaInference;
 use Flow\ETL\IO\Inference\SchemaInferenceBuilder;
 use Flow\ETL\IO\Inference\SchemaInferrer;
+use Flow\ETL\IO\Loader;
 use Flow\ETL\Storage\Memory\Memory;
 use Flow\ETL\Values\BatchSize;
 use Flow\ETL\Values\Cardinality;
 use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Rows\RecordBatch;
 use Flow\ETL\Values\Schema;
 use Flow\Filesystem\Filesystem;
@@ -27,8 +31,10 @@ use Generator;
 use function count;
 use function is_array;
 
-final class ArrayExtractor implements BatchableExtractor, Extractor, InfersSchema, Refreshable
+final class ArrayExtractor implements BatchableExtractor, Extractor, InfersSchema, Refreshable, CorruptedRecordsRouter
 {
+    private ?Loader $corruptedRecordsLoader = null;
+
     private BatchSize $batchSize;
 
     /**
@@ -87,35 +93,35 @@ final class ArrayExtractor implements BatchableExtractor, Extractor, InfersSchem
         return true;
     }
 
+    public function corruptedRecordsLoader(): ?Loader
+    {
+        return $this->corruptedRecordsLoader;
+    }
+
     /**
-     * @return Generator<int, \Flow\ETL\Values\Rows, Signal|null, void>
+     * @return Generator<int, CorruptedRecordException|Rows, Signal|null, void>
      */
     public function extract(Backend $backend, Criteria $criteria): Generator
     {
         // a one-shot dataset is typed from every row it spills, so only an in-place dataset's bounded sample can be outrun
         $inPlace = $this->inPlace();
         $sample = $this->schema === null && $inPlace !== null ? $this->inference : null;
-        $batches = new RecordBatch($this->describe(), $backend, $this->batchSize());
+        $schema = $this->describe();
+        $batches = new RecordBatch(
+            $schema,
+            $backend,
+            $this->batchSize(),
+            sampleSize: $this->schema === null ? $sample->sampleSize ?? -1 : null,
+            known: $schema,
+        );
 
         try {
-            foreach ($this->source?->rows() ?? $inPlace ?? $this->dataset as $record) {
-                $rows = $batches->add($record);
-
-                if ($rows === null) {
-                    continue;
-                }
-
+            foreach ($batches->of($this->source?->rows() ?? $inPlace ?? $this->dataset) as $rows) {
                 $signal = yield $rows;
 
                 if ($signal === Signal::STOP) {
                     return;
                 }
-            }
-
-            $rest = $batches->flush();
-
-            if ($rest !== null) {
-                yield $rest;
             }
         } catch (SchemaMismatchException $mismatch) {
             throw InferredSchemaException::whenPastTheSample(
@@ -223,6 +229,13 @@ final class ArrayExtractor implements BatchableExtractor, Extractor, InfersSchem
     public function withBatchSize(int $batchSize): static
     {
         $this->batchSize = new BatchSize($batchSize);
+
+        return $this;
+    }
+
+    public function withCorruptedRecords(?Loader $loader): static
+    {
+        $this->corruptedRecordsLoader = $loader;
 
         return $this;
     }

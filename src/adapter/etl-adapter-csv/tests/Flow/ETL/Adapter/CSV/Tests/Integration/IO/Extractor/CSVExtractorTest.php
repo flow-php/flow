@@ -8,10 +8,11 @@ use Closure;
 use DateTimeImmutable;
 use Flow\ETL\Adapter\CSV\IO\Extractor\CSVExtractor;
 use Flow\ETL\Adapter\CSV\Tests\Context\CSVFixtureContext;
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\SchemaDefinitionNotUniqueException;
-use Flow\ETL\Foundation\Exception\SchemaMismatchException;
+use Flow\ETL\Foundation\Exception\SchemaValidationException;
 use Flow\ETL\Functions\ScalarFunction;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\File\FileSplit;
@@ -33,6 +34,7 @@ use PHPUnit\Framework\Attributes\DataProviderExternal;
 use PHPUnit\Framework\Attributes\TestWith;
 use RuntimeException;
 
+use function array_column;
 use function array_filter;
 use function array_keys;
 use function array_map;
@@ -49,6 +51,7 @@ use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_all;
 use function Flow\ETL\DSL\from_array;
@@ -63,6 +66,7 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\schema_metadata;
 use function Flow\ETL\DSL\schema_to_ascii;
 use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\to_array;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path;
@@ -80,6 +84,74 @@ use function str_repeat;
 
 final class CSVExtractorTest extends FlowTestCase
 {
+    #[TestWith(["a,b,c\n1,2,3\n4,5,6,7,8\n", '4,5,6,7,8', ['4', '5', '6', '7', '8'], '5 fields, the header has 3'])]
+    #[TestWith(["a,b,c\n1,2,3\n4,5\n", '4,5', ['4', '5'], '2 fields, the header has 3'])]
+    /**
+     * @param list<string> $fields
+     */
+    public function test_a_record_whose_field_count_differs_from_the_header_is_refused(
+        string $content,
+        string $record,
+        array $fields,
+        string $reason,
+    ): void {
+        try {
+            ExtractedRows::of(from_csv('memory://source.csv', filesystem: CSVFixtureContext::memory($content)));
+            static::fail('Expected the corrupted record to be refused');
+        } catch (CorruptedRecordException $e) {
+            static::assertSame(['memory://source.csv', 12, 3, $reason, $record, $fields], [
+                $e->uri,
+                $e->offset,
+                $e->lineNumber,
+                $e->reason,
+                $e->record,
+                $e->fields,
+            ]);
+        }
+    }
+
+    public function test_an_empty_line_is_skipped(): void
+    {
+        $rows = ExtractedRows::of(from_csv(
+            'memory://source.csv',
+            filesystem: CSVFixtureContext::memory("a,b,c\n1,2,3\n\n4,5,6\n"),
+        ));
+
+        static::assertSame([1, 4], $rows->reduceToArray('a'));
+    }
+
+    public function test_a_value_that_does_not_cast_to_the_declared_type_is_a_corrupted_record(): void
+    {
+        try {
+            ExtractedRows::of(from_csv(
+                'memory://source.csv',
+                filesystem: CSVFixtureContext::memory("id,amount\n1,10.5\n2,N/A\n3,7\n"),
+            )->withSchema(schema(int_schema('id'), float_schema('amount', true))));
+            static::fail('Expected the corrupted record to be refused');
+        } catch (CorruptedRecordException $e) {
+            static::assertSame(['memory://source.csv', 17, 3, '2,N/A', ['2', 'N/A']], [
+                $e->uri,
+                $e->offset,
+                $e->lineNumber,
+                $e->record,
+                $e->fields,
+            ]);
+            static::assertStringContainsString('"amount"', $e->reason);
+            static::assertStringContainsString('N/A', $e->reason);
+        }
+    }
+
+    public function test_a_declared_column_the_header_lacks_is_a_schema_error(): void
+    {
+        $this->expectException(SchemaValidationException::class);
+        $this->expectExceptionMessage('"x"');
+
+        ExtractedRows::of(from_csv(
+            'memory://source.csv',
+            filesystem: CSVFixtureContext::memory("a,b,c\n1,2,3\n"),
+        )->withSchema(schema(int_schema('a'), int_schema('b'), int_schema('x', true))));
+    }
+
     public function test_an_empty_glob_refuses_to_infer_a_schema(): void
     {
         $this->expectException(InferredSchemaException::class);
@@ -112,7 +184,7 @@ final class CSVExtractorTest extends FlowTestCase
         static::assertEquals(schema(int_schema('id')), $extractor->schema());
         static::assertSame(
             [],
-            iterator_to_array($extractor->extract(flow_context()->backend(), new Criteria()), false),
+            iterator_to_array(FlowTestCase::extracted($extractor, flow_context()->backend(), new Criteria()), false),
         );
     }
 
@@ -144,7 +216,7 @@ final class CSVExtractorTest extends FlowTestCase
             ->withSchema(schema(int_schema('id'), str_schema('value')))
             ->partitionTypes(partition_types(group: type_integer()));
 
-        foreach ($extractor->extract(flow_context(config())->backend(), new Criteria()) as $rows) {
+        foreach (FlowTestCase::extracted($extractor, flow_context(config())->backend(), new Criteria()) as $rows) {
             static::assertEquals($extractor->schema(), $rows->schema());
             static::assertSame(1, $rows->column('group')->value(0));
 
@@ -160,7 +232,7 @@ final class CSVExtractorTest extends FlowTestCase
             partition_types(group: type_integer()),
         );
 
-        foreach ($extractor->extract(flow_context(config())->backend(), new Criteria()) as $rows) {
+        foreach (FlowTestCase::extracted($extractor, flow_context(config())->backend(), new Criteria()) as $rows) {
             static::assertSame(1, $rows->column('group')->value(0));
 
             return;
@@ -252,7 +324,11 @@ final class CSVExtractorTest extends FlowTestCase
         $schema = $extractor->schema();
         $sizes = [];
 
-        foreach ($extractor->withBatchSize(3)->extract(flow_context()->backend(), new Criteria()) as $rows) {
+        foreach (FlowTestCase::extracted(
+            $extractor->withBatchSize(3),
+            flow_context()->backend(),
+            new Criteria(),
+        ) as $rows) {
             static::assertTrue($schema->isSame($rows->schema()));
             $sizes[] = $rows->count();
 
@@ -275,7 +351,7 @@ final class CSVExtractorTest extends FlowTestCase
         ));
 
         $extractor->schema();
-        iterator_to_array($extractor->extract(flow_context(config())->backend(), new Criteria()));
+        iterator_to_array(FlowTestCase::extracted($extractor, flow_context(config())->backend(), new Criteria()));
 
         static::assertSame(1, $counting->readFromCalls);
     }
@@ -379,7 +455,7 @@ final class CSVExtractorTest extends FlowTestCase
         $extractor = from_csv(CSVFixtureContext::path('two_rows.csv'), filesystem: $counting);
 
         $extractor->schema();
-        iterator_to_array($extractor->extract(flow_context(config())->backend(), new Criteria()));
+        iterator_to_array(FlowTestCase::extracted($extractor, flow_context(config())->backend(), new Criteria()));
 
         static::assertSame(3, $counting->readFromCalls, 'header() + sample + read');
         static::assertSame(3, $counting->closedStreams());
@@ -407,7 +483,10 @@ final class CSVExtractorTest extends FlowTestCase
     public function test_a_shape_changing_setter_drops_the_inferred_schema(Closure $setter): void
     {
         $counting = new CountingFilesystem(new NativeLocalFilesystem());
-        $extractor = from_csv(CSVFixtureContext::path('file_with_empty_columns.csv'), filesystem: $counting);
+        $extractor = from_csv(
+            CSVFixtureContext::path('file_with_empty_columns.csv'),
+            filesystem: $counting,
+        )->withMissingColumnsAsNull(true);
 
         $extractor->schema();
         $cold = $counting->readFromCalls;
@@ -435,7 +514,10 @@ final class CSVExtractorTest extends FlowTestCase
     public function test_infer_schema_drops_the_inferred_schema_and_all_strings_floors_it(): void
     {
         $counting = new CountingFilesystem(new NativeLocalFilesystem());
-        $extractor = from_csv(CSVFixtureContext::path('file_with_empty_columns.csv'), filesystem: $counting);
+        $extractor = from_csv(
+            CSVFixtureContext::path('file_with_empty_columns.csv'),
+            filesystem: $counting,
+        )->withMissingColumnsAsNull(true);
 
         $extractor->schema();
         $cold = $counting->readFromCalls;
@@ -453,7 +535,10 @@ final class CSVExtractorTest extends FlowTestCase
 
     public function test_without_header_generates_the_column_names(): void
     {
-        $schema = from_csv(CSVFixtureContext::path('file_with_empty_columns.csv'))->withHeader(false)->schema();
+        $schema = from_csv(CSVFixtureContext::path('file_with_empty_columns.csv'))
+            ->withMissingColumnsAsNull(true)
+            ->withHeader(false)
+            ->schema();
 
         static::assertSame(['e00', 'e01', 'e02'], array_keys($schema->definitions()));
 
@@ -522,13 +607,14 @@ final class CSVExtractorTest extends FlowTestCase
 
     public function test_a_value_past_the_sample_is_reported(): void
     {
-        $this->expectException(SchemaMismatchException::class);
+        $this->expectException(InferredSchemaException::class);
 
-        iterator_to_array(
+        iterator_to_array(FlowTestCase::extracted(
             from_csv(CSVFixtureContext::path('annual-enterprise-survey-2019-financial-year-provisional-csv.csv'))
-                ->inferSchema(infer_schema()->sampleSize(10))
-                ->extract(flow_context(config())->backend(), new Criteria()),
-        );
+                ->inferSchema(infer_schema()->sampleSize(10)),
+            flow_context(config())->backend(),
+            new Criteria(),
+        ));
     }
 
     public function test_files_to_sniff_bounds_the_sources_opened(): void
@@ -547,11 +633,11 @@ final class CSVExtractorTest extends FlowTestCase
         $this->expectException(InferredSchemaException::class);
         $this->expectExceptionMessageMatches('/unexpected \[label\].+missing \[name\]/');
 
-        iterator_to_array(
-            from_csv(CSVFixtureContext::path('columns_diverge/*.csv'))
-                ->inferSchema(infer_schema()->filesToSniff(1))
-                ->extract(flow_context(config())->backend(), new Criteria()),
-        );
+        iterator_to_array(FlowTestCase::extracted(
+            from_csv(CSVFixtureContext::path('columns_diverge/*.csv'))->inferSchema(infer_schema()->filesToSniff(1)),
+            flow_context(config())->backend(),
+            new Criteria(),
+        ));
     }
 
     /**
@@ -567,7 +653,7 @@ final class CSVExtractorTest extends FlowTestCase
 
         $rows = [];
 
-        foreach ($extractor->extract(flow_context(config())->backend(), new Criteria()) as $batch) {
+        foreach (FlowTestCase::extracted($extractor, flow_context(config())->backend(), new Criteria()) as $batch) {
             foreach ($batch->toArray() as $row) {
                 $rows[] = $row;
             }
@@ -586,11 +672,12 @@ final class CSVExtractorTest extends FlowTestCase
     public function test_the_divergence_message_names_both_sources(): void
     {
         try {
-            iterator_to_array(
+            iterator_to_array(FlowTestCase::extracted(
                 from_csv(CSVFixtureContext::path('columns_diverge/*.csv'))
-                    ->inferSchema(infer_schema()->filesToSniff(1))
-                    ->extract(flow_context(config())->backend(), new Criteria()),
-            );
+                    ->inferSchema(infer_schema()->filesToSniff(1)),
+                flow_context(config())->backend(),
+                new Criteria(),
+            ));
             static::fail('a divergent column set must throw');
         } catch (InferredSchemaException $e) {
             static::assertStringContainsString('b.csv', $e->getMessage());
@@ -605,21 +692,23 @@ final class CSVExtractorTest extends FlowTestCase
         $this->expectException(InferredSchemaException::class);
         $this->expectExceptionMessageMatches('/unexpected \[label\]/');
 
-        iterator_to_array(
+        iterator_to_array(FlowTestCase::extracted(
             from_csv(CSVFixtureContext::path('columns_diverge_refused/*.csv'))
-                ->inferSchema(infer_schema()->filesToSniff(1))
-                ->extract(flow_context(config())->backend(), new Criteria()),
-        );
+                ->inferSchema(infer_schema()->filesToSniff(1)),
+            flow_context(config())->backend(),
+            new Criteria(),
+        ));
     }
 
     public function test_a_header_only_file_with_a_divergent_header_is_rejected(): void
     {
         try {
-            iterator_to_array(
+            iterator_to_array(FlowTestCase::extracted(
                 from_csv(CSVFixtureContext::path('columns_diverge_header_only/*.csv'))
-                    ->inferSchema(infer_schema()->filesToSniff(1))
-                    ->extract(flow_context(config())->backend(), new Criteria()),
-            );
+                    ->inferSchema(infer_schema()->filesToSniff(1)),
+                flow_context(config())->backend(),
+                new Criteria(),
+            ));
             static::fail('a divergent header-only source must throw');
         } catch (InferredSchemaException $e) {
             static::assertMatchesRegularExpression('/unexpected \[label\].+missing \[name\]/', $e->getMessage());
@@ -637,7 +726,7 @@ final class CSVExtractorTest extends FlowTestCase
         static::assertSame('string', $extractor->schema()->get('name')->type()->toString());
         static::assertSame(
             [],
-            iterator_to_array($extractor->extract(flow_context(config())->backend(), new Criteria())),
+            iterator_to_array(FlowTestCase::extracted($extractor, flow_context(config())->backend(), new Criteria())),
         );
     }
 
@@ -647,7 +736,7 @@ final class CSVExtractorTest extends FlowTestCase
 
         static::assertSame(
             [],
-            iterator_to_array($extractor->extract(flow_context(config())->backend(), new Criteria())),
+            iterator_to_array(FlowTestCase::extracted($extractor, flow_context(config())->backend(), new Criteria())),
         );
 
         $this->expectException(InferredSchemaException::class);
@@ -690,13 +779,15 @@ final class CSVExtractorTest extends FlowTestCase
         static::assertSame(['id', 'name'], array_keys($extractor->schema()->definitions()));
         static::assertSame(
             [],
-            iterator_to_array($extractor->extract(flow_context(config())->backend(), new Criteria())),
+            iterator_to_array(FlowTestCase::extracted($extractor, flow_context(config())->backend(), new Criteria())),
         );
     }
 
     public function test_empty_cells_are_not_type_evidence(): void
     {
-        $schema = from_csv(CSVFixtureContext::path('file_with_empty_columns.csv'))->schema();
+        $schema = from_csv(CSVFixtureContext::path('file_with_empty_columns.csv'))
+            ->withMissingColumnsAsNull(true)
+            ->schema();
 
         static::assertSame('integer', $schema->get('id')->type()->toString());
         static::assertSame('string', $schema->get('name')->type()->toString());
@@ -705,7 +796,10 @@ final class CSVExtractorTest extends FlowTestCase
 
     public function test_without_empty_to_null_empty_cells_are_string_evidence(): void
     {
-        $schema = from_csv(CSVFixtureContext::path('file_with_empty_columns.csv'))->withEmptyToNull(false)->schema();
+        $schema = from_csv(CSVFixtureContext::path('file_with_empty_columns.csv'))
+            ->withMissingColumnsAsNull(true)
+            ->withEmptyToNull(false)
+            ->schema();
 
         static::assertSame(['id', 'name', 'active'], array_keys($schema->definitions()));
         static::assertSame('string', $schema->get('id')->type()->toString());
@@ -720,7 +814,7 @@ final class CSVExtractorTest extends FlowTestCase
 
         static::assertSame('string', $extractor->schema()->get('group')->type()->toString());
 
-        foreach ($extractor->extract(flow_context(config())->backend(), new Criteria()) as $rows) {
+        foreach (FlowTestCase::extracted($extractor, flow_context(config())->backend(), new Criteria()) as $rows) {
             static::assertSame('1', $rows->toArray()[0]['group']);
 
             break;
@@ -741,17 +835,25 @@ final class CSVExtractorTest extends FlowTestCase
             )->inferSchema(infer_schema()->sampleSize(10));
 
             try {
-                iterator_to_array($extractor->extract(flow_context(config())->backend(), new Criteria()));
+                iterator_to_array(FlowTestCase::extracted(
+                    $extractor,
+                    flow_context(config())->backend(),
+                    new Criteria(),
+                ));
                 static::fail('a value past the sample must stop the read');
-            } catch (SchemaMismatchException) {
+            } catch (InferredSchemaException) {
             }
         } else {
             $extractor = from_csv(CSVFixtureContext::path('orders_flow.csv'), filesystem: $counting);
 
             if ($mode === 'limit') {
-                iterator_to_array($extractor->extract(flow_context(config())->backend(), new Criteria(limit: 2)));
+                iterator_to_array(FlowTestCase::extracted(
+                    $extractor,
+                    flow_context(config())->backend(),
+                    new Criteria(limit: 2),
+                ));
             } else {
-                $rows = $extractor->extract(flow_context(config())->backend(), new Criteria());
+                $rows = FlowTestCase::extracted($extractor, flow_context(config())->backend(), new Criteria());
                 $rows->current();
                 $rows->send(Signal::STOP);
             }
@@ -812,7 +914,8 @@ final class CSVExtractorTest extends FlowTestCase
             ],
             array_map(
                 static fn(Rows $r) => $r->toArray(),
-                iterator_to_array($extractor->extract(
+                iterator_to_array(FlowTestCase::extracted(
+                    $extractor,
                     flow_context(config_builder()->build())->backend(),
                     new Criteria(),
                 )),
@@ -839,7 +942,8 @@ final class CSVExtractorTest extends FlowTestCase
             ],
             array_map(
                 static fn(Rows $r) => $r->toArray(),
-                iterator_to_array($extractor->extract(
+                iterator_to_array(FlowTestCase::extracted(
+                    $extractor,
                     flow_context(config_builder()->build())->backend(),
                     new Criteria(),
                 )),
@@ -870,7 +974,8 @@ final class CSVExtractorTest extends FlowTestCase
             ],
             array_map(
                 static fn(Rows $r) => $r->toArray(),
-                iterator_to_array($extractor->extract(
+                iterator_to_array(FlowTestCase::extracted(
+                    $extractor,
                     flow_context(config_builder()->build())->backend(),
                     new Criteria(),
                 )),
@@ -901,7 +1006,8 @@ final class CSVExtractorTest extends FlowTestCase
             ],
             array_map(
                 static fn(Rows $r) => $r->toArray(),
-                iterator_to_array($extractor->extract(
+                iterator_to_array(FlowTestCase::extracted(
+                    $extractor,
                     flow_context(config_builder()->build())->backend(),
                     new Criteria(),
                 )),
@@ -929,7 +1035,8 @@ final class CSVExtractorTest extends FlowTestCase
             ],
             array_map(
                 static fn(Rows $r) => $r->toArray(),
-                iterator_to_array($extractor->extract(
+                iterator_to_array(FlowTestCase::extracted(
+                    $extractor,
                     flow_context(config_builder()->build())->backend(),
                     new Criteria(),
                 )),
@@ -975,7 +1082,9 @@ final class CSVExtractorTest extends FlowTestCase
         $extractor = from_csv(
             $path = path_real(__DIR__ . '/../../../Fixtures/file_with_empty_columns.csv'),
             empty_to_null: false,
-        )->withMetadataColumns(true);
+        )
+            ->withMissingColumnsAsNull(true)
+            ->withMetadataColumns(true);
 
         static::assertSame(
             [
@@ -1012,7 +1121,7 @@ final class CSVExtractorTest extends FlowTestCase
                 ],
             ],
             ExtractedRows::of(
-                from_csv(__DIR__ . '/../../../Fixtures/file_with_empty_columns.csv'),
+                from_csv(__DIR__ . '/../../../Fixtures/file_with_empty_columns.csv')->withMissingColumnsAsNull(true),
                 flow_context(config()),
             )->toArray(),
         );
@@ -1026,7 +1135,7 @@ final class CSVExtractorTest extends FlowTestCase
                 ['e00' => 1, 'name' => 'Norbert', 'active' => null],
             ],
             ExtractedRows::of(
-                from_csv(__DIR__ . '/../../../Fixtures/file_with_empty_headers.csv'),
+                from_csv(__DIR__ . '/../../../Fixtures/file_with_empty_headers.csv')->withMissingColumnsAsNull(true),
                 flow_context(config()),
             )->toArray(),
         );
@@ -1112,7 +1221,7 @@ final class CSVExtractorTest extends FlowTestCase
 
         $total = 0;
 
-        foreach ($extractor->extract(flow_context(config())->backend(), new Criteria()) as $rows) {
+        foreach (FlowTestCase::extracted($extractor, flow_context(config())->backend(), new Criteria()) as $rows) {
             foreach ($rows->toArray() as $row) {
                 static::assertSame(
                     ['e00', 'e01', 'e02', 'e03', 'e04', 'e05', 'e06', 'e07', 'e08', 'e09'],
@@ -1127,38 +1236,28 @@ final class CSVExtractorTest extends FlowTestCase
 
     public function test_extracting_csv_with_corrupted_row(): void
     {
-        static::assertSame(
-            3,
-            df()
-                ->read(from_csv(__DIR__ . '/../../../Fixtures/corrupted_row.csv'))
-                ->fetch()
-                ->count(),
-        );
+        $this->expectException(CorruptedRecordException::class);
+        $this->expectExceptionMessage('5 fields, the header has 2');
+
+        df()->read(from_csv(__DIR__ . '/../../../Fixtures/corrupted_row.csv'))->fetch();
     }
 
     public function test_extracting_csv_with_more_columns_than_headers(): void
     {
-        $extractor = from_csv(__DIR__ . '/../../../Fixtures/more_columns_than_headers.csv');
+        $this->expectException(CorruptedRecordException::class);
+        $this->expectExceptionMessage('3 fields, the header has 2');
 
-        $total = 0;
-
-        foreach ($extractor->extract(flow_context(config())->backend(), new Criteria()) as $rows) {
-            foreach ($rows->toArray() as $row) {
-                static::assertSame(['id', 'name'], array_keys($row));
-            }
-            $total += $rows->count();
-        }
-
-        static::assertSame(1, $total);
+        ExtractedRows::of(from_csv(__DIR__ . '/../../../Fixtures/more_columns_than_headers.csv'));
     }
 
     public function test_extracting_csv_with_more_headers_than_columns(): void
     {
-        $extractor = from_csv(path_real(__DIR__ . '/../../../Fixtures/more_headers_than_columns.csv'));
+        $extractor = from_csv(path_real(__DIR__ . '/../../../Fixtures/more_headers_than_columns.csv'))
+            ->withMissingColumnsAsNull(true);
 
         $total = 0;
 
-        foreach ($extractor->extract(flow_context(config())->backend(), new Criteria()) as $rows) {
+        foreach (FlowTestCase::extracted($extractor, flow_context(config())->backend(), new Criteria()) as $rows) {
             foreach ($rows->toArray() as $row) {
                 static::assertSame(['id', 'name', 'active'], array_keys($row));
             }
@@ -1235,7 +1334,11 @@ final class CSVExtractorTest extends FlowTestCase
 
         static::assertSame(['id', 'value', 'group'], $extractor->schema()->names());
 
-        foreach ($extractor->extract(flow_context(config_builder()->build())->backend(), new Criteria()) as $rows) {
+        foreach (FlowTestCase::extracted(
+            $extractor,
+            flow_context(config_builder()->build())->backend(),
+            new Criteria(),
+        ) as $rows) {
             static::assertEquals($extractor->schema(), $rows->schema());
         }
     }
@@ -1292,8 +1395,11 @@ final class CSVExtractorTest extends FlowTestCase
 
     public function test_signal_stop(): void
     {
-        $generator = from_csv(path_real(__DIR__ . '/../../../Fixtures/orders_flow.csv'))
-            ->extract(flow_context(config())->backend(), new Criteria());
+        $generator = FlowTestCase::extracted(
+            from_csv(path_real(__DIR__ . '/../../../Fixtures/orders_flow.csv')),
+            flow_context(config())->backend(),
+            new Criteria(),
+        );
 
         static::assertTrue($generator->valid());
         $generator->next();
@@ -1326,7 +1432,8 @@ final class CSVExtractorTest extends FlowTestCase
             ],
             array_map(
                 static fn(Rows $r) => $r->toArray(),
-                iterator_to_array($extractor->extract(
+                iterator_to_array(FlowTestCase::extracted(
+                    $extractor,
                     flow_context(config_builder()->build())->backend(),
                     new Criteria(),
                 )),
@@ -1416,7 +1523,7 @@ final class CSVExtractorTest extends FlowTestCase
         );
     }
 
-    #[DataProviderExternal(CSVFixtureContext::class, 'fixtures')]
+    #[DataProviderExternal(CSVFixtureContext::class, 'wellFormedFixtures')]
     public function test_record_counts_match_fgetcsv_for_every_fixture(string $fixture): void
     {
         $path = CSVFixtureContext::path($fixture);
@@ -1589,7 +1696,8 @@ final class CSVExtractorTest extends FlowTestCase
             filesystem: CSVFixtureContext::memory(CSVFixtureContext::tenByteRows(30)),
         );
         $extractor->withBatchSize(1);
-        $generator = $extractor->extract(
+        $generator = FlowTestCase::extracted(
+            $extractor,
             flow_context()->backend(),
             (new Criteria())->withSplit($extractor->splits(new Criteria(), 100)[1]),
         );
@@ -1612,7 +1720,8 @@ final class CSVExtractorTest extends FlowTestCase
         $extractor->withBatchSize(2);
         $total = 0;
 
-        foreach ($extractor->extract(
+        foreach (FlowTestCase::extracted(
+            $extractor,
             flow_context()->backend(),
             (new Criteria(3))->withSplit($extractor->splits(new Criteria(), 100)[1]),
         ) as $rows) {
@@ -1789,5 +1898,74 @@ final class CSVExtractorTest extends FlowTestCase
         sort($read);
         static::assertSame(['file_01.csv', 'file_02.csv'], $read);
         static::assertSame([1, 2, 3, 4], $rows->reduceToArray('id'));
+    }
+
+    public function test_corrupted_records_are_routed_to_the_reject_loader_and_the_read_goes_on(): void
+    {
+        $rejects = [];
+
+        $rows = df()
+            ->read(
+                from_csv(
+                    'memory://source.csv',
+                    filesystem: CSVFixtureContext::memory("id,name\n1,a\n2,b,c\nx,d\n4,e\n"),
+                )
+                    ->withSchema(schema(int_schema('id'), str_schema('name')))
+                    ->withCorruptedRecords(to_array($rejects)),
+            )
+            ->fetch();
+
+        static::assertSame([['id' => 1, 'name' => 'a'], ['id' => 4, 'name' => 'e']], $rows->toArray());
+        static::assertSame(
+            [
+                [
+                    'uri' => 'memory://source.csv',
+                    'offset' => 12,
+                    'line' => 3,
+                    'reason' => '3 fields, the header has 2',
+                    'record' => '2,b,c',
+                    'fields' => ['2', 'b', 'c'],
+                ],
+                [
+                    'uri' => 'memory://source.csv',
+                    'offset' => 18,
+                    'line' => 4,
+                    'reason' => 'column "id": could not convert \'x\' (string) to integer',
+                    'record' => 'x,d',
+                    'fields' => ['x', 'd'],
+                ],
+            ],
+            $rejects,
+        );
+    }
+
+    public function test_a_limit_counts_rows_and_never_the_corrupted_records_routed_before_them(): void
+    {
+        $rejects = [];
+
+        $rows = df()
+            ->read(
+                from_csv('memory://source.csv', filesystem: CSVFixtureContext::memory("id\nx\n1\ny\n2\n3\n"))
+                    ->withSchema(schema(int_schema('id')))
+                    ->withCorruptedRecords(to_array($rejects)),
+            )
+            ->limit(2)
+            ->fetch();
+
+        static::assertSame([1, 2], $rows->reduceToArray('id'));
+        static::assertSame(['x', 'y'], array_column($rejects, 'record'));
+    }
+
+    public function test_a_decode_refusal_and_a_cast_refusal_in_one_batch_are_routed_in_offset_order(): void
+    {
+        $rejects = [];
+
+        df()->read(
+            from_csv('memory://source.csv', filesystem: CSVFixtureContext::memory("id,name\nx,a\n2,b,c\n3,d\n"))
+                ->withSchema(schema(int_schema('id'), str_schema('name')))
+                ->withCorruptedRecords(to_array($rejects)),
+        )->run();
+
+        static::assertSame([8, 12], array_column($rejects, 'offset'));
     }
 }

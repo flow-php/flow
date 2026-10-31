@@ -15,6 +15,7 @@ use Flow\ETL\Values\Schema\SameSchemas;
 use Flow\ETL\Values\Schema\SortingStrategy;
 use Flow\ETL\Values\Schema\SortingStrategy\AlphabeticalStrategy;
 
+use function array_diff;
 use function array_key_exists;
 use function array_keys;
 use function array_map;
@@ -411,6 +412,18 @@ final readonly class Schema implements Countable
     public function prepend(Definition ...$definitions): self
     {
         return new self(...$definitions, ...array_values($this->definitions));
+    }
+
+    /**
+     * The names of this schema's columns $header does not hold.
+     *
+     * @param list<string> $header
+     *
+     * @return list<string>
+     */
+    public function missingFrom(array $header): array
+    {
+        return array_values(array_diff($this->names(), $header));
     }
 
     /**

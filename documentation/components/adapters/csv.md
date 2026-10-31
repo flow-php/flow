@@ -36,10 +36,16 @@ $rows = data_frame()
 ### Header and missing cells
 
 ```
-header row  [' id ', '', 'name']   →  columns ['id', 'e01', 'name']   (trimmed, a blank cell named e + its position)
-record      ['1', 'a']             →  ['id' => 1, 'e01' => 'a', 'name' => null]   (a cell the record lacks is null)
-record      ['1', '', 'x']         →  'e01' => null   (a present '' is null; `withEmptyToNull(false)` keeps it '')
+header row  [' id ', '', 'name']   ->  columns ['id', 'e01', 'name']   (trimmed, a blank cell named e + its position)
+record      ['1', 'a']             ->  corrupted record (2 cells, the header has 3); `withMissingColumnsAsNull(true)` makes 'name' null
+record      ['1', 'a', 'x', '']    ->  corrupted record (a non-empty cell past the header), an empty one is dropped
+record      ['1', '', 'x']         ->  'e01' => null   (a present '' is null; `withEmptyToNull(false)` keeps it '')
+empty line                         ->  skipped
 ```
+
+A corrupted record throws `CorruptedRecordException`, or goes to `->withCorruptedRecords($loader)`, see
+[Corrupted Records](/documentation/components/core/corrupted-records.md). A column of `->withSchema()` missing from the
+header throws `SchemaValidationException`.
 
 ## Loader
 

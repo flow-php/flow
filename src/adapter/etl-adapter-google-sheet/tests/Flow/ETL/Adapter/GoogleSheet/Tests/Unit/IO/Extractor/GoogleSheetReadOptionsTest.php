@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\GoogleSheet\Tests\Unit\IO\Extractor;
 
 use Flow\ETL\Adapter\GoogleSheet\IO\Extractor\GoogleSheetReadOptions;
-use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\IO\Inference\InferredTypes;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Type\Logical\InstanceOfTypeNarrower;
@@ -18,7 +17,7 @@ final class GoogleSheetReadOptionsTest extends FlowTestCase
         $options = new GoogleSheetReadOptions();
 
         static::assertTrue($options->withHeader);
-        static::assertTrue($options->dropExtraColumns);
+        static::assertFalse($options->missingColumnsAsNull);
         static::assertTrue($options->emptyToNull);
         static::assertSame([], $options->options);
     }
@@ -28,17 +27,17 @@ final class GoogleSheetReadOptionsTest extends FlowTestCase
         $options = (new GoogleSheetReadOptions())->withHeader(false);
 
         static::assertFalse($options->withHeader);
-        static::assertTrue($options->dropExtraColumns);
+        static::assertFalse($options->missingColumnsAsNull);
         static::assertTrue($options->emptyToNull);
         static::assertSame([], $options->options);
     }
 
-    public function test_with_drop_extra_columns_changes_only_that_flag(): void
+    public function test_with_missing_columns_as_null_changes_only_that_flag(): void
     {
-        $options = (new GoogleSheetReadOptions())->withDropExtraColumns(false);
+        $options = (new GoogleSheetReadOptions())->withMissingColumnsAsNull(true);
 
         static::assertTrue($options->withHeader);
-        static::assertFalse($options->dropExtraColumns);
+        static::assertTrue($options->missingColumnsAsNull);
         static::assertTrue($options->emptyToNull);
         static::assertSame([], $options->options);
     }
@@ -48,7 +47,7 @@ final class GoogleSheetReadOptionsTest extends FlowTestCase
         $options = (new GoogleSheetReadOptions())->withEmptyToNull(false);
 
         static::assertTrue($options->withHeader);
-        static::assertTrue($options->dropExtraColumns);
+        static::assertFalse($options->missingColumnsAsNull);
         static::assertFalse($options->emptyToNull);
         static::assertSame([], $options->options);
     }
@@ -58,7 +57,7 @@ final class GoogleSheetReadOptionsTest extends FlowTestCase
         $options = (new GoogleSheetReadOptions())->withOptions(['valueRenderOption' => 'UNFORMATTED_VALUE']);
 
         static::assertTrue($options->withHeader);
-        static::assertTrue($options->dropExtraColumns);
+        static::assertFalse($options->missingColumnsAsNull);
         static::assertTrue($options->emptyToNull);
         static::assertSame(['valueRenderOption' => 'UNFORMATTED_VALUE'], $options->options);
     }
@@ -72,25 +71,22 @@ final class GoogleSheetReadOptionsTest extends FlowTestCase
 
     public function test_decoder_carries_the_empty_to_null_flag(): void
     {
-        static::assertSame(
-            [['a' => '']],
-            (new GoogleSheetReadOptions())
-                ->withEmptyToNull(false)
-                ->decoder()
-                ->decode([['a'], ['']]),
-        );
+        $decoder = (new GoogleSheetReadOptions())
+            ->withEmptyToNull(false)
+            ->decoder();
+        $decoder->decode(['a']);
+
+        static::assertSame(['a' => ''], $decoder->decode(['']));
     }
 
-    public function test_decoder_carries_the_drop_extra_columns_flag(): void
+    public function test_decoder_carries_the_missing_columns_as_null_flag(): void
     {
         $decoder = (new GoogleSheetReadOptions())
-            ->withDropExtraColumns(false)
+            ->withMissingColumnsAsNull(true)
             ->decoder();
+        $decoder->decode(['a', 'b']);
 
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Row has more columns (2) than headers (1)');
-
-        $decoder->decode([['a'], ['x', 'y']]);
+        static::assertSame(['a' => 'x', 'b' => null], $decoder->decode(['x']));
     }
 
     public function test_typer_runs_the_string_ladder_under_the_default_render_option(): void

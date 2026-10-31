@@ -8,6 +8,7 @@ use Flow\ETL\Adapter\CSV\IO\Extractor\CSVFileBatches;
 use Flow\ETL\Adapter\CSV\IO\Extractor\CSVReadOptions;
 use Flow\ETL\Adapter\CSV\IO\Extractor\CSVSourceOpener;
 use Flow\ETL\Adapter\CSV\Tests\Context\CSVFixtureContext;
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\File\FileSplit;
@@ -50,7 +51,12 @@ final class CSVFileBatchesTest extends FlowTestCase
 
         static::assertSame(
             [[['id' => 1], ['id' => 2]], [['id' => 3]]],
-            array_map(static fn(Rows $rows): array => $rows->toArray(), iterator_to_array($file, false)),
+            array_map(
+                static fn(CorruptedRecordException|Rows $rows): array => (
+                    $rows instanceof Rows ? $rows->toArray() : [$rows->getMessage()]
+                ),
+                iterator_to_array($file, false),
+            ),
         );
         static::assertSame(0, $file->getReturn());
     }
@@ -91,6 +97,7 @@ final class CSVFileBatchesTest extends FlowTestCase
             new PhpBackend(),
             new ReadWindow(),
         ) as $batch) {
+            static::assertInstanceOf(Rows::class, $batch);
             $sizes[] = count($batch);
         }
 
@@ -147,6 +154,8 @@ final class CSVFileBatchesTest extends FlowTestCase
             new PhpBackend(),
             new ReadWindow(),
         ) as $batch) {
+            static::assertInstanceOf(Rows::class, $batch);
+
             foreach ($batch->toArray() as $row) {
                 $values[] = $row;
             }

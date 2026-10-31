@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Runtime\Executor;
 
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
+use Flow\ETL\IO\CorruptedRecordsRouter;
 use Flow\ETL\IO\Extractor;
+use Flow\ETL\IO\Extractor\Reader;
 use Flow\ETL\IO\Extractor\Signal;
 use Flow\ETL\IO\Loader;
 use Flow\ETL\IO\Loader\Closure;
 use Flow\ETL\IO\Loader\Discardable;
+use Flow\ETL\IO\Loader\File\FileLoader;
 use Flow\ETL\Operators\Processor;
 use Flow\ETL\Operators\Transformer;
 use Flow\ETL\Operators\Transformer\Limiting;
@@ -22,10 +26,18 @@ use Flow\ETL\Runtime\ErrorHandler\TransformationAction;
 use Flow\ETL\Runtime\ErrorHandler\TransformationError;
 use Flow\ETL\Runtime\FlowContext;
 use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Rows\RowsBuilder;
+use Flow\ETL\Values\Schema;
+use Flow\ETL\Values\Schema\Definition\IntegerDefinition;
+use Flow\ETL\Values\Schema\Definition\ListDefinition;
+use Flow\ETL\Values\Schema\Definition\StringDefinition;
 use Generator;
 use Throwable;
 
 use function count;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_string;
+use function sprintf;
 
 final readonly class StepRunner
 {
@@ -39,8 +51,9 @@ final readonly class StepRunner
      * goes to run(), an empty run included, and one more after the breaker. A join reads the rows of its right plan;
      * a branch runs as the step that feeds it.
      *
-     * @param Generator<Rows> $input
-     * @param null|Extractor $source the extractor $input comes from directly, so its failures reach the error handler
+     * @param Generator<CorruptedRecordException|Rows> $input
+     * @param null|Extractor|Reader $source the source $input comes from directly, so its failures reach the error
+     *                                      handler and its corrupted records its reject loader
      * @param null|SourceCounts $sources counts the rows the sources of a join's right plan yield
      *
      * @return Generator<int, Rows, null|Signal, void>
@@ -49,7 +62,7 @@ final readonly class StepRunner
         PipelineSteps $steps,
         Generator $input,
         FlowContext $context,
-        ?Extractor $source = null,
+        Extractor|Reader|null $source = null,
         ?SourceCounts $sources = null,
     ): Generator {
         $run = [];
@@ -87,18 +100,32 @@ final readonly class StepRunner
     }
 
     /**
-     * $input through one run of loaders and transformers: drops empty batches, ends its loaders when the run ends.
+     * $input through one run of loaders and transformers: drops empty batches, ends its loaders when the run ends. A
+     * corrupted record goes to the source's reject loader, loaded and ended like the run's own loaders; without one it
+     * fails the run, whatever the error handler.
      *
      * @param list<Loader|NestedLoader|Transformer> $steps one run between two processors
-     * @param Generator<Rows> $input
-     * @param null|Extractor $source the extractor $input comes from directly, so its failures reach the error handler
+     * @param Generator<CorruptedRecordException|Rows> $input
+     * @param null|Extractor|Reader $source the source $input comes from directly, so its failures reach the error
+     *                                      handler and its corrupted records its reject loader
      *
      * @return Generator<int, Rows, null|Signal, void>
      */
-    public function run(array $steps, Generator $input, FlowContext $context, ?Extractor $source = null): Generator
-    {
+    public function run(
+        array $steps,
+        Generator $input,
+        FlowContext $context,
+        Extractor|Reader|null $source = null,
+    ): Generator {
         $loaders = [];
         $limits = [];
+        $rejects = $source instanceof CorruptedRecordsRouter ? $source->corruptedRecordsLoader() : null;
+        /** @var list<array<string, mixed>> $corrupted */
+        $corrupted = [];
+        $routed = 0;
+        if ($rejects !== null) {
+            $loaders[] = $rejects;
+        }
 
         foreach ($steps as $step) {
             if (!$step instanceof Transformer) {
@@ -154,70 +181,62 @@ final readonly class StepRunner
                     continue;
                 }
 
+                if ($rows instanceof CorruptedRecordException) {
+                    // the reader's option alone owns a corrupted record: no error handler skips it
+                    if ($rejects === null) {
+                        throw $rows;
+                    }
+
+                    $corrupted[] = $rows->toRecord();
+                    $routed++;
+
+                    continue;
+                }
+
+                // a batch's corrupted records come before its rows, so they are loaded together when the rows arrive
+                if ($rejects !== null && $corrupted !== []) {
+                    $this->loadRejects($rejects, $corrupted, $context);
+                    $corrupted = [];
+                }
+
                 // the batch is half transformed, so its columns no longer match its siblings -
                 // skipping means emitting nothing, not emitting what the failed step had produced
                 $skipped = false;
                 $stop = false;
 
                 foreach ($steps as $step) {
-                    $error = null;
+                    if (!$step instanceof Transformer) {
+                        $this->load($step, $rows, $context);
 
-                    if ($step instanceof Transformer || $step instanceof Loader) {
-                        try {
-                            if ($step instanceof Transformer) {
-                                $rows = $this->telemetry->transform($step, $rows, $context);
-                            } elseif ($rows->count()) {
-                                $this->telemetry->load($step, $rows, $context);
-                            }
-                        } catch (Throwable $failure) {
-                            $error = $step instanceof Transformer
-                                ? new TransformationError($failure, $step, $rows)
-                                : new LoadingError($failure, $step, $rows);
-                        }
-                    } else {
-                        // a NestedLoader: what it throws is never offered here, see NestedLoader::load()
-                        $error = $rows->count() ? $step->load($rows) : null;
-                    }
-
-                    if ($error === null) {
                         continue;
                     }
 
-                    if (
-                        $error instanceof LoadingError
-                            ? $context->errorHandler()->onLoading($error) === LoadingAction::propagate
-                            : $context->errorHandler()->onTransformation($error) === TransformationAction::propagate
-                    ) {
+                    try {
+                        $rows = $this->telemetry->transform($step, $rows, $context);
+                    } catch (Throwable $failure) {
+                        if (
+                            $context->errorHandler()->onTransformation(new TransformationError($failure, $step, $rows))
+                            === TransformationAction::propagate
+                        ) {
+                            $context
+                                ->telemetry()
+                                ->logger()
+                                ->error('Error during ETL pipeline execution.', ['exception' => $failure]);
+
+                            throw $failure;
+                        }
+
                         $context
                             ->telemetry()
                             ->logger()
-                            ->error('Error during ETL pipeline execution.', ['exception' => $error->cause]);
-
-                        throw $error->cause;
-                    }
-
-                    // a write that failed is skipped and the batch flows on, a rolled-back transaction included
-                    if (!$step instanceof Transformer) {
-                        $context
-                            ->telemetry()
-                            ->logger()
-                            ->debug('Skipping loader due to error during ETL pipeline execution.', [
-                                'exception' => $error->cause,
+                            ->debug('Skipping rows due to error during ETL pipeline execution.', [
+                                'exception' => $failure,
                             ]);
 
-                        continue;
+                        $skipped = true;
+
+                        break;
                     }
-
-                    $context
-                        ->telemetry()
-                        ->logger()
-                        ->debug('Skipping rows due to error during ETL pipeline execution.', [
-                            'exception' => $error->cause,
-                        ]);
-
-                    $skipped = true;
-
-                    break;
                 }
 
                 // a limit trims the batch it is reached in, so the steps after it still ran, on the trimmed batch
@@ -244,6 +263,10 @@ final readonly class StepRunner
                 }
             }
 
+            if ($rejects !== null && $corrupted !== []) {
+                $this->loadRejects($rejects, $corrupted, $context);
+            }
+
             $completed = true;
         } finally {
             $endings = $this->endLoaders($loaders, $context, $completed);
@@ -253,6 +276,89 @@ final readonly class StepRunner
         if ($endings !== []) {
             throw $endings[0];
         }
+
+        if ($rejects !== null && $routed > 0) {
+            $context
+                ->telemetry()
+                ->logger()
+                ->warn(sprintf(
+                    'Routed %d corrupted records to %s.',
+                    $routed,
+                    $rejects instanceof FileLoader ? $rejects->destination()->uri() : $rejects::class,
+                ));
+        }
+    }
+
+    /**
+     * @param non-empty-list<array<string, mixed>> $records CorruptedRecordException::toRecord() of each
+     */
+    private function loadRejects(Loader $rejects, array $records, FlowContext $context): void
+    {
+        $this->load(
+            $rejects,
+            (new RowsBuilder(
+                new Schema(
+                    new StringDefinition('uri', nullable: true),
+                    new IntegerDefinition('offset'),
+                    new IntegerDefinition('line', nullable: true),
+                    new StringDefinition('reason'),
+                    new StringDefinition('record'),
+                    new ListDefinition('fields', type_list(type_string()), nullable: true),
+                ),
+                $context->backend(),
+            ))
+                ->appendRecords($records)
+                ->finish(),
+            $context,
+        );
+    }
+
+    /**
+     * $rows into $loader; a failure the error handler skips is logged and the batch flows on, a rolled-back
+     * transaction included.
+     */
+    private function load(Loader|NestedLoader $loader, Rows $rows, FlowContext $context): void
+    {
+        if (!$rows->count()) {
+            return;
+        }
+
+        if ($loader instanceof Loader) {
+            try {
+                $this->telemetry->load($loader, $rows, $context);
+
+                return;
+            } catch (Throwable $failure) {
+                $error = new LoadingError($failure, $loader, $rows);
+            }
+        } else {
+            // what a NestedLoader throws is never offered here, see NestedLoader::load()
+            $error = $loader->load($rows);
+        }
+
+        if ($error === null) {
+            return;
+        }
+
+        if (
+            $error instanceof LoadingError
+                ? $context->errorHandler()->onLoading($error) === LoadingAction::propagate
+                : $context->errorHandler()->onTransformation($error) === TransformationAction::propagate
+        ) {
+            $context
+                ->telemetry()
+                ->logger()
+                ->error('Error during ETL pipeline execution.', ['exception' => $error->cause]);
+
+            throw $error->cause;
+        }
+
+        $context
+            ->telemetry()
+            ->logger()
+            ->debug('Skipping loader due to error during ETL pipeline execution.', [
+                'exception' => $error->cause,
+            ]);
     }
 
     /**

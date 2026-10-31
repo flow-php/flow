@@ -3,11 +3,12 @@
 //! refusals.
 
 use std::borrow::Cow;
+use std::collections::VecDeque;
 use std::fmt;
 
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::prelude::*;
-use ext_php_rs::types::Zval;
+use ext_php_rs::types::{ZendHashTable, Zval};
 use flow_batch_frame::builder::KindBuilder;
 use flow_batch_frame::key::array_key_index;
 use flow_batch_frame::kind::Kind;
@@ -18,13 +19,15 @@ use flow_json_records::{
 use serde::de::{self, Deserializer as _, IgnoredAny, SeqAccess, Visitor};
 use serde_json::value::RawValue;
 
-use crate::batch_columns::{native_text, BatchColumns, HeldBatch};
+use crate::batch_columns::{native_text, BatchColumns};
 use crate::builder::{append_native, append_one, native_leaf, Append};
 use crate::cast::{CastKind, MapKeyKind};
+use crate::corrupted::{from_values, missing_column, outside_the_sample, reason_of, unexpected_column};
 use crate::ctx::{self, null_zval, zval_str};
 use crate::exception::ext_exception;
 use crate::physical::overflow;
 use crate::render::runtime;
+use crate::source::Fetched;
 
 fn number_zval(text: &str) -> Zval {
     let mut zval = Zval::new();
@@ -222,12 +225,16 @@ struct JsonColumns {
 
 pub struct JsonReader {
     uri: String,
+    /// The byte of its file the stream begins at: a window's start, else 0.
+    start: u64,
     framing: Framing,
     /// The framed records of the pending batch, copied out of the input.
     records: Vec<u8>,
     bounds: Vec<Record>,
     slots: Vec<Option<(usize, usize)>>,
     columns: JsonColumns,
+    /// A read batch's corrupted records, then the batch itself.
+    ready: VecDeque<Fetched>,
 }
 
 /// `Malformed JSON in "<uri>" at line N: …` (lines, 1-based) or `at element N` (a document, 0-based).
@@ -236,6 +243,91 @@ fn malformed(uri: &str, lines: bool, ordinal: usize, message: &str) -> PhpExcept
         "Malformed JSON in \"{uri}\" at {} {ordinal}: {message}",
         if lines { "line" } else { "element" },
     ))
+}
+
+/// A line by its byte offset in the file (and its line when the read began at the file's first byte), an array
+/// element by its 1-based number.
+fn located(start: u64, lines: bool, record: &Record) -> (u64, Option<u64>) {
+    match lines {
+        true => (start + record.offset, (start == 0).then_some(record.ordinal as u64)),
+        false => (record.ordinal as u64 + 1, None),
+    }
+}
+
+/// A record of a batch refused: by a value (the earliest definition wins) or, ranked after every refused value, by a
+/// NOT NULL column it lacks - RowsBuilder's order.
+struct Refused {
+    row: usize,
+    absent: bool,
+    cause: Zval,
+}
+
+/// Each record's members into the batch's columns, the rows of `skip` (ascending) left out; the refusals, one per
+/// refused record, ascending by row.
+fn fill(
+    state: &mut BatchColumns,
+    records: &[u8],
+    slots: &[Option<(usize, usize)>],
+    rows: usize,
+    skip: &[usize],
+) -> PhpResult<Vec<Refused>> {
+    let width = state.columns.len();
+    let mut refusals: Vec<Refused> = Vec::new();
+
+    for (position, column) in state.columns.iter_mut().enumerate() {
+        for row in (0..rows).filter(|row| skip.binary_search(row).is_err()) {
+            let Some((start, end)) = slots[row * width + position] else {
+                if !column.nullable {
+                    refusals.push(Refused {
+                        row,
+                        absent: true,
+                        cause: missing_column(&column.definition)?,
+                    });
+                }
+
+                column.values.append_null();
+
+                continue;
+            };
+            // SAFETY: every record of the batch passed map_record(), whose serde parse checked the UTF-8 of each
+            // member value; the span is one of those values, so it starts and ends on character boundaries
+            let text = unsafe { std::str::from_utf8_unchecked(&records[start..end]) };
+
+            let value = if text == "null" {
+                null_zval()
+            } else {
+                let len = column.values.len();
+
+                if into_column(&mut column.values, &column.plan.kind, &column.plan.cast, text)? {
+                    continue;
+                }
+
+                column.values.truncate(len);
+
+                decode(text)?
+            };
+
+            if let Append::Refused { cause, .. } = append_one(
+                &mut column.values,
+                &column.plan,
+                &column.definition,
+                column.nullable,
+                &value,
+            )? {
+                refusals.push(Refused {
+                    row,
+                    absent: false,
+                    cause,
+                });
+            }
+        }
+    }
+
+    // stable: within a row and kind, the earliest definition stays first
+    refusals.sort_by_key(|refused| (refused.row, refused.absent));
+    refusals.dedup_by_key(|refused| refused.row);
+
+    Ok(refusals)
 }
 
 impl JsonReader {
@@ -248,16 +340,23 @@ impl JsonReader {
         }
     }
 
-    fn read(&mut self, schema: &Zval, batch_size: usize) -> PhpResult<Option<HeldBatch>> {
+    /// Reads the next batch into `ready`: its corrupted records, then its rows.
+    fn read(&mut self, schema: &Zval, batch_size: usize, sample_size: Option<i64>, known: &[Vec<u8>]) -> PhpResult<()> {
         let (state, rebuilt) = BatchColumns::prepare(&mut self.columns.batch, schema, batch_size, "JSON")?;
 
         if rebuilt {
-            self.columns.members = MemberColumns::of(state.columns.iter().map(|column| &column.key));
+            let members = MemberColumns::of(state.columns.iter().map(|column| &column.key));
+
+            self.columns.members = match sample_size {
+                Some(_) => members.knowing(known.iter().cloned()),
+                None => members,
+            };
         }
 
         let batch_size = state.batch_size;
         let lines = self.framing.lines();
 
+        // a refused record fills its place in the batch, as RecordBatch counts it
         while self.bounds.len() < batch_size {
             match self.framing.next(&mut self.records, &mut self.bounds) {
                 Ok(true) => {}
@@ -275,14 +374,14 @@ impl JsonReader {
         }
 
         let state = self.columns.batch.as_mut().expect("prepared above");
-        state.rows = self.bounds.len();
 
         if self.bounds.is_empty() || (self.bounds.len() < state.batch_size && !self.framing.finished()) {
-            return Ok(None);
+            return Ok(());
         }
 
         let width = state.columns.len();
         let base = self.records.as_ptr() as usize;
+        let mut unknown = None;
 
         self.slots.clear();
         self.slots.resize(self.bounds.len() * width, None);
@@ -296,7 +395,10 @@ impl JsonReader {
                 slots,
                 base,
             ) {
-                Ok(()) => {}
+                Ok(None) => {}
+                Ok(Some(name)) => {
+                    unknown = unknown.or(Some((row, name)));
+                }
                 Err(RecordError::Malformed(message)) => {
                     return Err(malformed(&self.uri, lines, record.ordinal, &message))
                 }
@@ -309,56 +411,85 @@ impl JsonReader {
             }
         }
 
-        for (position, column) in state.columns.iter_mut().enumerate() {
-            for row in 0..self.bounds.len() {
-                if column.refusal.is_some() {
-                    break;
-                }
+        let uri = || zval_str(self.uri.as_bytes());
 
-                let Some((start, end)) = self.slots[row * width + position] else {
-                    if !column.nullable {
-                        column.absent = column.absent.or(Some(row));
-                    }
+        if let (Some((row, name)), Some(sample_size)) = (unknown, sample_size) {
+            let (offset, line) = located(self.start, lines, &self.bounds[row]);
 
-                    column.values.append_null();
+            return Err(outside_the_sample(
+                &uri(),
+                offset,
+                line,
+                sample_size,
+                row,
+                unexpected_column(&name)?,
+            ));
+        }
 
-                    continue;
-                };
-                // SAFETY: every record of the batch passed map_record(), whose serde parse checked the UTF-8 of each
-                // member value; the span is one of those values, so it starts and ends on character boundaries
-                let text = unsafe { std::str::from_utf8_unchecked(&self.records[start..end]) };
+        let rows = self.bounds.len();
+        let refusals = fill(state, &self.records, &self.slots, rows, &[])?;
 
-                let value = if text == "null" {
-                    null_zval()
-                } else {
-                    let len = column.values.len();
+        if !refusals.is_empty() {
+            if let Some(sample_size) = sample_size {
+                let first = refusals.iter().find(|refused| !refused.absent).unwrap_or(&refusals[0]);
+                let (offset, line) = located(self.start, lines, &self.bounds[first.row]);
 
-                    if into_column(&mut column.values, &column.plan.kind, &column.plan.cast, text)? {
-                        continue;
-                    }
-
-                    column.values.truncate(len);
-
-                    decode(text)?
-                };
-
-                if let Append::Refused { cause, .. } = append_one(
-                    &mut column.values,
-                    &column.plan,
-                    &column.definition,
-                    column.nullable,
-                    &value,
-                )? {
-                    column.refusal = Some((row, cause));
-                }
+                return Err(outside_the_sample(
+                    &uri(),
+                    offset,
+                    line,
+                    sample_size,
+                    first.row,
+                    first.cause.shallow_clone(),
+                ));
             }
+
+            for refused in &refusals {
+                let record = &self.bounds[refused.row];
+                let text = &self.records[record.start..record.end];
+                let (offset, line) = located(self.start, lines, record);
+                let reason = reason_of(&refused.cause)?;
+
+                // a line is its own text; an array element, which the source holds no text of alone, is its values
+                self.ready.push_back(Fetched::Corrupted(match lines {
+                    true => from_values(&uri(), offset, line, &reason, empty_array(), Some(text))?,
+                    false => from_values(
+                        &uri(),
+                        offset,
+                        line,
+                        &reason,
+                        // SAFETY: map_record() parsed the record, checking its UTF-8
+                        decode(unsafe { std::str::from_utf8_unchecked(text) })?,
+                        None,
+                    )?,
+                }));
+            }
+
+            let skip: Vec<usize> = refusals.iter().map(|refused| refused.row).collect();
+
+            state.reset();
+            fill(state, &self.records, &self.slots, rows, &skip)?;
+            state.rows = rows - skip.len();
+        } else {
+            state.rows = rows;
+        }
+
+        if state.rows > 0 {
+            self.ready.push_back(Fetched::Batch(state.finish()?));
         }
 
         self.records.clear();
         self.bounds.clear();
 
-        state.finish().map(Some)
+        Ok(())
     }
+}
+
+fn empty_array() -> Zval {
+    let mut array = Zval::new();
+    array.set_hashtable(ZendHashTable::new());
+
+    array
 }
 
 /// `json_decode($text, true)`: PHP's own value of a JSON value `into_column()` did not cast.
@@ -380,15 +511,17 @@ fn decode(text: &str) -> Result<Zval, PhpException> {
 }
 
 impl JsonReader {
-    /// `uri` names the file in refusals.
-    pub fn new(lines: bool, uri: &[u8]) -> Self {
+    /// `uri` names the file in malformed-input refusals; `start` is the byte of its file the stream begins at.
+    pub fn new(lines: bool, uri: &[u8], start: u64) -> Self {
         Self {
             uri: String::from_utf8_lossy(uri).into_owned(),
+            start,
             framing: Framing::new(lines),
             records: Vec::new(),
             bounds: Vec::new(),
             slots: Vec::new(),
             columns: JsonColumns::default(),
+            ready: VecDeque::new(),
         }
     }
 
@@ -401,15 +534,24 @@ impl JsonReader {
         self.framing.finish();
     }
 
-    /// Exactly `batch_size` rows keyed and ordered by `schema` while that many are buffered, the remainder after
-    /// `finish()`, else none. Refusals are `RowsBuilder::appendRows()`'s, row indexes relative to the source.
-    pub fn next_columns(&mut self, schema: &Zval, batch_size: usize) -> PhpResult<Option<HeldBatch>> {
-        let batch = self.read(schema, batch_size);
+    /// Exactly `batch_size` records keyed and ordered by `schema` while that many are buffered, the remainder after
+    /// `finish()`, else none: a batch's corrupted records first, then its rows. Under an inferred schema a refused
+    /// record is an `InferredSchemaException`.
+    pub fn next_columns(
+        &mut self,
+        schema: &Zval,
+        batch_size: usize,
+        sample_size: Option<i64>,
+        known: &[Vec<u8>],
+    ) -> PhpResult<Option<Fetched>> {
+        if self.ready.is_empty() {
+            if let Err(e) = self.read(schema, batch_size, sample_size, known) {
+                self.clear();
 
-        if batch.is_err() {
-            self.clear();
+                return Err(e);
+            }
         }
 
-        batch
+        Ok(self.ready.pop_front())
     }
 }

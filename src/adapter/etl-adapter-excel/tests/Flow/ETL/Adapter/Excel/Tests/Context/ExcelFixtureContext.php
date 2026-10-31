@@ -29,6 +29,7 @@ use function array_values;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
 use function glob;
+use function is_array;
 use function sys_get_temp_dir;
 
 final class ExcelFixtureContext
@@ -148,6 +149,26 @@ final class ExcelFixtureContext
         ExcelReadOptions $options = new ExcelReadOptions(),
     ): WorkbookSheet {
         return self::reader($filesystem, $options)->sheet(self::source($fixture));
+    }
+
+    /**
+     * The rows of $sheet's records that are not corrupted, decoded as the read decodes them.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public static function decodedRows(WorkbookSheet $sheet): array
+    {
+        $rows = [];
+
+        foreach ($sheet->rows() as $cells) {
+            $values = $sheet->decode($cells);
+
+            if (is_array($values)) {
+                $rows[] = $values;
+            }
+        }
+
+        return $rows;
     }
 
     public static function source(string $fixture): SourceFile

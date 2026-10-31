@@ -35,6 +35,7 @@ final class RustCSVOpenSource implements CSVOpenSource
         bool $removeBOM,
         ?int $charactersReadInLine = null,
         ?array $headers = null,
+        bool $missingColumnsAsNull = false,
     ) {
         throw new RuntimeException('flow_php extension is not loaded');
     }
@@ -42,7 +43,7 @@ final class RustCSVOpenSource implements CSVOpenSource
     /**
      * @return RustIterator<Rows>
      */
-    public function batches(Schema $schema, int $batchSize, Backend $backend): RustIterator
+    public function batches(Schema $schema, int $batchSize, Backend $backend, ?int $sampleSize = null): RustIterator
     {
         throw new RuntimeException('flow_php extension is not loaded');
     }

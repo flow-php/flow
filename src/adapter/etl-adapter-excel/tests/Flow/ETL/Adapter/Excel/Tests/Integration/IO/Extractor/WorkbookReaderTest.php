@@ -16,19 +16,15 @@ use Flow\Filesystem\Local\NativeLocalFilesystem;
 use function array_keys;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Types\DSL\type_array;
-use function iterator_to_array;
 
 final class WorkbookReaderTest extends FlowTestCase
 {
     public function test_options_reach_the_sheet(): void
     {
-        $rows = iterator_to_array(
-            ExcelFixtureContext::sheet(
-                'nullable_fixture.xlsx',
-                options: new ExcelReadOptions(withHeader: false, convertEmptyToNull: false),
-            )->rows(),
-            false,
-        );
+        $rows = ExcelFixtureContext::decodedRows(ExcelFixtureContext::sheet(
+            'nullable_fixture.xlsx',
+            options: new ExcelReadOptions(withHeader: false, convertEmptyToNull: false),
+        ));
 
         static::assertCount(6, $rows);
         static::assertSame(['e00', 'e01', 'e02'], array_keys($rows[0]));

@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\IO\Extractor;
 
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\SchemaMismatchException;
+use Flow\ETL\IO\CorruptedRecordsRouter;
 use Flow\ETL\IO\Extractor;
 use Flow\ETL\IO\Extractor\Memory\InMemoryRows;
 use Flow\ETL\IO\Extractor\SequenceGenerator\SequenceGenerator;
 use Flow\ETL\IO\Inference\SchemaInference;
 use Flow\ETL\IO\Inference\SchemaInferenceBuilder;
 use Flow\ETL\IO\Inference\SchemaInferrer;
+use Flow\ETL\IO\Loader;
 use Flow\ETL\Values\BatchSize;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
@@ -19,8 +22,10 @@ use Flow\ETL\Values\Rows\RecordBatch;
 use Flow\ETL\Values\Schema;
 use Generator;
 
-final class SequenceExtractor implements BatchableExtractor, Extractor, InfersSchema
+final class SequenceExtractor implements BatchableExtractor, Extractor, InfersSchema, CorruptedRecordsRouter
 {
+    private ?Loader $corruptedRecordsLoader = null;
+
     private BatchSize $batchSize;
 
     private ?Schema $derivedSchema = null;
@@ -52,37 +57,47 @@ final class SequenceExtractor implements BatchableExtractor, Extractor, InfersSc
         return true;
     }
 
+    public function corruptedRecordsLoader(): ?Loader
+    {
+        return $this->corruptedRecordsLoader;
+    }
+
     /**
-     * @return Generator<int, Rows, Signal|null, void>
+     * @return Generator<int, CorruptedRecordException|Rows, Signal|null, void>
      */
     public function extract(Backend $backend, Criteria $criteria): Generator
     {
         $sample = $this->schema === null ? $this->inference : null;
-        $batches = new RecordBatch($this->describe(), $backend, $this->batchSize());
+        $schema = $this->describe();
+        $batches = new RecordBatch(
+            $schema,
+            $backend,
+            $this->batchSize(),
+            sampleSize: $sample?->sampleSize,
+            known: $schema,
+        );
 
         try {
-            /** @var mixed $item */
-            foreach ($this->generator->generate() as $item) {
-                $rows = $batches->add([$this->columnName => $item]);
-
-                if ($rows === null) {
-                    continue;
-                }
-
+            foreach ($batches->of($this->records()) as $rows) {
                 $signal = yield $rows;
 
                 if ($signal === Signal::STOP) {
                     return;
                 }
             }
-
-            $rest = $batches->flush();
-
-            if ($rest !== null) {
-                yield $rest;
-            }
         } catch (SchemaMismatchException $mismatch) {
             throw InferredSchemaException::whenPastTheSample('the sequence', $sample?->sampleSize, $mismatch);
+        }
+    }
+
+    /**
+     * @return Generator<int, array<string, mixed>>
+     */
+    private function records(): Generator
+    {
+        /** @var mixed $item */
+        foreach ($this->generator->generate() as $item) {
+            yield [$this->columnName => $item];
         }
     }
 
@@ -139,6 +154,13 @@ final class SequenceExtractor implements BatchableExtractor, Extractor, InfersSc
     public function withBatchSize(int $batchSize): static
     {
         $this->batchSize = new BatchSize($batchSize);
+
+        return $this;
+    }
+
+    public function withCorruptedRecords(?Loader $loader): static
+    {
+        $this->corruptedRecordsLoader = $loader;
 
         return $this;
     }

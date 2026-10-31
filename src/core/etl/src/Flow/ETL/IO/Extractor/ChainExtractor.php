@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\IO\Extractor;
 
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\IO\Extractor;
 use Flow\ETL\Values\Cardinality;
@@ -40,7 +41,7 @@ final class ChainExtractor implements Extractor, Refreshable
     }
 
     /**
-     * @return Generator<int, Rows, Signal|null, void>
+     * @return Generator<int, CorruptedRecordException|Rows, Signal|null, void>
      */
     public function extract(Backend $backend, Criteria $criteria): Generator
     {
@@ -52,8 +53,13 @@ final class ChainExtractor implements Extractor, Refreshable
 
         foreach ($this->extractors as $extractor) {
             foreach ($extractor->extract($backend, new Criteria()) as $rows) {
-                $schema ??= $this->schema();
-                $signal = yield $rows->matchTo($schema, $backend);
+                // a corrupted record passes through: the chain's read has no reject loader, so it is refused
+                if (!$rows instanceof Rows) {
+                    $signal = yield $rows;
+                } else {
+                    $schema ??= $this->schema();
+                    $signal = yield $rows->matchTo($schema, $backend);
+                }
 
                 if ($signal === Signal::STOP) {
                     return;

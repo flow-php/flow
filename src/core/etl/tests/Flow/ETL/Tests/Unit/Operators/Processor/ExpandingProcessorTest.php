@@ -109,12 +109,14 @@ final class ExpandingProcessorTest extends FlowTestCase
 
     public function test_stop_after_the_first_batch_is_forwarded_upstream(): void
     {
-        $upstream = (new CountingExtractor(ListColumnsMother::tagsSchema(), array_to_rows([
-            ['id' => 'a', 'tags' => ['x', 'y']],
-            ['id' => 'b', 'tags' => ['z']],
-        ], ListColumnsMother::tagsSchema())))
-            ->withBatchSize(1)
-            ->extract(flow_context()->backend(), new Criteria());
+        $upstream = FlowTestCase::extracted(
+            (new CountingExtractor(ListColumnsMother::tagsSchema(), array_to_rows([
+                ['id' => 'a', 'tags' => ['x', 'y']],
+                ['id' => 'b', 'tags' => ['z']],
+            ], ListColumnsMother::tagsSchema())))->withBatchSize(1),
+            flow_context()->backend(),
+            new Criteria(),
+        );
         $processed = (new ExpandingProcessor(
             'tag',
             ref('tags')->expand(),

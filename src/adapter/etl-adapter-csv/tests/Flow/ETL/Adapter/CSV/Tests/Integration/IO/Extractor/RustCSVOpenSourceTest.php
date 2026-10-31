@@ -8,7 +8,6 @@ use Flow\ETL\Adapter\CSV\IO\Extractor\CSVReadOptions;
 use Flow\ETL\Adapter\CSV\Tests\Context\CSVFixtureContext;
 use Flow\ETL\Adapter\CSV\Tests\Double\LengthCapturingSourceStream;
 use Flow\ETL\Foundation\Exception\ColumnMismatchException;
-use Flow\ETL\Foundation\Exception\SchemaMismatchException;
 use Flow\ETL\IO\Inference\ColumnTypes;
 use Flow\ETL\IO\Inference\InferredTypes;
 use Flow\ETL\IO\Inference\SchemaInference;
@@ -18,6 +17,8 @@ use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Schema;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
+use Flow\Filesystem\SourceStream;
+use Flow\Filesystem\Stream\RangeSourceStream;
 use Flow\Filesystem\Telemetry\FilesystemTelemetryAttributes;
 use Flow\Filesystem\Telemetry\TraceableFilesystem;
 use Flow\Filesystem\Tests\Mother\FilesystemTelemetryConfigMother;
@@ -27,8 +28,9 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
 use PHPUnit\Framework\Attributes\TestWith;
 
-use function array_keys;
+use function array_key_exists;
 use function array_map;
+use function array_slice;
 use function count;
 use function extension_loaded;
 use function file_get_contents;
@@ -41,6 +43,7 @@ use function Flow\Telemetry\DSL\memory_span_processor;
 use function Flow\Telemetry\DSL\void_exporter;
 use function implode;
 use function iterator_to_array;
+use function strlen;
 
 final class RustCSVOpenSourceTest extends FlowTestCase
 {
@@ -134,7 +137,7 @@ final class RustCSVOpenSourceTest extends FlowTestCase
         }
     }
 
-    public function test_records_yields_every_row_with_the_full_key_set(): void
+    public function test_records_yields_only_the_rows_of_records_that_are_not_corrupted(): void
     {
         if (!extension_loaded('flow_php')) {
             static::markTestSkipped('flow_php extension is not loaded');
@@ -143,13 +146,7 @@ final class RustCSVOpenSourceTest extends FlowTestCase
         $open = CSVFixtureContext::openNative('ragged.csv');
 
         try {
-            $records = iterator_to_array($open->records(), false);
-
-            static::assertCount(3, $records);
-
-            foreach ($records as $record) {
-                static::assertSame(['id', 'name', 'v'], array_keys($record));
-            }
+            static::assertSame([['id' => '1', 'name' => 'a', 'v' => '10']], iterator_to_array($open->records(), false));
         } finally {
             $open->close();
         }
@@ -479,48 +476,76 @@ final class RustCSVOpenSourceTest extends FlowTestCase
         );
     }
 
-    public function test_batches_refuse_a_missing_not_null_column(): void
+    public function test_batches_hand_up_a_record_missing_a_not_null_column(): void
     {
         if (!extension_loaded('flow_php')) {
             static::markTestSkipped('flow_php extension is not loaded');
         }
 
-        $refusal = CSVFixtureContext::batches(
+        $batches = CSVFixtureContext::batches(
             CSVFixtureContext::openNativeStream(CSVFixtureContext::content("id\n1\n")),
             schema(int_schema('id'), str_schema('name')),
             10,
         );
 
-        static::assertInstanceOf(SchemaMismatchException::class, $refusal);
+        static::assertIsArray($batches);
         static::assertSame(
-            (new SchemaMismatchException(0, ColumnMismatchException::missingColumn('name')))->getMessage(),
-            $refusal->getMessage(),
+            [[
+                3,
+                2,
+                'column "'
+                    . ColumnMismatchException::missingColumn('name')->column
+                    . '"'
+                    . ColumnMismatchException::missingColumn('name')->detail,
+                '1',
+                ['1'],
+            ]],
+            array_map(static fn(array $batch): array => array_key_exists('corrupted', $batch)
+                ? array_slice($batch['corrupted'], 1)
+                : $batch, $batches),
         );
-        static::assertSame(0, $refusal->rowIndex);
     }
 
-    public function test_batches_refused_value_wins_over_absence(): void
+    public function test_batches_hand_up_corrupted_records_in_source_order(): void
     {
         if (!extension_loaded('flow_php')) {
             static::markTestSkipped('flow_php extension is not loaded');
         }
 
-        $refusal = CSVFixtureContext::batches(
+        $batches = CSVFixtureContext::batches(
             CSVFixtureContext::openNativeStream(CSVFixtureContext::content("id\n1\nx\n")),
             schema(int_schema('id'), str_schema('name')),
             10,
         );
 
-        static::assertInstanceOf(SchemaMismatchException::class, $refusal);
+        static::assertIsArray($batches);
         static::assertSame(
-            (new SchemaMismatchException(1, ColumnMismatchException::valueDoesNotMatch(
-                'id',
-                'integer',
-                'x',
-            )))->getMessage(),
-            $refusal->getMessage(),
+            [
+                [
+                    3,
+                    2,
+                    'column "'
+                        . ColumnMismatchException::missingColumn('name')->column
+                        . '"'
+                        . ColumnMismatchException::missingColumn('name')->detail,
+                    '1',
+                    ['1'],
+                ],
+                [
+                    5,
+                    3,
+                    'column "'
+                        . ColumnMismatchException::valueDoesNotMatch('id', 'integer', 'x')->column
+                        . '"'
+                        . ColumnMismatchException::valueDoesNotMatch('id', 'integer', 'x')->detail,
+                    'x',
+                    ['x'],
+                ],
+            ],
+            array_map(static fn(array $batch): array => array_key_exists('corrupted', $batch)
+                ? array_slice($batch['corrupted'], 1)
+                : $batch, $batches),
         );
-        static::assertSame(1, $refusal->rowIndex);
     }
 
     public function test_batches_refusal_tie_goes_to_the_first_definition(): void
@@ -529,46 +554,61 @@ final class RustCSVOpenSourceTest extends FlowTestCase
             static::markTestSkipped('flow_php extension is not loaded');
         }
 
-        $refusal = CSVFixtureContext::batches(
+        $batches = CSVFixtureContext::batches(
             CSVFixtureContext::openNativeStream(CSVFixtureContext::content("a,b\nx,y\n")),
             schema(int_schema('b'), int_schema('a')),
             10,
         );
 
-        static::assertInstanceOf(SchemaMismatchException::class, $refusal);
+        static::assertIsArray($batches);
         static::assertSame(
-            (new SchemaMismatchException(0, ColumnMismatchException::valueDoesNotMatch(
-                'b',
-                'integer',
-                'y',
-            )))->getMessage(),
-            $refusal->getMessage(),
+            [[
+                4,
+                2,
+                'column "'
+                    . ColumnMismatchException::valueDoesNotMatch('b', 'integer', 'y')->column
+                    . '"'
+                    . ColumnMismatchException::valueDoesNotMatch('b', 'integer', 'y')->detail,
+                'x,y',
+                ['x', 'y'],
+            ]],
+            array_map(static fn(array $batch): array => array_key_exists('corrupted', $batch)
+                ? array_slice($batch['corrupted'], 1)
+                : $batch, $batches),
         );
-        static::assertSame(0, $refusal->rowIndex);
     }
 
-    public function test_batches_refuse_an_empty_to_null_null_under_not_null(): void
+    public function test_batches_hand_up_an_empty_to_null_null_under_not_null(): void
     {
         if (!extension_loaded('flow_php')) {
             static::markTestSkipped('flow_php extension is not loaded');
         }
 
-        $refusal = CSVFixtureContext::batches(
+        $batches = CSVFixtureContext::batches(
             CSVFixtureContext::openNativeStream(CSVFixtureContext::content("id,name\n1,a\n2,\n")),
             schema(int_schema('id'), str_schema('name')),
             10,
         );
 
-        static::assertInstanceOf(SchemaMismatchException::class, $refusal);
+        static::assertIsArray($batches);
         static::assertSame(
-            (new SchemaMismatchException(1, ColumnMismatchException::valueDoesNotMatch(
-                'name',
-                'string',
-                null,
-            )))->getMessage(),
-            $refusal->getMessage(),
+            [
+                [
+                    12,
+                    3,
+                    'column "'
+                        . ColumnMismatchException::valueDoesNotMatch('name', 'string', null)->column
+                        . '"'
+                        . ColumnMismatchException::valueDoesNotMatch('name', 'string', null)->detail,
+                    '2,',
+                    ['2', ''],
+                ],
+                [['id' => 1, 'name' => 'a']],
+            ],
+            array_map(static fn(array $batch): array => array_key_exists('corrupted', $batch)
+                ? array_slice($batch['corrupted'], 1)
+                : $batch, $batches),
         );
-        static::assertSame(1, $refusal->rowIndex);
     }
 
     public function test_batches_of_a_header_only_source_are_empty(): void
@@ -588,7 +628,7 @@ final class RustCSVOpenSourceTest extends FlowTestCase
     }
 
     /**
-     * @return Generator<string, array{string, Schema, positive-int}>
+     * @return Generator<string, array{0: string, 1: Schema, 2: positive-int, 3?: CSVReadOptions, 4?: ?int, 5?: int<0, max>}>
      */
     public static function batch_parity_cases(): Generator
     {
@@ -622,28 +662,65 @@ final class RustCSVOpenSourceTest extends FlowTestCase
         ];
         yield 'numeric header' => ["1,2\na,3\n", schema(str_schema('1'), int_schema('2')), 2];
         yield 'refusal in the second batch' => ["id,name\n1,a\n2,b\n3,c\nx,d\n", $idName, 2];
+
+        $idNullableName = schema(int_schema('id'), str_schema('name', nullable: true));
+
+        yield 'bom, crlf, multiline, blank lines and corrupted records' => [
+            "\xEF\xBB\xBFid,name\r\n1,\"a\r\nb\"\r\n\r\n2\r\n3,c,x\r\nx,d\r\n4,",
+            $idNullableName,
+            2,
+        ];
+        yield 'a cast refusal before a decode refusal in one batch' => ["id,name\nx,a\n2,b,c\n3,d\n", $idName, 10];
+        yield 'missing columns as null' => [
+            "id,name\n1\n2,b\n3,c,x\n",
+            $idNullableName,
+            2,
+            (new CSVReadOptions())->withMissingColumnsAsNull(true),
+        ];
+        yield 'refused past the sample' => ["id,name\n1,a\n2,b\nx,c\n", $idName, 2, new CSVReadOptions(), 2];
+        yield 'window past the first byte' => [
+            "e00,e01\n1,a\n2\n3,c\n",
+            schema(str_schema('e00'), str_schema('e01', nullable: true)),
+            2,
+            (new CSVReadOptions())->withHeader(false),
+            null,
+            8,
+        ];
     }
 
     /**
      * @param positive-int $batchSize
+     * @param int<0, max> $windowStart
      */
     #[DataProvider('batch_parity_cases')]
-    public function test_native_and_php_batches_are_identical(string $content, Schema $schema, int $batchSize): void
-    {
+    public function test_native_and_php_batches_are_identical(
+        string $content,
+        Schema $schema,
+        int $batchSize,
+        CSVReadOptions $options = new CSVReadOptions(),
+        ?int $sampleSize = null,
+        int $windowStart = 0,
+    ): void {
         if (!extension_loaded('flow_php')) {
             static::markTestSkipped('flow_php extension is not loaded');
         }
 
+        $stream = static fn(): SourceStream => $windowStart === 0
+            ? CSVFixtureContext::content($content)
+            : new RangeSourceStream(CSVFixtureContext::content($content), $windowStart, strlen($content));
+
         static::assertSame(
             CSVFixtureContext::batchesOutcome(
-                CSVFixtureContext::openPhpStream(CSVFixtureContext::content($content)),
+                CSVFixtureContext::openPhpStream($stream(), $options),
                 $schema,
                 $batchSize,
+                sampleSize: $sampleSize,
             ),
             CSVFixtureContext::batchesOutcome(
-                CSVFixtureContext::openNativeStream(CSVFixtureContext::content($content)),
+                CSVFixtureContext::openNativeStream($stream(), $options),
                 $schema,
                 $batchSize,
+                sampleSize: $sampleSize,
             ),
         );
     }

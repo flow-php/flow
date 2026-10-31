@@ -39,7 +39,7 @@ final class FileSplitReaderTest extends FlowTestCase
             [[['id' => 1], ['id' => 2]], [['id' => 3]]],
             array_map(
                 static fn(Rows $rows): array => $rows->toArray(),
-                iterator_to_array($reader->extract(flow_context()->backend(), new Criteria()), false),
+                iterator_to_array(FlowTestCase::extracted($reader, flow_context()->backend(), new Criteria()), false),
             ),
         );
         static::assertSame(1, $batches->closes);
@@ -48,15 +48,19 @@ final class FileSplitReaderTest extends FlowTestCase
     public function test_a_read_stopped_early_still_closes_the_batches(): void
     {
         $batches = new InMemoryFileBatches(['memory://a.csv' => [1, 2, 3]]);
-        $read = (new FileSplitReader(
-            FileReadMother::of(
-                schema(int_schema('id')),
-                batchSize: 2,
-                filesystem: MemoryFiles::with(['memory://a.csv' => 'abc']),
-                path: path('memory://a.csv'),
+        $read = FlowTestCase::extracted(
+            new FileSplitReader(
+                FileReadMother::of(
+                    schema(int_schema('id')),
+                    batchSize: 2,
+                    filesystem: MemoryFiles::with(['memory://a.csv' => 'abc']),
+                    path: path('memory://a.csv'),
+                ),
+                $batches,
             ),
-            $batches,
-        ))->extract(flow_context()->backend(), new Criteria());
+            flow_context()->backend(),
+            new Criteria(),
+        );
 
         $read->current();
         $read->send(Signal::STOP);

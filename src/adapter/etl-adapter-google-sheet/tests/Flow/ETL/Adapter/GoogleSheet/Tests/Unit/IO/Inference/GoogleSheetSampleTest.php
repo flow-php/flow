@@ -11,10 +11,17 @@ final class GoogleSheetSampleTest extends FlowTestCase
 {
     public function test_carries_names_and_rows(): void
     {
-        $sample = new GoogleSheetSample(['a'], [['a' => 1]], wholeSheet: true, gridRowCount: 1000);
+        $sample = new GoogleSheetSample(
+            ['a'],
+            [['a' => 1]],
+            [1 => ['a'], 2 => [1]],
+            wholeSheet: true,
+            gridRowCount: 1000,
+        );
 
         static::assertSame(['a'], $sample->names);
         static::assertSame([['a' => 1]], [$sample->rows[0]]);
+        static::assertSame([1 => ['a'], 2 => [1]], $sample->cells);
         static::assertTrue($sample->wholeSheet);
         static::assertSame(1000, $sample->gridRowCount);
     }

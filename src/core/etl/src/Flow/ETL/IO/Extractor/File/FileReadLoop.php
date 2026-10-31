@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\IO\Extractor\File;
 
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Functions\Evaluation\Filter;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\Signal;
@@ -21,7 +22,7 @@ final readonly class FileReadLoop
     /**
      * @param list<SourceFile> $sources
      *
-     * @return Generator<int, Rows, null|Signal, void>
+     * @return Generator<int, CorruptedRecordException|Rows, null|Signal, void>
      */
     public function read(array $sources, FileBatches $batches, Backend $backend, ReadWindow $window): Generator
     {
@@ -51,6 +52,17 @@ final readonly class FileReadLoop
             );
 
             foreach ($file as $batch) {
+                // a corrupted record is no row: it passes through, outside the filter and the window
+                if ($batch instanceof CorruptedRecordException) {
+                    $signal = yield $batch;
+
+                    if ($signal === Signal::STOP) {
+                        return;
+                    }
+
+                    continue;
+                }
+
                 $filtered = $filter->filter($constants->fillRows($batch, $schema, $backend), $backend);
                 $rows = $skipping->skip($filtered, $skipped);
                 $skipped += $filtered->count() - $rows->count();

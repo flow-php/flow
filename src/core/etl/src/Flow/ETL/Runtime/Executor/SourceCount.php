@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Runtime\Executor;
 
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\IO\Extractor\Signal;
 use Flow\ETL\Values\Rows;
 use Generator;
@@ -23,16 +24,20 @@ final class SourceCount
     }
 
     /**
-     * Counts $batches into this read, forwards a STOP, closed() once exhausted.
+     * Counts the rows of $batches into this read, a corrupted record none, forwards a STOP, closed() once exhausted.
      *
-     * @param Generator<Rows> $batches
+     * @template T of CorruptedRecordException|Rows
      *
-     * @return Generator<int, Rows, null|Signal, void>
+     * @param Generator<T> $batches
+     *
+     * @return Generator<int, T, null|Signal, void>
      */
     public function count(Generator $batches): Generator
     {
         foreach ($batches as $batch) {
-            $this->counted($batch->count());
+            if ($batch instanceof Rows) {
+                $this->counted($batch->count());
+            }
 
             $signal = yield $batch;
 

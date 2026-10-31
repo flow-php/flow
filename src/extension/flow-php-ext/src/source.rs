@@ -8,6 +8,8 @@ use ext_php_rs::types::Zval;
 
 use crate::backend::{adopt_batch, Adoption, Definitions};
 use crate::batch_columns::HeldBatch;
+use crate::ctx::call_method;
+use crate::exception::ext_exception;
 use crate::iterator::RustIterator;
 use crate::render::runtime;
 
@@ -15,10 +17,35 @@ use crate::render::runtime;
 /// and narrow files. `JsonFileBatches::CHUNK` is its PHP copy.
 pub const CHUNK: i64 = 1 << 15;
 
+/// What a reader hands out next.
+pub enum Fetched {
+    Batch(HeldBatch),
+    /// A `CorruptedRecordException`.
+    Corrupted(Zval),
+}
+
+pub const RANGE_SOURCE_STREAM: &str = "Flow\\Filesystem\\Stream\\RangeSourceStream";
+
+/// The byte of its file `stream` begins at: a `RangeSourceStream`'s start, else 0.
+pub fn window_start(stream: &Zval) -> PhpResult<u64> {
+    let is_window = matches!(
+        (stream.object(), ext_php_rs::zend::ClassEntry::try_find(RANGE_SOURCE_STREAM)),
+        (Some(object), Some(ce)) if object.instance_of(ce)
+    );
+
+    if !is_window {
+        return Ok(0);
+    }
+
+    u64::try_from(call_method(stream, "start", &mut [])?.long().unwrap_or(-1))
+        .map_err(|_| ext_exception("flow_php expected RangeSourceStream::start() to be an int >= 0"))
+}
+
 /// A reader a stream is fed into, one consuming call at a time.
 pub trait Fed {
-    /// The next full batch of what was fed (the remainder once finished), none while more input is needed.
-    fn next_batch(&self) -> PhpResult<Option<HeldBatch>>;
+    /// The next full batch of what was fed (the remainder once finished) or corrupted record, none while more input
+    /// is needed.
+    fn next_batch(&self) -> PhpResult<Option<Fetched>>;
 
     /// The next chunk of the stream fed in; false at its end.
     fn feed(&self) -> PhpResult<bool>;
@@ -26,14 +53,16 @@ pub trait Fed {
     fn finish(&self) -> PhpResult<()>;
 }
 
-/// The batches of `fed`, each adopted by `backend` into `Rows` of `schema`.
+/// The batches of `fed`, each adopted by `backend` into `Rows` of `schema`, and its corrupted records as they are.
 pub fn batches(fed: impl Fed + 'static, schema: &Zval, backend: &Zval) -> PhpResult<RustIterator> {
     let adoption = Adoption::new(Definitions::of(schema)?, schema, backend);
     let mut finished = false;
 
     Ok(RustIterator::new(Box::new(move || loop {
-        if let Some(batch) = fed.next_batch()? {
-            return adopt_batch(&adoption, batch).map(Some);
+        match fed.next_batch()? {
+            Some(Fetched::Batch(batch)) => return adopt_batch(&adoption, batch).map(Some),
+            Some(Fetched::Corrupted(record)) => return Ok(Some(record)),
+            None => {}
         }
 
         if finished {

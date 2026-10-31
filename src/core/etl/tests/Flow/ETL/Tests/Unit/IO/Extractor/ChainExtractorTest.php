@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\IO\Extractor;
 
 use ArrayIterator;
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\IO\Extractor;
 use Flow\ETL\IO\Extractor\BatchableExtractor;
@@ -15,6 +16,7 @@ use Flow\ETL\Tests\Double\RepeatableExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Cardinality;
 use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
 use Generator;
 
@@ -50,9 +52,11 @@ final class ChainExtractorTest extends FlowTestCase
         static::assertSame(
             [],
             iterator_to_array(
-                from_all(from_all(), from_all(from_array([])))
-                    ->withSchema(schema(int_schema('id')))
-                    ->extract(flow_context()->backend(), new Criteria()),
+                FlowTestCase::extracted(
+                    from_all(from_all(), from_all(from_array([])))->withSchema(schema(int_schema('id'))),
+                    flow_context()->backend(),
+                    new Criteria(),
+                ),
                 false,
             ),
         );
@@ -63,9 +67,11 @@ final class ChainExtractorTest extends FlowTestCase
         static::assertSame(
             [],
             iterator_to_array(
-                from_all(from_array([]))
-                    ->withSchema(schema(int_schema('id')))
-                    ->extract(flow_context()->backend(), new Criteria()),
+                FlowTestCase::extracted(
+                    from_all(from_array([]))->withSchema(schema(int_schema('id'))),
+                    flow_context()->backend(),
+                    new Criteria(),
+                ),
                 false,
             ),
         );
@@ -142,9 +148,11 @@ final class ChainExtractorTest extends FlowTestCase
         $child = from_rows(array_to_rows([['id' => 1]], schema(int_schema('id'))));
 
         iterator_to_array(
-            from_all($child)
-                ->withSchema(schema(int_schema('id'), str_schema('name', nullable: true)))
-                ->extract(flow_context()->backend(), new Criteria()),
+            FlowTestCase::extracted(
+                from_all($child)->withSchema(schema(int_schema('id'), str_schema('name', nullable: true))),
+                flow_context()->backend(),
+                new Criteria(),
+            ),
             false,
         );
 
@@ -152,7 +160,7 @@ final class ChainExtractorTest extends FlowTestCase
         static::assertSame(
             [['id' => 1]],
             iterator_to_array(
-                from_all($child)->extract(flow_context()->backend(), new Criteria()),
+                FlowTestCase::extracted(from_all($child), flow_context()->backend(), new Criteria()),
                 false,
             )[0]->toArray(),
         );
@@ -212,5 +220,20 @@ final class ChainExtractorTest extends FlowTestCase
     public function test_an_empty_chain_declares_zero_rows_and_bytes_exactly(): void
     {
         static::assertEquals(new Statistics(Cardinality::exact(0), Cardinality::exact(0)), from_all()->statistics());
+    }
+
+    public function test_a_childs_corrupted_record_passes_through_unchanged(): void
+    {
+        $batches = iterator_to_array(
+            from_all(from_array([['id' => 'x'], ['id' => 2]], schema(int_schema('id'))))
+                ->withSchema(schema(int_schema('id')))
+                ->extract(flow_context()->backend(), new Criteria()),
+            false,
+        );
+
+        static::assertInstanceOf(CorruptedRecordException::class, $batches[0]);
+        static::assertSame(1, $batches[0]->offset);
+        static::assertInstanceOf(Rows::class, $batches[1]);
+        static::assertSame([['id' => 2]], $batches[1]->toArray());
     }
 }

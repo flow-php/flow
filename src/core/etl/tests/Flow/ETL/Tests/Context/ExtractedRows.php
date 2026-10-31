@@ -24,7 +24,7 @@ final class ExtractedRows
         $context ??= flow_context();
         $extracted = null;
 
-        foreach (FlowTestCase::extracted($extractor, $context, $criteria) as $batch) {
+        foreach (FlowTestCase::extracted($extractor, $context->backend(), $criteria) as $batch) {
             $extracted = $extracted === null
                 ? $batch
                 : Rows::concat($extracted->schema(), $context->backend(), $extracted, $batch);
@@ -42,8 +42,8 @@ final class ExtractedRows
     {
         $context ??= flow_context();
         $reads = [
-            $extractor->extract($context->backend(), new Criteria()),
-            $extractor->extract($context->backend(), new Criteria()),
+            FlowTestCase::extracted($extractor, $context->backend(), new Criteria()),
+            FlowTestCase::extracted($extractor, $context->backend(), new Criteria()),
         ];
         /** @var array{0: null|Rows, 1: null|Rows} $extracted */
         $extracted = [null, null];

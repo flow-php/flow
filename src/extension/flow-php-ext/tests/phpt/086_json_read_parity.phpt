@@ -10,6 +10,7 @@ use Flow\ETL\Adapter\JSON\IO\Extractor\JsonFileReader;
 use Flow\ETL\Adapter\JSON\IO\JsonFraming;
 use Flow\ETL\Adapter\JSON\IO\Extractor\PhpJsonOpenSource;
 use Flow\ETL\Adapter\JSON\IO\Extractor\RustJsonOpenSource;
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Values\Column\{RustBackend, RustColumn, PhpBackend};
 use Flow\ETL\IO\Extractor\File\SourceFile;
 use Flow\ETL\Values\{Rows, Schema};
@@ -117,6 +118,12 @@ $frames = static function (iterable $batches, object $backend): array {
     $frames = [];
 
     foreach ($batches as $batch) {
+        if ($batch instanceof CorruptedRecordException) {
+            $frames[] = 'corrupted ' . json_encode([$batch->uri, $batch->offset, $batch->lineNumber, $batch->reason, $batch->record]);
+
+            continue;
+        }
+
         foreach ($batch->columns() as $column) {
             if ($backend instanceof PhpBackend && $column instanceof RustColumn) {
                 return ['a RustColumn survived PhpBackend'];
@@ -192,7 +199,7 @@ for ($t = 0; $t < 400; $t++) {
                 }
 
                 $identical++;
-                $refused += refused($php) ? 1 : 0;
+                $refused += refused($php) || str_contains($php, 'corrupted ') ? 1 : 0;
                 $nulls += str_contains($raw, 'null') ? 1 : 0;
             }
         }

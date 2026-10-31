@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\IO\Extractor\File;
 
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\File\FileReadLoop;
 use Flow\ETL\IO\Extractor\File\ReadWindow;
@@ -33,25 +34,15 @@ final class FileReadLoopTest extends FlowTestCase
     {
         static::assertSame(
             [[['id' => 1, 'year' => '2023'], ['id' => 2, 'year' => '2023']], [['id' => 3, 'year' => '2024']]],
-            array_map(
-                static fn(Rows $batch): array => $batch->toArray(),
-                iterator_to_array((new FileReadLoop(FileReadMother::of(
-                    schema(int_schema('id'), str_schema('year')),
-                    FileColumnsContext::discovering(),
-                    10,
-                )))->read(
-                    [
-                        new SourceFile(path('memory://orders/year=2023/a.csv')),
-                        new SourceFile(path('memory://orders/year=2024/b.csv')),
-                    ],
-                    new InMemoryFileBatches([
-                        'memory://orders/year=2023/a.csv' => [1, 2],
-                        'memory://orders/year=2024/b.csv' => [3],
-                    ]),
-                    flow_context()->backend(),
-                    new ReadWindow(),
-                )),
-            ),
+            array_map(static fn(CorruptedRecordException|Rows $batch): array => (
+                $batch instanceof Rows ? $batch->toArray() : [$batch->getMessage()]
+            ), iterator_to_array((new FileReadLoop(FileReadMother::of(schema(int_schema('id'), str_schema('year')), FileColumnsContext::discovering(), 10)))->read([
+                new SourceFile(path('memory://orders/year=2023/a.csv')),
+                new SourceFile(path('memory://orders/year=2024/b.csv')),
+            ], new InMemoryFileBatches([
+                'memory://orders/year=2023/a.csv' => [1, 2],
+                'memory://orders/year=2024/b.csv' => [3],
+            ]), flow_context()->backend(), new ReadWindow()))),
         );
     }
 
@@ -68,7 +59,10 @@ final class FileReadLoopTest extends FlowTestCase
             new ReadWindow(),
         );
 
-        static::assertSame([['id' => 1]], $read->current()->toArray());
+        $rows = $read->current();
+
+        static::assertInstanceOf(Rows::class, $rows);
+        static::assertSame([['id' => 1]], $rows->toArray());
 
         $read->send(Signal::STOP);
 
@@ -81,19 +75,9 @@ final class FileReadLoopTest extends FlowTestCase
 
         static::assertSame(
             [[['id' => 1], ['id' => 2]]],
-            array_map(
-                static fn(Rows $batch): array => $batch->toArray(),
-                iterator_to_array((new FileReadLoop(FileReadMother::of(
-                    schema(int_schema('id')),
-                    FileColumnsContext::discovering(names: []),
-                    10,
-                )))->read(
-                    [new SourceFile(path('memory://a.csv')), new SourceFile(path('memory://b.csv'))],
-                    $batches,
-                    flow_context()->backend(),
-                    new ReadWindow(limit: 2),
-                )),
-            ),
+            array_map(static fn(CorruptedRecordException|Rows $batch): array => (
+                $batch instanceof Rows ? $batch->toArray() : [$batch->getMessage()]
+            ), iterator_to_array((new FileReadLoop(FileReadMother::of(schema(int_schema('id')), FileColumnsContext::discovering(names: []), 10)))->read([new SourceFile(path('memory://a.csv')), new SourceFile(path('memory://b.csv'))], $batches, flow_context()->backend(), new ReadWindow(limit: 2)))),
         );
         static::assertEquals(['memory://a.csv' => [new ReadWindow(0, 2)]], $batches->windows);
     }
@@ -128,23 +112,13 @@ final class FileReadLoopTest extends FlowTestCase
 
         static::assertSame(
             [[['id' => 4]], [['id' => 5]]],
-            array_map(
-                static fn(Rows $batch): array => $batch->toArray(),
-                iterator_to_array((new FileReadLoop(FileReadMother::of(
-                    schema(int_schema('id')),
-                    FileColumnsContext::discovering(names: []),
-                    10,
-                )))->read(
-                    [
-                        new SourceFile(path('memory://a.csv')),
-                        new SourceFile(path('memory://b.csv')),
-                        new SourceFile(path('memory://c.csv')),
-                    ],
-                    $batches,
-                    flow_context()->backend(),
-                    new ReadWindow(offset: 3, limit: 2),
-                )),
-            ),
+            array_map(static fn(CorruptedRecordException|Rows $batch): array => (
+                $batch instanceof Rows ? $batch->toArray() : [$batch->getMessage()]
+            ), iterator_to_array((new FileReadLoop(FileReadMother::of(schema(int_schema('id')), FileColumnsContext::discovering(names: []), 10)))->read([
+                new SourceFile(path('memory://a.csv')),
+                new SourceFile(path('memory://b.csv')),
+                new SourceFile(path('memory://c.csv')),
+            ], $batches, flow_context()->backend(), new ReadWindow(offset: 3, limit: 2)))),
         );
         static::assertEquals(
             [
@@ -179,7 +153,9 @@ final class FileReadLoopTest extends FlowTestCase
         static::assertSame(
             [[['id' => 4]], [['id' => 5]]],
             array_map(
-                static fn(Rows $batch): array => $batch->toArray(),
+                static fn(CorruptedRecordException|Rows $batch): array => (
+                    $batch instanceof Rows ? $batch->toArray() : [$batch->getMessage()]
+                ),
                 iterator_to_array(
                     (new FileReadLoop(FileReadMother::of(
                         schema(int_schema('id')),
@@ -216,7 +192,9 @@ final class FileReadLoopTest extends FlowTestCase
         static::assertSame(
             [[['id' => 4], ['id' => 5]]],
             array_map(
-                static fn(Rows $batch): array => $batch->toArray(),
+                static fn(CorruptedRecordException|Rows $batch): array => (
+                    $batch instanceof Rows ? $batch->toArray() : [$batch->getMessage()]
+                ),
                 iterator_to_array(
                     (new FileReadLoop(FileReadMother::of(
                         schema(int_schema('id')),
@@ -240,7 +218,9 @@ final class FileReadLoopTest extends FlowTestCase
         static::assertSame(
             [[['id' => 3], ['id' => 4]], [['id' => 5]]],
             array_map(
-                static fn(Rows $batch): array => $batch->toArray(),
+                static fn(CorruptedRecordException|Rows $batch): array => (
+                    $batch instanceof Rows ? $batch->toArray() : [$batch->getMessage()]
+                ),
                 iterator_to_array(
                     (new FileReadLoop(
                         FileReadMother::of(schema(int_schema('id')), FileColumnsContext::discovering(names: []), 2),
@@ -267,7 +247,9 @@ final class FileReadLoopTest extends FlowTestCase
         static::assertSame(
             [[['id' => 5], ['id' => 6], ['id' => 7]]],
             array_map(
-                static fn(Rows $batch): array => $batch->toArray(),
+                static fn(CorruptedRecordException|Rows $batch): array => (
+                    $batch instanceof Rows ? $batch->toArray() : [$batch->getMessage()]
+                ),
                 iterator_to_array(
                     (new FileReadLoop(
                         FileReadMother::of(schema(int_schema('id')), FileColumnsContext::discovering(names: []), 10),
@@ -295,7 +277,9 @@ final class FileReadLoopTest extends FlowTestCase
         static::assertSame(
             [[['id' => 4, 'year' => '2024']]],
             array_map(
-                static fn(Rows $batch): array => $batch->toArray(),
+                static fn(CorruptedRecordException|Rows $batch): array => (
+                    $batch instanceof Rows ? $batch->toArray() : [$batch->getMessage()]
+                ),
                 iterator_to_array(
                     (new FileReadLoop(
                         FileReadMother::of(
@@ -332,7 +316,9 @@ final class FileReadLoopTest extends FlowTestCase
         static::assertSame(
             [[['id' => 7], ['id' => 8]]],
             array_map(
-                static fn(Rows $batch): array => $batch->toArray(),
+                static fn(CorruptedRecordException|Rows $batch): array => (
+                    $batch instanceof Rows ? $batch->toArray() : [$batch->getMessage()]
+                ),
                 iterator_to_array(
                     (new FileReadLoop(
                         FileReadMother::of(schema(int_schema('id')), FileColumnsContext::discovering(names: []), 10),
@@ -357,7 +343,9 @@ final class FileReadLoopTest extends FlowTestCase
         static::assertSame(
             [[['id' => 7], ['id' => 8]]],
             array_map(
-                static fn(Rows $batch): array => $batch->toArray(),
+                static fn(CorruptedRecordException|Rows $batch): array => (
+                    $batch instanceof Rows ? $batch->toArray() : [$batch->getMessage()]
+                ),
                 iterator_to_array(
                     (new FileReadLoop(
                         FileReadMother::of(schema(int_schema('id')), FileColumnsContext::discovering(names: []), 10),
@@ -386,7 +374,9 @@ final class FileReadLoopTest extends FlowTestCase
         static::assertSame(
             [[['id' => 2]], [['id' => 3]]],
             array_map(
-                static fn(Rows $batch): array => $batch->toArray(),
+                static fn(CorruptedRecordException|Rows $batch): array => (
+                    $batch instanceof Rows ? $batch->toArray() : [$batch->getMessage()]
+                ),
                 iterator_to_array(
                     (new FileReadLoop(
                         FileReadMother::of(schema(int_schema('id')), FileColumnsContext::discovering(names: []), 10),
@@ -416,7 +406,9 @@ final class FileReadLoopTest extends FlowTestCase
         static::assertSame(
             [[['id' => 2]]],
             array_map(
-                static fn(Rows $batch): array => $batch->toArray(),
+                static fn(CorruptedRecordException|Rows $batch): array => (
+                    $batch instanceof Rows ? $batch->toArray() : [$batch->getMessage()]
+                ),
                 iterator_to_array(
                     (new FileReadLoop(
                         FileReadMother::of(schema(int_schema('id')), FileColumnsContext::discovering(names: []), 10),

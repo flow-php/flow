@@ -32,8 +32,13 @@ final class RustJsonOpenSource implements JsonOpenSource
     /**
      * @return RustIterator<Rows>
      */
-    public function batches(Schema $schema, int $batchSize, Backend $backend): RustIterator
-    {
+    public function batches(
+        Schema $schema,
+        int $batchSize,
+        Backend $backend,
+        ?int $sampleSize = null,
+        ?Schema $known = null,
+    ): RustIterator {
         throw new RuntimeException('flow_php extension is not loaded');
     }
 

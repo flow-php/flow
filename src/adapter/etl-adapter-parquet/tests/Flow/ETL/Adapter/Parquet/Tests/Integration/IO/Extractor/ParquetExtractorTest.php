@@ -19,6 +19,7 @@ use Flow\ETL\Tests\Context\SplitCoverage;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\Double\RecordingFilesystem;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Cardinality;
 use Flow\ETL\Values\Schema\Definition;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
@@ -201,7 +202,11 @@ final class ParquetExtractorTest extends FlowIntegrationTestCase
         $extractor->schema();
 
         iterator_to_array(
-            $extractor->extract(flow_context(config())->backend(), new Criteria(pathFilter: new RejectingFilter())),
+            FlowTestCase::extracted(
+                $extractor,
+                flow_context(config())->backend(),
+                new Criteria(pathFilter: new RejectingFilter()),
+            ),
             false,
         );
 
@@ -266,7 +271,11 @@ final class ParquetExtractorTest extends FlowIntegrationTestCase
 
         $extractedRows = 0;
 
-        foreach ($extractor->extract(flow_context(config())->backend(), new Criteria(limit: 2)) as $batch) {
+        foreach (FlowTestCase::extracted(
+            $extractor,
+            flow_context(config())->backend(),
+            new Criteria(limit: 2),
+        ) as $batch) {
             $extractedRows += $batch->count();
         }
 
@@ -282,8 +291,8 @@ final class ParquetExtractorTest extends FlowIntegrationTestCase
         $warm->withMetadataColumns(true);
 
         static::assertEquals(
-            iterator_to_array($cold->extract(flow_context(config())->backend(), new Criteria())),
-            iterator_to_array($warm->extract(flow_context(config())->backend(), new Criteria())),
+            iterator_to_array(FlowTestCase::extracted($cold, flow_context(config())->backend(), new Criteria())),
+            iterator_to_array(FlowTestCase::extracted($warm, flow_context(config())->backend(), new Criteria())),
         );
     }
 
@@ -294,7 +303,7 @@ final class ParquetExtractorTest extends FlowIntegrationTestCase
             columns: ['email'],
         )->withMetadataColumns(true);
 
-        foreach ($extractor->extract(flow_context(config())->backend(), new Criteria()) as $batch) {
+        foreach (FlowTestCase::extracted($extractor, flow_context(config())->backend(), new Criteria()) as $batch) {
             static::assertSame($extractor->schema()->names(), $batch->schema()->names());
 
             break;
@@ -391,7 +400,7 @@ final class ParquetExtractorTest extends FlowIntegrationTestCase
         $extractor = from_parquet(path(__DIR__
         . '/../../../Fixtures/Pagination/partitioned/date=2024-01-01/*.parquet'));
 
-        foreach ($extractor->extract(flow_context(config())->backend(), new Criteria()) as $rows) {
+        foreach (FlowTestCase::extracted($extractor, flow_context(config())->backend(), new Criteria()) as $rows) {
             static::assertSame(['id', 'name', 'date'], array_keys($rows->toArray()[0]));
             static::assertSame('2024-01-01', $rows->column('date')->value(0));
             static::assertEquals($extractor->schema(), $rows->schema());
@@ -453,7 +462,7 @@ final class ParquetExtractorTest extends FlowIntegrationTestCase
         $extractor = from_parquet(path(__DIR__ . '/../../../Fixtures/Pagination/partitioned/date=2024-01-01/*.parquet'))
             ->partitionTypes(partition_types(date: type_datetime()));
 
-        foreach ($extractor->extract(flow_context(config())->backend(), new Criteria()) as $rows) {
+        foreach (FlowTestCase::extracted($extractor, flow_context(config())->backend(), new Criteria()) as $rows) {
             static::assertEquals($extractor->schema(), $rows->schema());
             static::assertEquals(new DateTimeImmutable('2024-01-01 00:00:00 UTC'), $rows->column('date')->value(0));
 
@@ -467,10 +476,14 @@ final class ParquetExtractorTest extends FlowIntegrationTestCase
     {
         $filesystem = new CountingFilesystem(new NativeLocalFilesystem());
 
-        $generator = from_parquet(
-            path(__DIR__ . '/../../../Fixtures/Pagination/partitioned/*/*.parquet'),
-            filesystem: $filesystem,
-        )->extract(flow_context(config())->backend(), new Criteria());
+        $generator = FlowTestCase::extracted(
+            from_parquet(
+                path(__DIR__ . '/../../../Fixtures/Pagination/partitioned/*/*.parquet'),
+                filesystem: $filesystem,
+            ),
+            flow_context(config())->backend(),
+            new Criteria(),
+        );
         $generator->current();
         unset($generator);
 
@@ -539,10 +552,14 @@ final class ParquetExtractorTest extends FlowIntegrationTestCase
     {
         $filesystem = new CountingFilesystem(new NativeLocalFilesystem());
 
-        foreach (from_parquet(
-            path(__DIR__ . '/../../../Fixtures/Pagination/partitioned/*/*.parquet'),
-            filesystem: $filesystem,
-        )->extract(flow_context(config())->backend(), new Criteria()) as $_rows) {
+        foreach (FlowTestCase::extracted(
+            from_parquet(
+                path(__DIR__ . '/../../../Fixtures/Pagination/partitioned/*/*.parquet'),
+                filesystem: $filesystem,
+            ),
+            flow_context(config())->backend(),
+            new Criteria(),
+        ) as $_rows) {
         }
 
         static::assertSame($filesystem->readFromCalls, $filesystem->closedStreams());
@@ -552,10 +569,14 @@ final class ParquetExtractorTest extends FlowIntegrationTestCase
     {
         $filesystem = new CountingFilesystem(new NativeLocalFilesystem());
 
-        foreach (from_parquet(
-            path(__DIR__ . '/../../../Fixtures/Pagination/partitioned/*/*.parquet'),
-            filesystem: $filesystem,
-        )->extract(flow_context(config())->backend(), new Criteria(offset: 2500)) as $_rows) {
+        foreach (FlowTestCase::extracted(
+            from_parquet(
+                path(__DIR__ . '/../../../Fixtures/Pagination/partitioned/*/*.parquet'),
+                filesystem: $filesystem,
+            ),
+            flow_context(config())->backend(),
+            new Criteria(offset: 2500),
+        ) as $_rows) {
         }
 
         static::assertSame($filesystem->readFromCalls, $filesystem->closedStreams());
@@ -565,10 +586,14 @@ final class ParquetExtractorTest extends FlowIntegrationTestCase
     {
         $filesystem = new CountingFilesystem(new NativeLocalFilesystem());
 
-        $generator = from_parquet(
-            path(__DIR__ . '/../../../Fixtures/Pagination/partitioned/*/*.parquet'),
-            filesystem: $filesystem,
-        )->extract(flow_context(config())->backend(), new Criteria());
+        $generator = FlowTestCase::extracted(
+            from_parquet(
+                path(__DIR__ . '/../../../Fixtures/Pagination/partitioned/*/*.parquet'),
+                filesystem: $filesystem,
+            ),
+            flow_context(config())->backend(),
+            new Criteria(),
+        );
 
         static::assertTrue($generator->valid());
         $generator->send(Signal::STOP);
@@ -631,7 +656,8 @@ final class ParquetExtractorTest extends FlowIntegrationTestCase
 
         static::assertSame(
             [],
-            iterator_to_array($extractor->extract(
+            iterator_to_array(FlowTestCase::extracted(
+                $extractor,
                 flow_context(config())->backend(),
                 new Criteria(pathFilter: new RejectingFilter()),
             )),
@@ -642,8 +668,11 @@ final class ParquetExtractorTest extends FlowIntegrationTestCase
 
     public function test_signal_stop(): void
     {
-        $generator = from_parquet(path(__DIR__ . '/../../../Fixtures/Pagination/*.parquet'))
-            ->extract(flow_context(config())->backend(), new Criteria());
+        $generator = FlowTestCase::extracted(
+            from_parquet(path(__DIR__ . '/../../../Fixtures/Pagination/*.parquet')),
+            flow_context(config())->backend(),
+            new Criteria(),
+        );
 
         static::assertTrue($generator->valid());
         $generator->next();
@@ -654,9 +683,11 @@ final class ParquetExtractorTest extends FlowIntegrationTestCase
 
     public function test_signal_stop_on_the_first_file_tail_batch_skips_the_remaining_files(): void
     {
-        $generator = from_parquet(path(__DIR__ . '/../../../Fixtures/Pagination/*.parquet'))
-            ->withBatchSize(1500)
-            ->extract(flow_context(config())->backend(), new Criteria());
+        $generator = FlowTestCase::extracted(
+            from_parquet(path(__DIR__ . '/../../../Fixtures/Pagination/*.parquet'))->withBatchSize(1500),
+            flow_context(config())->backend(),
+            new Criteria(),
+        );
 
         static::assertTrue($generator->valid());
         $generator->send(Signal::STOP);
@@ -676,9 +707,11 @@ final class ParquetExtractorTest extends FlowIntegrationTestCase
         // 01_1000.parquet fills the first batch; 02_500.parquet must be read up to the 200 rows still
         // wanted, not up to the full limit again
         $batches = iterator_to_array(
-            from_parquet(path(__DIR__ . '/../../../Fixtures/Pagination/*.parquet'))
-                ->withBatchSize(1000)
-                ->extract(flow_context(config())->backend(), new Criteria(limit: 1200)),
+            FlowTestCase::extracted(
+                from_parquet(path(__DIR__ . '/../../../Fixtures/Pagination/*.parquet'))->withBatchSize(1000),
+                flow_context(config())->backend(),
+                new Criteria(limit: 1200),
+            ),
             false,
         );
 
@@ -906,7 +939,8 @@ final class ParquetExtractorTest extends FlowIntegrationTestCase
         ParquetFilesContext::writeRowGroups($filesystem, 'memory://split/a.parquet', 300);
         $extractor = from_parquet('memory://split/a.parquet', filesystem: $filesystem);
         $extractor->withBatchSize(1);
-        $generator = $extractor->extract(
+        $generator = FlowTestCase::extracted(
+            $extractor,
             flow_context()->backend(),
             (new Criteria())->withSplit($extractor->splits(new Criteria(), 100_000)[0]),
         );
@@ -924,12 +958,11 @@ final class ParquetExtractorTest extends FlowIntegrationTestCase
     {
         $filesystem = memory_filesystem();
         ParquetFilesContext::writeRowGroups($filesystem, 'memory://split/a.parquet', 300);
-        $generator = from_parquet('memory://split/a.parquet', filesystem: $filesystem)
-            ->withBatchSize(1)
-            ->extract(
-                flow_context()->backend(),
-                (new Criteria())->withSplit(new FileSplit(path('memory://split/a.parquet'), 0, null)),
-            );
+        $generator = FlowTestCase::extracted(
+            from_parquet('memory://split/a.parquet', filesystem: $filesystem)->withBatchSize(1),
+            flow_context()->backend(),
+            (new Criteria())->withSplit(new FileSplit(path('memory://split/a.parquet'), 0, null)),
+        );
         $totalRows = 0;
 
         foreach ($generator as $rows) {
@@ -948,7 +981,8 @@ final class ParquetExtractorTest extends FlowIntegrationTestCase
         $extractor->withBatchSize(10);
         $total = 0;
 
-        foreach ($extractor->extract(
+        foreach (FlowTestCase::extracted(
+            $extractor,
             flow_context()->backend(),
             (new Criteria(25))->withSplit($extractor->splits(new Criteria(), 100_000)[0]),
         ) as $rows) {

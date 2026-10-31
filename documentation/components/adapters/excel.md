@@ -71,10 +71,15 @@ starts at row 5.
 ### Header and missing cells
 
 ```
-header row  [' id ', '', 'name']   →  columns ['id', 'e01', 'name']   (trimmed, a blank cell named e + its position)
-record      ['1', 'a']             →  ['id' => '1', 'e01' => 'a', 'name' => null]   (a cell the record lacks is null)
-record      ['1', '', 'x']         →  'e01' => null   (a present '' is null; `withConvertEmptyToNull(false)` keeps it '')
+header row  [' id ', '', 'name']   ->  columns ['id', 'e01', 'name']   (trimmed, a blank cell named e + its position)
+record      ['1', 'a']             ->  ['id' => '1', 'e01' => 'a', 'name' => null]; `withMissingColumnsAsNull(false)` makes it a corrupted record
+record      ['1', 'a', 'x', '']    ->  corrupted record (a non-empty cell past the header), an empty one is dropped
+record      ['1', '', 'x']         ->  'e01' => null   (a present '' is null; `withConvertEmptyToNull(false)` keeps it '')
 ```
+
+A corrupted record throws `CorruptedRecordException`, or goes to `->withCorruptedRecords($loader)`, see
+[Corrupted Records](/documentation/components/core/corrupted-records.md). A column of `->withSchema()` missing from the
+header throws `SchemaValidationException`.
 
 A header cell that is not text (a date, a number) is named like a blank one.
 

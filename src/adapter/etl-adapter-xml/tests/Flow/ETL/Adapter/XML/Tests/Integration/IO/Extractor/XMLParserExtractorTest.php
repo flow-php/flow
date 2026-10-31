@@ -20,6 +20,7 @@ use Flow\ETL\Tests\Double\RecordingFilesystem;
 use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\Double\UnsizedFilesystem;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Cardinality;
 use Flow\Filesystem\Tests\Double\RejectingFilter;
 
@@ -363,9 +364,11 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
 
     public function test_signal_stop(): void
     {
-        $generator = from_xml(path_real(__DIR__ . '/../../../Fixtures/flow_orders.xml'))
-            ->withXMLNodePath('root/row')
-            ->extract(flow_context(config())->backend(), new Criteria());
+        $generator = FlowTestCase::extracted(
+            from_xml(path_real(__DIR__ . '/../../../Fixtures/flow_orders.xml'))->withXMLNodePath('root/row'),
+            flow_context(config())->backend(),
+            new Criteria(),
+        );
 
         static::assertTrue($generator->valid());
         $generator->next();
@@ -378,9 +381,11 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
 
     public function test_signal_stop_on_the_first_file_tail_batch_skips_the_remaining_files(): void
     {
-        $generator = from_xml(__DIR__ . '/../../../Fixtures/cross_stream/*/file.xml', 'root/item')
-            ->withBatchSize(10)
-            ->extract(flow_context(config())->backend(), new Criteria());
+        $generator = FlowTestCase::extracted(
+            from_xml(__DIR__ . '/../../../Fixtures/cross_stream/*/file.xml', 'root/item')->withBatchSize(10),
+            flow_context(config())->backend(),
+            new Criteria(),
+        );
 
         static::assertTrue($generator->valid());
         $generator->send(Signal::STOP);
@@ -409,7 +414,11 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
             ->withXMLNodePath('root/items/item')
             ->withBatchSize(1);
 
-        foreach ($extractor->extract(flow_context(config())->backend(), new Criteria(limit: 1)) as $_rows) {
+        foreach (FlowTestCase::extracted(
+            $extractor,
+            flow_context(config())->backend(),
+            new Criteria(limit: 1),
+        ) as $_rows) {
         }
 
         static::assertContains('closeSource', $filesystem->calls);
@@ -444,7 +453,7 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
     {
         $extractor = from_xml(__DIR__ . '/../../../Fixtures/one_line_items.xml', 'root/item')->withBatchSize(1);
 
-        $extractor->extract(flow_context(config())->backend(), new Criteria())->send(Signal::STOP);
+        FlowTestCase::extracted($extractor, flow_context(config())->backend(), new Criteria())->send(Signal::STOP);
 
         static::assertCount(10, ExtractedRows::of($extractor));
     }
@@ -456,7 +465,7 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
             ->withBatchSize(1)
             ->withBufferSize(35);
 
-        $extractor->extract(flow_context(config())->backend(), new Criteria())->send(Signal::STOP);
+        FlowTestCase::extracted($extractor, flow_context(config())->backend(), new Criteria())->send(Signal::STOP);
 
         static::assertEquals(
             ExtractedRows::of(from_xml(__DIR__ . '/../../../Fixtures/one_line_items.xml', 'root/item')),
@@ -467,10 +476,13 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
     public function test_a_stopped_read_closes_its_stream(): void
     {
         $filesystem = new RecordingFilesystem(native_local_filesystem());
-        $generator = (new XMLParserExtractor(path_real(__DIR__ . '/../../../Fixtures/simple_items.xml'), $filesystem))
-            ->withXMLNodePath('root/items/item')
-            ->withBatchSize(1)
-            ->extract(flow_context(config())->backend(), new Criteria());
+        $generator = FlowTestCase::extracted(
+            (new XMLParserExtractor(path_real(__DIR__ . '/../../../Fixtures/simple_items.xml'), $filesystem))
+                ->withXMLNodePath('root/items/item')
+                ->withBatchSize(1),
+            flow_context(config())->backend(),
+            new Criteria(),
+        );
 
         static::assertTrue($generator->valid());
 
@@ -523,9 +535,11 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
         $backend = new SpyBackend();
 
         iterator_to_array(
-            from_xml(path_real(__DIR__ . '/../../../Fixtures/one_line_items.xml'))
-                ->withXMLNodePath('root/item')
-                ->extract(flow_context(config_builder()->backend($backend)->build())->backend(), new Criteria()),
+            FlowTestCase::extracted(
+                from_xml(path_real(__DIR__ . '/../../../Fixtures/one_line_items.xml'))->withXMLNodePath('root/item'),
+                flow_context(config_builder()->backend($backend)->build())->backend(),
+                new Criteria(),
+            ),
             false,
         );
 
@@ -560,7 +574,8 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
     {
         $extractor = from_xml(__DIR__ . '/../../../Fixtures/flow_orders.xml', 'root/row');
         $extractor->withBatchSize(1);
-        $generator = $extractor->extract(
+        $generator = FlowTestCase::extracted(
+            $extractor,
             flow_context()->backend(),
             (new Criteria())->withSplit($extractor->splits(new Criteria(), 1)[0]),
         );

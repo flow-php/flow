@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Rows;
 
 use function array_map;
@@ -205,7 +205,7 @@ final class SchemaTest extends FlowIntegrationTestCase
 
         // Row 1's nulls are TYPED nulls in known columns rather than untyped null columns a later
         // row contradicts.
-        $batches = iterator_to_array($extractor->extract(flow_context()->backend(), new Criteria()));
+        $batches = iterator_to_array(FlowTestCase::extracted($extractor, flow_context()->backend()));
 
         static::assertSame(
             [

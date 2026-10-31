@@ -25,7 +25,11 @@ final class JsonLinesExtractorTypedColumnsTest extends FlowTestCase
 
         $actual = [];
 
-        foreach ($extractor->extract(flow_context(config_builder()->build())->backend(), new Criteria()) as $rows) {
+        foreach (FlowTestCase::extracted(
+            $extractor,
+            flow_context(config_builder()->build())->backend(),
+            new Criteria(),
+        ) as $rows) {
             foreach ($rows->toArray() as $row) {
                 $actual[] = $row;
             }

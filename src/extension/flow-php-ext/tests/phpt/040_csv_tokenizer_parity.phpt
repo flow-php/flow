@@ -14,7 +14,6 @@ $cases = [
     'space_before_enclosure' => '2261222c2020226222',
     'junk_after_close' => '612c226222782c63',
     'unterminated' => '22756e7465726d696e617465642c61',
-    'blank' => '',
     'trailing_sep' => '612c622c',
 ];
 
@@ -25,6 +24,9 @@ foreach ($cases as $case => $hex) {
 
     echo $case, ': ', $fields === $expected ? 'identical' : 'FAIL ' . json_encode(array_map(static fn(?string $f): ?string => $f === null ? null : bin2hex($f), $fields)), "\n";
 }
+
+// a blank line is no record, as RecordDecoder::decode() skips str_getcsv('')'s [null]
+echo 'blank: ', csv_native_rows("\n", ',', '"', '\\', false, false, false)[1] === [] ? 'no row' : 'FAIL', "\n";
 ?>
 --EXPECT--
 plain: identical
@@ -34,5 +36,5 @@ doubled_quote: identical
 space_before_enclosure: identical
 junk_after_close: identical
 unterminated: identical
-blank: identical
 trailing_sep: identical
+blank: no row

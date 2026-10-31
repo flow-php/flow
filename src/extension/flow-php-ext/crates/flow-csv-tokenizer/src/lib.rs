@@ -6,7 +6,7 @@
 use std::io;
 use std::ops::Range;
 
-use memchr::{memchr, memchr2};
+use memchr::{memchr, memchr2, memchr_iter};
 
 pub struct Dialect {
     pub separator: u8,
@@ -59,6 +59,8 @@ enum Span {
 pub struct Record {
     /// Where the record begins in the tokenizer's buffer.
     start: usize,
+    /// Where it ends, its line ending excluded.
+    end: usize,
     fields: Vec<Span>,
     unescaped: Vec<u8>,
 }
@@ -73,6 +75,11 @@ impl Record {
     /// Never 0: `str_getcsv('')` is `[null]`, one field.
     pub fn field_count(&self) -> usize {
         self.fields.len().max(1)
+    }
+
+    /// An empty line: no field at all.
+    pub fn is_empty(&self) -> bool {
+        self.fields.is_empty()
     }
 
     fn clear(&mut self) {
@@ -136,6 +143,9 @@ pub struct Tokenizer {
     /// The BOM the first record loses once its end is found, counted in its bytes.
     bom: usize,
     last_record_bytes: usize,
+    /// The newlines before `counted`, the buffer position `line()` last counted to, compacted bytes included.
+    newlines: u64,
+    counted: usize,
 }
 
 impl Tokenizer {
@@ -153,6 +163,8 @@ impl Tokenizer {
             first_record: true,
             bom: 0,
             last_record_bytes: 0,
+            newlines: 0,
+            counted: 0,
         }
     }
 
@@ -160,6 +172,8 @@ impl Tokenizer {
     /// are no longer valid.
     fn compact(&mut self) {
         if self.record_start > 0 {
+            self.count_newlines_to(self.record_start);
+            self.counted -= self.record_start;
             self.buffer.drain(..self.record_start);
             self.scanned -= self.record_start;
             self.record_start = 0;
@@ -202,6 +216,26 @@ impl Tokenizer {
             None if index == 0 && record.fields.is_empty() => Field::Null,
             None => Field::Missing,
         }
+    }
+
+    /// The 1-based line `record` starts on among every byte fed; valid until the next `feed()`. Each byte is counted
+    /// once: records only move forward.
+    pub fn line(&mut self, record: &Record) -> u64 {
+        self.count_newlines_to(record.start);
+
+        1 + self.newlines
+    }
+
+    fn count_newlines_to(&mut self, position: usize) {
+        if position > self.counted {
+            self.newlines += memchr_iter(b'\n', &self.buffer[self.counted..position]).count() as u64;
+            self.counted = position;
+        }
+    }
+
+    /// The record's bytes as the stream holds them, its line ending excluded; valid until the next `feed()`.
+    pub fn text<'a>(&'a self, record: &'a Record) -> &'a [u8] {
+        &self.buffer[record.start..record.end.max(record.start)]
     }
 
     pub fn next(&mut self, record: &mut Record) -> bool {
@@ -390,6 +424,7 @@ impl Tokenizer {
             limit -= 1;
         }
 
+        open.end = limit;
         let limit = limit - base;
 
         match self.scan {
@@ -672,5 +707,51 @@ mod tests {
         assert_eq!(record.field_count(), 1);
         assert!(matches!(tokenizer.field(&record, 0), Field::Value(b"a")));
         assert!(matches!(tokenizer.field(&record, 1), Field::Missing));
+    }
+
+    #[test]
+    fn text_is_the_record_as_read_without_its_line_ending_and_a_blank_line_is_empty() {
+        let mut tokenizer = Tokenizer::new(comma(), true);
+        let mut record = Record::default();
+        let mut seen = Vec::new();
+
+        tokenizer.feed(b"\xEF\xBB\xBFa,\"b\r\nc\"\r\n\r\n4,5");
+        tokenizer.finish();
+
+        while tokenizer.next(&mut record) {
+            seen.push((tokenizer.text(&record).to_vec(), record.is_empty()));
+        }
+
+        assert_eq!(
+            seen,
+            vec![
+                (b"a,\"b\r\nc\"".to_vec(), false),
+                (b"".to_vec(), true),
+                (b"4,5".to_vec(), false),
+            ]
+        );
+    }
+
+    #[test]
+    fn a_line_counts_every_newline_fed_before_the_record_compacted_or_not() {
+        let mut tokenizer = Tokenizer::new(comma(), true);
+        let mut record = Record::default();
+        let mut lines = Vec::new();
+
+        for chunk in [&b"\xEF\xBB\xBFa,\"b\r\nc\"\r\n\r"[..], b"\n4,5\n", b"6,7"] {
+            tokenizer.feed(chunk);
+
+            while tokenizer.next(&mut record) {
+                lines.push(tokenizer.line(&record));
+            }
+        }
+
+        tokenizer.finish();
+
+        while tokenizer.next(&mut record) {
+            lines.push(tokenizer.line(&record));
+        }
+
+        assert_eq!(lines, vec![1, 3, 4, 5]);
     }
 }

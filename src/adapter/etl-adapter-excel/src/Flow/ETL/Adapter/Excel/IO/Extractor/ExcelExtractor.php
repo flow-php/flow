@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Excel\IO\Extractor;
 
 use Flow\ETL\Adapter\Excel\IO\Inference\ExcelSniffer;
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Functions\ScalarFunction;
+use Flow\ETL\IO\CorruptedRecordsRouter;
 use Flow\ETL\IO\Extractor;
 use Flow\ETL\IO\Extractor\BatchableExtractor;
 use Flow\ETL\IO\Extractor\Criteria;
@@ -29,6 +31,7 @@ use Flow\ETL\IO\Inference\SampledUnits;
 use Flow\ETL\IO\Inference\SchemaInference;
 use Flow\ETL\IO\Inference\SchemaInferenceBuilder;
 use Flow\ETL\IO\Inference\SchemaInferrer;
+use Flow\ETL\IO\Loader;
 use Flow\ETL\Values\BatchSize;
 use Flow\ETL\Values\Cardinality;
 use Flow\ETL\Values\Column\Backend;
@@ -49,6 +52,7 @@ final class ExcelExtractor implements
     FileExtractor,
     InfersSchema,
     MetadataColumnsExtractor,
+    CorruptedRecordsRouter,
     SplittableExtractor
 {
     private BatchSize $batchSize;
@@ -75,6 +79,8 @@ final class ExcelExtractor implements
      * What the last inference's samples read; null until one ran. Kept apart from $sampled, which extract() takes.
      */
     private ?SampledUnits $sampledUnits = null;
+
+    private ?Loader $corruptedRecordsLoader = null;
 
     private ?Schema $schema = null;
 
@@ -129,8 +135,13 @@ final class ExcelExtractor implements
         return true;
     }
 
+    public function corruptedRecordsLoader(): ?Loader
+    {
+        return $this->corruptedRecordsLoader;
+    }
+
     /**
-     * @return Generator<int, Rows, Signal|null, void>
+     * @return Generator<int, CorruptedRecordException|Rows, Signal|null, void>
      */
     public function extract(Backend $backend, Criteria $criteria): Generator
     {
@@ -154,7 +165,9 @@ final class ExcelExtractor implements
                         $this->derived->from(),
                     )
                     : null,
+                $this->schema === null ? $this->inference->sampleSize : null,
             ),
+            $this->corruptedRecordsLoader,
         ))->extract($backend, $criteria);
     }
 
@@ -176,7 +189,9 @@ final class ExcelExtractor implements
                         $this->derived->from(),
                     )
                     : null,
+                $this->schema === null ? $this->inference->sampleSize : null,
             ),
+            $this->corruptedRecordsLoader,
         );
     }
 
@@ -311,6 +326,21 @@ final class ExcelExtractor implements
     public function withConvertEmptyToNull(bool $convertEmptyToNull): self
     {
         $this->readOptions = $this->readOptions->withConvertEmptyToNull($convertEmptyToNull);
+        $this->forgetInference();
+
+        return $this;
+    }
+
+    public function withCorruptedRecords(?Loader $loader): static
+    {
+        $this->corruptedRecordsLoader = $loader;
+
+        return $this;
+    }
+
+    public function withMissingColumnsAsNull(bool $missingColumnsAsNull): self
+    {
+        $this->readOptions = $this->readOptions->withMissingColumnsAsNull($missingColumnsAsNull);
         $this->forgetInference();
 
         return $this;

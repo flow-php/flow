@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\GoogleSheet\IO\Extractor;
 
 use Flow\ETL\Adapter\GoogleSheet\IO\Inference\GoogleSheetSniffer;
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Exception\SchemaValidationException;
+use Flow\ETL\IO\CorruptedRecordsRouter;
 use Flow\ETL\IO\Extractor;
 use Flow\ETL\IO\Extractor\BatchableExtractor;
 use Flow\ETL\IO\Extractor\Criteria;
@@ -17,26 +20,33 @@ use Flow\ETL\IO\Extractor\Statistics;
 use Flow\ETL\IO\Inference\SchemaInference;
 use Flow\ETL\IO\Inference\SchemaInferenceBuilder;
 use Flow\ETL\IO\Inference\SchemaInferrer;
+use Flow\ETL\IO\Loader;
 use Flow\ETL\Values\BatchSize;
 use Flow\ETL\Values\Cardinality;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
-use Flow\ETL\Values\Rows\RowsBuilder;
+use Flow\ETL\Values\Rows\RecordBatch;
 use Flow\ETL\Values\Schema;
 use Flow\ETL\Values\Schema\Definition\StringDefinition;
 use Generator;
 use Google\Service\Sheets;
 
 use function array_diff;
-use function array_keys;
-use function array_map;
+use function is_string;
 use function sprintf;
 
 /**
  * @import-type GoogleSheetOptions from GoogleSheetReadOptions
  */
-final class GoogleSheetExtractor implements BatchableExtractor, Extractor, InfersSchema, MetadataColumnsExtractor
+final class GoogleSheetExtractor implements
+    BatchableExtractor,
+    Extractor,
+    InfersSchema,
+    MetadataColumnsExtractor,
+    CorruptedRecordsRouter
 {
+    private ?Loader $corruptedRecordsLoader = null;
+
     private BatchSize $batchSize;
 
     /**
@@ -88,8 +98,13 @@ final class GoogleSheetExtractor implements BatchableExtractor, Extractor, Infer
         return true;
     }
 
+    public function corruptedRecordsLoader(): ?Loader
+    {
+        return $this->corruptedRecordsLoader;
+    }
+
     /**
-     * @return Generator<int, Rows, Signal|null, void>
+     * @return Generator<int, CorruptedRecordException|Rows, Signal|null, void>
      */
     public function extract(Backend $backend, Criteria $criteria): Generator
     {
@@ -112,60 +127,23 @@ final class GoogleSheetExtractor implements BatchableExtractor, Extractor, Infer
         $schema = $this->addMetadataColumns
             ? $base->add(new StringDefinition('_spread_sheet_id'), new StringDefinition('_sheet_name'))
             : $base;
-        $checked = $this->schema !== null || $this->inference->unionByName;
+        $checked = $this->schema === null && $this->inference->unionByName;
 
-        $batchSize = $this->batchSize();
         $yielded = 0;
         // the sample already holds every row when its range covered the grid, so the read is served from it rather
         // than fetching the same rows again; nothing can have diverged from a schema read off these very rows
-        $batches = ($sampledNow ? $sniffer->batches($batchSize) : null) ?? $reader->batches(
-            $this->rowsPerPage,
-            $batchSize,
+        $sheetRows = ($sampledNow ? $sniffer->rows() : null) ?? $reader->rows($this->rowsPerPage);
+        $uri = sprintf('google-sheet://%s/%s', $this->spreadsheetId, $this->columnRange->sheetName);
+        $batch = new RecordBatch(
+            $schema,
+            $backend,
+            $this->batchSize(),
+            $uri,
+            $this->schema === null ? $this->inference->sampleSize : null,
         );
 
-        foreach ($batches as $batch) {
-            if (!$checked) {
-                $columns = array_map(static fn(int|string $name): string => (string) $name, array_keys($batch[0]));
-
-                // a row that carries no columns is not a divergence: withHeader(false) decodes a leading blank
-                // row to one, and the names come from the row after it
-                if ($columns !== []) {
-                    $expected = $base->names();
-
-                    if (array_diff($columns, $expected) !== [] || array_diff($expected, $columns) !== []) {
-                        // a sheet is one source, so it is named as both the read and the inferred-from side
-                        throw InferredSchemaException::columnsDiverge(
-                            sprintf('spreadsheet "%s" sheet "%s"', $this->spreadsheetId, $this->columnRange->sheetName),
-                            sprintf('spreadsheet "%s" sheet "%s"', $this->spreadsheetId, $this->columnRange->sheetName),
-                            $expected,
-                            $columns,
-                            $this->inference->sampleSize,
-                            $this->inference->filesToSniff,
-                        );
-                    }
-
-                    $checked = true;
-                }
-            }
-
-            if ($this->addMetadataColumns) {
-                $batch = array_map(
-                    function (array $values): array {
-                        // assigned, never unpacked: a numeric column name is an int array key and ... renumbers it
-                        $values['_spread_sheet_id'] = $this->spreadsheetId;
-                        $values['_sheet_name'] = $this->columnRange->sheetName;
-
-                        return $values;
-                    },
-                    $batch,
-                );
-            }
-
-            $rows = (new RowsBuilder($schema, $backend))
-                ->appendRows($batch)
-                ->finish();
-
-            $yielded += $rows->count();
+        foreach ($this->recordBatches($batch, $uri, $sheetRows, $base, $checked) as $rows) {
+            $yielded += $rows instanceof Rows ? $rows->count() : 0;
 
             $signal = yield $rows;
 
@@ -239,9 +217,16 @@ final class GoogleSheetExtractor implements BatchableExtractor, Extractor, Infer
         return $this;
     }
 
-    public function withDropExtraColumns(bool $dropExtraColumns): self
+    public function withCorruptedRecords(?Loader $loader): static
     {
-        $this->readOptions = $this->readOptions->withDropExtraColumns($dropExtraColumns);
+        $this->corruptedRecordsLoader = $loader;
+
+        return $this;
+    }
+
+    public function withMissingColumnsAsNull(bool $missingColumnsAsNull): self
+    {
+        $this->readOptions = $this->readOptions->withMissingColumnsAsNull($missingColumnsAsNull);
         $this->derivedSchema = null;
         $this->gridRowCount = null;
         $this->statistics = null;
@@ -305,5 +290,70 @@ final class GoogleSheetExtractor implements BatchableExtractor, Extractor, Infer
         $this->schema = $schema;
 
         return $this;
+    }
+
+    /**
+     * @param Generator<int, list<mixed>> $sheetRows the raw cells of every row, keyed by its number in the sheet
+     *
+     * @throws InferredSchemaException when the sheet's header diverges from the inferred schema
+     *
+     * @return Generator<int, CorruptedRecordException|Rows>
+     */
+    private function recordBatches(
+        RecordBatch $batch,
+        string $uri,
+        Generator $sheetRows,
+        Schema $base,
+        bool $checked,
+    ): Generator {
+        $decoder = $this->readOptions->decoder();
+        $sheet = sprintf('spreadsheet "%s" sheet "%s"', $this->spreadsheetId, $this->columnRange->sheetName);
+
+        foreach ($sheetRows as $number => $cells) {
+            $values = $decoder->decode($cells);
+            $columns = $decoder->headers();
+
+            if (!$checked && $columns !== null) {
+                $checked = true;
+                $expected = $base->names();
+                $missing = $base->missingFrom($columns);
+
+                if ($this->schema !== null && $missing !== []) {
+                    throw SchemaValidationException::declaredColumnsMissing($uri, $missing, $columns);
+                }
+
+                if ($this->schema === null && (array_diff($columns, $expected) !== [] || $missing !== [])) {
+                    // a sheet is one source, so it is named as both the read and the inferred-from side
+                    throw InferredSchemaException::columnsDiverge(
+                        $sheet,
+                        $sheet,
+                        $expected,
+                        $columns,
+                        $this->inference->sampleSize,
+                        $this->inference->filesToSniff,
+                    );
+                }
+            }
+
+            if ($values === null) {
+                continue;
+            }
+
+            if (is_string($values)) {
+                yield from $batch->refuse(CorruptedRecordException::fromCells($uri, $number, null, $values, $cells));
+
+                continue;
+            }
+
+            if ($this->addMetadataColumns) {
+                // assigned, never unpacked: a numeric column name is an int array key and ... renumbers it
+                $values['_spread_sheet_id'] = $this->spreadsheetId;
+                $values['_sheet_name'] = $this->columnRange->sheetName;
+            }
+
+            yield from $batch->add($values, $number, fields: $cells);
+        }
+
+        yield from $batch->flush();
     }
 }

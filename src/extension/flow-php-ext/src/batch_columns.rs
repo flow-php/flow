@@ -1,6 +1,5 @@
-//! A batch of native columns, one builder per schema definition, with `RowsBuilder::appendRows()`'s refusals: each
-//! column keeps its first, the lowest refused row wins (then the earliest definition), and a NOT NULL column a row
-//! lacks is refused only when nothing else was. The readers differ only in where a cell comes from.
+//! A batch of native columns, one builder per schema definition. The readers differ only in where a cell comes from
+//! and decide what a refused record becomes.
 
 use std::rc::Rc;
 
@@ -11,12 +10,12 @@ use flow_batch_frame::builder::KindBuilder;
 use flow_batch_frame::key::Key;
 use flow_batch_frame::kind::Kind;
 
-use crate::builder::{definition_nullable, schema_mismatch};
+use crate::builder::definition_nullable;
 use crate::cast::{
     bool_from_str, float_from_str, integer_from_str, json_gate, parse_iso_date, parse_iso_datetime, CastKind,
 };
 use crate::column::RustColumn;
-use crate::ctx::{self, call_method, call_static, ht_for_each, ht_insert, ht_insert_long, zval_long};
+use crate::ctx::{self, call_method, ht_for_each, ht_insert, ht_insert_long};
 use crate::date_check::iso_instant_micros;
 use crate::exception::ext_exception;
 use crate::json_check::json_valid;
@@ -30,10 +29,6 @@ pub struct BatchColumn {
     pub nullable: bool,
     pub plan: Rc<TypePlan>,
     pub values: KindBuilder,
-    /// The first refused row and its `ColumnMismatchException`.
-    pub refusal: Option<(usize, Zval)>,
-    /// The first row lacking this NOT NULL column.
-    pub absent: Option<usize>,
 }
 
 /// The batch being built, and the schema and batch size it is built for.
@@ -43,8 +38,6 @@ pub struct BatchColumns {
     pub batch_size: usize,
     pub columns: Vec<BatchColumn>,
     pub rows: usize,
-    /// Rows already handed out from this source: a refusal names its row in the whole source, as `RecordBatch` does.
-    emitted: usize,
 }
 
 /// A PHP `$batchSize` as a row count: refused unless greater than 0.
@@ -86,8 +79,6 @@ impl BatchColumns {
                 nullable: definition_nullable(definition)?,
                 values: KindBuilder::new(&plan.kind),
                 plan,
-                refusal: None,
-                absent: None,
             });
 
             Ok(())
@@ -99,7 +90,6 @@ impl BatchColumns {
             batch_size,
             columns,
             rows: 0,
-            emitted: 0,
         })
     }
 
@@ -127,10 +117,7 @@ impl BatchColumns {
                     )));
                 }
                 _ => {
-                    let emitted = pending.as_ref().map_or(0, |state| state.emitted);
-                    let mut state = Self::new(schema, json, batch_size)?;
-                    state.emitted = emitted;
-                    *pending = Some(state);
+                    *pending = Some(Self::new(schema, json, batch_size)?);
                     rebuilt = true;
                 }
             }
@@ -157,20 +144,12 @@ impl BatchColumns {
 
         for column in &mut self.columns {
             column.values.truncate(0);
-            column.refusal = None;
-            column.absent = None;
         }
     }
 
-    /// The batch's columns, or its refusal at its row in the whole source: the lowest refused row (ties: the earliest
-    /// definition), else the lowest absent row (ties: the earliest definition) as `missingColumn`. The state is reset
-    /// either way.
+    /// The batch's columns; the state is reset either way.
     pub fn finish(&mut self) -> Result<HeldBatch, PhpException> {
         let batch = self.build();
-
-        if batch.is_ok() {
-            self.emitted += self.rows;
-        }
 
         self.reset();
 
@@ -178,34 +157,6 @@ impl BatchColumns {
     }
 
     fn build(&mut self) -> Result<HeldBatch, PhpException> {
-        // min_by_key() keeps the first of equal rows: the earliest definition
-        if let Some((row, cause)) = self
-            .columns
-            .iter()
-            .filter_map(|column| column.refusal.as_ref())
-            .min_by_key(|(row, _)| *row)
-        {
-            return Err(schema_mismatch(
-                zval_long((self.emitted + *row) as i64),
-                cause.shallow_clone(),
-            ));
-        }
-
-        if let Some((row, column)) = self
-            .columns
-            .iter()
-            .filter_map(|column| Some((column.absent?, column)))
-            .min_by_key(|(row, _)| *row)
-        {
-            let cause = call_static(
-                "Flow\\ETL\\Foundation\\Exception\\ColumnMismatchException",
-                "missingColumn",
-                &mut [call_method(&column.definition, "name", &mut [])?],
-            )?;
-
-            return Err(schema_mismatch(zval_long((self.emitted + row) as i64), cause));
-        }
-
         let mut columns = ZendHashTable::with_capacity(self.columns.len() as u32);
 
         for column in &mut self.columns {

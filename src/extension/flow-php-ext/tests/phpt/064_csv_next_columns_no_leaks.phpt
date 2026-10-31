@@ -20,12 +20,18 @@ $cycle = static function () use ($raw, $schema, $refusing): void {
     foreach ((new RustCSVOpenSource(new MemorySourceStream($raw), ',', '"', '\\', true, true, true, 5))->batches($schema, 2, new RustBackend()) as $batch) {
     }
 
+    foreach ((new RustCSVOpenSource(new MemorySourceStream("name\nx\n"), ',', '"', '\\', true, true, true))->batches($refusing, 2, new RustBackend()) as $batch) {
+        if (!$batch instanceof Flow\ETL\Foundation\Exception\CorruptedRecordException) {
+            throw new LogicException('a refused cell was accepted');
+        }
+    }
+
     try {
-        foreach ((new RustCSVOpenSource(new MemorySourceStream("name\nx\n"), ',', '"', '\\', true, true, true))->batches($refusing, 2, new RustBackend()) as $batch) {
+        foreach ((new RustCSVOpenSource(new MemorySourceStream("name\nx\n"), ',', '"', '\\', true, true, true))->batches($refusing, 2, new RustBackend(), 1) as $batch) {
         }
 
-        throw new LogicException('a refused cell was accepted');
-    } catch (Flow\ETL\Foundation\Exception\SchemaMismatchException) {
+        throw new LogicException('a refused cell past the sample was accepted');
+    } catch (Flow\ETL\Foundation\Exception\InferredSchemaException) {
     }
 };
 

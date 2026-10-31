@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV\IO\Extractor;
 
 use Flow\ETL\Adapter\CSV\IO\Inference\CSVSniffer;
+use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Functions\ScalarFunction;
+use Flow\ETL\IO\CorruptedRecordsRouter;
 use Flow\ETL\IO\Extractor;
 use Flow\ETL\IO\Extractor\BatchableExtractor;
 use Flow\ETL\IO\Extractor\Criteria;
@@ -29,6 +31,7 @@ use Flow\ETL\IO\Inference\SampledUnits;
 use Flow\ETL\IO\Inference\SchemaInference;
 use Flow\ETL\IO\Inference\SchemaInferenceBuilder;
 use Flow\ETL\IO\Inference\SchemaInferrer;
+use Flow\ETL\IO\Loader;
 use Flow\ETL\Values\BatchSize;
 use Flow\ETL\Values\Cardinality;
 use Flow\ETL\Values\Column\Backend;
@@ -47,6 +50,7 @@ final class CSVExtractor implements
     FileExtractor,
     InfersSchema,
     MetadataColumnsExtractor,
+    CorruptedRecordsRouter,
     SplittableExtractor
 {
     private BatchSize $batchSize;
@@ -69,6 +73,8 @@ final class CSVExtractor implements
     /**
      * The source the inferred header was read from; '' until an inference ran.
      */
+
+    private ?Loader $corruptedRecordsLoader = null;
 
     private ?Schema $schema = null;
 
@@ -107,8 +113,13 @@ final class CSVExtractor implements
         return true;
     }
 
+    public function corruptedRecordsLoader(): ?Loader
+    {
+        return $this->corruptedRecordsLoader;
+    }
+
     /**
-     * @return Generator<int, Rows, Signal|null, void>
+     * @return Generator<int, CorruptedRecordException|Rows, Signal|null, void>
      */
     public function extract(Backend $backend, Criteria $criteria): Generator
     {
@@ -132,7 +143,9 @@ final class CSVExtractor implements
                         $this->derived->from(),
                     )
                     : null,
+                $this->schema === null ? $this->inference->sampleSize : null,
             ),
+            $this->corruptedRecordsLoader,
         );
     }
 
@@ -285,6 +298,13 @@ final class CSVExtractor implements
         return $this;
     }
 
+    public function withCorruptedRecords(?Loader $loader): static
+    {
+        $this->corruptedRecordsLoader = $loader;
+
+        return $this;
+    }
+
     public function withEmptyToNull(bool $emptyToNull): self
     {
         $this->derived = new DerivedFromFiles();
@@ -332,6 +352,16 @@ final class CSVExtractor implements
     public function withMetadataColumns(bool $addMetadataColumns): static
     {
         $this->fileColumns = $this->fileColumns->withMetadataColumns($addMetadataColumns);
+
+        return $this;
+    }
+
+    public function withMissingColumnsAsNull(bool $missingColumnsAsNull): self
+    {
+        $this->derived = new DerivedFromFiles();
+        $this->sampled = null;
+        $this->statistics = null;
+        $this->readOptions = $this->readOptions->withMissingColumnsAsNull($missingColumnsAsNull);
 
         return $this;
     }
