@@ -25,8 +25,9 @@ final readonly class BloomFilterOptions
         public ?int $ndv = null,
     ) {
         if (!($fpp > 0.0 && $fpp < 1.0)) {
-            throw new InvalidArgumentException('A bloom filter false positive probability must be between 0 and 1, got '
-            . $fpp);
+            throw new InvalidArgumentException(
+                'A bloom filter false positive probability must be between 0 and 1, got ' . var_export($fpp, true),
+            );
         }
 
         if ($ndv !== null && $ndv < 1) {

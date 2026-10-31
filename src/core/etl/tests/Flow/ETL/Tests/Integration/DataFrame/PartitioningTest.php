@@ -139,7 +139,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
 
         static::assertTrue($df->schema()->get('tier')->isNullable());
 
-        $df->filter(ref('region')->equals(lit('eu')));
+        $df = $df->filter(ref('region')->equals(lit('eu')));
 
         static::assertTrue($df->schema()->get('tier')->isNullable());
         static::assertEquals($df->schema(), $df->fetch()->schema());

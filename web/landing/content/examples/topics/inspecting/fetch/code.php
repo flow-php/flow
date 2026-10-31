@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use function Flow\ETL\DSL\{data_frame, from_array, int_schema, schema, str_schema};
+use function Flow\Types\DSL\type_string;
 
 require __DIR__ . '/vendor/autoload.php';
 
@@ -16,7 +17,7 @@ $rows = data_frame()
     ->fetch(2);
 
 echo 'fetched ' . $rows->count() . " rows\n";
-echo 'first name: ' . $rows->column('name')->value(0) . "\n";
+echo 'first name: ' . type_string()->assert($rows->column('name')->value(0)) . "\n";
 
 foreach ($rows->toArray() as $row) {
     echo "  {$row['id']}: {$row['name']}\n";

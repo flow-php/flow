@@ -12,6 +12,20 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 final class FileAnalyzeCommandTest extends FlowTestCase
 {
+    public function test_an_offset_skips_rows_inside_the_limit(): void
+    {
+        $tester = new CommandTester(new FileAnalyzeCommand('file:analyze'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            '--input-file-limit' => 5,
+            '--input-file-offset' => 3,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+        CommandOutputNormalizer::assertCommandOutputContains('Analyzed Rows    2', $tester->getDisplay());
+    }
+
     public function test_read_rows_csv(): void
     {
         $tester = new CommandTester(new FileAnalyzeCommand('file:analyze'));

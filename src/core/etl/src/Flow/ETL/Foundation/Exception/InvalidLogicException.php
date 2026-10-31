@@ -59,20 +59,11 @@ final class InvalidLogicException extends Exception
         );
     }
 
-    public static function transformationReturnedAnotherFrame(string $transformation): self
+    public static function branchFrameNotBuiltFromPrefix(string $branch): self
     {
         return self::because(
-            'A Transformation inside a branch must return the frame it was given; %s returned another frame, so its '
-            . 'writes would never run',
-            $transformation,
-        );
-    }
-
-    public static function errorHandlerInsideBranch(string $branch): self
-    {
-        return self::because(
-            'onError() inside a branch cannot apply, because a plan runs under one error handler: call onError() on '
-            . 'the frame, not inside %s',
+            'A branch must return a frame built from the prefix it was given: %s returned another frame. Build on '
+            . '$prefix, and call onError() on the frame you write to, not inside the branch',
             $branch,
         );
     }

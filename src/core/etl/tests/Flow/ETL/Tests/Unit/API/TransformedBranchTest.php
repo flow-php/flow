@@ -4,15 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\API;
 
-use Flow\ETL\API\DataFrame;
 use Flow\ETL\API\FilteredBranch;
 use Flow\ETL\API\TransformedBranch;
-use Flow\ETL\Foundation\Exception\InvalidLogicException;
 use Flow\ETL\Operators\Transformer\AddRowIndex\StartFrom;
 use Flow\ETL\Operators\Transformer\AddRowIndexTransformer;
 use Flow\ETL\Planning\Logical\Format;
 use Flow\ETL\Storage\Memory\ArrayMemory;
-use Flow\ETL\Tests\Double\CallbackTransformation;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\df;
@@ -98,20 +95,5 @@ final class TransformedBranchTest extends FlowTestCase
                 ->explain()
                 ->toString(format: Format::declarations),
         );
-    }
-
-    public function test_a_transformation_returning_another_frame_is_refused(): void
-    {
-        $this->expectException(InvalidLogicException::class);
-        $this->expectExceptionMessage(
-            'A Transformation inside a branch must return the frame it was given; '
-            . CallbackTransformation::class
-            . ' returned another frame, so its writes would never run',
-        );
-
-        df()->read(from_array([['id' => 1]]))->write(new TransformedBranch(
-            new CallbackTransformation(static fn(DataFrame $prefix): DataFrame => df()->read(from_array([['x' => 1]]))),
-            to_memory(new ArrayMemory()),
-        ));
     }
 }

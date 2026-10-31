@@ -165,7 +165,10 @@ final class LimitTest extends FlowIntegrationTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Limit can't be lower or equal zero, given: -1");
 
-        df()->read(from_rows(rows(schema())))->limit(-1);
+        df()
+            ->read(from_rows(rows(schema())))
+            ->limit(-1)
+            ->fetch();
     }
 
     public function test_limit_null(): void

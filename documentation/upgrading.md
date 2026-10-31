@@ -1774,14 +1774,14 @@ and has no `write()`: pass it to `DataFrame::write()`, `to_branch()` or `to_tran
 directly inside a `Transactional` is a `TypeError`. The named argument of `DataFrame::write()`, `to_branch()`,
 `to_transformation()` is `$write`, of `to_dbal_transaction()` and `to_pgsql_transaction()` it is `$writes`.
 
-| Before                                                                                       | After                                                                     |
-|----------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|
-| `DataFrame::write(Loader\|Sink $sink)`                                                       | `DataFrame::write(Loader\|Branch\|Transactional $write)`                  |
-| `Transactional::sinks()`                                                                     | `Transactional::writes()`                                                 |
-| `Transactional::write(DataFrame $prefix)`                                                    | removed: `$frame->write($transactional)`                                  |
-| `LogicalPlan::sinks()`, `LogicalPlan::sinksOnSpine()`, `Node\Outputs::sinks()`               | `writes()`, `writesOnSpine()`, `writes()`                                 |
-| `SinkBranch::consumers()`                                                                    | `BranchPipeline::writes()`                                                |
-| `InvalidLogicException::sinkNotOnSpine()`, `sinkRootRewritten()`, `errorHandlerInsideSink()` | `writeNotOnSpine()`, `writeRootRewritten()`, `errorHandlerInsideBranch()` |
+| Before                                                                                       | After                                                                          |
+|----------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
+| `DataFrame::write(Loader\|Sink $sink)`                                                       | `DataFrame::write(Loader\|Branch\|Transactional $write)`                       |
+| `Transactional::sinks()`                                                                     | `Transactional::writes()`                                                      |
+| `Transactional::write(DataFrame $prefix)`                                                    | removed: `$frame->write($transactional)`                                       |
+| `LogicalPlan::sinks()`, `LogicalPlan::sinksOnSpine()`, `Node\Outputs::sinks()`               | `writes()`, `writesOnSpine()`, `writes()`                                      |
+| `SinkBranch::consumers()`                                                                    | `BranchPipeline::writes()`                                                     |
+| `InvalidLogicException::sinkNotOnSpine()`, `sinkRootRewritten()`, `errorHandlerInsideSink()` | `writeNotOnSpine()`, `writeRootRewritten()`, `branchFrameNotBuiltFromPrefix()` |
 
 ### 115) `flow-php/etl` - a file loader writes through a `FileWriter`
 
@@ -1920,6 +1920,55 @@ by Spark's hidden-path rule.
 |---------------------------------|------------------------------------------------------------------------------------------------------------------|
 | `$report->statistics()->memory` | `$report->statistics()->heap`: the parent's PHP heap plus the backend's bytes, sampled once per batch, as before |
 | -                               | `$report->statistics()->processes`: the OS peak of the parent and of every worker, `workerPeak()`, `peakSum()`   |
+
+### 129) `flow-php/etl` - `DataFrame` is immutable, every verb returns a new frame
+
+| Before                                                              | After                                                                                                                    |
+|---------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
+| `$df->limit(10);` limits `$df`                                      | does nothing, keep the result: `$df = $df->limit(10);`                                                                   |
+| `$df->onError($handler);` sets the handler on `$df`                 | `$df = $df->onError($handler);`                                                                                          |
+| `$df->fetch(10)`, `display()`, `printRows()` limit `$df`            | leave `$df` unchanged                                                                                                    |
+| `Branch::write(DataFrame $prefix): void`                            | `Branch::write(DataFrame $prefix): DataFrame`                                                                            |
+| `new DataFrame(Extractor $extractor, Config\|FlowContext $context)` | `df($config)->read($extractor)`                                                                                          |
+| `new DataFrame(Extractor $extractor, FlowContext $context)`         | `new DataFrame(new \Flow\ETL\Planning\Logical\Node\Read($extractor), new \Flow\ETL\Planning\Logical\Writes(), $context)` |
+
+PHP 8.5 warns about a dropped result (`#[\NoDiscard]`); PHP 8.3 and 8.4 do not.
+
+Before:
+
+```php
+public function write(DataFrame $prefix): void
+{
+    $prefix->filter($this->condition)->write($this->loader);
+}
+
+public function transform(DataFrame $dataFrame): DataFrame
+{
+    foreach ($this->columns as $column) {
+        $dataFrame->withColumn($column, lit('***'));
+    }
+
+    return $dataFrame;
+}
+```
+
+After:
+
+```php
+public function write(DataFrame $prefix): DataFrame
+{
+    return $prefix->filter($this->condition)->write($this->loader);
+}
+
+public function transform(DataFrame $dataFrame): DataFrame
+{
+    foreach ($this->columns as $column) {
+        $dataFrame = $dataFrame->withColumn($column, lit('***'));
+    }
+
+    return $dataFrame;
+}
+```
 
 ## Upgrading from 0.45.x to 0.46.x
 

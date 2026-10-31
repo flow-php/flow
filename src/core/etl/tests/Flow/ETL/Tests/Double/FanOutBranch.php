@@ -23,10 +23,14 @@ final readonly class FanOutBranch implements Branch
         $this->writes = array_values($writes);
     }
 
-    public function write(DataFrame $prefix): void
+    public function write(DataFrame $prefix): DataFrame
     {
+        $frame = $prefix;
+
         foreach ($this->writes as $write) {
-            $prefix->write($write);
+            $frame = $frame->write($write);
         }
+
+        return $frame;
     }
 }

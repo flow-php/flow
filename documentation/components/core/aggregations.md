@@ -103,8 +103,8 @@ arithmetic:
 
 use function Flow\ETL\DSL\{df, from_array, ref, sum};
 
-df()->read(from_array([['a' => 0.1], ['a' => 0.2]]))->aggregate([sum(ref('a'))]);              // 0.30000000000000004
-df()->read(from_array([['a' => 0.1], ['a' => 0.2]]))->aggregate([sum(ref('a'), exact: true)]); // 0.3
+df()->read(from_array([['a' => 0.1], ['a' => 0.2]]))->aggregate([sum(ref('a'))])->fetch();              // 0.30000000000000004
+df()->read(from_array([['a' => 0.1], ['a' => 0.2]]))->aggregate([sum(ref('a'), exact: true)])->fetch(); // 0.3
 ```
 
 ## Example

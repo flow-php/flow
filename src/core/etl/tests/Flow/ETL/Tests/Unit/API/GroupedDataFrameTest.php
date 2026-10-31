@@ -40,7 +40,10 @@ final class GroupedDataFrameTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Aggregations can't be empty");
 
-        df()->read(from_array([['a' => 1]]))->aggregate([]);
+        df()
+            ->read(from_array([['a' => 1]]))
+            ->aggregate([])
+            ->fetch();
     }
 
     public function test_a_group_by_without_aggregate_leaves_the_frame_unchanged(): void

@@ -130,24 +130,24 @@ final class FileReadCommand extends Command
             return Command::FAILURE;
         }
 
-        $df->batchSize($batchSize);
+        $df = $df->batchSize($batchSize);
 
         $limit = option_int_nullable('input-file-limit', $input);
 
         if ($limit !== null && $limit > 0) {
-            $df->limit($limit);
+            $df = $df->limit($limit);
         }
 
         $offset = option_int_nullable('input-file-offset', $input);
 
         if ($offset !== null && $offset > 0) {
-            $df->offset($offset);
+            $df = $df->offset($offset);
         }
 
         $outputColumns = option_list_of_strings('output-columns', $input);
 
         if (count($outputColumns)) {
-            $df->select(...$outputColumns);
+            $df = $df->select(...$outputColumns);
         }
 
         $formatter = new AsciiTableFormatter();

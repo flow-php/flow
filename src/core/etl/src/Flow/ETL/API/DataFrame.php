@@ -16,7 +16,6 @@ use Flow\ETL\Functions\Reference\UnresolvedReference;
 use Flow\ETL\Functions\ScalarFunction;
 use Flow\ETL\Functions\WindowFunction;
 use Flow\ETL\Functions\WithColumn;
-use Flow\ETL\IO\Extractor;
 use Flow\ETL\IO\Extractor\ExtractorFactory;
 use Flow\ETL\IO\Formatter;
 use Flow\ETL\IO\Formatter\AsciiTableFormatter;
@@ -39,7 +38,6 @@ use Flow\ETL\Planning\Logical\Plan;
 use Flow\ETL\Planning\Logical\Trigger;
 use Flow\ETL\Planning\Logical\Writes;
 use Flow\ETL\Runtime\Analyze;
-use Flow\ETL\Runtime\Config;
 use Flow\ETL\Runtime\ErrorHandler;
 use Flow\ETL\Runtime\Executor\StatisticsCollector;
 use Flow\ETL\Runtime\FlowContext;
@@ -53,6 +51,7 @@ use Flow\ETL\Values\Schema\Definition;
 use Flow\ETL\Values\Schema\Validator\StrictValidator;
 use Flow\ETL\Values\SchemaValidator;
 use Generator;
+use NoDiscard;
 
 use function array_map;
 use function array_unique;
@@ -68,23 +67,13 @@ use function is_string;
  * @type GroupByReferences = list<string|Reference>
  * @type SortColumns       = list<string|Reference|SortColumn>
  */
-final class DataFrame
+final readonly class DataFrame
 {
-    private FlowContext $context;
-
-    private readonly Extractor $extractor;
-
-    private Node $root;
-
-    private Writes $writes;
-
-    public function __construct(Extractor $extractor, Config|FlowContext $context)
-    {
-        $this->context = $context instanceof FlowContext ? $context : new FlowContext($context);
-        $this->extractor = $extractor;
-        $this->root = new Node\Read($extractor);
-        $this->writes = new Writes();
-    }
+    public function __construct(
+        private Node $root,
+        private Writes $writes,
+        private FlowContext $context,
+    ) {}
 
     /**
      * @lazy
@@ -93,6 +82,7 @@ final class DataFrame
      * @param null|BucketingAlgorithmBuilder $algorithm null defers to configuration; a builder pins the
      *                                               algorithm for this operation and skips any automatic choice
      */
+    #[NoDiscard]
     public function aggregate(array $aggregations, ?BucketingAlgorithmBuilder $algorithm = null): self
     {
         if ($aggregations === []) {
@@ -108,11 +98,10 @@ final class DataFrame
      * @param null|BucketingAlgorithmBuilder $algorithm null defers to configuration; a builder pins the
      *                                               algorithm for this operation and skips any automatic choice
      */
+    #[NoDiscard]
     public function aggregateBy(GroupBy $groupBy, ?BucketingAlgorithmBuilder $algorithm = null): self
     {
-        $this->root = new Node\Aggregate($this->root, $groupBy, $algorithm);
-
-        return $this;
+        return new self(new Node\Aggregate($this->root, $groupBy, $algorithm), $this->writes, $this->context);
     }
 
     /**
@@ -130,11 +119,14 @@ final class DataFrame
      *
      * @throws InvalidArgumentException
      */
+    #[NoDiscard]
     public function batchBy(string|Reference $column, ?int $minSize = null): self
     {
-        $this->root = new Node\BatchBy($this->root, UnresolvedReference::init($column), $minSize);
-
-        return $this;
+        return new self(
+            new Node\BatchBy($this->root, UnresolvedReference::init($column), $minSize),
+            $this->writes,
+            $this->context,
+        );
     }
 
     /**
@@ -150,6 +142,7 @@ final class DataFrame
      *
      * @lazy
      */
+    #[NoDiscard]
     public function batchSize(int $size): self
     {
         if ($size === -1) {
@@ -160,9 +153,7 @@ final class DataFrame
             return $this->collect();
         }
 
-        $this->root = new Node\Batch($this->root, new BatchSize($size));
-
-        return $this;
+        return new self(new Node\Batch($this->root, new BatchSize($size)), $this->writes, $this->context);
     }
 
     /**
@@ -182,15 +173,14 @@ final class DataFrame
      *
      * @throws InvalidArgumentException
      */
+    #[NoDiscard]
     public function cache(?string $id = null, ?int $cacheBatchSize = null, ?RowsStorage $cache = null): self
     {
         if ($cacheBatchSize !== null && $cacheBatchSize < 1) {
             throw new InvalidArgumentException('Cache batch size must be greater than 0');
         }
 
-        $this->root = new Node\Cache($this->root, $id, $cacheBatchSize, $cache);
-
-        return $this;
+        return new self(new Node\Cache($this->root, $id, $cacheBatchSize, $cache), $this->writes, $this->context);
     }
 
     /**
@@ -199,11 +189,10 @@ final class DataFrame
      *
      * @lazy
      */
+    #[NoDiscard]
     public function collect(): self
     {
-        $this->root = new Node\Collect($this->root);
-
-        return $this;
+        return new self(new Node\Collect($this->root), $this->writes, $this->context);
     }
 
     /**
@@ -218,18 +207,16 @@ final class DataFrame
      *
      * @lazy
      */
+    #[NoDiscard]
     public function collectRefs(References $references): self
     {
-        $this->root = new Node\CollectRefs($this->root, $references);
-
-        return $this;
+        return new self(new Node\CollectRefs($this->root, $references), $this->writes, $this->context);
     }
 
+    #[NoDiscard]
     public function constrain(Constraint $constraint, Constraint ...$constraints): self
     {
-        $this->root = new Node\Constrain($this->root, [$constraint, ...$constraints]);
-
-        return $this;
+        return new self(new Node\Constrain($this->root, [$constraint, ...$constraints]), $this->writes, $this->context);
     }
 
     /**
@@ -251,11 +238,14 @@ final class DataFrame
     /**
      * @lazy
      */
+    #[NoDiscard]
     public function crossJoin(self $dataFrame, string $prefix = ''): self
     {
-        $this->root = new Node\CrossJoin($this->root, $dataFrame->explain(Trigger::rows)->logical->root, $prefix);
-
-        return $this;
+        return new self(
+            new Node\CrossJoin($this->root, $dataFrame->explain(Trigger::rows)->logical->root, $prefix),
+            $this->writes,
+            $this->context,
+        );
     }
 
     /**
@@ -273,15 +263,14 @@ final class DataFrame
         int|bool $truncate = 20,
         Formatter $formatter = new AsciiTableFormatter(),
     ): string {
-        $this->limit($limit);
-        $this->collect();
-
+        $frame = $this->limit($limit)->collect();
         $output = '';
 
-        foreach ($this->context
+        foreach ($frame
+            ->context
             ->config
             ->executor()
-            ->execute(Trigger::rows->plan($this->root, $this->writes), $this->context) as $rows) {
+            ->execute(Trigger::rows->plan($frame->root, $frame->writes), $frame->context) as $rows) {
             $output .= $formatter->format($rows, $truncate);
         }
 
@@ -293,32 +282,31 @@ final class DataFrame
      *
      * @lazy
      */
+    #[NoDiscard]
     public function drop(string|Reference ...$columns): self
     {
-        $this->root = new Node\Drop($this->root, array_values($columns));
-
-        return $this;
+        return new self(new Node\Drop($this->root, array_values($columns)), $this->writes, $this->context);
     }
 
     /**
      * @param Reference|string ...$columns
      *
      * @lazy
-     *
-     * @return $this
      */
+    #[NoDiscard]
     public function dropDuplicates(string|Reference ...$columns): self
     {
-        $this->root = new Node\Distinct($this->root, array_values($columns));
-
-        return $this;
+        return new self(new Node\Distinct($this->root, array_values($columns)), $this->writes, $this->context);
     }
 
+    #[NoDiscard]
     public function duplicateRow(mixed $condition, WithColumn ...$columns): self
     {
-        $this->root = new Node\DuplicateRow($this->root, $condition, array_values($columns));
-
-        return $this;
+        return new self(
+            new Node\DuplicateRow($this->root, $condition, array_values($columns)),
+            $this->writes,
+            $this->context,
+        );
     }
 
     /**
@@ -335,24 +323,22 @@ final class DataFrame
      */
     public function fetch(?int $limit = null): Rows
     {
-        if ($limit !== null) {
-            $this->limit($limit);
-        }
+        $frame = $this->limit($limit);
 
-        return $this->context
+        return $frame
+            ->context
             ->config
             ->executor()
-            ->fetch(Trigger::rows->plan($this->root, $this->writes), $this->context);
+            ->fetch(Trigger::rows->plan($frame->root, $frame->writes), $frame->context);
     }
 
     /**
      * @lazy
      */
+    #[NoDiscard]
     public function filter(ScalarFunction $function): self
     {
-        $this->root = new Node\Filter($this->root, $function);
-
-        return $this;
+        return new self(new Node\Filter($this->root, $function), $this->writes, $this->context);
     }
 
     /**
@@ -360,13 +346,16 @@ final class DataFrame
      *
      * @param array<ScalarFunction> $functions
      */
+    #[NoDiscard]
     public function filters(array $functions): self
     {
+        $frame = $this;
+
         foreach ($functions as $function) {
-            $this->filter($function);
+            $frame = $frame->filter($function);
         }
 
-        return $this;
+        return $frame;
     }
 
     /**
@@ -451,12 +440,9 @@ final class DataFrame
         ?BucketingAlgorithmBuilder $algorithm = null,
     ): GroupedDataFrame {
         // the rows feeding the aggregate, without the frame's writes - what pivot discovery scans
-        $input = new self($this->extractor, $this->context);
-        $input->root = $this->root;
-
         return new GroupedDataFrame(
             $this,
-            $input,
+            new self($this->root, new Writes(), $this->context),
             References::init(...array_unique(is_array($columns) ? $columns : [$columns])),
             $algorithm,
         );
@@ -468,6 +454,7 @@ final class DataFrame
      * @param null|JoinAlgorithmBuilder $algorithm null defers to configuration; a builder pins the algorithm
      *                                            for this operation and skips any automatic choice
      */
+    #[NoDiscard]
     public function join(
         self $dataFrame,
         Expression $on,
@@ -478,15 +465,11 @@ final class DataFrame
             $type = JoinType::from($type);
         }
 
-        $this->root = new Node\Join(
-            $this->root,
-            $dataFrame->explain(Trigger::rows)->logical->root,
-            $on,
-            $type,
-            $algorithm,
+        return new self(
+            new Node\Join($this->root, $dataFrame->explain(Trigger::rows)->logical->root, $on, $type, $algorithm),
+            $this->writes,
+            $this->context,
         );
-
-        return $this;
     }
 
     /**
@@ -496,15 +479,14 @@ final class DataFrame
      *
      * @param string|JoinType $type
      */
+    #[NoDiscard]
     public function joinEach(ExtractorFactory $factory, Expression $on, string|JoinType $type = JoinType::left): self
     {
         if (is_string($type)) {
             $type = JoinType::tryFrom($type) ?? throw new InvalidArgumentException('Unsupported join type');
         }
 
-        $this->root = new Node\JoinEach($this->root, $factory, $on, $type);
-
-        return $this;
+        return new self(new Node\JoinEach($this->root, $factory, $on, $type), $this->writes, $this->context);
     }
 
     /**
@@ -512,15 +494,14 @@ final class DataFrame
      *
      * @throws InvalidArgumentException
      */
+    #[NoDiscard]
     public function limit(?int $limit): self
     {
         if ($limit === null) {
             return $this;
         }
 
-        $this->root = new Node\Limit($this->root, $limit);
-
-        return $this;
+        return new self(new Node\Limit($this->root, $limit), $this->writes, $this->context);
     }
 
     /**
@@ -528,11 +509,14 @@ final class DataFrame
      *
      * @param null|SchemaValidator $validator - when null, StrictValidator gets initialized
      */
+    #[NoDiscard]
     public function match(Schema $schema, ?SchemaValidator $validator = null): self
     {
-        $this->root = new Node\Validate($this->root, $schema, $validator ?? new StrictValidator());
-
-        return $this;
+        return new self(
+            new Node\Validate($this->root, $schema, $validator ?? new StrictValidator()),
+            $this->writes,
+            $this->context,
+        );
     }
 
     /**
@@ -549,25 +533,23 @@ final class DataFrame
      *
      * @throws InvalidArgumentException
      */
+    #[NoDiscard]
     public function offset(?int $offset): self
     {
         if ($offset === null) {
             return $this;
         }
 
-        $this->root = new Node\Offset($this->root, $offset);
-
-        return $this;
+        return new self(new Node\Offset($this->root, $offset), $this->writes, $this->context);
     }
 
     /**
      * @lazy
      */
+    #[NoDiscard]
     public function onError(ErrorHandler $handler): self
     {
-        $this->context = $this->context->withErrorHandler($handler);
-
-        return $this;
+        return new self($this->root, $this->writes, $this->context->withErrorHandler($handler));
     }
 
     /**
@@ -575,13 +557,16 @@ final class DataFrame
      * Shuffles the stream so every row sharing the given columns arrives in one batch. It does not
      * write directories - that is declared on the loader, `to_csv(...)->partitionBy('region')`.
      */
+    #[NoDiscard]
     public function repartition(string|Reference $column, string|Reference ...$columns): self
     {
         array_unshift($columns, $column);
 
-        $this->root = new Node\Repartition($this->root, References::init(...$columns));
-
-        return $this;
+        return new self(
+            new Node\Repartition($this->root, References::init(...$columns)),
+            $this->writes,
+            $this->context,
+        );
     }
 
     /**
@@ -592,20 +577,16 @@ final class DataFrame
         int|bool $truncate = 20,
         Formatter $formatter = new AsciiTableFormatter(),
     ): void {
-        if ($limit !== null) {
-            $this->limit($limit);
-        }
-
-        $this->collect();
-        $this->write(StreamLoader::output($truncate, Output::rows, $formatter));
-
-        $this->run();
+        $this
+            ->limit($limit)
+            ->collect()
+            ->write(StreamLoader::output($truncate, Output::rows, $formatter))
+            ->run();
     }
 
     /**
-     * The plan $trigger would run over this frame, frozen: later verbs on this frame do not reach it. The default
-     * adds no consumer of its own - it draws the frame as built, its chain and its writes. toString() prints it as a
-     * tree. Answers from the plan without reading a row.
+     * The plan $trigger would run over this frame. The default adds no consumer of its own - it draws the frame as
+     * built, its chain and its writes. toString() prints it as a tree. Answers from the plan without reading a row.
      */
     public function explain(Trigger $trigger = Trigger::run): Plan
     {
@@ -625,18 +606,16 @@ final class DataFrame
     /**
      * @lazy
      */
+    #[NoDiscard]
     public function rename(string $from, string $to): self
     {
-        $this->root = new Node\Rename($this->root, $from, $to);
-
-        return $this;
+        return new self(new Node\Rename($this->root, $from, $to), $this->writes, $this->context);
     }
 
+    #[NoDiscard]
     public function renameEach(RenameColumnStrategy ...$strategies): self
     {
-        $this->root = new Node\RenameEach($this->root, array_values($strategies));
-
-        return $this;
+        return new self(new Node\RenameEach($this->root, array_values($strategies)), $this->writes, $this->context);
     }
 
     /**
@@ -687,11 +666,10 @@ final class DataFrame
      * @lazy
      * Keep only given columns.
      */
+    #[NoDiscard]
     public function select(string|Reference ...$columns): self
     {
-        $this->root = new Node\Select($this->root, array_values($columns));
-
-        return $this;
+        return new self(new Node\Select($this->root, array_values($columns)), $this->writes, $this->context);
     }
 
     /**
@@ -701,20 +679,23 @@ final class DataFrame
      * @param null|SortAlgorithmBuilder $algorithm null defers to configuration; a builder pins the algorithm
      *                                            for this operation and skips any automatic choice
      */
+    #[NoDiscard]
     public function sortBy(array|Reference|SortColumn|string $columns, ?SortAlgorithmBuilder $algorithm = null): self
     {
-        $this->root = new Node\Sort(
-            $this->root,
-            array_map(
-                static fn(string|Reference|SortColumn $column): SortColumn => $column instanceof SortColumn
-                    ? $column
-                    : UnresolvedReference::init($column)->asc(),
-                is_array($columns) ? array_values($columns) : [$columns],
+        return new self(
+            new Node\Sort(
+                $this->root,
+                array_map(
+                    static fn(string|Reference|SortColumn $column): SortColumn => $column instanceof SortColumn
+                        ? $column
+                        : UnresolvedReference::init($column)->asc(),
+                    is_array($columns) ? array_values($columns) : [$columns],
+                ),
+                $algorithm,
             ),
-            $algorithm,
+            $this->writes,
+            $this->context,
         );
-
-        return $this;
     }
 
     /**
@@ -723,11 +704,10 @@ final class DataFrame
      *
      * @lazy
      */
+    #[NoDiscard]
     public function until(ScalarFunction $function): self
     {
-        $this->root = new Node\Until($this->root, $function);
-
-        return $this;
+        return new self(new Node\Until($this->root, $function), $this->writes, $this->context);
     }
 
     /**
@@ -737,28 +717,24 @@ final class DataFrame
      * removing code. All operations will get processed up to this point,
      * from here no rows are passed forward.
      */
+    #[NoDiscard]
     public function void(): self
     {
-        $this->root = new Node\Discard($this->root);
-
-        return $this;
+        return new self(new Node\Discard($this->root), $this->writes, $this->context);
     }
 
     /**
      * @lazy
      */
+    #[NoDiscard]
     public function with(Transformer|Transformation|WithColumn $transformer): self
     {
         if ($transformer instanceof Transformer) {
-            $this->root = new Node\Transform($this->root, $transformer);
-
-            return $this;
+            return new self(new Node\Transform($this->root, $transformer), $this->writes, $this->context);
         }
 
         if ($transformer instanceof WithColumn) {
-            $this->withColumn($transformer->name, $transformer->function);
-
-            return $this;
+            return $this->withColumn($transformer->name, $transformer->function);
         }
 
         return $transformer->transform($this);
@@ -769,19 +745,22 @@ final class DataFrame
      *
      * @lazy
      */
+    #[NoDiscard]
     public function withColumn(string|Definition $column, ScalarFunction|WindowFunction $reference): self
     {
-        $this->root = match (true) {
-            $reference instanceof WindowFunction => new Node\WindowColumn($this->root, $column, $reference),
-            (new ExpandingFunctions())->in($reference) !== [] => new Node\ExpandColumn(
-                $this->root,
-                $column,
-                $reference,
-            ),
-            default => new Node\WithColumn($this->root, $column, $reference),
-        };
-
-        return $this;
+        return new self(
+            match (true) {
+                $reference instanceof WindowFunction => new Node\WindowColumn($this->root, $column, $reference),
+                (new ExpandingFunctions())->in($reference) !== [] => new Node\ExpandColumn(
+                    $this->root,
+                    $column,
+                    $reference,
+                ),
+                default => new Node\WithColumn($this->root, $column, $reference),
+            },
+            $this->writes,
+            $this->context,
+        );
     }
 
     /**
@@ -789,36 +768,39 @@ final class DataFrame
      *
      * @param array<int, WithColumn>|array<string, ScalarFunction|WindowFunction|WithColumn> $references
      */
+    #[NoDiscard]
     public function withColumns(array $references): self
     {
+        $frame = $this;
+
         foreach ($references as $name => $ref) {
-            if ($ref instanceof WithColumn) {
-                $this->withColumn($ref->name, $ref->function);
-            } else {
-                $this->withColumn((string) $name, $ref);
-            }
+            $frame = $ref instanceof WithColumn
+                ? $frame->withColumn($ref->name, $ref->function)
+                : $frame->withColumn((string) $name, $ref);
         }
 
-        return $this;
+        return $frame;
     }
 
     /**
      * @lazy
      */
+    #[NoDiscard]
     public function write(Loader|Branch|Transactional $write): self
     {
         if ($write instanceof Loader) {
-            $this->writes = $this->writes->merge(new Writes(new Node\Write($this->root, $write)));
-
-            return $this;
+            return new self(
+                $this->root,
+                $this->writes->merge(new Writes(new Node\Write($this->root, $write))),
+                $this->context,
+            );
         }
 
-        $prefix = new self($this->extractor, $this->context);
-        $prefix->root = $this->root;
+        $prefix = new self($this->root, new Writes(), $this->context);
 
         if ($write instanceof Transactional) {
             foreach ($write->writes() as $child) {
-                $prefix->write($child);
+                $prefix = $prefix->write($child);
             }
 
             $writes = [];
@@ -830,19 +812,19 @@ final class DataFrame
                     : $root;
             }
 
-            $this->writes = $this->writes->merge(new Writes(new Node\Transaction($write->transaction(), ...$writes)));
-
-            return $this;
+            return new self(
+                $this->root,
+                $this->writes->merge(new Writes(new Node\Transaction($write->transaction(), ...$writes))),
+                $this->context,
+            );
         }
 
-        $write->write($prefix);
+        $branched = $write->write($prefix);
 
-        if ($prefix->context->errorHandler() !== $this->context->errorHandler()) {
-            throw InvalidLogicException::errorHandlerInsideBranch($write::class);
+        if ($branched->context !== $prefix->context) {
+            throw InvalidLogicException::branchFrameNotBuiltFromPrefix($write::class);
         }
 
-        $this->writes = $this->writes->merge($prefix->writes);
-
-        return $this;
+        return new self($this->root, $this->writes->merge($branched->writes), $this->context);
     }
 }

@@ -195,7 +195,7 @@ final class PlanBindTest extends FlowTestCase
 
         static::assertSame(['a', 'b'], $df->schema()->names());
 
-        $df->drop('b');
+        $df = $df->drop('b');
 
         static::assertSame(['a'], $df->schema()->names());
     }

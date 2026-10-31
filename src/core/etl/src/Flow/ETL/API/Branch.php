@@ -7,8 +7,7 @@ namespace Flow\ETL\API;
 interface Branch
 {
     /**
-     * @param DataFrame $prefix a frame over the caller's chain, handed to this call only - its writes become the
-     *                         caller's writes, its other verbs never reach the caller
+     * @param DataFrame $prefix a frame over the caller's chain - the writes of the returned frame become the caller's
      */
-    public function write(DataFrame $prefix): void;
+    public function write(DataFrame $prefix): DataFrame;
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Flow\ETL\Values\Rows;
 
 use function Flow\ETL\DSL\{data_frame, from_array, int_schema, schema, str_schema};
+use function Flow\Types\DSL\{type_list, type_string};
 
 require __DIR__ . '/vendor/autoload.php';
 
@@ -19,5 +20,5 @@ data_frame()
     ], schema(int_schema('id'), str_schema('name'))))
     ->batchSize(2)
     ->forEach(static function (Rows $rows): void {
-        echo $rows->count() . ' rows, names: ' . implode(', ', $rows->column('name')->values()) . "\n";
+        echo $rows->count() . ' rows, names: ' . implode(', ', type_list(type_string())->assert($rows->column('name')->values())) . "\n";
     });
