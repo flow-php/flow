@@ -47,6 +47,7 @@ impl ParquetWriter {
             Arc::clone(&schema),
             ArrowWriterOptions::new()
                 .with_properties(props)
+                .with_skip_arrow_metadata(true)
                 .with_parquet_schema(SchemaDescriptor::new(Arc::new(root))),
         )?;
 

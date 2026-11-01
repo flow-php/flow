@@ -405,6 +405,8 @@ $writer->close();
   the arrow writer treats it as a target, checked between write batches, so its pages can hold more. Smaller pages let
   the page index skip more of a filtered read.
 - `PAGE_SIZE_BYTES` - default: `128Kb` - maximum size of data page.
+- `ROW_GROUP_MAXIMUM_ROWS_COUNT` - default: `1048576` - rows per row group at most: both engines close a row group at
+  exactly that many, or earlier when `ROW_GROUP_SIZE_BYTES` is reached.
 - `ROW_GROUP_SIZE_BYTES` - default: `32Mb` - maximum size of row group.
 - `ROW_GROUP_SIZE_CHECK_INTERVAL` default: `1000` - number of rows to write before checking if row group size limit is
   reached.
@@ -418,6 +420,7 @@ $writer->close();
 
 Two most important options that can heavily affect memory usage are:
 
+- `ROW_GROUP_MAXIMUM_ROWS_COUNT`
 - `ROW_GROUP_SIZE_BYTES`
 - `ROW_GROUP_SIZE_CHECK_INTERVAL`
 

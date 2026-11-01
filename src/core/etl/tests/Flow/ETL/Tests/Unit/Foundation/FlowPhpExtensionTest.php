@@ -26,7 +26,11 @@ final class FlowPhpExtensionTest extends TestCase
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            'The loaded flow_php extension (0.46.0, ABI 4) does not match flow-php/etl (ABI 3). Rebuild or upgrade '
+            'The loaded flow_php extension (0.46.0, ABI '
+            . (FlowPhpExtension::ABI + 1)
+            . ') does not match flow-php/etl (ABI '
+            . FlowPhpExtension::ABI
+            . '). Rebuild or upgrade '
             . 'flow_php to the version of flow-php/etl, or stop loading it to use the PHP implementation.',
         );
 

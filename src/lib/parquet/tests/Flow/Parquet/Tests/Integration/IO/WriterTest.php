@@ -23,6 +23,7 @@ use Flow\Parquet\ParquetFile\Page\ColumnPageHeader;
 use Flow\Parquet\ParquetFile\PageIndex\BoundaryOrder;
 use Flow\Parquet\ParquetFile\PageIndex\ColumnIndex;
 use Flow\Parquet\ParquetFile\PageIndex\PageLocation;
+use Flow\Parquet\ParquetFile\RowGroup;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\ConvertedType;
@@ -57,6 +58,7 @@ use function array_unique;
 use function array_values;
 use function count;
 use function extension_loaded;
+use function file_get_contents;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function fopen;
@@ -228,9 +230,10 @@ class WriterTest extends ParquetIntegrationTestCase
         $writer->close();
     }
 
-    public function test_created_by_metadata(): void
+    #[DataProvider('engine_provider')]
+    public function test_created_by_metadata(string $engineClass): void
     {
-        $writer = Writer::php();
+        $writer = new Writer(engine: ParquetEngineMother::create($engineClass));
 
         $path = TestParquetFile::path($this);
 
@@ -238,12 +241,45 @@ class WriterTest extends ParquetIntegrationTestCase
         $writer->open($path, $schema);
         $writer->close();
 
-        $metadata = Reader::php()->read($path)->metadata();
-
         static::assertSame(
             'flow-php parquet version ' . InstalledVersions::getRootPackage()['pretty_version'],
-            $metadata->createdBy(),
+            Reader::php()->read($path)->metadata()->createdBy(),
         );
+    }
+
+    #[DataProvider('engine_provider')]
+    public function test_row_groups_close_at_the_maximum_rows_count(string $engineClass): void
+    {
+        $writer = new Writer(
+            options: Options::default()->set(Option::ROW_GROUP_MAXIMUM_ROWS_COUNT, 300),
+            engine: ParquetEngineMother::create($engineClass),
+        );
+        $path = TestParquetFile::path($this);
+
+        $writer->open($path, Schema::with(FlatColumn::int32('id')));
+        $writer->writeBatch(array_map(static fn(int $id): array => ['id' => $id], range(1, 1000)));
+        $writer->close();
+
+        static::assertSame(
+            [300, 300, 300, 100],
+            array_map(
+                static fn(RowGroup $group): int => $group->rowsCount(),
+                Reader::php()->read($path)->metadata()->rowGroups()->all(),
+            ),
+        );
+    }
+
+    #[DataProvider('engine_provider')]
+    public function test_no_arrow_schema_is_written_to_the_footer(string $engineClass): void
+    {
+        $writer = new Writer(engine: ParquetEngineMother::create($engineClass));
+        $path = TestParquetFile::path($this);
+
+        $writer->open($path, Schema::with(FlatColumn::int32('id')));
+        $writer->writeRow(['id' => 1]);
+        $writer->close();
+
+        static::assertStringNotContainsString('ARROW:schema', (string) file_get_contents($path));
     }
 
     #[DataProvider('engine_provider')]

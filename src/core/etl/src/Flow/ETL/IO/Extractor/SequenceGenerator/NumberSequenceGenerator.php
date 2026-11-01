@@ -23,6 +23,27 @@ final readonly class NumberSequenceGenerator implements SequenceGenerator
 
     public function generate(): Generator
     {
+        if (
+            is_int($this->start)
+            && is_int($this->end)
+            && is_int($this->step)
+            && $this->step > 0
+            && abs($this->end - $this->start) >= $this->step
+        ) {
+            // counted out one by one: range() would hold the whole sequence in memory
+            $step = $this->start <= $this->end ? $this->step : -$this->step;
+
+            for (
+                $item = $this->start, $left = intdiv(abs($this->end - $this->start), $this->step);
+                $left >= 0;
+                $item += $step, $left--
+            ) {
+                yield $item;
+            }
+
+            return;
+        }
+
         foreach (range($this->start, $this->end, $this->step) as $item) {
             yield $item;
         }

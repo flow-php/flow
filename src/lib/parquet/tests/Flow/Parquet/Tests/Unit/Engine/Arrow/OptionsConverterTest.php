@@ -9,6 +9,7 @@ use Flow\Parquet\Engine\Arrow\OptionsConverter;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\Writer\StatisticsLevel;
@@ -63,6 +64,22 @@ final class OptionsConverterTest extends TestCase
                 50,
             ))['PAGE_MAXIMUM_ROWS_COUNT'],
         );
+    }
+
+    public function test_row_group_maximum_rows_count_is_mapped(): void
+    {
+        static::assertSame(
+            300,
+            OptionsConverter::toExtension((new Options())->set(
+                Option::ROW_GROUP_MAXIMUM_ROWS_COUNT,
+                300,
+            ))['ROW_GROUP_MAXIMUM_ROWS_COUNT'],
+        );
+    }
+
+    public function test_created_by_is_the_one_the_php_engine_writes(): void
+    {
+        static::assertSame(ParquetFile::createdBy(), OptionsConverter::toExtension(new Options())['CREATED_BY']);
     }
 
     public function test_statistics_truncate_length_is_mapped(): void

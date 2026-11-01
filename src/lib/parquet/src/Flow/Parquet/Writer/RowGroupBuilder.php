@@ -16,6 +16,7 @@ use Flow\Parquet\ParquetFile\Schema;
 use function array_chunk;
 use function array_slice;
 use function count;
+use function max;
 use function min;
 use function strlen;
 
@@ -42,6 +43,8 @@ final class RowGroupBuilder
 
     private readonly int $pageMaximumRows;
 
+    private readonly int $rowGroupMaximumRows;
+
     private readonly int $rowGroupSizeBytes;
 
     public function __construct(
@@ -55,6 +58,17 @@ final class RowGroupBuilder
         if ($this->pageMaximumRows < 1) {
             throw new InvalidArgumentException(
                 Option::PAGE_MAXIMUM_ROWS_COUNT->name . ' must be greater than 0, ' . $this->pageMaximumRows . ' given',
+            );
+        }
+
+        $this->rowGroupMaximumRows = $this->options->getInt(Option::ROW_GROUP_MAXIMUM_ROWS_COUNT);
+
+        if ($this->rowGroupMaximumRows < 1) {
+            throw new InvalidArgumentException(
+                Option::ROW_GROUP_MAXIMUM_ROWS_COUNT->name
+                . ' must be greater than 0, '
+                . $this->rowGroupMaximumRows
+                . ' given',
             );
         }
 
@@ -192,7 +206,12 @@ final class RowGroupBuilder
 
     public function isFull(): bool
     {
-        return $this->columnChunkBuilders->uncompressedSize() >= $this->rowGroupSizeBytes;
+        return $this->rowsLeft() === 0 || $this->columnChunkBuilders->uncompressedSize() >= $this->rowGroupSizeBytes;
+    }
+
+    public function rowsLeft(): int
+    {
+        return max(0, $this->rowGroupMaximumRows - $this->rowsCount);
     }
 
     public function rowsCount(): int

@@ -51,11 +51,11 @@ both engines
 | writes accepted an int from 0 to `PHP_INT_MAX` into `UINT_64`                           | an int >= 0 or a canonical digit string up to `18446744073709551615`                             |
 | `to_parquet()` refused a `numeric_string` column (`NumericStringType is not supported`) | written as a parquet `STRING`                                                                    |
 
-### 4) `flow-php/parquet` - the `arrow` extension must be rebuilt (arrow-rs 60, ABI 3)
+### 4) `flow-php/parquet` - the `arrow` extension must be rebuilt (arrow-rs 60, ABI 2)
 
 | Before                                                  | After                                                                                                                                                      |
 |---------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| arrow-ext built against arrow-rs 59, `FLOW_ARROW_ABI` 1 | arrow-rs 60, `FLOW_ARROW_ABI` / `ArrowExtension::ABI` 3 (covering every contract change below): an older build is refused by `ArrowExtension::available()` |
+| arrow-ext built against arrow-rs 59, `FLOW_ARROW_ABI` 1 | arrow-rs 60, `FLOW_ARROW_ABI` / `ArrowExtension::ABI` 2 (covering every contract change below): an older build is refused by `ArrowExtension::available()` |
 
 ### 5) `flow-php/parquet`, `flow-php/etl-adapter-parquet` - reads take a `Query` (or, below the file, a
 
@@ -91,7 +91,7 @@ both engines
 | no column index truncation option                                                                                                                                       | `Option::COLUMN_INDEX_TRUNCATE_LENGTH` (64): BYTE_ARRAY/FIXED_LEN_BYTE_ARRAY page bounds in the column index                                                                                                                                                                  |
 | `DataPageHeaderV2::statistics(Options $options)`                                                                                                                        | `statistics()`, as `DataPageHeader::statistics()`                                                                                                                                                                                                                             |
 | `ParquetFile::pageHeaders()` repeated every chunk of a row group under each column                                                                                      | each column's own chunk pages, once                                                                                                                                                                                                                                           |
-| `FLOW_PHP_ABI` / `FlowPhpExtension::ABI` 1                                                                                                                              | 2: rebuild the `flow_php` extension (and `arrow`, item 4); an older build is refused by `available()`                                                                                                                                                                         |
+| `FLOW_PHP_ABI` / `FlowPhpExtension::ABI` 1                                                                                                                              | 2 (covering every contract change below): rebuild the `flow_php` extension (and `arrow`, item 4); an older build is refused by `available()`                                                                                                                                  |
 
 ### 6) `flow-php/etl`, `flow-php/types` - string comparisons in filters use byte order, as sort already does
 
@@ -287,15 +287,12 @@ filesystem bundle builds the configured form unless an HTTP client, a factory or
 
 ---
 
-### 15) `flow-php/filesystem`, `flow-php/parquet` - every filesystem and parquet engine is configurable; the
-
-`arrow` extension must be rebuilt (ABI 3)
+### 15) `flow-php/filesystem`, `flow-php/parquet` - every filesystem and parquet engine is configurable
 
 | Before                                     | After                                                                                                                                                                                                                                                                                   |
 |--------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `interface Filesystem` (10 methods)        | `+ normalize(): ?array`, `+ static fromArray(array $configuration): static` - the plain configuration a worker rebuilds the filesystem from; `null` / throw when the instance holds live state (a client, memory). Core wraps it in `Flow\ETL\Foundation\Describe\ConfiguredFilesystem` |
 | `interface ParquetEngine` (3 methods)      | the same two methods (`fromArray(): self`); `PhpParquetEngine` and `AdaptiveParquetEngine` normalize `{byte_order, options}`, `RustParquetEngine` `{options}`; wrapped by `Flow\ETL\Adapter\Parquet\IO\ConfiguredParquetEngine`                                                         |
-| `FLOW_ARROW_ABI` / `ArrowExtension::ABI` 2 | 3: the interface the extension registers gained the two methods; an older build is refused by `ArrowExtension::available()`                                                                                                                                                             |
 | `Path`                                     | `+ normalize(): PathData`, `+ static fromArray(array)`; `NativeLocalFileBlocksFactory::blockLocation()`; `OptionalType::assert()` is documented as returning `null                                                                                                           \|T`       |
 
 ---
@@ -384,14 +381,11 @@ filesystem bundle builds the configured form unless an HTTP client, a factory or
 The footer struct (`rows`, `byteSize`) is no longer a third `Statistics` beside `Flow\ETL\IO\Extractor\Statistics` and
 `Flow\ETL\Runtime\Metrics\Statistics`. The Floe bytes are unchanged.
 
-### 27) `flow-php/filesystem`, `flow-php/etl` - `RangeSourceStream` exposes its window; the
-
-`flow_php` extension must be rebuilt (ABI 3)
+### 27) `flow-php/filesystem`, `flow-php/etl` - `RangeSourceStream` exposes its window
 
 | Before                                                      | After                                                                                          |
 |-------------------------------------------------------------|------------------------------------------------------------------------------------------------|
 | `RangeSourceStream` reads only through `iterate()`/`read()` | `stream()`, `start()`, `end()` (exclusive) name the inner stream and the window it is cut from |
-| `FlowPhpExtension::ABI` is `2`                              | `FlowPhpExtension::ABI` is `3`; a `flow_php` built before this change is refused               |
 
 The native CSV reader opens a `NativeLocalSourceStream` (or a `RangeSourceStream` over one) by its path and reads the
 window itself; every other stream is still read through its PHP `iterate()`. `NativeLocalFilesystem::readFrom()` no
@@ -1985,6 +1979,13 @@ public function transform(DataFrame $dataFrame): DataFrame
 | `Flow\PostgreSql\AST\Transformers\PaginationModifier`, `PaginationConfig`                | `OffsetPaginationModifier`, `OffsetPaginationConfig`            |
 | `Flow\Bridge\Monolog\Telemetry\ValueNormalizer`, `value_normalizer()`                    | `AttributeValueNormalizer`, `attribute_value_normalizer()`      |
 | `Flow\Bridge\Psr3\Telemetry\ValueNormalizer`, `psr3_value_normalizer()`                  | `AttributeValueNormalizer`, `psr3_attribute_value_normalizer()` |
+
+### 131) `flow-php/parquet` - both engines cap a row group at `ROW_GROUP_MAXIMUM_ROWS_COUNT` rows and write the same footer
+
+| Before                                                                                                    | After                                                                                                                  |
+|-----------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| the PHP engine closed a row group on `ROW_GROUP_SIZE_BYTES` only; the arrow engine also at 1 048 576 rows | `Option::ROW_GROUP_MAXIMUM_ROWS_COUNT` (default `1_048_576`): both engines close a row group at that many rows exactly |
+| the arrow engine wrote `created_by` `parquet-rs version 60.0.0` and an `ARROW:schema` key                 | `flow-php parquet version <version>` and no `ARROW:schema` key, as the PHP engine writes                               |
 
 ## Upgrading from 0.45.x to 0.46.x
 

@@ -166,6 +166,14 @@ enum Option
     case PAGE_SIZE_CHECK_INTERVAL;
 
     /**
+     * The rows a row group holds at most, beside ROW_GROUP_SIZE_BYTES (arrow-rs max_row_group_row_count): a row group
+     * is closed when either limit is reached. Readers decode a row group at a time, so this bounds their memory too.
+     *
+     * Default value is 1048576 rows
+     */
+    case ROW_GROUP_MAXIMUM_ROWS_COUNT;
+
+    /**
      * RowGroupBuilder is going to use this value to determine for how long it should keep adding rows to the buffer
      * before flushing it on disk.
      *

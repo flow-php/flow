@@ -11,6 +11,10 @@ use PHPUnit\Framework\Attributes\TestWith;
 use ValueError;
 
 use function iterator_count;
+use function iterator_to_array;
+use function range;
+
+use const PHP_INT_MAX;
 
 final class NumberSequenceGeneratorTest extends FlowTestCase
 {
@@ -38,6 +42,36 @@ final class NumberSequenceGeneratorTest extends FlowTestCase
 
         static::assertEquals(Cardinality::exact($expected), $generator->rows());
         static::assertSame($expected, iterator_count($generator->generate()));
+    }
+
+    #[TestWith([1, 4, 1, [1, 2, 3, 4]])]
+    #[TestWith([1, 10, 4, [1, 5, 9]])]
+    #[TestWith([4, 1, 1, [4, 3, 2, 1]])]
+    #[TestWith([10, 1, 4, [10, 6, 2]])]
+    #[TestWith([-2, 2, 2, [-2, 0, 2]])]
+    #[TestWith([10, 1, -4, [10, 6, 2]])]
+    #[TestWith([7, 7, 1, [7]])]
+    #[TestWith([0, 1, 0.5, [0.0, 0.5, 1.0]])]
+    public function test_generate_yields_the_values_range_yields(
+        int $start,
+        int $end,
+        int|float $step,
+        array $expected,
+    ): void {
+        static::assertSame($expected, iterator_to_array(
+            (new NumberSequenceGenerator($start, $end, $step))->generate(),
+            false,
+        ));
+        static::assertSame(range($start, $end, $step), $expected);
+    }
+
+    public function test_an_integer_sequence_is_generated_without_building_it_first(): void
+    {
+        $generator = (new NumberSequenceGenerator(0, PHP_INT_MAX))->generate();
+
+        static::assertSame(0, $generator->current());
+        $generator->next();
+        static::assertSame(1, $generator->current());
     }
 
     #[TestWith([1, 10, 0])]

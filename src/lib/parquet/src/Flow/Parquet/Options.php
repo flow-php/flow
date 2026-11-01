@@ -41,6 +41,7 @@ final class Options
             Option::PAGE_MAXIMUM_ROWS_COUNT->name => 1000,
             Option::PAGE_SIZE_BYTES->name => SizeUnits::KiB_SIZE * 128,
             Option::PAGE_SIZE_CHECK_INTERVAL->name => 100,
+            Option::ROW_GROUP_MAXIMUM_ROWS_COUNT->name => 1_048_576,
             Option::ROW_GROUP_SIZE_BYTES->name => SizeUnits::MiB_SIZE * 32,
             Option::ROW_GROUP_SIZE_CHECK_INTERVAL->name => 1000,
             Option::STATISTICS_LEVEL->name => StatisticsLevel::PAGE,

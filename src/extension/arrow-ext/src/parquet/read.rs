@@ -212,7 +212,8 @@ impl ParquetReader {
         let mut builder = ParquetPushDecoderBuilder::new_with_metadata(meta)
             .with_row_group_selections(plan.selections)
             .with_projection(mask)
-            .with_batch_size(batch_size);
+            .with_batch_size(batch_size)
+            .with_max_predicate_cache_size(0);
 
         if !predicates.is_empty() {
             builder = builder.with_row_filter(RowFilter::new(
