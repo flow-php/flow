@@ -47,6 +47,7 @@
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/arrow-ext - page-range reads and row filtering through arrow-rs** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [4be1dc](https://github.com/flow-php/flow/commit/4be1dcb9fee1599aa9f250a4feafd9dd5d485d3a) - **docs(flow-php/etl): {part} writes one part per task, not per worker** - [@norberttech](https://github.com/norberttech)
 - [#2717](https://github.com/flow-php/flow/pull/2717) - **flow-php/arrow-ext - FLOW_ARROW_ABI is 2, one bump since 0.46.0** - [@norberttech](https://github.com/norberttech)
 - [#2717](https://github.com/flow-php/flow/pull/2717) - **flow-php/flow-php-ext - FLOW_PHP_ABI is 2, one bump since 0.46.0** - [@norberttech](https://github.com/norberttech)
 - [2c0f7b](https://github.com/flow-php/flow/commit/2c0f7b9a4e38be745d1316914150aaaf68414438) - **chore: update docker/login github action** - [@norberttech](https://github.com/norberttech)
