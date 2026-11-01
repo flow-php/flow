@@ -46,6 +46,7 @@
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/arrow-ext - page-range reads and row filtering through arrow-rs** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [2c0f7b](https://github.com/flow-php/flow/commit/2c0f7b9a4e38be745d1316914150aaaf68414438) - **chore: update docker/login github action** - [@norberttech](https://github.com/norberttech)
 - [#2715](https://github.com/flow-php/flow/pull/2715) - **flow-php/etl - sampleSize() and filesToSniff() refuse values below 1** - [@norberttech](https://github.com/norberttech)
 - [#2715](https://github.com/flow-php/flow/pull/2715) - **flow-php/etl - a negative sniff row budget is refused; null means every row** - [@norberttech](https://github.com/norberttech)
 - [#2715](https://github.com/flow-php/flow/pull/2715) - **flow-php/telemetry - AttributeMatchingSampler renamed to AttributeFilteringSampler** - [@norberttech](https://github.com/norberttech)
