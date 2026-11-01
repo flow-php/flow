@@ -2,8 +2,8 @@
 
 [DOC_LINK:/documentation/components/core/core.md]
 
-`DataFrame::groupBy()` returns a `GroupedDataFrame`; `aggregate()` turns it back into a `DataFrame` with one row per
-group:
+`DataFrame::groupBy()` returns a `GroupedDataFrame`. `aggregate()` turns it back into a `DataFrame` with one row for
+each group:
 
 ```php
 data_frame()
@@ -34,15 +34,15 @@ data_frame()
 
 ## Buckets Storage
 
-While the process stays under the memory limit, `groupBy()` aggregates in one pass and writes nothing. Past the limit it
-partitions the rest of the stream by the hashed grouping key into buckets of a `RowsStorage` - the same abstraction
-used by [external sort](/documentation/components/core/sort.md) and [join](/documentation/components/core/join.md) -
-aggregates each bucket on its own and merges the groups aggregated before the limit into them. The default storage is
-`FilesystemRowsStorage` (Floe files in the local cache directory); `MemoryRowsStorage` and `PsrRowsStorage` (any PSR-16
-cache) are the alternatives.
+While the process stays under the memory limit, `groupBy()` aggregates in one pass and writes nothing. After the
+limit, it partitions the rest of the stream by the hashed grouping key into buckets of a `RowsStorage`.
+[External sort](/documentation/components/core/sort.md) and [join](/documentation/components/core/join.md) use the
+same abstraction. It aggregates each bucket separately, and merges the groups from before the limit into them. The
+default storage is `FilesystemRowsStorage` (Floe files in the local cache directory). The alternatives are
+`MemoryRowsStorage` and `PsrRowsStorage` (each PSR-16 cache).
 
-`groupBy()` takes an optional trailing `BucketingAlgorithmBuilder`, so one operation can override the configured
-algorithm:
+`groupBy()` takes an optional `BucketingAlgorithmBuilder` as the last argument. One operation can therefore override
+the configured algorithm:
 
 ```php ignore
 ->groupBy([ref('country')], hash_group_by()->storage(new MemoryRowsStorage()))
@@ -72,14 +72,14 @@ data_frame(
 
 ### Column pruning
 
-Before aggregating, the batch is pruned to the columns the group by reads: the grouping references plus every column
-referenced by the aggregators. A grouping or aggregated column the input does not have throws
+Before the aggregation, the batch is pruned to the columns that the group by reads: the grouping references plus
+each column that the aggregators reference. A grouping or aggregated column that the input does not have throws
 `SchemaDefinitionNotFoundException`.
 
-Custom aggregators take part through `AggregatingFunction::references()`: return the references the aggregator reads,
-or `null` when they cannot be listed - `null` turns pruning off for that group by.
+Custom aggregators take part through `AggregatingFunction::references()`. It returns the references that the
+aggregator reads, or `null` for references that it cannot list. `null` turns off pruning for that group by.
 
 ### Output order
 
-Group order is not a contract - past the memory limit groups come out in bucket order. For a specific
-order, apply [sortBy](/documentation/components/core/sort.md) after aggregation.
+The group order is not a contract. After the memory limit, groups come out in bucket order. For a specific order,
+apply [sortBy](/documentation/components/core/sort.md) after the aggregation.

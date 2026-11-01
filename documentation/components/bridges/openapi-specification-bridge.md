@@ -8,16 +8,17 @@ package: flow-php/openapi-specification-bridge
 
 [TOC]
 
-This package provides bidirectional conversion between Flow PHP schemas and OpenAPI 3.0 specifications. 
-It enables you to generate OpenAPI documentation from Flow schemas and vice versa, facilitating API-first development and documentation workflows.
+This package converts Flow PHP schemas to OpenAPI 3.0 specifications, and back.
+You can generate OpenAPI documentation from Flow schemas, and Flow schemas from OpenAPI documentation. This helps
+API-first development and documentation workflows.
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/openapi-specification-bridge.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/openapi-specification-bridge.md).
 
 ## Usage
 
-This bridge allows you to convert Flow PHP schemas to OpenAPI specification format and vice versa.
+With this bridge, you can convert Flow PHP schemas to the OpenAPI specification format, and back.
 
 ### Converting Flow Schema to OpenAPI
 
@@ -110,22 +111,22 @@ $flowSchema = schema_from_openapi_specification($openApiSpec);
 
 ## OpenAPI Metadata
 
-The OpenAPI Specification Bridge provides specialized metadata handling through the `OpenAPIMetadata` enum, allowing you to add OpenAPI-specific properties to your Flow schema definitions. This metadata is used during schema conversion to generate rich OpenAPI specifications.
+The OpenAPI Specification Bridge handles special metadata through the `OpenAPIMetadata` enum. With it, you can add OpenAPI-specific properties to your Flow schema definitions. The schema conversion uses this metadata to generate detailed OpenAPI specifications.
 
 ### Available OpenAPI Metadata
 
-The `OpenAPIMetadata` enum provides the following metadata types:
+The `OpenAPIMetadata` enum has these metadata types:
 
-- `DESCRIPTION` - Human-readable description of the property
-- `FORMAT` - OpenAPI format specification (e.g., 'email', 'date-time', 'uuid')
-- `EXAMPLE` - Example value for the property
-- `EXAMPLES` - Multiple named examples
-- `DEPRECATED` - Mark property as deprecated
-- `TITLE` - Short title for the property
-- `DEFAULT` - Default value for the property
-- `READ_ONLY` - Mark property as read-only
-- `WRITE_ONLY` - Mark property as write-only
-- `NULLABLE` - Override schema nullability
+- `DESCRIPTION`: human-readable description of the property
+- `FORMAT`: openAPI format specification (for example 'email', 'date-time', 'uuid')
+- `EXAMPLE`: example value for the property
+- `EXAMPLES`: multiple named examples
+- `DEPRECATED`: mark property as deprecated
+- `TITLE`: short title for the property
+- `DEFAULT`: default value for the property
+- `READ_ONLY`: mark property as read-only
+- `WRITE_ONLY`: mark property as write-only
+- `NULLABLE`: override schema nullability
 
 ### Using OpenAPI Metadata
 
@@ -211,10 +212,10 @@ $openApiSpec = $converter->toOpenAPI($userSchema);
 
 ### Metadata Priority System
 
-The OpenAPI bridge uses a priority system when handling metadata:
+The OpenAPI bridge uses a priority system for metadata:
 
-1. **OpenAPI-specific metadata** (from `OpenAPIMetadata`) takes highest priority
-2. **Legacy metadata keys** are used as fallback when OpenAPI metadata is not present
+1. OpenAPI-specific metadata (from `OpenAPIMetadata`) has the highest priority.
+2. Without OpenAPI metadata, the bridge uses the legacy metadata keys.
 
 ```php
 <?php
@@ -237,29 +238,29 @@ $schema = schema(
 
 ### Common OpenAPI Formats
 
-Here are some commonly used OpenAPI formats you can specify with `OpenAPIMetadata::format()`:
+These are common OpenAPI formats for `OpenAPIMetadata::format()`:
 
-**String formats:**
-- `email` - Email address
-- `uri` - URI/URL
-- `uuid` - UUID string
-- `date` - Date (YYYY-MM-DD)
-- `date-time` - Date and time (RFC 3339)
-- `password` - Password field
-- `byte` - Base64 encoded string
-- `binary` - Binary data
+String formats:
+- `email`: email address
+- `uri`: URI/URL
+- `uuid`: UUID string
+- `date`: date (YYYY-MM-DD)
+- `date-time`: date and time (RFC 3339)
+- `password`: password field
+- `byte`: base64 encoded string
+- `binary`: binary data
 
-**Integer formats:**
-- `int32` - 32-bit integer
-- `int64` - 64-bit integer
+Integer formats:
+- `int32`: 32-bit integer
+- `int64`: 64-bit integer
 
-**Number formats:**
-- `float` - Floating point number
-- `double` - Double precision number
+Number formats:
+- `float`: floating point number
+- `double`: double precision number
 
 ### Usage Example
 
-A structure's `properties` object preserves the structure type's declared field order; an element
+The `properties` object of a structure keeps the declared field order of the structure type. An element
 declared with `structure_element(..., optional: true)` emits `nullable: true` in its property.
 
 ```php

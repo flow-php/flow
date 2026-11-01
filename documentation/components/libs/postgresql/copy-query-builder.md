@@ -136,7 +136,7 @@ echo $query->toSql();
 
 ### Error Handling
 
-Control behavior when encountering invalid data:
+Control the behavior for invalid data:
 
 ```php
 <?php
@@ -315,19 +315,19 @@ echo $query->toSql();
 
 The `CopyFormat` enum provides three format options:
 
-| Format | Description |
-|--------|-------------|
-| `CopyFormat::TEXT` | Default PostgreSQL text format |
-| `CopyFormat::CSV` | Comma-separated values format |
-| `CopyFormat::BINARY` | PostgreSQL binary format |
+| Format               | Description                    |
+|----------------------|--------------------------------|
+| `CopyFormat::TEXT`   | Default PostgreSQL text format |
+| `CopyFormat::CSV`    | Comma-separated values format  |
+| `CopyFormat::BINARY` | PostgreSQL binary format       |
 
 ## Error Handling Options
 
 The `CopyOnError` enum (COPY FROM only) provides error handling options:
 
-| Option | Description |
-|--------|-------------|
-| `CopyOnError::STOP` | Stop on first error (default) |
+| Option                | Description                        |
+|-----------------------|------------------------------------|
+| `CopyOnError::STOP`   | Stop on first error (default)      |
 | `CopyOnError::IGNORE` | Skip rows with errors and continue |
 
 For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/postgresql/namespaces/flow-postgresql-dsl.html).

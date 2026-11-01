@@ -4,11 +4,11 @@
 
 - [Installation](/documentation/installation/packages/etl-adapter-avro.md)
 
-Avro integration was temporarily abandoned due to the lack of availability of good libraries for PHP.
-If you are interested in this integration, please let us know by creating an issue in the repository.
+The Avro integration is stopped for now, because no good Avro libraries for PHP are available.
+If you want this integration, create an issue in the repository.
 
-At some point in the future we are going to write our own Avro library for PHP, but it is not a priority at the moment.
+In the future, we plan to write our own Avro library for PHP. At this time, it is not a priority.
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/etl-adapter-avro.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/etl-adapter-avro.md).

@@ -8,12 +8,12 @@ package: flow-php/etl-adapter-google-sheet
 
 [TOC]
 
-Flow PHP's Google Sheet adapter reads a sheet of a Google Spreadsheet through the Sheets API v4 as a Flow extractor,
-with the schema either declared or inferred from the sheet's first rows. The adapter is read-only: there is no loader.
+This adapter reads a Google Spreadsheet sheet. It is a Flow extractor that uses the Sheets API v4. You can declare
+the schema, or the extractor infers it from the first rows of the sheet. The adapter is read-only: there is no loader.
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/etl-adapter-google-sheet.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/etl-adapter-google-sheet.md).
 
 ## Extractor
 
@@ -38,31 +38,36 @@ record      ['1', 'a', 'x', '']    ->  corrupted record (a non-empty cell past t
 record      ['1', '', 'x']         ->  'e01' => null   (a present '' is null; `withEmptyToNull(false)` keeps it '')
 ```
 
-A corrupted record throws `CorruptedRecordException`, or goes to `->withCorruptedRecords($loader)`, see
-[Corrupted Records](/documentation/components/core/corrupted-records.md). A column of `->withSchema()` missing from the
-header throws `SchemaValidationException`.
+A corrupted record throws `CorruptedRecordException`, or goes to `->withCorruptedRecords($loader)`. For more
+information, read [Corrupted Records](/documentation/components/core/corrupted-records.md). If a column of
+`->withSchema()` is not in the header, the read throws `SchemaValidationException`.
 
-Blank rows before the header are skipped, also under `withHeader(false)`.
+The extractor skips blank rows before the header, also under `withHeader(false)`.
 
 ## Needed parameters
 
 - `$auth_config`
 
-    - Create project: [console.cloud.google.com](https://console.cloud.google.com/projectcreate) choosing the right organization.
-    - Enable google sheet API for created project on [api sheets.googleapis.com](https://console.cloud.google.com/apis/library/sheets.googleapis.com)
-    - To work with google sheet enable it on [serviceaccounts](https://console.cloud.google.com/iam-admin/serviceaccounts/create) this will generate email for example `serviceaccounts@project.iam.gserviceaccount.com`
-    - Generate json (auth config)  for created serviceaccounts on `Keys` tab.
+    - Create a project on [console.cloud.google.com](https://console.cloud.google.com/projectcreate). Choose the correct organization.
+    - Enable the google sheet API for the project on [api sheets.googleapis.com](https://console.cloud.google.com/apis/library/sheets.googleapis.com).
+    - Create a service account on [serviceaccounts](https://console.cloud.google.com/iam-admin/serviceaccounts/create). This generates an email, for example `serviceaccounts@project.iam.gserviceaccount.com`.
+    - Generate the json (auth config) for the service account on the `Keys` tab.
 
-- `$spreadsheet_document_id` ID needs to be readded from the document we want to use, example URL `https://docs.google.com/spreadsheets/d/xyzID-for-documentxyz/edit` ID is `xyzID-for-documentxyz`
-- `$sheet_name` - Name of sheet from document you want to read.
+- `$spreadsheet_document_id`: the ID of the document. Read it from the document URL. For the URL `https://docs.google.com/spreadsheets/d/xyzID-for-documentxyz/edit`, the ID is `xyzID-for-documentxyz`.
+- `$sheet_name`: the name of the sheet in the document that you want to read.
 
 ## Schema
 
-Declare it with `->withSchema(schema(...))`, or let the extractor infer it: without a declaration `schema()` reads the
-first rows of the sheet (100 by default) through one `spreadsheets.values.get` and every batch carries that schema.
-A sheet the sample already read in full is not fetched again. Every inferred column is nullable; strings that look like numbers, booleans and dates become
-those types under the API's default `FORMATTED_VALUE`; with `->withOptions(['valueRenderOption' => 'UNFORMATTED_VALUE'])`
-the API's own numbers and booleans are used as they are (dates arrive as serial numbers unless
-`dateTimeRenderOption` is `FORMATTED_STRING`). `->inferSchema(infer_schema()->everyRow())` reads the whole sheet;
-`->allStrings()` keeps every column a string. Empty cells are `null` (`->withEmptyToNull(false)` keeps them `""`).
-A value past the sample that does not fit the inferred type fails the read with the column and row.
+Declare it with `->withSchema(schema(...))`, or let the extractor infer it. Without a declaration, `schema()` reads
+the first rows of the sheet (100 by default) through one `spreadsheets.values.get`, and each batch carries that schema.
+If the sample already read the full sheet, the extractor does not fetch it again. Each inferred column is nullable.
+
+- Under the default `FORMATTED_VALUE` of the API, strings that look like numbers, booleans and dates become those types.
+- With `->withOptions(['valueRenderOption' => 'UNFORMATTED_VALUE'])`, the extractor uses the numbers and booleans of
+  the API as they are. Dates then arrive as serial numbers, except with `dateTimeRenderOption` set to
+  `FORMATTED_STRING`.
+- `->inferSchema(infer_schema()->everyRow())` reads the full sheet.
+- `->allStrings()` keeps each column a string.
+- Empty cells are `null`. `->withEmptyToNull(false)` keeps them `""`.
+
+A value after the sample that does not fit the inferred type fails the read. The error names the column and the row.

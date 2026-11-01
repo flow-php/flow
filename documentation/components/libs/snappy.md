@@ -8,15 +8,15 @@ package: flow-php/snappy
 
 [TOC]
 
-Pure PHP implementation of Google [Snappy](https://github.com/google/snappy) compression algorithm.
+Pure PHP implementation of the Google [Snappy](https://github.com/google/snappy) compression algorithm.
 
-This library is a port of javascript [snappyjs](https://github.com/zhipeng-jia/snappyjs).
-Whenever it's possible it's recommended to install [PHP Extension](https://github.com/kjdev/php-ext-snappy),
-otherwise this lib will register polyfill functions.
+This library is a port of the javascript library [snappyjs](https://github.com/zhipeng-jia/snappyjs) to PHP.
+If you can, install the [PHP Extension](https://github.com/kjdev/php-ext-snappy).
+Without the extension, this library registers polyfill functions.
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/snappy.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/snappy.md).
 
 ## Usage
 
@@ -30,7 +30,7 @@ echo \snappy_uncompress(\snappy_compress($string)); // This is some random strin
 
 ## Performance
 
-PHP Implementation is significantly slower than extension, below you can find a benchmark script and results:
+The PHP implementation is much slower than the extension. This is a benchmark script and its results:
 
 ```php
 <?php

@@ -8,18 +8,13 @@ package: flow-php/doctrine-dbal-bulk
 
 [TOC]
 
-Flow PHP's Doctrine DBAL Bulk is a specialized library crafted for optimizing bulk operations in your data workflows.
-This library is a prime choice for handling bulk data tasks with the Doctrine Database Abstraction Layer (DBAL),
-augmenting the performance and efficiency of data insertion and manipulation tasks. The Doctrine DBAL Bulk library
-encapsulates the complexities of bulk operations, presenting a streamlined API that is both powerful and easy to use. By
-leveraging this library, developers can effortlessly manage bulk data processes, ensuring high throughput and
-reliability even in demanding data-intensive environments. This aligns perfectly with Flow PHP's ethos of robust data
-processing, making the Doctrine DBAL Bulk library an invaluable addition to your data transformation and processing
-toolkit.
+Doctrine DBAL Bulk is a Flow PHP library for bulk operations with the Doctrine Database Abstraction Layer (DBAL).
+It handles bulk inserts, updates and deletes. The library hides the complex parts of bulk operations behind
+a small API.
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/doctrine-dbal-bulk.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/doctrine-dbal-bulk.md).
 
 ## Usage Examples
 
@@ -43,8 +38,8 @@ Bulk::create()->insert(
 
 ### Column types
 
-Without types, `Bulk` reads the column types of the table from the database, once per table and `Bulk` instance. Pass
-them to `BulkData` to bind with exactly these types:
+Without types, `Bulk` reads the column types of the table from the database, once for each table and `Bulk` instance.
+To bind with exactly your types, give them to `BulkData`:
 
 ```php
 <?php
@@ -88,7 +83,7 @@ Bulk::create()->update(
 );
 ```
 
-`Bulk::delete()` removes the rows matching every column of `BulkData`.
+`Bulk::delete()` removes the rows that match all columns of `BulkData`.
 
 ## Supported Dialects
 
@@ -99,11 +94,11 @@ Bulk::create()->update(
 ### Adding new Dialects
 
 A [Dialect](/src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk/Dialect/Dialect.php) builds the SQL of one insert,
-update or delete from a [BulkData](/src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk/BulkData.php) and the dialect's
-own `InsertOptions` / `UpdateOptions` implementation (`PostgreSQLInsertOptions`, `MySQLInsertOptions`,
+update or delete. It uses a [BulkData](/src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk/BulkData.php) and the
+`InsertOptions` / `UpdateOptions` implementation of the dialect (`PostgreSQLInsertOptions`, `MySQLInsertOptions`,
 `SqliteInsertOptions`, ...).
 
 [DbalPlatform](/src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk/DbalPlatform.php) picks the Dialect for a Doctrine
-DBAL platform, and [DbalQueryFactory](/src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk/QueryFactory/DbalQueryFactory.php),
-the [QueryFactory](/src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk/QueryFactory.php) implementation, asks it for
-the query.
+DBAL platform. [DbalQueryFactory](/src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk/QueryFactory/DbalQueryFactory.php)
+is the [QueryFactory](/src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk/QueryFactory.php) implementation. It asks the
+Dialect for the query.

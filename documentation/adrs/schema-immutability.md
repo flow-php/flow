@@ -8,60 +8,63 @@ Date: 2026-07-27
 ## Context
 ---
 
-`Schema` was mutable - `add()`, `remove()`, `rename()`, `merge()` and every other mutator rewrote
+`Schema` was mutable. `add()`, `remove()`, `rename()`, `merge()` and all other mutators rewrote
 `$this->definitions` and returned `$this`. `Definition::addMetadata()` and `Definition::setMetadata()` did the same
 with `$this->metadata`.
 
-File extractors extend the schema they were given so the hydrator can cast auto-added columns
-(`_input_file_uri`, partition columns, sheet metadata): `Hydrator::cast()` iterates schema definitions and drops
-undeclared row keys, so a column that should materialize in rows must be present in the schema. An extractor
-storing the caller's `Schema` therefore wrote every internal extension into the caller's object, producing three
-observable defects (#2536 regression):
+File extractors extend the schema that they get, so that the hydrator can cast auto-added columns
+(`_input_file_uri`, partition columns, sheet metadata). `Hydrator::cast()` iterates the schema definitions and drops
+undeclared row keys. A column that must appear in rows must therefore be in the schema. An extractor that stored the
+`Schema` of the caller therefore wrote each internal extension into the object of the caller. This caused three
+visible defects (#2536 regression):
 
-1. **Caller schema pollution** - a `Schema` the user holds for other purposes gains non-nullable columns it never
+1. Caller schema pollution: a `Schema` that the user holds for other purposes gets non-nullable columns that it never
    declared.
-2. **Extractor-lifetime pollution** - columns added during one `extract()` run persist into subsequent runs.
-3. **Cross-stream pollution** - partition columns of one stream leak into the next, and
+2. Extractor-lifetime pollution: columns added during one `extract()` run stay in the next runs.
+3. Cross-stream pollution: partition columns of one stream go into the next stream, and
    `Hydrator::cast(fillMissing: true)` injects `null` into a non-nullable definition.
 
-The first fix cloned: `withSchema()` stored `clone $schema`, and extractors cloned again per run and per stream.
-That fix was incomplete. `clone` is shallow and `Schema`'s only state is `array<string, Definition>`, so a cloned
-`Schema` **shares its `Definition` instances**. `Schema::addMetadata()` / `setMetadata()` reached into a shared
-`Definition` and mutated it in place, so metadata writes aliased through every copy - including the caller's.
+The first fix cloned. `withSchema()` stored `clone $schema`, and extractors cloned again for each run and each
+stream. That fix was incomplete. `clone` is shallow, and the only state of `Schema` is `array<string, Definition>`. A
+cloned `Schema` therefore shares its `Definition` instances. `Schema::addMetadata()` / `setMetadata()` changed a
+shared `Definition` in place, so each metadata write went through to all copies, also the copy of the caller.
 
-The same mutable contract left latent aliasing traps elsewhere: `Rows::schema()` seeded its merge loop with row 0's
-*memoized* `Schema` and corrupted it, `FloeStreamWriter` retained a caller-owned `Schema` for the lifetime of a
-write session, and `merge()`'s fast paths returned `$this` or the argument.
+The same mutable contract left hidden aliasing traps in other places:
+
+- `Rows::schema()` started its merge loop with the memoized `Schema` of row 0 and corrupted it.
+- `FloeStreamWriter` kept a `Schema` of the caller for the lifetime of a write session.
+- The fast paths of `merge()` returned `$this` or the argument.
 
 ## Decision
 ---
 
-**`Schema` and its whole state chain are immutable. Every mutator returns a new instance; nothing is ever written
-in place.**
+`Schema` and its full state chain are immutable. Each mutator returns a new instance. Nothing is ever written in
+place.
 
-- `Schema` - a `final readonly class`. All 19 mutators return `new self(...)`; `setDefinitions()` is the
-  constructor's validation helper and is called from the constructor only.
-- `Definition` (19 implementations) - each a `final readonly class`. `addMetadata()` and `setMetadata()` return a
-  per-class `new self(...)`, matching the idiom `makeNullable()` and `rename()` already used.
-- `Metadata` - already a `final readonly class`.
+- `Schema`: a `final readonly class`. All 19 mutators return `new self(...)`. `setDefinitions()` is the validation
+  helper of the constructor, and only the constructor calls it.
+- `Definition` (19 implementations): each one is a `final readonly class`. `addMetadata()` and `setMetadata()` return
+  a `new self(...)` of their own class. `makeNullable()` and `rename()` already used this idiom.
+- `Metadata`: already a `final readonly class`.
 
-Immutability is declared at the class level, not per property: a `readonly class` cannot gain a writable property
-later, so the guarantee survives future edits instead of depending on whoever adds property number 20 remembering
-the rule. It is compiler-enforced, not convention. Extractors and the DSL hold caller-provided `Schema` instances
-directly: there is nothing to clone because there is nothing to mutate. Sharing an instance - `merge()`'s fast
-paths, a retained base `Definition` in the hydrator, `Rows`' memoized schema - is safe by construction.
+Immutability is declared at the class level, not for each property. A `readonly class` cannot get a writable
+property later. The guarantee therefore survives future edits. It does not depend on the person who adds property
+number 20 and remembers the rule. The compiler enforces it, so it is not a convention. Extractors and the DSL hold the
+`Schema` instances of the caller directly. There is nothing to clone, because there is nothing to mutate. Shared
+instances are safe by construction. Examples are the fast paths of `merge()`, a kept base `Definition` in the
+hydrator, and the memoized schema of `Rows`.
 
 DSL `from_*()` functions stay pure delegation.
 
 ### Out of scope
 
-`UnresolvedReference` remains mutable - `as()`, `asc()` and `desc()` write `$alias` / `$sort` on `$this`. It is shared
-with the entire expression DSL, so making it immutable is a separate project and is not attempted here.
+`UnresolvedReference` stays mutable. `as()`, `asc()` and `desc()` write `$alias` / `$sort` on `$this`. The full
+expression DSL shares it, so its immutability is a separate project. This decision does not try it.
 
 ### Breaking change
 
-Calling a mutator and discarding the result is now a **silent no-op**. There is no `#[\NoDiscard]`; the change is
-communicated through [upgrading.md](/documentation/upgrading.md).
+A call to a mutator that discards the result is now a silent no-op. There is no `#[\NoDiscard]`.
+[upgrading.md](/documentation/upgrading.md) tells users about the change.
 
 ```php
 $schema->add(str_schema('x'));          // before: mutates $schema. now: no-op.
@@ -71,46 +74,46 @@ $schema = $schema->add(str_schema('x')); // correct
 ## Pros & Cons
 ---
 
-**Advantages:**
+Advantages:
 
-- **The bug class is gone**, not patched - aliasing is impossible because there is no writable state to alias.
-- **Compiler-enforced**: a `readonly` violation is a fatal error, not a convention a new extractor can forget.
-- **Sharing becomes free**: no defensive clones in extractors, `PhpRowHydrator`, or the native hydrator.
+- The bug class is gone, not patched. Aliasing is impossible, because there is no writable state to alias.
+- Compiler-enforced: a `readonly` violation is a fatal error, not a convention that a new extractor can forget.
+- Sharing is free: no defensive clones in extractors, `PhpRowHydrator`, or the native hydrator.
 - Fixes the `Rows::schema()` and `FloeStreamWriter` aliasing traps without touching either.
 
-**Disadvantages:**
+Disadvantages:
 
-- Breaking change for downstream code that discards a mutator's return value, and it breaks **silently**.
-- A long mutator chain allocates one `Schema` per link. Schemas are small and built once per pipeline, not per
-  row, so this does not show up in profiles.
+- Breaking change for downstream code that discards the return value of a mutator, and it breaks silently.
+- A long mutator chain allocates one `Schema` for each link. Schemas are small and built once for each pipeline, not
+  for each row, so this does not show in profiles.
 
 ## Alternatives Considered
 ---
 
 ### 1. Clone at reception, clone before extending
 
-Every `withSchema()` stores `clone $schema`; extractors clone again per run and per stream.
+Each `withSchema()` stores `clone $schema`. Extractors clone again for each run and each stream.
 
-**Rejected because:** the clone is shallow, so `Definition` instances stay shared and metadata mutations alias
-through every copy anyway. It is also convention rather than a compiler-enforced rule - a new extractor can forget
-to clone - and it leaves unobservable dead clones in extractors that never extend the schema.
+Rejected because: the clone is shallow, so `Definition` instances stay shared, and metadata mutations still go
+through to all copies. It is also a convention and not a rule that the compiler enforces. A new extractor can forget
+to clone. It also leaves invisible dead clones in extractors that never extend the schema.
 
 ### 2. Deep `Schema::__clone()` + `Definition::__clone()`
 
-Give `Schema` and every `Definition` a `__clone()` that copies the definition array and its objects.
+Give `Schema` and each `Definition` a `__clone()` that copies the definition array and its objects.
 
-**Rejected because:** it patches the symptom while keeping the mutable contract, so every future aliasing trap
-(`Rows::schema()`, `FloeStreamWriter`, `merge()`'s fast paths) still has to be found and cloned around by hand. It
-also makes every clone more expensive without removing the need to remember to clone.
+Rejected because: it patches the symptom and keeps the mutable contract. Each future aliasing trap
+(`Rows::schema()`, `FloeStreamWriter`, the fast paths of `merge()`) must still be found and cloned around by hand. It
+also makes each clone more expensive, and developers must still remember to clone.
 
 ### 3. Materialize auto-added columns post-hydration via `Row::add()` (Floe style)
 
-**Rejected because:** the extended schema *is* the hydrator's instruction set - `Hydrator::cast()` drops undeclared
-row keys, and the `findDefinition()` guard lets a user-declared partition column keep its user-defined type.
-Post-hydration adds would bypass both.
+Rejected because: the extended schema is the instruction set of the hydrator. `Hydrator::cast()` drops undeclared
+row keys. The `findDefinition()` guard lets a partition column that the user declared keep its user-defined type.
+Adds after hydration go around both.
 
 ## Links and References
 ---
 
-- [PR #2536](https://github.com/flow-php/flow/pull/2536) - encoder/hydrator row contract that introduced the
+- [PR #2536](https://github.com/flow-php/flow/pull/2536): the encoder/hydrator row contract that added the
   schema extension in extractors

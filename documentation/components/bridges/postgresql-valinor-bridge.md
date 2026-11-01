@@ -4,7 +4,7 @@ package: flow-php/postgresql-valinor-bridge
 
 # PostgreSQL Valinor Bridge
 
-Bridge that lets [cuyz/valinor](https://valinor.cuyz.io) act as a `RowMapper` for the [flow-php/postgresql](/documentation/components/libs/postgresql.md) client. Use it when you want Valinor's strict, type-safe object hydration to materialize PostgreSQL rows into immutable DTOs or value objects.
+This bridge lets [cuyz/valinor](https://valinor.cuyz.io) act as a `RowMapper` for the [flow-php/postgresql](/documentation/components/libs/postgresql.md) client. Use it to turn PostgreSQL rows into immutable DTOs or value objects with the strict, type-safe object hydration of Valinor.
 
 [PACKAGE_NAV]
 
@@ -41,7 +41,7 @@ $user = $client->fetchInto(
 
 ### With a Pre-built `TreeMapper`
 
-When you want to share the same Valinor configuration across many mappers, build the `TreeMapper` once and reuse it:
+To share the same Valinor configuration across many mappers, build the `TreeMapper` once and use it again:
 
 ```php
 <?php
@@ -61,11 +61,11 @@ $users = $client->fetchAllInto(
 
 ## Combining With `TypeMapper` for Value Coercion
 
-PostgreSQL drivers return values as PHP scalars or strings - e.g. `JSONB` arrives as a JSON-encoded string, `TIMESTAMP` as `'2026-01-01 14:30:00'`, `UUID` as a string. Valinor is strict about types, so feeding raw row arrays directly often fails.
+PostgreSQL drivers return values as PHP scalars or strings. For example, `JSONB` arrives as a JSON-encoded string, `TIMESTAMP` as `'2026-01-01 14:30:00'`, and `UUID` as a string. Valinor is strict about types, so raw row arrays often fail.
 
-The cleanest pattern is to chain `TypeMapper` (from flow-php/postgresql) **in front of** the Valinor mapper. `TypeMapper` casts each row column to a concrete type via [flow-php/types](/documentation/components/libs/types.md), and the resulting array is passed to Valinor for object construction.
+The cleanest pattern is a chain with `TypeMapper` (from flow-php/postgresql) before the Valinor mapper. `TypeMapper` casts each row column to a concrete type through [flow-php/types](/documentation/components/libs/types.md). Valinor then gets the result array and constructs the object.
 
-`type_mapper(...)` accepts an optional `RowMapper $next`; when provided, the cast result is forwarded to it and its return value becomes the final output.
+`type_mapper(...)` accepts an optional `RowMapper $next`. With it, the cast result goes to `$next`, and its return value is the final output.
 
 ### Decoding `JSONB` Into Nested Objects
 
@@ -116,9 +116,9 @@ $user = $client->fetchInto($mapper, 'SELECT id, name, address FROM users WHERE i
 
 ### Coercing Date Strings Into `DateTimeImmutable`
 
-PostgreSQL returns `TIMESTAMP` values like `'2026-01-01 14:30:00'`. Valinor cannot construct `\DateTimeImmutable` from a raw string without explicit configuration, but `type_datetime()` can.
+PostgreSQL returns `TIMESTAMP` values such as `'2026-01-01 14:30:00'`. Without explicit configuration, Valinor cannot construct `\DateTimeImmutable` from a raw string, but `type_datetime()` can.
 
-The string carries no offset, so `type_datetime()` reads it as UTC; `type_datetime('Europe/Warsaw')` reads it as Warsaw local time.
+The string has no offset, so `type_datetime()` reads it as UTC. `type_datetime('Europe/Warsaw')` reads it as Warsaw local time.
 
 ```php
 <?php
@@ -158,11 +158,18 @@ $order = $client->fetchInto(
 );
 ```
 
-The same composition handles `UUID` (`type_uuid()`), nested `JSONB` arrays into typed lists (`type_list(type_structure([...]))`), optional fields (`type_optional(...)`), and any other Type from `flow-php/types`. See [TypeMapper](/documentation/components/libs/postgresql/client-type-mapper.md) for the full list of mapper helpers shipped with the postgresql library.
+The same composition handles these cases:
+
+- `UUID` (`type_uuid()`)
+- nested `JSONB` arrays into typed lists (`type_list(type_structure([...]))`)
+- optional fields (`type_optional(...)`)
+- each other Type from `flow-php/types`
+
+For the full list of mapper helpers of the postgresql library, read [TypeMapper](/documentation/components/libs/postgresql/client-type-mapper.md).
 
 ## Error Handling
 
-Both bridge mappers catch Valinor's `CuyZ\Valinor\Mapper\MappingError` and rethrow it as `Flow\PostgreSql\Client\Exception\MappingException`, preserving the original error as the previous exception:
+Both bridge mappers catch the `CuyZ\Valinor\Mapper\MappingError` of Valinor and throw it again as `Flow\PostgreSql\Client\Exception\MappingException`. The original error stays as the previous exception:
 
 ```php
 <?php

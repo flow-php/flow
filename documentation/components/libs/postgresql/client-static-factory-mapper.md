@@ -4,21 +4,21 @@
 
 [TOC]
 
-`StaticFactoryMapper` delegates row → object construction to a **public static** factory method on the target class. Use it when:
+`StaticFactoryMapper` delegates row → object construction to a public static factory method on the target class. Use it in these cases:
 
-- The target class has a `private` constructor and a named static factory (`User::fromRow(...)`),
-- You want to keep row-to-object logic on the domain class itself instead of scattering it across mapper implementations,
-- You need custom coercion inside the factory (e.g. `created_at` string → `\DateTimeImmutable`, JSONB string → decoded array).
+- The target class has a `private` constructor and a named static factory (`User::fromRow(...)`).
+- You want to keep the row-to-object logic on the domain class itself, not in many mapper implementations.
+- You need custom coercion inside the factory, for example `created_at` string → `\DateTimeImmutable` or JSONB string → decoded array.
 
-The factory method **must** have this exact signature:
+The factory method must have this exact signature:
 
 ```php ignore
 public static function fromRow(array $row) : self;
 ```
 
-The method **does not** receive the mapping `Context`. If your factory needs access to the originating `Query`, executing `Client`, or user-supplied data, implement [`RowMapper`](/documentation/components/libs/postgresql.md#row-mappers) directly - see the *Custom RowMapper* section of the [ConstructorMapper documentation](/documentation/components/libs/postgresql/client-constructor-mapper.md#custom-rowmapper).
+The method does not receive the mapping `Context`. Your factory can need the original `Query`, the executing `Client`, or user-supplied data. In that case, implement [`RowMapper`](/documentation/components/libs/postgresql.md#row-mappers) directly. For more information, read the *Custom RowMapper* section of the [ConstructorMapper documentation](/documentation/components/libs/postgresql/client-constructor-mapper.md#custom-rowmapper).
 
-For simple 1:1 constructor-parameter mapping, use [`ConstructorMapper`](/documentation/components/libs/postgresql/client-constructor-mapper.md). For type-driven coercion via `flow-php/types`, use [`TypeMapper`](/documentation/components/libs/postgresql/client-type-mapper.md).
+For simple 1:1 constructor-parameter mapping, use [`ConstructorMapper`](/documentation/components/libs/postgresql/client-constructor-mapper.md). For type-driven coercion through `flow-php/types`, use [`TypeMapper`](/documentation/components/libs/postgresql/client-type-mapper.md).
 
 ## DSL
 
@@ -70,7 +70,7 @@ $user = $client->fetchOneInto(
 
 ## fetchInto() - First Object or Null
 
-Returns the first row mapped via the factory, or `null` if no rows:
+Returns the first row mapped through the factory, or `null` for no rows:
 
 ```php
 <?php
@@ -112,27 +112,27 @@ foreach ($cursor->map(static_factory_mapper(User::class, 'fromRow')) as $user) {
 }
 ```
 
-See [Cursors](/documentation/components/libs/postgresql/client-cursor.md) for details.
+For more information, read [Cursors](/documentation/components/libs/postgresql/client-cursor.md).
 
 ## Error Handling
 
 `StaticFactoryMapper` throws `Flow\PostgreSql\Client\Exception\MappingException` in these cases:
 
-| Condition                                         | Message pattern                                       |
-|---------------------------------------------------|-------------------------------------------------------|
-| `$class` does not exist                           | `Failed to map row to "<class>": Class does not exist`|
-| Factory method does not exist on `$class`         | `Static factory method "<class>::<method>()" does not exist` |
-| Factory method exists but is not declared `static`| `Factory method "<class>::<method>()" must be declared static` |
-| Factory method is declared but not `public`       | `Factory method "<class>::<method>()" must be declared public` |
-| Factory method throws any `\Throwable`            | `Failed to map row to "<class>": <original message>`, with the original exception available via `MappingException::getPrevious()` |
+| Condition                                          | Message pattern                                                                                                                   |
+|----------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| `$class` does not exist                            | `Failed to map row to "<class>": Class does not exist`                                                                            |
+| Factory method does not exist on `$class`          | `Static factory method "<class>::<method>()" does not exist`                                                                      |
+| Factory method exists but is not declared `static` | `Factory method "<class>::<method>()" must be declared static`                                                                    |
+| Factory method is declared but not `public`        | `Factory method "<class>::<method>()" must be declared public`                                                                    |
+| Factory method throws any `\Throwable`             | `Failed to map row to "<class>": <original message>`, with the original exception available via `MappingException::getPrevious()` |
 
-Validation of `$class` / `$method` (existence, `static`, `public`) runs **eagerly in the constructor** - a misconfigured mapper fails fast at wiring time, not at query time. Exceptions thrown by the factory method itself surface on the matching `map()` call and are wrapped in a `MappingException` whose `getPrevious()` returns the original throwable.
+The constructor validates `$class` / `$method` (existence, `static`, `public`) immediately. A misconfigured mapper therefore fails at wiring time, not at query time. Exceptions that the factory method throws show on the matching `map()` call. They are wrapped in a `MappingException`, and its `getPrevious()` returns the original throwable.
 
 ## When to Reach for Something Else
 
-| Need                                                                | Use                                                                                   |
-|---------------------------------------------------------------------|---------------------------------------------------------------------------------------|
-| 1:1 column-to-constructor-parameter mapping with no coercion        | [`ConstructorMapper`](/documentation/components/libs/postgresql/client-constructor-mapper.md) |
-| Row validation / coercion via `flow-php/types`                      | [`TypeMapper`](/documentation/components/libs/postgresql/client-type-mapper.md)       |
-| Access to `Context` (query / parameters / client / catalog) in your mapping logic | Implement [`RowMapper`](/documentation/components/libs/postgresql.md#row-mappers) directly |
-| Strict object hydration of complex graphs                           | [PostgreSQL Valinor Bridge](/documentation/components/bridges/postgresql-valinor-bridge.md) |
+| Need                                                                              | Use                                                                                           |
+|-----------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------|
+| 1:1 column-to-constructor-parameter mapping with no coercion                      | [`ConstructorMapper`](/documentation/components/libs/postgresql/client-constructor-mapper.md) |
+| Row validation / coercion via `flow-php/types`                                    | [`TypeMapper`](/documentation/components/libs/postgresql/client-type-mapper.md)               |
+| Access to `Context` (query / parameters / client / catalog) in your mapping logic | Implement [`RowMapper`](/documentation/components/libs/postgresql.md#row-mappers) directly    |
+| Strict object hydration of complex graphs                                         | [PostgreSQL Valinor Bridge](/documentation/components/bridges/postgresql-valinor-bridge.md)   |

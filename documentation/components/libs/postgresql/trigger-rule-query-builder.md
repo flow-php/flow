@@ -113,7 +113,7 @@ $builder = alter()->trigger('my_trigger')
 
 ### DROP TRIGGER
 
-Drop triggers with optional IF EXISTS and CASCADE/RESTRICT:
+Drop triggers, with optional `IF EXISTS` and `CASCADE`/`RESTRICT`:
 
 ```php
 use function Flow\PostgreSql\DSL\drop;
@@ -244,7 +244,7 @@ $builder = create()->rule('audit_rule')
 
 ### DROP RULE
 
-Drop rules with optional IF EXISTS and CASCADE/RESTRICT:
+Drop rules, with optional `IF EXISTS` and `CASCADE`/`RESTRICT`:
 
 ```php
 use function Flow\PostgreSql\DSL\drop;

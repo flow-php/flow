@@ -2,103 +2,99 @@
 
 [TOC]
 
-Nix is probably the easiest way of setting up the development environment.
+Nix is probably the easiest way to set up the development environment.
 
-Before you start please make sure you have Nix installed. 
-If you don't have it installed, you can install it by following official documentation.
+Before you start, make sure that Nix is installed.
+If it is not installed, follow the official documentation to install it.
 
 [Nix installation instructions](https://nixos.org/download/)
 
-Once you have Nix installed, you can start your development environment
-by going to the project folder and running following command:
+After you install Nix, go to the project folder and run this command to start your development environment:
 
 ```bash
 nix-shell
 ```
 
-> If you are using Nix for the first time, it might take a while to download all the dependencies.
+> The first time that you use Nix, the download of all the dependencies takes some time.
 
-> To achieve full isolation, use `nix-shell --pure` command. This way nix will isolate your development environment from the system.
+> For full isolation, use the `nix-shell --pure` command. Nix then isolates your development environment from the system.
 
-That's all, after running this command you will have all the necessary tools and dependencies.
-Nix will create a new shell with all the necessary tools and dependencies for the project.
+This command gives you all the tools and dependencies of the project in a new shell.
 
-By default, we're using [Starship](https://starship.rs/) to provide a nice bash prompt.
-You can override it by creating `/.nix/shell/starship.toml` based on `/.nix/shell/starship.toml.dist` 
-file. 
+By default, the shell uses [Starship](https://starship.rs/) for the bash prompt.
+To override it, create `/.nix/shell/starship.toml` from the `/.nix/shell/starship.toml.dist` file.
 
-Once you apply your modification you can run `nix-shell` again to apply changes.
+After a change, run `nix-shell` again to apply it.
 
-To use the php version from nix inside your IDE please start a nix shell `nix-shell`
-and type: 
+To use the php version from nix in your IDE, start a nix shell with `nix-shell`
+and type:
 
 ```shell
 type php
 ```
 
-This should return you path to your php version that is used inside of the nix shell.
-It will look like this: 
+This command shows the path to the php version of the nix shell.
+The output looks like this:
 
 ```shell
-php is /nix/store/p2m5bamh01ncpwjxscdl11p2m9xy8aq6-php-with-extensions-8.2.27/bin/php
+php is /nix/store/p2m5bamh01ncpwjxscdl11p2m9xy8aq6-php-with-extensions-8.x.y/bin/php
 ```
 
 ## php.ini
 
-Nix shell comes with predefined php.ini, but if for any reason
-it wouldn't be enough for you, you can create your own php.ini file in path:
+The nix shell has a predefined php.ini. If it is not sufficient for you, create your own php.ini file at this path:
 
 `./.nix/php/lib/php.ini`
 
-If that file is not present, the default php.ini.dist from the same location will be used.
+If that file is not there, the shell uses the default php.ini.dist from the same location.
 
 ## Pcov
 
-- `pcov` - required for code coverage
+- `pcov`: necessary for code coverage
 
-To skip installing pcov extension, you can run nix shell with `--arg with-pcov false` flag:
+To start the nix shell without the pcov extension, use the `--arg with-pcov false` flag:
 
 ```shell
 
 nix-shell --arg with-pcov false
 ```
 
-To configure pcov, you can create a file `./.nix/php/lib/pcov.ini` with your xdebug configuration.
+To configure pcov, create a file `./.nix/php/lib/pcov.ini` with your pcov configuration.
 
 ## Xdebug
 
-- `xdebug` - required for debugging
+- `xdebug`: necessary for debugging
 
-To install xdebug extension, you can run nix shell with `--arg with-xdebug true` flag:
+To install the xdebug extension, start the nix shell with the `--arg with-xdebug true` flag:
 
 ```shell
 nix-shell --arg with-xdebug true
 ```
 
-To configure xdebug, you can create a file `./.nix/php/lib/xdebug.ini` with your xdebug configuration.
+To configure xdebug, create a file `./.nix/php/lib/xdebug.ini` with your xdebug configuration.
 
 ## Blackfire
 
-- `blackfire` - required for profiling
+- `blackfire`: necessary for profiling
 
-To install blackfire extension, you can run nix shell with `--arg with-blackfire true` flag:
+To install the blackfire extension, start the nix shell with the `--arg with-blackfire true` flag:
 
 ```shell
 nix-shell --arg with-blackfire true
 ```
 
-To configure blackfire, you can create a file `./.nix/php/lib/blackfire.ini` with your blackfire configuration.
+To configure blackfire, create a file `./.nix/php/lib/blackfire.ini` with your blackfire configuration.
 
 ## Benchmarking PHP
 
-The default shell runs PHP with development settings. OPcache is off for the CLI, which keeps the JIT off.
-`zend.assertions` is `1`. pcov is loaded. To time Flow with production settings:
+The default shell runs PHP with a development configuration. OPcache is off for the CLI, so the JIT is also off.
+`zend.assertions` is `1`. pcov is loaded. To time Flow with a production configuration:
 
 ```shell
 nix-shell --arg with-php-benchmark true
 ```
 
-The flag removes pcov, xdebug and blackfire. A shell that combines the flag with one of them fails at evaluation.
+The flag removes pcov, xdebug and blackfire. If you combine the flag with one of them, the shell fails at evaluation.
 The flag appends `./.nix/php/lib/benchmark.ini.dist` to `php.ini`:
 
 ```ini
@@ -113,26 +109,25 @@ opcache.validate_timestamps=1
 zend.assertions=-1
 ```
 
-On Linux the flag also sets `opcache.huge_code_pages=1`. To override a value, create `./.nix/php/lib/benchmark.ini`.
+On Linux, the flag also sets `opcache.huge_code_pages=1`. To override a value, create `./.nix/php/lib/benchmark.ini`.
 
 ## Changing PHP Versions
 
-To change the PHP version, you can run nix shell with `--arg php-version 8.3` flag:
+To change the PHP version, start the nix shell with the `--arg php-version 8.3` flag:
 
 ```shell
 nix-shell --arg php-version 8.3
 ```
 
-> In general, it's not recommended to change the PHP version, as development should always
-> be done on the lowest supported PHP version.
+> Usually, do not change the PHP version. Development must always use the lowest supported PHP version.
 >
-> This feature is mostly for testing new integrations
-> or lowest/highest versions of dependencies.
+> This feature is mostly for tests of new integrations
+> or of the lowest and highest versions of dependencies.
 
 ## Optional Tool Groups
 
-The nix shell supports optional tool groups that can be enabled when needed.
-This keeps the default shell lightweight while allowing access to specialized tools.
+The nix shell has optional tool groups. You enable each group with a flag.
+The default shell stays small, and you can still get the special tools.
 
 ### WASM Build Tools
 
@@ -140,11 +135,11 @@ This keeps the default shell lightweight while allowing access to specialized to
 nix-shell --arg with-wasm true
 ```
 
-See [WASM - Interactive Playground Build](/documentation/contributing/wasm.md) for details.
+For more information, read the [WASM Interactive Playground Build](/documentation/contributing/wasm.md) page.
 
 ### Terraform
 
-To include Terraform and Node.js for infrastructure development:
+To add Terraform and Node.js for infrastructure development:
 
 ```shell
 nix-shell --arg with-terraform true
@@ -156,7 +151,7 @@ nix-shell --arg with-terraform true
 nix-shell --arg with-pg-query-ext false --arg with-c true
 ```
 
-See [C - pg-query Extension Development](/documentation/contributing/c.md) for details.
+For more information, read the [C pg-query Extension Development](/documentation/contributing/c.md) page.
 
 ### arrow-ext and flow-php-ext Extensions (Rust)
 
@@ -164,24 +159,26 @@ See [C - pg-query Extension Development](/documentation/contributing/c.md) for d
 nix-shell --arg with-rust true
 ```
 
-`with-arrow-ext` and `with-flow-php-ext` both default to `!with-rust`, so this single flag already turns the prebuilt
-extensions off for both.
+`with-arrow-ext` and `with-flow-php-ext` both default to `!with-rust`. This one flag therefore turns off the prebuilt
+extensions for both.
 
-See [Rust - Extension Development](/documentation/contributing/rust.md) for details.
+For more information, read the [Rust Extension Development](/documentation/contributing/rust.md) page.
 
 ### Protobuf / gRPC Code Generation (protoc)
 
-Adds `protoc` and `grpc_php_plugin` to the shell. Required when regenerating OTLP protobuf and gRPC PHP classes via `just gen-protobuf-otlp`.
+This flag adds `protoc` and `grpc_php_plugin` to the shell. You need them to generate the OTLP protobuf and gRPC PHP
+classes again with `just gen-protobuf-otlp`.
 
 ```shell
 nix-shell --arg with-protoc true
 ```
 
-The `ext-protobuf` and `ext-grpc` PHP extensions are part of the default shell (`with-protobuf` / `with-grpc`, both default `true`); pass `false` to opt out.
+The default shell has the `ext-protobuf` and `ext-grpc` PHP extensions (`with-protobuf` / `with-grpc`, both default
+`true`). To remove them, give `false`.
 
 ### Reference Engines (DuckDB, Polars, Spark)
 
-Each engine has its own flag. Enable only the engines a comparison needs:
+Each engine has its own flag. Enable only the engines that a comparison needs:
 
 ```shell
 nix-shell --arg with-duckdb true --arg with-polars true --arg with-spark true --arg with-php-benchmark true
@@ -196,7 +193,7 @@ The scripts and the measurement rules are on the
 
 ### Combining Multiple Options
 
-You can combine multiple arguments:
+You can combine many arguments:
 
 ```shell
 nix-shell --arg with-terraform true --arg with-wasm true
@@ -204,8 +201,8 @@ nix-shell --arg with-terraform true --arg with-wasm true
 
 ## Local Webserver
 
-To run the local webserver for Flow Website development, please use Symfony CLI app
-that is also available in nix shell.
+To run the local webserver for the development of the Flow website, use the Symfony CLI app. The nix shell contains
+it.
 
 ```shell
 cd web/landing
@@ -213,6 +210,6 @@ symfony proxy:start
 symfony server:start -d 
 ```
 
-You can read more about it here: 
+For more information, read:
 
 - [How to use .wip domain for development](https://symfony.com/doc/current/setup/symfony_server.html#setting-up-the-local-proxy)

@@ -4,12 +4,12 @@
 
 [TOC]
 
-DataFrame provides several methods for manipulating data structures and values within your datasets. These operations
-allow you to add, modify, cast, and clean data efficiently.
+DataFrame has several methods that change the data structures and values of your datasets. With these operations,
+you can add, change, cast, and clean data efficiently.
 
 ## Inferring Types from an Array
 
-An array source carries no schema, so ask it to infer one:
+An array source has no schema, so tell it to infer one:
 
 ```php
 <?php
@@ -31,15 +31,15 @@ data_frame()
 // |-- active: ?string
 ```
 
-> **Note**: inference reads the sample once and freezes one type per column, so a column never comes out mixed. Every
+> Note: inference reads the sample once and fixes one type for each column, so a column is never mixed. Each
 > inferred column is nullable. `from_array()` infers from the PHP value, so these string cells stay strings.
-> Narrowing text is a file-source behaviour - `from_csv()` and `from_json()` read each cell as text and narrow it to
-> the richest type that parses, so `'19.99'` read from a CSV infers as `?float`. Restrict the candidates with
-> `->types(...)`, or take strings only with `->allStrings()`.
+> Only file sources narrow text. `from_csv()` and `from_json()` read each cell as text and narrow it to the richest
+> type that parses. `'19.99'` from a CSV therefore infers as `?float`. To limit the candidates, use `->types(...)`.
+> For strings only, use `->allStrings()`.
 
 ## Adding Columns with withColumn()
 
-Add new columns or modify existing ones using expressions:
+Add new columns or change existing columns with expressions:
 
 ```php
 <?php
@@ -59,11 +59,11 @@ data_frame()
 
 ## Duplicating Rows
 
-Create duplicate rows for testing or data expansion:
+Create duplicate rows for tests or data expansion:
 
 ### duplicateRow() - Duplicate Matching Rows
 
-`duplicateRow()` takes a boolean condition; every row it is true for appears twice.
+`duplicateRow()` takes a boolean condition. Each row that matches it appears twice.
 
 ```php
 <?php
@@ -83,7 +83,7 @@ data_frame()
 
 ## Removing Duplicates
 
-`dropDuplicates()` takes at least one column and keeps the first row of each distinct combination of those columns:
+`dropDuplicates()` takes one or more columns. It keeps the first row of each distinct combination of those columns:
 
 ```php
 <?php

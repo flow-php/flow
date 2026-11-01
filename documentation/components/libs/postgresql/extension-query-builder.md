@@ -230,7 +230,7 @@ echo $query->toSql();
 
 ### RESTRICT
 
-Refuse to drop the extension if any objects depend on it (default behavior):
+Refuse to drop the extension while other objects depend on it (default behavior):
 
 ```php
 <?php

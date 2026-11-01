@@ -8,21 +8,12 @@ package: flow-php/etl-adapter-doctrine
 
 [TOC]
 
-Flow PHP's Adapter Doctrine is an adept library designed to seamlessly integrate Doctrine ORM within your ETL (Extract,
-Transform, Load) workflows. This adapter is crucial for developers seeking to effortlessly interact with databases using
-Doctrine ORM, ensuring a streamlined and reliable data transformation process. By harnessing the Adapter Doctrine
-library, developers can tap into a robust set of features engineered for precise database interaction through Doctrine
-ORM, simplifying complex data transformations and enhancing data processing efficiency. The Adapter Doctrine library
-encapsulates a rich set of functionalities, offering a streamlined API for managing database tasks, which is crucial in
-contemporary data processing and transformation scenarios. This library epitomizes Flow PHP's commitment to delivering
-versatile and efficient data processing solutions, making it an excellent choice for developers dealing with database
-operations in large-scale and data-intensive environments. With Flow PHP's Adapter Doctrine, managing database
-interactions within your ETL workflows becomes a more simplified and efficient endeavor, perfectly aligning with the
-robust and adaptable nature of the Flow PHP ecosystem.
+The Doctrine adapter reads and writes database tables through Doctrine DBAL in ETL (Extract, Transform, Load)
+pipelines.
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/etl-adapter-doctrine.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/etl-adapter-doctrine.md).
 
 ## Description
 
@@ -44,11 +35,11 @@ data_frame()
     ->run();
 ```
 
-All supported DbalLoader operations via DSL functions:
+All supported DbalLoader operations, as DSL functions:
 
-- `to_dbal_table_insert(array|Connection $connection, string $table, ?InsertOptions $options = null)` - Insert new rows
-- `to_dbal_table_update(array|Connection $connection, string $table, ?UpdateOptions $options = null)` - Update existing rows
-- `to_dbal_table_delete(array|Connection $connection, string $table)` - Delete rows
+- `to_dbal_table_insert(array|Connection $connection, string $table, ?InsertOptions $options = null)`: insert new rows
+- `to_dbal_table_update(array|Connection $connection, string $table, ?UpdateOptions $options = null)`: update existing rows
+- `to_dbal_table_delete(array|Connection $connection, string $table)`: delete rows
 
 You can also configure bulk operations with platform-specific options:
 
@@ -68,8 +59,8 @@ data_frame()
 
 ### Types
 
-By default, `DbalLoader` binds every column with the DBAL type mapped from its Flow type
-(the default map is listed under [Schema Converter - Types Map](#schema-converter---types-map)):
+By default, `DbalLoader` binds each column with the DBAL type that the map gives for its Flow type. The default map
+is in [Types Map](#schema-converter---types-map):
 
 ```php
 use function Flow\ETL\Adapter\Doctrine\to_dbal_table_insert;
@@ -83,7 +74,7 @@ data_frame()
 
 #### Custom Types Map
 
-A custom map replaces the default one, so spread `TypesMap::FLOW_TYPES` to keep the other types:
+A custom map replaces the default map. To keep the other types, spread `TypesMap::FLOW_TYPES`:
 
 ```php
 use Doctrine\DBAL\Types\TextType;
@@ -107,7 +98,7 @@ data_frame()
 
 #### Bound values
 
-A column is bound as its values and converted by its DBAL type: `list`, `map` and `structure` become JSON through
+A column is bound as its values, and its DBAL type converts them. `list`, `map` and `structure` become JSON through
 `JsonType`. `xml`, `xml_element`, `html` and `html_element` are bound as their markup text:
 
 ```php
@@ -126,8 +117,8 @@ data_frame()
 
 ## Transactional Loading
 
-`to_dbal_transaction()` writes one or more children inside transactions: each batch of rows is written in its own
-transaction, and if any child throws, the open transaction is rolled back:
+`to_dbal_transaction()` writes one or more children inside transactions. Each batch of rows is written in its own
+transaction. If a child throws, the open transaction rolls back:
 
 ```php
 use function Flow\ETL\Adapter\Doctrine\{to_dbal_table_insert, to_dbal_transaction};
@@ -143,22 +134,22 @@ data_frame()
     ->run();
 ```
 
-A plain loader child is written directly; a `to_transformation(...)` child delivers inside the same transaction.
-Every child's loader must use the same connection as the transaction - pass one live `Connection` to
-`to_dbal_transaction()` and to every child. A loader built from array params (like
-`to_dbal_table_insert($params, 'users')`) opens its own connection and escapes the transaction.
+A plain loader child is written directly. A `to_transformation(...)` child delivers inside the same transaction.
+The loader of each child must use the same connection as the transaction. Give one live `Connection` to
+`to_dbal_transaction()` and to each child. A loader built from array params (for example
+`to_dbal_table_insert($params, 'users')`) opens its own connection and is outside the transaction.
 
-Branches with blocking operations (`to_transformation()`, also inside `to_branch()`, with `sortBy()`,
-`aggregate()`, `groupBy()->aggregate()`, `pivot()`, window functions, `collect()`, `join()` - see
-[transformations](../core/transformations.md)) buffer the stream and deliver it when the run ends;
-`to_dbal_transaction()` opens one final transaction around that delivery - the whole drained stream commits
-atomically, a failure during it rolls back and surfaces from `run()`.
+Some branches have blocking operations: `to_transformation()`, also inside `to_branch()`, with `sortBy()`,
+`aggregate()`, `groupBy()->aggregate()`, `pivot()`, window functions, `collect()` or `join()`. For more information,
+read [transformations](../core/transformations.md). These branches buffer the stream and deliver it at the end of the
+run. `to_dbal_transaction()` opens one final transaction around that delivery. The full drained stream commits
+atomically. A failure during the delivery rolls back, and `run()` throws it.
 
-Inside the transaction every child runs throw-only: a failure rolls the batch back first, and only then the frame's
-`onError()` handler decides whether the run continues.
+Inside the transaction, each child runs throw-only. A failure first rolls back the batch. Only after that, the
+`onError()` handler of the frame decides about the rest of the run.
 
-To set the isolation level, build the transaction yourself; it applies to every transaction opened, including the
-final one, and the previous level is restored when each one ends:
+To set the isolation level, build the transaction yourself. The level applies to each transaction that opens, also
+the final transaction. At the end of each transaction, the previous level comes back:
 
 ```php
 use Doctrine\DBAL\TransactionIsolationLevel;
@@ -175,8 +166,9 @@ new Transactional(
 
 ## Extractor - DbalQuery
 
-`from_dbal_*()` extractors derive their schema from the query unless `->withSchema()` declares it - how that works
-and fails: [Doctrine DBAL sources](../core/schema.md#doctrine-dbal-sources-describe-themselves-and-keep-withschema).
+`from_dbal_*()` extractors get their schema from the query. `->withSchema()` declares a different schema. For how
+this works and fails, read
+[Doctrine DBAL sources](../core/schema.md#doctrine-dbal-sources-describe-themselves-and-keep-withschema).
 
 ### Single Query
 
@@ -224,14 +216,14 @@ data_frame()
     ->run();
 ```
 
-The query runs once per parameter set, three times here.
+The query runs once for each parameter set, three times here.
 
 ## Extractor - Keyset Pagination
 
-`from_dbal_key_set_qb()` reads a query builder page by page, asking for the rows after the last key it saw.
+`from_dbal_key_set_qb()` reads a query builder page by page. It asks for the rows after the last key that it saw.
 
-The keys must be **indexed, non-null and unique together**. A single non-unique column such as `created_at` is not a
-key; add the primary key. `pagination_key_set()` takes the keys from least to most significant, so the last key is the
+The keys must be indexed, non-null and unique together. A single non-unique column such as `created_at` is not a
+key. Add the primary key. `pagination_key_set()` takes the keys from least to most significant, so the last key is the
 primary sort:
 
 ```php
@@ -249,25 +241,25 @@ data_frame()
     ->run();
 ```
 
-- Before the first page the extractor sends one check query, the builder plus `WHERE (created_at IS NULL) OR (id IS
-  NULL) LIMIT 1`, and throws when it finds a row. On an indexed key this is an index lookup; on an unindexed key it is
-  one full scan.
+- Before the first page, the extractor sends one check query: the builder plus `WHERE (created_at IS NULL) OR (id IS
+  NULL) LIMIT 1`. If it finds a row, it throws. On an indexed key, this is an index lookup. On a key without an index,
+  it is one full scan.
 - Two rows with the same key throw `Keyset pagination requires unique keys`.
-- A next page that does not start at the row the previous page looked ahead to throws. This happens when the database
-  compares two different values as equal (a case- or accent-insensitive collation such as MySQL's default, `numeric`
-  `1.0` and `1.00`) or when rows change between pages.
+- The next page must start at the row that the previous page looked ahead to. If it does not, the read throws.
+  Two causes are possible. The database compares two different values as equal. An example is a case- or
+  accent-insensitive collation such as the MySQL default. Another example is `numeric` `1.0` and `1.00`. Or rows change between pages.
 - Known limit: two such values on the same page are both read without an error. Nothing is lost.
-- The query builder must not have an ORDER BY, `setMaxResults()` or `setFirstResult()`; use `withMaximum()` or
+- The query builder must not have an ORDER BY, `setMaxResults()` or `setFirstResult()`. Use `withMaximum()` or
   `DataFrame::limit()`.
 - A page shorter than the batch size ends the read without another query.
 
 ## Schema Converter
 
-With `to_dbal_schema_table()` function we can convert any Flow Schema (which represents a dataset)
-to Doctrine DBAL Schema Table.
+The `to_dbal_schema_table()` function converts a Flow Schema (which represents a dataset)
+to a Doctrine DBAL Schema Table.
 
-By providing metadata defined in `\Flow\ETL\Adapter\Doctrine\Values\Schema\DbalMetadata` we can also add additional information to the schema,
-like length, primary key, index, precision, etc
+With the metadata in `\Flow\ETL\Adapter\Doctrine\Values\Schema\DbalMetadata`, you can add more information to the schema,
+for example length, primary key, index and precision.
 
 
 ```php
@@ -301,7 +293,7 @@ $flowSchema = schema(
 );
 ```
 
-Can be converted to Doctrine DBAL Schema Table like this:
+Convert it to a Doctrine DBAL Schema Table like this:
 
 ```php
 use function Flow\ETL\Adapter\Doctrine\to_dbal_schema_table;
@@ -309,7 +301,7 @@ use function Flow\ETL\Adapter\Doctrine\to_dbal_schema_table;
 to_dbal_schema_table($flowSchema, 'test');
 ```
 
-Will generate:
+This generates:
 
 ```php
 
@@ -342,7 +334,7 @@ new Table(
 
 ### Schema Converter - Types Map
 
-When types map is not provided, the default one will be used:
+Without a types map, the converter uses the default map:
 
 ```php ignore
 public const array FLOW_TYPES = [
@@ -367,7 +359,7 @@ public const array FLOW_TYPES = [
 ];
 ```
 
-The `TypesMap` class provides bidirectional mapping between Flow types and Doctrine DBAL types, allowing for flexible type conversion in both directions:
+The `TypesMap` class maps Flow types to Doctrine DBAL types, and Doctrine DBAL types back to Flow types:
 
 ```php
 use Flow\ETL\Adapter\Doctrine\Values\Schema\TypesMap;

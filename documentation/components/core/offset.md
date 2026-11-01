@@ -4,7 +4,7 @@
 
 [TOC]
 
-The offset operation skips a specified number of rows from the beginning of the dataset, commonly used for pagination
+The offset operation skips a specified number of rows at the start of the dataset. Common uses are pagination
 and data sampling.
 
 ## Basic Offset Usage
@@ -33,6 +33,6 @@ $dataFrame = data_frame()
 
 ## Performance Considerations
 
-> **Performance Warning**: The `offset()` method must iterate through and process all skipped rows to reach the
-> offset position. For large offsets (e.g., `offset(1000000)`), this can significantly impact performance as the DataFrame
-> still needs to read and process all data up to the offset point.
+> Performance Warning: The `offset()` method must go through and process all skipped rows to reach the offset
+> position. Large offsets, for example `offset(1000000)`, can therefore be slow. The DataFrame still reads and
+> processes all data up to the offset point.

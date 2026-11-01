@@ -4,7 +4,7 @@ package: flow-php/psr18-telemetry-bridge
 
 # PSR-18 Telemetry Bridge
 
-Flow PSR-18 Telemetry Bridge provides a traceable HTTP client wrapper for PSR-18 compliant HTTP clients, enabling automatic span creation and telemetry context propagation for outgoing HTTP requests.
+This bridge has a traceable HTTP client wrapper for PSR-18 compliant HTTP clients. It creates spans and propagates telemetry context for outgoing HTTP requests automatically.
 
 [PACKAGE_NAV]
 
@@ -12,22 +12,22 @@ Flow PSR-18 Telemetry Bridge provides a traceable HTTP client wrapper for PSR-18
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/psr18-telemetry-bridge.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/psr18-telemetry-bridge.md).
 
 ## Overview
 
-This bridge connects Flow PHP's Telemetry library with PSR-18 compliant HTTP clients, providing automatic tracing for outgoing HTTP requests. It wraps any PSR-18 `ClientInterface` implementation to create spans with HTTP request/response metadata.
+This bridge connects the Telemetry library of Flow PHP with PSR-18 compliant HTTP clients. It traces outgoing HTTP requests automatically. It wraps each PSR-18 `ClientInterface` implementation and creates spans with HTTP request/response metadata.
 
-This is particularly useful for:
+Use cases:
 
 - Automatic tracing of outgoing HTTP requests
-- Recording HTTP method, URL, status code, and other attributes
+- Record the HTTP method, URL, status code, and other attributes
 - Error tracking for failed requests (4xx/5xx responses)
-- Exception recording when HTTP clients throw errors
+- Exception records for errors that HTTP clients throw
 - Integration with OpenTelemetry-based observability stacks
 - Framework-agnostic HTTP client instrumentation
 
-> **Note:** This bridge works with any PSR-18 compliant HTTP client implementation (Guzzle, Symfony HttpClient with PSR-18 adapter, Buzz, etc.).
+> Note: This bridge works with each PSR-18 compliant HTTP client implementation, for example Guzzle, Symfony HttpClient with the PSR-18 adapter, or Buzz.
 
 ## Requirements
 
@@ -65,7 +65,7 @@ $response = $traceableClient->sendRequest($request);
 
 ### Span Attributes
 
-The traceable client automatically records the following span attributes:
+The traceable client records these span attributes automatically:
 
 | Attribute                   | Description                                               | Example                                      |
 |-----------------------------|-----------------------------------------------------------|----------------------------------------------|
@@ -73,12 +73,12 @@ The traceable client automatically records the following span attributes:
 | `url.full`                  | Full request URL, redacted                                | `https://api.example.com/users?sig=REDACTED` |
 | `url.scheme`                | URL scheme                                                | `https`                                      |
 | `server.address`            | Target host                                               | `api.example.com`                            |
-| `server.port`               | Target port, the scheme default when the URL has none     | `443`                                        |
+| `server.port`               | Target port, or the scheme default for a URL without port | `443`                                        |
 | `http.response.status_code` | Response status code                                      | `200`, `404`, `500`                          |
 | `error.type`                | Status code of a 4xx/5xx response, or the exception class | `404`, `RuntimeException`                    |
 
-`url.full` and `exception.message` carry the URL with userinfo and the values of sensitive query parameters replaced by
-`REDACTED` (see [URL sanitization](/documentation/components/libs/telemetry.md#url-sanitization)):
+In `url.full` and `exception.message`, the userinfo and the values of sensitive query parameters of the URL become
+`REDACTED`. For more information, read [URL sanitization](/documentation/components/libs/telemetry.md#url-sanitization):
 
 ```php
 use Flow\Telemetry\Sanitizer\UrlSanitizer;
@@ -97,8 +97,8 @@ $traceableClient = psr18_traceable_client(
 
 The client handles errors in two ways:
 
-1. **HTTP Error Responses (4xx/5xx)**: The span status is set to ERROR with the message "HTTP {status_code}"
-2. **Exceptions**: If the underlying client throws an exception, it is recorded on the span and re-thrown
+1. HTTP Error Responses (4xx/5xx): the span status becomes ERROR, with the message "HTTP {status_code}".
+2. Exceptions: if the wrapped client throws an exception, the span records it, and the exception is thrown again.
 
 ```php
 try {
@@ -115,7 +115,7 @@ try {
 
 ### DSL Functions
 
-The bridge provides a convenient DSL function:
+The bridge has a DSL function:
 
 ```php
 use function Flow\Bridge\Psr18\Telemetry\DSL\psr18_traceable_client;

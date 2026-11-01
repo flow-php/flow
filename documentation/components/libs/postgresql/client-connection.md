@@ -4,12 +4,12 @@
 
 [TOC]
 
-The PostgreSQL client uses the `ext-pgsql` extension for database connectivity. Connection parameters can be specified
-using connection strings, DSN URLs, or individual parameters.
+The PostgreSQL client uses the `ext-pgsql` extension to connect to the database. You can give the connection
+parameters as connection strings, DSN URLs, or individual parameters.
 
 ## Connection String
 
-The most common approach using libpq-style connection strings:
+The most common approach uses libpq-style connection strings:
 
 ```php
 <?php
@@ -34,7 +34,7 @@ $client = pgsql_client(
 
 ## DSN URL
 
-Parse standard PostgreSQL DSN format commonly used in environment variables:
+Parse the standard PostgreSQL DSN format that environment variables often use:
 
 ```php
 <?php
@@ -100,8 +100,8 @@ $client = pgsql_client(
 
 ## Overriding Parsed Parameters
 
-`ConnectionParameters` is immutable. Each `with*()` method returns a new instance, so a parsed DSN
-can be adjusted without re-parsing. 
+`ConnectionParameters` is immutable. Each `with*()` method returns a new instance, so you can change a parsed DSN
+without a new parse.
 
 ```php
 <?php
@@ -118,11 +118,10 @@ $params = (new DsnParser())->parse('postgresql://user:pass@localhost:5432/mydb')
 
 ### Database Suffix
 
-`withDatabaseSuffix()` appends a suffix to the configured database name. The base DSN stays constant
-and only the suffix changes per environment, which makes per-worker parallel-test databases work
-(`mydb` → `mydb_test7`) without a second DSN. The suffix is appended verbatim - nothing is inserted
-automatically, so include a separator yourself if you want one (e.g. `_test7`). An empty suffix is a
-no-op:
+`withDatabaseSuffix()` appends a suffix to the configured database name. The base DSN stays the same, and only the
+suffix changes for each environment. Parallel-test databases for each worker then work without a second DSN
+(`mydb` → `mydb_test7`). The suffix is appended exactly as it is. Nothing is inserted automatically, so add a
+separator yourself, for example `_test7`. An empty suffix is a no-op:
 
 ```php
 <?php
@@ -133,8 +132,8 @@ $params = (new DsnParser())->parse('postgresql://user:pass@localhost:5432/mydb')
     ->withDatabaseSuffix('_test7'); // database() === 'mydb_test7'
 ```
 
-When combined with `withDatabase()`, apply the override first - the suffix is appended to the
-overridden name (`withDatabase('other')->withDatabaseSuffix('_test')` ⇒ `other_test`).
+With `withDatabase()`, apply the override first. The suffix is then appended to the overridden name
+(`withDatabase('other')->withDatabaseSuffix('_test')` ⇒ `other_test`).
 
 ## Connection Lifecycle
 
@@ -150,7 +149,7 @@ if ($client->isConnected()) {
 
 ### Closing Connections
 
-Always close connections when done:
+Always close connections at the end:
 
 ```php
 <?php
@@ -158,7 +157,7 @@ Always close connections when done:
 $client->close();
 ```
 
-For long-running applications, consider connection pooling at the infrastructure level (e.g., PgBouncer).
+For long-running applications, think about connection pooling at the infrastructure level, for example PgBouncer.
 
 ## Connection Parameters Reference
 
@@ -173,5 +172,5 @@ For long-running applications, consider connection pooling at the infrastructure
 | `connect_timeout`     | Connection timeout in seconds                                      | (system default) |
 | `application_name`    | Application name for pg_stat_activity                              | (none)           |
 
-For the full list of libpq connection parameters, see
+For the full list of libpq connection parameters, read
 the [PostgreSQL documentation](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-PARAMKEYWORDS).

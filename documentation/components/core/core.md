@@ -10,47 +10,48 @@ package: flow-php/etl
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/etl.md).
+For the installation steps, see the [installation page](/documentation/installation/packages/etl.md).
 
-A Data Frame is the core component of Flow PHP's ETL framework. It represents a structured collection of tabular data that can be processed, transformed, and loaded efficiently. Think of it as a programmable spreadsheet that can handle large datasets with minimal memory footprint.
+A Data Frame is the core component of the Flow PHP ETL framework. It is a structured collection of tabular data. You read, transform and load this data with it. A Data Frame works like a spreadsheet that you program. It processes large datasets with little memory.
 
 ## Key Features
 
-- **Memory Efficient**: Processes data in batches using generators, avoiding memory exhaustion
-- **Columnar**: Every batch stores one column per schema definition, built by a configurable [column backend](/documentation/components/core/column-backend.md)
-- **Lazy Evaluation**: Operations are only executed when needed
-- **Immutable**: Each transformation returns a new DataFrame instance
-- **Type Safe**: Strict typing throughout with comprehensive schema support
-- **Chainable API**: Fluent interface for building complex data pipelines
+- Memory Efficient: It processes data in batches with generators. This keeps the memory usage low.
+- Columnar: Every batch stores one column per schema definition. A [column backend](/documentation/components/core/column-backend.md) that you can configure builds the columns.
+- Lazy Evaluation: A trigger runs the operations. Before the trigger, nothing runs.
+- Immutable: Each transformation returns a new DataFrame instance.
+- Type Safe: It uses strict types and a schema for all data.
+- Chainable API: A fluent interface builds data pipelines.
 
 ## Understanding DataFrame Operations
 
-DataFrame methods fall into two categories based on when they execute:
+There are two categories of DataFrame methods. Each category runs at a different time:
 
 ### Lazy Operations (`@lazy`)
 
-These methods build the processing pipeline without executing it immediately:
+These methods build the processing pipeline. They do not run it:
 
-- **Transformations**: `filter()`, `withColumn()`, `select()`, `drop()`, `rename()`, `with()`
-- **Memory-intensive**: `collect()`, `sortBy()`, `groupBy()`, `join()`, `cache()`
-- **Processing control**: `batchSize()`, `limit()`, `offset()`, `partitionBy()`
+- Transformations: `filter()`, `withColumn()`, `select()`, `drop()`, `rename()`, `with()`
+- Memory-intensive: `collect()`, `sortBy()`, `groupBy()`, `join()`, `cache()`
+- Processing control: `batchSize()`, `limit()`, `offset()`, `partitionBy()`
 
 ### Trigger Operations (`@trigger`)
 
 These methods execute the entire pipeline and return results:
 
-- **Data retrieval**: `get()`, `getEachAsArray()`, `fetch()`, `count()`
-- **Output operations**: `run()`, `forEach()`, `printRows()`
-- **Schema inspection**: `display()`
+- Data retrieval: `get()`, `getEachAsArray()`, `fetch()`, `count()`
+- Output operations: `run()`, `forEach()`, `printRows()`
+- Schema inspection: `display()`
 
-`schema()`, `printSchema()` and `explain()` are **not** triggers - they answer from the plan without reading a row.
-`explain()` returns the frame's `Plan`. Its `toString()` prints the plan after the configured optimizer ran, as a
-tree read from the bottom up: a node's children are where its rows come from, and nodes are numbered in the order
-rows reach them - the source is `#1`. What a node does is listed under it.
+`schema()`, `printSchema()` and `explain()` are not triggers. They get their answer from the plan and do not read a
+row. `explain()` returns the `Plan` of the frame. Its `toString()` prints the plan after the configured optimizer ran.
+The output is a tree that you read from the bottom up. The children of a node are where its rows come from. The
+numbers of the nodes follow the order in which rows reach them, so the source is `#1`. What a node does is listed
+under it.
 
-The verbs build a plan with no consumer on top; **the trigger adds the one it needs**, so `explain()` takes the
-trigger it should print - `Trigger::rows` by default, `Trigger::run` for the plan `run()` executes, `Trigger::count`
-for the plan `count()` executes.
+The verbs build a plan with no consumer on top. The trigger adds the consumer that it needs. For this reason,
+`explain()` takes the trigger to print. The default is `Trigger::rows`. `Trigger::run` prints the plan that `run()`
+executes, and `Trigger::count` prints the plan that `count()` executes.
 
 ```php
 $dataFrame = data_frame()
@@ -96,14 +97,15 @@ echo data_frame()
          Source: file:///data/orders.csv
 ```
 
-`run()` takes no rows, so its plan carries only the writes - the `Write` is the root and there is no `Result`. A
-`Result` comes back only when a verb follows the last `write()`: nothing would read that chain end, so one is put on
-it to pull the rows, and `run(analyze: ...)` still counts them.
+`run()` takes no rows, so its plan has only the writes. The `Write` is the root and there is no `Result`. If a verb
+follows the last `write()`, the plan gets a `Result` again. Nothing reads the end of that chain, so a `Result` pulls
+the rows. `run(analyze: ...)` still counts them.
 
-`Outputs` lists everything the frame produces: `Result` is what a rows-returning trigger reads, `Write` is a write.
-A node several consumers read is printed once, and every other consumer points back at it by number - `#2 Filter (shared)` is that same filter, not a second one. A node keeps its number in every format.
-A frame joined with `join()` / `crossJoin()` is part of the same tree: the join reads it the way it reads any other
-input, numbered with the rest of the plan, and it runs with this frame's configuration.
+`Outputs` lists everything that the frame produces. `Result` is what a trigger that returns rows reads. `Write` is a
+write. If several consumers read a node, the node is printed once. Every other consumer points back at it by number.
+`#2 Filter (shared)` is that same filter, not a second one. A node keeps its number in every format.
+A frame that you join with `join()` / `crossJoin()` is part of the same tree. The join reads it like any other
+input. Its nodes get numbers with the rest of the plan, and it runs with the configuration of this frame.
 
 `toString()` takes the stage and the format to print:
 
@@ -170,10 +172,10 @@ echo $dataFrame->explain()->toString(format: Format::boxes);
 └───────────────────────────┘
 ```
 
-`Stage::physical` prints what the executor runs. A pipeline ends at a step that needs every row before it emits one
-(a sort, a group by, a join, `collect()`), so the pipeline a step sits in is where rows stop flowing through. Every
-step lists the settings it was given - the algorithm's storage among them, which the logical stages cannot know
-because the planner picks it.
+`Stage::physical` prints what the executor runs. A pipeline ends at a step that needs every row before it emits one.
+A sort, a group by, a join and `collect()` are such steps. Rows stop at the end of the pipeline that holds the step.
+Every step lists the configuration that it got. This includes the storage of the algorithm. The logical stages
+cannot show the storage, because the planner selects it.
 
 ```php
 $users = [['id' => 1, 'name' => 'Alice'], ['id' => 2, 'name' => 'Bob']];
@@ -211,20 +213,20 @@ Physical plan
                   Statistics: rows exact 1 · size unknown
 ```
 
-`Memory: 1000 MB` is the default limit under `memory_limit = -1`. With a set `memory_limit` it is 70% of it, or
-`FLOW_MAX_MEMORY`.
+`Memory: 1000 MB` is the default limit under `memory_limit = -1`. If `memory_limit` has a value, the limit is 70% of
+it, or `FLOW_MAX_MEMORY`.
 
-A joined frame is planned apart, so its pipelines are numbered apart - `Right side:` says which plan they belong to.
-Every source lists what it declares about itself before a row is read - `exact n`, `≤ n` (a guaranteed bound),
-`~n ±e%` (an estimate) or `unknown`. A source that declares nothing lists no `Statistics:` line.
-Reaching this stage plans the frame, so a source that infers its schema by reading is read here; the logical stages
-never read a row.
+The planner plans a joined frame separately, so its pipelines have their own numbers. `Right side:` tells which
+plan they belong to. Before it reads a row, every source lists what it declares about itself. The values are
+`exact n`, `≤ n` (a guaranteed bound), `~n ±e%` (an estimate) or `unknown`. A source that declares nothing lists no
+`Statistics:` line. This stage plans the frame. A source that infers its schema by reading is therefore read here. The
+logical stages never read a row.
 
-> **Important**: Build your complete pipeline with lazy operations, then execute once with a trigger operation for optimal performance.
+> Build your complete pipeline with lazy operations. Then execute it once with a trigger operation. This gives the best performance.
 
 ## Creating DataFrames
 
-DataFrames are created using the `data_frame()` DSL function and populated with data through extractors. The framework supports various data sources through adapter-specific extractors.
+You create a DataFrame with the `data_frame()` DSL function. Extractors fill it with data. Each adapter has its own extractors for its data source.
 
 ```php
 <?php
@@ -243,9 +245,9 @@ $dataFrame = data_frame()
     ->run();
 ```
 
-> **Note**: Flow PHP supports many data sources through specialized adapters. See individual adapter documentation for specific extractor usage (CSV, JSON, Parquet, databases, APIs, etc.).
+> Flow PHP reads many data sources through adapters. For the extractors of each source, see the documentation of its adapter. Examples are CSV, JSON, Parquet, databases and APIs.
 
-An empty source has no column to infer a schema from and throws `InferredSchemaException`. Declare the schema to read it:
+An empty source has no column to infer a schema from, so it throws `InferredSchemaException`. To read it, declare the schema:
 
 ```php
 <?php
@@ -261,21 +263,21 @@ data_frame()
 
 ## Memory Management Best Practices
 
-1. **Prefer Generator Methods**: Use `get()`, `getEachAsArray()` over `fetch()` for large datasets
-2. **Avoid Memory-Intensive Operations**: Be cautious with `collect()`, `sortBy()`, `groupBy()`, and `join()` on large datasets
-3. **Use Appropriate Batch Sizes**: Start with 1000-5000 rows and adjust based on your memory constraints
-4. **Monitor Memory Usage**: Use `run(analyze: true)` to track memory consumption during development
+1. Prefer Generator Methods: For large datasets, use `get()` or `getEachAsArray()` instead of `fetch()`.
+2. Avoid Memory-Intensive Operations: On large datasets, be careful with `collect()`, `sortBy()`, `groupBy()`, and `join()`.
+3. Use Appropriate Batch Sizes: Start with 1000-5000 rows. Then change the size to fit your memory limits.
+4. Monitor Memory Usage: During development, use `run(analyze: true)` to see the memory usage.
 
 ## Performance Optimization
 
-- **Push Operations to Data Source**: When possible, perform filtering, sorting, and joins at the database/file level
-- **Minimize Data Movement**: Apply filters early in the pipeline to reduce data volume
-- **Cache Strategically**: Only cache expensive operations that will be reused multiple times
-- **Avoid Large Offsets**: Use data source pagination instead of DataFrame `offset()` for large skips
+- Push Operations to Data Source: If possible, filter, sort and join at the database/file level.
+- Minimize Data Movement: Apply filters early in the pipeline. This reduces the data volume.
+- Cache Strategically: Cache only expensive operations that the pipeline uses multiple times.
+- Avoid Large Offsets: To skip many rows, use the pagination of the data source instead of DataFrame `offset()`.
 
 ### Optimizer
 
-Before a frame runs, the optimizer rewrites its plan. `Optimizer::default()` runs these rules, in order:
+Before a frame runs, the optimizer rewrites its plan. `Optimizer::default()` runs these rules in this order:
 
 | Rule                   | Rewrite                                                                         |
 |------------------------|---------------------------------------------------------------------------------|
@@ -285,7 +287,7 @@ Before a frame runs, the optimizer rewrites its plan. `Optimizer::default()` run
 | `PushFilterIntoSource` | a `filter()` on partition columns skips whole partition directories             |
 | `CountFromStatistics`  | `count()` over a source that knows its rows exactly reads that number, no rows  |
 
-Rules live in `Flow\ETL\Planning\Optimizer\Rule` and are configured through `config_builder()->optimizer()`:
+The rules are in `Flow\ETL\Planning\Optimizer\Rule`. You configure them with `config_builder()->optimizer()`:
 
 ```php
 <?php
@@ -305,48 +307,48 @@ data_frame(config_builder()->optimizer(Optimizer::default()->without(CombineSort
 data_frame(config_builder()->optimizer(Optimizer::default()->with(new MyRule())));
 ```
 
-`without()` throws on a rule that is not registered, `with()` on a rule class that already is.
+`without()` throws on a rule that is not registered. `with()` throws on a rule class that is already registered.
 `explain()->toString()` prints the plan after the configured optimizer ran.
 
 ## Component Documentation
 
-For detailed information about specific DataFrame operations, see the following component documentation:
+For more information about each DataFrame operation, see this component documentation:
 
 ### Core Operations
-- **[Building Blocks](/documentation/components/core/building-blocks.md)** - Rows, columns and the schema that describes them
-- **[Transformations](/documentation/components/core/transformations.md)** - Reusable DataFrame transformations and the Transformation interface
-- **[Select/Drop](/documentation/components/core/select-drop.md)** - Column selection and removal
-- **[Rename](/documentation/components/core/rename.md)** - Column renaming strategies
-- **[Filter](/documentation/components/core/filter.md)** - Row filtering and conditions
-- **[Save Mode](/documentation/components/core/save-mode.md)** - configure how flow is saving files
+- [Building Blocks](/documentation/components/core/building-blocks.md): rows, columns and the schema that describes them
+- [Transformations](/documentation/components/core/transformations.md): reusable DataFrame transformations and the Transformation interface
+- [Select/Drop](/documentation/components/core/select-drop.md): column selection and removal
+- [Rename](/documentation/components/core/rename.md): column renaming strategies
+- [Filter](/documentation/components/core/filter.md): row filtering and conditions
+- [Save Mode](/documentation/components/core/save-mode.md): configure how flow saves files
 
 ### Data Processing
-- **[Join](/documentation/components/core/join.md)** - DataFrame joining operations
-- **[Group By](/documentation/components/core/group-by.md)** - Grouping and aggregation operations
-- **[Pivot](/documentation/components/core/pivot.md)** - Transform data from long to wide format
-- **[Sort](/documentation/components/core/sort.md)** - Data sorting
-- **[Limit](/documentation/components/core/limit.md)** - Result limiting and pagination
-- **[Offset](/documentation/components/core/offset.md)** - Skipping rows and pagination
-- **[Until](/documentation/components/core/until.md)** - Conditional processing termination
-- **[Window Functions](/documentation/components/core/window-functions.md)** - Advanced analytical functions
+- [Join](/documentation/components/core/join.md): DataFrame join operations
+- [Group By](/documentation/components/core/group-by.md): grouping and aggregation operations
+- [Pivot](/documentation/components/core/pivot.md): transform data from long to wide format
+- [Sort](/documentation/components/core/sort.md): data sorting
+- [Limit](/documentation/components/core/limit.md): result limiting and pagination
+- [Offset](/documentation/components/core/offset.md): skipping rows and pagination
+- [Until](/documentation/components/core/until.md): conditional processing termination
+- [Window Functions](/documentation/components/core/window-functions.md): advanced analytical functions
 
 ### Memory & Performance
-- **[Column Backend](/documentation/components/core/column-backend.md)** - Where batch columns live: PHP arrays or the flow_php extension
-- **[Batch Processing](/documentation/components/core/batch-processing.md)** - Controlling batch sizes and memory collection
-- **[Partitioning](/documentation/components/core/partitioning.md)** - Data partitioning for efficient processing
-- **[Caching](/documentation/components/core/caching.md)** - Performance optimization through caching
-- **[Floe File Format](/documentation/components/core/floe.md)** - Flow's native self-describing columnar binary format
-- **[Source Statistics](/documentation/components/core/statistics.md)** - What a source declares about its rows and bytes before it is read
-- **[Data Retrieval](/documentation/components/core/data-retrieval.md)** - Methods for getting processed data
+- [Column Backend](/documentation/components/core/column-backend.md): where batch columns live: PHP arrays or the flow_php extension
+- [Batch Processing](/documentation/components/core/batch-processing.md): controlling batch sizes and memory collection
+- [Partitioning](/documentation/components/core/partitioning.md): data partitioning for efficient processing
+- [Caching](/documentation/components/core/caching.md): performance optimization through caching
+- [Floe File Format](/documentation/components/core/floe.md): flow's native self-describing columnar binary format
+- [Source Statistics](/documentation/components/core/statistics.md): what a source declares about its rows and bytes before it is read
+- [Data Retrieval](/documentation/components/core/data-retrieval.md): methods for getting processed data
 
 ### Data Quality & Validation
-- **[Schema](/documentation/components/core/schema.md)** - Schema management and validation
-- **[Constraints](/documentation/components/core/constraints.md)** - Data integrity constraints and business rules
-- **[Error Handling](/documentation/components/core/error-handling.md)** - Error management strategies
-- **[Corrupted Records](/documentation/components/core/corrupted-records.md)** - Routing records that cannot become rows
+- [Schema](/documentation/components/core/schema.md): schema management and validation
+- [Constraints](/documentation/components/core/constraints.md): data integrity constraints and business rules
+- [Error Handling](/documentation/components/core/error-handling.md): error management strategies
+- [Corrupted Records](/documentation/components/core/corrupted-records.md): routing records that cannot become rows
 
 ### Observability
-- **[Telemetry](/documentation/components/core/telemetry.md)** - Distributed tracing, metrics, and logging integration
+- [Telemetry](/documentation/components/core/telemetry.md): integration of distributed tracing, metrics and logging
 
 ### Output & Display
-- **[Display](/documentation/components/core/display.md)** - Data visualization and output
+- [Display](/documentation/components/core/display.md): data visualization and output

@@ -278,7 +278,7 @@ echo $query->toSql();
 
 ### IF EXISTS
 
-Only alter the view if it exists:
+Alter only an existing view:
 
 ```php
 <?php

@@ -4,8 +4,8 @@
 
 [TOC]
 
-The client provides a transaction callback pattern that handles commit and rollback automatically, ensuring data
-consistency even when exceptions occur.
+The client has a transaction callback pattern that handles commit and rollback automatically. The data therefore
+stays consistent, also after exceptions.
 
 ## Transaction Callback
 
@@ -37,8 +37,8 @@ echo "Created account: {$result}";
 
 ## Automatic Commit/Rollback
 
-- **Success**: Transaction commits when the callback returns without throwing
-- **Failure**: Transaction rolls back when the callback throws any exception
+- Success: a callback that returns without an exception commits the transaction
+- Failure: a callback that throws an exception rolls back the transaction
 
 ```php
 <?php
@@ -197,10 +197,10 @@ try {
 
 ## Best Practices
 
-1. **Keep transactions short**: Long transactions hold locks and reduce concurrency
-2. **Use the callback pattern**: Ensures proper cleanup on both success and failure
-3. **Don't catch and suppress**: Let exceptions propagate for proper rollback
-4. **Avoid user interaction**: Never wait for user input inside a transaction
+1. Keep transactions short: long transactions hold locks and reduce concurrency.
+2. Use the callback pattern: it cleans up correctly on success and on failure.
+3. Do not catch and suppress: let exceptions propagate for a correct rollback.
+4. No user interaction: never wait for user input inside a transaction.
 
 ```php
 <?php

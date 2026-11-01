@@ -4,8 +4,8 @@
 
 [TOC]
 
-The client provides built-in support for analyzing PostgreSQL query execution plans. Use `EXPLAIN ANALYZE` to understand
-how PostgreSQL executes your queries and identify performance issues.
+The client has built-in support for the analysis of PostgreSQL query execution plans. Use `EXPLAIN ANALYZE` to see
+how PostgreSQL executes your queries, and to find performance issues.
 
 ## Basic Usage
 
@@ -29,12 +29,12 @@ echo "Planning time: {$plan->planningTime()}ms\n";
 echo "Total cost: {$plan->rootNode()->cost()->totalCost()}\n";
 ```
 
-With `analyze` (the default), the statement runs inside a transaction - a savepoint when one is already open - that
-is always rolled back, so `INSERT`, `UPDATE`, `DELETE`, `MERGE` and `CREATE TABLE … AS` leave no rows behind (sequences
-still advance). SELECT, INSERT, UPDATE, DELETE, MERGE, CREATE TABLE AS, EXECUTE and DECLARE CURSOR can be explained;
-any other statement, including an `EXPLAIN …` query, throws `InvalidStatementException`.
+With `analyze` (the default), the statement runs inside a transaction that always rolls back. Inside an open
+transaction, it is a savepoint. `INSERT`, `UPDATE`, `DELETE`, `MERGE` and `CREATE TABLE ... AS` therefore leave no rows
+(sequences still advance). You can explain SELECT, INSERT, UPDATE, DELETE, MERGE, CREATE TABLE AS, EXECUTE and DECLARE
+CURSOR. All other statements throw `InvalidStatementException`, also an `EXPLAIN ...` query.
 
-You can also pass raw SQL strings with parameters:
+You can also give raw SQL strings with parameters:
 
 ```php
 <?php
@@ -47,7 +47,7 @@ $plan = $client->explain(
 
 ## The Plan Object
 
-The `Plan` object provides access to execution statistics and the full node tree:
+The `Plan` object gives access to the execution statistics and the full node tree:
 
 ```php
 <?php
@@ -110,7 +110,7 @@ foreach ($node->children() as $child) {
 
 ## Plan Analyzer
 
-The `PlanAnalyzer` provides quick insights without manually traversing the plan tree:
+The `PlanAnalyzer` gives quick insights. You do not have to go through the plan tree yourself:
 
 ```php
 <?php
@@ -143,7 +143,7 @@ foreach ($analyzer->slowestNodes(limit: 3) as $insight) {
 
 ### Sequential Scans
 
-Find full table scans that might benefit from indexes:
+Find full table scans that an index can make faster:
 
 ```php
 <?php
@@ -157,7 +157,7 @@ foreach ($analyzer->sequentialScans() as $insight) {
 
 ### Estimate Mismatches
 
-Detect where the planner's row estimates differ significantly from actual rows:
+Find the places where the row estimates of the planner are very different from the actual rows:
 
 ```php
 <?php
@@ -218,7 +218,7 @@ foreach ($analyzer->lowCacheHits(threshold: 0.9) as $insight) {
 
 ### Plan Summary
 
-Get aggregate statistics for the entire plan:
+Get aggregate statistics for the full plan:
 
 ```php
 <?php
@@ -247,7 +247,7 @@ if ($summary->overallCacheHitRatio !== null) {
 
 ## EXPLAIN Configuration
 
-Customize what information is collected:
+Change the information that is collected:
 
 ```php
 <?php
@@ -299,6 +299,6 @@ $plan = $client->explain($query, config: sql_explain_config(
 
 | Severity   | Description                                     |
 |------------|-------------------------------------------------|
-| `INFO`     | Informational, may not require action           |
+| `INFO`     | Informational, possibly no action necessary     |
 | `WARNING`  | Potential performance issue worth investigating |
 | `CRITICAL` | Significant performance problem                 |

@@ -4,10 +4,10 @@ package: flow-php/types
 
 # Types
 
-Flow Types is a small library that provides a set of type classes for PHP. 
-It's designed to work together with static analysis tools like PHPStan and Psalm. 
+Flow Types is a small library with type classes for PHP.
+It works together with static analysis tools such as PHPStan and Psalm.
 
-The main goal of this library is to simplify common type-related tasks, such as type checking, type casting, and type assertion.
+The library makes common type tasks simpler: type checks, type casts and type assertions.
 
 [PACKAGE_NAV]
 
@@ -15,19 +15,19 @@ The main goal of this library is to simplify common type-related tasks, such as 
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/types.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/types.md).
 
 ### Usage
 
-**Heads Up** - in order to use full potential of `type_structure()` with PHPStan, install the
+To get all features of `type_structure()` with PHPStan, install the
 [PHPStan Types Bridge](/documentation/components/bridges/phpstan-types-bridge.md):
 
 ```
 composer require --dev flow-php/phpstan-types-bridge
 ```
 
-With [phpstan/extension-installer](https://github.com/phpstan/extension-installer) it is registered
-automatically, otherwise include it in your `phpstan.neon`:
+[phpstan/extension-installer](https://github.com/phpstan/extension-installer) registers it automatically.
+Without the installer, include it in your `phpstan.neon`:
 
 ```neon
 includes:
@@ -36,12 +36,12 @@ includes:
 
 #### Type Narrowing 
 
-To narrow a variable to a specific type, you can use one of two available methods: 
+To narrow a variable to a specific type, use one of these two methods:
 
 - `Type::isValid(mixed $value) : bool`
 - `Type::assert(mixed $value) : mixed`
 
-The main difference between those two, is that isValid returns a boolean value, while assert will throw an exception if the type is not valid.
+The difference: isValid returns a boolean value. For a type that is not valid, assert throws an exception.
 
 Examples:
 
@@ -55,8 +55,8 @@ $variable = $input->get('some-input');
 $string = type_string()->assert($variable); 
 ```
 
-The above code will throw an exception if the variable is not a string. 
-On top of that it will also narrow the `$string` variable to a string type, so you can use it without any additional checks.
+For a variable that is not a string, the code above throws an exception.
+It also narrows the `$string` variable to a string type, so you can use it without more checks.
 
 ```php
 <?php
@@ -75,16 +75,16 @@ if (type_string()->isValid($variable)) {
 } 
 ```
 
-The above code will check if the variable is a string, and if it is, it will call the `doSomething` function with the variable.
-Thanks to the `isValid` method, you can use the variable without any additional checks and static analysis tools will not complain about it.
+For a variable that is a string, the code above calls the `doSomething` function with the variable.
+Because of the `isValid` method, you can use the variable without more checks, and static analysis tools do not report it.
 
 ### Type Casting 
 
-To cast a variable to a specific type, you just simply need to use the `cast` method:
+To cast a variable to a specific type, use the `cast` method:
 
-> Note: The cast method will throw CastingException if the variable cannot be casted to the specified type.
+> Note: for a variable that it cannot cast to the specified type, the cast method throws CastingException.
 
-> When passed value already has a valid type it's returned as is. 
+> A value that already has a valid type comes back unchanged.
 
 ```php
 <?php
@@ -96,27 +96,27 @@ $variable = $input->get('some-input');
 $string = type_string()->cast($variable); 
 ```
 
-The rule is *parse the text as a number, then narrow*: a value is refused only when the target cannot
-represent it at all, never merely because precision is lost. **Losing precision is not a refusal** -
+The rule is: parse the text as a number, then narrow. The only values that `cast()` refuses are
+values that the target cannot represent at all. It never refuses a value only because of lost precision. Lost precision is not a refusal:
 `type_integer()->cast(1.5)` is `1`, `type_integer()->cast('12.9')` is `12`, `type_integer()->cast('1e5')`
-is `100000`, and `type_boolean()->cast('on')` is `true`. What `cast()` refuses is a conversion that
-would substitute a *different* value:
+is `100000`, and `type_boolean()->cast('on')` is `true`. `cast()` refuses a conversion that puts a different value
+in place of the input:
 
-- an integer literal that does not fit - `type_integer()->cast('9223372036854775808')` and
-  `type_integer()->cast(1e300)` throw instead of saturating to `PHP_INT_MAX` or collapsing to `0`.
-  The boundaries themselves still cast: `'9223372036854775807'`, `'-9223372036854775808'`
-- a date string that is not a calendar date - `type_date()->cast('')`, `type_datetime()->cast('now')`
-  and `type_datetime()->cast('+12')` throw instead of resolving against the wall clock, which would
-  make the same input produce a different value on every run. A date-only string still casts under
-  `type_datetime()`, landing at midnight, and 8-digit compact ISO (`'20240305'`) is accepted. Numeric
-  Unix timestamps are unaffected: `type_datetime()->cast(1700000000)` still works
-- `null` into a string - `type_string()->cast(null)` throws instead of returning `''`
-- a scalar into a container - `type_array()->cast('abc')` and `type_list(type_integer())->cast(5)`
-  throw, and the message names the remedy (`wrap the value first, e.g. type_list(type_string())`).
-  `type_array()->cast(null)` throws too, rather than fabricating an empty array
+- An integer literal that does not fit. `type_integer()->cast('9223372036854775808')` and
+  `type_integer()->cast(1e300)` throw. They do not saturate to `PHP_INT_MAX` or collapse to `0`.
+  The boundaries themselves still cast: `'9223372036854775807'`, `'-9223372036854775808'`.
+- A date string that is not a calendar date. `type_date()->cast('')`, `type_datetime()->cast('now')`
+  and `type_datetime()->cast('+12')` throw. They do not resolve against the wall clock, because then the same input
+  gives a different value on each run. A date-only string still casts under `type_datetime()`, to midnight. 8-digit
+  compact ISO (`'20240305'`) is also accepted. Numeric Unix timestamps do not change:
+  `type_datetime()->cast(1700000000)` still works.
+- `null` into a string. `type_string()->cast(null)` throws. It does not return `''`.
+- A scalar into a container. `type_array()->cast('abc')` and `type_list(type_integer())->cast(5)`
+  throw, and the message names the fix (`wrap the value first, e.g. type_list(type_string())`).
+  `type_array()->cast(null)` also throws. It does not make an empty array.
 
-A `datetime` type carries one time zone - UTC unless you name one - and every value it casts lands in that zone, the
-instant unchanged:
+A `datetime` type has one time zone. The default is UTC. Each value that it casts goes into that zone, and the
+instant does not change:
 
 ```php
 type_datetime()->cast('2026-01-02 03:04');                                 // 2026-01-02 03:04:00 UTC, date.timezone ignored
@@ -129,37 +129,37 @@ type_equals(type_datetime(), type_datetime('+02:00'));                      // f
 ```
 
 A zone is an IANA region (`Europe/Warsaw`), `UTC` or an offset (`+05:30`). Abbreviations such as `CET` or `PST` are
-refused: PHP reads them as fixed offsets without daylight-saving rules.
+refused, because PHP reads them as fixed offsets without daylight-saving rules.
 
-`DateTimeInterface` and `DateInterval` convert to `int`/`float` in **seconds**, so they round-trip
-with `type_datetime()->cast(<int>)`. `float` keeps the sub-second fraction; `int` floors to whole
+`DateTimeInterface` and `DateInterval` convert to `int`/`float` in seconds, so they convert back
+with `type_datetime()->cast(<int>)`. `float` keeps the sub-second fraction. `int` rounds down to whole
 seconds.
 
 Casting structures, lists and maps:
 
-- a structure element that is absent, or present with `null`, throws `CastingException` when the element's type does
-  not accept `null` - `getPrevious()` returns a `MissingElementCastingException` whose `element` property names the
-  failing element
-- elements whose type accepts `null` (`type_optional(...)`, `type_union(..., type_null())`) cast `null` to `null`;
-  an absent optional element stays absent from the output
-- a `null` **element** inside a list or map whose element type rejects `null` throws `CastingException` -
-  `type_list(type_string())->cast([null])` used to produce `['']`
-- `type_list(...)->cast(null)` and `type_map(...)->cast(null)` throw `CastingException`
-- a scalar is never wrapped into a single-item list: `type_list(type_string())->cast('hello')` throws
-  rather than returning `['hello']`
-- a JSON string payload is decoded and cast element-wise, exactly like an array payload
+- The type of a structure element can refuse `null`. If such an element is absent or `null`, the cast throws
+  `CastingException`. `getPrevious()` returns a `MissingElementCastingException`. Its `element` property names the
+  element that failed.
+- Elements with a type that accepts `null` (`type_optional(...)`, `type_union(..., type_null())`) cast `null` to
+  `null`. An absent optional element stays absent from the output.
+- The element type of a list or map can refuse `null`. A `null` element in such a list or map throws
+  `CastingException`. Before, `type_list(type_string())->cast([null])` gave `['']`.
+- `type_list(...)->cast(null)` and `type_map(...)->cast(null)` throw `CastingException`.
+- A scalar is never wrapped into a single-item list. `type_list(type_string())->cast('hello')` throws. It does not
+  return `['hello']`.
+- A JSON string payload is decoded and cast element by element, exactly like an array payload.
 
 ### Complex Types 
 
-By default all types are not nullabe, in order to achieve nullability two types needs to be combined: 
+By default, no type is nullable. For a nullable type, combine two types:
 
 - `type_optional(type_string())` - results in nullable string '?string'
 - `type_union(type_string(),type_integer(),type_null())` - results in `union<string,integer,null>` which is the same as `string|integer|null`
-- `type_intersection(type_integer(),type_string())` - results in `intersection<integer,string>` which is the same as `integer&string`, requiring values to be valid for ALL types in the intersection
+- `type_intersection(type_integer(),type_string())` - results in `intersection<integer,string>` which is the same as `integer&string`. A value must be valid for all types in the intersection
 
 #### Lists 
 
-List is a collection of elements of the same where keys start from 0 and are auto incremented. 
+A list is a collection of elements of the same type. The keys start at 0 and increase by 1.
 
 ```php
 <?php
@@ -173,7 +173,7 @@ $listOfStrings = type_list(type_string());
 
 #### Maps
 
-Map is a key value data structure where all keys and all values has the same type. 
+A map is a key-value data structure. All keys have the same type, and all values have the same type.
 
 ```php
 <?php
@@ -187,7 +187,7 @@ $mapOfStringToInt = type_map(type_string(), type_integer());
 
 #### Structures
 
-Structure is an associative array with a defined shape. Field order is part of the type: two
+A structure is an associative array with a defined shape. The field order is part of the type. Two
 structures with the same fields in a different order are different types.
 
 ```php
@@ -203,9 +203,9 @@ $userStructure = type_structure([
 ]);
 ```
 
-Insertion order of the `$elements` map is the field order. A plain `Type` value declares a required
-field; a `structure_element()` value carries its own `optional` flag, so an optional field can sit
-anywhere - including before a required one:
+The insertion order of the `$elements` map is the field order. A plain `Type` value declares a required
+field. A `structure_element()` value has its own `optional` flag. An optional field can therefore be at any
+position, also before a required field:
 
 ```php
 <?php
@@ -222,13 +222,13 @@ $userStructure = type_structure([
 // structure{id: string, nickname?: string, name: string}
 ```
 
-A `structure_element()` value must carry the same name as its key. Each element is a
-`StructureElement` carrying its name, type, and `optional` flag; `StructureType::elements()`
-returns them as one ordered list, and `StructureType::element($name)` looks a field up by name.
+A `structure_element()` value must have the same name as its key. Each element is a
+`StructureElement` with its name, type and `optional` flag. `StructureType::elements()`
+returns them as one ordered list. `StructureType::element($name)` finds a field by name.
 
 #### Combined Types 
 
-All above types can be easily combined together, so for to get the list of users:
+You can combine all types above. For example, a list of users:
 
 ```php
 <?php

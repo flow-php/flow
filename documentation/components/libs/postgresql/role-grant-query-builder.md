@@ -51,10 +51,10 @@ Available options:
 - `inherit()` / `noInherit()` - Privilege inheritance
 - `replication()` / `noReplication()` - Replication privileges
 - `bypassRls()` / `noBypassRls()` - Row-level security bypass
-- `withPassword(string)` - Set password
-- `connectionLimit(int)` - Maximum concurrent connections
-- `validUntil(string)` - Password expiration date
-- `inRole(string)` - Member of another role
+- `withPassword(string)`: set password
+- `connectionLimit(int)`: maximum concurrent connections
+- `validUntil(string)`: password expiration date
+- `inRole(string)`: member of another role
 
 ### ALTER ROLE
 

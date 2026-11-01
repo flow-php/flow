@@ -4,13 +4,13 @@
 
 [TOC]
 
-`TypeMapper` validates and coerces a database row against a `Flow\Types\Type` from [flow-php/types](/documentation/components/libs/types.md). Use it when you need:
+`TypeMapper` validates and coerces a database row against a `Flow\Types\Type` from [flow-php/types](/documentation/components/libs/types.md). Use it for:
 
-- **Strict type validation** of incoming row data,
-- **Coercion** of raw driver values (e.g. JSONB strings into arrays, date strings into `\DateTimeImmutable`, JSONB into typed structures or `Flow\Types\Value\Json`),
-- **Composition** with another `RowMapper` (e.g. [`ConstructorMapper`](/documentation/components/libs/postgresql/client-constructor-mapper.md) or the [PostgreSQL Valinor Bridge](/documentation/components/bridges/postgresql-valinor-bridge.md)) - the cast result is forwarded to the next mapper.
+- Strict type validation of incoming row data.
+- Coercion of raw driver values, for example JSONB strings into arrays, date strings into `\DateTimeImmutable`, or JSONB into typed structures or `Flow\Types\Value\Json`.
+- Composition with another `RowMapper`, for example [`ConstructorMapper`](/documentation/components/libs/postgresql/client-constructor-mapper.md) or the [PostgreSQL Valinor Bridge](/documentation/components/bridges/postgresql-valinor-bridge.md). The cast result goes to the next mapper.
 
-Internally, `TypeMapper::map()` calls `Type::cast($row)`. `cast()` is the lenient counterpart of `assert()` - it tries to coerce the value into the requested type before validating. For `JSONB`-style columns this means a JSON string starting with `{` or `[` is automatically `json_decode`'d before the inner Type is applied.
+Internally, `TypeMapper::map()` calls `Type::cast($row)`. `cast()` is the lenient counterpart of `assert()`. It tries to coerce the value into the requested type before the validation. For `JSONB`-style columns, a JSON string that starts with `{` or `[` is therefore automatically `json_decode`'d before the inner Type applies.
 
 ## DSL
 
@@ -18,8 +18,8 @@ Internally, `TypeMapper::map()` calls `Type::cast($row)`. `cast()` is the lenien
 type_mapper(Type<TType> $type, ?RowMapper<TNext> $next = null) : TypeMapper<TType, TNext>
 ```
 
-- When `$next` is `null`, `map()` returns whatever `$type->cast()` produces.
-- When `$next` is provided, the cast result is forwarded to `$next->map()` and `$next`'s return value becomes the mapper's output.
+- With `$next` set to `null`, `map()` returns the result of `$type->cast()`.
+- With a `$next`, the cast result goes to `$next->map()`, and the return value of `$next` is the output of the mapper.
 
 ## Basic Usage - Validating a Row Shape
 
@@ -47,7 +47,7 @@ $row = $client->fetchInto(
 
 ## Coercing JSONB Columns
 
-PostgreSQL `JSON` and `JSONB` columns arrive as **strings** when you don't use the driver's native decoding. `TypeMapper` handles all three common targets:
+Without the native decoding of the driver, PostgreSQL `JSON` and `JSONB` columns arrive as strings. `TypeMapper` handles all three common targets:
 
 ### JSONB → Nested Structure
 
@@ -74,7 +74,7 @@ $row = $client->fetchInto($mapper, 'SELECT profile FROM users WHERE id = $1', [1
 
 ### JSONB → `Flow\Types\Value\Json`
 
-When you want to pass the JSON value around as a first-class object (with `->toArray()`, `__toString()`, `JsonSerializable`):
+To pass the JSON value around as a first-class object (with `->toArray()`, `__toString()`, `JsonSerializable`):
 
 ```php
 <?php
@@ -96,7 +96,7 @@ $json->toArray();                  // ['theme' => 'dark', 'notifications' => tru
 
 ### JSONB → Plain String
 
-When you want the raw JSON text - for example to forward it to an HTTP response without re-encoding:
+For the raw JSON text, for example to send it to an HTTP response without a new encode:
 
 ```php
 <?php
@@ -138,7 +138,7 @@ $row = $client->fetchInto($mapper, 'SELECT addresses FROM users WHERE id = $1', 
 
 ## Coercing Date / Time Columns
 
-PostgreSQL `TIMESTAMP` / `TIMESTAMPTZ` already come back as `\DateTimeImmutable` from `ext-pgsql`. But text columns containing date/time strings (e.g. ISO formats stored as `TEXT`) need explicit coercion.
+PostgreSQL `TIMESTAMP` / `TIMESTAMPTZ` already come back as `\DateTimeImmutable` from `ext-pgsql`. But text columns with date/time strings, for example ISO formats stored as `TEXT`, need explicit coercion.
 
 ### String → `\DateTimeImmutable`
 
@@ -161,10 +161,10 @@ $row['created_at']->format('Y-m-d H:i:s');   // '2026-01-01 14:30:00'
 ```
 
 `type_datetime()->cast(...)` accepts calendar date and datetime strings, numeric Unix timestamps,
-`\DateTime`, `\DateTimeImmutable`, and `\DateInterval`. A **string** has to be a real calendar date -
-a date-only string lands at midnight, while a wall-clock expression such as `''`, `'now'` or `'+12'`
-is refused, so the same input never produces a different value on a different run.
-A string without an offset is read in the column zone - UTC for `type_datetime()`, never `date.timezone`. Declare
+`\DateTime`, `\DateTimeImmutable`, and `\DateInterval`. A string must be a real calendar date. A date-only string
+becomes midnight. A wall-clock expression such as `''`, `'now'` or `'+12'` is refused, so the same input never
+produces a different value on a different run.
+A string without an offset is read in the column zone: UTC for `type_datetime()`, never `date.timezone`. Declare
 `type_datetime('Europe/Warsaw')` to read local timestamps.
 
 ### String → Date
@@ -211,8 +211,8 @@ $row['id'];        // \Flow\Types\Value\Uuid
 ## Optional Fields
 
 Absent and null are two different facts about a structure field. Declare a field as
-`structure_element(..., optional: true)` when the driver row may omit the column entirely; wrap its
-type in `type_optional(...)` when a present column may hold `null`:
+`structure_element(..., optional: true)` for a column that the driver row can omit fully. Wrap its
+type in `type_optional(...)` for a present column that can hold `null`:
 
 ```php
 <?php
@@ -231,7 +231,7 @@ $mapper = type_mapper(type_structure([
 
 ## Chaining Into Another `RowMapper` (`$next`)
 
-Pass any `RowMapper<T>` as the second argument and `TypeMapper` will forward its cast result to it. This is useful for **decode-then-hydrate** pipelines: have `TypeMapper` clean up the raw row (decode JSONB, parse dates) and then hand the clean array to a class-aware mapper.
+Pass any `RowMapper<T>` as the second argument and `TypeMapper` will forward its cast result to it. This is useful for decode-then-hydrate pipelines: have `TypeMapper` clean up the raw row (decode JSONB, parse dates) and then hand the clean array to a class-aware mapper.
 
 ### Chained with `ConstructorMapper`
 
@@ -270,11 +270,11 @@ $order = $client->fetchInto(
 
 ### Chained with the Valinor Bridge
 
-For complex object graphs (nested DTOs, lists of value objects), combine `TypeMapper` with the [PostgreSQL Valinor Bridge](/documentation/components/bridges/postgresql-valinor-bridge.md) - `TypeMapper` decodes JSONB and parses dates, then Valinor builds the strict object tree.
+For complex object graphs (nested DTOs, lists of value objects), combine `TypeMapper` with the [PostgreSQL Valinor Bridge](/documentation/components/bridges/postgresql-valinor-bridge.md). `TypeMapper` decodes JSONB and parses dates. Then Valinor builds the strict object tree.
 
 ## Error Handling
 
-When `Type::cast()` fails (or the chained `$next` mapper throws), `TypeMapper` wraps the error in `Flow\PostgreSql\Client\Exception\MappingException` and exposes the original via `getPrevious()`:
+If `Type::cast()` fails (or the chained `$next` mapper throws), `TypeMapper` wraps the error in `Flow\PostgreSql\Client\Exception\MappingException`. `getPrevious()` returns the original:
 
 ```php
 <?php

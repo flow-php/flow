@@ -10,15 +10,15 @@ package: flow-php/parquet
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/parquet.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/parquet.md).
 
 ## Engine System
 
-- **PHP Engine** (`PhpParquetEngine`) - pure PHP, no extra dependencies beyond optional compression extensions.
-- **Rust Engine** (`RustParquetEngine`) - registered by the
-  [arrow extension](/documentation/components/extensions/arrow-ext.md), every compression codec built in.
-- **Adaptive Engine** (`AdaptiveParquetEngine`) - the default: `RustParquetEngine` when the arrow extension is loaded,
-  `PhpParquetEngine` otherwise. A big-endian `Reader` uses `PhpParquetEngine`.
+- PHP Engine (`PhpParquetEngine`): pure PHP. It needs no extra dependencies, only optional compression extensions.
+- Rust Engine (`RustParquetEngine`): the
+  [arrow extension](/documentation/components/extensions/arrow-ext.md) registers it. All compression codecs are built in.
+- Adaptive Engine (`AdaptiveParquetEngine`): the default. If the arrow extension is loaded, it uses
+  `RustParquetEngine`. If not, it uses `PhpParquetEngine`. A big-endian `Reader` uses `PhpParquetEngine`.
 
 ```php
 <?php
@@ -33,19 +33,20 @@ $reader = Reader::php();
 $writer = Writer::php();
 ```
 
-Both engines read the same values and accept and refuse the same writes. The Arrow engine refuses, before the first
-batch and naming `\Flow\Parquet\Reader::php()`, what it cannot read: `INTERVAL`, dictionary and view types, `LZO`, a
-path into a `LIST` / `MAP`, and `INT96` under `Option::INT_96_AS_DATETIME = false`.
+Both engines read the same values, and they accept and refuse the same writes. The Arrow engine cannot read these:
+`INTERVAL`, dictionary and view types, `LZO`, a path into a `LIST` / `MAP`. It also cannot read `INT96` under
+`Option::INT_96_AS_DATETIME = false`. It refuses them before the first batch, and the message names
+`\Flow\Parquet\Reader::php()`.
 
 ## What is Parquet
 
-Apache Parquet is an open source, column-oriented data file format designed for efficient data storage and retrieval.
-It provides efficient data compression and encoding schemes with enhanced performance to handle complex data in bulk.
-Parquet is available in multiple languages including Java, C++, Python, etc... **Now also in PHP!**
+Apache Parquet is an open source, column-oriented data file format for efficient data storage and retrieval.
+It has efficient data compression and encoding schemes for large amounts of complex data.
+Parquet is available in many languages, for example Java, C++ and Python. It is now also available in PHP.
 
 ## Columnar Storage
 
-Parquet stores data in a columnar format, but what does it means?
+Parquet stores data in a columnar format. This section shows what that means.
 
 Row-based format:
 
@@ -65,17 +66,13 @@ Column-based format:
 | Name | Alice | Bob | Carol |
 | Age  | 20    | 25  | 30    |
 
-This approach has several advantages:
+This approach has these advantages:
 
-- **Compression**: Since data is stored in columns, it is naturally compressed better.
-- **I/O**: When querying a subset of columns, we can skip reading the other columns. This is especially useful when the
-  columns are large.
-- **Encoding**: Different encoding schemes can be used for different columns, depending on the data type and the
-  distribution of values.
-- **Data skipping**: When querying a subset of rows, we can skip reading the other rows. This is especially useful when
-  the rows are large.
-- **Reading selective columns**: When querying a subset of columns, we can skip reading the other columns. This is
-  especially useful when the columns are large.
+- Compression: the data is stored in columns, so it compresses better.
+- I/O and selective columns: a query on some of the columns can skip the other columns. This helps most with large
+  columns.
+- Encoding: each column can use a different encoding scheme, for its data type and the distribution of its values.
+- Data skipping: a query on some of the rows can skip the other rows. This helps most with large rows.
 
 ### Parquet File Structure
 
@@ -103,7 +100,7 @@ File Metadata
 
 ## Reading Parquet Files
 
-The first thing we need to do is to create a reader.
+First, create a reader.
 
 ```php
 use Flow\Parquet\Reader;
@@ -112,27 +109,27 @@ $reader = new Reader();
 ```
 
 > [!TIP]
-> `new Reader()` uses the adaptive engine. See [Engine System](#engine-system) for how to explicitly choose the Arrow or
-> PHP engine.
+> `new Reader()` uses the adaptive engine. To choose the Arrow or PHP engine explicitly, read
+> [Engine System](#engine-system).
 
 The Reader accepts three arguments:
 
 - `$byteOrder` - by default set to `ByteOrder::LITTLE_ENDIAN`
-- `$options` - a set of options that can be used to configure the reader.
+- `$options` - a set of options for the reader configuration.
 - `$engine` - by default `AdaptiveParquetEngine`
 
-All available options are described in [Option](/src/lib/parquet/src/Flow/Parquet/Option.php) enum.
+The [Option](/src/lib/parquet/src/Flow/Parquet/Option.php) enum describes all available options.
 
-> Please be aware that not all options are affecting reader.
+> Not all options have an effect on the reader.
 
 ### Reader Options
 
-- `INT_96_AS_DATETIME` - default: `true` - if set to `true` then `INT96` values are read as `DateTimeImmutable`,
-  floored to microseconds.
+- `INT_96_AS_DATETIME` - default: `true`. With `true`, the reader reads `INT96` values as `DateTimeImmutable`,
+  rounded down to microseconds.
 
 ### Reading a file
 
-Once we have reader we can read a file.
+With the reader, read a file.
 
 ```php
 use Flow\Parquet\Reader;
@@ -143,10 +140,10 @@ $file = $reader->read('path/to/file.parquet');
 $file = $reader->readStream(\fopen('path/to/file.parquet', 'rb'));
 ```
 
-`RustParquetEngine` reads the footer when the file is opened, `PhpParquetEngine` on the first call that needs it. An
-invalid file throws `InvalidArgumentException` `Given file is not valid Parquet file...`.
+`RustParquetEngine` reads the footer at the time that the file opens. `PhpParquetEngine` reads it on the first call
+that needs it. An invalid file throws `InvalidArgumentException` `Given file is not valid Parquet file...`.
 
-There are several things we can read from parquet file:
+You can read these things from a parquet file:
 
 - `ParquetFile::values(Query $query = new Query()) : \Generator` - rows, one by one
 - `ParquetFile::columns(Query $query = new Query(), int $batchSize = 1024) : \Generator` - columns, in batches
@@ -183,8 +180,8 @@ foreach ($file->values(parquet_query()->select('column_1', 'column_2')) as $row)
 ### Pagination
 
 > [!NOTE]
-> Paginating over parquet file is a bit tricky, especially if we want to keep memory usage low.
-> To achieve the best results, we will need to play a bit with Writer options (covered later).
+> Pagination over a parquet file is not easy, most of all with low memory usage.
+> For the best results, try different Writer options (described later).
 
 ```php
 foreach ($file->values(parquet_query()->select('column_1')->offset(1000)->limit(100)) as $row) {
@@ -223,9 +220,10 @@ foreach ($file->values($query) as $row) {
 }
 ```
 
-The rows returned are exactly the matching ones; offset and limit count matching rows. Row groups and pages whose
-statistics (column chunk statistics, the [page index](#page-index)) prove no row matches are never read - both engines
-skip the same ones and read a kept page's bytes alone. A second `where()` narrows the first.
+The read returns exactly the rows that match. Offset and limit count matching rows. The statistics (column chunk
+statistics, the [page index](#page-index)) can prove that no row of a row group or page matches. The engines never read
+such a row group or page. Both engines skip the same ones, and they read only the bytes of the pages that they keep. A
+second `where()` narrows the first.
 
 | Method on `parquet_column($path)`                                            | Filter                   |
 |------------------------------------------------------------------------------|--------------------------|
@@ -235,17 +233,17 @@ skip the same ones and read a kept page's bytes alone. A second `where()` narrow
 | `isNull()`, `isNotNull()`                                                    | `IsNull`, its `Not`      |
 | `startsWith(string)`                                                         | `StartsWith`             |
 
-- `->and()`, `->or()`, `->negate()` on any filter build `All`, `Any`, `Not`; `new All(...$filters)` and
+- `->and()`, `->or()`, `->negate()` on a filter build `All`, `Any`, `Not`. `new All(...$filters)` and
   `new Any(...$filters)` combine a list (namespace `Flow\Parquet\Filter`).
-- `$path` names a leaf through structs (`'user.address.city'`); a column the file lacks reads as null. A leaf inside a
-  list or a map is refused (`InvalidArgumentException`): a row holds no single value there.
-- Semantics are SQL's: a comparison on null is null, `NOT` null is null, only true keeps a row. Floats follow IEEE 754
-  (`NaN` matches nothing, `-0.0` equals `0.0`), strings compare in byte order (`'10' < '9'`), `UINT_64` values
-  numerically, date-times by instant. A literal of another kind than the column's values (a string on an `INT64`
-  column) matches nothing, under `->negate()` too.
-- Literals: scalars, `DateTimeInterface`, `Stringable` (uuids); `null` (use `isNull()`) and `NaN` are refused.
-- Files written without `column_orders` (older flow-php versions) are never pruned, only filtered. The statistics a file
-  holds are set by the writer options in [Statistics](#statistics).
+- `$path` names a leaf through structs (`'user.address.city'`). A column that the file does not have reads as null. A
+  leaf inside a list or a map is refused (`InvalidArgumentException`), because a row has no single value there.
+- The semantics are the same as in SQL: a comparison on null is null, `NOT` null is null, and only true keeps a row.
+  Floats follow IEEE 754 (`NaN` matches nothing, `-0.0` equals `0.0`). Strings compare in byte order (`'10' < '9'`),
+  `UINT_64` values compare as numbers, and date-times compare by instant. A literal of a different kind than the column
+  values (a string on an `INT64` column) matches nothing, also under `->negate()`.
+- Literals: scalars, `DateTimeInterface`, `Stringable` (uuids). `null` (use `isNull()`) and `NaN` are refused.
+- Files written without `column_orders` (older flow-php versions) are never pruned, only filtered. The writer options
+  in [Statistics](#statistics) set the statistics of a file.
 
 #### Reading with a ReadPlan
 
@@ -267,15 +265,15 @@ foreach ($file->reader()->readColumns(['id'], 1024, $plan) as $batch) {
 }
 ```
 
-`ReadPlan::$rowFilter` holds the conjuncts the file compares exactly; rows come back matching them, a superset of the
-query's matches when they are not the whole filter.
+`ReadPlan::$rowFilter` holds the conjuncts that the file compares exactly. The rows that come back match them. If
+they are not the full filter, the rows are a superset of the query matches.
 
 ## Writing Parquet Files
 
-Since parquet is a binary format, we need to provide a schema for the writer so it can know how
-to encode values in specific columns.
+Parquet is a binary format. The writer therefore needs a schema to know how to encode the values in each
+column.
 
-Here is how we can create a schema:
+Create a schema like this:
 
 ```php
 
@@ -301,9 +299,9 @@ $schema = Schema::with(
 );
 ```
 
-`FlatColumn::dateTime()` is written as `TIMESTAMP(isAdjustedToUTC=true, MICROS)`; files with `isAdjustedToUTC=false` read as UTC wall clock.
+`FlatColumn::dateTime()` is written as `TIMESTAMP(isAdjustedToUTC=true, MICROS)`. Files with `isAdjustedToUTC=false` read as UTC wall clock.
 
-Once we have a schema, we can create a writer.
+With the schema, create a writer.
 
 ```php
 use Flow\Parquet\Writer;
@@ -313,9 +311,9 @@ $writer = new Writer();
 
 > [!TIP]
 > `new Writer()` uses `AdaptiveParquetEngine`. Use `Writer::php()` to select the PHP engine.
-> See [Engine System](#engine-system).
+> For more information, read [Engine System](#engine-system).
 
-and write our data:
+Then write the data:
 
 ```
 $writer->write(
@@ -331,12 +329,12 @@ $writer->write(
 );
 ```
 
-This approach will open a parquet file, create a group writer, write all data and close the file.
-It requires to keep whole dataset in memory which usually is not the best approach.
+This approach opens a parquet file, creates a group writer, writes all data and closes the file.
+It keeps the full dataset in memory, which is usually not the best approach.
 
 ### Writing data in chunks
 
-Before we can write a batch of rows, we need to open a file.
+Before you write a batch of rows, open a file.
 
 ```php
 $writer->open($path, $schema);
@@ -348,7 +346,7 @@ $writer->writeBatch([$row, $row]);
 $writer->close();
 ```
 
-We can also open a file for a resource:
+You can also open a file for a resource:
 
 ```php
 $writer->openForStream($stream, $schema);
@@ -356,8 +354,9 @@ $writer->openForStream($stream, $schema);
 
 ### Writing columns
 
-A batch that is already held by column is written without building rows: one list per top-level column, every list of
-the same length. A schema column the array lacks is written as nulls, a key the schema lacks is ignored.
+A batch that is already in columns is written without rows: one list for each top-level column, and all lists have
+the same length. A schema column that the array does not have is written as nulls. A key that the schema does not have
+is ignored.
 
 ```php
 $writer->open($path, $schema);
@@ -366,8 +365,8 @@ $writer->writeColumns(['id' => [4], 'tags' => [['x', 'y']]]);
 $writer->close();
 ```
 
-The file is the one `writeBatch()` writes for the same rows, and a value is accepted or refused as `writeBatch()`
-accepts or refuses it. Lists of different lengths are refused:
+The file is the same as the file that `writeBatch()` writes for the same rows. A value is accepted or refused in the
+same way as by `writeBatch()`. Lists of different lengths are refused:
 `InvalidArgumentException('writeColumns() takes lists of one length, got "id": 3, "name": 2')`.
 
 A custom `ParquetFileWriter` implements `writeColumns(array $columns): void`.
@@ -385,70 +384,71 @@ $writer->close();
 ```
 
 > [!WARNING]
-> At this point, schema evolution is not yet supported.
-> We need to make sure that schema is the same as the one used to create a file.
+> Schema evolution is not supported yet.
+> Make sure that the schema is the same as the schema that created the file.
 
 ### Writer Options
 
-- `COLUMN_INDEX_TRUNCATE_LENGTH` - default: `64` - bytes a string/binary page's min/max in the column index are cut to.
-- `DICTIONARY_ENABLED` - default: `true` - columns without a `COLUMNS_ENCODINGS` entry are written `RLE_DICTIONARY`,
-  except BOOLEAN and, under `WRITER_VERSION` 1, FIXED_LEN_BYTE_ARRAY (as arrow-rs and parquet-java); `false` writes the
-  fallback encoding instead.
-- `DICTIONARY_PAGE_SIZE` - default: `1Mb` - maximum size of dictionary page; the pages of a column chunk after it is
-  reached use the fallback encoding.
-- `GZIP_COMPRESSION_LEVEL` - default: `9` - compression level for GZIP compression (applied only when GZIP compression
-  is enabled).
-- `COLUMNS_BLOOM_FILTERS` - default: `null` - `BloomFilterOptions` by column flat path: those columns get a bloom filter
-  per row group ([Bloom filters](#bloom-filters)).
-- `PAGE_HEADER_STATISTICS` - default: `false` - data page headers carry the page's statistics (at `StatisticsLevel::PAGE`).
-- `PAGE_MAXIMUM_ROWS_COUNT` - default: `1000` - rows per data page: the PHP writer closes a page at exactly that many;
-  the arrow writer treats it as a target, checked between write batches, so its pages can hold more. Smaller pages let
-  the page index skip more of a filtered read.
-- `PAGE_SIZE_BYTES` - default: `128Kb` - maximum size of data page.
-- `ROW_GROUP_MAXIMUM_ROWS_COUNT` - default: `1048576` - rows per row group at most: both engines close a row group at
-  exactly that many, or earlier when `ROW_GROUP_SIZE_BYTES` is reached.
-- `ROW_GROUP_SIZE_BYTES` - default: `32Mb` - maximum size of row group.
-- `ROW_GROUP_SIZE_CHECK_INTERVAL` default: `1000` - number of rows to write before checking if row group size limit is
-  reached.
+- `COLUMN_INDEX_TRUNCATE_LENGTH` - default: `64` - the number of bytes to which the column index cuts the min/max of a string/binary page.
+- `DICTIONARY_ENABLED` - default: `true` - columns without a `COLUMNS_ENCODINGS` entry are written `RLE_DICTIONARY`.
+  The exceptions are BOOLEAN and, under `WRITER_VERSION` 1, FIXED_LEN_BYTE_ARRAY (as in arrow-rs and parquet-java).
+  `false` writes the fallback encoding instead.
+- `DICTIONARY_PAGE_SIZE` - default: `1Mb` - maximum size of a dictionary page. After the dictionary page reaches this
+  size, the next pages of the column chunk use the fallback encoding.
+- `GZIP_COMPRESSION_LEVEL` - default: `9` - compression level for GZIP compression. It applies only to GZIP
+  compression.
+- `COLUMNS_BLOOM_FILTERS` - default: `null` - `BloomFilterOptions` by column flat path. Those columns get a bloom filter
+  for each row group ([Bloom filters](#bloom-filters)).
+- `PAGE_HEADER_STATISTICS` - default: `false` - data page headers carry the statistics of the page (at `StatisticsLevel::PAGE`).
+- `PAGE_MAXIMUM_ROWS_COUNT` - default: `1000` - rows for each data page. The PHP writer closes a page at exactly that
+  number. The arrow writer uses it as a target, and checks it between write batches, so its pages can hold more rows.
+  With smaller pages, the page index can skip more of a filtered read.
+- `PAGE_SIZE_BYTES` - default: `128Kb` - maximum size of a data page.
+- `ROW_GROUP_MAXIMUM_ROWS_COUNT` - default: `1048576` - maximum rows for each row group. Both engines close a row group
+  at exactly that number, or earlier at `ROW_GROUP_SIZE_BYTES`.
+- `ROW_GROUP_SIZE_BYTES` - default: `32Mb` - maximum size of a row group.
+- `ROW_GROUP_SIZE_CHECK_INTERVAL` default: `1000` - the number of rows that the writer writes between two checks of the
+  row group size limit.
 - `STATISTICS_LEVEL` - default: `StatisticsLevel::PAGE` - `NONE`, `CHUNK` (column chunk statistics) or `PAGE` (also a
-  column index); the offset index is written at every level.
-- `STATISTICS_TRUNCATE_LENGTH` - default: `64` - bytes a string/binary column chunk's min/max statistics are cut to.
-- `VALIDATE_DATA` - default: `true` - if set to `true` then writer will validate data against schema.
-- `WRITER_VERSION` - default `1` - `2` writes data page v2. It also picks the fallback encoding used without a
-  dictionary: `PLAIN` under `1`; under `2` `RLE` (BOOLEAN), `DELTA_BINARY_PACKED` (INT32/INT64), `DELTA_BYTE_ARRAY`
-  (BYTE_ARRAY/FIXED_LEN_BYTE_ARRAY), `PLAIN` otherwise, as arrow-rs and parquet-java fall back.
+  column index). The offset index is written at each level.
+- `STATISTICS_TRUNCATE_LENGTH` - default: `64` - the number of bytes to which the writer cuts the min/max statistics of
+  a string/binary column chunk.
+- `VALIDATE_DATA` - default: `true` - with `true`, the writer makes sure that the data matches the schema.
+- `WRITER_VERSION` - default `1` - `2` writes data page v2. It also picks the fallback encoding without a
+  dictionary. Under `1`, it is `PLAIN`. Under `2`, it is `RLE` (BOOLEAN), `DELTA_BINARY_PACKED` (INT32/INT64),
+  `DELTA_BYTE_ARRAY` (BYTE_ARRAY/FIXED_LEN_BYTE_ARRAY), and `PLAIN` for the other types, as in arrow-rs and parquet-java.
 
-Two most important options that can heavily affect memory usage are:
+The three most important options for memory usage are:
 
 - `ROW_GROUP_MAXIMUM_ROWS_COUNT`
 - `ROW_GROUP_SIZE_BYTES`
 - `ROW_GROUP_SIZE_CHECK_INTERVAL`
 
-Row Group Size defines pretty much how much data writer (but also reader) will need to keep in memory
-before flushing it to the file.
-Row group size check interval, defines how often writer will check if row group size limit is reached.
-If you set this value too high, writer might exceed row group size limit.
+The row group size sets how much data the writer (and also the reader) keeps in memory
+before it flushes the data to the file.
+The row group size check interval sets how often the writer checks the row group size limit.
+With a value that is too high, the writer can go over the row group size limit.
 
 Common row group sizes are 128-512 MB.
-Which is great for big data, and quick processing in memory but not so great for PHP.
+This is good for big data and fast processing in memory, but not for PHP.
 
-For example, if you need to paginate over file with 1Gb of data, and you set row group size to 512Mb,
-you will need to keep at least 512Mb of data in memory at once.
+For example, you paginate over a file with 1Gb of data, and the row group size is 512Mb.
+You then keep at least 512Mb of data in memory at one time.
 
-A Much better approach is to reduce the row group size to something closer to 1Mb, and row grpu size check interval to
-what your default page size should be - like for example 100 or 500 (that obviously depends on your data)
+A much better approach is a row group size near 1Mb. Set the row group size check interval to your default page size,
+for example 100 or 500. The correct value depends on your data.
 
-This way you will keep memory usage low, and you will be able to paginate over big files without any issues.
-But it will take a little longer to write to these files, because writer has to flush and calculate statistic
+You then keep memory usage low, and you can paginate over big files without problems.
+But the write to these files takes a little longer, because the writer flushes and calculates statistics
 more frequently.
 
-Unfortunately, there is no one size fits all solution here.
-You will need to play a bit with those values to find the best one for your use case.
+No one value is correct for all cases.
+Try different values to find the best one for your use case.
 
 ## Statistics
 
-Both engines write the column chunk statistics arrow-rs writes: `min_value`/`max_value` with exactness flags,
-`nan_count` for floats and a column order per leaf.
+Both engines write the same column chunk statistics as arrow-rs: `min_value`/`max_value` with exactness flags,
+`nan_count` for floats and a column order for each leaf.
 
 ```php
 <?php
@@ -474,21 +474,22 @@ foreach ($metadata->rowGroups()->all() as $rowGroup) {
 $metadata->columnOrder($column);            // ColumnOrder::TypeDefined; ColumnOrder::Absent in files written before it
 ```
 
-| Physical type                    | Order of `min_value`/`max_value`                                                       |
-|----------------------------------|----------------------------------------------------------------------------------------|
-| BYTE_ARRAY, FIXED_LEN_BYTE_ARRAY | unsigned bytes (`'10' < '9'`)                                                          |
-| DECIMAL                          | signed (two's complement bytes, or the unscaled INT32/INT64)                           |
-| INT32/INT64 `UINT_*`             | unsigned                                                                               |
-| FLOAT, DOUBLE, FLOAT16           | IEEE 754 total order (`-0.0 < 0.0`); NaN counted, a bound only when every value is NaN |
-| INT96, INTERVAL                  | none: no `min_value`/`max_value` is written                                            |
+| Physical type                    | Order of `min_value`/`max_value`                                                         |
+|----------------------------------|------------------------------------------------------------------------------------------|
+| BYTE_ARRAY, FIXED_LEN_BYTE_ARRAY | unsigned bytes (`'10' < '9'`)                                                            |
+| DECIMAL                          | signed (two's complement bytes, or the unscaled INT32/INT64)                             |
+| INT32/INT64 `UINT_*`             | unsigned                                                                                 |
+| FLOAT, DOUBLE, FLOAT16           | IEEE 754 total order (`-0.0 < 0.0`), NaN counted. NaN is a bound only for all-NaN values |
+| INT96, INTERVAL                  | none: no `min_value`/`max_value` is written                                              |
 
-Strings and binaries longer than `STATISTICS_TRUNCATE_LENGTH` keep a prefix as the min and an incremented prefix as the
-max. Decimals and FLOAT16 are never truncated.
+Strings and binaries longer than `STATISTICS_TRUNCATE_LENGTH` keep a prefix as the min, and an incremented prefix as
+the max. Decimals and FLOAT16 are never truncated.
 
 ### Page index
 
-Both writers write a column index (each page's min, max, null and NaN counts) and an offset index (where each page
-starts, and its first row) by default. Pages start on row boundaries, lists included.
+By default, both writers write a column index and an offset index. The column index has the min, max, null and NaN
+counts of each page. The offset index has the start of each page and its first row. Pages start on row boundaries,
+also in lists.
 
 ```php
 <?php
@@ -508,9 +509,9 @@ $file->indexes()->offsetIndex(0, $column);       // ?OffsetIndex: pages[i]->offs
 
 ### Bloom filters
 
-A bloom filter per column chunk lets a read skip the row groups that cannot hold a value, where min/max cannot (an id
-inside every group's range). Only `equals()` and `in()` use them. Both writers write them after each row group, for the
-columns asked only.
+With a bloom filter for each column chunk, a read can skip the row groups that cannot hold a value. Min/max cannot
+do this for some values, for example an id inside the range of each group. Only `equals()` and `in()` use bloom
+filters. Both writers write them after each row group, only for the configured columns.
 
 ```php
 <?php
@@ -531,41 +532,41 @@ use function Flow\Parquet\DSL\{parquet_column, parquet_query};
 ## Compressions
 
 > [!NOTE]
-> With the Arrow engine every compression codec is built into the extension. The PHP compression extensions listed below
-> are only required by the PHP engine.
+> With the Arrow engine, all compression codecs are built into the extension. Only the PHP engine needs the PHP
+> compression extensions below.
 
-Parquet supports several compression algorithms.
+Parquet supports these compression algorithms:
 
-- `BROTLI` - supported if [Brotli Extension](https://github.com/kjdev/php-ext-brotli) is installed
-- `GZIP` - supported out of the box
-- `LZ4` - supported if [LZ4 Extension](https://github.com/kjdev/php-ext-lz4) is installed
-- `LZ4_RAW` - supported if [LZ4 Extension](https://github.com/kjdev/php-ext-lz4) is installed
-- `LZO`  - not yet supported
-- `SNAPPY` - supported - it's recommended to install [Snappy Extension](https://github.com/kjdev/php-ext-snappy) -
-  otherwise php implementation is used that is much slower than extension
-- `UNCOMPRESSED` - supported out of the box
-- `ZSTD` - supported if [ZSTD Extension](https://github.com/kjdev/php-ext-zstd) is installed
+- `BROTLI` - needs the [Brotli Extension](https://github.com/kjdev/php-ext-brotli)
+- `GZIP` - supported by default
+- `LZ4` - needs the [LZ4 Extension](https://github.com/kjdev/php-ext-lz4)
+- `LZ4_RAW` - needs the [LZ4 Extension](https://github.com/kjdev/php-ext-lz4)
+- `LZO`  - not supported yet
+- `SNAPPY` - supported. Install the [Snappy Extension](https://github.com/kjdev/php-ext-snappy). Without it, a php
+  implementation runs, which is much slower than the extension
+- `UNCOMPRESSED` - supported by default
+- `ZSTD` - needs the [ZSTD Extension](https://github.com/kjdev/php-ext-zstd)
 
-Obviously, compression is a trade-off between speed and size.
-If you want to achieve the best compression, you should use `GZIP` or `SNAPPY` which is a default compression algorithm.
+Compression is a trade-off between speed and size.
+For the smallest files, use `ZSTD` or `BROTLI`. `SNAPPY` is the default because it is fast.
 
-For not yet supported algorithms, please check our [Roadmap](https://github.com/orgs/flow-php/projects/1) to understand
-when they will be supported.
+Our [Roadmap](https://github.com/orgs/flow-php/projects/1) shows the plan for the algorithms that are not supported
+yet.
 
 ### Per-Column Compression
 
-You can specify different compression algorithms for individual columns using flat path notation. This allows
-fine-grained control over the compression strategy for optimal storage and performance.
+You can set a different compression algorithm for each column with flat path notation. This gives you fine control
+over the compression for storage and performance.
 
 #### When to Use Per-Column Compression
 
-**Different data characteristics require different compression strategies:**
+Different types of data need different compression strategies:
 
-- **Fast access columns** (IDs, timestamps) - Use `UNCOMPRESSED` or `LZ4` for minimal decompression overhead
-- **Categorical data** (status, country codes) - Use `SNAPPY` for balanced compression with good performance
-- **Text/JSON data** (descriptions, metadata) - Use `ZSTD` or `BROTLI` for maximum compression
-- **Numerical data** - Use `LZ4` or `SNAPPY` for good compression with fast access
-- **Archival columns** - Use `ZSTD` for maximum compression when access speed is less critical
+- Fast access columns (IDs, timestamps): use `UNCOMPRESSED` or `LZ4` for minimal decompression overhead
+- Categorical data (status, country codes): use `SNAPPY` for balanced compression with good performance
+- Text/JSON data (descriptions, metadata): use `ZSTD` or `BROTLI` for maximum compression
+- Numerical data: use `LZ4` or `SNAPPY` for good compression with fast access
+- Archival columns: use `ZSTD` for maximum compression, for data with less need of access speed
 
 #### Basic Per-Column Compression
 
@@ -594,7 +595,7 @@ $writer = new Writer(compression: Compressions::GZIP, options: $options);
 
 #### Nested Column Compression
 
-For nested structures, use the same flat path notation as column encodings:
+For nested structures, use the same flat path notation as for column encodings:
 
 ```php
 use Flow\Parquet\ParquetFile\Schema\{NestedColumn, ListElement, MapKey, MapValue};
@@ -632,7 +633,7 @@ $options = Options::default()->set(Option::COLUMNS_COMPRESSIONS, [
 
 #### Performance-Optimized Strategies
 
-**Query-Optimized Strategy:**
+Query-Optimized Strategy:
 
 ```php
 $options = Options::default()->set(Option::COLUMNS_COMPRESSIONS, [
@@ -651,7 +652,7 @@ $options = Options::default()->set(Option::COLUMNS_COMPRESSIONS, [
 ]);
 ```
 
-**Storage-Optimized Strategy:**
+Storage-Optimized Strategy:
 
 ```php
 $options = Options::default()->set(Option::COLUMNS_COMPRESSIONS, [
@@ -668,7 +669,7 @@ $options = Options::default()->set(Option::COLUMNS_COMPRESSIONS, [
 
 #### Combined Compression and Encoding Strategy
 
-You can combine per-column compression with custom encodings for optimal results:
+You can combine compression for each column with custom encodings:
 
 ```php
 $options = Options::default()
@@ -686,57 +687,57 @@ $options = Options::default()
 
 #### Compression Selection Guidelines
 
-| Data Type             | Characteristics                       | Recommended Compression | Use Case                     |
-|-----------------------|---------------------------------------|-------------------------|------------------------------|
-| **Primary Keys**      | Sequential integers, frequent queries | `UNCOMPRESSED` or `LZ4` | Fast joins and lookups       |
-| **Status/Categories** | Low cardinality, repeated values      | `SNAPPY`                | Balanced performance         |
-| **Timestamps**        | Sequential, frequently filtered       | `LZ4`                   | Fast time-based queries      |
-| **Text Content**      | High variance, large size             | `ZSTD` or `BROTLI`      | Storage optimization         |
-| **JSON/Metadata**     | Complex nested data                   | `ZSTD`                  | Maximum compression          |
-| **Numerical Data**    | Calculations, aggregations            | `SNAPPY` or `LZ4`       | Fast mathematical operations |
-| **Archive Data**      | Rarely accessed                       | `ZSTD` or `BROTLI`      | Long-term storage            |
+| Data Type         | Characteristics                       | Recommended Compression | Use Case                     |
+|-------------------|---------------------------------------|-------------------------|------------------------------|
+| Primary Keys      | Sequential integers, frequent queries | `UNCOMPRESSED` or `LZ4` | Fast joins and lookups       |
+| Status/Categories | Low cardinality, repeated values      | `SNAPPY`                | Balanced performance         |
+| Timestamps        | Sequential, frequently filtered       | `LZ4`                   | Fast time-based queries      |
+| Text Content      | High variance, large size             | `ZSTD` or `BROTLI`      | Storage optimization         |
+| JSON/Metadata     | Complex nested data                   | `ZSTD`                  | Maximum compression          |
+| Numerical Data    | Calculations, aggregations            | `SNAPPY` or `LZ4`       | Fast mathematical operations |
+| Archive Data      | Rarely accessed                       | `ZSTD` or `BROTLI`      | Long-term storage            |
 
 #### Performance vs. Compression Trade-offs
 
-**Compression Ratio (Best to Worst):**
+Compression Ratio (Best to Worst):
 
-1. `ZSTD` - Best compression, slower decompression
-2. `BROTLI` - Excellent compression, moderate speed
-3. `GZIP` - Good compression, widely supported
-4. `SNAPPY` - Balanced compression and speed (default)
-5. `LZ4` - Fast compression/decompression, moderate ratio
-6. `UNCOMPRESSED` - No compression overhead, largest size
+1. `ZSTD`: best compression, slower decompression
+2. `BROTLI`: very good compression, moderate speed
+3. `GZIP`: good compression, widely supported
+4. `SNAPPY`: balanced compression and speed (default)
+5. `LZ4`: fast compression/decompression, moderate ratio
+6. `UNCOMPRESSED`: no compression overhead, largest size
 
-**Decompression Speed (Fastest to Slowest):**
+Decompression Speed (Fastest to Slowest):
 
-1. `UNCOMPRESSED` - No decompression needed
-2. `LZ4` - Very fast decompression
-3. `SNAPPY` - Fast decompression (good balance)
-4. `GZIP` - Moderate decompression speed
-5. `BROTLI` - Slower decompression
-6. `ZSTD` - Configurable, generally slower for high compression
+1. `UNCOMPRESSED`: no decompression necessary
+2. `LZ4`: very fast decompression
+3. `SNAPPY`: fast decompression (good balance)
+4. `GZIP`: moderate decompression speed
+5. `BROTLI`: slower decompression
+6. `ZSTD`: configurable, usually slower for high compression
 
 ## Column Encodings
 
-Parquet supports various column encoding algorithms that can significantly impact file size and query performance.
-You can specify custom encodings for individual columns using flat path notation.
+Parquet supports different column encoding algorithms. They have a large effect on file size and query performance.
+You can set a custom encoding for each column with flat path notation.
 
 ### Available Encodings
 
-Without a `COLUMNS_ENCODINGS` entry both engines write `RLE_DICTIONARY` (see `DICTIONARY_ENABLED`), and the
-`WRITER_VERSION` fallback encoding past `DICTIONARY_PAGE_SIZE`.
+Without a `COLUMNS_ENCODINGS` entry, both engines write `RLE_DICTIONARY` (read `DICTIONARY_ENABLED`). After
+`DICTIONARY_PAGE_SIZE`, they write the `WRITER_VERSION` fallback encoding.
 
 #### PLAIN
 
-Stores values as-is without any compression scheme.
+Stores the values as they are, without a compression scheme.
 
-**When to use:**
+When to use:
 
-- Small datasets where compression overhead isn't justified
+- Small datasets, where the compression overhead gives no benefit
 - Columns with high cardinality and random distribution
-- When you need maximum compatibility with other Parquet readers
+- Maximum compatibility with other Parquet readers
 
-**Supported types:** All column types
+Supported types: All column types
 
 ```php
 use Flow\Parquet\{Options, Option};
@@ -750,16 +751,16 @@ $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
 
 #### RLE_DICTIONARY
 
-Run Length Encoding with Dictionary compression. Values are stored in a dictionary and replaced with indices.
+Run Length Encoding with Dictionary compression. The values go into a dictionary, and indices replace them.
 
-**When to use:**
+When to use:
 
 - Columns with low cardinality (many repeated values)
 - String columns with repeated categories (status, country, department)
 - Enumeration-like data
 - Significant file size reduction (often 50-90% smaller)
 
-**Supported types:** All types except `BOOLEAN`; `FIXED_LEN_BYTE_ARRAY` only under `WRITER_VERSION` 2
+Supported types: all types except `BOOLEAN`. `FIXED_LEN_BYTE_ARRAY` only under `WRITER_VERSION` 2.
 
 ```php
 $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
@@ -773,15 +774,15 @@ Past `DICTIONARY_PAGE_SIZE`, the rest of the chunk uses the `WRITER_VERSION` fal
 
 #### DELTA_BINARY_PACKED
 
-Delta encoding with binary packing for integer columns. Stores differences between consecutive values.
+Delta encoding with binary packing for integer columns. It stores the differences between consecutive values.
 
-**When to use:**
+When to use:
 
 - Sequential or monotonic integer data (IDs, timestamps, counters)
 - Time series data with incremental values
 - Can achieve 70-95% compression for sequential data
 
-**Supported types:** Only `INT32` and `INT64`
+Supported types: Only `INT32` and `INT64`
 
 ```php
 $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
@@ -793,7 +794,7 @@ $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
 
 #### DELTA_LENGTH_BYTE_ARRAY
 
-**Supported types:** Only `BYTE_ARRAY`
+Supported types: Only `BYTE_ARRAY`
 
 ```php
 $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
@@ -801,11 +802,11 @@ $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
 ]);
 ```
 
-**When to use:** many distinct strings.
+When to use: many distinct strings.
 
 #### DELTA_BYTE_ARRAY
 
-**Supported types:** `BYTE_ARRAY` and `FIXED_LEN_BYTE_ARRAY`
+Supported types: `BYTE_ARRAY` and `FIXED_LEN_BYTE_ARRAY`
 
 ```php
 $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
@@ -813,12 +814,12 @@ $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
 ]);
 ```
 
-**When to use:** sorted strings sharing prefixes.
+When to use: sorted strings sharing prefixes.
 
 ### Using Custom Encodings
 
-Both engines write exactly the encoding given and refuse one the column type cannot take; only `RLE_DICTIONARY` adds a
-dictionary.
+Both engines write exactly the given encoding. They refuse an encoding that the column type cannot take. Only
+`RLE_DICTIONARY` adds a dictionary.
 
 #### Basic Column Encoding
 
@@ -844,15 +845,15 @@ $writer = new Writer(compression: Compressions::SNAPPY, options: $options);
 
 #### Nested Column Encoding (Flat Path Notation)
 
-For nested structures, use dot notation to specify the exact column path.
-The flat path follows Parquet's internal structure conventions:
+For nested structures, use dot notation to give the exact column path.
+The flat path follows the internal structure conventions of Parquet:
 
-**Flat Path Patterns:**
+Flat Path Patterns:
 
-- **Struct fields**: `parent.field_name`
-- **List elements**: `list_name.list.element`
-- **Map keys**: `map_name.key_value.key`
-- **Map values**: `map_name.key_value.value`
+- Struct fields: `parent.field_name`
+- List elements: `list_name.list.element`
+- Map keys: `map_name.key_value.key`
+- Map values: `map_name.key_value.value`
 
 ```php
 use Flow\Parquet\ParquetFile\Schema\{NestedColumn, ListElement, MapKey, MapValue};
@@ -872,7 +873,7 @@ $schema = Schema::with(
 );
 ```
 
-**Understanding Flat Paths:**
+Understanding Flat Paths:
 
 ```php ignore
 // STRUCT: Direct field access with dot notation
@@ -890,7 +891,7 @@ $schema = Schema::with(
 'metadata.key_value.value' // metadata map → key_value wrapper → value (string values)
 ```
 
-**Applying Custom Encodings:**
+Applying Custom Encodings:
 
 ```php
 $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
@@ -910,7 +911,7 @@ $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
 ]);
 ```
 
-**Complex Nested Example:**
+Complex Nested Example:
 
 ```php
 // Complex nested structure with lists of structs and maps
@@ -965,10 +966,10 @@ $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
 
 ### Performance Guidelines
 
-1. **Analyze your data first** - Check cardinality and distribution patterns
-2. **Use RLE_DICTIONARY for categorical data** - Countries, statuses, departments
-3. **Use DELTA_BINARY_PACKED for sequential integers** - IDs, timestamps, counters
-4. **Use PLAIN for high-variance data** - Descriptions, UUIDs, random data
-5. **Test different combinations** - Measure file size and query performance
-6. **Consider query patterns** - Frequently filtered columns benefit from dictionary encoding
+1. Analyze your data first: look at the cardinality and the distribution patterns.
+2. Use RLE_DICTIONARY for categorical data: countries, statuses, departments.
+3. Use DELTA_BINARY_PACKED for sequential integers: IDs, timestamps, counters.
+4. Use PLAIN for high-variance data: descriptions, UUIDs, random data.
+5. Test different combinations: measure the file size and the query performance.
+6. Think about the query patterns: dictionary encoding helps columns that are frequently filtered.
 

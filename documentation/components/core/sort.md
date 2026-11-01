@@ -4,8 +4,8 @@
 
 ## Order
 
-Nulls sort first ascending and last descending, NaN after every other number, strings by bytes; rows with equal keys
-keep their input order. Both algorithms below produce the same order.
+Nulls sort first in ascending order and last in descending order. NaN sorts after all other numbers, and strings sort
+by bytes. Rows with equal keys keep their input order. Both algorithms below produce the same order.
 
 ```php
 <?php
@@ -36,17 +36,17 @@ data_frame()
 
 ## Sort Algorithm
 
-The sort algorithm is configured through `config_builder()->sort()` - all options live on the algorithm's own builder:
+Configure the sort algorithm through `config_builder()->sort()`. All options are on the builder of the algorithm:
 
-- `external_sort()` - **default**; sorts in memory while the buffered rows stay under its memory limit. Past the limit
-  it spills each sorted run as a bucket through a `RowsStorage` (the same abstraction used by
-  [join](/documentation/components/core/join.md) and
-  [group by](/documentation/components/core/group-by.md)), then k-way merges the runs back into one sorted stream.
-  The memory limit defaults to `FLOW_MAX_MEMORY` when set, otherwise 70% of PHP's `memory_limit` (1 GB when
-  `memory_limit` is `-1`), and is compared with the whole process - a sort and a join in one pipeline stay under it
-  together.
-- `memory_sort()` - buffers the whole dataset and sorts it in one pass; fastest, but everything must fit in RAM. It has
-  no options.
+- `external_sort()`: the default. It sorts in memory while the buffered rows stay under its memory limit. After the
+  limit, it spills each sorted run as a bucket through a `RowsStorage`.
+  [Join](/documentation/components/core/join.md) and
+  [group by](/documentation/components/core/group-by.md) use the same abstraction. Then it k-way merges the runs back
+  into one sorted stream. The default memory limit is `FLOW_MAX_MEMORY`. Without it, the limit is 70% of the
+  `memory_limit` of PHP, or 1 GB for a `memory_limit` of `-1`. The limit applies to the full process, so a sort and a
+  join in one pipeline stay under it together.
+- `memory_sort()`: buffers the full dataset and sorts it in one pass. It is the fastest, but everything must fit in
+  RAM. It has no options.
 
 ```php
 <?php
@@ -63,9 +63,9 @@ data_frame(
 
 | Buckets storage                       | Behavior                                                                                     |
 |---------------------------------------|----------------------------------------------------------------------------------------------|
-| `FilesystemRowsStorage` - **Default** | Sorted runs are spilled to disk (Floe files).                                                |
-| `MemoryRowsStorage`                   | Runs are kept in memory - prefer `memory_sort()` instead, it sorts once and skips the merge. |
-| `PsrRowsStorage`                      | Runs are spilled into any PSR-16 cache.                                                      |
+| `FilesystemRowsStorage` (default)     | Sorted runs are spilled to disk (Floe files).                                                |
+| `MemoryRowsStorage`                   | Runs stay in memory. Use `memory_sort()` instead. It sorts once and skips the merge.         |
+| `PsrRowsStorage`                      | Runs are spilled into each PSR-16 cache.                                                     |
 
 ```php
 <?php
@@ -84,16 +84,17 @@ data_frame(
     ->run();
 ```
 
-The storage implementation is swapped with `external_sort()->storage(RowsStorage $storage)`, which covers
-both phases - the sorted runs and the runs written while merging.
+To change the storage implementation, use `external_sort()->storage(RowsStorage $storage)`. It covers both phases:
+the sorted runs and the runs that the merge writes.
 
-`sortBy()` followed by `limit(n)` keeps only the top `n` rows while it reads. Past the same memory limit it hands
-the rows it kept and the rest of the stream to the external sort, whose merge stops after `n` rows.
+`sortBy()` followed by `limit(n)` keeps only the top `n` rows while it reads. After the same memory limit, it gives
+the rows that it kept and the rest of the stream to the external sort. The merge of the external sort stops after `n`
+rows.
 
 ## Overriding the algorithm for one sort
 
-`sortBy()` takes an optional second argument, so a single sort can use a different algorithm from the one on the
-config - everything else in the pipeline keeps the configured default:
+`sortBy()` takes an optional second argument. One sort can therefore use a different algorithm than the
+configuration. All other steps in the pipeline keep the configured default:
 
 ```php
 <?php
@@ -105,10 +106,10 @@ data_frame()
     ->run();
 ```
 
-Passing `null` (or omitting it) uses the configured algorithm.
+`null`, or no argument, uses the configured algorithm.
 
-To keep merged runs somewhere else, add `external_sort()->mergeStorage(RowsStorage $storage)`. It defaults
-to the spill storage, so `storage()` alone stays sufficient:
+To keep merged runs in a different place, add `external_sort()->mergeStorage(RowsStorage $storage)`. Its default
+is the spill storage, so `storage()` alone is still sufficient:
 
 ```php
 external_sort()
@@ -116,7 +117,7 @@ external_sort()
     ->mergeStorage(new FilesystemRowsStorage($fs, path('/tmp/merge'), new AdaptiveBackend())); // merged runs only
 ```
 
-`FilesystemRowsStorage` reads runs back into the [column backend](/documentation/components/core/column-backend.md) it is given.
+`FilesystemRowsStorage` reads runs back into the [column backend](/documentation/components/core/column-backend.md) that it gets.
 
 ## Example
 

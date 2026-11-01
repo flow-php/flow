@@ -4,8 +4,8 @@ package: flow-php/psr7-telemetry-bridge
 
 # PSR-7 Telemetry Bridge
 
-Flow PSR-7 Telemetry Bridge provides carriers for propagators that can pass and read telemetry context
-and baggage via PSR-7 request and response objects.
+This bridge has carriers for propagators. With them, propagators pass and read telemetry context and baggage
+through PSR-7 request and response objects.
 
 [PACKAGE_NAV]
 
@@ -13,25 +13,25 @@ and baggage via PSR-7 request and response objects.
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/psr7-telemetry-bridge.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/psr7-telemetry-bridge.md).
 
 ## Overview
 
-This bridge connects Flow PHP's Telemetry library with PSR-7 compliant HTTP message implementations, enabling telemetry
-context propagation in HTTP-based applications. It provides carriers that allow propagators to inject and extract
+This bridge connects the Telemetry library of Flow PHP with PSR-7 compliant HTTP message implementations.
+HTTP-based applications can then propagate telemetry context. Its carriers let propagators inject and extract
 telemetry context (trace context, baggage) through HTTP headers in PSR-7 Request and Response objects.
 
-This is particularly useful for:
+Use cases:
 
 - Distributed tracing across microservices
-- Propagating correlation IDs through HTTP calls
-- Passing baggage data (key-value pairs) across service boundaries
+- Correlation IDs that go through HTTP calls
+- Baggage data (key-value pairs) that goes across service boundaries
 - Integration with OpenTelemetry-based observability stacks
 - Framework-agnostic telemetry integration
 
-> **Note:** This bridge works with any PSR-7 compliant HTTP message implementation (Nyholm/PSR-7, Guzzle, Laminas, etc.).
-> Due to PSR-7's immutable nature, use `unwrap()` on the `ResponseCarrier` to retrieve the modified response after
-> injecting headers.
+> Note: This bridge works with each PSR-7 compliant HTTP message implementation, for example Nyholm/PSR-7, Guzzle or
+> Laminas. PSR-7 objects are immutable. After you inject headers, use `unwrap()` on the `ResponseCarrier` to get the
+> changed response.
 
 ## Requirements
 
@@ -91,7 +91,7 @@ $response = $carrier->unwrap();
 
 ### DSL Functions
 
-The bridge provides convenient DSL functions:
+The bridge has DSL functions:
 
 ```php
 use function Flow\Bridge\Psr7\Telemetry\DSL\psr7_request_carrier;

@@ -10,18 +10,16 @@ package: flow-php/filesystem
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/filesystem.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/filesystem.md).
 
-Flow Filesystem is a unified solution to store and retrieve data at remote and local filesystems.
-What differentiates Flow Filesystem from other libraries is the ability to store data in Blocks and read
-it by byte ranges.
+Flow Filesystem is one API to store and get data on remote and local filesystems.
+Unlike other libraries, Flow Filesystem can store data in Blocks and read it by byte ranges.
 
-This means, that while writing data to a large remote file, instead we can literally stream the data and based on the
-implementation
-of the filesystem, it will be saved in blocks.
+When you write data to a large remote file, you can stream the data. The filesystem implementation then saves it in
+blocks.
 
-When reading, instead of iterating through the whole file to find the data you need, you can directly access the data
-you need by specifying the byte range.
+When you read, you do not have to go through the full file to find the data. You give the byte range, and you get
+that data directly.
 
 # Available Filesystems
 
@@ -56,7 +54,7 @@ DestinationStream::append(string $data) : self;
 DestinationStream::fromResource($resource) : self;
 ```
 
-- `Mount` - a value object identifying a filesystem mount by its URI protocol (`file`, `memory`, `aws-s3`, `warehouse`, ...)
+- `Mount` - a value object that identifies a filesystem mount by its URI protocol (`file`, `memory`, `aws-s3`, `warehouse`, ...)
 
 ```php
 <?php
@@ -103,12 +101,12 @@ final readonly class FileStatus
 }
 ```
 
-`size` and `lastModifiedAt` come from the backend's list/head response for free - no extra stream is
-opened, no extra HTTP call made. They're `null` when the backend can't provide them (e.g. `StdOutFilesystem`).
+`size` and `lastModifiedAt` come from the list/head response of the backend, at no cost. No extra stream opens, and
+no extra HTTP call runs. If the backend cannot give them, they are `null`, for example in `StdOutFilesystem`.
 
 - `Path::protocol() : string` - returns the raw URI scheme (`'file'`, `'aws-s3'`, `'warehouse'`).
 
-- `FilesystemTable` - a registry of filesystems keyed by mount protocol
+- `FilesystemTable` - a registry of filesystems, with the mount protocol as the key
 
 ```php ignore
 <?php
@@ -118,10 +116,9 @@ FilesystemTable::mount(Filesystem $filesystem) : void;
 FilesystemTable::unmount(Filesystem $filesystem) : void;
 ```
 
-Every mount must have a unique protocol. Two mounts of the same protocol throw
-`InvalidArgumentException`. A filesystem can be mounted under any protocol you choose - e.g. two S3
-buckets mounted under `warehouse` and `archive` - and resolved at runtime via
-`$table->for('warehouse')` or `$table->for($path)`.
+Each mount must have a unique protocol. Two mounts with the same protocol throw
+`InvalidArgumentException`. You can mount a filesystem under any protocol, for example two S3 buckets under
+`warehouse` and `archive`. At runtime, you get them with `$table->for('warehouse')` or `$table->for($path)`.
 
 ## Usage
 
@@ -157,18 +154,18 @@ $stream->close();
 
 ## Glob patterns
 
-Every filesystem - local, memory, S3, Azure - lists the same files for the same pattern.
+All filesystems (local, memory, S3, Azure) list the same files for the same pattern.
 
-| token                   | matches                                                                |
-|-------------------------|------------------------------------------------------------------------|
-| `*`                     | any run of characters inside one path segment, a leading `.` included  |
-| `?`                     | one character inside one segment                                       |
-| `[abc]` `[a-z]`         | one character of the set / range, never `/`                            |
-| `[!abc]`                | one character outside the set, never `/`; `^` inside `[]` is a literal |
-| `**` as a whole segment | zero or more segments; as the last segment: everything below           |
-| `**` inside a segment   | same as `*`                                                            |
-| `{name}`                | flow partition placeholder: one or more characters inside one segment  |
-| unclosed `[`            | the literal `[` - also when its `]` comes after a `/`                  |
+| token                   | matches                                                                    |
+|-------------------------|----------------------------------------------------------------------------|
+| `*`                     | any run of characters inside one path segment, a leading `.` included      |
+| `?`                     | one character inside one segment                                           |
+| `[abc]` `[a-z]`         | one character of the set / range, never `/`                                |
+| `[!abc]`                | one character outside the set, never `/`, and `^` inside `[]` is a literal |
+| `**` as a whole segment | zero or more segments, and as the last segment: everything below           |
+| `**` inside a segment   | same as `*`                                                                |
+| `{name}`                | flow partition placeholder: one or more characters inside one segment      |
+| unclosed `[`            | the literal `[`. A `]` after a `/` does not close it                       |
 
 ```php
 <?php
@@ -181,14 +178,14 @@ native_local_filesystem()->list(path(__DIR__ . '/data/**/*.parquet')); // all th
 native_local_filesystem()->list(path(__DIR__ . '/data/**.parquet'));   // data/flat.parquet
 ```
 
-Local listing follows symlinks a pattern names; `**` never descends into a symlinked directory. There is no escape
-character.
+A local listing follows the symlinks that a pattern names. `**` never goes into a symlinked directory. There is no
+escape character.
 
 ## Exclusive create
 
-`create()` writes a file that becomes visible whole at `close()`. If the path exists by then, `close()` throws
-`FileExistsException` and the existing file stays as it was. Local, memory, S3 and Azure filesystems support it; SFTP
-and StdOut throw.
+`create()` writes a file that becomes visible as a whole at `close()`. If the path exists at that time, `close()`
+throws `FileExistsException`, and the existing file does not change. Local, memory, S3 and Azure filesystems support
+it. SFTP and StdOut throw.
 
 ```php
 <?php
@@ -206,8 +203,8 @@ try {
 
 ## Local permissions
 
-`NativeLocalFilesystem` applies `Permissions` to every file it writes and every directory it creates. Existing
-directories are not changed. Without `Permissions`, the umask decides.
+`NativeLocalFilesystem` applies `Permissions` to each file that it writes and each directory that it creates. It does
+not change existing directories. Without `Permissions`, the umask decides.
 
 ```php
 <?php
@@ -223,12 +220,12 @@ $filesystem->writeTo(path(__DIR__ . '/secrets/token.txt'))->append($token)->clos
 
 ## Cross-filesystem copy & move
 
-`FilesystemTable` coupled with the `Copy` / `Move` operations lets you copy or move files between any
-two mounted filesystems. Same-filesystem moves use the backend's native `mv` (local rename, S3
-CopyObject + DeleteObject, Azure CopyBlob + DeleteBlob). Cross-filesystem moves stream bytes from
-source to destination in chunks and remove the source afterwards - **not atomic**: if the source
-removal fails after a successful write, the destination is present and the source remains; re-running
-is idempotent.
+With `FilesystemTable` and the `Copy` / `Move` operations, you can copy or move files between two mounted
+filesystems. A move in the same filesystem uses the native `mv` of the backend (local rename, S3
+CopyObject + DeleteObject, Azure CopyBlob + DeleteBlob). A move across filesystems streams bytes from the source to
+the destination in chunks, and then removes the source. This move is not atomic. If the removal of the source fails
+after a successful write, the destination is present and the source stays. A second run is idempotent (safe to run
+again).
 
 ```php
 <?php
@@ -248,13 +245,13 @@ file_move($table, operation_options(chunkSize: 64 * 1024))
     ->execute(path('memory://hello.txt'), path('/tmp/moved.txt'));
 ```
 
-`operation_options()` accepts a single `chunkSize` (default `8192`) that controls the byte-chunk
-size for cross-filesystem streaming copies.
+`operation_options()` accepts one `chunkSize` (default `8192`). It sets the byte-chunk size for streaming copies
+across filesystems.
 
 ## Size formatting
 
-`Flow\Filesystem\SizeUnits::humanReadable()` formats byte counts using binary units
-(B, KiB, MiB, GiB, TiB, PiB). It mirrors PHP's `number_format` signature for the fractional part:
+`Flow\Filesystem\SizeUnits::humanReadable()` formats byte counts with binary units
+(B, KiB, MiB, GiB, TiB, PiB). For the fractional part, it has the same signature as `number_format` of PHP:
 
 ```php
 <?php
@@ -275,14 +272,14 @@ SizeUnits::humanReadable(null, null: 'n/a');                  // "n/a"
 
 ## Telemetry
 
-Flow Filesystem supports OpenTelemetry-compatible tracing and metrics for observability of all filesystem operations.
-Flow Filesystem uses [Flow Telemetry](/documentation/components/libs/telemetry) library.
+Flow Filesystem supports OpenTelemetry-compatible tracing and metrics for all filesystem operations.
+Flow Filesystem uses the [Flow Telemetry](/documentation/components/libs/telemetry) library.
 
-In order to use telemetry, you need to create an instance of `TraceableFilesystem` which 
+To use telemetry, create an instance of `TraceableFilesystem`. It
 wraps an existing filesystem and adds telemetry to it.
 
-Alternatively you can pass `FilesystemTelemetryConfig` to `FilesystemTable` and let it 
-automatically wrap all mounted filesystems with telemetry.
+You can also give `FilesystemTelemetryConfig` to `FilesystemTable`. It then
+wraps all mounted filesystems with telemetry.
 
 ### DSL Functions
 
@@ -299,7 +296,7 @@ automatically wrap all mounted filesystems with telemetry.
 
 ### What Gets Traced
 
-**Spans:**
+Spans:
 
 - `filesystem.read` - spans the lifecycle of a read stream from creation to close
 - `filesystem.write` - spans the lifecycle of a write stream from creation to close
@@ -307,7 +304,7 @@ automatically wrap all mounted filesystems with telemetry.
 Spans carry `flow.filesystem.path.uri`, `flow.filesystem.protocol`, `flow.filesystem.stream.type` and, on close,
 `flow.filesystem.bytes.total_read` / `flow.filesystem.bytes.total_written`.
 
-**Metrics:**
+Metrics:
 
 - `flow.filesystem.read.size` (`By`) - total bytes read from source streams
 - `flow.filesystem.read.operations` (`{operation}`) - number of read operations
@@ -318,7 +315,7 @@ Metadata operations (list, status, rm, mv) are logged but do not create spans.
 
 ### Examples
 
-**Wrap an individual filesystem:**
+Wrap one filesystem:
 
 ```php
 <?php
@@ -352,7 +349,7 @@ $fs = traceable_filesystem(native_local_filesystem(), $config);
 $stream = $fs->readFrom(path('/path/to/file.csv'));
 ```
 
-**Enable telemetry on FilesystemTable:**
+Enable telemetry on FilesystemTable:
 
 ```php
 <?php
@@ -370,7 +367,7 @@ $fstab->withTelemetry($config);
 // All filesystems in the table are now wrapped with telemetry
 ```
 
-**Disable specific features:**
+Disable specific features:
 
 ```php
 <?php

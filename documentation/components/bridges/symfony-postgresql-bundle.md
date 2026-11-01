@@ -4,8 +4,8 @@ package: flow-php/symfony-postgresql-bundle
 
 # Symfony PostgreSQL Bundle
 
-Symfony bundle integrating Flow PHP's PostgreSQL library with Symfony applications, providing database management,
-schema migrations, catalog-driven schema diffing, and optional telemetry for query tracing and metrics.
+This Symfony bundle connects the Flow PHP PostgreSQL library to Symfony applications. It gives database management,
+schema migrations, schema diffs against a catalog, and optional telemetry for query tracing and metrics.
 
 [PACKAGE_NAV]
 
@@ -13,34 +13,34 @@ schema migrations, catalog-driven schema diffing, and optional telemetry for que
 
 ## Installation
 
-For detailed installation instructions, see
-the [installation page](/documentation/installation/packages/symfony-postgresql-bundle.md).
+The [installation page](/documentation/installation/packages/symfony-postgresql-bundle.md) has the installation
+instructions.
 
 ## Overview
 
 This bundle is built on top of [flow-php/postgresql](/documentation/components/libs/postgresql.md)
-and [flow-php/pg-query-ext](/documentation/components/extensions/pg-query-ext.md) - see those pages for the underlying
-client, query builders, catalog, and migration engine.
+and [flow-php/pg-query-ext](/documentation/components/extensions/pg-query-ext.md). Those pages describe the
+client, the query builders, the catalog, and the migration engine.
 
-For telemetry support (tracing, metrics, query logging per connection),
-the [Symfony Telemetry Bundle](/documentation/components/bridges/symfony-telemetry-bundle.md) is required and must
-expose a configured `Telemetry` service referenced via `telemetry.service_id`.
+The [Symfony Telemetry Bundle](/documentation/components/bridges/symfony-telemetry-bundle.md) is required for
+telemetry support (tracing, metrics, and query logging per connection). It must expose a configured `Telemetry`
+service. The `telemetry.service_id` key references that service.
 
-This bundle integrates Flow PHP's PostgreSQL library with Symfony applications. It provides:
+The bundle has these features:
 
-- **Multiple database connections** - Configure and manage several PostgreSQL connections independently
-- **Database management commands** - Create, drop databases and execute SQL from the console
-- **Migration framework** - Generate, execute, and track schema migrations
-- **Schema diffing** - Automatically generate migrations by comparing the database to catalog definitions
-- **Rollback support** - Generate reversible migrations with automatic rollback files
-- **Telemetry integration** - Distributed tracing, query logging, and metrics per connection
-- **Catalog provider system** - Define target schemas via PHP attributes, service references, or inline YAML
+- Multiple database connections: configure and manage several PostgreSQL connections independently.
+- Database management commands: create and drop databases, and run SQL from the console.
+- Migration framework: generate, execute, and track schema migrations.
+- Schema diffs: generate migrations automatically from a comparison of the database with the catalog definitions.
+- Rollback support: generate reversible migrations with automatic rollback files.
+- Telemetry integration: distributed tracing, query logging, and metrics per connection.
+- Catalog provider system: define target schemas with PHP attributes, service references, or inline YAML.
 
 ## Configuration Reference
 
 ### Connections
 
-At least one connection is required. Each connection has a DSN and optional telemetry and migrations blocks.
+You must configure at least one connection. Each connection has a DSN and an optional telemetry block. `migrations` is a top-level key.
 
 ```yaml
 flow_postgresql:
@@ -51,10 +51,10 @@ flow_postgresql:
 
 ### Connection Overrides
 
-Each connection may override individual parts of the parsed DSN. Every key maps 1:1 onto an immutable
-`ConnectionParameters` method in the `flow-php/postgresql` library; the bundle adds no logic of its own.
-Overrides are applied at service-factory time, so values may be `%env(...)%` placeholders - they are
-resolved at runtime, not when the configuration is parsed.
+Each connection can override individual parts of the parsed DSN. Each key maps 1:1 to a method of the immutable
+`ConnectionParameters` class in the `flow-php/postgresql` library. The bundle adds no logic of its own.
+The service factory applies the overrides at runtime. For this reason, the values can be `%env(...)%` placeholders.
+Symfony resolves them at runtime, not at the time that it parses the configuration.
 
 ```yaml
 flow_postgresql:
@@ -79,9 +79,8 @@ flow_postgresql:
 | `password`      | string | `null`  | Replaces the password parsed from the DSN.                |
 | `dbname_suffix` | string | `''`    | Appends the given suffix to the configured database name. |
 
-`dbname`/`host`/`port`/`user`/`password` are applied first, then `dbname_suffix` **last** - so
-`dbname: 'foo'` + `dbname_suffix: '_test'` yields `foo_test`. A connection with only `dsn` behaves
-exactly as before.
+The bundle applies `dbname`, `host`, `port`, `user` and `password` first, and `dbname_suffix` last. For example,
+`dbname: 'foo'` and `dbname_suffix: '_test'` give `foo_test`. A connection with only `dsn` works as before.
 
 #### `dbname_suffix` for parallel tests
 
@@ -101,7 +100,7 @@ when@test:
 
 ### Telemetry
 
-Enable telemetry per connection to get distributed tracing, query logging, and metrics.
+To get distributed tracing, query logging, and metrics for a connection, enable telemetry on that connection.
 
 ```yaml
 flow_postgresql:
@@ -124,11 +123,10 @@ flow_postgresql:
 
 ### Web Profiler
 
-Adds a **Flow PostgreSQL** panel to the Symfony Web Profiler listing the SQL executed during the
-current request - like the Doctrine bundle's Queries panel, but for the Flow PostgreSQL client and
-independent of telemetry. Each connection's client is decorated with a recording wrapper that
-captures statement, bound parameters, duration, returned/affected rows, the calling code location,
-and failures.
+This configuration adds a Flow PostgreSQL panel to the Symfony Web Profiler. The panel lists the SQL that the current
+request runs. It is similar to the Queries panel of the Doctrine bundle, but it is for the Flow PostgreSQL client and
+does not need telemetry. The bundle wraps the client of each connection in a recording wrapper. The wrapper records the
+statement, the bound parameters, the duration, the returned or affected rows, the calling code location, and failures.
 
 ```yaml
 flow_postgresql:
@@ -141,19 +139,22 @@ flow_postgresql:
     migrations: true         # show the Flow Migrations panel (requires migrations enabled)
 ```
 
-The log is bounded: at most `max_queries` entries are retained and the panel notes when older ones were
-dropped. Because bound parameters dominate memory, a query binding more than `max_retained_parameters`
-values keeps none of them - such queries show "parameters omitted" and cannot be explained from the panel.
-The all-or-nothing rule is deliberate, and the reason this option is not named like the per-connection
-`telemetry.max_parameters` (which keeps the first N): the panel re-binds the retained parameters to run
-EXPLAIN, and a partial list is not a valid query. Statements themselves are bounded by
-`max_query_length` - a batch `INSERT` with a thousand `VALUES` tuples is over 100 KB of SQL, so retaining
-`max_queries` of them uncut would cost hundreds of megabytes. Truncated statements are marked in the panel
-and cannot be explained from it.
+The log has limits. The panel keeps at most `max_queries` entries. After it drops older entries, it shows a note.
+Bound parameters use most of the memory. For this reason, a query that binds more than `max_retained_parameters`
+values keeps none of them. The panel shows "parameters omitted" for such a query, and you cannot run EXPLAIN on it
+from the panel.
 
-Recording is dev-only and adds nothing in production: when the profiler is disabled - or
-WebProfilerBundle is absent in `enabled: ~` mode - no connection is decorated. A single connection
-can opt out while the profiler is on:
+This all-or-nothing rule is intentional. It is also the reason that this option has a different name from the
+per-connection `telemetry.max_parameters`, which keeps the first N values. The panel binds the retained parameters
+again to run EXPLAIN, and a partial list does not make a valid query.
+
+The `max_query_length` option limits the length of the statements. A batch `INSERT` with a thousand `VALUES` tuples
+is over 100 KB of SQL. Uncut, `max_queries` of these statements use hundreds of megabytes. The panel marks truncated
+statements, and you cannot run EXPLAIN on them from the panel.
+
+Recording is for development only and adds nothing in production. If the profiler is disabled, the bundle wraps no
+connection. If WebProfilerBundle is not registered in `enabled: ~` mode, the result is the same. If the profiler is on, you
+can turn off recording for a single connection:
 
 ```yaml
 flow_postgresql:
@@ -163,15 +164,15 @@ flow_postgresql:
       profiler: false # do not record queries in selected connection (default: true)
 ```
 
-Recording follows `kernel.debug`, like DoctrineBundle's `dbal.profiling`. With `enabled: ~` the panel is
-wired only when WebProfilerBundle is registered **and** the kernel runs in debug mode, so
-`bin/console --no-debug` - which compiles a separate container - decorates no connection and records
-nothing. `enabled: true` forces recording on regardless of debug mode.
+Recording follows `kernel.debug`, like `dbal.profiling` in DoctrineBundle. With `enabled: ~`, the bundle adds the
+panel in one case only. WebProfilerBundle must be registered, and the kernel must run in debug mode. For this reason,
+`bin/console --no-debug` wraps no connection and records nothing. That command compiles a separate container.
+With `enabled: true`, recording is always on, in debug mode and outside it.
 
-When `migrations` are enabled, a separate **Flow Migrations** panel reports the migrations connection's
-executed, pending and unavailable migrations (with execution time) - like the Doctrine Migrations
-bundle's panel. It queries the database on every profiled request; set `profiler.migrations: false`
-to disable it while keeping the query panel:
+If `migrations` are enabled, a separate Flow Migrations panel shows the migrations of the migrations connection. It
+lists the executed, pending, and unavailable migrations, with their execution time. It is similar to the panel of the
+Doctrine Migrations bundle. The panel queries the database on every profiled request. To disable it and keep the query
+panel, set `profiler.migrations: false`:
 
 ```yaml
 flow_postgresql:
@@ -181,9 +182,9 @@ flow_postgresql:
 
 ### Migrations
 
-Migrations are configured at the top level, not per connection, and always run against a single connection.
-Set `connection` to choose which one; when omitted it defaults to the default (first) connection. Every migration
-command operates on that connection - there is no per-command connection override.
+Migrations are configured at the top level, not per connection. They always run against one connection. To choose
+that connection, set `connection`. If you do not set it, the bundle uses the default (first) connection. Every
+migration command operates on that connection. There is no connection override per command.
 
 ```yaml
 flow_postgresql:
@@ -207,19 +208,20 @@ flow_postgresql:
 
 #### `drop_if_exists`
 
-Set `drop_if_exists: true` to render every diff-generated `DROP` with `IF EXISTS` - useful for convergence migrations
-that run against both fresh and legacy databases. Default `false`, so a missing object fails loudly (drift detection).
-Override for a single run with the [`--drop-if-exists`](#generating-migrations-from-schema-diff) flag.
+To add `IF EXISTS` to every `DROP` that the diff generates, set `drop_if_exists: true`. Use it for convergence
+migrations, that is, migrations that run against both fresh and legacy databases. The default is `false`, so a
+missing object makes the migration fail (drift detection).
+The [`--drop-if-exists`](#generating-migrations-from-schema-diff) flag overrides this key for a single run.
 
 #### Accessing the service container in a migration
 
-When migrations are enabled, the bundle injects the application's service container into the migration context under
-`FlowPostgreSqlBundle::SERVICE_CONTAINER`. This gives migrations access to resolved parameters - including values
-that Symfony resolves at container build time, such as decrypted secrets and `%env(...)%` processors - and to any
-service, matching the behaviour of Doctrine's container-aware migrations.
+If migrations are enabled, the bundle puts the service container of the application into the migration context under
+`FlowPostgreSqlBundle::SERVICE_CONTAINER`. Migrations can then read resolved parameters and use any service. Resolved
+parameters include values that Symfony resolves at container build time, for example decrypted secrets and
+`%env(...)%` processors. This matches the behavior of the container-aware migrations in Doctrine.
 
-Read it through `MigrationContext::attribute()`, which throws when the attribute is absent (use `hasAttribute()` to
-check first):
+Read the container with `MigrationContext::attribute()`, as the example below shows. If the attribute is not set, this
+method throws an exception. To make sure that it is set first, use `hasAttribute()`.
 
 ```php
 <?php
@@ -251,10 +253,10 @@ return new class implements Migration {
 
 #### Passing custom attributes via configuration
 
-Injecting the whole container forces any service a migration needs to be public. To avoid that, declare extra
-attributes under `migrations.context` - they are merged into the migration context next to the container. Each value
-can be a literal, an `@service_id` reference (use `@@` to keep a literal leading `@`), a `%parameter%` placeholder, or
-a `%env(VAR)%` expression. Referenced services may be private.
+If you inject the whole container, every service that a migration needs must be public. To avoid this, declare extra
+attributes under `migrations.context`. The bundle merges them into the migration context next to the container. Each
+value can be a literal, an `@service_id` reference, a `%parameter%` placeholder, or a `%env(VAR)%` expression. To
+keep a literal leading `@`, use `@@`. Referenced services can be private.
 
 ```yaml
 flow_postgresql:
@@ -266,7 +268,7 @@ flow_postgresql:
       batch_size: 500                                   # literal
 ```
 
-Each key is read in a migration via `MigrationContext::attribute()`:
+A migration reads each key with `MigrationContext::attribute()`:
 
 ```php
 <?php
@@ -293,18 +295,18 @@ return new class implements Migration {
 };
 ```
 
-The `service_container` key is always present and cannot be overridden by a `context` entry.
+The `service_container` key is always present. A `context` entry cannot override it.
 
 ### Catalog Providers
 
-Catalog providers define the target database schema. When you run `flow:migrations:diff`, the bundle compares
-the current database state to the catalog and generates migration SQL to reconcile the differences.
+Catalog providers define the target database schema. When you run `flow:migrations:diff`, the bundle compares the
+current database state to the catalog. Then it generates migration SQL that removes the differences.
 
 There are three ways to define catalog providers.
 
 #### Attribute-Based Discovery
 
-Annotate a class implementing `CatalogProvider` with `#[AsCatalogProvider]` for automatic discovery:
+Add `#[AsCatalogProvider]` to a class that implements `CatalogProvider`, and the bundle finds it automatically:
 
 ```php
 <?php
@@ -346,7 +348,7 @@ flow_postgresql:
 
 #### Inline YAML
 
-Define the catalog directly in configuration:
+Define the catalog directly in the configuration:
 
 ```yaml
 flow_postgresql:
@@ -368,15 +370,15 @@ flow_postgresql:
                     nullable: false
 ```
 
-Multiple catalog providers can be combined. They are merged via `ChainCatalogProvider` into a single catalog.
+You can combine multiple catalog providers. `ChainCatalogProvider` merges them into one catalog.
 
 ### Exclusions
 
-By default `flow:migrations:diff` compares **every** object found in the database against the catalog, so any
-object that is not described by a catalog provider is reported as a difference to drop. That is a problem when some
-objects are created outside of migrations - for example tables generated dynamically from user-uploaded content, or
-a whole schema owned by another system. List those objects under `migrations.exclude` and they are skipped while the
-diff is generated (the migrations tracking table is always excluded automatically).
+By default, `flow:migrations:diff` compares every object in the database with the catalog. If no catalog provider
+describes an object, the diff reports it as a difference to drop. This is a problem for objects that are created
+outside of migrations. Examples are tables that the application generates from content that users upload, or a whole
+schema that another system owns. List these objects under `migrations.exclude`, and the diff skips them. The diff
+always excludes the table that tracks the migrations.
 
 ```yaml
 flow_postgresql:
@@ -392,28 +394,28 @@ flow_postgresql:
       - { policy_id: app.my_exclusion_policy }   # delegate to a custom ExclusionPolicy service
 ```
 
-Each entry defines **exactly one** matcher:
+Each entry defines exactly one matcher:
 
-| Key           | Excludes                                                            |
-|---------------|--------------------------------------------------------------------|
+| Key           | Excludes                                                                               |
+|---------------|----------------------------------------------------------------------------------------|
 | `schema`      | The named schema and every object inside it (tables, views, sequences, functions, ...) |
-| `table`       | A table by exact name (shorthand for `exact` narrowed to tables)   |
-| `exact`       | Any object whose name matches exactly                              |
-| `starts_with` | Any object whose name starts with the given prefix                 |
-| `ends_with`   | Any object whose name ends with the given suffix                   |
-| `pattern`     | Any object whose name matches the given PCRE pattern (with delimiters) |
+| `table`       | A table by exact name (shorthand for `exact` narrowed to tables)                       |
+| `exact`       | Any object whose name matches exactly                                                  |
+| `starts_with` | Any object whose name starts with the given prefix                                     |
+| `ends_with`   | Any object whose name ends with the given suffix                                       |
+| `pattern`     | Any object whose name matches the given PCRE pattern (with delimiters)                 |
 | `policy_id`   | Delegates to a service implementing `Flow\PostgreSql\Schema\Exclusion\ExclusionPolicy` |
 
-The `exact`, `starts_with`, `ends_with`, `pattern` and `policy_id` matchers can be narrowed with optional scopes:
+You can narrow the `exact`, `starts_with`, `ends_with`, `pattern` and `policy_id` matchers with these scopes:
 
-- `type` - limit to a single object type: `table`, `view`, `materialized_view`, `sequence`, `function`,
-  `procedure`, `domain` or `extension`. When omitted, the matcher applies to every type.
-- `for_schema` - limit to a single schema. When omitted, the matcher applies to every schema.
+- `type`: limits the matcher to one object type, which is `table`, `view`, `materialized_view`, `sequence`,
+  `function`, `procedure`, `domain` or `extension`. If you do not set it, the matcher applies to every type.
+- `for_schema`: limits the matcher to one schema. If you do not set it, the matcher applies to every schema.
 
-Tables and whole schemas are filtered before they are introspected, so excluding dynamically created tables also
-avoids the cost of reading their columns, indexes and constraints on every diff.
+The diff filters tables and whole schemas before it reads their structure. If you exclude dynamically created
+tables, the diff thus does not read their columns, indexes and constraints on every run.
 
-A custom `policy_id` service implements the same interface and receives every candidate object:
+A custom `policy_id` service implements the same interface. It receives every candidate object:
 
 ```php
 <?php
@@ -437,7 +439,7 @@ final class MyExclusionPolicy implements ExclusionPolicy
 
 ### Database Commands
 
-These commands are always available, regardless of migration configuration.
+These commands are always available, with or without a migration configuration.
 
 | Command                | Description                                       |
 |------------------------|---------------------------------------------------|
@@ -445,12 +447,12 @@ These commands are always available, regardless of migration configuration.
 | `flow:database:drop`   | Drop the configured database (requires `--force`) |
 | `flow:sql:run`         | Execute SQL directly on the database              |
 
-The commands above accept `--connection` (`-c`) to target a specific connection. Migration commands do not -
-they always run against the configured migrations connection.
+The commands above accept `--connection` (`-c`) to target a specific connection. Migration commands do not accept
+it. They always run against the configured migrations connection.
 
 ### Migration Commands
 
-These commands are available when `migrations.enabled: true` for at least one connection.
+If the top-level `migrations.enabled: true` is set, these commands are available.
 
 | Command                      | Description                                                   |
 |------------------------------|---------------------------------------------------------------|
@@ -462,17 +464,17 @@ These commands are available when `migrations.enabled: true` for at least one co
 | `flow:migrations:current`    | Output the current migration version                          |
 | `flow:migrations:latest`     | Output the latest available migrations                        |
 | `flow:migrations:list`       | List all available migrations                                 |
-| `flow:migrations:up-to-date` | Check if all migrations have been executed                    |
+| `flow:migrations:up-to-date` | Make sure that all migrations are executed                    |
 
-**Common options:**
+Common options:
 
 | Option                | Description                                           |
 |-----------------------|-------------------------------------------------------|
 | `--dry-run`           | Preview changes without applying (migrate, execute)   |
 | `--all-or-nothing`    | Wrap all migrations in a single transaction (migrate) |
 | `--up` / `--down`     | Migration direction (execute)                         |
-| `--allow-empty-diff`  | Don't fail when no changes detected (diff)            |
-| `--from-empty-schema` | Generate as if the database were empty (diff)         |
+| `--allow-empty-diff`  | Do not fail on an empty diff (diff)                   |
+| `--from-empty-schema` | Treat the database as empty (diff)                    |
 | `--drop-if-exists`    | Emit `IF EXISTS` on generated DROP statements (diff)  |
 
 ## Migration Workflow
@@ -491,24 +493,25 @@ migrations/
     rollback.php
 ```
 
-Each directory name follows the pattern `{version}` or `{version}_{name}`, where version is a numeric timestamp
-(e.g. `20260401120000`) and name is an optional description.
+Each directory name follows the pattern `{version}` or `{version}_{name}`. The version is a numeric timestamp, for
+example `20260401120000`. The name is an optional description.
 
 ### Generating Migrations from Schema Diff
 
-Compare the current database to your catalog providers and generate migration SQL automatically:
+This command compares the current database to your catalog providers and generates the migration SQL:
 
 ```bash
 php bin/console flow:migrations:diff
 ```
 
-This creates a new versioned directory with `migration.php` containing the SQL to bring the database in sync
-with the catalog, and `rollback.php` with the reverse operations (if `generate_rollback` is enabled).
+The command creates a new version directory. It contains `migration.php` with the SQL that brings the database in sync
+with the catalog. If `generate_rollback` is enabled, it also contains `rollback.php` with the reverse operations.
 
-Use `--from-empty-schema` to generate a migration as if the database were empty (useful for initial setup).
+To generate a migration that assumes an empty database, use `--from-empty-schema`. This helps for the initial
+setup.
 
-Use `--drop-if-exists` to emit `IF EXISTS` on every generated `DROP` for this run (a per-run override of the
-[`drop_if_exists`](#drop_if_exists) config key):
+To add `IF EXISTS` to every generated `DROP` for one run, use `--drop-if-exists`. It overrides the
+[`drop_if_exists`](#drop_if_exists) configuration key for that run:
 
 ```bash
 php bin/console flow:migrations:diff --drop-if-exists
@@ -530,7 +533,7 @@ Run all pending migrations:
 php bin/console flow:migrations:migrate
 ```
 
-Preview without applying:
+Preview the changes and apply nothing:
 
 ```bash
 php bin/console flow:migrations:migrate --dry-run
@@ -570,24 +573,24 @@ flow_postgresql:
     directory: "%kernel.project_dir%/migrations"
 ```
 
-Each connection gets its own set of services (`flow.postgresql.{name}.*`). The first connection is automatically
-aliased to the base interfaces (`Client`, `ConnectionParameters`, `Migrator`, etc.), allowing direct type-hint
-injection without specifying a connection name.
+Each connection gets its own set of services (`flow.postgresql.{name}.*`). The bundle aliases the first connection to
+the base interfaces (`Client`, `ConnectionParameters`, `Migrator`, and others). Thus you can inject these interfaces
+by type-hint and give no connection name.
 
-When migrations are enabled, migration services are registered for every connection. The same migration
-directory and configuration is shared across all connections.
-
-Target a specific connection with any command:
+If migrations are enabled, the bundle registers the migration services once, for `migrations.connection`, or for the
+first connection without it. Migration commands always use that connection. Only the database create/drop and
+run-sql commands accept `--connection`:
 
 ```bash
-php bin/console flow:migrations:migrate --connection=reporting
+php bin/console flow:migrations:migrate
 ```
 
 ## Symfony Messenger Integration
 
-The bundle integrates
-with [flow-php/symfony-postgresql-messenger-bridge](/documentation/components/bridges/symfony-postgresql-messenger-bridge.md)
-to provide a Symfony Messenger transport backed by Flow's native PostgreSQL client - no Doctrine DBAL required.
+The bundle works
+with [flow-php/symfony-postgresql-messenger-bridge](/documentation/components/bridges/symfony-postgresql-messenger-bridge.md).
+The bridge gives a Symfony Messenger transport that uses the native PostgreSQL client of Flow. It does not need
+Doctrine DBAL.
 
 ### Setup
 
@@ -631,8 +634,8 @@ php bin/console flow:migrations:diff
 php bin/console flow:migrations:migrate
 ```
 
-The `MessengerCatalogProvider` is registered automatically when `messenger.enabled: true`, so the `messenger_messages`
-table appears in schema diffs alongside your other catalog-managed tables.
+If `messenger.enabled: true` is set, the bundle registers the `MessengerCatalogProvider` automatically. Thus the
+`messenger_messages` table appears in schema diffs together with your other tables from the catalog.
 
 ### Configuration Options
 
@@ -643,19 +646,19 @@ table appears in schema diffs alongside your other catalog-managed tables.
 | `queue_name`        | `default`            | `framework.messenger.transports.*.options` | Queue name for message routing                         |
 | `redeliver_timeout` | `3600`               | `framework.messenger.transports.*.options` | Seconds before unacknowledged messages are redelivered |
 
-For full documentation, see
-the [Symfony PostgreSQL Messenger Bridge](/documentation/components/bridges/symfony-postgresql-messenger-bridge.md).
+The [Symfony PostgreSQL Messenger Bridge](/documentation/components/bridges/symfony-postgresql-messenger-bridge.md)
+page has the full documentation.
 
 ## Symfony Cache Integration
 
-The bundle integrates
-with [flow-php/symfony-postgresql-cache-bridge](/documentation/components/bridges/symfony-postgresql-cache-bridge.md) to
-provide PSR-6 / Symfony Cache pools backed by Flow's native PostgreSQL client - no Doctrine DBAL required. The adapter
-implements `PruneableInterface`, so `cache:pool:prune` works out of the box.
+The bundle works
+with [flow-php/symfony-postgresql-cache-bridge](/documentation/components/bridges/symfony-postgresql-cache-bridge.md).
+The bridge gives PSR-6 and Symfony Cache pools that use the native PostgreSQL client of Flow. It does not need
+Doctrine DBAL. The adapter implements `PruneableInterface`, so `cache:pool:prune` works without extra configuration.
 
-Each pool is wired with the named connection's `ConnectionParameters` and opens its **own** `pg_connect`, isolated from
-the `Client` services used by application code. This isolation is what keeps `$cache->save(...)` from accidentally
-participating in (and being rolled back by) a transaction held by the caller.
+The bundle gives each pool the `ConnectionParameters` of the named connection. Each pool opens its own `pg_connect`,
+separate from the `Client` services that application code uses. Because of this isolation, `$cache->save(...)` does
+not take part in a transaction that the caller holds. A rollback of that transaction does not roll back the cache write.
 
 ### Setup
 
@@ -688,11 +691,11 @@ flow_postgresql:
 
 Each pool registers two services:
 
-- `flow.postgresql.cache.pool.<name>` - the cache adapter (public).
-- `flow.postgresql.cache.pool.<name>.catalog_provider` - tagged `flow.postgresql.catalog_provider`, so the table is
-  included in `flow:migrations:diff`.
+- `flow.postgresql.cache.pool.<name>`: the cache adapter (public).
+- `flow.postgresql.cache.pool.<name>.catalog_provider`: has the `flow.postgresql.catalog_provider` tag, so
+  `flow:migrations:diff` includes the table.
 
-3. Wire the pools into Symfony's cache framework via `cache.adapter.psr6`:
+3. Connect the pools to the Symfony cache framework with `cache.adapter.psr6`:
 
 ```yaml
 # config/packages/framework.yaml
@@ -708,8 +711,9 @@ framework:
         provider: flow.postgresql.cache.pool.sessions
 ```
 
-The `cache.adapter.psr6` wrapper is required because Symfony's `CachePoolPass` overwrites the first constructor argument
-of any service used directly as `adapter:`, which conflicts with this bridge's strict `Client` typing on argument 0.
+The `cache.adapter.psr6` wrapper is required. Symfony's `CachePoolPass` overwrites the first constructor argument of
+any service that is used directly as `adapter:`. This conflicts with the strict `Client` type of argument 0 in this
+bridge.
 
 4. Generate and run the migration to create the cache tables:
 
@@ -720,52 +724,57 @@ php bin/console flow:migrations:migrate
 
 ### Configuration Options (per pool)
 
-| Option                                              | Default                                                 | Description                                          |
-|-----------------------------------------------------|---------------------------------------------------------|------------------------------------------------------|
-| `connection`                                        | first connection                                        | `flow_postgresql.connections` key the pool uses      |
-| `table_name`                                        | `cache_items`                                           | Table storing pool entries                           |
-| `schema`                                            | `public`                                                | Schema owning the table                              |
-| `id_col` / `data_col` / `lifetime_col` / `time_col` | `item_id` / `item_data` / `item_lifetime` / `item_time` | Column overrides                                     |
-| `namespace`                                         | `''`                                                    | Cache pool namespace; chars in `[-+.A-Za-z0-9]` only |
-| `default_lifetime`                                  | `0`                                                     | Default TTL in seconds; `0` means no expiry          |
-| `marshaller_service_id`                             | `null`                                                  | Service ID of a custom `MarshallerInterface`         |
+| Option                                              | Default                                                 | Description                                                                                                           |
+|-----------------------------------------------------|---------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
+| `connection`                                        | first connection                                        | `flow_postgresql.connections` key the pool uses                                                                       |
+| `table_name`                                        | `cache_items`                                           | Table storing pool entries                                                                                            |
+| `schema`                                            | `public`                                                | Schema owning the table                                                                                               |
+| `id_col` / `data_col` / `lifetime_col` / `time_col` | `item_id` / `item_data` / `item_lifetime` / `item_time` | Column overrides                                                                                                      |
+| `namespace`                                         | `''`                                                    | Cache pool namespace. Only characters in `[-+.A-Za-z0-9]`                                                             |
+| `default_lifetime`                                  | `0`                                                     | Default TTL in seconds. `0` means no expiry                                                                           |
+| `marshaller_service_id`                             | `null`                                                  | Service ID of a custom `MarshallerInterface`                                                                          |
 | `share_connection`                                  | `false`                                                 | Reuse the named connection's `Client` instead of opening a dedicated `pg_connect`. See "Sharing the Connection" below |
 
 ### Sharing the Connection
 
-By default each pool opens its own `pg_connect` derived from the named connection's parameters. That isolation is what keeps `$cache->save(...)` from being rolled back if the caller's transaction fails.
+By default, each pool opens its own `pg_connect` from the parameters of the named connection. Because of this
+isolation, a failed transaction of the caller does not roll back `$cache->save(...)`.
 
-Set `share_connection: true` to reuse the existing `flow.postgresql.<connection>.client` service instead. Trade-offs:
+To reuse the existing `flow.postgresql.<connection>.client` service, set `share_connection: true`. This has a benefit
+and a cost:
 
-- **Pro:** one fewer `pg_connect` per worker per pool. Useful when connection budget is tight.
-- **Con:** cache writes participate in whatever transaction the calling code happens to be inside. A rollback on the caller's transaction also rolls back the cache write.
+- Pro: one `pg_connect` less per worker per pool. If the connection budget is small, this helps.
+- Con: if the calling code is inside a transaction, cache writes take part in it. A rollback on the caller's
+  transaction also rolls back the cache write.
 
-Use `share_connection: true` only when you have an explicit reason to share state (e.g. transactional outbox, cache writes that should logically belong to the caller's unit of work).
+Use `share_connection: true` only for an explicit reason to share state. Examples are a transactional outbox, or cache
+writes that belong to the unit of work of the caller.
 
 ### Pruning
 
-Schedule the standard Symfony command on a cron to remove expired rows:
+To remove expired rows, run the standard Symfony command from a cron schedule:
 
 ```bash
 php bin/console cache:pool:prune
 ```
 
-Without pruning, expired rows accumulate in the table. They are filtered out on read but are not deleted until either
-the same key is fetched again or `cache:pool:prune` runs.
+Without pruning, expired rows stay in the table. Reads filter them out. Two events delete them: a new fetch of the same key, or
+a run of `cache:pool:prune`.
 
-For full documentation, see
-the [Symfony PostgreSQL Cache Bridge](/documentation/components/bridges/symfony-postgresql-cache-bridge.md).
+The [Symfony PostgreSQL Cache Bridge](/documentation/components/bridges/symfony-postgresql-cache-bridge.md) page has
+the full documentation.
 
 ## Symfony Session Integration
 
-The bundle integrates
-with [flow-php/symfony-postgresql-session-bridge](/documentation/components/bridges/symfony-postgresql-session-bridge.md)
-to provide a Symfony session handler backed by Flow's native PostgreSQL client - no PDO or Doctrine DBAL required. The
-table layout is byte-compatible with `PdoSessionHandler`, so existing session rows can be reused as-is.
+The bundle works
+with [flow-php/symfony-postgresql-session-bridge](/documentation/components/bridges/symfony-postgresql-session-bridge.md).
+The bridge gives a Symfony session handler that uses the native PostgreSQL client of Flow. It does not need PDO or
+Doctrine DBAL. The table layout is byte-compatible with `PdoSessionHandler`, so you can reuse existing session rows as
+they are.
 
-The handler is wired with the named connection's `ConnectionParameters` and opens its **own** `pg_connect`, isolated
-from the `Client` services used by application code. This is what makes `LOCK_TRANSACTIONAL` safe by default - the
-session's transaction lives on a dedicated connection and never wraps unrelated request work.
+The bundle gives the handler the `ConnectionParameters` of the named connection. The handler opens its own
+`pg_connect`, separate from the `Client` services that application code uses. For this reason, `LOCK_TRANSACTIONAL` is
+safe by default. The session transaction is on a dedicated connection and never contains unrelated request work.
 
 ### Setup
 
@@ -792,15 +801,15 @@ flow_postgresql:
     ttl: 86400                     # optional; falls back to session.gc_maxlifetime
 ```
 
-Enabling the section registers three services:
+If you enable this section, the bundle registers three services:
 
-- `flow.postgresql.session.handler` - the `FlowPostgreSqlSessionHandler` (public, also aliased to
+- `flow.postgresql.session.handler`: the `FlowPostgreSqlSessionHandler` (public, also aliased to
   `\SessionHandlerInterface`).
-- `flow.postgresql.session.catalog_provider` - tagged `flow.postgresql.catalog_provider`, so the `sessions` table is
-  included in `flow:migrations:diff`.
-- `flow.postgresql.session.purge_command` - see [Purging Sessions](#purging-sessions).
+- `flow.postgresql.session.catalog_provider`: has the `flow.postgresql.catalog_provider` tag, so
+  `flow:migrations:diff` includes the `sessions` table.
+- `flow.postgresql.session.purge_command`: the command that [Purging Sessions](#purging-sessions) describes.
 
-3. Wire the handler into Symfony's session framework:
+3. Connect the handler to the Symfony session framework:
 
 ```yaml
 # config/packages/framework.yaml
@@ -820,30 +829,34 @@ php bin/console flow:migrations:migrate
 
 ### Configuration Options
 
-| Option         | Default                       | Description                                                                          |
-|----------------|-------------------------------|--------------------------------------------------------------------------------------|
-| `enabled`      | `false`                       | Master switch for the session integration                                            |
-| `connection`   | first connection              | `flow_postgresql.connections` key the handler uses                                   |
-| `table_name`   | `sessions`                    | Table storing sessions                                                               |
-| `schema`       | `public`                      | Schema owning the table                                                              |
-| `id_col`       | `sess_id`                     | Column override                                                                      |
-| `data_col`     | `sess_data`                   | Column override                                                                      |
-| `lifetime_col` | `sess_lifetime`               | Column override                                                                      |
-| `time_col`     | `sess_time`                   | Column override                                                                      |
-| `lock_mode`    | `transactional`               | One of `none`, `advisory`, `transactional`. See bridge docs for the trade-offs       |
-| `ttl`          | `null`                        | Session lifetime in seconds; `null` falls back to ini `session.gc_maxlifetime`       |
-| `share_connection` | `false`                   | Reuse the named connection's `Client` instead of opening a dedicated `pg_connect`. See "Sharing the Connection" below |
+| Option             | Default          | Description                                                                                                           |
+|--------------------|------------------|-----------------------------------------------------------------------------------------------------------------------|
+| `enabled`          | `false`          | Turns the session integration on or off                                                                               |
+| `connection`       | first connection | `flow_postgresql.connections` key the handler uses                                                                    |
+| `table_name`       | `sessions`       | Table storing sessions                                                                                                |
+| `schema`           | `public`         | Schema owning the table                                                                                               |
+| `id_col`           | `sess_id`        | Column override                                                                                                       |
+| `data_col`         | `sess_data`      | Column override                                                                                                       |
+| `lifetime_col`     | `sess_lifetime`  | Column override                                                                                                       |
+| `time_col`         | `sess_time`      | Column override                                                                                                       |
+| `lock_mode`        | `transactional`  | One of `none`, `advisory`, `transactional`. The bridge documentation describes the trade-offs                         |
+| `ttl`              | `null`           | Session lifetime in seconds. With `null`, the ini value `session.gc_maxlifetime` applies                              |
+| `share_connection` | `false`          | Reuse the named connection's `Client` instead of opening a dedicated `pg_connect`. See "Sharing the Connection" below |
 
 ### Sharing the Connection
 
-By default the handler opens its own `pg_connect` derived from the named connection's parameters. That isolation is what keeps the session handler's transactions / locks from leaking into the connection used by application code.
+By default, the handler opens its own `pg_connect` from the parameters of the named connection. Because of this
+isolation, the transactions and locks of the session handler stay off the connection that application code uses.
 
-Set `share_connection: true` to reuse the existing `flow.postgresql.<connection>.client` service instead. Use only when you have an explicit reason - tight connection budget or a deliberate need to keep session state on the same connection as application code.
+To reuse the existing `flow.postgresql.<connection>.client` service, set `share_connection: true`. Use it only for an
+explicit reason. Examples are a small connection budget, or a need to keep session state on the same connection as
+application code.
 
 ### Purging Sessions
 
-PHP's normal probabilistic GC (`session.gc_probability`) already triggers expired-row cleanup at request close, so most
-applications don't need extra wiring. For deterministic cleanup on a cron, the bundle exposes:
+The probabilistic garbage collection of PHP (`session.gc_probability`) already removes expired rows at the end of a
+request. Most applications thus need no extra configuration. For predictable cleanup from a cron schedule, the bundle
+has this command:
 
 ```bash
 # Delete only sessions whose sess_lifetime is in the past (default behavior)
@@ -856,17 +869,17 @@ php bin/console flow:postgresql:session:purge --expired
 php bin/console flow:postgresql:session:purge --all
 ```
 
-`--expired` and `--all` are mutually exclusive; passing both returns a non-zero exit code.
+You cannot use `--expired` and `--all` together. If you use both, the command returns a non-zero exit code.
 
-For full documentation, see
-the [Symfony PostgreSQL Session Bridge](/documentation/components/bridges/symfony-postgresql-session-bridge.md).
+The [Symfony PostgreSQL Session Bridge](/documentation/components/bridges/symfony-postgresql-session-bridge.md) page
+has the full documentation.
 
 ## Test Transaction Rollback
 
-The bundle integrates
-with [flow-php/phpunit-postgresql-bridge](/documentation/components/bridges/phpunit-postgresql-bridge.md) to
-automatically wrap each PHPUnit test in a database transaction and roll it back after the test finishes - keeping your
-test database clean without manual teardown.
+The bundle works
+with [flow-php/phpunit-postgresql-bridge](/documentation/components/bridges/phpunit-postgresql-bridge.md). The bridge
+wraps each PHPUnit test in a database transaction and rolls it back after the test. Thus your test database stays clean
+without manual teardown.
 
 ### Setup
 
@@ -885,7 +898,7 @@ composer require --dev flow-php/phpunit-postgresql-bridge:~--FLOW_PHP_VERSION--
 </extensions>
 ```
 
-3. Enable transaction rollback per connection in a test-environment config:
+3. Enable transaction rollback per connection in a configuration for the test environment:
 
 ```yaml
 # config/packages/test/flow_postgresql.yaml
@@ -897,25 +910,25 @@ flow_postgresql:
       test_transaction_rollback: false  # default, no wrapping
 ```
 
-When `test_transaction_rollback` is `true`, the bundle replaces `PgSqlClient::connect` with `StaticClient::connect` for
-that connection. This ensures the exact same `Client` instance is reused across kernel reboots within the same test, so
-the transaction started by the PHPUnit extension covers all database operations performed by your services.
+If `test_transaction_rollback` is `true`, the bundle replaces `PgSqlClient::connect` with `StaticClient::connect` for
+that connection. Thus the same `Client` instance is reused across kernel reboots in one test. The transaction that the
+PHPUnit extension starts then covers all database operations of your services.
 
 ### How It Works
 
-1. PHPUnit starts → extension enables `StaticClient` caching
-2. Before each test → extension rolls back the previous transaction and begins a new one
-3. Symfony kernel boots → bundle creates the client via `StaticClient::connect()` → returns the cached instance with an
-   active transaction
-4. Test runs → all queries go through the same cached client, inside the transaction
-5. Next test starts → extension rolls back all changes from the previous test
+1. PHPUnit starts. The extension enables `StaticClient` caching.
+2. Before each test, the extension rolls back the previous transaction and begins a new one.
+3. The Symfony kernel boots. The bundle creates the client with `StaticClient::connect()`, which returns the cached
+   instance with an active transaction.
+4. The test runs. All queries go through the same cached client, inside the transaction.
+5. The next test starts. The extension rolls back all changes from the previous test.
 
-PostgreSQL supports transactional DDL, so even `CREATE TABLE` and `ALTER TABLE` statements are rolled back.
+PostgreSQL supports transactional DDL, so the rollback also undoes `CREATE TABLE` and `ALTER TABLE` statements.
 
 ### Skipping Rollback
 
-Use the `#[SkipTransactionRollback]` attribute to opt out for specific tests, classes, or abstract parent classes. See
-the [PHPUnit PostgreSQL Bridge documentation](/documentation/components/bridges/phpunit-postgresql-bridge.md) for
+To opt out for specific tests, classes, or abstract parent classes, use the `#[SkipTransactionRollback]` attribute.
+The [PHPUnit PostgreSQL Bridge documentation](/documentation/components/bridges/phpunit-postgresql-bridge.md) has the
 details.
 
 ## Complete Example

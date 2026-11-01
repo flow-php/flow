@@ -4,7 +4,7 @@
 
 [TOC]
 
-The Merge Query Builder provides a fluent, type-safe interface for constructing PostgreSQL MERGE queries. MERGE (also known as "upsert" in some contexts) allows you to perform INSERT, UPDATE, or DELETE operations in a single statement based on whether rows match between a source and target table.
+The Merge Query Builder has a fluent, type-safe interface that builds PostgreSQL MERGE queries. MERGE (also known as "upsert" in some contexts) does INSERT, UPDATE, or DELETE operations in one statement. The operation depends on whether rows of a source table and a target table match.
 
 ## Simple Merge with Update
 
@@ -115,7 +115,7 @@ echo $query->toSql();
 
 ## Conditional WHEN Clauses
 
-Add conditions to WHEN MATCHED and WHEN NOT MATCHED clauses:
+Add conditions to the `WHEN MATCHED` and `WHEN NOT MATCHED` clauses:
 
 ```php
 <?php
@@ -225,7 +225,7 @@ echo $query->toSql();
 
 ## WHEN NOT MATCHED BY SOURCE
 
-Handle rows in the target that don't have matching rows in the source:
+Handle the rows in the target that have no matching rows in the source:
 
 ```php
 <?php

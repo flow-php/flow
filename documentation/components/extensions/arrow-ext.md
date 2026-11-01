@@ -8,48 +8,48 @@ package: flow-php/arrow-ext
 
 [TOC]
 
-[Apache Arrow](https://arrow.apache.org/) is a language-independent columnar memory format for flat and hierarchical data.
-The Arrow ecosystem provides high-performance implementations for common data operations - including I/O for formats like
-Parquet, CSV, JSON, and Arrow IPC - in C++, Rust, Java, Python, and other languages.
+[Apache Arrow](https://arrow.apache.org/) is a columnar memory format for flat and hierarchical data. It does not
+depend on a programming language. The Arrow ecosystem has fast implementations of common data operations in C++, Rust,
+Java, Python and other languages. These operations include I/O for formats such as Parquet, CSV, JSON and Arrow IPC.
 
-This extension brings the [Arrow Rust ecosystem](https://github.com/apache/arrow-rs) into PHP via
-[ext-php-rs](https://github.com/extphprs/ext-php-rs). It exposes Arrow's native readers and writers through
-PHP streaming interfaces, letting PHP applications benefit from Rust-level performance without leaving the PHP runtime.
+This extension uses [ext-php-rs](https://github.com/extphprs/ext-php-rs) to bring the
+[Arrow Rust ecosystem](https://github.com/apache/arrow-rs) into PHP. It gives PHP streaming interfaces to the native readers and
+writers of Arrow. PHP applications then get the performance of Rust and stay in the PHP runtime.
 
 > [!TIP]
-> The recommended way to use this extension is through the [parquet library](/documentation/components/libs/parquet.md), which provides a higher-level PHP API and automatically leverages the Arrow extension when it is loaded. You only need to use the classes documented here directly if you want low-level control over the Arrow reader/writer.
+> Use this extension through the [parquet library](/documentation/components/libs/parquet.md). The library has a higher-level PHP API. When the Arrow extension is loaded, the library uses it automatically. For low-level control over the Arrow reader/writer, use the classes on this page directly.
 
 ### Current Scope
 
-The first module exposed through this extension is **Apache Parquet** - a columnar storage format widely used in data
-engineering and analytics.
+The first module of this extension is Apache Parquet. Parquet is a columnar storage format that data engineering and
+analytics use widely.
 
 ### Planned Modules
 
-The Arrow Rust crates offer additional I/O capabilities that are candidates for future exposure through this extension:
+The Arrow Rust crates have more I/O features. This extension can add them in the future:
 
-- **CSV** - high-performance CSV reading/writing with automatic type inference and Arrow-native batching
-- **JSON** - Arrow-backed JSON line (JSONL/NDJSON) reading/writing with schema support
-- **IPC** - Arrow's own binary streaming/file format for zero-copy data exchange between processes and languages
+- CSV: fast CSV reading/writing with automatic type inference and Arrow-native batching
+- JSON: JSON line (JSONL/NDJSON) reading/writing on Arrow, with schema support
+- IPC: the binary streaming/file format of Arrow, for zero-copy data exchange between processes and languages
 
 ## Features
 
-- Read and write Apache Parquet files over `flow-php/filesystem` streams, value for value as `PhpParquetEngine`
+- Read and write Apache Parquet files over `flow-php/filesystem` streams, with the same values as `PhpParquetEngine`
 - Nested types: LIST, STRUCT, MAP (arbitrarily nested)
 - Compression codecs: UNCOMPRESSED, SNAPPY, GZIP, ZSTD, LZ4_RAW, BROTLI
-- Column projection, offset and limit, read from one footer read
-- Batches handed to other extensions through the [Arrow C Data Interface](https://arrow.apache.org/docs/format/CDataInterface.html)
+- Column projection, offset and limit, from one read of the footer
+- Batches that go to other extensions through the [Arrow C Data Interface](https://arrow.apache.org/docs/format/CDataInterface.html)
 
 ## Requirements
 
 - PHP 8.3+
-- Rust toolchain (rustc, cargo) - install from [rustup.rs](https://rustup.rs/)
+- Rust toolchain (rustc, cargo), from [rustup.rs](https://rustup.rs/)
 - clang / libclang (for ext-php-rs bindgen)
 - make
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/arrow-ext.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/arrow-ext.md).
 
 ## Loading the Extension
 
@@ -67,11 +67,11 @@ php -d extension=./ext/modules/arrow.so your_script.php
 
 ## Usage
 
-The extension registers the [parquet library](/documentation/components/libs/parquet.md)'s
-`Flow\Parquet\{ParquetEngine, ParquetFileReader, ParquetFileWriter}` and implements them with
-`Flow\Parquet\Engine\{RustParquetEngine, RustParquetFileReader, RustParquetFileWriter}`. `AdaptiveParquetEngine` - the
-default of `Reader` and `Writer` - picks `RustParquetEngine` while the extension is loaded, `PhpParquetEngine`
-otherwise.
+The extension registers `Flow\Parquet\{ParquetEngine, ParquetFileReader, ParquetFileWriter}` of the
+[parquet library](/documentation/components/libs/parquet.md). It implements them with
+`Flow\Parquet\Engine\{RustParquetEngine, RustParquetFileReader, RustParquetFileWriter}`. `AdaptiveParquetEngine` is the
+default of `Reader` and `Writer`. If the extension is loaded, it picks `RustParquetEngine`. If not, it picks
+`PhpParquetEngine`.
 
 ```php
 <?php
@@ -128,15 +128,16 @@ $batches->schema();                            // Flow\Arrow\RustArrowSchema
 $batches->next();                              // Flow\Arrow\RustParquetBatch, null after the last
 ```
 
-Refusals are the `Flow\Parquet\Exception\*` the PHP engine throws; an exception the stream throws surfaces as itself.
+Refusals are the same `Flow\Parquet\Exception\*` that the PHP engine throws. An exception from the stream comes out
+unchanged.
 
 ### Arrow C Data Interface
 
 `RustParquetBatch` (`RustBatchReader::next()`) carries one struct array: `arrowSchemaAddress()` (`FFI_ArrowSchema*`) and
-`arrowArrayAddress()` (`FFI_ArrowArray*`). Its consumer, another extension, reads the schema by reference and moves the
-array out. `RustParquetFileWriter::writeArrowBatch()` takes the same pair from any extension's final internal class exposing both
-methods, its children by writer column name. Userland cannot build either: the classes are final and their
-constructors throw.
+`arrowArrayAddress()` (`FFI_ArrowArray*`). The consumer is another extension. It reads the schema by reference and
+moves the array out. `RustParquetFileWriter::writeArrowBatch()` takes the same pair from a final internal class of
+any extension that has both methods. The children of the array match the writer columns by name. Userland code cannot
+make either class: the classes are final, and their constructors throw.
 
 ## Development
 
@@ -162,9 +163,9 @@ make test
 
 - Built with [ext-php-rs](https://github.com/extphprs/ext-php-rs), which generates PHP bindings from Rust code
 - Uses Apache Arrow and Parquet Rust crates from the [Arrow ecosystem](https://github.com/apache/arrow-rs)
-- All compression codecs compiled into the extension - no external PHP compression extensions needed
-- Stream methods (`read`, `size`, `append`, `close`) called from Rust via ext-php-rs
-- PIE-compatible via `ext/config.m4` that delegates to `cargo build`
+- All compression codecs are compiled into the extension, so no external PHP compression extensions are necessary
+- Rust calls the stream methods (`read`, `size`, `append`, `close`) through ext-php-rs
+- PIE-compatible through `ext/config.m4`, which calls `cargo build`
 
 ## See Also
 

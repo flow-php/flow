@@ -46,10 +46,10 @@ echo $query->toSql();
 
 ### Available Methods
 
-| Method | Description |
-|--------|-------------|
-| `ifNotExists()` | Add IF NOT EXISTS clause |
-| `authorization(string $role)` | Specify schema owner |
+| Method                        | Description              |
+|-------------------------------|--------------------------|
+| `ifNotExists()`               | Add IF NOT EXISTS clause |
+| `authorization(string $role)` | Specify schema owner     |
 
 ## ALTER SCHEMA
 
@@ -130,18 +130,18 @@ echo $query->toSql();
 
 ### Available Methods
 
-| Method | Description |
-|--------|-------------|
-| `ifExists()` | Add IF EXISTS clause |
-| `cascade()` | Drop dependent objects |
-| `restrict()` | Refuse to drop if dependent objects exist (default) |
+| Method       | Description                                            |
+|--------------|--------------------------------------------------------|
+| `ifExists()` | Add IF EXISTS clause                                   |
+| `cascade()`  | Drop dependent objects                                 |
+| `restrict()` | Refuse to drop while dependent objects exist (default) |
 
 ## DSL Functions
 
-| Function | Returns | Description |
-|----------|---------|-------------|
-| `create()->schema(string $name)` | `CreateSchemaOptionsStep` | Start building a CREATE SCHEMA statement |
-| `alter()->schema(string $name)` | `AlterSchemaActionStep` | Start building an ALTER SCHEMA statement |
-| `drop()->schema(string ...$names)` | `DropSchemaFinalStep` | Start building a DROP SCHEMA statement |
+| Function                           | Returns                   | Description                              |
+|------------------------------------|---------------------------|------------------------------------------|
+| `create()->schema(string $name)`   | `CreateSchemaOptionsStep` | Start building a CREATE SCHEMA statement |
+| `alter()->schema(string $name)`    | `AlterSchemaActionStep`   | Start building an ALTER SCHEMA statement |
+| `drop()->schema(string ...$names)` | `DropSchemaFinalStep`     | Start building a DROP SCHEMA statement   |
 
 For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/postgresql/namespaces/flow-postgresql-dsl.html).

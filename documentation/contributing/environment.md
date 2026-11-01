@@ -1,12 +1,12 @@
 ## Prepare Project:
 
-To run tests locally, please make sure you have [docker](https://www.docker.com/) up and running.
-You also need [PHP 8.2](https://www.php.net/) and [composer](https://getcomposer.org/) to be available from your CLI.
-Even though we are supporting 3 PHP versions at the time, we are using the lowest supported one for development, currently it's PHP 8.2.
+To run the tests locally, you need a running [docker](https://www.docker.com/).
+You also need [PHP 8.3](https://www.php.net/) and [composer](https://getcomposer.org/) in your CLI.
+The minimum PHP version is 8.3, and 8.4 and 8.5 are also supported. Development uses the minimum version, PHP 8.3.
 
 
-**HEADS UP** - instead of using php installed on your host machine, consider using Nix Shell.
-You can find detailed instructions how to use Nix in the [Nix Development Environment](/documentation/contributing/nix.md) section.
+Instead of the PHP on your host machine, you can use Nix Shell.
+The [Nix Development Environment](/documentation/contributing/nix.md) section tells you how to use Nix.
 
 ```shell
 cp compose.yml.dist compose.yml
@@ -14,18 +14,19 @@ just install
 docker compose up -d
 ```
 
-Service and test env config (database URLs, S3/Azurite/OTel endpoints, the filesystem cache dir) lives in the
-committed `.env.dist`, loaded for both PHPUnit and phpbench by the root `bootstrap.php`. The `.dist` defaults match the
-`compose.yml.dist` ports, so a standard setup needs no extra step. If you shift service ports in your own `compose.yml`,
-copy `.env.dist` to `.env` (gitignored) and set the shifted values there - `.env` overrides `.env.dist` per-variable:
+The committed `.env.dist` file contains the configuration for the services and the tests: database URLs, S3, Azurite
+and OTel endpoints, and the filesystem cache directory. The root `bootstrap.php` loads it for PHPUnit and for phpbench.
+The `.dist` defaults match the `compose.yml.dist` ports, so a standard setup needs no extra step. If you change the
+service ports in your own `compose.yml`, copy `.env.dist` to `.env` and set the changed values there. Git ignores
+`.env`. Each variable in `.env` overrides the same variable in `.env.dist`:
 
 ```shell
 cp .env.dist .env
 ```
 
-> **Upgrading from an older checkout** - the local S3 service moved from MinIO to
-> [RustFS](https://rustfs.com/) (MinIO deleted its community images from Docker Hub) and the S3 credentials changed from
-> `minioadmin` to `flowphpaccess01` / `flowphpsecret01`. Refresh **both** files, otherwise every S3 request fails with
+> Upgrading from an older checkout: the local S3 service is now [RustFS](https://rustfs.com/), not MinIO. MinIO
+> deleted its community images from Docker Hub. The S3 credentials changed from `minioadmin` to
+> `flowphpaccess01` / `flowphpsecret01`. Update both files. If you do not, each S3 request fails with
 > `SignatureDoesNotMatch`:
 >
 > ```shell
@@ -36,15 +37,16 @@ cp .env.dist .env
 > docker compose up -d
 > ```
 
-> If you keep a personal gitignored `phpunit.xml`, regenerate it from `phpunit.xml.dist` after pulling this change: the
-> new `.dist` uses `bootstrap="bootstrap.php"` and no longer carries the `<php><env>` block (env now comes from `.env.dist`
-> / `.env`). A stale `phpunit.xml` keeps the old bootstrap and env, bypassing the shared config.
+> If you keep a personal `phpunit.xml` (git ignores it), make it again from `phpunit.xml.dist` after you pull this
+> change. The new `.dist` uses `bootstrap="bootstrap.php"` and does not have the `<php><env>` block. The environment
+> now comes from `.env.dist` / `.env`. An old `phpunit.xml` keeps the old bootstrap and environment, and it does not
+> use the shared configuration.
 
-For the code coverage, please install [pcov](https://pecl.php.net/package/pcov).
+For code coverage, install [pcov](https://pecl.php.net/package/pcov).
 
-Pcov extension is not mandatory, and tests are going to pass without it; however, you won't be able to run mutation tests.
+The tests pass without the pcov extension. Without it, you cannot run mutation tests.
 
-Run `just --list` to see every available task.
+Run `just --list` to see all available tasks.
 
 ## Run Test Suite
 
@@ -52,15 +54,15 @@ Run `just --list` to see every available task.
 just test
 ```
 
-Above command will run all tests, including those that require custom extensions.
-To run a single test or a specific phpunit testsuite, forward arguments to `just test`:
+This command runs all tests, also the tests that need custom extensions.
+To run one test or one phpunit testsuite, give the arguments to `just test`:
 
 ```shell
 just test --filter=my_test_method
 just test --testsuite=lib-parquet-unit
 ```
 
-`tools/phpunit/vendor/bin/phpunit --list-suites` shows every testsuite defined in `phpunit.xml.dist`.
+`tools/phpunit/vendor/bin/phpunit --list-suites` shows all testsuites in `phpunit.xml.dist`.
 
 ## Run Lint & Static Analyze
 
@@ -69,23 +71,23 @@ just lint
 just analyze
 ```
 
-`just lint` runs Mago (format check + lint) and validates the monorepo configuration.
-`just analyze` runs Mago static analysis.
+`just lint` runs `lint-mago` (Mago format check and lint), `lint-monorepo` (monorepo validation)
+and `lint-actions` (GitHub Actions audit).
+`just analyze` runs `mago guard` and the Mago static analysis.
 
-**Important** static analyze **MUST** be executed at the lowest supported PHP version
-and with dependencies locked by `composer.lock`.
-Please make sure to use PHP 8.2 and that you used the `just install` command first.
+Run the static analysis on the lowest supported PHP version, with the dependencies that `composer.lock` locks.
+Use PHP 8.3, and run the `just install` command first.
 
 ## Fixing Coding Standards
 
-Before committing your code, please make sure that your code is following our coding standards.
+Before you commit your code, make sure that it follows the coding standards.
 
 ```shell
 just fix
 ```
 
-This command will automatically fix all coding standards issues in your code.
-If you want to first check what needs to be fixed, you can use:
+This command fixes all coding standard issues in your code.
+To see the issues first, without a fix, use:
 
 ```shell
 just lint-mago
@@ -93,8 +95,8 @@ just lint-mago
 
 ## Test everything
 
-This command will execute exactly the same tests as we run at GitHub Actions before a PR can get merged.
-If it passes locally, you are good to open a pull request.
+This command runs the same tests that GitHub Actions runs before a pull request can merge.
+If it passes locally, you can open a pull request.
 
 ```shell
 just build
@@ -102,14 +104,14 @@ just build
 
 ## Building Documentation
 
-Since documentation for DSL and our entire API is automatically generated, you can build it by running:
+The documentation for the DSL and the full API is generated. To build it, run:
 
 ```shell
 just docs
 just docs-api
 ```
 
-`just docs` must be executed after any adjustments to `functions.php` files (DSL).
+Run `just docs` after each change to a `functions.php` file (DSL).
 
 ## Building PHAR
 
@@ -120,7 +122,7 @@ just phar
 
 ## Building Docker Image
 
-In order to build docker image and load it to local registry please use:
+To build the docker image and load it into the local registry, use:
 
 ```shell
 just docker

@@ -13,7 +13,7 @@ seo_description: >
 
 ## Precompiled Binaries
 
-Precompiled binaries are available for download from the [GitHub Releases](https://github.com/flow-php/arrow-ext/releases/latest) page.
+You can download precompiled binaries from the [GitHub Releases](https://github.com/flow-php/arrow-ext/releases/latest) page.
 
 Binary names follow the [PIE naming convention](https://github.com/php/pie/blob/1.4.x/docs/extension-maintainers.md):
 
@@ -49,8 +49,8 @@ php -m | grep arrow
 Install the extension of the Flow release you use. `flow-php/parquet` and `flow-php/etl-adapter-parquet` conflict
 with `ext-arrow <0.45`.
 
-An extension built for another release is refused with a `RuntimeException` naming its version and ABI, raised by
-`AdaptiveParquetEngine`. `new PhpParquetEngine()` still runs.
+`AdaptiveParquetEngine` refuses an extension built for a different release. It throws a `RuntimeException` that names
+the version and the ABI of the extension. `new PhpParquetEngine()` still runs.
 
 ## PIE
 
@@ -62,7 +62,7 @@ pie install flow-php/arrow-ext
 
 ## Build Prerequisites
 
-The Arrow extension is written in Rust and requires the following tools to compile:
+The Arrow extension is written in Rust. Its compilation needs these tools:
 
-- **Rust toolchain** (rustc, cargo) - install via [rustup](https://rustup.rs/)
-- **clang** - required by the Rust build process
+- Rust toolchain (rustc, cargo): install it with [rustup](https://rustup.rs/)
+- clang: required by the Rust build process

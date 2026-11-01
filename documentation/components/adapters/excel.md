@@ -8,24 +8,14 @@ package: flow-php/etl-adapter-excel
 
 [TOC]
 
-Flow PHP's Adapter Excel is a comprehensive library engineered to enable smooth interactions with Excel
-within your ETL (Extract, Transform, Load) workflows. This adapter is indispensable for developers looking to seamlessly
-extract from or load data into Excel, ensuring a coherent and reliable data transformation journey. By
-leveraging the Adapter Excel library, developers can utilize a robust set of features designed for precise
-interaction with Excel, simplifying complex data transformations and enhancing data processing efficiency. The
-Adapter Excel library encapsulates a wide range of functionalities, providing a streamlined API for managing
-Excel tasks, which is essential in modern data processing and transformation scenarios. This library reflects
-Flow PHP's dedication to offering versatile and effective data processing solutions, making it an optimal choice for
-developers dealing with Excel in large-scale and data-intensive projects. With Flow PHP's Adapter Excel,
-managing Excel data within your ETL workflows becomes a more simplified and efficient task, perfectly aligning
-with the robust and adaptable nature of the Flow PHP ecosystem.
+The Excel adapter reads and writes Excel data in ETL (Extract, Transform, Load) pipelines.
 
-> **Note:** This adapter only supports local filesystem paths due to limitations of the underlying OpenSpout library.
-> Remote filesystems (S3, Azure Blob Storage, etc.) are not supported.
+> Note: This adapter supports only local filesystem paths, because of limitations of the OpenSpout library that it
+> uses. Remote filesystems (for example S3 or Azure Blob Storage) are not supported.
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/etl-adapter-excel.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/etl-adapter-excel.md).
 
 ## Extractor
 
@@ -65,8 +55,8 @@ $rows = data_frame()
     ->fetch();
 ```
 
-`offset()` counts data rows, so a sheet read without a header starts at row 5 here; with a header, `->offset(3)`
-starts at row 5.
+`offset()` counts data rows. Here, a sheet read without a header therefore starts at row 5. With a header,
+`->offset(3)` starts at row 5.
 
 ### Header and missing cells
 
@@ -77,16 +67,16 @@ record      ['1', 'a', 'x', '']    ->  corrupted record (a non-empty cell past t
 record      ['1', '', 'x']         ->  'e01' => null   (a present '' is null; `withConvertEmptyToNull(false)` keeps it '')
 ```
 
-A corrupted record throws `CorruptedRecordException`, or goes to `->withCorruptedRecords($loader)`, see
-[Corrupted Records](/documentation/components/core/corrupted-records.md). A column of `->withSchema()` missing from the
-header throws `SchemaValidationException`.
+A corrupted record throws `CorruptedRecordException`, or goes to `->withCorruptedRecords($loader)`. For more
+information, read [Corrupted Records](/documentation/components/core/corrupted-records.md). If a column of
+`->withSchema()` is not in the header, the read throws `SchemaValidationException`.
 
-A header cell that is not text (a date, a number) is named like a blank one.
+A header cell that is not text (a date, a number) gets the same name as a blank header cell.
 
 ### Schema
 
-Without a declared schema, `from_excel()` samples the workbook before the first row is read, decides one schema, and
-every batch it yields carries exactly that schema. `schema()` answers without running the pipeline:
+Without a declared schema, `from_excel()` samples the workbook before it reads the first row. It decides one schema,
+and each batch that it yields carries exactly that schema. `schema()` answers without a run of the pipeline:
 
 ```php
 <?php
@@ -94,17 +84,18 @@ every batch it yields carries exactly that schema. `schema()` answers without ru
 from_excel('path/to/your/excel.xlsx')->schema();
 ```
 
-The default sample is the first `20 480` rows of up to `10` files. Every inferred column is nullable, and where
-narrowing is not safe the column floors to `string`.
+The default sample is the first `20 480` rows of up to `10` files. Each inferred column is nullable. If narrowing is
+not safe, the column falls back to `string`.
 
-A workbook has its own cell types, so inference reads those first: a numeric cell is `integer` or `float`, a boolean
-cell is `boolean`, a date-formatted cell is `date` or `datetime`. A date cell has no zone, so it reads as a UTC wall
-clock whatever `date.timezone` says; `withSchema(schema(datetime_schema('d', zone: 'Europe/Warsaw')))` converts it.
-A cell holding **text** stays `string` even when the text looks like something else - `TRUE`, `12.9` and `2023-10-02`
-are all text a spreadsheet author chose not to type.
+A workbook has its own cell types, so inference reads those first. A numeric cell is `integer` or `float`, a boolean
+cell is `boolean`, and a date-formatted cell is `date` or `datetime`. A date cell has no zone, so it reads as a UTC
+wall clock. The value of `date.timezone` does not change this.
+`withSchema(schema(datetime_schema('d', zone: 'Europe/Warsaw')))` converts it. A cell with text stays `string`. The
+look of the text does not change this. `TRUE`, `12.9` and `2023-10-02` are all text that the author of the
+spreadsheet chose not to type.
 
-The exception is types a cell cannot hold at all. There is no uuid, json or timezone cell, so text is the only way to
-write one and text is narrowed for exactly those three:
+The exception is the types that a cell cannot hold at all. There is no uuid, json or timezone cell. Text is the only
+way to write them, so inference narrows text for exactly those three types:
 
 ```
 254d61c5-22c8-4407-83a2-76f1cab53af2   ->  uuid
@@ -113,7 +104,7 @@ America/New_York                       ->  timezone
 TRUE / 12.9 / 2023-10-02               ->  string
 ```
 
-Tune the sample, or floor it:
+Change the sample, or make all columns strings:
 
 ```php
 <?php
@@ -126,11 +117,11 @@ $rows = data_frame()
     ->fetch();
 ```
 
-Reading a glob whose files carry different headers raises `InferredSchemaException`, naming the file that diverged and
-the file the schema came from. Declare the schema with `->withSchema(...)`, or read the files as one wider schema with
-`->inferSchema(infer_schema()->unionByName())`.
+If the files of a glob have different headers, the read throws `InferredSchemaException`. The message names the file
+that is different and the file that gave the schema. Declare the schema with `->withSchema(...)`, or read the files as
+one wider schema with `->inferSchema(infer_schema()->unionByName())`.
 
-Declare the schema instead whenever it is known - a declared schema is never sampled for:
+If you know the schema, declare it. A declared schema never needs a sample:
 
 ```php
 <?php
@@ -182,7 +173,7 @@ data_frame()
 
 ### Sheet Name from a Column
 
-Write each row to the sheet named by its `category` value:
+Write each row to the sheet with the name of its `category` value:
 
 ```php
 <?php
@@ -232,14 +223,14 @@ data_frame()
 | `string`, `integer`, `float`, `boolean`      | the value                                                                              |
 | `datetime`, `date`                           | a date cell, displayed with `withDateTimeFormat()` / `withDateFormat()`                |
 | `time`                                       | text, `withTimeFormat()`                                                               |
-| `enum`                                       | a backed enum's value, a unit enum's name                                              |
+| `enum`                                       | the value of a backed enum, the name of a unit enum                                    |
 | `uuid`, `json`                               | text                                                                                   |
-| `xml`, `xml_element`, `html`, `html_element` | the markup, e.g. `<a b="1"><c></c></a>`                                                |
+| `xml`, `xml_element`, `html`, `html_element` | the markup, for example `<a b="1"><c></c></a>`                                         |
 | `list`, `map`, `structure`                   | JSON text: a datetime element as `DATE_ATOM`, a time as microseconds, a float as `1.0` |
 
 ### Cell Styling
 
-`$value` is the cell as it is written (see [Cells](#cells)), not the column value.
+`$value` is the cell as it is written (read [Cells](#cells)), not the column value.
 
 ```php
 <?php
@@ -276,7 +267,7 @@ data_frame()
 
 ### Custom Writer Options
 
-For advanced configuration, pass OpenSpout options directly:
+For an advanced configuration, give OpenSpout options directly:
 
 ```php
 <?php
@@ -315,8 +306,8 @@ data_frame()
 
 ### Custom Date/Time Formats
 
-Dates and datetimes are written as real date cells, so they read back as `date` / `datetime` rather than as text.
-`withDateFormat()` and `withDateTimeFormat()` take an **Excel number format** - they control how the cell is
+Dates and datetimes are written as real date cells, so they read back as `date` / `datetime` and not as text.
+`withDateFormat()` and `withDateTimeFormat()` take an Excel number format. They control how the cell is
 displayed, never the value. `withTimeFormat()` still takes a PHP `DateInterval::format()` string, because a workbook
 has no cell type that reads back as `time`.
 

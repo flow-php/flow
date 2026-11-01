@@ -6,20 +6,20 @@
 
 ## Introduction
 
-Telemetry integration in Flow PHP provides observability into your ETL pipelines through distributed tracing, metrics
-collection, and structured logging. Understanding what happens inside your data processing workflows is essential for:
+Telemetry shows what happens inside your ETL pipelines. Flow PHP gives distributed tracing, metrics and structured
+logs. Use them for:
 
-- **Debugging** - Identify bottlenecks and failures in complex pipelines
-- **Monitoring** - Track performance metrics in production environments
-- **Optimization** - Measure throughput and resource usage to improve efficiency
-- **Compliance** - Maintain audit trails of data processing operations
+- Debugging: find slow steps and failures in large pipelines
+- Monitoring: follow performance metrics in production
+- Optimization: measure throughput and resource usage
+- Compliance: keep an audit trail of data processing operations
 
-Flow PHP's telemetry is built on OpenTelemetry-compatible concepts, allowing integration with popular observability
-platforms like Jaeger, Grafana, Datadog, and others.
+The telemetry of Flow PHP uses OpenTelemetry-compatible concepts. You can send its data to observability platforms
+such as Jaeger, Grafana and Datadog.
 
 ## Quick Start
 
-The simplest way to get started with telemetry is using console exporters for local development:
+For local development, start with console exporters:
 
 ```php
 <?php
@@ -58,7 +58,7 @@ df(config_builder()->withTelemetry($telemetry, telemetry_options(
 
 ## Telemetry Options
 
-Flow PHP provides granular control over what telemetry data is collected through `telemetry_options()`:
+`telemetry_options()` controls which telemetry data Flow PHP collects:
 
 | Option                  | Description                                                             | Performance Impact                      |
 |-------------------------|-------------------------------------------------------------------------|-----------------------------------------|
@@ -83,7 +83,7 @@ telemetry_options(
 )
 ```
 
-You can also use the fluent builder pattern:
+You can also use the fluent builder:
 
 ```php
 telemetry_options()
@@ -96,7 +96,7 @@ telemetry_options()
 
 ### Basic Configuration
 
-Enable telemetry by passing a `Telemetry` instance to the config builder:
+To enable telemetry, give a `Telemetry` instance to the configuration builder:
 
 ```php
 use function Flow\ETL\DSL\{config_builder, telemetry_options};
@@ -111,8 +111,7 @@ $config = config_builder()
 
 ### Console Exporters (Development)
 
-Console exporters output telemetry data directly to stdout with ASCII table formatting. They're ideal for local
-development and debugging:
+Console exporters write telemetry data to stdout as ASCII tables. Use them for local development and debugging:
 
 ```php
 use function Flow\Telemetry\DSL\console_exporter;
@@ -129,7 +128,7 @@ $logExporter = console_exporter(colors: true, maxLogBodyLength: 100);
 
 ### OTLP Export (Production)
 
-For production environments, send telemetry to an OTLP-compatible collector using the OTLP bridge:
+For production, use the OTLP bridge to send telemetry to an OTLP-compatible collector:
 
 ```php
 use Flow\ETL\Foundation\Clock\SystemClock;
@@ -163,7 +162,7 @@ $telemetry->registerShutdownFunction();
 
 #### Curl Transport (Async)
 
-Recommended for better performance - uses curl_multi for non-blocking I/O:
+This transport is faster. It uses curl_multi for non-blocking I/O:
 
 ```php
 use function Flow\Bridge\Telemetry\OTLP\DSL\{otlp_curl_transport, otlp_curl_options, otlp_json_serializer};
@@ -181,8 +180,8 @@ $transport = otlp_curl_transport(
 
 #### gRPC Transport
 
-For gRPC endpoints (requires ext-grpc). OTLP/gRPC mandates Protobuf, so the transport builds the request factory
-internally - no serializer parameter.
+Use it for gRPC endpoints. It needs ext-grpc. OTLP/gRPC must use Protobuf, so the transport builds the request
+factory itself. It has no serializer parameter.
 
 ```php
 use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_grpc_transport;
@@ -194,7 +193,7 @@ $transport = otlp_grpc_transport(endpoint: 'localhost:4317');
 
 ### Spans
 
-Every DataFrame execution creates a root span with the following attributes:
+Each run of a DataFrame creates a root span with these attributes:
 
 | Attribute                             | Description                                      |
 |---------------------------------------|--------------------------------------------------|
@@ -205,24 +204,24 @@ Every DataFrame execution creates a root span with the following attributes:
 | `flow.etl.memory.min`                 | Minimum memory consumption during execution (MB) |
 | `flow.etl.memory.max`                 | Maximum memory consumption during execution (MB) |
 
-When `trace_loading` is enabled, child spans are created for each loader with:
+When `trace_loading` is enabled, Flow creates a child span for each loader:
 
-- Span name: short loader class name (e.g., `StreamLoader`); the full name is in `flow.etl.loader.class`
+- Span name: short loader class name, for example `StreamLoader`. The full name is in `flow.etl.loader.class`.
 - Parent: DataFrame span
 - Status: OK on success, ERROR on failure
 
-When `trace_transformations` is enabled, child spans are created for each transformer with:
+When `trace_transformations` is enabled, Flow creates a child span for each transformer:
 
-- Span name: short transformer class name (e.g., `ScalarFunctionTransformer`); the full name is in
-  `flow.etl.transformer.class`, the batch sizes in `flow.etl.transformation.input_rows` / `output_rows`
+- Span name: short transformer class name, for example `ScalarFunctionTransformer`. The full name is in
+  `flow.etl.transformer.class`. The batch sizes are in `flow.etl.transformation.input_rows` / `output_rows`.
 - Parent: DataFrame span
 - Status: OK on success, ERROR on failure
 
 The same option creates one span for each processor and join (sort, group by, join, distinct):
 
 - Span name: short class name, for example `MergeSortProcessor`. The full name is in `flow.etl.operator.class`.
-- Duration: wall time from the first batch requested to the last batch yielded, including the time the steps after it
-  spend on those batches.
+- Duration: wall time from the request for the first batch to the yield of the last batch. It includes the time that
+  the steps after it spend on those batches.
 - Parent: DataFrame span
 - Status: ERROR on failure, OK in every other case (an early stop included)
 
@@ -237,19 +236,19 @@ When `collect_metrics` is enabled:
 
 ### Logs
 
-Structured logs are emitted at DEBUG level for pipeline events:
+Flow writes structured logs at DEBUG level for these pipeline events:
 
-- **Pipeline start** - Logged with configuration details (cache type, serializer, optimizer rules, spill storages)
-- **Pipeline completion** - Logged with summary statistics (total rows, memory usage)
-- **Errors** - Logged at ERROR level with exception details
+- Pipeline start: with configuration details (cache type, serializer, optimizer rules, spill storages)
+- Pipeline completion: with summary statistics (total rows, memory usage)
+- Errors: at ERROR level, with the exception details
 
 ## Processing and Batching
 
-Telemetry data is processed through configurable processors:
+Processors handle the telemetry data. You can configure them:
 
 ### Batching Processors (Recommended)
 
-Collect telemetry in memory and export in batches for better performance:
+These processors collect telemetry in memory and export it in batches. This is faster:
 
 ```php ignore
 use function Flow\Telemetry\DSL\{
@@ -268,7 +267,7 @@ batching_log_processor($exporter, batchSize: 512)
 
 ### Pass-Through Processors (Debugging)
 
-Export immediately for real-time visibility during debugging:
+These processors export each item immediately. Use them to see data in real time while you debug:
 
 ```php ignore
 use function Flow\Telemetry\DSL\{
@@ -315,13 +314,13 @@ pass_through_log_processor($exporter)
 
 ### Samplers
 
-| Function                         | Description                                                           |
-|----------------------------------|-----------------------------------------------------------------------|
-| `always_on_sampler()`            | Record and sample every span                                          |
-| `always_off_sampler()`           | Drop every span                                                       |
-| `trace_id_ratio_based_sampler()` | Sample a deterministic fraction of traces                             |
-| `parent_based_sampler()`         | Honor the parent's decision; root sampler for parentless spans        |
-| `attribute_filtering_sampler()`  | Drop spans matching an attribute filter, defer the rest to a delegate |
+| Function                         | Description                                                                 |
+|----------------------------------|-----------------------------------------------------------------------------|
+| `always_on_sampler()`            | Record and sample every span                                                |
+| `always_off_sampler()`           | Drop every span                                                             |
+| `trace_id_ratio_based_sampler()` | Sample a deterministic fraction of traces                                   |
+| `parent_based_sampler()`         | Use the decision of the parent. Use a root sampler for spans with no parent |
+| `attribute_filtering_sampler()`  | Drop spans matching an attribute filter, defer the rest to a delegate       |
 
 ### Exporters (Console)
 
@@ -363,22 +362,22 @@ pass_through_log_processor($exporter)
 
 ### When to Enable Each Option
 
-- **`trace_loading: true`** - Enable when debugging write operations or when you need to identify slow loaders
-- **`trace_transformations: true`** - Enable temporarily when debugging transformation logic; disable in production for
-  high-throughput pipelines
-- **`collect_metrics: true`** - Safe to enable in production; provides valuable throughput data with minimal overhead
+- `trace_loading: true`: to debug write operations or to find slow loaders, enable this option.
+- `trace_transformations: true`: to debug transformation logic, enable this option for a short time. For
+  high-throughput pipelines in production, disable it.
+- `collect_metrics: true`: you can enable this option in production. It gives throughput data at a low cost.
 
 ### Performance Considerations
 
-1. **Use batching processors** - Batching reduces I/O overhead significantly compared to immediate export
-2. **Disable transformation tracing in production** - Pipelines with many transformations create many spans
-3. **Configure appropriate batch sizes** - Larger batches are more efficient but use more memory
-4. **Use curl transport** - The async curl transport has better performance than PSR-18 HTTP clients
-5. **Call `registerShutdownFunction()`** - Ensures all pending telemetry is flushed on script termination
+1. Use batching processors. Batching causes much less I/O than immediate export.
+2. In production, disable transformation tracing. Pipelines with many transformations create many spans.
+3. Set a correct batch size. Larger batches are more efficient, but they use more memory.
+4. Use the curl transport. The async curl transport is faster than PSR-18 HTTP clients.
+5. Call `registerShutdownFunction()`. When the script stops, it makes sure that Flow flushes all pending telemetry.
 
 ### Sampling Strategies
 
-For high-volume pipelines, consider sampling to reduce telemetry volume:
+For high-volume pipelines, use sampling to send less telemetry:
 
 ```php
 use function Flow\Telemetry\DSL\{parent_based_sampler, trace_id_ratio_based_sampler};
@@ -387,13 +386,12 @@ use function Flow\Telemetry\DSL\{parent_based_sampler, trace_id_ratio_based_samp
 tracer_provider($processor, $clock, $contextStorage, parent_based_sampler(trace_id_ratio_based_sampler(0.1)));
 ```
 
-See the [breaking change note](../libs/telemetry.md#sampling) in the telemetry library docs: the default sampler
-changed from `AlwaysOnSampler` to `ParentBasedSampler(AlwaysOnSampler)`, so spans whose parent is unsampled are now
-dropped.
+The default sampler changed from `AlwaysOnSampler` to `ParentBasedSampler(AlwaysOnSampler)`. Thus Flow now drops the
+spans of an unsampled parent. Refer to the [breaking change note](../libs/telemetry.md#sampling) in the documentation of the telemetry library.
 
 ### Resource Attributes
 
-Include meaningful resource attributes to identify your service:
+Add resource attributes that identify your service:
 
 ```php
 resource([
@@ -406,15 +404,14 @@ resource([
 
 ## Disabling Telemetry
 
-Telemetry is disabled by default. If you've enabled it but want to disable it for certain environments, simply don't
-pass telemetry configuration:
+Telemetry is disabled by default. To disable it in an environment, do not give a telemetry configuration:
 
 ```php
 // No telemetry - uses void providers internally
 $config = config_builder()->build();
 ```
 
-Or use void providers explicitly:
+Or give void processors explicitly to the normal providers:
 
 ```php
 use function Flow\Telemetry\DSL\{void_span_processor, void_metric_processor, void_log_processor};

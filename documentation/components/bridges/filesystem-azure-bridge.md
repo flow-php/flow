@@ -8,15 +8,15 @@ package: flow-php/filesystem-azure-bridge
 
 [TOC]
 
-The Filesystem Azure Bridge is a bridge that allows you to use the Azure Blob Storage as a filesystem in your application.
+With the Filesystem Azure Bridge, you can use Azure Blob Storage as a filesystem in your application.
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/filesystem-azure-bridge.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/filesystem-azure-bridge.md).
 
 ## Usage
 
-The plain form takes the account, the container and the shared key and builds the service itself:
+The plain form takes the account, the container and the shared key, and builds the service itself:
 
 ```php
 <?php
@@ -31,13 +31,13 @@ $azure = azure_filesystem([
 ]);
 ```
 
-A filesystem built from a `BlobServiceInterface` you assembled yourself - your own HTTP client, factories or logger -
-stays in this process and reads serially.
+You can also build a filesystem from your own `BlobServiceInterface`, with your own HTTP client, factories or
+logger. Such a filesystem stays in this process and reads serially.
 
 > [!NOTE]  
-> Since the Azure SDK is not providing any http client or factories, you need to install them manually.
-> The following example uses the `php-http/discovery` package to find the factories in your project existing dependencies.
-> Use below links to find the implementations for client and the factories:
+> The Azure SDK does not include an http client or factories, so you must install them yourself.
+> The example below uses the `php-http/discovery` package to find the factories in the existing dependencies of your project.
+> Use these links to find implementations of the client and the factories:
 
 - [Http Client](https://packagist.org/providers/psr/http-client-implementation)
 - [Http Factories](https://packagist.org/providers/psr/http-factory-implementation)
@@ -66,12 +66,12 @@ $sdk = azure_blob_service(
 
 ## Usage with Flow
 
-To use the Azure Blob filesystem with Flow, pass it to the source or sink that reads or writes the
-`azure-blob://` path. Hold one instance and pass the same one to both sides.
+To use the Azure Blob filesystem with Flow, give it to the source or sink that reads or writes the
+`azure-blob://` path. Keep one instance, and give the same instance to both sides.
 
-The **mount protocol** - the URI scheme the filesystem serves - defaults to `'azure-blob'`. Override via
-the third argument (`azure_filesystem($blobService, $options, protocol: 'warehouse')`) when the paths you
-read and write use a different scheme.
+The mount protocol is the URI scheme that the filesystem serves. The default is `'azure-blob'`. For paths with a
+different scheme, override it with the third argument
+(`azure_filesystem($blobService, $options, protocol: 'warehouse')`).
 
 ```php
 $azure = azure_filesystem(
@@ -93,13 +93,13 @@ data_frame()
     ->run();
 ```
 
-A source or sink given a filesystem that does not serve its path throws at construction, naming the
+If the filesystem of a source or sink does not serve its path, the construction throws. The message names the
 `filesystem:` argument.
 
-`FileStatus` values returned from `list()` and `status()` carry `size` (from the `Content-Length`
-header / listing property) and `lastModifiedAt` (from the `Last-Modified` header, parsed as RFC 7231)
-populated directly from the Azure response - no extra stream is opened when the CLI
-`flow:filesystem:ls --long` or `flow:filesystem:stat` prints them.
+The `FileStatus` values from `list()` and `status()` carry `size` and `lastModifiedAt`. `size` comes from the
+`Content-Length` header / listing property. `lastModifiedAt` comes from the `Last-Modified` header, parsed as RFC 7231. Both come directly from the
+Azure response. The CLI commands `flow:filesystem:ls` and `flow:filesystem:stat` print them without an extra
+stream.
 
-`create()` commits the blob with `If-None-Match: *`, so it throws `FileExistsException` when the blob exists. A
-blob written in blocks is invisible until `close()`.
+`create()` commits the blob with `If-None-Match: *`. For an existing blob, it therefore throws
+`FileExistsException`. A blob written in blocks stays invisible until `close()`.

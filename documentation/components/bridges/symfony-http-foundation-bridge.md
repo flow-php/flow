@@ -8,24 +8,24 @@ package: flow-php/symfony-http-foundation-bridge
 
 [TOC]
 
-Http Foundation Bridge provides seamless integration between Symfony Http Foundation and Flow PHP.
+The Http Foundation Bridge integrates Symfony Http Foundation with Flow PHP.
 
 `FlowStreamedResponse` is a Symfony Streamed Response that can:
 
 - stream to one of the available formats (CSV, JSON, Parquet, XML)
 - apply transformations on the fly
-- stream large datasets that normally would not fit in memory
+- stream large datasets that usually do not fit in memory
 - use ETL to convert data on the fly
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/symfony-http-foundation-bridge.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/symfony-http-foundation-bridge.md).
 
 ## Usage
 
-Stream a large parquet file converting it on the fly to CSV format.
-Since Flow is extracting data from datasets in chunk, FlowStreamedResponse allows to stream
-files that normally would not fit in memory.
+Stream a large parquet file, and convert it to CSV format on the fly.
+Flow extracts data from datasets in chunks, so FlowStreamedResponse can stream
+files that usually do not fit in memory.
 
 ```php
 <?php
@@ -76,9 +76,9 @@ final class ReportsController extends AbstractController
 
 ## Stream a DataFrame
 
-`http_stream_open()` also takes a DataFrame. The frame runs under its own config, so `config()` is refused for it: set
-`analyze()` on the frame's config instead. The response adds its transformations and its output to the frame, so do not
-use the frame again after you build the response.
+`http_stream_open()` also takes a DataFrame. The frame runs under its own configuration, so `config()` is refused
+for it. Set `analyze()` on the configuration of the frame instead. The response adds its transformations and its
+output to the frame. After you build the response, do not use the frame again.
 
 ```php
 <?php
@@ -112,15 +112,15 @@ final class OrdersController extends AbstractController
 
 ## Available Outputs
 
-- `Flow\Bridge\Symfony\HttpFoundation\Output\CSVOutput` - `http_csv_output()` - converts dataset to CSV format.
-- `Flow\Bridge\Symfony\HttpFoundation\Output\JsonOutput` - `http_json_output()` - converts dataset to JSON format.
-- `Flow\Bridge\Symfony\HttpFoundation\Output\ParquetOutput` - `http_parquet_output()` - converts dataset to Parquet format.
-- `Flow\Bridge\Symfony\HttpFoundation\Output\XMLOutput` - `http_xml_output()` - converts dataset to XML format.
+- `Flow\Bridge\Symfony\HttpFoundation\Output\CSVOutput`: `http_csv_output()` converts the dataset to CSV format.
+- `Flow\Bridge\Symfony\HttpFoundation\Output\JsonOutput`: `http_json_output()` converts the dataset to JSON format.
+- `Flow\Bridge\Symfony\HttpFoundation\Output\ParquetOutput`: `http_parquet_output()` converts the dataset to Parquet format.
+- `Flow\Bridge\Symfony\HttpFoundation\Output\XMLOutput`: `http_xml_output()` converts the dataset to XML format.
 
 ## Modify output on the fly
 
-Sometimes we need to modify the output on the fly. 
-To do that, FlowStreamedResponse allows passing a Transformation that will be applied on the dataset.
+To change the output on the fly, give FlowStreamedResponse a Transformation. It applies the transformation to the
+dataset.
 
 ```php
 <?php
@@ -137,17 +137,17 @@ new class implements Transformation {
 };
 ```
 
-Above example will add a new column `time` to the dataset with the current timestamp.
+The example above adds a new column `time` with the current timestamp to the dataset.
 
 ## Collecting Telemetry After Streaming
 
-When streaming large datasets, you may want to collect telemetry data such as total row counts, execution time,
-or memory usage after the streaming completes. Flow provides a `StreamCompletionListener` mechanism that gets called
-with a `Report` containing statistics about the streamed data.
+After a stream of a large dataset, you can collect telemetry data such as the total row count, the execution time,
+or the memory usage. Flow has a `StreamCompletionListener` mechanism. It gets a `Report` with statistics about the
+streamed data.
 
-To receive a `Report`, you need to:
-1. Configure `Analyze` in the `Config` using `config()` method
-2. Set an `onComplete()` callback using `http_on_complete()` DSL function
+To receive a `Report`:
+1. Configure `Analyze` in the `Config` with the `config()` method.
+2. Set an `onComplete()` callback with the `http_on_complete()` DSL function.
 
 ```php
 <?php
@@ -196,12 +196,12 @@ final class ReportsController extends AbstractController
 
 ### Analyze Options
 
-The `analyze()` function supports additional options for collecting more detailed statistics:
+The `analyze()` function has more options for more detailed statistics:
 
-- `analyze()` - Basic statistics (row count, execution time, memory usage)
-- `analyze()->withSchema()` - Also collects schema information about the dataset
-- `analyze()->withColumnStatistics()` - Also collects per-column statistics (min, max, null counts)
-- `analyze()->withSchema()->withColumnStatistics()` - Collects all available statistics
+- `analyze()`: basic statistics (row count, execution time, memory usage)
+- `analyze()->withSchema()`: also collects schema information about the dataset
+- `analyze()->withColumnStatistics()`: also collects statistics for each column (min, max, null counts)
+- `analyze()->withSchema()->withColumnStatistics()`: collects all available statistics
 
 ```php ignore
 // Collect schema information along with basic statistics
@@ -213,13 +213,13 @@ The `analyze()` function supports additional options for collecting more detaile
 
 ### Report Contents
 
-The `Report` object provides access to:
+The `Report` object gives access to:
 
-- `$report->statistics()->totalRows()` - Total number of rows streamed
-- `$report->statistics()->executionTime->inSeconds()` - Execution duration
-- `$report->statistics()->executionTime->startedAt` - Start timestamp
-- `$report->statistics()->executionTime->finishedAt` - End timestamp
-- `$report->statistics()->heap->max()` - Peak PHP heap plus backend memory, sampled once per batch
-- `$report->statistics()->processes` - OS peak of the process and of every worker: `workerPeak()`, `peakSum()`
-- `$report->schema()` - Dataset schema (when `withSchema()` is enabled)
-- `$report->statistics()->columns` - Column statistics (when `withColumnStatistics()` is enabled)
+- `$report->statistics()->totalRows()`: total number of rows streamed
+- `$report->statistics()->executionTime->inSeconds()`: execution duration
+- `$report->statistics()->executionTime->startedAt`: start timestamp
+- `$report->statistics()->executionTime->finishedAt`: end timestamp
+- `$report->statistics()->heap->max()`: peak PHP heap plus backend memory, sampled once for each batch
+- `$report->statistics()->processes`: OS peak of the process and of each worker: `workerPeak()`, `peakSum()`
+- `$report->schema()`: dataset schema (when `withSchema()` is enabled)
+- `$report->statistics()->columns`: column statistics (when `withColumnStatistics()` is enabled)

@@ -4,9 +4,9 @@
 
 [TOC]
 
-At this point, you should have a working installation of Flow ETL. If you don't, please go back to the [Installation](installation.md) section.
+Before you start, you need a working installation of Flow ETL. If you do not have one, go back to the [Installation](installation.md) section.
 
-Let's take a look at a simple example of how to use Flow ETL to read a CSV file, transform it and write it to another CSV file.
+This simple example uses Flow ETL to read a CSV file, transform it and write it to a different CSV file.
 
 ```php
 <?php
@@ -37,34 +37,35 @@ data_frame()
 
 ## Data Frame 
 
-The `data_frame()` function is the entry point to the Flow ETL DSL. 
+The `data_frame()` function is the entry point to the Flow ETL DSL.
 
 > [!TIP]
-> To maximize developer experience, Flow exposes a DSL (Domain Specific Language).
-> Flow DSL is a set of functions that can be used to build a data processing pipeline.
-> The entire project is written in Object-Oriented style, but DSL is a more convenient way to build a pipeline.
-> Whenever possible, use DSL functions instead of creating objects directly.
+> For the best developer experience, Flow has a DSL (Domain Specific Language).
+> The Flow DSL is a set of functions that build a data processing pipeline.
+> The full project uses an Object-Oriented style, but the DSL is a more convenient way to build a pipeline.
+> When possible, use DSL functions instead of creating objects directly.
 
-It creates a new instance of the `Flow\ETL\Flow` class, which is the main class of the ETL. 
+It creates a new instance of the `Flow\ETL\Flow` class, which is the main class of the ETL.
 
-For comprehensive DataFrame documentation, see the [Data Frame Guide](/documentation/components/core/core.md).
+For the full DataFrame documentation, read the [Data Frame Guide](/documentation/components/core/core.md).
 
 [Data Frame Examples](/getting_started/#example)
 
 ## Extraction - Reading
 
-The first step in creating a data processing pipeline is to read the data from a data source.
-Extractors are responsible for reading data from a data source and converting it into a format that can be processed by Flow ETL.
-All extractors return a `\Generator` of batches (`Rows`, one column per schema definition), so memory stays constant no matter how big the source is.
+The first step of a data processing pipeline is to read the data from a data source.
+Extractors read data from a data source and convert it into a format that Flow ETL can process.
+All extractors return a `\Generator` of batches (`Rows`, one column for each schema definition). Memory therefore
+stays constant for each size of the source.
 
 ```php
 data_frame()
     ->read(from_csv(__DIR__ . '/orders_flow.csv'));
 ```
 
-In this example we're using the `from_csv()` function to create a new instance of the `Flow\ETL\Adapter\CSV\IO\Extractor\CSVExtractor` class.
+In this example, the `from_csv()` function creates a new instance of the `Flow\ETL\Adapter\CSV\IO\Extractor\CSVExtractor` class.
 
-All file-based extractors accept [glob path patterns](/documentation/components/libs/filesystem.md#glob-patterns), allowing you to read multiple files at once.
+All file-based extractors accept [glob path patterns](/documentation/components/libs/filesystem.md#glob-patterns), so you can read multiple files at the same time.
 
 ```php
 data_frame()
@@ -75,75 +76,75 @@ data_frame()
 
 ## Transformation
 
-Extractors by default are going to read all columns from the data source, you can use the `select()` function to select only the columns you need.
-Alternatively you can use the `drop()` function to drop columns you don't need.
+By default, extractors read all columns from the data source. To keep only the columns that you need, use the
+`select()` function. You can also use the `drop()` function to drop the columns that you do not need.
 
 ```php ignore
     ->select('created_at', 'total_price', 'discount')
 ```
 
-One of the most powerful features of Flow ETL is the ability to transform data using the `withColumn()` function.
+One of the main features of Flow ETL is data transformation with the `withColumn()` function.
 
 ```php ignore
     ->withColumn('created_at', ref('created_at')->cast('date')->dateFormat('Y/m'))
     ->withColumn('revenue', ref('total_price')->minus(ref('discount')))
 ```
 
-`withColumn()` function accepts two arguments, the first one is the name of the new column, the second one is the value of the new column.
-The value of the new column can be a literal value, a reference to an existing column or a function call.
+The `withColumn()` function accepts two arguments. The first one is the name of the new column. The second one is
+the value of the new column. The value can be a literal value, a reference to an existing column or a function call.
 
-- `ref('created_at')` - creates a reference to the `created_at` column.
-- `...->cast('date')` - casts column to a date type.
-- `...->dateFormat('Y/m')` - format date using the `Y/m` format, as a result created_at becomes a string `2023/01`.
+- `ref('created_at')`: creates a reference to the `created_at` column.
+- `...->cast('date')`: casts the column to a date type.
+- `...->dateFormat('Y/m')`: formats the date with the `Y/m` format. created_at then becomes the string `2023/01`.
 
-You can find all available functions in the [DSL](/src/core/etl/src/Flow/ETL/DSL/functions.php).
+All available functions are in the [DSL](/src/core/etl/src/Flow/ETL/DSL/functions.php).
 
 > [!TIP]
-> DSL is nothing more than a set of functions that return instances of Flow PHP objects. 
-> You can always create objects directly, but DSL is a more convenient way to build a pipeline.
-> All available ETL functions can be found in the [Functions](/src/core/etl/src/Flow/ETL/Functions) namespace.
+> The DSL is only a set of functions that return instances of Flow PHP objects.
+> You can always create objects directly, but the DSL is a more convenient way to build a pipeline.
+> All available ETL functions are in the [Functions](/src/core/etl/src/Flow/ETL/Functions) namespace.
 
 [Transformations Examples](/transformations/#example)
 
 ## Loading - Writing
 
-Loading, also writing to a data source, is the last step in the data processing pipeline.
-There can be more than one writer in the pipeline
+Loading, also called writing to a data source, is the last step of the data processing pipeline.
+A pipeline can have more than one writer.
 
 ```php ignore
     ->write(to_output(truncate: false))
     ->write(to_csv(__DIR__ . '/daily_revenue.csv')->saveMode(overwrite()))
 ```
 
-In this example we're first using the `to_output()` which just prints the data to the console as a simple ASCII table without
-truncating the output.
+In this example, the first writer is `to_output()`. It prints the data to the console as a simple ASCII table, and
+it does not truncate the output.
 
 ```php ignore
     ->write(to_csv(__DIR__ . '/daily_revenue.csv')->saveMode(overwrite()))
 ```
 
-Second write is writing the data to a CSV file, we're using `saveMode(overwrite())` to set the save mode to `overwrite`.
-There are four save modes available:
+The second writer writes the data to a CSV file. `saveMode(overwrite())` sets the save mode to `overwrite`.
+Four save modes are available:
 
-- `SaveMode::Append` - If data sink already exists, data will be appended. This solution might cause data duplication since it does not check if the given rows already exist.
-- `SaveMode::ExceptionIfExists` - If data sink already exists an error will be thrown.
-- `SaveMode::Ignore` - If data sink already exists, writing will be skipped.
-- `SaveMode::Overwrite` - If data sink already exists, it will be removed and written again.
+- `SaveMode::Append`: if the data sink already exists, the data is appended. This can cause duplicated data, because it does not look for rows that already exist.
+- `SaveMode::ExceptionIfExists`: if the data sink already exists, an error is thrown.
+- `SaveMode::Ignore`: if the data sink already exists, the write is skipped.
+- `SaveMode::Overwrite`: if the data sink already exists, it is removed and written again.
 
 > [!NOTE]
-> Append mode does not append to an existing file. It writes a sibling file `name_<suffix>.ext` next to it
-> (`daily_revenue_ecd5b31525.csv`). Read all of them with a glob: `from_csv(__DIR__ . '/daily_revenue*.csv')`.
+> Append mode does not append to an existing file. It writes a sibling file `name-<run>.ext` next to it
+> (`daily_revenue-ecd5b31525.csv`). To read all of them, use a glob: `from_csv(__DIR__ . '/daily_revenue*.csv')`.
 
 [Loaders Examples](/writing/#example)
 
 ## Lazy Execution
 
-Flow ETL is using lazy execution, which means that the pipeline will not be executed until you call the `run()` function.
+Flow ETL uses lazy execution. Only a call to the `run()` function executes the pipeline.
 
 ```php ignore
     ->run();
 ```
 
-There are few more triggering functions, like `fetch()`. You can find which functions are `@lazy` or `@trigger` by looking at
-the [DataFrame](/src/core/etl/src/Flow/ETL/API/DataFrame.php) source code.
+Some other functions also trigger the execution, for example `fetch()`. The
+[DataFrame](/src/core/etl/src/Flow/ETL/API/DataFrame.php) source code marks each function as `@lazy` or `@trigger`.
       

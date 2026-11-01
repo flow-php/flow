@@ -259,7 +259,7 @@ echo $query->toSql();
 
 ### VALIDATE CONSTRAINT
 
-Validate an existing constraint:
+Make sure that an existing constraint is valid:
 
 ```php
 <?php
@@ -334,7 +334,7 @@ echo $query->toSql();
 
 ### RESTRICT
 
-Refuse to drop the domain if any objects depend on it (default behavior):
+Refuse to drop the domain while other objects depend on it (default behavior):
 
 ```php
 <?php

@@ -10,18 +10,18 @@ package: flow-php/postgresql
 
 ## Overview
 
-> **Note:** This library is under active development. If you encounter any issues, especially with the Query Builder,
-> please [report a bug](https://github.com/flow-php/flow/issues/new?template=bug.yml).
+> Note: This library is under active development. If you find an issue, for example in the Query Builder,
+> [report a bug](https://github.com/flow-php/flow/issues/new?template=bug.yml).
 
-PostgreSQL library provides three main capabilities:
+The PostgreSQL library has three main features:
 
-1. **SQL Parser** - Parse, analyze, and modify existing PostgreSQL queries using the real PostgreSQL
+1. SQL Parser: parse, analyze, and modify existing PostgreSQL queries with the real PostgreSQL
    parser ([libpg_query](https://github.com/pganalyze/libpg_query))
-2. **Query Builder** - Build new queries programmatically with a fluent, type-safe API
-3. **Client** - Execute queries against PostgreSQL with automatic type conversion and object mapping
+2. Query Builder: build new queries programmatically with a fluent, type-safe API
+3. Client: execute queries against PostgreSQL with automatic type conversion and object mapping
 
-All features produce valid PostgreSQL syntax and can be combined - for example, build a query with the Query Builder,
-execute it with the Client, and map results to objects.
+All features produce valid PostgreSQL syntax, and you can combine them. For example, build a query with the Query
+Builder, execute it with the Client, and map the results to objects.
 
 ## Use Case Navigator
 
@@ -37,18 +37,18 @@ execute it with the Client, and map results to objects.
 
 ## Requirements
 
-This library has two optional PHP extensions depending on which features you use:
+This library has two optional PHP extensions. The features that you use decide which ones you need:
 
 | Extension      | Required for                                          | Installation                                                                         |
 |----------------|-------------------------------------------------------|--------------------------------------------------------------------------------------|
 | `ext-pgsql`    | Client (database connections, query execution)        | Usually bundled with PHP, or `apt install php-pgsql`                                 |
 | `ext-pg_query` | Query Builder, SQL Parser (AST parsing, manipulation) | [postgresql-ext documentation](/documentation/components/extensions/pg-query-ext.md) |
 
-Both extensions are optional - you can use the Client without installing `ext-pg_query`, and vice versa.
+Both extensions are optional. You can use the Client without `ext-pg_query`, and the other features without `ext-pgsql`.
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/postgresql.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/postgresql.md).
 
 ---
 
@@ -87,10 +87,10 @@ foreach (sql_query_functions($query)->all() as $func) {
 }
 ```
 
-Extractors report every node of their kind anywhere in the statement - DDL targets (`CREATE TABLE x AS ...`,
-`CREATE VIEW v ...`, `SELECT ... INTO t`), `excluded.*`, window `ORDER BY` - so filter the result when you need only
-some of them. `sql_query_tables()` returns relations only: it skips CTE references and `FOR UPDATE OF` names, and
-includes the targets of `DROP`, `COMMENT ON`, `SECURITY LABEL` and `ALTER EXTENSION`.
+Extractors report each node of their kind at any position in the statement. This includes DDL targets
+(`CREATE TABLE x AS ...`, `CREATE VIEW v ...`, `SELECT ... INTO t`), `excluded.*` and window `ORDER BY`. To get only
+some of them, filter the result. `sql_query_tables()` returns only relations. It skips CTE references and
+`FOR UPDATE OF` names. It includes the targets of `DROP`, `COMMENT ON`, `SECURITY LABEL` and `ALTER EXTENSION`.
 
 ### Parsing Utilities
 
@@ -133,7 +133,7 @@ $summary = sql_summary('SELECT * FROM users WHERE id = 1');
 
 ### Deparsing (AST to SQL)
 
-Convert a parsed query back to SQL, optionally with pretty-printing:
+Convert a parsed query back to SQL, with optional pretty-printing:
 
 ```php
 <?php
@@ -229,54 +229,54 @@ echo $query->toSQL();
 
 ### Available Builders
 
-**Data Queries (DML)**
+Data Queries (DML)
 
-- [Select Query Builder](/documentation/components/libs/postgresql/select-query-builder.md) - SELECT with JOINs, CTEs,
+- [Select Query Builder](/documentation/components/libs/postgresql/select-query-builder.md): SELECT with JOINs, CTEs,
   window functions, subqueries
-- [Insert Query Builder](/documentation/components/libs/postgresql/insert-query-builder.md) - INSERT with ON CONFLICT (
+- [Insert Query Builder](/documentation/components/libs/postgresql/insert-query-builder.md): INSERT with ON CONFLICT (
   upsert), RETURNING
-- [Update Query Builder](/documentation/components/libs/postgresql/update-query-builder.md) - UPDATE with FROM clause,
+- [Update Query Builder](/documentation/components/libs/postgresql/update-query-builder.md): UPDATE with FROM clause,
   RETURNING
-- [Delete Query Builder](/documentation/components/libs/postgresql/delete-query-builder.md) - DELETE with USING clause,
+- [Delete Query Builder](/documentation/components/libs/postgresql/delete-query-builder.md): DELETE with USING clause,
   RETURNING
-- [Merge Query Builder](/documentation/components/libs/postgresql/merge-query-builder.md) - MERGE (SQL:2008 upsert)
+- [Merge Query Builder](/documentation/components/libs/postgresql/merge-query-builder.md): MERGE (SQL:2008 upsert)
 
-**Query Building Utilities**
+Query Building Utilities
 
-- [Condition Builder](/documentation/components/libs/postgresql/condition-builder.md) - Build WHERE conditions incrementally with fluent API
+- [Condition Builder](/documentation/components/libs/postgresql/condition-builder.md): build WHERE conditions incrementally with fluent API
 
-**Schema Management (DDL)**
+Schema Management (DDL)
 
-- [Table Query Builder](/documentation/components/libs/postgresql/table-query-builder.md) - CREATE/ALTER/DROP TABLE
-- [Index Query Builder](/documentation/components/libs/postgresql/index-query-builder.md) - CREATE/DROP INDEX
-- [View Query Builder](/documentation/components/libs/postgresql/view-query-builder.md) - CREATE/DROP VIEW, materialized
+- [Table Query Builder](/documentation/components/libs/postgresql/table-query-builder.md): CREATE/ALTER/DROP TABLE
+- [Index Query Builder](/documentation/components/libs/postgresql/index-query-builder.md): CREATE/DROP INDEX
+- [View Query Builder](/documentation/components/libs/postgresql/view-query-builder.md): CREATE/DROP VIEW, materialized
   views
-- [Sequence Query Builder](/documentation/components/libs/postgresql/sequence-query-builder.md) - CREATE/ALTER/DROP
+- [Sequence Query Builder](/documentation/components/libs/postgresql/sequence-query-builder.md): CREATE/ALTER/DROP
   SEQUENCE
-- [Schema Query Builder](/documentation/components/libs/postgresql/schema-query-builder.md) - CREATE/DROP SCHEMA
+- [Schema Query Builder](/documentation/components/libs/postgresql/schema-query-builder.md): CREATE/DROP SCHEMA
 
-**Database Administration**
+Database Administration
 
-- [Transaction Query Builder](/documentation/components/libs/postgresql/transaction-query-builder.md) - BEGIN, COMMIT,
+- [Transaction Query Builder](/documentation/components/libs/postgresql/transaction-query-builder.md): BEGIN, COMMIT,
   ROLLBACK, SAVEPOINT
-- [Role & Grant Query Builder](/documentation/components/libs/postgresql/role-grant-query-builder.md) - CREATE/ALTER
+- [Role & Grant Query Builder](/documentation/components/libs/postgresql/role-grant-query-builder.md): CREATE/ALTER
   ROLE, GRANT/REVOKE
-- [Utility Query Builder](/documentation/components/libs/postgresql/utility-query-builder.md) - VACUUM, ANALYZE,
+- [Utility Query Builder](/documentation/components/libs/postgresql/utility-query-builder.md): VACUUM, ANALYZE,
   EXPLAIN, LOCK, CLUSTER
 
-**Extensions & Types**
+Extensions & Types
 
-- [Copy Query Builder](/documentation/components/libs/postgresql/copy-query-builder.md) - COPY for bulk data
+- [Copy Query Builder](/documentation/components/libs/postgresql/copy-query-builder.md): COPY for bulk data
   import/export
-- [Trigger & Rule Query Builder](/documentation/components/libs/postgresql/trigger-rule-query-builder.md) - CREATE/DROP
+- [Trigger & Rule Query Builder](/documentation/components/libs/postgresql/trigger-rule-query-builder.md): CREATE/DROP
   TRIGGER, RULE
-- [Function & Procedure Query Builder](/documentation/components/libs/postgresql/function-procedure-query-builder.md) -
+- [Function & Procedure Query Builder](/documentation/components/libs/postgresql/function-procedure-query-builder.md):
   CREATE/DROP FUNCTION, PROCEDURE
-- [Extension Query Builder](/documentation/components/libs/postgresql/extension-query-builder.md) - CREATE/DROP
+- [Extension Query Builder](/documentation/components/libs/postgresql/extension-query-builder.md): CREATE/DROP
   EXTENSION
-- [Type Query Builder](/documentation/components/libs/postgresql/type-query-builder.md) - CREATE/DROP TYPE (enum,
+- [Type Query Builder](/documentation/components/libs/postgresql/type-query-builder.md): CREATE/DROP TYPE (enum,
   composite, range)
-- [Domain Query Builder](/documentation/components/libs/postgresql/domain-query-builder.md) - CREATE/DROP DOMAIN
+- [Domain Query Builder](/documentation/components/libs/postgresql/domain-query-builder.md): CREATE/DROP DOMAIN
 
 ---
 
@@ -318,7 +318,7 @@ $client->close();
 
 ### Array Types
 
-PostgreSQL arrays are supported through type-specific converters. Use `typed()` with the appropriate array type:
+Type-specific converters support PostgreSQL arrays. Use `typed()` with the correct array type:
 
 ```php
 <?php
@@ -340,15 +340,15 @@ $client->execute(
 );
 ```
 
-See [Type System](/documentation/components/libs/postgresql/client-types.md) for all supported array types.
+For all supported array types, read [Type System](/documentation/components/libs/postgresql/client-types.md).
 
 ### Row Mappers
 
-A `RowMapper` turns a raw database row (an associative `array<string, mixed>`) into a typed result. Mappers are
-passed to the `fetchInto`, `fetchOneInto`, `fetchAllInto`, and `Cursor::map()` methods so the client can return
-objects, value objects, or typed arrays instead of plain arrays.
+A `RowMapper` turns a raw database row (an associative `array<string, mixed>`) into a typed result. You give mappers
+to the `fetchInto`, `fetchOneInto`, `fetchAllInto`, and `Cursor::map()` methods. The client then returns objects,
+value objects, or typed arrays instead of plain arrays.
 
-The contract is a single method:
+The contract is one method:
 
 ```php
 <?php
@@ -371,47 +371,47 @@ interface RowMapper
 }
 ```
 
-The library ships two default mappers, both available via DSL functions, plus an optional bridge for
-[cuyz/valinor](https://valinor.cuyz.io).
+The library has two default mappers. DSL functions give access to both. An optional bridge for
+[cuyz/valinor](https://valinor.cuyz.io) is also available.
 
-| Mapper                                                                                           | Use for                                                                                                                                                                                                 |
-|--------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [ConstructorMapper](/documentation/components/libs/postgresql/client-constructor-mapper.md)      | Map row columns directly to constructor parameters by name (1:1). No type coercion.                                                                                                                     |
-| [StaticFactoryMapper](/documentation/components/libs/postgresql/client-static-factory-mapper.md) | Delegate row → object construction to a public static factory method (`self::fromRow(array $row)`). Useful when the target class has a private constructor or needs custom coercion inside the factory. |
-| [TypeMapper](/documentation/components/libs/postgresql/client-type-mapper.md)                    | Validate and coerce the row via [flow-php/types](/documentation/components/libs/types.md) (JSONB → structure, date string → `\DateTimeImmutable`, ...). Optionally chains into another `RowMapper`.     |
-| [PostgreSQL Valinor Bridge](/documentation/components/bridges/postgresql-valinor-bridge.md) | Strict object hydration of complex graphs via cuyz/valinor. **Requires the separate `flow-php/postgresql-valinor-bridge` package.** |
+| Mapper                                                                                           | Use for                                                                                                                                                                                             |
+|--------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [ConstructorMapper](/documentation/components/libs/postgresql/client-constructor-mapper.md)      | Map row columns directly to constructor parameters by name (1:1). No type coercion.                                                                                                                 |
+| [StaticFactoryMapper](/documentation/components/libs/postgresql/client-static-factory-mapper.md) | Delegate row → object construction to a public static factory method (`self::fromRow(array $row)`). Use it for a target class with a private constructor, or with custom coercion in the factory.   |
+| [TypeMapper](/documentation/components/libs/postgresql/client-type-mapper.md)                    | Validate and coerce the row via [flow-php/types](/documentation/components/libs/types.md) (JSONB → structure, date string → `\DateTimeImmutable`, ...). Optionally chains into another `RowMapper`. |
+| [PostgreSQL Valinor Bridge](/documentation/components/bridges/postgresql-valinor-bridge.md)      | Strict object hydration of complex graphs through cuyz/valinor. Needs the separate `flow-php/postgresql-valinor-bridge` package.                                                                    |
 
 ### Detailed Documentation
 
-- [Connection](/documentation/components/libs/postgresql/client-connection.md) - Connection parameters, DSN parsing,
+- [Connection](/documentation/components/libs/postgresql/client-connection.md): connection parameters, DSN parsing,
   lifecycle
-- [Fetching Data](/documentation/components/libs/postgresql/client-fetching.md) - fetch, fetchOne, fetchAll, fetchScalar
-- [ConstructorMapper](/documentation/components/libs/postgresql/client-constructor-mapper.md) - Map rows directly to
+- [Fetching Data](/documentation/components/libs/postgresql/client-fetching.md): fetch, fetchOne, fetchAll, fetchScalar
+- [ConstructorMapper](/documentation/components/libs/postgresql/client-constructor-mapper.md): map rows directly to
   constructor parameters
-- [StaticFactoryMapper](/documentation/components/libs/postgresql/client-static-factory-mapper.md) - Map rows via a
+- [StaticFactoryMapper](/documentation/components/libs/postgresql/client-static-factory-mapper.md): map rows via a
   public static factory method on the target class
-- [TypeMapper](/documentation/components/libs/postgresql/client-type-mapper.md) - Validate and coerce rows via
-  flow-php/types; chain into another mapper
-- [PostgreSQL Valinor Bridge](/documentation/components/bridges/postgresql-valinor-bridge.md) - Strict object
+- [TypeMapper](/documentation/components/libs/postgresql/client-type-mapper.md): validate and coerce rows through
+  flow-php/types, and chain into another mapper
+- [PostgreSQL Valinor Bridge](/documentation/components/bridges/postgresql-valinor-bridge.md): strict object
   hydration via cuyz/valinor *(optional dependency)*
-- [Cursors](/documentation/components/libs/postgresql/client-cursor.md) - Memory-efficient streaming for large result
+- [Cursors](/documentation/components/libs/postgresql/client-cursor.md): memory-efficient streaming for large result
   sets
-- [Transactions](/documentation/components/libs/postgresql/client-transactions.md) - Transaction callback pattern,
+- [Transactions](/documentation/components/libs/postgresql/client-transactions.md): transaction callback pattern,
   nesting
-- [Type System](/documentation/components/libs/postgresql/client-types.md) - Value converters, TypedValue, custom types
-- [Query Plan Analysis](/documentation/components/libs/postgresql/client-explain.md) - EXPLAIN ANALYZE, plan insights,
+- [Type System](/documentation/components/libs/postgresql/client-types.md): value converters, TypedValue, custom types
+- [Query Plan Analysis](/documentation/components/libs/postgresql/client-explain.md): EXPLAIN ANALYZE, plan insights,
   performance debugging
-- [Telemetry](/documentation/components/libs/postgresql/client-telemetry.md) - OpenTelemetry tracing and metrics
+- [Telemetry](/documentation/components/libs/postgresql/client-telemetry.md): openTelemetry tracing and metrics
 
 ---
 
 ## Query Modification
 
-Modify existing SQL queries programmatically - useful for adding pagination to queries.
+Modify existing SQL queries in code, for example to add pagination.
 
-The pagination helpers and modifiers take exactly one read-only `SELECT` or `VALUES` statement. Anything else -
-`INSERT ... RETURNING`, two statements, a data-modifying `WITH`, `SELECT ... INTO` - throws
-`InvalidStatementException`.
+The pagination helpers and modifiers take exactly one read-only `SELECT` or `VALUES` statement. All other input
+throws `InvalidStatementException`, for example `INSERT ... RETURNING`, two statements, a data-modifying `WITH` or
+`SELECT ... INTO`.
 
 ### Offset Pagination
 
@@ -431,7 +431,7 @@ $page2 = sql_to_paginated_query($sql, limit: 25, offset: 25);
 // SELECT * FROM users ORDER BY created_at DESC LIMIT 25 OFFSET 25
 ```
 
-Works with complex queries including JOINs, CTEs, subqueries, and UNION:
+It works with complex queries, also with JOINs, CTEs, subqueries, and UNION:
 
 ```php
 <?php
@@ -469,12 +469,12 @@ $countQuery = sql_to_count_query($sql);
 $page1 = sql_to_paginated_query($sql, limit: 20, offset: 0);
 ```
 
-The COUNT modifier automatically removes ORDER BY (optimization) and wraps the query in a subquery.
+The COUNT modifier removes ORDER BY (an optimization) and wraps the query in a subquery.
 
 ### Keyset (Cursor) Pagination
 
-For large datasets, keyset pagination is more efficient than OFFSET. It uses indexed WHERE conditions instead of
-scanning and skipping rows:
+For large datasets, keyset pagination is more efficient than OFFSET. It uses indexed WHERE conditions. It does not
+scan and skip rows:
 
 ```php
 <?php
@@ -500,16 +500,16 @@ $page2 = sql_to_keyset_query($sql, limit: 100, columns: $columns, cursor: ['2025
 The cursor values come from the last row of the previous page. Keyset pagination:
 
 - Uses O(log n) index lookups instead of O(n) row scanning
-- Uses a row comparison `(a, b) > ($1, $2)` when all keys sort the same direction, and an `OR` expansion when
-  directions are mixed
+- Uses a row comparison `(a, b) > ($1, $2)` for keys that all sort in the same direction, and an `OR` expansion for
+  mixed directions
 - Works with existing WHERE conditions (combined with AND)
 
 Rules:
 
-- Key columns must be non-null and unique together; a NULL cursor value throws `PaginationException`
-- ORDER BY is optional; when present it must list exactly the keys, in order, with no NULLS clause, ordinal,
-  expression or USING
-- The query must not have its own LIMIT or OFFSET; pass the page size as `limit`
+- Key columns must be non-null and unique together. A NULL cursor value throws `PaginationException`.
+- ORDER BY is optional. An ORDER BY must list exactly the keys, in order, with no NULLS clause, ordinal,
+  expression or USING.
+- The query must not have its own LIMIT or OFFSET. Give the page size as `limit`.
 
 ---
 
@@ -572,22 +572,22 @@ interface NodeVisitor
 }
 ```
 
-Visitors declare which node types they handle via `nodeClasses()` (one or many). Return values:
+Visitors declare the node types that they handle with `nodeClasses()` (one or many). Return values:
 
-- `null` - continue traversal
-- `DONT_TRAVERSE_CHILDREN` - skip children (from `enter()` only)
-- `STOP_TRAVERSAL` - stop entire traversal
+- `null`: continue traversal
+- `DONT_TRAVERSE_CHILDREN`: skip children (from `enter()` only)
+- `STOP_TRAVERSAL`: stop entire traversal
 
 #### Built-in Visitors
 
-- `ColumnRefCollector` - collects all `ColumnRef` nodes
-- `FuncCallCollector` - collects all `FuncCall` nodes
-- `RangeVarCollector` - collects all `RangeVar` nodes
-- `RelationCollector` - collects a `RangeVar` per relation - skips CTE references and `FOR UPDATE OF` names, builds one for `DROP` / `COMMENT ON` targets
+- `ColumnRefCollector`: collects all `ColumnRef` nodes
+- `FuncCallCollector`: collects all `FuncCall` nodes
+- `RangeVarCollector`: collects all `RangeVar` nodes
+- `RelationCollector`: collects a `RangeVar` for each relation. It skips CTE references and `FOR UPDATE OF` names, and it builds one for `DROP` / `COMMENT ON` targets
 
 ### Custom Modifiers
 
-Create custom modifiers by implementing the `NodeModifier` interface:
+To create a custom modifier, implement the `NodeModifier` interface:
 
 ```php
 <?php
@@ -633,30 +633,30 @@ interface NodeModifier
 }
 ```
 
-The `ModificationContext` provides:
+The `ModificationContext` has:
 
-- `$context->depth()` - traversal depth: 1 for a top-level statement, +1 per message edge
-- `$context->ancestors()` - parent messages from the root statement down, without `Node` wrappers
-- `$context->parent()` - immediate parent message
-- `$context->isTopLevel()` - whether this is the top-level statement
+- `$context->depth()`: traversal depth: 1 for a top-level statement, +1 per message edge
+- `$context->ancestors()`: parent messages from the root statement down, without `Node` wrappers
+- `$context->parent()`: immediate parent message
+- `$context->isTopLevel()`: whether this is the top-level statement
 
 Return values:
 
-- `null` - continue traversal
-- `NodeModifier::DONT_TRAVERSE_CHILDREN` - skip children
-- `NodeModifier::STOP_TRAVERSAL` - stop entire traversal
-- `NodeModifier::REMOVE_NODE` - remove the node from its list (throws for a single-node slot)
-- `object` - replace the current node
+- `null`: continue traversal
+- `NodeModifier::DONT_TRAVERSE_CHILDREN`: skip children
+- `NodeModifier::STOP_TRAVERSAL`: stop entire traversal
+- `NodeModifier::REMOVE_NODE`: remove the node from its list (throws for a single-node slot)
+- `object`: replace the current node
 
 Replacement rules:
 
-- a slot holding a `Node` takes a `Node`; any other slot takes the same class; anything else throws
-- a replacement is not traversed (unlike PHP-Parser) - run a second traversal if needed
-- to clear a single slot, mutate the parent
+- A slot that holds a `Node` takes a `Node`. Each other slot takes the same class. Anything else throws.
+- A replacement is not traversed (unlike PHP-Parser). To traverse it, run a second traversal.
+- To clear a single slot, mutate the parent.
 
 ### Using Modifiers Directly
 
-For more control, you can use modifier objects directly with `traverse()`:
+For more control, use modifier objects directly with `traverse()`:
 
 ```php
 <?php
@@ -689,8 +689,8 @@ echo $query->deparse();
 // SELECT * FROM users WHERE (created_at, id) > ($1, $2) ORDER BY created_at, id LIMIT 10
 ```
 
-`ExplainModifier` wraps every statement before any of them is visited, so run it in its own `traverse()` after the
-other modifiers:
+`ExplainModifier` wraps each statement before the traversal visits any of them. Run it in its own `traverse()` after
+the other modifiers:
 
 ```php
 <?php
@@ -705,7 +705,7 @@ $query->traverse(new ExplainModifier(ExplainConfig::forEstimate()));
 echo $query->deparse(); // EXPLAIN (COSTS 1, FORMAT "json") SELECT * FROM users ORDER BY id LIMIT 10
 ```
 
-Pass `param()` instead of a number to leave the value to the query's parameters - every page then sends the same SQL:
+Give `param()` instead of a number to leave the value to the parameters of the query. Each page then sends the same SQL:
 
 ```php
 <?php
@@ -748,7 +748,7 @@ foreach ($query->raw()->getStmts() as $stmt) {
 
 ## Schema Diff
 
-Compare two catalogs and generate the SQL that turns the source into the target.
+Compare two catalogs and generate the SQL that changes the source into the target.
 
 ```php
 <?php
@@ -767,9 +767,9 @@ foreach (catalog_comparator()->compare($current, $target)->generate() as $sql) {
 
 ### `dropIfExists`
 
-By default, generated `DROP` statements have no `IF EXISTS`, so a missing object fails loudly (drift detection).
-Set `dropIfExists: true` to render every diff-generated drop with `IF EXISTS` - useful for convergence migrations
-that must run against both fresh and legacy databases:
+By default, generated `DROP` statements have no `IF EXISTS`, so a missing object fails with an error (drift
+detection). Set `dropIfExists: true` to render each generated drop with `IF EXISTS`. This helps convergence migrations
+that must run against new and legacy databases:
 
 ```php
 // On the comparator (applies to every compare):
@@ -814,11 +814,11 @@ try {
 
 ### Performance
 
-For optimal protobuf parsing performance, install the `ext-protobuf` PHP extension:
+For the best protobuf parse performance, install the `ext-protobuf` PHP extension:
 
 ```bash
 pecl install protobuf
 ```
 
-The library works without it using the pure PHP implementation from `google/protobuf`, but the native extension provides
-significantly better performance.
+Without it, the library uses the pure PHP implementation from `google/protobuf`. The native extension is much
+faster.

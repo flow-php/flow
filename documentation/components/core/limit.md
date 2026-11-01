@@ -2,9 +2,9 @@
 
 [DOC_LINK:/documentation/components/core/core.md]
 
-Sometimes you might just want to process only few first rows, maybe for debugging purpose or you don't want to go above certain number of rows.
+Sometimes you want to process only the first few rows, for example to debug, or to stay below a specific number of rows.
 
-In this example, Pipeline will take only 5 rows from Extractor passing them through all transformers.
+In this example, the Pipeline takes only 5 rows from the Extractor and sends them through all transformers.
 
 ## Example 
 
@@ -34,16 +34,16 @@ data_frame()
 5 rows
 ```
 
-It's important to remember that some transformers might actually change the original number of rows extracted
-from the source, like, for example, when you need to expand an array of elements in single row, into new rows.
+Some transformers can change the original number of rows from the source. An example is the expansion of an array
+of elements in one row into new rows.
 
-In that case, Flow will detect the expansion, and it will cut rows accordingly to the total limit, however,
-it will happen only after expanding transformation. It's done this way because there is no way to predict
-the result of the expansion.
+In that case, Flow detects the expansion and cuts the rows to the total limit. But this happens only after the
+expanding transformation, because the result of the expansion cannot be predicted.
 ## Limit Push-Down
 
-When nothing between `read()` and `limit()` can change the number of rows, the optimizer hands the limit to the
-extractor, so a source that supports it reads only what is needed (`offset()` in between adds the skipped rows).
+Sometimes nothing between `read()` and `limit()` can change the number of rows. The optimizer then gives the limit
+to the extractor. A source that supports it reads only the rows that it needs. An `offset()` between them adds the
+skipped rows.
 
 ```php
 <?php

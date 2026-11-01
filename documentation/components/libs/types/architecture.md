@@ -4,20 +4,20 @@
 
 [TOC]
 
-Types is a small library designed to ensure type consistency at runtime.  
-The concept is that wherever the system receives input data, one of three operations can be performed:
+Types is a small library that keeps types consistent at runtime.
+The idea: each place where the system receives input data can do one of three operations:
 
-- `Type::isValid($value) : bool` - checks if the value is of the correct type
-- `Type::cast($value) : mixed` - casts the value to a specific type, it must throw `\Flow\Types\Exception\CastingException` if the value
-  cannot be casted to the expected type
-- `Type::assert($value) : mixed` - returns the value when it is of the correct type, throws
-  `Flow\Types\Exception\InvalidTypeException` if not
+- `Type::isValid($value) : bool` returns true for a value of the correct type.
+- `Type::cast($value) : mixed` casts the value to a specific type. For a value that it cannot cast to the expected
+  type, it must throw `\Flow\Types\Exception\CastingException`.
+- `Type::assert($value) : mixed` returns a value of the correct type. For any other value, it throws
+  `Flow\Types\Exception\InvalidTypeException`.
 
-Each operation is executed at runtime, not compile time, but their structure provides significant type information for
-static code analysis tools.
+Each operation runs at runtime, not at compile time. But their structure gives much type information to static code
+analysis tools.
 
-By using these functions, static analysis tools can predict undesirable situations in the code, such as passing an
-incorrect type to a function or method.
+With these functions, static analysis tools can find problems in the code before it runs. An example is an
+incorrect type that goes to a function or method.
 
 ```php
 <?php
@@ -41,76 +41,78 @@ The main building block of this library is the interface [`Flow\Types\Type`](/sr
 
 This interface is implemented by two kinds of types:
 
-- Native Types - those built into PHP, e.g., `int`, `string`, `bool`, `float`, `array`, `object`.
-- Logical Types - those that narrow and refine native types, e.g., `type_uuid()` is a refinement of `type_string()` and
-  checks if a string is a valid UUID.
+- Native Types: the types of PHP itself, for example `int`, `string`, `bool`, `float`, `array`, `object`.
+- Logical Types: types that make native types narrower. For example, `type_uuid()` is a narrower `type_string()`. It
+  accepts only a string that is a valid UUID.
 
-Additionally, all types are divided into:
+All types are also in one of these groups:
 
-- Composite Types - those composed of other types, e.g., `type_optional(type_string())` is equivalent to `?string`,
-  i.e., a string or null.
-- Simple Types - single types, e.g., `type_string()`, `type_integer()`, `type_boolean()`, `type_float()`, `type_array()`,
-  `type_object()`.
+- Composite Types: types made of other types. For example, `type_optional(type_string())` is the same as `?string`,
+  that is, a string or null.
+- Simple Types: single types, for example `type_string()`, `type_integer()`, `type_boolean()`, `type_float()`,
+  `type_array()`, `type_object()`.
 
 ## Architecture
 
-The entire library is written following best object-oriented programming practices and design patterns. Each type is a
-class implementing the `Flow\Types\Type` interface, enabling easy extension and addition of new types in the future.
+The library follows object-oriented programming practices and design patterns. Each type is a class that implements
+the `Flow\Types\Type` interface. You can therefore extend the library and add new types.
 
-To improve the developer experience, the library includes DSL (Domain Specific Language) functions that simplify
-creating and using types in code.
+For a better developer experience, the library has DSL (Domain Specific Language) functions. They make it simpler to
+create and use types in code.
 
-For example, `new \Flow\Types\Type\Native\StringType()` is equivalent to `\Flow\Types\DSL\type_string()`.
+For example, `new \Flow\Types\Type\Native\StringType()` is the same as `\Flow\Types\DSL\type_string()`.
 
-This library also provides a set of helpers for working with types, that are also covered by the DSL.
+This library also has helpers for types, and the DSL also covers them.
 
-For example, to determine a variable's type, you can use the `\Flow\Types\DSL\get_type($value) : Type` function, which
-internally creates a new instance of `\Flow\Types\Type\TypeDetector` and calls its `detectType(mixed $value) : Type`
+For example, to find the type of a variable, use the `\Flow\Types\DSL\get_type($value) : Type` function. Internally,
+it creates a new instance of `\Flow\Types\Type\TypeDetector` and calls its `detectType(mixed $value) : Type`
 method.
 
-The DSL definition can thus be considered the library's API, located in the
+The DSL definition is therefore the API of the library. It is in the
 file [functions.php](/src/lib/types/src/Flow/Types/DSL/functions.php).
 
-One of the library's key principles is tight integration with static code analysis tools. This is achieved through
-proper use of template mechanisms and type narrowing, `@template` and `@assert`.
+One main principle of the library is tight integration with static code analysis tools. The library gets this
+through correct use of templates and type narrowing, `@template` and `@assert`.
 
-More details can be found at:
+For more information, read:
 
 - [PHPStan Generic](https://phpstan.org/blog/generics-in-php-using-phpdocs)
 - [Generic by Examples](https://phpstan.org/blog/generics-by-examples)
 - [Narrowing Types](https://phpstan.org/writing-php-code/narrowing-types)
 
-Therefore, it is critical that all classes and functions in this library are properly documented in PHPDoc.
+All classes and functions in this library must therefore have correct PHPDoc.
 
-Two rules follow from that, and both are load-bearing rather than stylistic.
+Two rules follow from that. Both rules are necessary for the analysis, not a matter of style.
 
-**Every implementation restates `@return` when its own type is narrower than its native signature.** Mago resolves a
-return type from the implementation's docblock, never from the interface's - an implementation that declares
-`assert(mixed $value): string` and omits `@return non-empty-string` silently hands back `string`, discarding exactly
-the narrowing the library exists to provide. This produces no diagnostic on its own: the resulting program is valid,
-and nothing observes an inferred type.
-[`TypeNarrowing`](/src/lib/types/tests/Flow/Types/Tests/Unit/Type/Fixtures/TypeNarrowing.php) funnels every `type_*()`
-through `assert()`, `cast()` and `isValid()` into sinks that accept only the narrow type, so `just analyze` fails on
-the line where a narrowing is lost.
+The first rule: if the type of an implementation is narrower than its native signature, the implementation repeats
+`@return`. Mago
+reads a return type from the docblock of the implementation, never from the docblock of the interface. An
+implementation can declare `assert(mixed $value): string` without `@return non-empty-string`. It then returns
+`string` without a warning, and it loses exactly the narrowing that the library exists for. Mago reports no
+diagnostic for this: the program is valid, and nothing looks at an inferred type.
+[`TypeNarrowing`](/src/lib/types/tests/Flow/Types/Tests/Unit/Type/Fixtures/TypeNarrowing.php) sends each `type_*()`
+through `assert()`, `cast()` and `isValid()` into sinks that accept only the narrow type. `just analyze` therefore
+fails on the line that loses a narrowing.
 
-**Every implementation declares `@template T of X` and `@implements Type<T>`, including those where nothing can bind
-`T` to anything but its own bound.** These templates look like ceremony and are not. Mago's `flow-php` analyzer plugin
-builds a `type_structure()` shape by reading type parameter 0 off each element's concrete class; an element class with
-no type parameters makes the plugin discard the *entire* shape, degrading it to `array<array-key, mixed>` - again with
-no diagnostic.
+The second rule: each implementation declares `@template T of X` and `@implements Type<T>`. This also applies to an
+implementation where nothing can bind `T` to a type other than its own bound. These templates look unnecessary, but they are necessary.
+The `flow-php` analyzer plugin of Mago builds a `type_structure()` shape. It reads type parameter 0 from the concrete
+class of each element. If an element class has no type parameters, the plugin discards the full shape and makes it
+`array<array-key, mixed>`. Again, there is no diagnostic.
 [`StructureShapeInference`](/src/lib/types/tests/Flow/Types/Tests/Unit/Type/Fixtures/StructureShapeInference.php)
-pins those shapes so `just analyze` fails if this is broken. The derivation runs in the `flow/types` Mago analyzer plugin shipped by
-[flow-php/mago-types-bridge](/src/bridge/mago/types), configured in `mago.toml`, which replaces Mago's built-in `flow-php` plugin: same
-`type_structure()` shape derivation, plus `structure_element()` marker support - the member value type comes from
-the element's first template and a literal `optional: true` (the `TOptional` template) marks the shape key
-optional. `StructureShapeInference::markerElements` pins the marker derivation.
+pins those shapes. If this rule breaks, `just analyze` fails. The derivation runs in the `flow/types` Mago analyzer
+plugin. [flow-php/mago-types-bridge](/src/bridge/mago/types) ships this plugin, and `mago.toml` configures it. It
+replaces the built-in `flow-php` plugin of Mago. It does the same `type_structure()` shape derivation, and it also
+supports the `structure_element()` marker. The member value type comes from the first template of the element. A
+literal `optional: true` (the `TOptional` template) makes the shape key optional.
+`StructureShapeInference::markerElements` pins the marker derivation.
 
 ## Testing
 
-This library provides a set of unit tests that verify the correct operation of all types and DSL functions.  
-All tests are located in the directory [`Flow/Types/Tests/Unit`](/src/lib/types/tests/Flow/Types/Tests/Unit).
+This library has unit tests that make sure that all types and DSL functions work correctly.
+All tests are in the directory [`Flow/Types/Tests/Unit`](/src/lib/types/tests/Flow/Types/Tests/Unit).
 
-Below is an example template that can be used to create cover a type with unit tests:
+This example template covers a type with unit tests:
 
 ```php ignore
 <?php
@@ -169,14 +171,13 @@ final class CustomTypeTest extends TestCase
 ```
 
 
-Additionally, if a given type provides any extra functions, they should be tested in separate unit tests, covering all
-possible use cases.
+If a type has extra functions, test them in separate unit tests that cover all use cases.
 
-The Types library is part of the Flow PHP framework for data processing.  
-It is developed in a monorepository alongside other framework libraries and components.  
-All tools, such as Composer, PHPUnit, PHPStan, and Mago, are available in the same location.
+The Types library is part of the Flow PHP framework for data processing.
+Its development happens in a monorepository, together with the other libraries and components of the framework.
+All tools, such as Composer, PHPUnit and Mago, are in the same location.
 
-Tests can be executed using the following command at the monorepo root level:
+To run the tests, use these commands in the root of the monorepo:
 
 ```shell
 just test --testsuite=lib-types-unit

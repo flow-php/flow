@@ -8,20 +8,11 @@ package: flow-php/etl-adapter-csv
 
 [TOC]
 
-Flow PHP's Adapter CSV is a proficient library crafted to enable seamless interaction with CSV data within your ETL (
-Extract, Transform, Load) workflows. This adapter is indispensable for developers aiming to effortlessly extract from or
-load data into CSV formats, ensuring a smooth and reliable data transformation journey. By employing the Adapter CSV
-library, developers can access a robust set of features tailored for precise CSV data handling, making complex data
-transformations both manageable and efficient. The Adapter CSV library encapsulates a broad range of functionalities,
-providing a streamlined API for engaging with CSV data, which is vital in modern data processing and transformation
-scenarios. This library embodies Flow PHP's dedication to offering versatile and effective data processing solutions,
-making it a prime choice for developers dealing with CSV data in large-scale and data-intensive projects. With Flow
-PHP's Adapter CSV, managing CSV data within your ETL workflows becomes a more simplified and efficient task, perfectly
-aligning with the robust and adaptable framework of the Flow PHP ecosystem.
+The CSV adapter reads and writes CSV data in ETL (Extract, Transform, Load) pipelines.
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/etl-adapter-csv.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/etl-adapter-csv.md).
 
 ## Extractor
 
@@ -43,9 +34,9 @@ record      ['1', '', 'x']         ->  'e01' => null   (a present '' is null; `w
 empty line                         ->  skipped
 ```
 
-A corrupted record throws `CorruptedRecordException`, or goes to `->withCorruptedRecords($loader)`, see
-[Corrupted Records](/documentation/components/core/corrupted-records.md). A column of `->withSchema()` missing from the
-header throws `SchemaValidationException`.
+A corrupted record throws `CorruptedRecordException`, or goes to `->withCorruptedRecords($loader)`. For more
+information, read [Corrupted Records](/documentation/components/core/corrupted-records.md). If a column of
+`->withSchema()` is not in the header, the read throws `SchemaValidationException`.
 
 ## Loader
 
@@ -78,19 +69,19 @@ id,active,price,at,days,labels,size,meta
 2,false,1.0,,[],{},"{""w"":3,""h"":4}",{}
 ```
 
-| Column                     | Field                                                                                                                              |
-|----------------------------|------------------------------------------------------------------------------------------------------------------------------------|
-| `boolean`                  | `true` / `false`                                                                                                                   |
-| `float`                    | the shortest text that reads back as the same float, always with a fraction or an exponent: `1.0`, `1.0e+25`; `NAN`, `INF`, `-INF` |
-| `null`, `''`               | an empty field - `from_csv()` reads both back as `null` unless `withEmptyToNull(false)`                                            |
-| `datetime`, `date`         | `withDateTimeFormat()` (default `DATE_ATOM`) in the column zone, `withDateFormat()` (default `Y-m-d`)                              |
-| `time`                     | microseconds                                                                                                                       |
-| `list`, `map`, `structure` | JSON: a list is `[...]`, a map and a structure are always `{...}`; every element is written as a column of its type would be       |
-| `json`                     | the stored text                                                                                                                    |
+| Column                     | Field                                                                                                                                   |
+|----------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| `boolean`                  | `true` / `false`                                                                                                                        |
+| `float`                    | the shortest text that reads back as the same float, always with a fraction or an exponent: `1.0`, `1.0e+25`. Also `NAN`, `INF`, `-INF` |
+| `null`, `''`               | an empty field. `from_csv()` reads both back as `null`, except with `withEmptyToNull(false)`                                            |
+| `datetime`, `date`         | `withDateTimeFormat()` (default `DATE_ATOM`) in the column zone, `withDateFormat()` (default `Y-m-d`)                                   |
+| `time`                     | microseconds                                                                                                                            |
+| `list`, `map`, `structure` | JSON: a list is `[...]`, and a map and a structure are always `{...}`. Each element is written like a column of its type                |
+| `json`                     | the stored text                                                                                                                         |
 
-Floats are rendered under `serialize_precision = -1`. When the ini holds another value the writer sets it for the
-render and restores it, so `ini_set()` must be allowed; otherwise it throws
+Floats are rendered under `serialize_precision = -1`. If the ini has a different value, the writer sets it for the
+render and then restores it. `ini_set()` must therefore be allowed. If it is not allowed, the writer throws
 `RuntimeException('Writing floats requires serialize_precision = -1 and ini_set() cannot change it')`.
 
-With the [`flow_php`](/documentation/components/extensions/flow-php-ext.md) extension loaded the same bytes are
-rendered natively.
+When the [`flow_php`](/documentation/components/extensions/flow-php-ext.md) extension is loaded, it renders the same
+bytes natively.

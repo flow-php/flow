@@ -4,7 +4,7 @@
 
 [TOC]
 
-DataFrame provides several methods for renaming columns. These operations are lazy and don't execute until a trigger operation is called.
+DataFrame has several methods to rename columns. These operations are lazy. Only a trigger operation executes them.
 
 ## Single Column Rename
 
@@ -27,9 +27,9 @@ data_frame()
 
 ## Batch Renaming
 
-The `renameEach()` method allows you to rename multiple columns at once using various strategies:
+The `renameEach()` method renames multiple columns at the same time, with different strategies:
 
 ### Available Strategies
 
-- **`rename_style()`** - Changes column names using string style conventions (camelCase, snake_case, etc.)
-- **`rename_replace()`** - Replaces parts of column names using search and replace patterns
+- `rename_style()`: changes column names with string style conventions, for example camelCase or snake_case
+- `rename_replace()`: replaces parts of column names with search and replace patterns

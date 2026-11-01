@@ -2,8 +2,8 @@
 
 [DOC_LINK:/documentation/components/core/core.md]
 
-`Until` works in a very similar way to [filter](/documentation/components/core/filter.md) function. 
-The difference is that it will send STOP signal to extractor when the condition is met.
+`Until` works almost the same as the [filter](/documentation/components/core/filter.md) function.
+The difference: at the first row that matches the condition, it sends a STOP signal to the extractor.
 
 Example:
 
@@ -30,6 +30,5 @@ data_frame()
 1 rows
 ```
 
-This feature is useful when you want to stop the extraction process when a certain condition is met but the data source
-does not provide a good way to filter the data. For example, when you want to stop the extraction process when you reach
-a certain date. 
+Use this feature to stop the extraction at a condition that the data source cannot filter well. An example is a
+stop of the extraction at a specific date.

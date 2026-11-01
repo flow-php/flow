@@ -8,69 +8,64 @@ Date: 2025-01-09
 ## Context
 ---
 
-Flow is a framework, and as all frameworks, it should provide extension points for developers to hook into the framework and extend its functionality.
+Flow is a framework. As all frameworks, it must give developers extension points, where they can connect to the framework and extend it.
 
 How to find an extension point? 
 
-Easy, look for interfaces! For example take a look at `\Flow\ETL\Storage\RowsStorage` which is 
-an interface with few implementations. Thanks to the interface, you can easily
-create your own implementation and use it in the framework.
+Look for interfaces. An example is `\Flow\ETL\Storage\RowsStorage`, an interface with a few implementations.
+Because of the interface, you can create your own implementation and use it in the framework.
 
-Most of the extension points exposed through `\Flow\ETL\Runtime\Config` where you can
-replace a default implementations of various interfaces with those that better 
-fit your needs.
+Most of the extension points are in `\Flow\ETL\Runtime\Config`. There, you can replace the default
+implementations of different interfaces with implementations that fit your needs better.
 
-Those extension points are there by design and should follow the backward compatibility policy. 
+Those extension points exist by design, and they must follow the backward compatibility policy.
 
-Are there any other extension points that we should consider?
+Are there other extension points to think about?
 
-Yes... Unfortunately, each class that is not marked final and that is being somehow
-injected into the DataFrame must be considered as an extension point. 
+Yes. Each class that is not marked final, and that goes into the DataFrame in some way, is also an extension
+point.
 
-Why? Because nothing prevents developers from extending those classes and injecting 
-their custom version into the DataFrame.
+The reason: nothing stops developers from extending those classes and putting their custom version into the
+DataFrame.
 
-Those extension points can't be covered by our backward compatibility policy. 
+Our backward compatibility policy cannot cover those extension points.
 
 ## Decision
 ---
 
-**Closed by default**
+Closed by default:
 
-All classes should be marked as `final` and whenever we need to expose an extension point,
-we should do it through an interface.
+All classes must be marked as `final`. Each extension point that we need must be an interface.
 
-**Always possible to open later**
+Always possible to open later:
 
-In a justifiable cases, we can expose extension points through abstract classes or
-simply allowing people to extend the class. Those must always be approved by one of
-the core contributors. 
+In justified cases, we can give extension points through abstract classes, or allow people to extend the class. One
+of the core contributors must always approve these cases.
 
-**No guarantee and support for workarounds**
+No guarantee and no support for workarounds:
 
-Developers can still use reflections or dedicated tools to "unfinalize" Flow classes, 
-but we do not guarantee backward compatibility for those cases and everyone should 
-do it at their own risk. As a Flow PHP maintainers, we also reserve the right to
-not provide any help or support for those cases.
+Developers can still use reflection or special tools to "unfinalize" Flow classes. We do not guarantee backward
+compatibility for those cases, and each developer does it at their own risk. As Flow PHP maintainers, we also keep the
+right to give no help or support for those cases.
 
 ## Pros & Cons
 ---
 
-- zero risk of breaking accidentally backward compatibility promise
+- no risk to break the backward compatibility promise by accident
 - more predictable behavior
-- reduced cost of maintaining backward compatibility
-- easier to find an actual extension points
-- impossible to mock classes that aren't marked as `final` in tests (which is a good thing, users shouldn't mock Flow classes in their test suites)
+- lower cost to keep backward compatibility
+- easier to find the real extension points
+- impossible to mock classes that are marked as `final` in tests (which is good, because users must not mock Flow classes in their test suites)
 
 ## Alternatives Considered (optional)
 ---
 
-Alternatively we could take similar approach to Symfony and mark classes as `final`
-[when it makes sense](https://github.com/symfony/symfony/issues/15233#issuecomment-1566682054)
-but this approach is too easy to get abused. 
+An alternative is the approach of Symfony: mark classes as `final`
+[when it makes sense](https://github.com/symfony/symfony/issues/15233#issuecomment-1566682054).
+But this approach is too easy to abuse.
 
-Plus, changing non-final class into a final one is much bigger BC break
-then the other way around.
+Also, a change from a non-final class to a final class is a much bigger BC break
+than the other way around.
 
 ## Links and References (optional)
 ---

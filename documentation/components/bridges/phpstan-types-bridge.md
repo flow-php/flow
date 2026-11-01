@@ -4,8 +4,8 @@ package: flow-php/phpstan-types-bridge
 
 # PHPStan Types Bridge
 
-PHPStan extension for [flow-php/types](/documentation/components/libs/types.md). It teaches PHPStan the
-precise return type of the `Flow\Types\DSL\type_structure()` DSL function, so structure shapes are narrowed
+PHPStan extension for [flow-php/types](/documentation/components/libs/types.md). It gives PHPStan the
+precise return type of the `Flow\Types\DSL\type_structure()` DSL function. Structure shapes are therefore narrowed
 for editor autocompletion and static analysis.
 
 [PACKAGE_NAV]
@@ -14,12 +14,12 @@ for editor autocompletion and static analysis.
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/phpstan-types-bridge.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/phpstan-types-bridge.md).
 
 ## Overview
 
-Without the extension PHPStan infers the return type of `type_structure()` as the generic `StructureType`.
-With the extension installed, the structure definition is read from the call arguments and PHPStan narrows
+Without the extension, PHPStan infers the return type of `type_structure()` as the generic `StructureType`.
+With the extension, PHPStan reads the structure definition from the call arguments and narrows
 the result to the concrete array shape:
 
 ```php
@@ -39,8 +39,8 @@ $schema = type_structure(
 );
 ```
 
-The bridge also narrows `structure_element()` marker values inside the first argument - the member
-type comes from the element's type and a literal `optional: true` flag turns the shape key optional:
+The bridge also narrows `structure_element()` marker values inside the first argument. The member
+type comes from the type of the element. A literal `optional: true` flag makes the shape key optional:
 
 ```php
 // Inferred as: Type<array{id: int, nickname?: string}>&StructureType
@@ -50,8 +50,8 @@ $schema = type_structure([
 ]);
 ```
 
-> **Note:** Flow PHP itself is analyzed with [Mago](https://mago.carthage.software/), whose `flow-php`
-> plugin handles `type_structure()` natively. This bridge exists purely for downstream projects that use
+> Note: Flow PHP itself is analyzed with [Mago](https://mago.carthage.software/). Its `flow-php`
+> plugin handles `type_structure()` natively. This bridge exists only for downstream projects that use
 > PHPStan.
 
 ## Requirements
@@ -62,12 +62,12 @@ $schema = type_structure([
 
 ## Usage
 
-Register the extension in your `phpstan.neon` (skipped automatically when using
-[phpstan/extension-installer](https://github.com/phpstan/extension-installer)):
+Register the extension in your `phpstan.neon`. With
+[phpstan/extension-installer](https://github.com/phpstan/extension-installer), this step is automatic:
 
 ```neon
 includes:
     - vendor/flow-php/phpstan-types-bridge/extension.neon
 ```
 
-That's it - `type_structure()` calls are now narrowed by PHPStan across your codebase.
+PHPStan now narrows the `type_structure()` calls in your full codebase.

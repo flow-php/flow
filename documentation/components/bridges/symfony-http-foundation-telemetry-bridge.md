@@ -4,8 +4,8 @@ package: flow-php/symfony-http-foundation-telemetry-bridge
 
 # Symfony HttpFoundation Telemetry Bridge
 
-Flow Symfony HttpFoundation Telemetry Bridge provides carriers for propagators that can pass and read telemetry context
-and baggage via Symfony HttpFoundation request and response objects.
+This bridge has carriers for propagators. With them, propagators pass and read telemetry context and baggage
+through Symfony HttpFoundation request and response objects.
 
 [PACKAGE_NAV]
 
@@ -13,24 +13,24 @@ and baggage via Symfony HttpFoundation request and response objects.
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/symfony-http-foundation-telemetry-bridge.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/symfony-http-foundation-telemetry-bridge.md).
 
 ## Overview
 
-This bridge connects Flow PHP's Telemetry library with Symfony's HttpFoundation component, enabling telemetry context
-propagation in HTTP-based applications. It provides carriers that allow propagators to inject and extract telemetry
-context (trace context, baggage) through HTTP headers in Symfony Request and Response objects.
+This bridge connects the Telemetry library of Flow PHP with the HttpFoundation component of Symfony. HTTP-based
+applications can then propagate telemetry context. Its carriers let propagators inject and extract telemetry context
+(trace context, baggage) through HTTP headers in Symfony Request and Response objects.
 
-This is particularly useful for:
+Use cases:
 
 - Distributed tracing across microservices
-- Propagating correlation IDs through HTTP calls
-- Passing baggage data (key-value pairs) across service boundaries
+- Correlation IDs that go through HTTP calls
+- Baggage data (key-value pairs) that goes across service boundaries
 - Integration with OpenTelemetry-based observability stacks
 
-> **Note:** This bridge is separate from the `flow-php/symfony-http-foundation-bridge` which is designed for ETL
-> operations. This bridge focuses specifically on telemetry integration, allowing users who only need telemetry
-> support to avoid bringing in the entire ETL framework as a dependency.
+> Note: This bridge is separate from the `flow-php/symfony-http-foundation-bridge`, which is for ETL operations.
+> This bridge is only for telemetry integration. Users who need only telemetry support therefore do not get the full
+> ETL framework as a dependency.
 
 ## Requirements
 

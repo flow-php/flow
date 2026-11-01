@@ -8,31 +8,31 @@ package: flow-php/azure-sdk
 
 [TOC]
 
-Simple, lightweight, dependency-free and efficient Azure SDK for PHP.
+A small Azure SDK for PHP without dependencies.
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/azure-sdk.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/azure-sdk.md).
 
 > [!NOTE]  
-> Since the Azure SDK is not providing any http client or factories, you need to install them manually.
-> The following example uses the `php-http/discovery` package to find the factories in your project existing dependencies.
-> Use below links to find the implementations for client and the factories:
+> The Azure SDK does not include an http client or factories, so you must install them yourself.
+> The example below uses the `php-http/discovery` package to find the factories in the existing dependencies of your project.
+> Use these links to find implementations of the client and the factories:
 
 - [Http Client](https://packagist.org/providers/psr/http-client-implementation)
 - [Http Factories](https://packagist.org/providers/psr/http-factory-implementation)
 
 > [!TIP]
-> To fully benefit from SDK features, you need to install the following packages:
-> `composer require flow-php/monolog-http-bridge` that will normalize request/response objects from logs context
+> For all SDK features, install this package:
+> `composer require flow-php/monolog-http-bridge`. It normalizes the request/response objects in the log context.
 
 > [!WARNING]
-> This implementation is not fully covering Azure SDK, only Storage related services are implemented. 
-> Feel free to contribute to the project and add more services. 
+> This implementation does not cover the full Azure SDK. It implements only the Storage services.
+> You can contribute to the project and add more services.
 
 ## Usage
 
-The absolute minimum configuration to start using the SDK is to provide the account name and the account key.
+The minimum configuration for the SDK is the account name and the account key.
 
 ```php
 <?php
@@ -49,9 +49,9 @@ $sdk = azure_blob_service(
 
 #### Advanced
 
-Since our goal is to not depend on any specific http client implementation, the library will use [php-http/discovery](https://packagist.org/packages/php-http/discovery)
-to find the factories for the http client and the request/response objects. To gain full control over this library 
-it need to be initialized like this: 
+The library does not depend on a specific http client implementation. It uses [php-http/discovery](https://packagist.org/packages/php-http/discovery)
+to find the factories for the http client and the request/response objects. For full control over this library,
+initialize it like this:
 
 ```php
 <?php

@@ -6,12 +6,12 @@
 
 The client handles type conversion between PHP and PostgreSQL in two directions:
 
-- **Parameter binding**: Converting PHP values to PostgreSQL format when executing queries
-- **Result casting**: Converting PostgreSQL results back to PHP types
+- Parameter binding: converts PHP values to the PostgreSQL format for query execution
+- Result casting: converts PostgreSQL results back to PHP types
 
 ## Result Casting
 
-When fetching data, PostgreSQL returns all values as strings. The client automatically casts **unambiguous types** to
+In a fetch, PostgreSQL returns all values as strings. The client automatically casts unambiguous types to
 their
 native PHP equivalents:
 
@@ -22,9 +22,9 @@ native PHP equivalents:
 | INT8            | `int` or `string` | `int` on 64-bit, `string` on 32-bit to avoid overflow |
 | FLOAT4, FLOAT8  | `float`           | Handles `Infinity`, `-Infinity`, `NaN`                |
 | BYTEA           | `string`          | Decoded binary data                                   |
-| Everything else | `string`          | JSON, UUID, dates, arrays, etc.                       |
+| Everything else | `string`          | for example JSON, UUID, dates, arrays                 |
 
-**Why only these types?** Types like JSON, UUID, timestamps, and arrays have multiple valid PHP representations.
+Why only these types? Types like JSON, UUID, timestamps, and arrays have multiple valid PHP representations.
 Rather than choosing one, the client returns them as strings, letting you parse them as needed:
 
 ```php
@@ -49,7 +49,7 @@ $createdAt = new \DateTimeImmutable($row['created_at']);
 
 ## Parameter Binding
 
-PHP values are automatically converted when binding parameters:
+PHP values are converted automatically at parameter binding:
 
 | PHP Type             | PostgreSQL Type           | Notes                                                                             |
 |----------------------|---------------------------|-----------------------------------------------------------------------------------|
@@ -58,8 +58,8 @@ PHP values are automatically converted when binding parameters:
 | `float`              | DOUBLE PRECISION (FLOAT8) |                                                                                   |
 | `bool`               | BOOLEAN                   | `true` → `'t'`, `false` → `'f'`                                                   |
 | `null`               | NULL                      |                                                                                   |
-| `\DateTimeInterface` | TIMESTAMP                 | Normalized to UTC; use `typed()` with `ValueType::TIMESTAMPTZ` to keep the offset |
-| `array`              | Ambiguous              | Use `typed()` to specify JSON or ARRAY                                            |
+| `\DateTimeInterface` | TIMESTAMP                 | Normalized to UTC. Use `typed()` with `ValueType::TIMESTAMPTZ` to keep the offset |
+| `array`              | Ambiguous                 | Use `typed()` to specify JSON or ARRAY                                            |
 
 ### The Array Ambiguity
 
@@ -91,7 +91,7 @@ $client->execute(
 
 ## Explicit Type Hints with typed()
 
-When automatic detection isn't sufficient, use `typed()` to specify the exact PostgreSQL type:
+If automatic detection is not sufficient, use `typed()` to give the exact PostgreSQL type:
 
 ```php
 <?php
@@ -128,7 +128,7 @@ $client->execute(
 );
 ```
 
-You can also use the `ValueType` enum directly if you prefer:
+You can also use the `ValueType` enum directly:
 
 ```php
 <?php
@@ -146,46 +146,46 @@ $client->execute(
 
 | DSL Function                                  | PostgreSQL Type  | Use Case                       |
 |-----------------------------------------------|------------------|--------------------------------|
-| **String types**                              |                  |                                |
+| String types                                  |                  |                                |
 | `value_type_text()`                           | TEXT             | Text strings                   |
 | `value_type_varchar()`                        | VARCHAR          | Variable-length strings        |
 | `value_type_char()`                           | CHAR             | Fixed-length strings           |
-| **Integer types**                             |                  |                                |
+| Integer types                                 |                  |                                |
 | `value_type_int2()` / `value_type_smallint()` | SMALLINT         | Small integers                 |
 | `value_type_int4()` / `value_type_integer()`  | INTEGER          | Standard integers              |
 | `value_type_int8()` / `value_type_bigint()`   | BIGINT           | Large integers                 |
-| **Floating point types**                      |                  |                                |
+| Floating point types                          |                  |                                |
 | `value_type_float4()` / `value_type_real()`   | REAL             | Single precision floats        |
 | `value_type_float8()` / `value_type_double()` | DOUBLE PRECISION | Double precision floats        |
 | `value_type_numeric()`                        | NUMERIC          | Arbitrary precision numbers    |
 | `value_type_money()`                          | MONEY            | Currency amounts               |
-| **Boolean type**                              |                  |                                |
+| Boolean type                                  |                  |                                |
 | `value_type_bool()` / `value_type_boolean()`  | BOOLEAN          | True/false values              |
-| **Binary types**                              |                  |                                |
+| Binary types                                  |                  |                                |
 | `value_type_bytea()`                          | BYTEA            | Binary data                    |
 | `value_type_bit()`                            | BIT              | Bit strings                    |
 | `value_type_varbit()`                         | VARBIT           | Variable-length bit strings    |
-| **Date/time types**                           |                  |                                |
+| Date/time types                               |                  |                                |
 | `value_type_date()`                           | DATE             | Dates without time             |
 | `value_type_time()`                           | TIME             | Time without timezone          |
 | `value_type_timetz()`                         | TIMETZ           | Time with timezone             |
 | `value_type_timestamp()`                      | TIMESTAMP        | Timestamp without timezone     |
 | `value_type_timestamptz()`                    | TIMESTAMPTZ      | Timestamp with timezone        |
 | `value_type_interval()`                       | INTERVAL         | Time intervals                 |
-| **JSON types**                                |                  |                                |
+| JSON types                                    |                  |                                |
 | `value_type_json()`                           | JSON             | JSON data                      |
 | `value_type_jsonb()`                          | JSONB            | Binary JSON data               |
-| **UUID type**                                 |                  |                                |
+| UUID type                                     |                  |                                |
 | `value_type_uuid()`                           | UUID             | Universally unique identifiers |
-| **Network types**                             |                  |                                |
+| Network types                                 |                  |                                |
 | `value_type_inet()`                           | INET             | IPv4/IPv6 addresses            |
 | `value_type_cidr()`                           | CIDR             | Network addresses              |
 | `value_type_macaddr()`                        | MACADDR          | MAC addresses                  |
 | `value_type_macaddr8()`                       | MACADDR8         | MAC addresses (EUI-64)         |
-| **Other types**                               |                  |                                |
+| Other types                                   |                  |                                |
 | `value_type_xml()`                            | XML              | XML data                       |
 | `value_type_oid()`                            | OID              | Object identifiers             |
-| **Array types**                               |                  |                                |
+| Array types                                   |                  |                                |
 | `value_type_text_array()`                     | TEXT[]           | Array of strings               |
 | `value_type_int4_array()`                     | INTEGER[]        | Array of integers              |
 | `value_type_int8_array()`                     | BIGINT[]         | Array of big integers          |
@@ -197,8 +197,8 @@ $client->execute(
 
 ## Built-in Value Converters
 
-The client includes converters for all common PostgreSQL types. These converters handle the `toDatabase()` conversion
-when you use `typed()`:
+The client includes converters for all common PostgreSQL types. With `typed()`, these converters handle the
+`toDatabase()` conversion:
 
 | Converter            | PostgreSQL Types            | PHP Input Types             |
 |----------------------|-----------------------------|-----------------------------|
@@ -227,8 +227,8 @@ when you use `typed()`:
 
 ### Converter Notes
 
-- **FloatConverter**: Handles special PostgreSQL float values (`Infinity`, `-Infinity`, `NaN`)
-- **Array Converters**: Type-specific converters for PostgreSQL arrays. Each validates element types strictly:
+- FloatConverter: Handles special PostgreSQL float values (`Infinity`, `-Infinity`, `NaN`)
+- Array Converters: Type-specific converters for PostgreSQL arrays. Each validates element types strictly:
     - `BoolArrayConverter`: Expects `bool` elements
     - `IntArrayConverter`: Expects `int` elements
     - `FloatArrayConverter`: Expects `float` elements
@@ -237,8 +237,8 @@ when you use `typed()`:
     - `JsonArrayConverter`: Expects `array` or `object` elements (JSON-encodable)
     - All converters support `null` elements (converted to PostgreSQL `NULL`)
     - Invalid element types throw `ValueConversionException`
-- **JsonConverter**: Accepts PHP arrays, objects, or already-encoded JSON strings
-- **NumericConverter**: Preserves precision as string to avoid floating-point errors
+- JsonConverter: Accepts PHP arrays, objects, or already-encoded JSON strings
+- NumericConverter: Preserves precision as string to avoid floating-point errors
 
 ## Custom ValueConverters
 
@@ -282,7 +282,7 @@ readonly class CustomMoneyConverter implements ValueConverter
 
 ## Registering Custom Converters
 
-Add converters when creating the client:
+Add converters at the creation of the client:
 
 ```php
 <?php
@@ -330,7 +330,7 @@ $converters->unregister(ValueType::MONEY);
 
 ## Pre-converted Parameters
 
-`execute()` runs a converter for every parameter. Parameters already in PostgreSQL's text form can skip that step:
+`execute()` runs a converter for each parameter. Parameters that are already in the text form of PostgreSQL can skip that step:
 wrap the whole list in `converted_parameters()` and every value is sent as it is.
 
 ```php
@@ -344,7 +344,7 @@ $client->execute(
 );
 ```
 
-Bulk writes use it to resolve each column's converter once, instead of once per value:
+Bulk writes use it to resolve the converter of each column once, not once for each value:
 
 ```php
 <?php
@@ -366,7 +366,7 @@ $client->execute(bulk_insert('users', ['id', 'created_at'], count($users)), conv
 ```
 
 - Each value is a `string`, or `null` for SQL `NULL`, bound by position to `$1`, `$2`, ...
-- Nothing is converted or checked: registered converters are skipped, and a value PostgreSQL cannot parse for its
+- Nothing is converted or validated. Registered converters are skipped. A value that PostgreSQL cannot parse for its
   column fails the query with a `QueryException` (SQLSTATE `22P02`).
 - Only `execute()` accepts it.
 

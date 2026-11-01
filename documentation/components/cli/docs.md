@@ -10,13 +10,13 @@ package: flow-php/cli
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/cli.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/cli.md).
 
 ## Commands
 
 ### Config 
 
-All Flow CLI Commands can be configured using `--config` option. The option accepts a path to a configuration file in php that returns a Config or ConfigBuilder instance.
+You can configure all Flow CLI commands with the `--config` option. The option takes the path to a php configuration file that returns a `Config` or `ConfigBuilder` instance.
 
 `.flow.php`
 
@@ -33,8 +33,8 @@ return config_builder()
 
 ### Reading remote files
 
-The CLI reads and writes `file://` paths only. To work with a remote filesystem, build it in a pipeline
-file and run that with `flow run`:
+The CLI reads and writes only `file://` paths. For a remote filesystem, build the filesystem in a pipeline
+file and run that file with `flow run`:
 
 ```php ignore
 # pipeline.php
@@ -198,7 +198,7 @@ Options:
 
 Example: 
 
-CSV infers its schema, so `file:schema` prints types without any extra flag:
+CSV infers its schema, so `file:schema` prints the types without an extra flag:
 
 ```shell
 $ flow schema orders.csv --output-table
@@ -216,7 +216,7 @@ $ flow schema orders.csv --output-table
 7 rows
 ```
 
-Every inferred column is nullable - inference never claims a column cannot be null.
+Each inferred column is nullable. Inference never says that a column cannot be null.
 
 ### `file:analyze` alias `analyze`
 
@@ -427,10 +427,10 @@ Help:
 
 ## `db:table:schema`
 
-Prints a schema of a dataset from a database table.
+Prints the schema of a dataset from a database table.
 
-> Note: Database connection string can be passed through `FLOW_DB_CONNECTION_STRING` environment variable, otherwise command will ask for it.
-> If you need a custom connection, you can use `--db-connection-file` option which should point to a php file that will be included and should return an instance of `\Doctrine\DBAL\Connection`.
+> Note: you can give the database connection string in the `FLOW_DB_CONNECTION_STRING` environment variable. If you do not, the command asks for it.
+> For a custom connection, use the `--db-connection-file` option. It must point to a php file that the command includes. The file must return an instance of `\Doctrine\DBAL\Connection`.
 
 ```shell
 flow db:table:schema --help
@@ -492,8 +492,8 @@ Help:
 
 ## `schema:format`
 
-Take a JSON schema and print it in another format, including PHP,  
-which can be then directly used to validate datasets. 
+Takes a JSON schema and prints it in a different format, for example PHP.
+You can then use the PHP output directly to make sure that datasets are valid.
 
 ```shell
 flow schema:format --help

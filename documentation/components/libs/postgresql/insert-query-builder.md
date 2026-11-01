@@ -201,7 +201,7 @@ echo $query->toSql();
 
 ### ON CONFLICT DO UPDATE with EXCLUDED
 
-Reference the values that would have been inserted using the `excluded` pseudo-table:
+Reference the values of the attempted insert with the `excluded` pseudo-table:
 
 ```php
 <?php

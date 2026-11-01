@@ -13,7 +13,7 @@ seo_description: >
 
 ## Precompiled Binaries
 
-Precompiled binaries are available for download from the [GitHub Releases](https://github.com/flow-php/flow-php-ext/releases/latest) page.
+You can download precompiled binaries from the [GitHub Releases](https://github.com/flow-php/flow-php-ext/releases/latest) page.
 
 Binary names follow the [PIE naming convention](https://github.com/php/pie/blob/1.4.x/docs/extension-maintainers.md):
 
@@ -21,8 +21,8 @@ Binary names follow the [PIE naming convention](https://github.com/php/pie/blob/
 
 Available platforms:
 - macOS ARM64 (Apple Silicon)
-- Linux ARM64 - glibc (Debian, Ubuntu, ...) and musl (Alpine)
-- Linux x86_64 - glibc (Debian, Ubuntu, ...) and musl (Alpine)
+- Linux ARM64: glibc (Debian, Ubuntu, ...) and musl (Alpine)
+- Linux x86_64: glibc (Debian, Ubuntu, ...) and musl (Alpine)
 
 PHP versions: 8.3, 8.4, 8.5 (each with NTS and ZTS variants).
 
@@ -49,9 +49,9 @@ php -m | grep flow_php
 Install the extension of the Flow release you use. `flow-php/etl`, `flow-php/etl-adapter-csv`, `-json` and `-parquet`
 conflict with `ext-flow_php <0.45`.
 
-An extension built for another release is refused with a `RuntimeException` naming its version and ABI, raised by
-the first `Adaptive*` class that picks a lane. A pipeline that reaches none, e.g.
-`config_builder()->backend(new PhpBackend())` with `from_array()`, still runs.
+The first `Adaptive*` class that picks a lane refuses an extension built for a different release. It throws a
+`RuntimeException` that names the version and the ABI of the extension. A pipeline that reaches no such class still
+runs, for example `config_builder()->backend(new PhpBackend())` with `from_array()`.
 
 ## PIE
 
@@ -63,27 +63,27 @@ pie install flow-php/flow-php-ext
 
 ### Alpine Linux (musl)
 
-Alpine images need `libgcc` before the extension will load:
+Alpine images need `libgcc` before the extension can load:
 
 ```bash
 apk add --no-cache libgcc
 pie install flow-php/flow-php-ext
 ```
 
-`libgcc` (129 KiB) provides `libgcc_s.so.1`, which the Rust runtime links for stack unwinding. Debian and Ubuntu
-ship it in the base system; Alpine does not. Without it PHP reports:
+`libgcc` (129 KiB) gives `libgcc_s.so.1`, which the Rust runtime links for stack unwinding. Debian and Ubuntu
+include it in the base system, but Alpine does not. Without it, PHP reports:
 
 ```
 Unable to load dynamic library '.../flow_php.so'
   (Error loading shared library libgcc_s.so.1: No such file or directory)
 ```
 
-Installing `libgcc` is still dramatically cheaper than the alternative - without a musl binary PIE falls back to a
+The install of `libgcc` is still much cheaper than the alternative. Without a musl binary, PIE falls back to a
 source build, which pulls the full Rust toolchain (`rust cargo clang-dev`, ~824 MB) into the image.
 
 ## Build Prerequisites
 
-The Flow PHP extension is written in Rust and requires the following tools to compile:
+The Flow PHP extension is written in Rust. Its compilation needs these tools:
 
-- **Rust toolchain** (rustc, cargo) - install via [rustup](https://rustup.rs/)
-- **clang** - required by the Rust build process
+- Rust toolchain (rustc, cargo): install it with [rustup](https://rustup.rs/)
+- clang: required by the Rust build process

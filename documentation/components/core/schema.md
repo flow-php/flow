@@ -4,34 +4,34 @@
 
 [TOC]
 
-Schema defines the structure and validation rules for DataFrame data. It provides type safety, data validation, and
-metadata management for your data processing pipelines.
+A schema defines the structure of DataFrame data and the rules that the data must follow. It gives type safety, data
+validation and metadata to your pipelines.
 
 ## Understanding Schema Components
 
-A schema consists of column definitions that specify:
+A schema is a list of column definitions. Each definition has:
 
-- **Name**: The column identifier
-- **Type**: The expected data type (class string)
-- **Nullable**: Whether NULL values are permitted
-- **Metadata**: Key-value pairs for additional context
+- Name: The identifier of the column
+- Type: The expected data type (class string)
+- Nullable: If the column accepts NULL values
+- Metadata: Key-value pairs with more information about the column
 
-Structure field order is part of a structure type's identity: `structure{a, b}` and `structure{b, a}`
-are different types, so `Schema::isSame()` and `Definition::isSame()` distinguish them. Comparing two such columns
-(`ref('a')->equals(ref('b'))`) is refused at plan time; cast one of them to the other's type first.
+The order of the fields is part of the identity of a structure type. `structure{a, b}` and `structure{b, a}`
+are different types, so `Schema::isSame()` and `Definition::isSame()` tell them apart. The plan refuses a comparison of
+two such columns (`ref('a')->equals(ref('b'))`). To compare them, first cast one of them to the type of the other.
 
 ## Arrays in a Schema
 
-`type_array()` declares a `json` column. The data layer has no array type - parquet and Floe both express an
-array as a JSON object or a JSON collection - so a declared `array<mixed>` is projected onto `json`, and the value is
-stored as a `Flow\Types\Value\Json`, which preserves whether it was an object or a collection.
+`type_array()` declares a `json` column. The data layer has no array type. Parquet and Floe both express an array
+as a JSON object or a JSON collection. For this reason, a declared `array<mixed>` is projected onto `json`. The value
+is stored as a `Flow\Types\Value\Json`. It remembers whether it was an object or a collection.
 
 ```php
 definition_from_type('tags', type_array())->type()->toString();   // "json"
 ```
 
-The projection applies at every depth, not only to whole columns. A structure field, list element or map value declared
-as `array<mixed>` is rewritten to `json` when the definition is built:
+The projection applies at every depth, not only to whole columns. When the definition is built, a structure field,
+list element or map value declared as `array<mixed>` becomes `json`:
 
 ```php
 structure_schema('user', type_structure(['tags' => type_array()]))->type()->toString();   // "structure{tags: json}"
@@ -39,8 +39,8 @@ list_schema('batches', type_list(type_array()))->type()->toString();   // "list<
 map_schema('translations', type_map(type_string(), type_array()))->type()->toString();   // "map<string, json>"
 ```
 
-The empty array `array{}` is **not** a column type - it is a value whose element type was never observed. Declaring one
-is refused, because a column typed `array{}` could never hold anything:
+The empty array `array{}` is not a column type. It is a value whose element type was never observed. A declaration
+of one is refused, because a column typed `array{}` can never hold anything:
 
 ```php
 definition_from_type('tags', type_empty_array());
@@ -48,39 +48,42 @@ definition_from_type('tags', type_empty_array());
 // column type. Declare the element type, e.g. type_list(type_string()).
 ```
 
-Declare the concrete shape whenever it is known - `type_list()`, `type_map()` or `type_structure()` keep element typing
-that `json` throws away, and adapters can map them onto native nested types.
+If the concrete shape is known, declare it. `type_list()`, `type_map()` or `type_structure()` keep the element types
+that `json` throws away. Adapters can map them onto native nested types.
 
 ## Schema Inference
 
-Sources fall into two groups when no schema is declared.
+If no schema is declared, there are two groups of sources.
 
-**Sources that infer one.** CSV, Excel, JSON and JSON lines sample the file - and Google Sheet the sheet - before the
-first row is read, decide one schema, and every batch they yield carries exactly that schema -
+Sources that infer one. CSV, Excel, JSON and JSON lines sample the file before they read the first row. Google
+Sheet samples the sheet. They decide one schema, and every batch that they yield has exactly that schema.
 `from_csv(...)->schema()`, `from_excel(...)->schema()`, `from_json(...)->schema()`, `from_json_lines(...)->schema()`
-and `from_google_sheet(...)->schema()` answer without running the pipeline. Tune the sample with
-`->inferSchema(infer_schema()->sampleSize(...)->filesToSniff(...)->types(...)->allStrings()->unionByName())`, where
-`filesToSniff()` counts files that yielded a row (a glob of empty files is opened in full) and so does nothing for Google Sheet, which reads a single sheet. `types()` restricts
-which types inference may produce (`allStrings()` is sugar for `types(type_string())`), and `unionByName()` reads
-sources with differing column sets as one wider schema, instead of rejecting them (CSV, Excel and Google Sheet,
-which check the column set against the header) or dropping the columns a later source introduces (JSON, which has no
-header to check). Every inferred column is nullable, and where narrowing is not safe the column floors to `string`.
+and `from_google_sheet(...)->schema()` give the answer and do not run the pipeline. To tune the sample, use
+`->inferSchema(infer_schema()->sampleSize(...)->filesToSniff(...)->types(...)->allStrings()->unionByName())`.
+`filesToSniff()` counts only files that yielded a row, so a glob of empty files is opened in full. It does nothing
+for Google Sheet, which reads a single sheet. `types()` limits the types that inference can produce.
+`allStrings()` is a short form of `types(type_string())`. `unionByName()` reads sources with different column sets
+as one wider schema. Without it, CSV, Excel and Google Sheet reject such sources, because they compare the column
+set with the header. JSON has no header to compare, so it drops the columns that a later source adds. Every inferred
+column is nullable. Where narrowing is not safe, the column falls back to `string`.
 
 `from_array()`, `from_memory()` and the `from_sequence_*()` extractors infer the same way, from their first
-`sampleSize` rows (20,480 by default). `from_array()` given a non-array iterable types every row. A row after the
-sample that does not fit the inferred type fails the read with an `InferredSchemaException` naming that row - infer
-from every row with `->inferSchema(infer_schema()->everyRow())`, or declare the schema.
+`sampleSize` rows (20,480 by default). If `from_array()` gets an iterable that is not an array, it types every row.
+If a row after the sample does not fit the inferred type, the read fails with an `InferredSchemaException`. The
+exception names that row. To prevent this, infer from every row with `->inferSchema(infer_schema()->everyRow())`,
+or declare the schema.
 
-**Sources that do not.** The rest know their schema before the first row: Parquet and Floe read it from the file,
-PostgreSQL and DBAL derive it from the query (below), and the text, XML and HTTP extractors yield fixed columns.
+Sources that do not. The other sources know their schema before the first row. Parquet and Floe read it from the
+file. PostgreSQL and DBAL derive it from the query (see below). The text, XML and HTTP extractors yield fixed columns.
 
-**`DataFrame::schema()` describes the plan, not the data.** It walks the pipeline's steps once, threading each
-step's output schema into the next, starting from the source's own `schema()` - so it may do the I/O that source
-needs to describe itself (a CSV sniff, a Parquet footer), but it never reads a row. A column a step cannot name
-before rows flow is a build error, raised there rather than mid-run: `select('nope')` and
+`DataFrame::schema()` describes the plan, not the data. It starts from the `schema()` of the source and walks the
+steps of the pipeline once. It gives the output schema of each step to the next step. For this reason, it can do the
+I/O that the source needs to describe itself, for example a CSV sniff or a Parquet footer. It never reads a row. If
+a step cannot name a column before rows flow, that is a build error. The error comes at that point, not in the
+middle of the run. `select('nope')` and
 `ref('a')->greaterThan(ref('b'))`
 over incomparable types both refuse at the first trigger. `printSchema()` formats that same answer and runs
-nothing. A plan containing `joinEach()` cannot be described this way and refuses.
+nothing. A plan that contains `joinEach()` cannot be described this way, so it refuses.
 
 ```php
 <?php
@@ -98,26 +101,26 @@ data_frame()
 // tags: ?list<?string>
 ```
 
-Inference sees only the values in front of it:
+Inference sees only the values that it reads:
 
-- `[]` detects as `list<null>` - a collection whose element type was never observed. It is the bottom of the type
-  lattice, so it unifies with any other list rather than destroying its element type. In the example the first row
-  infers `tags: list<string>`, and merging it with the second row's empty array yields `list<?string>`: the element
-  is still a string, but it is no longer known to be present in every row.
-- An array whose element types do not unify detects as `array<mixed>` - `json` in the schema, because no
-  narrower type fits. `[1, 2, 'a']` and `[1, true]` are such arrays; `[1, 1.5]` is not, because integer and
-  float unify to `float`, giving `list<float>`.
-- Sources that transport everything as text (CSV, JSON) read each cell as a string and narrow it to the
-  richest type that parses, so a CSV column of `10.5` infers as `?float`, not `?string`.
+- `[]` detects as `list<null>`, that is, a collection whose element type was never observed. It is the bottom of
+  the type lattice (the narrowest list type). It unifies with any other list and keeps the element type of that
+  list. In the example, the first row infers `tags: list<string>`. A merge with the empty array of the second row
+  yields `list<?string>`. The element is still a string, but it is no longer known to be present in every row.
+- If the element types of an array do not unify, the array detects as `array<mixed>`. That is `json` in the
+  schema, because no narrower type fits. `[1, 2, 'a']` and `[1, true]` are such arrays. `[1, 1.5]` is not, because
+  integer and float unify to `float`, which gives `list<float>`.
+- Some sources transport everything as text (CSV, JSON). They read each cell as a string and narrow it to the
+  richest type that parses. A CSV column of `10.5` therefore infers as `?float`, not `?string`.
 
-Inference is a fallback. When the source schema is known, declare it on the extractor ("Declaring the Source Schema"
-below); when it is not, the extractor infers one - including from a plain PHP array ("Inferring Types from an Array"
+Inference is a fallback. If the source schema is known, declare it on the extractor ("Declaring the Source Schema"
+below). If it is not known, the extractor infers one, also from a plain PHP array ("Inferring Types from an Array"
 below).
 
 ## When Two Types Disagree
 
-A column holds exactly one type. When two rows disagree, the schema merge widens them to the narrowest type that can
-hold both, and the result is fixed:
+A column holds exactly one type. If two rows disagree, the schema merge widens them to the narrowest type that can
+hold both. The result is always one of these:
 
 | both sides are                                  | result   |
 |-------------------------------------------------|----------|
@@ -132,8 +135,8 @@ data_frame()
 // a: ?string
 ```
 
-**A union is not a column type.** `null|T` is the single exception, and it does not mean "either" - it means a nullable
-column of `T`. Any other union is refused when the definition is built:
+A union is not a column type. `null|T` is the single exception, and it does not mean "either". It means a nullable
+column of `T`. When the definition is built, any other union is refused:
 
 ```php
 definition_from_type('value', type_union(type_string(), type_null()));
@@ -155,9 +158,9 @@ list_schema('tags', type_list(type_union(type_string(), type_integer())));
 
 ## Declaring the Source Schema
 
-Most extractors accept a schema up front: fluent `withSchema(Schema)`, or the optional `$schema` argument of the
-`from_*` DSL function. The declared types replace inference, and each batch keeps only the columns the schema
-mentions.
+Most extractors accept a schema before the read. Use the fluent `withSchema(Schema)`, or the `$schema` argument that
+the `from_*` DSL function can take. The declared types replace inference. Each batch keeps only the columns that the
+schema names.
 
 ```php
 <?php
@@ -181,8 +184,8 @@ data_frame()
 // |-- paid: boolean
 ```
 
-The same works for in-memory data - declaring `tags` as a list keeps the element type the inference example above
-threw away:
+This also works for in-memory data. If you declare `tags` as a list, it keeps the element type that the inference
+example above threw away:
 
 ```php
 <?php
@@ -205,18 +208,19 @@ data_frame()
 // |-- tags: list<string>
 ```
 
-The HTTP extractors accept a schema the same way - see
-[Typing the row with a schema](/documentation/components/adapters/http.md) for declaring the response body as a
-`structure`.
+The HTTP extractors accept a schema the same way.
+[Typing the row with a schema](/documentation/components/adapters/http.md) shows how to declare the response body as
+a `structure`.
 
-Self-descriptive formats carry their schema in the file itself - Parquet and Floe in this repository. Their extractors
-read it from there unless `withSchema()` declares one, which reads every file by name.
+Self-descriptive formats carry their schema in the file. In this repository, these formats are Parquet and Floe.
+Their extractors read the schema from the file. If `withSchema()` declares a schema, they use it and read every file
+by name.
 
 ### PostgreSQL sources describe themselves, and keep `withSchema()`
 
 The `from_pgsql_cursor()`, `from_pgsql_limit_offset()` and `from_pgsql_key_set()` extractors derive their schema from
-the database. Unlike a file format, a driver's type mapping is lossy, so these sources keep `withSchema()` as an
-override that always wins:
+the database. The type mapping of a driver loses information, and a file format does not. For this reason, these
+sources keep `withSchema()` as an override that always wins:
 
 ```php
 <?php
@@ -242,39 +246,40 @@ data_frame()
 
 How the derivation behaves:
 
-- It **executes a zero-row probe** of your query (`SELECT * FROM (<your sql>) flow_describe LIMIT 0`) and reads the
-  result's column metadata. It describes the *result*, never the catalog, so a view, an alias and a computed column
-  all describe correctly.
-- A **parameterised query describes normally**. The probe binds `null` at every parameter position, so it never sees
-  the values you passed.
-- **Every derived column is nullable.** Result metadata cannot prove that a column is `NOT NULL` - an outer join or an
-  expression column can always produce `null`.
-- The schema is derived **once per read**, before the first row, and every batch conforms to it.
+- It executes a zero-row probe (a run that returns no rows) of your query
+  (`SELECT * FROM (<your sql>) flow_describe LIMIT 0`). Then it reads the column metadata of the result. It describes
+  the *result*, never the catalog. A view, an alias and a computed column therefore all describe correctly.
+- A parameterised query describes normally. The probe binds `null` at every parameter position, so it never sees
+  the values that you passed.
+- Every derived column is nullable. The result metadata cannot prove that a column is `NOT NULL`. An outer join or
+  an expression column can always produce `null`.
+- The schema is derived once per read, before the first row. Every batch matches it.
 
-A query that cannot be read or described **does not read at all**:
+If a query cannot be read or described, nothing is read:
 
-| What is wrong                                                                                                                       | What you get                                                                     |
-|-------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
-| the SQL does not parse                                                                                                              | `ParserException`, before any query runs                                         |
-| not exactly one read-only `SELECT` or `VALUES` (`INSERT ... RETURNING`, two statements, a data-modifying `WITH`, `SELECT ... INTO`) | `InvalidArgumentException`, before any query runs                                |
-| a table, column, function, type or privilege the query names is missing                                                             | PostgreSQL's own `QueryException`, positioned in your SQL - what the read throws |
-| any other refusal of the zero-row probe                                                                                             | `SchemaNotDerivableException`, `getPrevious()` is PostgreSQL's error             |
-| a column type Flow has no type for (`record`, `point`, `line`, `lseg`, `box`, `path`, `polygon`, `circle`)                          | `SchemaNotDerivableException`                                                    |
+| What is wrong                                                                                                                       | What you get                                                                             |
+|-------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------|
+| the SQL does not parse                                                                                                              | `ParserException`, before any query runs                                                 |
+| not exactly one read-only `SELECT` or `VALUES` (`INSERT ... RETURNING`, two statements, a data-modifying `WITH`, `SELECT ... INTO`) | `InvalidArgumentException`, before any query runs                                        |
+| a table, column, function, type or privilege the query names is missing                                                             | the `QueryException` of PostgreSQL, with its position in your SQL, as the read throws it |
+| any other refusal of the zero-row probe                                                                                             | `SchemaNotDerivableException`, `getPrevious()` is PostgreSQL's error                     |
+| a column type Flow has no type for (`record`, `point`, `line`, `lseg`, `box`, `path`, `polygon`, `circle`)                          | `SchemaNotDerivableException`                                                            |
 
-`->withSchema(...)` skips the probe; it helps the last row, and the one before it when the query runs as written.
+`->withSchema(...)` skips the probe. This helps with the last row of the table. If the query runs as written, it also
+helps with the row before it.
 
 ### Doctrine DBAL sources describe themselves, and keep `withSchema()`
 
 `from_dbal_query()`, `from_dbal_queries()`, `from_dbal_limit_offset()`, `from_dbal_limit_offset_qb()` and
-`from_dbal_key_set_qb()` derive their schema from a probe of the extractor's own SQL, memoised for the whole
-read, describing the *result* and never the catalog - so a view, an alias and a computed column describe
-correctly, and a query builder's paging is never part of what is described. `withSchema()` stays as an override
-that always wins and costs no query.
+`from_dbal_key_set_qb()` derive their schema from a probe of the SQL of the extractor. The extractor keeps the
+probe result for the whole read. The probe describes the *result*, never the catalog. A view, an alias and a
+computed column therefore describe correctly. The paging of a query builder is never part of what is described.
+`withSchema()` stays as an override that always wins and costs no query.
 
 How the probe runs depends on what the driver can answer:
 
-- **MySQL** prepares your SQL as written and reads the statement's own metadata. Nothing is executed.
-- **PostgreSQL** and **SQLite** run a zero-row query, `SELECT * FROM (<your sql>) flow_describe WHERE 1=0`.
+- MySQL prepares your SQL as written and reads the statement's own metadata. Nothing is executed.
+- PostgreSQL and SQLite run a zero-row query, `SELECT * FROM (<your sql>) flow_describe WHERE 1=0`.
 
 ```php
 <?php
@@ -300,28 +305,29 @@ data_frame()
 
 What each driver answers:
 
-- **PostgreSQL (`pgsql`)** and **MySQL (`mysqli`)** report real column types, mapped to Flow types; every derived
-  column is nullable. MySQL types are read off a prepared statement, so its type probe executes nothing.
-- **SQLite (`sqlite3`, `pdo_sqlite`)** has no per-column result types, so every column describes as nullable
-  `string` and the read casts its values to match.
-- A **parameterised query describes normally**: DBAL's `:name` and `?` placeholders are rewritten to the driver's own
-  dialect and the probe binds `null` at every position (an empty list for an array-typed parameter), so it never
-  sees the values you passed.
-- **Duplicate output column names** - `SELECT * FROM a JOIN b ON a.id = b.id` where both tables have `id` - collapse
-  to the last one on PostgreSQL and MySQL, exactly as the row itself collapses them. On SQLite the zero-row probe
-  makes the driver rename the second to `id:1`, so the schema carries a column the rows do not; alias the columns
-  apart, or declare the schema, when a SQLite query selects a name twice.
+- PostgreSQL (`pgsql`) and MySQL (`mysqli`) report real column types, mapped to Flow types. Every derived
+  column is nullable. MySQL types come from a prepared statement, so its type probe executes nothing.
+- SQLite (`sqlite3`, `pdo_sqlite`) has no result types per column. Every column therefore describes as nullable
+  `string`, and the read casts its values to match.
+- A parameterised query describes normally. The `:name` and `?` placeholders of DBAL are rewritten to the dialect
+  of the driver. The probe binds `null` at every position (an empty list for an array-typed parameter), so it never
+  sees the values that you passed.
+- Duplicate output column names collapse to the last one on PostgreSQL and MySQL, the same as the row collapses
+  them. An example is `SELECT * FROM a JOIN b ON a.id = b.id` where both tables have `id`. On SQLite, the zero-row
+  probe makes the driver rename the second to `id:1`. The schema then has a column that the rows do not have. If a
+  SQLite query selects a name twice, give the columns different aliases or declare the schema.
 
-A query that cannot be described **does not read at all**:
+If a query cannot be described, nothing is read:
 
-| What is wrong                                                                                                                                                                                                | What you get                                                                                                     |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
-| a table or column the query names is missing                                                                                                                                                                 | DBAL's `TableNotFoundException` / `InvalidFieldNameException` (SQLite: `DriverException`) - what the read throws |
-| any other refusal (a syntax error, a multi-statement query on SQLite or PostgreSQL)                                                                                                                          | `SchemaNotDerivableException`, `getPrevious()` is the DBAL exception                                             |
-| a driver without a result-type probe - `pdo_pgsql` and `pdo_mysql` hand out a plain `PDO`                                                                                                                    | `SchemaNotDerivableException` - use the native `pgsql://` or `mysqli://` DSN                                     |
-| a column whose driver type Flow has no type for - on PostgreSQL arrays, `money`, `inet`, ranges and `interval` on this route (the PostgreSQL adapter above maps more of them); on MySQL `BIT` and `GEOMETRY` | `SchemaNotDerivableException`                                                                                    |
+| What is wrong                                                                                                                                                                                                | What you get                                                                                                      |
+|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|
+| a table or column the query names is missing                                                                                                                                                                 | `TableNotFoundException` / `InvalidFieldNameException` of DBAL (SQLite: `DriverException`), as the read throws it |
+| any other refusal (a syntax error, a multi-statement query on SQLite or PostgreSQL)                                                                                                                          | `SchemaNotDerivableException`, `getPrevious()` is the DBAL exception                                              |
+| a driver without a result-type probe: `pdo_pgsql` and `pdo_mysql` give a plain `PDO`                                                                                                                         | `SchemaNotDerivableException`. Use the native `pgsql://` or `mysqli://` DSN.                                      |
+| a column whose driver type has no Flow type. On PostgreSQL over this route: arrays, `money`, `inet`, ranges and `interval` (the PostgreSQL adapter above maps more of them). On MySQL: `BIT` and `GEOMETRY`. | `SchemaNotDerivableException`                                                                                     |
 
-`->withSchema(...)` skips the probe; it helps the last two rows, and the second one when the query runs as written.
+`->withSchema(...)` skips the probe. This helps with the last two rows of the table. If the query runs as written, it
+also helps with the second row.
 
 ## Inferring Types from an Array
 
@@ -346,31 +352,31 @@ data_frame()
 // |-- paid: ?string
 ```
 
-`from_array()` infers from the PHP value, so a string cell stays a string. Narrowing text to a richer type is a
-file-source behaviour: `from_csv()` and `from_json()` read each cell as text and narrow it to the richest type
-that parses, so `'10.5'` read from a CSV infers as `?float`.
+`from_array()` infers from the PHP value, so a string cell stays a string. Only file sources narrow text to a richer
+type. `from_csv()` and `from_json()` read each cell as text and narrow it to the richest type that parses. A
+`'10.5'` from a CSV therefore infers as `?float`.
 
-A declared schema ("Declaring the Source Schema" above) is still the stronger option when you know the types;
-inference is what answers when you do not. Every inferred column is nullable - inference never claims a column
+If you know the types, a declared schema ("Declaring the Source Schema" above) is still the stronger option. If you
+do not know them, inference gives the answer. Every inferred column is nullable. Inference never claims that a column
 cannot be null.
 
 ## Schema Validation Strategies
 
-Flow PHP provides three built-in validation strategies:
+Flow PHP has three built-in validation strategies:
 
-- **[StrictValidator](/src/core/etl/src/Flow/ETL/Values/Schema/Validator/StrictValidator.php)** - Rows must exactly match the
-  schema; extra columns cause validation failure
-- **[SelectiveValidator](/src/core/etl/src/Flow/ETL/Values/Schema/Validator/SelectiveValidator.php)** - Only validates columns
-  defined in schema; ignores extra columns
-- **[EvolvingValidator](/src/core/etl/src/Flow/ETL/Values/Schema/Validator/EvolvingValidator.php)** - Allows missing and extra
-  columns as long as nullability permits it
+- [StrictValidator](/src/core/etl/src/Flow/ETL/Values/Schema/Validator/StrictValidator.php): rows must match the schema
+  exactly. Extra columns make the validation fail.
+- [SelectiveValidator](/src/core/etl/src/Flow/ETL/Values/Schema/Validator/SelectiveValidator.php): only the columns that the
+  schema defines must match. It ignores extra columns.
+- [EvolvingValidator](/src/core/etl/src/Flow/ETL/Values/Schema/Validator/EvolvingValidator.php): allows missing and extra
+  nullable columns.
 
-By default, DataFrame uses `StrictValidator`, but you can specify a different validator as the second parameter to
+By default, DataFrame uses `StrictValidator`. To use a different validator, give it as the second parameter of
 `DataFrame::match()`.
 
 ## Basic Schema Matching
 
-Use `DataFrame::match()` to validate data against a schema. `from_array()` infers every column as nullable, so the
+To match data against a schema, use `DataFrame::match()`. `from_array()` infers every column as nullable, so the
 expected schema declares them nullable too:
 
 ```php 

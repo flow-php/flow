@@ -8,13 +8,13 @@ Date: 2026-03-02
 ## Context
 ---
 
-Several Flow PHP methods accept multiple arguments where at least one is required. Examples include:
+Several Flow PHP methods accept multiple arguments, and at least one argument is required. Examples:
 - `DataFrame::partitionBy()`
 - `Rows::partitionBy()`
 - `Window::partitionBy()`
 - Type comparison methods
 
-A proposal was made to simplify the API signatures from:
+A proposal wanted to make the API signatures simpler, from:
 
 ```php ignore
 public function partitionBy(string|Reference $column, string|Reference ...$columns) : self
@@ -26,20 +26,20 @@ To:
 public function partitionBy(string|Reference ...$columns) : self
 ```
 
-The rationale for the proposal was to reduce array operations like `array_unshift()` used internally to merge the first required argument with the variadic rest.
+The reason for the proposal was fewer array operations, such as the internal `array_unshift()` that merges the first required argument with the variadic rest.
 
 ## Decision
 ---
 
-**Keep the explicit first argument pattern**
+Keep the explicit first argument pattern.
 
-Methods that require at least one argument should use the signature pattern:
+Methods that require at least one argument must use this signature pattern:
 
 ```php ignore
 public function method(Type $first, Type ...$rest) : ReturnType
 ```
 
-Rather than:
+Not:
 
 ```php ignore
 public function method(Type ...$args) : ReturnType
@@ -48,18 +48,18 @@ public function method(Type ...$args) : ReturnType
 ## Pros & Cons
 ---
 
-**Advantages of the chosen pattern:**
+Advantages of the chosen pattern:
 
-- **Compile-time enforcement**: PHP enforces at least one argument at the language level
-- **Static analysis support**: PHPStan, Psalm, and IDEs immediately understand the constraint
-- **Better developer experience**: The method signature clearly communicates the requirement without needing to read documentation or encounter runtime exceptions
-- **Fail-fast principle**: Errors are caught before execution, not during
+- Compile-time enforcement: PHP enforces at least one argument at the language level
+- Static analysis support: PHPStan, Psalm, and IDEs understand the constraint immediately
+- Better developer experience: the method signature shows the requirement clearly. The developer does not have to read documentation or get runtime exceptions
+- Fail-fast principle: errors are found before execution, not during execution
 
-**Disadvantages:**
+Disadvantages:
 
-- Internal implementation requires merging arguments: `array_unshift($rest, $first)`
-- Slightly more verbose method signatures
-- Minor performance overhead from array operations (negligible in practice)
+- The internal implementation must merge arguments: `array_unshift($rest, $first)`
+- Slightly longer method signatures
+- A small performance overhead from array operations (negligible in practice)
 
 ## Alternatives Considered
 ---
@@ -76,7 +76,7 @@ public function partitionBy(string|Reference ...$columns) : self
 }
 ```
 
-**Rejected because:** Developers only discover the constraint at runtime, leading to worse developer experience.
+Rejected because: developers find the constraint only at runtime. The developer experience is worse.
 
 ### 2. Validation in the References class
 
@@ -93,9 +93,9 @@ final class References
 }
 ```
 
-**Rejected because:** While this centralizes validation, it still defers the error to runtime. The explicit first argument pattern catches errors earlier in the development cycle.
+Rejected because: this puts the validation in one place, but the error still happens only at runtime. The explicit first argument pattern finds errors earlier in the development cycle.
 
 ## Links and References
 ---
 
-- [GitHub Issue #2236](https://github.com/flow-php/flow/issues/2236) - Original proposal discussion
+- [GitHub Issue #2236](https://github.com/flow-php/flow/issues/2236): discussion of the original proposal

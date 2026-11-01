@@ -2,8 +2,8 @@
 
 [DOC_LINK:/documentation/components/core/core.md]
 
-To filter rows from the data frame you can use `DataFrame::filter` function.
-Filter function accepts only one argument which is a `ScalarFunction` that returns `bool` value.
+To filter rows of the data frame, use the `DataFrame::filter` function.
+It accepts only one argument: a `ScalarFunction` that returns a `bool` value.
 
 Example:
 
@@ -31,7 +31,7 @@ data_frame()
 
 ## Custom Filter Functions
 
-Business logic the built-in functions do not cover goes into a `ScalarFunction` that returns a boolean column:
+Business logic that the built-in functions do not cover goes into a `ScalarFunction` that returns a boolean column:
 
 ```php
 <?php
@@ -103,6 +103,6 @@ data_frame()
     ->run();
 ```
 
-> **Performance Note**: prefer built-in scalar functions when they cover the logic.
+> Performance Note: for logic that built-in scalar functions cover, use them.
 
 - [Until](/documentation/components/core/until.md)

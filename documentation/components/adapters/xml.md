@@ -8,20 +8,11 @@ package: flow-php/etl-adapter-xml
 
 [TOC]
 
-Flow PHP's Adapter XML is a dedicated library engineered to facilitate seamless interactions with XML data within your
-ETL (Extract, Transform, Load) processes. This adapter empowers developers to effortlessly extract from and load data
-into XML formats, ensuring a smooth and reliable data transformation journey. By harnessing the Adapter XML library,
-developers can tap into a robust set of features designed for precise XML data handling, making complex data
-transformations both manageable and efficient. The Adapter XML library encapsulates a rich set of functionalities,
-providing a streamlined API for interacting with XML data, which is indispensable in modern data processing and
-transformation workflows. This library embodies Flow PHP's commitment to providing versatile data processing solutions,
-making it a prime choice for developers dealing with XML data in large-scale and data-intensive environments. With Flow
-PHP's Adapter XML, managing XML data within your ETL workflows becomes a more simplified and efficient endeavor,
-aligning perfectly with the robust and adaptable nature of the Flow PHP ecosystem.
+The XML adapter reads and writes XML data in ETL (Extract, Transform, Load) pipelines.
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/etl-adapter-xml.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/etl-adapter-xml.md).
 
 ## Extractor
 
@@ -61,7 +52,7 @@ data_frame()
 3 rows
 ```
 
-The file is streamed. Every node at `withXMLNodePath()` is one row with a single `xml` column `node`. Read it with
+The file is streamed. Each node at `withXMLNodePath()` is one row with one `xml` column `node`. Read it with
 `xpath()` (returns a `list<xml_element>`), `domElementValue()`, `domElementAttributeValue()` and the other
 `domElement*()` functions.
 
@@ -98,27 +89,27 @@ data_frame()
 </rows>
 ```
 
-| Column                     | Element                                                                                                                            |
-|----------------------------|------------------------------------------------------------------------------------------------------------------------------------|
-| `boolean`                  | `true` / `false`                                                                                                                   |
-| `float`                    | the shortest text that reads back as the same float, always with a fraction or an exponent: `1.0`, `1.0e+25`; `NAN`, `INF`, `-INF` |
-| `null`                     | an empty element                                                                                                                   |
-| `datetime`, `date`         | `withDateTimeFormat()` (default `Y-m-d\TH:i:s.uP`) in the column zone, `withDateFormat()` (default `Y-m-d`)                        |
-| `time`                     | microseconds                                                                                                                       |
-| `list`, `map`, `structure` | nested elements; every leaf is written as a column of its type would be                                                            |
-| `json`                     | the stored text                                                                                                                    |
+| Column                     | Element                                                                                                                                 |
+|----------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| `boolean`                  | `true` / `false`                                                                                                                        |
+| `float`                    | the shortest text that reads back as the same float, always with a fraction or an exponent: `1.0`, `1.0e+25`. Also `NAN`, `INF`, `-INF` |
+| `null`                     | an empty element                                                                                                                        |
+| `datetime`, `date`         | `withDateTimeFormat()` (default `Y-m-d\TH:i:s.uP`) in the column zone, `withDateFormat()` (default `Y-m-d`)                             |
+| `time`                     | microseconds                                                                                                                            |
+| `list`, `map`, `structure` | nested elements. Each leaf is written like a column of its type                                                                         |
+| `json`                     | the stored text                                                                                                                         |
 
-A column whose name starts with the attribute prefix (`_` by default) is an attribute of its row; a null there is
-refused.
+A column with a name that starts with the attribute prefix (`_` by default) is an attribute of its row. A null in
+such a column is refused.
 
-Floats are rendered under `serialize_precision = -1`. When the ini holds another value the writer sets it for the
-render and restores it, so `ini_set()` must be allowed; otherwise it throws
+Floats are rendered under `serialize_precision = -1`. If the ini has a different value, the writer sets it for the
+render and then restores it. `ini_set()` must therefore be allowed. If it is not allowed, the writer throws
 `RuntimeException('Writing floats requires serialize_precision = -1 and ini_set() cannot change it')`.
 
 ### Custom writers
 
-`XMLWriter` renders a column at a time: `elements()` and `attributes()` return one string per value, with the writer's
-own escaping. A writer that only builds nodes delegates to `write()`:
+`XMLWriter` renders one column at a time. `elements()` and `attributes()` return one string for each value, with the
+escaping of the writer. A writer that only builds nodes delegates to `write()`:
 
 ```php
 <?php

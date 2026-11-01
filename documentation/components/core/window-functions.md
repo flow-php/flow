@@ -4,13 +4,13 @@
 
 [TOC]
 
-Window functions are a special type of function that perform calculations on a set of rows that are related to the
-current row. Unlike regular aggregate functions, use of a window function does not cause rows to become grouped into a
-single output row - the rows retain their separate identities. Behind the scenes, the window function is able to access
-more than just the current row of the query result.
+Window functions are a special type of function. They calculate over a set of rows that are related to the current
+row. Unlike regular aggregate functions, a window function does not group rows into one output row. The rows keep
+their separate identities. Internally, the window function can access more than the current row of the query
+result.
 
-To narrow window function to a specific set of rows, you need to use `window`. Window is used to partition dataset into
-smaller partitions on which later window function will be applied.
+To narrow a window function to a specific set of rows, use `window`. The window partitions the dataset into smaller
+partitions. The window function then applies to them.
 
 ### Window Functions:
 
@@ -21,7 +21,7 @@ smaller partitions on which later window function will be applied.
 - [`AVERAGE`](/src/core/etl/src/Flow/ETL/Functions/Average.php)
 - [`COUNT`](/src/core/etl/src/Flow/ETL/Functions/Count.php)
 
-All window functions implement [`WindowFunction`](/src/core/etl/src/Flow/ETL/Functions/WindowFunction.php)
+All window functions implement the [`WindowFunction`](/src/core/etl/src/Flow/ETL/Functions/WindowFunction.php)
 interface.
 
 ### Example
@@ -62,8 +62,8 @@ Output:
 
 ## Frames
 
-A frame narrows a window function down to a subset of the partition, relative to the current row. This is what makes
-moving averages, running totals and trailing counts expressible.
+A frame narrows a window function to a subset of the partition, relative to the current row. With frames, you can
+express moving averages, running totals and trailing counts.
 
 ```php
 // every row in the department gets the same number
@@ -80,15 +80,15 @@ average(ref('salary'))->over(
 
 ### Default frame
 
-When no frame is defined explicitly, Flow follows the SQL default:
+Without an explicit frame, Flow follows the SQL default:
 
-| Window              | Default frame                                                                            |
-|---------------------|------------------------------------------------------------------------------------------|
-| `orderBy()` present | all rows from the start of the partition up to and including the current row's **peers** |
-| `orderBy()` absent  | the whole partition                                                                      |
+| Window              | Default frame                                                                        |
+|---------------------|--------------------------------------------------------------------------------------|
+| `orderBy()` present | all rows from the start of the partition up to and with the peers of the current row |
+| `orderBy()` absent  | the whole partition                                                                  |
 
-Peers are rows that compare equal to the current row on **every** `ORDER BY` reference. This is why
-`partitionBy()` without `orderBy()` still means "the whole partition", and why tied rows all see the same value:
+Peers are rows that are equal to the current row on all `ORDER BY` references. For this reason,
+`partitionBy()` without `orderBy()` still means "the whole partition", and tied rows all see the same value:
 
 ```php
 // date:   2024-01-01, 2024-01-01, 2024-01-02, 2024-01-03
@@ -98,7 +98,7 @@ sum(ref('salary'))->over(window()->orderBy(ref('date')));
 //                 ^^^^^^^^^^^^^^ both rows tie on date, so both see both
 ```
 
-To restore the pre-0.43 behaviour of aggregating over the entire partition, ask for it explicitly:
+For the behaviour before 0.43, an aggregation over the full partition, ask for it explicitly:
 
 ```php
 sum(ref('salary'))->over(
@@ -118,23 +118,24 @@ sum(ref('salary'))->over(
 | `following(int $offset)` | `$offset` rows after the current row  |
 | `unbounded_following()`  | the last row of the partition         |
 
-Bounds are clamped to the partition, so `preceding(2)` on the first row simply starts at the first row. A frame that
-falls entirely outside the partition is empty - `sum()` and `average()` then return `null`
-and `count()` returns `0`, matching SQL.
+Bounds are clamped to the partition, so `preceding(2)` on the first row starts at the first row. A frame that is
+fully outside the partition is empty. `sum()` and `average()` then return `null`,
+and `count()` returns `0`, as in SQL.
 
 `rowsBetween()` counts physical rows (SQL `ROWS` mode). `RANGE` with offsets, `GROUPS` and `EXCLUDE`
 are not supported yet.
 
-A frame on a window without `orderBy()` is permitted, matching PostgreSQL.
+A frame on a window without `orderBy()` is allowed, as in PostgreSQL.
 
 ### Ranking functions ignore frames
 
-`row_number()`, `rank()` and `dense_rank()` always see the whole ordered partition. A frame defined alongside them is
-accepted and ignored, exactly as in PostgreSQL. They do require an explicit
+`row_number()`, `rank()` and `dense_rank()` always see the full ordered partition. A frame next to them is
+accepted and ignored, exactly as in PostgreSQL. They need an explicit
 `orderBy()`.
 
-`rank()` and `dense_rank()` accept multiple `orderBy()` columns - rows are peers when they match on all of them - and
-follow the ordering direction, so ascending and descending windows rank in opposite directions as in PostgreSQL.
+`rank()` and `dense_rank()` accept multiple `orderBy()` columns. Rows that match on all of them are peers. The
+functions follow the ordering direction, so ascending and descending windows rank in opposite directions, as in
+PostgreSQL.
 
 ### Example
 

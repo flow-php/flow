@@ -4,12 +4,12 @@
 
 [TOC]
 
-DataFrame provides several methods for retrieving processed data. These methods are trigger operations that execute the
-entire pipeline.
+DataFrame has several methods that return processed data. These methods are trigger operations that execute the
+full pipeline.
 
 ## Memory-Safe Retrieval (Recommended)
 
-These methods use generators to maintain constant memory usage regardless of dataset size:
+These methods use generators, so the memory usage stays constant for each dataset size:
 
 ### get() - Retrieve as Rows batches
 
@@ -29,12 +29,13 @@ foreach ($dataFrame->get() as $rows) {
 }
 ```
 
-When `$largeDataset` is not an array - a generator, or any other one-shot iterable - `from_array()` reads
-it once and writes every row to a temporary file before the first batch is produced, so that the schema it
-reports is exact. Memory stays constant, but the dataset is on disk for as long as the extractor lives -
-which is what lets you call `get()` or `run()` on it more than once, exactly as you can with an
-array. (`schema()` never consumed the source in the first place - it answers from the plan.) Declare the schema up front with `from_array($largeDataset)->withSchema($schema)` to skip the spill
-entirely; a declared schema streams the source directly and can therefore be read only once.
+`$largeDataset` can be a value that is not an array, for example a generator or a different one-shot iterable.
+`from_array()` then reads it once and writes each row to a temporary file before the first batch. The schema that it
+reports is therefore exact. Memory stays constant, but the dataset stays on disk while the extractor lives. Because
+of this, you can call `get()` or `run()` on it more than once, exactly as with an array. (`schema()` never used the
+source in the first place. It answers from the plan.) To skip the spill, declare the schema first with
+`from_array($largeDataset)->withSchema($schema)`. A declared schema streams the source directly, so you can read it
+only once.
 
 ### getAsArray() - Retrieve as array batches
 
@@ -75,9 +76,9 @@ foreach ($firstTen->toArray() as $row) {
 $allRows = $dataFrame->fetch(); // Can cause memory exhaustion
 ```
 
-> **Memory Warning**: The `fetch()` method loads all requested rows into memory at once. Without a limit parameter,
-> it will attempt to load the entire dataset into memory, which can cause memory exhaustion. Always use with a reasonable
-> limit or prefer generator-based methods.
+> Memory Warning: The `fetch()` method loads all requested rows into memory at the same time. Without a limit
+> parameter, it tries to load the full dataset into memory, and the memory can run out. Always use it with a reasonable
+> limit, or use generator-based methods.
 
 ### count() - Count total rows
 
@@ -88,8 +89,8 @@ $totalCount = $dataFrame->count();
 echo "Total rows: $totalCount\n";
 ```
 
-A frame that only reads one source is counted from the source's statistics when they are exact - a Parquet or Floe
-file answers from its footer without reading a row (`explain(Trigger::count)` shows it):
+A frame that only reads one source can use the exact statistics of the source for the count. A Parquet or Floe
+file answers from its footer and reads no row. `explain(Trigger::count)` shows it:
 
 ```php
 <?php
@@ -97,8 +98,8 @@ file answers from its footer without reading a row (`explain(Trigger::count)` sh
 $totalCount = data_frame()->read(from_parquet('orders.parquet'))->count();
 ```
 
-> **Performance Warning**: Any other frame - a filter, a limit, a new column, a join, an estimated source - is executed
-> in full to count its rows, which can be expensive for large datasets.
+> Performance Warning: All other frames execute in full to count their rows. Examples are frames with a filter, a
+> limit, a new column, a join or an estimated source. This can be expensive for large datasets.
 
 ## Iteration with Callback
 
@@ -112,8 +113,8 @@ $dataFrame->forEach(function (Rows $rows) {
 });
 ```
 
-`forEach()` owns the streaming loop. `run(bool|Analyze $analyze = false)` takes no callback: it executes the frame's
-writes and returns a `Report` when asked to analyze.
+`forEach()` owns the streaming loop. `run(bool|Analyze $analyze = false)` takes no callback. It executes the writes
+of the frame. With analyze, it also returns a `Report`.
 
 ```php
 <?php
@@ -123,8 +124,8 @@ $dataFrame->write(to_json('out.json'))->run();
 $report = $dataFrame->write(to_json('out.json'))->run(analyze: analyze()->withSchema());
 ```
 
-`withSourceStatistics()` puts the rows every source declared next to the rows it actually yielded - the output row
-count alone cannot tell them apart once a filter or a join sits in between:
+`withSourceStatistics()` puts the rows that each source declared next to the rows that it really yielded. With a
+filter or a join between them, the output row count alone cannot tell them apart:
 
 ```php
 <?php
@@ -142,8 +143,9 @@ foreach ($report->sources() as $source) {
 }
 ```
 
-`rowsError()` is null without an estimate, and for a read that did not cover the whole source - a pushed `limit()` or
-partition filter, or a read stopped early - since the declaration describes the whole source:
+`rowsError()` is null without an estimate. It is also null for a read that did not cover the full source, because
+the declaration describes the full source. Examples are a pushed `limit()` or partition filter, or a read that stopped
+early:
 
 ```php
 <?php

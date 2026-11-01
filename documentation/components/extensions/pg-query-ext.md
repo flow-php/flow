@@ -8,10 +8,10 @@ package: flow-php/pg-query-ext
 
 [TOC]
 
-A compiled PHP extension for PostgreSQL query parsing using [libpg_query](https://github.com/pganalyze/libpg_query).
+A compiled PHP extension that parses PostgreSQL queries with [libpg_query](https://github.com/pganalyze/libpg_query).
 
-This extension provides low-level functions for parsing PostgreSQL SQL queries. For a higher-level, object-oriented
-interface with strongly-typed AST nodes, see the [PostgreSQL library](/documentation/components/libs/postgresql.md).
+This extension gives low-level functions that parse PostgreSQL SQL queries. For a higher-level, object-oriented
+interface with strongly-typed AST nodes, read the [PostgreSQL library](/documentation/components/libs/postgresql.md) page.
 
 ## Features
 
@@ -23,11 +23,11 @@ interface with strongly-typed AST nodes, see the [PostgreSQL library](/documenta
 - Split multiple SQL statements
 - Scan SQL into tokens
 - Generate query summaries for logging/monitoring
-- Check if queries contain utility/DDL statements (without full parsing)
+- Find utility/DDL statements in queries, without a full parse
 
 ## Requirements
 
-- PHP 8.2+
+- PHP 8.3+
 - C compiler (gcc/clang)
 - git (for auto-downloading libpg_query)
 - make
@@ -35,7 +35,7 @@ interface with strongly-typed AST nodes, see the [PostgreSQL library](/documenta
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/pg-query-ext.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/pg-query-ext.md).
 
 ## Loading the Extension
 
@@ -135,7 +135,7 @@ $isUtility = pg_query_is_utility_stmt('SELECT * FROM users');
 | `pg_query_deparse(string $protobuf)`                         | Convert protobuf AST back to SQL               | `string`            |
 | `pg_query_deparse_opts(...)`                                 | Deparse with formatting options                | `string`            |
 | `pg_query_summary(string $sql, int $options, int $truncate)` | Generate query summary                         | `string` (protobuf) |
-| `pg_query_is_utility_stmt(string $sql)`                      | Check if query contains utility/DDL statements | `bool`              |
+| `pg_query_is_utility_stmt(string $sql)`                      | Find utility/DDL statements in a query         | `bool`              |
 
 ### pg_query_deparse_opts Parameters
 
@@ -152,7 +152,7 @@ pg_query_deparse_opts(
 
 ## Error Handling
 
-The extension throws `RuntimeException` on parse errors:
+On a parse error, the extension throws `RuntimeException`:
 
 ```php
 <?php
@@ -187,7 +187,7 @@ make distclean
 
 ### Modifying the Extension
 
-When modifying the C source files:
+After a change to the C source files:
 
 ```bash
 # Inside nix-shell with --arg with-pg-query-ext true
@@ -200,18 +200,18 @@ make test
 
 ## Architecture
 
-The extension is built on top of [libpg_query](https://github.com/pganalyze/libpg_query), which extracts PostgreSQL's
-query parser into a standalone library. This means you get the exact same SQL parsing behavior as PostgreSQL itself.
+The extension uses [libpg_query](https://github.com/pganalyze/libpg_query), which puts the query parser of PostgreSQL
+into a standalone library. The SQL parse behavior is therefore exactly the same as in PostgreSQL.
 
-Key implementation details:
+Implementation details:
 
-- **Static linking**: libpg_query.a is statically linked into the extension
-- **Build dependency**: Requires `protobuf-c` library for compilation (libpg_query uses protobuf internally)
-- **Auto-download**: The build system automatically downloads the correct libpg_query version
+- Static linking: libpg_query.a is statically linked into the extension.
+- Build dependency: the compilation needs the `protobuf-c` library, because libpg_query uses protobuf internally.
+- Auto-download: the build system downloads the correct libpg_query version.
 
 ## See Also
 
-- [PostgreSQL library](/documentation/components/libs/postgresql.md) - Higher-level PHP wrapper with strongly-typed AST
+- [PostgreSQL library](/documentation/components/libs/postgresql.md): higher-level PHP wrapper with strongly-typed AST
   nodes
-- [libpg_query](https://github.com/pganalyze/libpg_query) - The underlying C library
-- [Nix Development Environment](/documentation/contributing/nix.md) - Using nix-shell for development
+- [libpg_query](https://github.com/pganalyze/libpg_query): the C library under this extension
+- [Nix Development Environment](/documentation/contributing/nix.md): development with nix-shell

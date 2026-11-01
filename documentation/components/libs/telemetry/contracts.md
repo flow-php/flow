@@ -1,8 +1,7 @@
 # Contracts
 
-Flow Telemetry is designed as a **contract library** - it defines interfaces that allow you to extend and customize
-every part of the telemetry pipeline. This page documents all contracts (interfaces) and their available
-implementations.
+Flow Telemetry is a contract library. Its interfaces let you extend and change each part of the telemetry pipeline.
+This page lists all contracts (interfaces) and their available implementations.
 
 [DOC_LINK:/documentation/components/libs/telemetry.md]
 
@@ -12,7 +11,7 @@ implementations.
 
 ### Transport
 
-**Interface:** `Flow\Bridge\Telemetry\OTLP\Transport\Transport`
+Interface: `Flow\Bridge\Telemetry\OTLP\Transport\Transport`
 
 Sends telemetry to an OTLP backend. The signal type is `Signals::$type`:
 
@@ -32,9 +31,9 @@ public function shutdown() : void;
 
 ### Exporter
 
-**Interface:** `Flow\Telemetry\Exporter\Exporter`
+Interface: `Flow\Telemetry\Exporter\Exporter`
 
-Exports telemetry to external observability backends. A single exporter handles all three signals with a `match` on
+Exports telemetry to external observability backends. One exporter handles all three signals with a `match` on
 `Signals::$type`.
 
 ```php ignore
@@ -65,11 +64,11 @@ public function shutdown() : void;
 
 ### ContextStorage
 
-**Interface:** `Flow\Telemetry\Context\ContextStorage`
+Interface: `Flow\Telemetry\Context\ContextStorage`
 
-Stores and retrieves telemetry context (active span, baggage) within a request lifecycle. `attach()` returns a
-`Scope` that must be detached in reverse order; a span becomes the parent of later spans only while its scope is
-attached - see `Tracer::activate()`.
+Stores and gets the telemetry context (active span, baggage) in a request lifecycle. `attach()` returns a `Scope`.
+You must detach the scopes in reverse order. A span is the parent of later spans only while its scope is attached.
+For more information, read `Tracer::activate()`.
 
 | Implementation         | Package              | Description                                |
 |------------------------|----------------------|--------------------------------------------|
@@ -81,14 +80,14 @@ attached - see `Tracer::activate()`.
 
 ### SpanProcessor
 
-**Interface:** `Flow\Telemetry\Tracer\SpanProcessor`
+Interface: `Flow\Telemetry\Tracer\SpanProcessor`
 
-Receives span lifecycle events (`onStart`, `onEnd`) and determines how spans are buffered and exported. The processor
-sits between the Tracer and the unified `Exporter`. The `exporter()` accessor returns the unified `Exporter`.
+Receives span lifecycle events (`onStart`, `onEnd`) and decides how spans are buffered and exported. The processor
+is between the Tracer and the unified `Exporter`. The `exporter()` accessor returns the unified `Exporter`.
 
 | Implementation             | Package              | Description                                       |
 |----------------------------|----------------------|---------------------------------------------------|
-| `PassThroughSpanProcessor` | `flow-php/telemetry` | Exports each span immediately when it ends        |
+| `PassThroughSpanProcessor` | `flow-php/telemetry` | Exports each span immediately at its end          |
 | `BatchingSpanProcessor`    | `flow-php/telemetry` | Buffers spans and exports in configurable batches |
 | `CompositeSpanProcessor`   | `flow-php/telemetry` | Delegates to multiple processors                  |
 | `MemorySpanProcessor`      | `flow-php/telemetry` | Stores spans in memory for testing                |
@@ -98,10 +97,9 @@ sits between the Tracer and the unified `Exporter`. The `exporter()` accessor re
 
 ### Sampler
 
-**Interface:** `Flow\Telemetry\Tracer\Sampler\Sampler`
+Interface: `Flow\Telemetry\Tracer\Sampler\Sampler`
 
-Makes sampling decisions for traces. Determines whether a span should be recorded and exported based on configurable
-rules.
+Makes sampling decisions for traces. It uses configurable rules to decide which spans are recorded and exported.
 
 | Implementation              | Package              | Description                                                                                              |
 |-----------------------------|----------------------|----------------------------------------------------------------------------------------------------------|
@@ -115,9 +113,9 @@ rules.
 
 ### SpanEvent
 
-**Interface:** `Flow\Telemetry\Tracer\SpanEvent`
+Interface: `Flow\Telemetry\Tracer\SpanEvent`
 
-Represents timestamped events that occurred during a span's lifetime (e.g., exceptions, state changes).
+Represents timestamped events in the lifetime of a span, for example exceptions or state changes.
 
 | Implementation | Package              | Description                           |
 |----------------|----------------------|---------------------------------------|
@@ -129,14 +127,14 @@ Represents timestamped events that occurred during a span's lifetime (e.g., exce
 
 ### MetricProcessor
 
-**Interface:** `Flow\Telemetry\Meter\MetricProcessor`
+Interface: `Flow\Telemetry\Meter\MetricProcessor`
 
-Processes metric measurements from instruments. Determines how metrics are aggregated and when they are exported. The
-`exporter()` accessor returns the unified `Exporter`.
+Processes metric measurements from instruments. It decides how metrics are aggregated and at what time they are
+exported. The `exporter()` accessor returns the unified `Exporter`.
 
 | Implementation               | Package              | Description                                         |
 |------------------------------|----------------------|-----------------------------------------------------|
-| `PassThroughMetricProcessor` | `flow-php/telemetry` | Exports each metric immediately when recorded       |
+| `PassThroughMetricProcessor` | `flow-php/telemetry` | Exports each metric immediately after its record    |
 | `BatchingMetricProcessor`    | `flow-php/telemetry` | Buffers metrics and exports in configurable batches |
 | `CompositeMetricProcessor`   | `flow-php/telemetry` | Delegates to multiple processors                    |
 | `MemoryMetricProcessor`      | `flow-php/telemetry` | Stores metrics in memory for testing                |
@@ -146,16 +144,16 @@ Processes metric measurements from instruments. Determines how metrics are aggre
 
 ### Instrument
 
-**Interface:** `Flow\Telemetry\Meter\Instrument\Instrument`
+Interface: `Flow\Telemetry\Meter\Instrument\Instrument`
 
-Base interface for metric instruments. Instruments are the API through which measurements are recorded.
+Base interface for metric instruments. Instruments are the API that records measurements.
 
-| Implementation  | Package              | Description                                       |
-|-----------------|----------------------|---------------------------------------------------|
-| `Counter`       | `flow-php/telemetry` | Monotonically increasing value (e.g., requests)   |
-| `UpDownCounter` | `flow-php/telemetry` | Value that can increase or decrease (e.g., queue) |
-| `Gauge`         | `flow-php/telemetry` | Point-in-time measurement (e.g., CPU usage)       |
-| `Histogram`     | `flow-php/telemetry` | Distribution of values (e.g., latency)            |
+| Implementation  | Package              | Description                                               |
+|-----------------|----------------------|-----------------------------------------------------------|
+| `Counter`       | `flow-php/telemetry` | Monotonically increasing value (for example requests)     |
+| `UpDownCounter` | `flow-php/telemetry` | Value that can increase or decrease (for example a queue) |
+| `Gauge`         | `flow-php/telemetry` | Point-in-time measurement (for example CPU usage)         |
+| `Histogram`     | `flow-php/telemetry` | Distribution of values (for example latency)              |
 
 ---
 
@@ -163,15 +161,15 @@ Base interface for metric instruments. Instruments are the API through which mea
 
 ### LogProcessor
 
-**Interface:** `Flow\Telemetry\Logger\LogProcessor`
+Interface: `Flow\Telemetry\Logger\LogProcessor`
 
-Processes log records from loggers. Determines how logs are buffered and when they are exported. A `LogSink`
-(marker interface extending `LogProcessor`) identifies the terminal/leaf processors; `PipelineLogProcessor` runs an
-ordered chain of `LogMiddleware` and forwards survivors to one `LogSink`.
+Processes log records from loggers. It decides how logs are buffered and at what time they are exported. A `LogSink`
+(a marker interface that extends `LogProcessor`) marks the terminal/leaf processors. `PipelineLogProcessor` runs an
+ordered chain of `LogMiddleware` and sends the remaining entries to one `LogSink`.
 
 | Implementation            | Package              | Sink? | Description                                            |
 |---------------------------|----------------------|-------|--------------------------------------------------------|
-| `PassThroughLogProcessor` | `flow-php/telemetry` | yes   | Exports each log immediately when recorded             |
+| `PassThroughLogProcessor` | `flow-php/telemetry` | yes   | Exports each log immediately after its record          |
 | `BatchingLogProcessor`    | `flow-php/telemetry` | yes   | Buffers logs and exports in configurable batches       |
 | `CompositeLogProcessor`   | `flow-php/telemetry` | yes   | Delegates to multiple processors                       |
 | `MemoryLogProcessor`      | `flow-php/telemetry` | yes   | Stores logs in memory for testing                      |
@@ -180,10 +178,11 @@ ordered chain of `LogMiddleware` and forwards survivors to one `LogSink`.
 
 ### LogMiddleware
 
-**Interface:** `Flow\Telemetry\Logger\LogMiddleware`
+Interface: `Flow\Telemetry\Logger\LogMiddleware`
 
-A chainable step inside a `PipelineLogProcessor`. `process(LogEntry): ?LogEntry` returns the entry to pass on (possibly
-enriched) or `null` to drop it. Stateless - flush/shutdown belong to the pipeline's `LogSink`.
+A chainable step in a `PipelineLogProcessor`. `process(LogEntry): ?LogEntry` returns the entry for the next step
+(possibly enriched), or `null` to drop it. A middleware has no state. Flush and shutdown belong to the `LogSink` of the
+pipeline.
 
 | Implementation                    | Package              | Description                                          |
 |-----------------------------------|----------------------|------------------------------------------------------|
@@ -197,9 +196,9 @@ enriched) or `null` to drop it. Stateless - flush/shutdown belong to the pipelin
 
 ### TextMapPropagator
 
-**Interface:** `Flow\Telemetry\Propagation\TextMapPropagator`
+Interface: `Flow\Telemetry\Propagation\TextMapPropagator`
 
-Extracts and injects trace context across process boundaries using text-based carriers (HTTP headers, message metadata).
+Extracts and injects trace context across process boundaries with text-based carriers (HTTP headers, message metadata).
 
 | Implementation        | Package              | Description                                          |
 |-----------------------|----------------------|------------------------------------------------------|
@@ -210,9 +209,9 @@ Extracts and injects trace context across process boundaries using text-based ca
 
 ### BaggagePropagator
 
-**Interface:** `Flow\Telemetry\Propagation\BaggagePropagator`
+Interface: `Flow\Telemetry\Propagation\BaggagePropagator`
 
-Propagates application-specific key-value pairs (baggage) across process boundaries alongside trace context.
+Propagates application-specific key-value pairs (baggage) across process boundaries, together with the trace context.
 
 | Implementation | Package              | Description          |
 |----------------|----------------------|----------------------|
@@ -222,9 +221,9 @@ Propagates application-specific key-value pairs (baggage) across process boundar
 
 ### Carrier
 
-**Interface:** `Flow\Telemetry\Propagation\Carrier`
+Interface: `Flow\Telemetry\Propagation\Carrier`
 
-Abstraction over the transport mechanism for context propagation. Provides get/set operations for header-like values.
+Abstraction over the transport mechanism for context propagation. It has get/set operations for header-like values.
 
 | Implementation | Package              | Description                              |
 |----------------|----------------------|------------------------------------------|
@@ -234,7 +233,7 @@ Abstraction over the transport mechanism for context propagation. Provides get/s
 
 ## Implementing Custom Contracts
 
-All contracts are designed for extension. To implement a custom exporter:
+You can extend all contracts. To implement a custom exporter:
 
 ```php
 <?php

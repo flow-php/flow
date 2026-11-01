@@ -4,16 +4,16 @@
 
 [TOC]
 
-Flow provides four save modes that control how a file sink writes when the destination file or path already exists:
+Flow has four save modes. They control how a file sink writes to a destination file or path that already exists:
 
-- **ExceptionIfExists** (default): Throws an exception if the destination already exists
-- **Append**: Appends data to existing files (may cause duplicates)
-- **Overwrite**: Removes existing files and writes new data
-- **Ignore**: Skips writing if destination already exists
+- ExceptionIfExists (default): throws an exception for an existing destination
+- Append: appends data to existing files (this can cause duplicates)
+- Overwrite: removes existing files and writes new data
+- Ignore: skips the write for an existing destination
 
 ## Changing Save Mode
 
-Save mode belongs to the sink, not to the DataFrame - set it with `FileLoader::saveMode()`:
+Save mode belongs to the sink, not to the DataFrame. Set it with `FileLoader::saveMode()`:
 
 ```php
 (data_frame())
@@ -25,8 +25,8 @@ Save mode belongs to the sink, not to the DataFrame - set it with `FileLoader::s
     ->run();
 ```
 
-Each sink carries its own mode, so two sinks in one DataFrame can differ and a mode never leaks from one
-destination to another:
+Each sink carries its own mode. Two sinks in one DataFrame can therefore have different modes, and a mode never goes
+from one destination to another:
 
 ```php
 (data_frame())
@@ -40,14 +40,14 @@ destination to another:
 // RuntimeException: Destination path "/path/to/second.csv" already exists
 ```
 
-The registry a sink uses to track its open streams is scoped to one run, so a run that fails part-way does
-not leave a stream registered for the next run to append into.
+A sink tracks its open streams in a registry that belongs to one run. A run that fails part of the way therefore
+leaves no registered stream that the next run appends to.
 
 ## Save Mode Behavior
 
 ### ExceptionIfExists (Default)
 
-Fails immediately if the destination file already exists:
+Fails immediately for an existing destination file:
 
 ```php
 (data_frame())
@@ -59,11 +59,11 @@ Fails immediately if the destination file already exists:
 // RuntimeException: Destination path "/path/to/data.csv" already exists
 ```
 
-**Use when:** You want to ensure data is never accidentally overwritten.
+Use it to make sure that data is never overwritten by accident.
 
 ### Append
 
-Creates additional files in the same directory when destination already exists:
+Creates more files in the same directory for an existing destination:
 
 ```php
 (data_frame())
@@ -76,11 +76,11 @@ Creates additional files in the same directory when destination already exists:
 // Read them all with a glob: from_csv(__DIR__ . '/data*.csv')
 ```
 
-**How it works:**
-- If destination file doesn't exist: writes normally
-- If destination file exists: writes `<name>-<run>.<ext>` beside it
+How it works:
+- If the destination file does not exist: writes normally
+- If the destination file exists: writes `<name>-<run>.<ext>` next to it
 
-**File structure after multiple runs:**
+File structure after multiple runs:
 ```
 output/
 ├── orders.csv                        # First run
@@ -89,18 +89,18 @@ output/
 └── orders-2140bfc5fd6e7f80.csv       # Fourth run
 ```
 
-Reading `orders.csv` reads that one file; read `orders*.csv` to get every run.
+A read of `orders.csv` reads that one file. To get all runs, read `orders*.csv`.
 
-**Important:** Flow does not check for duplicates. If you run the same pipeline twice, data will be duplicated across multiple files.
+Important: Flow does not look for duplicates. If you run the same pipeline twice, the data is duplicated across multiple files.
 
-**Use when:**
-- Incrementally building datasets over multiple pipeline runs
-- Writing to log directories
-- Accumulating results where each run adds new files
+Use it for:
+- Datasets that grow over multiple pipeline runs
+- Writes to log directories
+- Results where each run adds new files
 
 ### Overwrite
 
-Removes all existing files at the destination and writes fresh data:
+Removes all existing files at the destination and writes new data:
 
 ```php
 (data_frame())
@@ -111,21 +111,21 @@ Removes all existing files at the destination and writes fresh data:
 // File now contains only: id 100
 ```
 
-**Implementation details:**
-- Files are written under `.flow-tmp-<run>-<hash>/` inside the destination directory; readers skip it
-- After writing completes, they are moved to their final names, then the files they replace are removed
+Implementation details:
+- Files are written under `.flow-tmp-<run>-<hash>/` inside the destination directory. Readers skip it.
+- After the write, they move to their final names, and then the files that they replace are removed.
 - Only files Flow named are replaced: `<name>.<ext>`, `<name>-<run>.<ext>` and the `{part}` parts
 - For partitioned writes, only the partitions that received rows are replaced
 - A run without rows empties an unpartitioned destination
 
-**Use when:**
-- Regenerating reports or exports
-- Running pipelines that should replace previous results
-- Development and testing
+Use it for:
+- Reports or exports that you generate again
+- Pipelines that replace previous results
+- Development and tests
 
 ### Ignore
 
-Silently skips writing if the destination already exists:
+Silently skips the write for an existing destination:
 
 ```php
 (data_frame())
@@ -137,12 +137,12 @@ Silently skips writing if the destination already exists:
 // If file doesn't exist: data is written normally
 ```
 
-Ignore and ExceptionIfExists decide once for the whole destination: one existing file in any partition skips (or
-refuses) the whole write.
+Ignore and ExceptionIfExists decide once for the full destination. One existing file in any partition skips (or
+refuses) the full write.
 
-**Use when:**
-- Idempotent pipelines where re-running should have no effect
-- Avoiding duplicate work in batch processing
+Use it for:
+- Idempotent pipelines, where a second run has no effect
+- No duplicate work in batch processing
 - Resume-like behavior for incremental processing
 
 ## Partitioned Writes
@@ -165,13 +165,16 @@ Save modes work with partitioned data:
 // data/date=2024-01-02/file.parquet
 ```
 
-When using `SaveMode::Overwrite` with partitions:
+With `SaveMode::Overwrite` and partitions:
 - All files within each affected partition directory are removed
 - Only partitions being written to are affected
 - Unrelated partitions remain untouched
 
 ## Part destinations
 
-A destination holding `{part}` is written as `part-00000`. The save mode is checked over every existing part of the
-destination (`orders-*.parquet`), never over one file: `ExceptionIfExists` and `Ignore` see any part, `Overwrite`
-removes every stale part before the new ones are renamed in, and `Append` names every part with the run id.
+A destination with `{part}` is written as `part-00000`. The save mode applies to all existing parts of the
+destination (`orders-*.parquet`), never to one file:
+
+- `ExceptionIfExists` and `Ignore` see each part.
+- `Overwrite` removes all stale parts before it renames the new ones.
+- `Append` names each part with the run id.

@@ -4,12 +4,12 @@
 
 [TOC]
 
-The client provides several methods for fetching data from PostgreSQL. All methods support parameterized queries using
-positional placeholders (`$1`, `$2`, etc.).
+The client has several methods that fetch data from PostgreSQL. All methods support parameterized queries with
+positional placeholders (`$1`, `$2`, and so on).
 
 ## fetch() - First Row or Null
 
-Returns the first row as an associative array, or `null` if no rows match:
+Returns the first row as an associative array, or `null` for no matching rows:
 
 ```php
 <?php
@@ -35,7 +35,7 @@ $user = $client->fetch(
 
 ## fetchOne() - Exactly One Row
 
-Returns exactly one row. Throws `QueryException` if zero or more than one row is found:
+Returns exactly one row. Throws `QueryException` for zero rows or more than one row:
 
 ```php
 <?php
@@ -77,12 +77,12 @@ $recentUsers = $client->fetchAll(
 );
 ```
 
-> **Note**: For large result sets, consider using [cursors](/documentation/components/libs/postgresql/client-cursor.md)
-> instead to avoid loading all rows into memory.
+> Note: For large result sets, use [cursors](/documentation/components/libs/postgresql/client-cursor.md)
+> instead, so that not all rows load into memory.
 
 ## fetchScalar() - Single Value
 
-Returns a single value from the first column of the first row. Ideal for aggregates:
+Returns one value from the first column of the first row. Use it for aggregates:
 
 ```php
 <?php
@@ -131,7 +131,7 @@ $name = $client->fetchScalarString('SELECT name FROM users WHERE id = $1', [1]);
 // $name is guaranteed to be string
 ```
 
-These methods throw `QueryException` if the value cannot be converted to the expected type.
+For a value that cannot be converted to the expected type, these methods throw `QueryException`.
 
 ## execute() - Data Modification
 
@@ -163,7 +163,7 @@ $affected = $client->execute(
 
 ## Using Query Builder
 
-All fetch methods accept both SQL strings and Query Builder objects:
+All fetch methods accept SQL strings and Query Builder objects:
 
 ```php
 <?php
@@ -215,7 +215,7 @@ $id = $client->fetchScalar(
 
 ## Parameter Types
 
-PHP values are automatically converted to PostgreSQL types:
+PHP values are converted to PostgreSQL types automatically:
 
 | PHP Type            | PostgreSQL Type                   |
 |---------------------|-----------------------------------|
@@ -227,4 +227,4 @@ PHP values are automatically converted to PostgreSQL types:
 | `DateTimeInterface` | TIMESTAMP WITH TIME ZONE          |
 | `array`             | ARRAY or JSON (context-dependent) |
 
-For explicit type control, see [Type System](/documentation/components/libs/postgresql/client-types.md).
+For explicit type control, read [Type System](/documentation/components/libs/postgresql/client-types.md).

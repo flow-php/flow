@@ -4,12 +4,12 @@
 
 [TOC]
 
-`ConstructorMapper` maps a database row directly into a class constructor by name. It performs no type coercion - values from the driver are passed through as-is. Use it when:
+`ConstructorMapper` maps a database row directly into a class constructor by name. It does no type coercion. Values from the driver go through as they are. Use it in these cases:
 
-- The driver's PHP types (`int`, `string`, `bool`, `\DateTimeImmutable`, ...) already match your DTO's parameter types,
-- Column names match constructor parameter names exactly (use SQL `AS` aliases when they don't).
+- The PHP types of the driver (`int`, `string`, `bool`, `\DateTimeImmutable`, ...) already match the parameter types of your DTO.
+- Column names match constructor parameter names exactly. For names that do not match, use SQL `AS` aliases.
 
-For coercion (e.g. JSONB string → array, date string → `\DateTimeImmutable`), use [`TypeMapper`](/documentation/components/libs/postgresql/client-type-mapper.md) instead - optionally chained in front of `ConstructorMapper`.
+For coercion (for example JSONB string → array, date string → `\DateTimeImmutable`), use [`TypeMapper`](/documentation/components/libs/postgresql/client-type-mapper.md) instead. You can chain it before `ConstructorMapper`.
 
 ## DSL
 
@@ -47,7 +47,7 @@ $user = $client->fetchInto(
 
 ## fetchInto() - First Object or Null
 
-Returns the first row mapped to an object, or `null` if no rows:
+Returns the first row mapped to an object, or `null` for no rows:
 
 ```php
 <?php
@@ -61,7 +61,7 @@ $user = $client->fetchInto(
 
 ## fetchOneInto() - Exactly One Object
 
-Throws `QueryException` if zero or more than one row:
+Throws `QueryException` for zero rows or more than one row:
 
 ```php
 <?php
@@ -100,7 +100,7 @@ foreach ($users as $user) {
 
 ## Column Name Aliasing
 
-When DB columns use `snake_case` and your DTO uses `camelCase`, alias the columns in the SQL:
+For DB columns in `snake_case` and a DTO in `camelCase`, alias the columns in the SQL:
 
 ```php
 <?php
@@ -129,7 +129,7 @@ $profile = $client->fetchInto(
 
 ## Nullable Parameters
 
-Nullable constructor parameters receive `null` when the DB value is `NULL`:
+Nullable constructor parameters receive `null` for a DB value of `NULL`:
 
 ```php
 <?php
@@ -152,7 +152,7 @@ $products = $client->fetchAllInto(
 
 ## Default Values
 
-If a column is missing from the row but the constructor parameter has a default, the default is used:
+If a column is missing from the row and the constructor parameter has a default, the default is used:
 
 ```php
 <?php
@@ -174,7 +174,7 @@ $flag = $client->fetchInto(
 
 ## Extra Columns
 
-Extra columns in the row that don't match constructor parameters are silently ignored - you can `SELECT *` and only consume what you declare:
+Extra columns in the row that do not match constructor parameters are silently ignored. You can `SELECT *` and use only what you declare:
 
 ```php
 <?php
@@ -208,11 +208,11 @@ foreach ($cursor->map(constructor_mapper(User::class)) as $user) {
 }
 ```
 
-See [Cursors](/documentation/components/libs/postgresql/client-cursor.md) for details.
+For more information, read [Cursors](/documentation/components/libs/postgresql/client-cursor.md).
 
 ## Custom RowMapper
 
-When `ConstructorMapper`'s 1:1 column-to-parameter rule isn't enough, implement `RowMapper` directly:
+If the 1:1 column-to-parameter rule of `ConstructorMapper` is not sufficient, implement `RowMapper` directly:
 
 ```php
 <?php
@@ -240,7 +240,7 @@ $user = $client->fetchInto(new UserMapper(), 'SELECT * FROM users WHERE id = $1'
 
 ## Error Handling
 
-`ConstructorMapper` throws `Flow\PostgreSql\Client\Exception\MappingException` when:
+`ConstructorMapper` throws `Flow\PostgreSql\Client\Exception\MappingException` in these cases:
 
 - The target class does not exist,
 - The class has no constructor,
@@ -248,7 +248,7 @@ $user = $client->fetchInto(new UserMapper(), 'SELECT * FROM users WHERE id = $1'
 
 ## Type Conversion in Mappings
 
-PostgreSQL types are converted to PHP types by the driver before being passed to the mapper. The mapper receives:
+The driver converts PostgreSQL types to PHP types before the mapper gets them. The mapper receives:
 
 | PostgreSQL Type        | PHP Type             |
 |------------------------|----------------------|
@@ -262,12 +262,12 @@ PostgreSQL types are converted to PHP types by the driver before being passed to
 | BYTEA                  | `string` (binary)    |
 | NULL                   | `null`               |
 
-For explicit type coercion (JSONB → structure, string → DateTimeImmutable, etc.), see [`TypeMapper`](/documentation/components/libs/postgresql/client-type-mapper.md). For full type system control, see [Type System](/documentation/components/libs/postgresql/client-types.md).
+For explicit type coercion (for example JSONB → structure or string → DateTimeImmutable), read [`TypeMapper`](/documentation/components/libs/postgresql/client-type-mapper.md). For full type system control, read [Type System](/documentation/components/libs/postgresql/client-types.md).
 
 ## When to Reach for Something Else
 
-| Need | Use |
-| --- | --- |
-| Coerce JSONB string into array / nested structure | [`TypeMapper`](/documentation/components/libs/postgresql/client-type-mapper.md) |
-| Coerce date string into `\DateTimeImmutable` | [`TypeMapper`](/documentation/components/libs/postgresql/client-type-mapper.md) with `type_datetime()` |
-| Hydrate complex object graphs from JSONB | [`TypeMapper` chained with PostgreSQL Valinor Bridge](/documentation/components/bridges/postgresql-valinor-bridge.md) |
+| Need                                              | Use                                                                                                                   |
+|---------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
+| Coerce JSONB string into array / nested structure | [`TypeMapper`](/documentation/components/libs/postgresql/client-type-mapper.md)                                       |
+| Coerce date string into `\DateTimeImmutable`      | [`TypeMapper`](/documentation/components/libs/postgresql/client-type-mapper.md) with `type_datetime()`                |
+| Hydrate complex object graphs from JSONB          | [`TypeMapper` chained with PostgreSQL Valinor Bridge](/documentation/components/bridges/postgresql-valinor-bridge.md) |

@@ -21,7 +21,7 @@ pie install flow-php/pg-query-ext
 
 ## Build Prerequisites
 
-The PG Query extension requires the following tools to compile:
+The compilation of the PG Query extension needs these tools:
 
-- **protobuf-c** - Protocol Buffers C library
-- **git**, **make**, **gcc** - standard build tools
+- protobuf-c: Protocol Buffers C library
+- git, make, gcc: standard build tools

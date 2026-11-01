@@ -8,19 +8,12 @@ package: flow-php/array-dot
 
 [TOC]
 
-Flow PHP's Array Dot is a proficient library engineered to enhance array handling and manipulation in PHP. This library
-embodies a practical solution for accessing and manipulating array elements using dot notation, facilitating a more
-readable and maintainable code base. By leveraging the dot notation, developers can effortlessly traverse nested arrays
-and perform operations on array elements with ease and precision. Flow PHP's Array Dot library encapsulates the
-intricacies of array manipulation, offering a simplified yet powerful API that caters to both simple and complex array
-operations. This library aligns well with Flow PHP's core ethos of efficient data processing and transformation, making
-it a valuable asset for developers aiming to streamline their array handling tasks in PHP. Whether dealing with
-configuration data, nested JSON objects, or any other complex array structures, the Array Dot library is a reliable
-companion for achieving cleaner and more efficient array operations.
+Array Dot is a Flow PHP library that reads and changes array elements with dot notation. With dot notation, you can
+go through nested arrays, for example configuration data or nested JSON objects, with one path string.
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/array-dot.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/array-dot.md).
 
 ## Available Functions
 
@@ -33,7 +26,7 @@ array_dot_rename(array $array, Path|string $path, string $newName) : array;
 array_dot_exists(array $array, Path|string $path) : bool;
 ```
 
-`array_dot_steps(string $path)` is deprecated, use `Path::fromString($path)->steps`.
+`array_dot_steps(string $path)` is deprecated. Use `Path::fromString($path)->steps`.
 
 ### Dot Notation - Basic Syntax
 
@@ -53,10 +46,10 @@ $value = array_dot_get($array, 'foo.bar.baz'); // 1000
 $array = array_dot_set([], 'foo.bar.baz', 1000); // ['foo' => ['bar' => ['baz' => 1000]]];
 ```
 
-In above example `foo.bar.baz` is path which also supports integer keys. For example
+In the example above, `foo.bar.baz` is a path. Paths also support integer keys, for example
 `foo.0.baz`.
 
-`foo`, `bar`, `baz` represents single steps (keys) of path.
+`foo`, `bar` and `baz` are the single steps (keys) of the path.
 
 
 ### Dot Notation - Custom Operators
@@ -80,10 +73,10 @@ Supported in functions:
 
 `array_dot_set` writes the key without the `?`.
 
-Dot notation is strict by default, which means that if any step of path is not present,
-function will throw exception.
+Dot notation is strict by default. If a step of the path is not present,
+the function throws an exception.
 
-This behavior can be changed by `?` nullsafe operator.
+The `?` nullsafe operator changes this behavior.
 
 ```php
 <?php 
@@ -100,7 +93,7 @@ $value = array_dot_get($array, 'foo.bar.nothing'); // InvalidPathException
 $value = array_dot_get($array, 'foo.bar.?nothing'); // null
 ```
 
-Nullsafe does not need to be used with the last step of path.
+You do not have to use nullsafe on the last step of the path.
 
 ```php
 <?php 
@@ -124,7 +117,7 @@ Supported in functions:
 - `array_dot_set`
 - `array_dot_rename`
 
-Wildcard operator allows to access all paths in nested arrays.
+The wildcard operator gives access to all paths in nested arrays.
 
 ```php
 <?php 
@@ -150,8 +143,8 @@ Supported in functions:
 - `array_dot_get`
 - `array_dot_rename` - elements without the key are left as they are
 
-Nullsafe Wildcard operator allows to access all paths in nested arrays for non symmetric
-collections.
+The nullsafe wildcard operator gives access to all paths in nested arrays of collections that are not
+symmetric.
 
 ```php
 <?php 
@@ -177,7 +170,7 @@ Supported in functions:
 
 - `array_dot_get`
 
-Get only selected keys from nested array
+Get only the selected keys from a nested array:
 
 ```php
 <?php 
@@ -203,7 +196,7 @@ $value = array_dot_get($array, 'users.*.{id,?role}'); // [['id' => 1, 'role' => 
 
 ### Dot Notation - Escaping
 
-A backslash makes the next `\`, `.`, `?`, `*`, `,`, `{` or `}` part of the key. Before any other character the
+A backslash makes the next `\`, `.`, `?`, `*`, `,`, `{` or `}` part of the key. Before any other character, the
 backslash stays in the key.
 
 ```php
@@ -218,8 +211,8 @@ $value = array_dot_get(['m' => $array], 'm.{\?x, k\,l}'); // ['?x' => 2, 'k,l' =
 
 ### Path
 
-Every function accepts a `Flow\ArrayDot\Path` instead of a string. Build it from steps when the keys come from data,
-so they are never parsed:
+Each function also accepts a `Flow\ArrayDot\Path` instead of a string. If the keys come from data, build the path from
+steps. The keys are then never parsed:
 
 ```php
 <?php

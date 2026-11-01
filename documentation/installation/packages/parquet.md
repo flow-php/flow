@@ -27,15 +27,15 @@ composer require flow-php/parquet:~--FLOW_PHP_VERSION--
 - `ext-bcmath`
 - `ext-zlib`
 
-These extensions are typically bundled with PHP but may need to be explicitly enabled.
+PHP usually includes these extensions, but you can have to enable them explicitly.
 
 ## Suggested: Arrow Extension
 
-For high-performance Parquet reading/writing via Apache Arrow, install the arrow PHP extension:
+For fast Parquet reads and writes through Apache Arrow, install the arrow PHP extension:
 
 ```bash
 pie install flow-php/arrow-ext
 ```
 
-`flow-php/parquet` conflicts with `ext-arrow <0.45`. See
+`flow-php/parquet` conflicts with `ext-arrow <0.45`. Read
 [Arrow Extension installation](/documentation/installation/packages/arrow-ext.md) for full details.

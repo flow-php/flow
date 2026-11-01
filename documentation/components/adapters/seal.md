@@ -8,17 +8,16 @@ package: flow-php/etl-adapter-seal
 
 [TOC]
 
-Flow PHP Adapter for [SEAL](https://php-cmsig.github.io/search/) - a PHP Search Engine Abstraction Layer that provides a
-unified API for working with multiple search engines (Algolia, Elasticsearch, Meilisearch, OpenSearch, Solr, Typesense,
-RediSearch, Loupe). This adapter brings SEAL's engine-agnostic search capabilities into your Flow PHP ETL workflows,
-allowing you to extract from or load data into any SEAL-supported search backend without coupling your pipelines to a
-specific search engine implementation.
+This is the Flow PHP Adapter for SEAL. [SEAL](https://php-cmsig.github.io/search/) is a PHP Search Engine Abstraction Layer with
+one API for many search engines (Algolia, Elasticsearch, Meilisearch, OpenSearch, Solr, Typesense, RediSearch, Loupe).
+With this adapter, your Flow PHP ETL pipelines can load data into each search backend that SEAL supports. The
+pipelines do not depend on a specific search engine implementation.
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/etl-adapter-seal.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/etl-adapter-seal.md).
 
-In addition to this adapter, install the SEAL engine adapter for your search backend, for example:
+Also install the SEAL engine adapter for your search backend, for example:
 
 ```
 composer require flow-php/etl-adapter-seal cmsig/seal-elasticsearch-adapter
@@ -38,13 +37,13 @@ composer require flow-php/etl-adapter-seal cmsig/seal-elasticsearch-adapter
 
 ## Description
 
-The adapter operates on a `CmsIg\Seal\EngineInterface` that you build yourself from the SEAL adapter of your choice and
-a SEAL schema. This works the same way as the Doctrine and PostgreSQL adapters, which accept a pre-configured
-connection/client - and it plays well with the [SEAL Symfony bundle](https://php-cmsig.github.io/search/integrations/symfony.html),
-where a fully configured engine can simply be injected.
+The adapter works on a `CmsIg\Seal\EngineInterface`. You build it yourself from the SEAL adapter of your choice and
+a SEAL schema. The Doctrine and PostgreSQL adapters work in the same way: they accept a pre-configured
+connection/client. It also works with the [SEAL Symfony bundle](https://php-cmsig.github.io/search/integrations/symfony.html),
+which can inject a fully configured engine.
 
-- **Loader** - `to_seal_upsert()` / `to_seal_delete()` write or remove documents in a search index in bulks.
-- **Schema Conversion** - `to_seal_schema()` / `seal_schema_to_flow()` convert between Flow and SEAL schemas.
+- Loader: `to_seal_upsert()` / `to_seal_delete()` write or remove documents in a search index in bulks.
+- Schema Conversion: `to_seal_schema()` / `seal_schema_to_flow()` convert between Flow and SEAL schemas.
 
 ## Building an Engine
 
@@ -73,8 +72,8 @@ $engine->createIndex('users');
 
 ### Upserting Documents
 
-`to_seal_upsert()` saves documents into the index. Search engines upsert by document identifier - loading a document
-with an existing identifier replaces it.
+`to_seal_upsert()` saves documents into the index. Search engines upsert by document identifier. A document with an
+existing identifier replaces the old document.
 
 ```php
 use function Flow\ETL\Adapter\Seal\to_seal_upsert;
@@ -89,7 +88,7 @@ data_frame()
 
 ### Bulk Size
 
-Documents are written in bulks of 100 by default, adjustable with `withBulkSize()`:
+By default, documents are written in bulks of 100. To change this, use `withBulkSize()`:
 
 ```php
 to_seal_upsert($engine, 'users')->withBulkSize(500);
@@ -97,8 +96,8 @@ to_seal_upsert($engine, 'users')->withBulkSize(500);
 
 ### Deleting Documents
 
-`to_seal_delete()` removes documents by their identifiers, read from the `id` column. `withIdentifierColumn()` names
-another column.
+`to_seal_delete()` removes documents by their identifiers, which it reads from the `id` column. `withIdentifierColumn()`
+names a different column.
 
 ```php
 use function Flow\ETL\Adapter\Seal\to_seal_delete;
@@ -118,22 +117,22 @@ to_seal_delete($engine, 'products')->withIdentifierColumn('sku');
 
 Each row becomes one document:
 
-| Flow Type                                    | Document Value                               |
-|----------------------------------------------|----------------------------------------------|
-| `string`, `int`, `float`, `bool`             | unchanged                                    |
-| `uuid`                                       | string representation                        |
-| `datetime`                                   | string, `DateTimeInterface::ATOM` by default |
-| `date`                                       | string, `Y-m-d` by default                   |
-| `enum`                                       | case name                                    |
-| `time`                                       | microseconds                                 |
-| `xml`, `xml_element`, `html`, `html_element` | markup text, e.g. `<a b="1"><c></c></a>`     |
-| `json`                                       | decoded array                                |
-| `list`, `map`, `structure`                   | array (nested values normalized recursively) |
+| Flow Type                                    | Document Value                                  |
+|----------------------------------------------|-------------------------------------------------|
+| `string`, `int`, `float`, `bool`             | unchanged                                       |
+| `uuid`                                       | string representation                           |
+| `datetime`                                   | string, `DateTimeInterface::ATOM` by default    |
+| `date`                                       | string, `Y-m-d` by default                      |
+| `enum`                                       | case name                                       |
+| `time`                                       | microseconds                                    |
+| `xml`, `xml_element`, `html`, `html_element` | markup text, for example `<a b="1"><c></c></a>` |
+| `json`                                       | decoded array                                   |
+| `list`, `map`, `structure`                   | array (nested values normalized recursively)    |
 
 ## Schema Conversion
 
-`to_seal_schema()` converts a Flow schema into a SEAL schema for a single index. SEAL requires exactly one identifier
-field per index - name it with the `identifier` argument or mark a definition with `SealMetadata::identifier()`.
+`to_seal_schema()` converts a Flow schema into a SEAL schema for one index. SEAL needs exactly one identifier field
+for each index. Name it with the `identifier` argument, or mark a definition with `SealMetadata::identifier()`.
 
 ```php
 use Flow\ETL\Adapter\Seal\Values\Schema\SealMetadata;
@@ -153,7 +152,7 @@ $sealSchema = to_seal_schema(
 );
 ```
 
-`seal_schema_to_flow()` performs the reverse conversion, from a SEAL schema back to a Flow schema.
+`seal_schema_to_flow()` does the reverse conversion, from a SEAL schema back to a Flow schema.
 
 ### Type Mapping
 
@@ -170,7 +169,7 @@ $sealSchema = to_seal_schema(
 
 ### Field Flags
 
-Default flags can be overridden per definition through its metadata:
+You can override the default flags for each definition through its metadata:
 
 | Metadata                     | Effect                                  |
 |------------------------------|-----------------------------------------|
@@ -181,9 +180,9 @@ Default flags can be overridden per definition through its metadata:
 | `SealMetadata::distinct()`   | usable for distinct queries             |
 | `SealMetadata::facet()`      | usable as a facet                       |
 
-> **Note:** Index lifecycle (creating/dropping indexes) is a SEAL concern - use the engine directly:
+> Note: The index lifecycle (create and drop indexes) is a SEAL task. Use the engine directly:
 > `$engine->createIndex('users')`, `$engine->dropIndex('users')`.
 
-> **Note:** Some search backends index documents asynchronously - a document saved by the loader may not be
-> immediately visible to `countDocuments()`. Consult your backend's documentation; SEAL exposes the
-> `['return_slow_promise_result' => true]` option to wait for indexing tasks.
+> Note: Some search backends index documents asynchronously. A document that the loader saved can be invisible to
+> `countDocuments()` for a short time. Read the documentation of your backend. To wait for indexing tasks, SEAL has
+> the `['return_slow_promise_result' => true]` option.

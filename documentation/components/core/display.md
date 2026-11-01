@@ -2,13 +2,13 @@
 
 [DOC_LINK:/documentation/components/core/core.md]
 
-Displaying/printing data frame is a common operation during development. 
-It's the easiest way to debug data frame.
-By default, it will grab the selected number of rows (20 by default)
+Developers often display or print a data frame during development.
+It is the easiest way to debug a data frame.
+By default, it takes the selected number of rows (20 by default).
 
 ## Example
 
-`display()` returns a string; `write(to_output())` prints one.
+`display()` returns a string. `write(to_output())` prints one.
 
 ```php
 <?php
@@ -36,7 +36,7 @@ echo data_frame()
 2 rows
 ```
 
-Alternatively you can use `DataFrame::write` function to display data frame:
+You can also display the data frame with the `DataFrame::write` function:
 
 ```php
 <?php

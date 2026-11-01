@@ -2,17 +2,16 @@
 
 [TOC]
 
-This document describes how to develop the `pg-query-ext` PHP extension, which is written in C
-and wraps [libpg_query](https://github.com/pganalyze/libpg_query) - a C library that uses the
-actual PostgreSQL parser.
+This page tells you how to develop the `pg-query-ext` PHP extension. The extension is written in C. It wraps
+[libpg_query](https://github.com/pganalyze/libpg_query), a C library that uses the real PostgreSQL parser.
 
 ## Overview
 
-The `pg-query-ext` extension exposes PostgreSQL's SQL parser to PHP, providing functions for
-parsing, normalizing, fingerprinting, and splitting SQL queries. It statically links against
-`libpg_query` which embeds the PostgreSQL 18 grammar.
+The `pg-query-ext` extension gives PHP access to the SQL parser of PostgreSQL. Its functions parse, normalize,
+fingerprint and split SQL queries. It links statically against `libpg_query`, which contains the PostgreSQL 18
+grammar.
 
-For usage documentation, see [pg-query Extension](/documentation/components/extensions/pg-query-ext.md).
+For the usage documentation, read [pg-query Extension](/documentation/components/extensions/pg-query-ext.md).
 
 ## Development Setup
 
@@ -20,8 +19,8 @@ For usage documentation, see [pg-query Extension](/documentation/components/exte
 nix-shell --arg with-pg-query-ext false --arg with-c true
 ```
 
-This provides the C toolchain (gcc, autoconf, automake, libtool, protobuf) and PHP dev headers
-for building the extension from source.
+This shell gives you the C toolchain (gcc, autoconf, automake, libtool, protobuf). It also gives you the PHP dev
+headers for a build of the extension from source.
 
 ## Project Structure
 
@@ -41,37 +40,41 @@ src/extension/pg-query-ext/
 
 ## Commands
 
-Build the extension (first build downloads libpg_query automatically):
+Build the extension. The first build downloads libpg_query:
 
 ```bash
 nix-shell --arg with-pg-query-ext false --arg with-c true --run "cd src/extension/pg-query-ext && make build"
 ```
 
-A system `libpg_query` is only used when its `PG_MAJORVERSION` matches the pinned `LIBPG_QUERY_VERSION`
-in `config.m4`. A mismatched `--with-pg-query=DIR` is a hard configure error; a mismatched
-auto-discovered library (e.g. a Homebrew keg for a different PostgreSQL major) is skipped in favor of
-downloading the pinned version. This prevents silently baking the wrong PostgreSQL grammar into
-`pg_query.so` ([#2483](https://github.com/flow-php/flow/issues/2483)).
+A system `libpg_query` must have a `PG_MAJORVERSION` that matches the pinned `LIBPG_QUERY_VERSION` in `config.m4`.
+If it does not match, the build does not use it:
 
-Run PHPT tests:
+- If `--with-pg-query=DIR` points to a library with a different version, configure stops with an error.
+- If the build finds a library with a different version, for example a Homebrew keg for a different PostgreSQL major,
+  it skips that library and downloads the pinned version.
+
+This rule prevents a silent build of `pg_query.so` with the wrong PostgreSQL grammar
+([#2483](https://github.com/flow-php/flow/issues/2483)).
+
+Run the PHPT tests:
 
 ```bash
 nix-shell --arg with-pg-query-ext false --arg with-c true --run "cd src/extension/pg-query-ext && make test"
 ```
 
-Rebuild extension only (skip libpg_query, faster after C source changes):
+After a change to the C source, rebuild only the extension. This skips libpg_query and is faster:
 
 ```bash
 nix-shell --arg with-pg-query-ext false --arg with-c true --run "cd src/extension/pg-query-ext && make rebuild"
 ```
 
-Clean extension build artifacts (keep libpg_query):
+Remove the build artifacts of the extension and keep libpg_query:
 
 ```bash
 nix-shell --arg with-pg-query-ext false --arg with-c true --run "cd src/extension/pg-query-ext && make clean"
 ```
 
-Remove everything including downloaded libpg_query:
+Remove everything, also the downloaded libpg_query:
 
 ```bash
 nix-shell --arg with-pg-query-ext false --arg with-c true --run "cd src/extension/pg-query-ext && make distclean"
@@ -79,49 +82,50 @@ nix-shell --arg with-pg-query-ext false --arg with-c true --run "cd src/extensio
 
 ## Make Targets
 
-| Target      | Description                                           |
-|-------------|-------------------------------------------------------|
-| `build`     | Full build (download libpg_query if needed + compile) |
-| `test`      | Run PHPT tests                                        |
-| `install`   | Install to system PHP                                 |
-| `rebuild`   | Rebuild extension only (skip libpg_query)             |
-| `clean`     | Remove extension build artifacts                      |
-| `distclean` | Remove everything including libpg_query               |
+| Target      | Description                                                 |
+|-------------|-------------------------------------------------------------|
+| `build`     | Full build (download a missing libpg_query, compile)        |
+| `test`      | Run PHPT tests                                              |
+| `install`   | Install to system PHP                                       |
+| `rebuild`   | Rebuild extension only (skip libpg_query)                   |
+| `clean`     | Remove extension build artifacts                            |
+| `distclean` | Remove everything, also libpg_query                         |
 
 ## Upgrading libpg_query (keep the C, nix, and PHP sides in sync)
 
-The extension is only half of the story. A given `libpg_query` version pins a specific PostgreSQL
-**grammar**, and that grammar is shared across three places that must always agree:
+The extension is only one part. Each `libpg_query` version pins one PostgreSQL grammar. Three places use that
+grammar, and they must always agree:
 
-| Place                                                                                                                           | What it is                                                                | Used by                           |
-|---------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|-----------------------------------|
-| `src/extension/pg-query-ext/vendor/libpg_query` (`LIBPG_QUERY_VERSION`)                                                         | the C library compiled into the extension                                 | CI (`pie` build)                  |
-| `.nix/pkgs/php-pg-query-ext/package.nix` (`libpg_query` `version`/`rev`/`hash`)                                                 | the C library compiled into the **nix dev shell**                         | local `nix-shell`                 |
-| `src/lib/postgresql/resources/proto/pg_query.proto` + the generated stubs in `src/lib/postgresql/src/Flow/PostgreSql/Protobuf/` | the protobuf schema the PHP side serializes/deserializes parse trees with | the `flow-php/postgresql` library |
+| Place                                                                                                                           | What it is                                                                  | Used by                           |
+|---------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------|-----------------------------------|
+| `src/extension/pg-query-ext/vendor/libpg_query` (`LIBPG_QUERY_VERSION`)                                                         | the C library compiled into the extension                                   | CI (`pie` build)                  |
+| `.nix/pkgs/php-pg-query-ext/package.nix` (`libpg_query` `version`/`rev`/`hash`)                                                 | the C library compiled into the nix dev shell                               | local `nix-shell`                 |
+| `src/lib/postgresql/resources/proto/pg_query.proto` + the generated stubs in `src/lib/postgresql/src/Flow/PostgreSql/Protobuf/` | the protobuf schema that the PHP side uses to encode and decode parse trees | the `flow-php/postgresql` library |
 
-The PHP library round-trips parse trees as protobuf (`pg_query_parse_protobuf` → mutate → `pg_query_deparse`).
-Protobuf encodes each `Node` oneof case by its **field number**. When a new PG major inserts a node, every
-later field number shifts - so if the C library is bumped but the PHP stubs are left stale, PHP serializes
-parse trees with the wrong tags and `pg_query_deparse` can fail to unpack them and **segfault** (a real
-incident: PG17→PG18 left the stubs stale and crashed CI intermittently, while a stale nix pin hid it locally).
+The PHP library sends parse trees through protobuf in both directions (`pg_query_parse_protobuf` → mutate →
+`pg_query_deparse`). Protobuf encodes each `Node` oneof case by its field number. When a new PostgreSQL major adds a
+node, all later field numbers change. If you update the C library and not the PHP stubs, PHP encodes parse trees with
+the wrong tags. `pg_query_deparse` can then fail to decode them, and the process stops with a segfault. This
+happened in a real incident: the upgrade from PG17 to PG18 did not update the stubs, and CI crashed at random. A
+stale nix pin hid the problem on local machines.
 
-When you change the `libpg_query` version, do **all** of the following, then run the full PHP suite:
+When you change the `libpg_query` version, do all of these steps. Then run the full PHP suite:
 
-1. Bump the C side: `LIBPG_QUERY_VERSION` in `src/extension/pg-query-ext/Makefile` and `ext/config.m4` (a release tag, never a
-   branch - `18-latest` moved under CI once), then `make distclean build`.
-2. Bump the nix pin in `.nix/pkgs/php-pg-query-ext/package.nix` to the **same** `libpg_query` tag, and
-   update its `hash` (`nix-prefetch-url --unpack <github-archive-url>` → `nix hash convert --to sri`).
-3. Regenerate the PHP stubs from the new grammar - sync `resources/proto/pg_query.proto` from
-   `vendor/libpg_query/protobuf/pg_query.proto` (keep the `option php_namespace` / `php_metadata_namespace`
-   lines) then run `just gen-protobuf-pg` inside `nix-shell --arg with-protoc true`.
-4. Handle any grammar changes in the query builder / AST (e.g. new `Constraint` fields, restructured
-   clauses) - `mago analyze` and the suite will surface these.
+1. Update the C side: set `LIBPG_QUERY_VERSION` in `src/extension/pg-query-ext/Makefile` and `ext/config.m4`. Use a
+   release tag, never a branch. The `18-latest` branch once moved while CI ran. Then run `make distclean build`.
+2. Update the nix pin in `.nix/pkgs/php-pg-query-ext/package.nix` to the same `libpg_query` tag, and update its
+   `hash` (`nix-prefetch-url --unpack <github-archive-url>` → `nix hash convert --to sri`).
+3. Generate the PHP stubs again from the new grammar. Copy `vendor/libpg_query/protobuf/pg_query.proto` to
+   `resources/proto/pg_query.proto`, and keep the `option php_namespace` / `php_metadata_namespace` lines. Then run
+   `just gen-protobuf-pg` inside `nix-shell --arg with-protoc true`.
+4. Change the query builder and the AST for each grammar change, for example new `Constraint` fields or clauses with
+   a new structure. `mago analyze` and the test suite show these changes.
 
 ### Always validate against the full PHP suite, not just the PHPT tests
 
-`make test` only runs the C-level PHPT tests; it does **not** exercise the PHP `flow-php/postgresql`
-parse/deparse round-trips where grammar drift bites. After any extension change, run the full suite in a
-shell whose extension matches what you changed:
+`make test` runs only the PHPT tests at the C level. It does not run the parse and deparse round trips of the PHP
+`flow-php/postgresql` library, and grammar drift breaks these round trips. After each extension change, run the full
+suite in a shell that has the extension that you changed:
 
 ```bash
 # uses the nix-built extension (the package.nix pin) - must match the vendored/CI version
@@ -131,8 +135,8 @@ nix-shell --run "just test"
 nix-shell --run "tools/phpunit/vendor/bin/phpunit --testsuite lib-postgresql-unit,lib-postgresql-integration,bridge-phpunit-postgresql-unit,bridge-phpunit-postgresql-integration"
 ```
 
-A segfault here shows up as `signal 11` / exit `139`. To capture a backtrace, run the failing command
-under `lldb` (macOS) or `gdb` (Linux):
+A segfault shows as `signal 11` / exit `139`. To get a backtrace, run the failed command with `lldb` (macOS) or `gdb`
+(Linux):
 
 ```bash
 nix-shell --run 'lldb -b -o "settings set target.process.stop-on-exec false" -o run -o bt -o quit \

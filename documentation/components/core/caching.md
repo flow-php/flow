@@ -4,15 +4,15 @@
 
 ## Cache
 
-The goal of cache is to serialize and save on disk (or in another location defined by the cache storage)
-already transformed dataset.
+The cache serializes an already transformed dataset and saves it on disk, or in a different location of the cache
+storage.
 
-Cache runs the pipeline and appends each batch (`Rows`) under the cache id, from where it can be read later in the
+The cache runs the pipeline and appends each batch (`Rows`) under the cache id. A later read gets the batches in the
 same order.
 
-Another interesting use case for caching would be to share the dataset between multiple data processing pipelines.
-So instead of going to datasource multiple times and then repeating all transformations, only one ETL would
-do the whole job and others could benefit from the final form of dataset in a memory-safe way.
+The cache can also share the dataset between multiple data processing pipelines. The pipelines then do not read the
+data source many times and repeat all transformations. One ETL does the full job, and the others use the final
+dataset in a memory-safe way.
 
 ```php
 <?php
@@ -44,8 +44,8 @@ data_frame()
 ```
 
 By default, Flow writes the cache as [Floe](/documentation/components/core/floe.md) files on the local filesystem, in
-the pipeline's backend. The location can be adjusted through the `FLOW_LOCAL_FILESYSTEM_CACHE_DIR` environment
-variable, or on the config:
+the backend of the pipeline. To change the location, use the `FLOW_LOCAL_FILESYSTEM_CACHE_DIR` environment
+variable, or the configuration:
 
 ```php
 <?php
@@ -55,7 +55,7 @@ use function Flow\ETL\DSL\config_builder;
 config_builder()->cacheDir(__DIR__ . '/var/cache');
 ```
 
-To use a different cache, pass a `RowsStorage` to `ConfigBuilder`:
+For a different cache, give a `RowsStorage` to `ConfigBuilder`:
 
 ```php
 <?php
@@ -77,20 +77,20 @@ config_builder()
     );
 ```
 
-The following implementations are available out of the box:
+These implementations are available by default:
 
 * [MemoryRowsStorage](/src/core/etl/src/Flow/ETL/Storage/MemoryRowsStorage.php)
-* [FilesystemRowsStorage](/src/core/etl/src/Flow/ETL/Storage/FilesystemRowsStorage.php) - the default,
+* [FilesystemRowsStorage](/src/core/etl/src/Flow/ETL/Storage/FilesystemRowsStorage.php): the default,
   `filesystem_cache($dir, $filesystem, $backend)`
-* [PsrRowsStorage](/src/core/etl/src/Flow/ETL/Storage/PsrRowsStorage.php) - any
+* [PsrRowsStorage](/src/core/etl/src/Flow/ETL/Storage/PsrRowsStorage.php): each
   [psr/simple-cache implementation](https://packagist.org/providers/psr/simple-cache-implementation)
-* [ApcuRowsStorage](/src/core/etl/src/Flow/ETL/Storage/ApcuRowsStorage.php) - `new ApcuRowsStorage($serializer, $namespace)`,
+* [ApcuRowsStorage](/src/core/etl/src/Flow/ETL/Storage/ApcuRowsStorage.php): `new ApcuRowsStorage($serializer, $namespace)`,
   requires `ext-apcu`
 
 ## Batches and Serialization
 
 `RowsStorage::get()` yields the cached batches one by one. Each one holds at most `DataFrame::cache(cacheBatchSize:)`
-rows (falling back to `DataFrame::batchSize()`):
+rows. Without that value, it uses `DataFrame::batchSize()`:
 
 ```php
 <?php
@@ -103,11 +103,11 @@ data_frame()
     ->run();
 ```
 
-`FilesystemRowsStorage` writes one Floe file per cache id, `<dir>/flow-php-rows/<xxh128 of the id>/<id>.floe`, and
-reads it back in the backend it was given. A file without a footer - a write cut short by a killed process - counts
-as missing, so the next run writes it again.
+`FilesystemRowsStorage` writes one Floe file for each cache id, `<dir>/flow-php-rows/<xxh128 of the id>/<id>.floe`.
+It reads the file back in the backend that it got. A file without a footer, for example from a write that a killed
+process stopped, counts as missing. The next run writes it again.
 
-`PsrRowsStorage` and `ApcuRowsStorage` store each batch as a string, made by the
-[`Serializer`](/src/core/etl/src/Flow/ETL/Storage/Serializer/Serializer.php) they are given -
-[`FloeSerializer`](/src/core/etl/src/Flow/ETL/Storage/Floe/FloeSerializer.php) writes it as one Floe BATCH frame
+`PsrRowsStorage` and `ApcuRowsStorage` store each batch as a string. The
+[`Serializer`](/src/core/etl/src/Flow/ETL/Storage/Serializer/Serializer.php) that they get makes the string.
+[`FloeSerializer`](/src/core/etl/src/Flow/ETL/Storage/Floe/FloeSerializer.php) writes it as one Floe BATCH frame,
 and reads it back into its [column backend](/documentation/components/core/column-backend.md).

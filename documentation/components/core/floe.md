@@ -4,10 +4,10 @@
 
 [TOC]
 
-Floe is Flow's native, self-describing, columnar binary file format. Each batch is written as one BATCH frame holding
-every column in the Arrow buffer layout, the schema lives in the file's footer, and `from_floe()` reads the batches
-back into the configured [column backend](/documentation/components/core/column-backend.md). Files use the `.floe`
-extension.
+Floe is the native columnar binary file format of Flow. A Floe file holds its own schema. Flow writes each batch as
+one BATCH frame. The frame holds every column in the Arrow buffer layout. The schema is in the footer of the file.
+`from_floe()` reads the batches back into the configured [column backend](/documentation/components/core/column-backend.md) of the DataFrame.
+Files use the `.floe` extension.
 
 ## Writing
 
@@ -39,10 +39,10 @@ data_frame()
     ->run();
 ```
 
-Batches hold at most `withBatchSize()` rows, never spanning two BATCH frames.
+A batch holds at most `withBatchSize()` rows. A batch never spans two BATCH frames.
 
-The footer is the schema; `withSchema()` reads every file by name against a declared one, as
-[Parquet](/documentation/components/adapters/parquet.md) does. Change a column's type or zone after reading:
+The footer is the schema. `withSchema()` reads every file by column name against a schema that you declare, as
+[Parquet](/documentation/components/adapters/parquet.md) does. To change the type or the time zone of a column, do it after the read:
 
 ```php
 <?php
@@ -59,14 +59,14 @@ data_frame()
 
 ## Save Modes
 
-`to_floe()` honors every [Save Mode](/documentation/components/core/save-mode.md) through the same
-machinery as other file loaders:
+`to_floe()` supports every [Save Mode](/documentation/components/core/save-mode.md) in the same way as other file
+loaders:
 
-- **ExceptionIfExists** (default) - throws if the destination exists.
-- **Overwrite** - replaces the destination.
-- **Ignore** - skips writing when the destination exists.
-- **Append** - writes a **new sibling `.floe` file** per run (like every other file format).
-  Reading a directory of `.floe` files returns their union.
+- ExceptionIfExists (default): if the destination exists, the write throws.
+- Overwrite: replaces the destination.
+- Ignore: if the destination exists, the write is skipped.
+- Append: writes a new sibling `.floe` file for each run, as every other file format does.
+  A read of a directory of `.floe` files returns their union.
 
 ```php
 <?php
@@ -85,18 +85,17 @@ data_frame()
     ->run();
 ```
 
-> Floe additionally supports appending into a **single** file through the low-level
-> `Flow\ETL\Storage\Floe\FloeFiles::append()` API - appended batches must match the file's schema (a drifted
-> batch throws `IncompatibleSchemaException`; schema evolution is only available through
-> `merge_floe()`). Before the check, the appending schema is rewritten into the file's declared
-> column and structure-field order, so a batch that carries the same columns or the same structure
-> fields in a different order appends cleanly instead of throwing. The DataFrame `Append` save mode
-> uses the sibling-file behavior for consistency with the rest of Flow.
+> Floe can also append to one file through the low-level `Flow\ETL\Storage\Floe\FloeFiles::append()` API.
+> The appended batches must match the schema of the file. A batch with a different schema throws
+> `IncompatibleSchemaException`. Only `merge_floe()` can change the schema. Before the check, Flow puts the columns
+> and structure fields of the batch in the order that the file declares. Thus a batch with the same columns or
+> structure fields in a different order appends without an error. The DataFrame `Append` save mode writes sibling files,
+> as in the rest of Flow.
 
 ## Partitioning
 
-Partitioned datasets write one `.floe` file per partition directory. Reading prunes by path like
-other file-based sources:
+A partitioned dataset has one `.floe` file in each partition directory. A read prunes by path, as other file sources
+do:
 
 ```php
 <?php
@@ -121,9 +120,9 @@ data_frame()
 
 ## Limit & Offset Pushdown
 
-`limit()` stops reading early, and `offset()` skips whole file sections using the footer before
-reading, then passes over every BATCH frame whose row count lies inside the offset without decoding it, so
-neither scans the full file. A filter the source takes is applied first, and the offset then counts the rows it keeps:
+`limit()` stops the read early. Before the read, `offset()` uses the footer to skip full file sections. Then it skips
+each BATCH frame whose rows are all inside the offset, without decoding it. Thus neither of them scans the full file.
+If the source takes a filter, the filter runs first. The offset then counts the rows that the filter keeps:
 
 ```php
 <?php
@@ -140,8 +139,8 @@ data_frame()
 
 ## Source Schema Without a Scan
 
-`FloeExtractor::schema()` reads only the file footers (two ranged reads per file), so the source
-schema is available without scanning any rows:
+`FloeExtractor::schema()` reads only the file footers, with two ranged reads for each file. You get the schema of the
+source without a scan of the rows:
 
 ```php
 <?php
@@ -153,8 +152,8 @@ $schema = from_floe(__DIR__ . '/output.floe')->schema();
 
 ## Reading a Range of Rows
 
-The low-level reader reads a range of a single `.floe` file without a DataFrame. It seeks by the footer's sections,
-so it decodes only from the section holding the first requested row onward:
+The low-level reader reads a range of one `.floe` file without a DataFrame. It uses the sections in the footer to
+find the section that holds the first requested row. It decodes only from that section to the end of the range:
 
 ```php
 <?php
@@ -178,9 +177,9 @@ $file->close();
 
 ## Merging Files
 
-`merge_floe()` combines several `.floe` files (same or append-compatible evolving schema) into one.
-The default byte-splices frame regions without re-encoding a single row - O(bytes); `compact: true`
-re-reads and re-writes every batch, coalescing same-schema runs into fewer sections:
+`merge_floe()` combines several `.floe` files into one. The files must have the same schema, or a schema that can
+grow by append. By default, it copies the frame bytes and encodes no row again. The cost is O(bytes).
+With `compact: true`, it reads and writes every batch again. It joins runs of batches with the same schema into fewer sections:
 
 ```php
 <?php
@@ -196,25 +195,26 @@ merge_floe(
 );
 ```
 
-Sources must evolve the running merged schema cleanly - otherwise `IncompatibleSchemaException` is
-thrown before anything is written. `merge_floe()` works on the local filesystem; for other filesystems use `Flow\ETL\Storage\Floe\FloeMerger` directly.
+Each source must fit the merged schema so far, or extend it by append. If a source does not, Flow throws
+`IncompatibleSchemaException` before it writes anything. `merge_floe()` works on the local filesystem. For other
+filesystems, use `Flow\ETL\Storage\Floe\FloeMerger` directly.
 
 ## Whole-Value Serialization
 
-The whole-value serialization paths - the [cache](/documentation/components/core/caching.md) and
-`Flow\ETL\Storage\Floe\FloeSerializer` (the config default serializer) - stream: `serialize(Rows, DestinationStream)`
-goes through `FloeStreamWriter`, which writes one BATCH frame, and `unserialize(SourceStream)` through the
-strict `FloeStreamReader::rows()`, read in frame-sized batches of at most `batchSize` rows (default 1000) and
-returned as one `Rows` in the serializer's backend. String payloads round-trip through the `Flow\Serializer\DSL`
-helpers `serialize_to_string()` / `unserialize_from_string()`. A whole-value `unserialize()` verifies the decoded row
-count against the footer and rejects torn payloads.
+Two paths serialize a whole value: the [cache](/documentation/components/core/caching.md) and
+`Flow\ETL\Storage\Floe\FloeSerializer`. This serializer is the default serializer of the configuration. Both paths stream.
+`serialize(Rows, DestinationStream)` goes through `FloeStreamWriter`, which writes one BATCH frame.
+`unserialize(SourceStream)` goes through the strict `FloeStreamReader::rows()`. It reads batches of one frame each,
+with at most `batchSize` rows (default 1000). It returns them as one `Rows` in the backend of the serializer.
+String payloads go through the `Flow\Serializer\DSL` functions `serialize_to_string()` / `unserialize_from_string()`
+and come back unchanged. A whole-value `unserialize()` compares the decoded row count with the footer. It rejects an incomplete payload.
 
 ## Validation
 
-Floe never casts. Values are checked when a batch is built - a value that does not fit its column throws
-`SchemaMismatchException` before anything reaches the writer. The writer then checks each batch's schema against
-the file's schema, fixed when the write session starts: `FloeFiles::create()` takes it as an argument, `to_floe()` takes
-`withSchema()` or else the first batch's schema:
+Floe never casts. When Flow builds a batch, it tests each value. A value that does not fit its column throws
+`SchemaMismatchException` before anything goes to the writer. The writer then compares the schema of each batch with
+the schema of the file. The write session fixes the schema of the file at its start. `FloeFiles::create()` takes it
+as an argument. `to_floe()` takes `withSchema()`, or else the schema of the first batch:
 
 | Batch schema                                                  | Result                        |
 |---------------------------------------------------------------|-------------------------------|
@@ -241,12 +241,12 @@ Floe write session schema is fixed and this batch does not fit it:   Mismatched 
     |-- expected: id<integer>, given: id<string>
 ```
 
-The check runs before any bytes reach the destination, so a rejected batch leaves the file readable.
+The test runs before any bytes go to the destination. Thus a rejected batch does not damage the file.
 
 ## On-Disk Layout
 
-A `.floe` file is a 6-byte header, a stream of length-prefixed frames and a JSON footer located from the last
-8 bytes. The schema lives only in the footer. Integers are little-endian.
+A `.floe` file is a 6-byte header, a stream of frames with a length prefix, and a JSON footer. The last 8 bytes
+give the position of the footer. The schema is only in the footer. Integers are little-endian.
 
 ```
 HEADER                               6 bytes
@@ -271,7 +271,7 @@ length   4 bytes (u32)
 body     <length> bytes
 ```
 
-Any other frame type is refused with `Floe found unknown frame type 0x%02X`.
+Any other frame type fails with `Floe found unknown frame type 0x%02X`.
 
 ### BATCH body
 
@@ -288,14 +288,14 @@ buffer area  per non-empty buffer: i64 uncompressed length (-1 = stored raw) + b
 ```
 
 - Nodes per type: scalar and null 1, list 1 + element, map 2 (map, entries) + key + value, structure 1 + children.
-- Buffers per node: validity (`''` when the node holds no nulls), then offsets for list, map and string kinds,
-  then values/data; a null column has none.
+- Buffers per node: validity first. When the node holds no nulls, validity is `''`. Then offsets for list, map and
+  string kinds, then values/data. A null column has no buffers.
 - An empty buffer is extent `{0, 0}` with no prefix.
-- A codec compresses each buffer on its own; the buffer is stored raw (`-1`) whenever the codec output is not
-  smaller. The directory is never compressed.
+- A codec compresses each buffer separately. If the codec output is not smaller, the buffer is stored raw (`-1`).
+  The directory is never compressed.
 
 `[['id' => 1, 'name' => 'ab'], ['id' => 2, 'name' => null]]` under `int_schema('id')`,
-`str_schema('name', nullable: true)` - 72-byte directory, 80-byte buffer area:
+`str_schema('name', nullable: true)` gives a 72-byte directory and an 80-byte buffer area:
 
 ```
 02000000 02000000 05000000                                         rows 2, nodes 2, buffers 5
@@ -321,9 +321,9 @@ ffffffffffffffff 6162 000000000000                                 name data
 }
 ```
 
-- `sections` - byte `offset` and `rowCount` of each section, for offset/limit pushdown without a scan.
-- `statistics` - row count and the bytes of the data frames (header and footer excluded).
-- Unknown keys are ignored, so a field added later does not break an older reader.
+- `sections`: byte `offset` and `rowCount` of each section, for offset/limit pushdown without a scan.
+- `statistics`: row count and the bytes of the data frames (header and footer excluded).
+- A reader ignores unknown keys. Thus a field added later does not break an older reader.
 
 ### Trailer (last 8 bytes)
 
@@ -334,6 +334,6 @@ ffffffffffffffff 6162 000000000000                                 name data
       └───────────────┴───────────────┘
 ```
 
-A reader seeks to `EOF − 8`, reads the trailer, verifies the trailing `FLOE` magic, then seeks back
-`footer length` bytes to parse the footer JSON - two ranged reads, no body scan. This is what powers
-`FloeExtractor::schema()` and offset/limit pushdown.
+A reader seeks to `EOF − 8` and reads the trailer. It makes sure that the trailer ends with the `FLOE` magic. Then
+it seeks back `footer length` bytes and parses the footer JSON. This takes two ranged reads and no scan of the body.
+`FloeExtractor::schema()` and offset/limit pushdown use this.

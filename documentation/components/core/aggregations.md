@@ -4,7 +4,7 @@
 
 [TOC]
 
-Each group created by `groupBy` function can be aggregated using one of the aggregation functions.
+You can aggregate each group of the `groupBy` function with one of the aggregation functions.
 
 ## Aggregation functions
 
@@ -22,12 +22,12 @@ Each group created by `groupBy` function can be aggregated using one of the aggr
 All aggregation functions implement [`AggregatingFunction`](/src/core/etl/src/Flow/ETL/Functions/AggregatingFunction.php).
 `aggregate(Rows $rows, array $indices, Backend $backend)` folds the rows of one group into the state.
 `merge(array $partial, Backend $backend)` folds in the `partial()` of another aggregator of the same function.
-Group by merges after it spills.
+Group by merges after a spill.
 
 ## Custom aggregators
 
-A custom aggregator also describes itself (it is rebuilt in a worker from `describe()`) and exposes its state as a
-partial, the plain values a worker hands back for the parent or a later task to merge:
+A custom aggregator also describes itself, because a worker builds it again from `describe()`. It gives its state as
+a partial: the plain values that a worker returns, so that the parent or a later task can merge them:
 
 ```php
 <?php
@@ -89,13 +89,13 @@ final class LongestString implements AggregatingFunction
 }
 ```
 
-`partialType()` is valid once the aggregator is resolved; `partial()` of a fresh instance is the initial state, and
-merging it is a no-op. Partials of two tasks merge in task order: an order-sensitive aggregator (`first()`,
-`last()`, `collect()`) relies on it. A `describe()` returning `null` keeps the group by in the parent process.
+`partialType()` is valid after the aggregator is resolved. `partial()` of a new instance is the initial state, and a
+merge of it is a no-op. Partials of two tasks merge in task order. Order-sensitive aggregators (`first()`, `last()`,
+`collect()`) depend on this order. A `describe()` that returns `null` keeps the group by in the parent process.
 
 ## Float arithmetic
 
-`sum()` and `average()` add floats as IEEE 754 doubles with compensated summation. `exact: true` switches to decimal
+`sum()` and `average()` add floats as IEEE 754 doubles with compensated summation. `exact: true` changes to decimal
 arithmetic:
 
 ```php

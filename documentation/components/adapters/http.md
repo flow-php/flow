@@ -8,62 +8,52 @@ package: flow-php/etl-adapter-http
 
 [TOC]
 
-Flow PHP's Adapter HTTP is a finely crafted library designed to enable seamless interaction with HTTP protocols within
-your ETL (Extract, Transform, Load) workflows. This adapter is vital for developers aiming to effortlessly send or
-receive HTTP requests, ensuring a streamlined and reliable data transformation process. By harnessing the Adapter HTTP
-library, developers can access a robust suite of features engineered for precise HTTP communication, simplifying complex
-data exchange operations while enhancing overall data processing efficiency. The Adapter HTTP library encapsulates an
-extensive range of functionalities, offering a streamlined API for managing HTTP tasks, which is crucial in contemporary
-data processing and transformation endeavors. This library epitomizes Flow PHP's commitment to providing versatile and
-efficient data processing solutions, making it an excellent choice for developers dealing with HTTP communication in
-large-scale and data-intensive environments. With Flow PHP's Adapter HTTP, navigating HTTP tasks within your ETL
-workflows becomes a more refined and efficient endeavor, harmoniously aligning with the robust and adaptable framework
-of the Flow PHP ecosystem.
+The HTTP adapter sends HTTP requests and reads the responses as rows in ETL (Extract, Transform, Load) pipelines.
 
 ## Installation
 
-For detailed installation instructions, see
+For the installation instructions, read
 the [installation page](/documentation/installation/packages/etl-adapter-http.md).
 
 ## Which extractor to use
 
-- `from_http_paginated()` - reading from an API. Start here, it covers every common pagination scheme.
-- `from_static_http_requests()` - a fixed list of URLs known upfront, no pagination.
-- `from_dynamic_http_requests()` - last resort, when no built-in paginator can express how the next request is built.
+- `from_http_paginated()`: reads from an API. Start here. It covers all common pagination schemes.
+- `from_static_http_requests()`: a fixed list of URLs that you know before the run, no pagination.
+- `from_dynamic_http_requests()`: the last option, for a next request that no built-in paginator can describe.
 
 ## Row structure
 
-Every extractor in this adapter emits the same columns, so the sections below apply to all three.
+All extractors in this adapter emit the same columns, so the sections below apply to all three.
 
 | Column                      | Type                        | Description                                             |
 |-----------------------------|-----------------------------|---------------------------------------------------------|
 | `response_body`             | `?string`                   | Raw response body text                                  |
 | `response_headers`          | `map<string, list<string>>` | Response headers, one list of values per header name    |
-| `response_status_code`      | `integer`                   | HTTP status code, e.g. `200`                            |
-| `response_protocol_version` | `string`                    | e.g. `1.1`                                              |
-| `response_reason_phrase`    | `string`                    | e.g. `OK`                                               |
+| `response_status_code`      | `integer`                   | HTTP status code, for example `200`                     |
+| `response_protocol_version` | `string`                    | for example `1.1`                                       |
+| `response_reason_phrase`    | `string`                    | for example `OK`                                        |
 | `request_body`              | `?string`                   | Raw body of the request that produced this response     |
 | `request_uri`               | `string`                    | Full URI the request was sent to, query string included |
 | `request_headers`           | `map<string, list<string>>` | Request headers, one list of values per header name     |
-| `request_protocol_version`  | `string`                    | e.g. `1.1`                                              |
-| `request_method`            | `string`                    | e.g. `GET`                                              |
+| `request_protocol_version`  | `string`                    | for example `1.1`                                       |
+| `request_method`            | `string`                    | for example `GET`                                       |
 
 ### Body handling
 
-`response_body` and `request_body` hold the raw body text, whatever the content type is. An empty or unreadable body
-becomes `null`. The adapter never decodes the body into the row - to type it as a structure, declare a schema (see
+`response_body` and `request_body` hold the raw body text, for each content type. An empty or unreadable body
+becomes `null`. The adapter never decodes the body into the row. To type it as a structure, declare a schema (read
 *Typing the row with a schema* below).
 
-Paginators decode the body internally, content-type aware, to navigate into `records_path` and cursor fields, so JSON
-and XML paginate through the identical DSL. That decoding never reaches the row columns.
+Paginators decode the body internally, by its content type, to find `records_path` and the cursor fields. JSON and
+XML therefore paginate through the same DSL. That decoding never reaches the row columns.
 
 ## Extractor - PsrHttpClientPaginatedExtractor
 
-`from_http_paginated($client, $baseRequest, $paginator, ?$schema)` paginates declaratively - no hand-written
-`NextRequestFactory`. A paginator is a **strategy** (how the next page is derived) + a **stop condition**; strategies
-that inject a token also take an **injection** (where it goes). It stops on the strategy's safe default, on HTTP
-`>= 400`
-(the row is still emitted), and on a repeated request (loop guard). Every `http_*` helper below lives in
+`from_http_paginated($client, $baseRequest, $paginator, ?$schema)` paginates declaratively. You do not write a
+`NextRequestFactory`. A paginator is a strategy (how to get the next page) + a stop condition. Strategies that inject
+a token also take an injection (where the token goes). The extractor stops on the safe default of the strategy, on
+HTTP `>= 400`
+(the row is still emitted), and on a repeated request (loop guard). All `http_*` helpers below are in
 `Flow\ETL\Adapter\Http`.
 
 ```php
@@ -95,7 +85,7 @@ data_frame()
     ->run();
 ```
 
-This walks `?per_page=100&page=1,2,3...` until the `items` path of a response comes back empty.
+This goes through `?per_page=100&page=1,2,3...` until the `items` path of a response is empty.
 
 ### Supported strategies
 
@@ -140,8 +130,8 @@ stop_when: http_stop_when_any_of(http_stop_when_flag_false('has_more'), http_sto
 
 ## Extractor - PsrHttpClientStaticExtractor
 
-`from_static_http_requests($client, $requests, ?$schema)` sends a predefined collection of requests. Use it when every
-URL is known upfront and nothing needs to be derived from a response.
+`from_static_http_requests($client, $requests, ?$schema)` sends a predefined collection of requests. It is for
+URLs that you know before the run. No request depends on a response.
 
 ```php
 <?php
@@ -170,8 +160,8 @@ data_frame()
     ->run();
 ```
 
-Each response is one row and, by default, one batch. Group responses into batches with `withBatchSize()`; a pushed
-limit stops sending requests once it is reached:
+Each response is one row and, by default, one batch. Group responses into batches with `withBatchSize()`. A pushed
+limit stops the requests at the limit:
 
 ```php
 <?php
@@ -185,12 +175,12 @@ data_frame()
 
 ## Extractor - PsrHttpClientDynamicExtractor
 
-> Reach for this only when no built-in paginator fits. It is the lowest-level extractor of the three - you hand-write
-> the request loop, so loop guards, stop conditions and token extraction all become your responsibility. If the API
-> paginates in any of the shapes listed above, use `from_http_paginated()` instead.
+> Use this only for an API that no built-in paginator fits. It is the lowest-level extractor of the three. You write the request
+> loop yourself, so the loop guards, stop conditions and token extraction are your task. If the API paginates in one
+> of the shapes above, use `from_http_paginated()` instead.
 
-`from_dynamic_http_requests($client, $requestFactory, ?$schema)` drives the loop through a `NextRequestFactory` that
-receives the previous response and returns the next request, or `null` to stop.
+`from_dynamic_http_requests($client, $requestFactory, ?$schema)` runs the loop through a `NextRequestFactory`. The
+factory receives the previous response and returns the next request, or `null` to stop.
 
 ```php
 <?php
@@ -230,9 +220,9 @@ data_frame()
 
 ## Typing the row with a schema
 
-All three extractors expose `withSchema(Schema)` (also the optional last argument of the `from_*` DSL functions). The
-schema describes the **row**, so to type the body you declare `response_body` as a `structure`. As with every
-extractor, only the columns the schema mentions are kept, so include any envelope columns you want to keep.
+All three extractors have `withSchema(Schema)` (also the optional last argument of the `from_*` DSL functions). The
+schema describes the row. To type the body, declare `response_body` as a `structure`. As with all extractors, only
+the columns in the schema stay, so add the envelope columns that you want to keep.
 
 ```php
 <?php
@@ -254,6 +244,6 @@ $extractor = from_http_paginated(
 ));
 ```
 
-The `response_body` structure can be derived from an OpenAPI specification with the OpenAPI specification bridge
-(`schema_from_openapi_specification($spec)` returns the body's field definitions), so the HTTP adapter takes on no extra
-dependency.
+The OpenAPI specification bridge can make the `response_body` structure from an OpenAPI specification.
+`schema_from_openapi_specification($spec)` returns the field definitions of the body. The HTTP adapter therefore needs
+no extra dependency.

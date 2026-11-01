@@ -4,7 +4,7 @@
 
 [TOC]
 
-Batch processing controls how data flows through the DataFrame pipeline, affecting memory usage and performance.
+Batch processing controls how data flows through the DataFrame pipeline. It changes the memory usage and the performance.
 
 ## Batch Size Control
 
@@ -23,12 +23,12 @@ $dataFrame = data_frame()
     ->run();
 ```
 
-> **Performance Tip**: Optimal batch size depends on your data and available memory. Larger batches reduce I/O
-> operations but increase memory usage. Start with 1000-5000 rows and adjust based on your specific use case.
+> Performance Tip: The best batch size depends on your data and the available memory. Larger batches reduce I/O
+> operations, but they use more memory. Start with 1000-5000 rows, and change the value for your use case.
 
 ### Source and pipeline - two batch sizes
 
-`withBatchSize()` bounds what a source **builds**; `batchSize()` re-batches the pipeline **after** the source.
+`withBatchSize()` limits the batches that a source builds. `batchSize()` re-batches the pipeline after the source.
 
 ```php
 <?php
@@ -47,7 +47,7 @@ data_frame()
     ->run();
 ```
 
-Database sources that page over the network default to `withBatchSize(1000)`: there, one batch is one round trip.
+Database sources that page over the network default to `withBatchSize(1000)`. For them, one batch is one round trip.
 
 ### batchBy() - Group related records together
 
@@ -64,19 +64,20 @@ $dataFrame = data_frame()
     ->run();
 ```
 
-The `batchBy()` method ensures that all rows with the same column value stay in the same batch. This is critical when:
-- Processing hierarchical data (orders with line items, parent-child relationships)
-- Performing DELETE+INSERT operations (upsert patterns)
-- Maintaining referential integrity during batch processing
+The `batchBy()` method makes sure that all rows with the same column value stay in the same batch. This is
+important for:
+- Hierarchical data (orders with line items, parent-child relationships)
+- DELETE+INSERT operations (upsert patterns)
+- Referential integrity during batch processing
 
-**Key behaviors:**
-- Groups are **never** split across batches (preserves data integrity)
-- When `minSize` is specified: batches accumulate until reaching minimum size, then yield on group boundary
-- When `minSize` is omitted: each unique group value gets its own batch
-- Batches may exceed `minSize` to keep large groups intact
-- Group values compare by value (equal datetimes or uuids are one group); nulls form one group
+Key behaviors:
+- Groups are never split across batches. This keeps the data integrity.
+- With `minSize`: batches grow up to the minimum size, and then yield at a group boundary.
+- Without `minSize`: each unique group value gets its own batch.
+- Batches can be larger than `minSize`, to keep large groups complete.
+- Group values compare by value. Equal datetimes or uuids are one group. Nulls form one group.
 
-> **Use Case**: If you're loading orders with line items and using a DELETE+INSERT pattern, `batchBy('order_id')` ensures all line items for an order are in the same batch, preventing foreign key violations.
+> Use Case: you load orders with line items, with a DELETE+INSERT pattern. `batchBy('order_id')` makes sure that all line items of an order are in the same batch. This prevents foreign key violations.
 
 ## Data Collection
 
@@ -93,11 +94,11 @@ $dataFrame = data_frame()
     ->run();
 ```
 
-> **Memory Warning**: The `collect()` method loads all data into memory at once. This can cause memory exhaustion
-> with large datasets. Use only when:
-> - You're certain the entire dataset fits comfortably in available memory
-> - The next step needs the whole dataset in one batch
-> - You're working with small to medium datasets
+> Memory Warning: The `collect()` method loads all data into memory at the same time. With large datasets, the
+> memory can run out. Use it only in these cases:
+> - The full dataset surely fits in the available memory.
+> - The next step needs the full dataset in one batch
+> - You work with small to medium datasets
 
 ## Memory Management Strategies
 

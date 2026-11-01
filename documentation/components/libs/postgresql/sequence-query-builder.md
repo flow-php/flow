@@ -176,7 +176,7 @@ echo $query->toSql();
 
 ### CYCLE / NO CYCLE
 
-Enable or disable cycling when the sequence reaches its bounds:
+Enable or disable cycling at the bounds of the sequence:
 
 ```php
 <?php
@@ -216,7 +216,7 @@ echo $query->toSql();
 
 ### OWNED BY
 
-Associate the sequence with a table column (dropped automatically when the column is dropped):
+Connect the sequence to a table column. A drop of the column also drops the sequence:
 
 ```php
 <?php
@@ -293,7 +293,7 @@ echo $query->toSql();
 
 ### IF EXISTS
 
-Only alter the sequence if it exists:
+Alter only an existing sequence:
 
 ```php
 <?php
@@ -485,7 +485,7 @@ echo $query->toSql();
 
 ### RESTRICT
 
-Refuse to drop the sequence if any objects depend on it (default behavior):
+Refuse to drop the sequence while other objects depend on it (default behavior):
 
 ```php
 <?php

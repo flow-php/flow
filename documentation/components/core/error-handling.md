@@ -2,16 +2,16 @@
 
 [DOC_LINK:/documentation/components/core/core.md]
 
-By default an exception thrown while reading, transforming or loading stops the pipeline. An
-[ErrorHandler](/src/core/etl/src/Flow/ETL/Runtime/ErrorHandler.php) decides per failure instead:
+By default, an exception during the read, the transformation or the load stops the pipeline. An
+[ErrorHandler](/src/core/etl/src/Flow/ETL/Runtime/ErrorHandler.php) can decide for each failure instead:
 
 | Method                                                        | Error carries                  | Action other than `propagate` (rethrow)                                            |
 |---------------------------------------------------------------|--------------------------------|------------------------------------------------------------------------------------|
-| `onExtraction(ExtractionError): ExtractionAction`             | `cause`, `extractor`           | `endSource` - stop reading; rows read so far still flow and the run completes      |
-| `onTransformation(TransformationError): TransformationAction` | `cause`, `transformer`, `rows` | `skipBatch` - drop the batch, continue with the next one                           |
-| `onLoading(LoadingError): LoadingAction`                      | `cause`, `loader`, `rows`      | `skipLoader` - the failing loader misses this batch, the remaining steps still run |
+| `onExtraction(ExtractionError): ExtractionAction`             | `cause`, `extractor`           | `endSource`: stop the read. Rows read so far still flow, and the run completes     |
+| `onTransformation(TransformationError): TransformationAction` | `cause`, `transformer`, `rows` | `skipBatch`: drop the batch, continue with the next one                            |
+| `onLoading(LoadingError): LoadingAction`                      | `cause`, `loader`, `rows`      | `skipLoader`: the failing loader misses this batch, the remaining steps still run  |
 
-A corrupted record never reaches the `ErrorHandler`, see [Corrupted Records](/documentation/components/core/corrupted-records.md).
+A corrupted record never reaches the `ErrorHandler`. For more information, read [Corrupted Records](/documentation/components/core/corrupted-records.md).
 
 Built-in handlers:
 
@@ -73,11 +73,11 @@ data_frame()
 
 ## Tolerating invalid values per function
 
-A scalar function that receives a value it cannot process throws `EvaluationException` (an
-`InvalidArgumentException`) with the failing row of the batch, for example `ref('text')->upper()` over a null value:
-`ToUpper function requires non-null value (row 1)`; the original exception is `getPrevious()`. To tolerate the failure for
-one function instead of the whole pipeline, wrap it in `optional()` - it evaluates the
-wrapped function and returns null when it throws:
+A scalar function that gets a value that it cannot process throws `EvaluationException` (an
+`InvalidArgumentException`) with the failing row of the batch. An example is `ref('text')->upper()` over a null value:
+`ToUpper function requires non-null value (row 1)`. The original exception is `getPrevious()`. To accept the failure
+for one function, and not for the full pipeline, wrap the function in `optional()`. It evaluates the wrapped function.
+For a function that throws, it returns null:
 
 ```php
 <?php
@@ -98,7 +98,7 @@ data_frame()
 
 ## Row-level Error Handling
 
-For fine-grained error handling during row processing operations:
+For detailed error handling during row processing operations:
 
 ```php
 <?php
@@ -135,4 +135,4 @@ data_frame()
 echo "Success: {$successCount}, Errors: {$errorCount}";
 ```
 
-> **Best Practice**: When processing unreliable data sources, implement row-level error handling to prevent entire pipeline failures and provide detailed error reporting.
+> Best Practice: For unreliable data sources, implement row-level error handling. It prevents failures of the full pipeline and gives detailed error reports.

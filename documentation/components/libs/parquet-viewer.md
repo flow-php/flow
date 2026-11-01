@@ -10,9 +10,9 @@ package: flow-php/parquet-viewer
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/parquet-viewer.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/parquet-viewer.md).
 
-Parquet Viewer is a simple CLI tool to inspect and view the content and metadata of parquet files. 
+Parquet Viewer is a CLI tool that shows the content and the metadata of parquet files.
 
 ## Usage
 

@@ -1,17 +1,17 @@
 ---
 seo_title: Documentation
-seo_description: Strongly typed, memory-efficient data processing for PHP - installation, quick start, adapters, examples, and references.
+seo_description: Strongly typed, memory-efficient data processing for PHP, with installation, quick start, adapters, examples, and references.
 ---
 
 # Flow PHP
 
 Flow is a strongly typed, memory-efficient data processing framework for PHP.
-It gives you a single fluent API to read, transform, and write data across CSV,
-JSON, XML, Parquet, REST, RDBMS, SEAL, and more - without per-format
-boilerplate.
+It gives you one fluent API to read, transform, and write data in CSV,
+JSON, XML, Parquet, REST, RDBMS, SEAL, and other formats. You do not write
+boilerplate for each format.
 
-If you build pipelines, ETL jobs, exports, imports, or reporting in PHP and
-you've outgrown one-off scripts, you're in the right place.
+This framework is for people who build pipelines, ETL jobs, exports, imports,
+or reports in PHP, and for whom one-off scripts are no longer sufficient.
 
 ## Hello, Flow
 
@@ -37,48 +37,48 @@ data_frame()
     ->run();
 ```
 
-That's a complete program. The pipeline reads top-to-bottom and streams rows in
-constant memory regardless of input size.
+That is a complete program. The pipeline reads from top to bottom. It streams
+rows in constant memory, for each input size.
 
 ## Mental model
 
 Every Flow pipeline has three stages:
 
-- **Extract** - `->read(...)` pulls rows from a source (file, API, database).
-- **Transform** - `->filter()`, `->withColumn()`, `->join()`, `->groupBy()`,
+- Extract: `->read(...)` pulls rows from a source (file, API, database).
+- Transform: `->filter()`, `->withColumn()`, `->join()`, `->groupBy()`,
   `->window()`, and friends shape the rows.
-- **Load** - `->write(...)` streams the result into a loader; `->run()` executes
-  the whole thing.
+- Load: `->write(...)` streams the result into a loader. `->run()` executes
+  the full pipeline.
 
-Data moves through the pipeline as **DataFrame → Rows** batches of columns. Every `Rows`
+Data moves through the pipeline as DataFrame → Rows batches of columns. Each `Rows`
 batch carries the schema that types its columns.
 
 ## Where to go from here
 
-**New to Flow**
+New to Flow
 
-- [Installation](/documentation/installation) - Composer setup and runtime tips.
-- [Quick Start](/documentation/quick-start) - From empty project to working
+- [Installation](/documentation/installation): composer setup and runtime tips.
+- [Quick Start](/documentation/quick-start): from empty project to working
   pipeline in five minutes.
 
-**Learn the API**
+Learn the API
 
-- [Data Frame](/documentation/components/core/core) - the core: filter, join,
+- [Data Frame](/documentation/components/core/core): the core: filter, join,
   group by, window, partition, sort, limit.
-- [DSL Reference](/documentation/dsl/core) - every function in the DSL, with
+- [DSL Reference](/documentation/dsl/core): every function in the DSL, with
   signatures and examples.
 
-**Working with a specific source or destination**
+Working with a specific source or destination
 
-- Browse [Adapters](/documentation/components/adapters/csv) - CSV, JSON, XML,
-  Parquet, Avro, Excel, HTTP, PostgreSQL, Doctrine, SEAL, ChartJS.
+- Browse [Adapters](/documentation/components/adapters/csv): CSV, JSON, XML,
+  Parquet, Excel, HTTP, PostgreSQL, Doctrine, SEAL, ChartJS.
 
-**See it running**
+See it running
 
-- [Examples](/reading/array) - runnable snippets grouped by
+- [Examples](/reading/array): runnable snippets grouped by
   topic and format. Open any example in the Playground.
 
-**Going to production**
+Going to production
 
 - [Schema](/documentation/components/core/schema),
   [Save Mode](/documentation/components/core/save-mode),
@@ -88,10 +88,10 @@ batch carries the schema that types its columns.
 ## What Flow isn't
 
 Flow is not a database engine, a query planner, or a distributed compute
-framework. It runs inside any PHP runtime - CLI, FPM, queue worker - and
-processes rows in constant memory. If you need cluster-scale joins or SQL
-planning, reach for a distributed engine. If you need ergonomic, type-safe data
-pipelines inside a PHP application, you're in the right place.
+framework. It runs inside each PHP runtime (CLI, FPM, queue worker) and
+processes rows in constant memory. For cluster-scale joins or SQL planning,
+use a distributed engine. For easy, type-safe data pipelines inside a PHP
+application, use Flow.
 
 ## Get help
 

@@ -4,7 +4,7 @@
 
 [TOC]
 
-The Condition Builder provides a fluent API for building WHERE conditions incrementally. It's particularly useful when conditions need to be constructed dynamically based on runtime logic, such as building filter queries from user input.
+The Condition Builder has a fluent API that builds WHERE conditions step by step. Use it for conditions that runtime logic builds dynamically, for example filter queries from user input.
 
 ## Basic Usage
 
@@ -99,7 +99,7 @@ echo $query->toSql();
 
 ## Immutability
 
-`ConditionBuilder` is immutable - each `and()` or `or()` call returns a new builder instance:
+`ConditionBuilder` is immutable. Each `and()` or `or()` call returns a new builder instance:
 
 ```php
 <?php
@@ -117,10 +117,10 @@ $withAge = $base->and(gt(col('age'), literal(18)));
 
 ## Empty Builder Behavior
 
-- `isEmpty()` returns `true` when no conditions have been added
+- `isEmpty()` returns `true` for a builder without conditions
 - `getCondition()` returns `null` for empty builders
-- Passing an empty builder to `where()` throws `InvalidBuilderStateException`
-- Empty nested builders are ignored (no-op) when combined with `and()` or `or()`
+- An empty builder in `where()` throws `InvalidBuilderStateException`
+- `and()` and `or()` ignore empty nested builders (no-op)
 
 ```php
 <?php
@@ -144,13 +144,13 @@ $conditions = conditions()
 
 ## Method Reference
 
-| Method | Description |
-|--------|-------------|
-| `conditions()` | DSL function - creates a new empty `ConditionBuilder` |
-| `and(Condition\|ConditionBuilder $condition)` | Add a condition with AND logic |
-| `or(Condition\|ConditionBuilder $condition)` | Add a condition with OR logic |
-| `getCondition()` | Returns the built `Condition` or `null` if empty |
-| `isEmpty()` | Returns `true` if no conditions have been added |
+| Method                                        | Description                                                   |
+|-----------------------------------------------|---------------------------------------------------------------|
+| `conditions()`                                | DSL function: creates a new empty `ConditionBuilder`          |
+| `and(Condition\|ConditionBuilder $condition)` | Add a condition with AND logic                                |
+| `or(Condition\|ConditionBuilder $condition)`  | Add a condition with OR logic                                 |
+| `getCondition()`                              | Returns the built `Condition`, or `null` for an empty builder |
+| `isEmpty()`                                   | Returns `true` for a builder without conditions               |
 
 ## Comparison with and_/or_
 

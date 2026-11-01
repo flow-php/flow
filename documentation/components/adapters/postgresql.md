@@ -8,16 +8,12 @@ package: flow-php/etl-adapter-postgresql
 
 [TOC]
 
-Flow PHP's Adapter PostgreSQL is designed to seamlessly integrate PostgreSQL within your ETL (Extract, Transform, Load)
-workflows. This adapter is built on top of
-the [PostgreSQL library](/documentation/components/libs/postgresql/client-connection.md), providing efficient data
-extraction and loading capabilities. By harnessing the Adapter PostgreSQL library, developers can tap into robust
-features for precise database interaction, simplifying complex data transformations and enhancing data processing
-efficiency.
+The PostgreSQL adapter reads and writes PostgreSQL tables in ETL (Extract, Transform, Load) pipelines. It uses
+the [PostgreSQL library](/documentation/components/libs/postgresql/client-connection.md) for extraction and loading.
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/etl-adapter-postgresql.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/etl-adapter-postgresql.md).
 
 ## Requirements
 
@@ -27,15 +23,15 @@ For detailed installation instructions, see the [installation page](/documentati
 
 ## Description
 
-This adapter provides:
+This adapter has:
 
 ### Extractors
 
-Three extraction strategies optimized for different use cases:
+Three extraction strategies for different use cases:
 
-- **Server-Side Cursor**: True streaming extraction using PostgreSQL DECLARE CURSOR for maximum memory efficiency
-- **LIMIT/OFFSET Pagination**: Simple pagination suitable for smaller datasets
-- **Keyset (Cursor) Pagination**: Efficient pagination for large datasets with consistent performance
+- Server-Side Cursor: true streaming extraction with PostgreSQL DECLARE CURSOR, for the lowest memory usage
+- LIMIT/OFFSET Pagination: simple pagination for smaller datasets
+- Keyset (Cursor) Pagination: efficient pagination for large datasets, with the same performance on each page
 
 All extractors support:
 
@@ -44,28 +40,28 @@ All extractors support:
 - Maximum row limits
 - Custom schema definitions
 
-Every extractor reads exactly one read-only `SELECT` or `VALUES` statement - anything else throws
-`InvalidArgumentException` before a query runs. Schema derivation and its errors:
+Each extractor reads exactly one read-only `SELECT` or `VALUES` statement. All other input throws
+`InvalidArgumentException` before a query runs. For the schema derivation and its errors, read
 [PostgreSQL sources](../core/schema.md#postgresql-sources-describe-themselves-and-keep-withschema).
 
 ### Loader
 
-A flexible loader supporting:
+A loader that supports:
 
-- **INSERT**: Simple inserts with batch support
-- **UPDATE**: Update existing rows by primary key
-- **DELETE**: Delete rows by primary key
-- **UPSERT**: ON CONFLICT handling for insert-or-update operations
+- INSERT: simple inserts with batch support
+- UPDATE: update existing rows by primary key
+- DELETE: delete rows by primary key
+- UPSERT: ON CONFLICT handling for insert-or-update operations
 
 ## Extractor - Server-Side Cursor
 
-The `from_pgsql_cursor` extractor uses PostgreSQL's native server-side cursors via `DECLARE CURSOR` + `FETCH`.
-This is the **only way** to achieve true low-memory streaming with PHP's ext-pgsql, as the extension
+The `from_pgsql_cursor` extractor uses the native server-side cursors of PostgreSQL through `DECLARE CURSOR` + `FETCH`.
+This is the only way to get true low-memory streaming with the ext-pgsql of PHP, because the extension
 has no unbuffered query mode.
 
-> **Note:** This extractor automatically manages transactions. Cursors require a transaction context,
-> which is auto-started if not already in one. A failed read rolls back the transaction the extractor started;
-> inside a transaction you opened, the rollback is yours.
+> Note: This extractor manages transactions automatically. Cursors need a transaction context. Without an open
+> transaction, the extractor starts one. A failed read rolls back the transaction that the extractor started.
+> Inside a transaction that you opened, the rollback is your task.
 
 ### Basic Usage
 
@@ -124,8 +120,8 @@ data_frame()
 
 ## Extractor - LIMIT/OFFSET Pagination
 
-The `from_pgsql_limit_offset` extractor uses traditional LIMIT/OFFSET pagination. This is simple to use but may have
-performance degradation on very large datasets with high offsets.
+The `from_pgsql_limit_offset` extractor uses traditional LIMIT/OFFSET pagination. It is simple to use, but it can
+become slow on very large datasets with high offsets.
 
 ### Basic Usage
 
@@ -177,13 +173,13 @@ data_frame()
 
 ## Extractor - Keyset (Cursor) Pagination
 
-The `from_pgsql_key_set` extractor uses keyset pagination (also known as cursor-based pagination). This provides
-consistent performance regardless of how deep you paginate, making it ideal for large datasets.
+The `from_pgsql_key_set` extractor uses keyset pagination (also known as cursor-based pagination). Each page has the
+same performance, also deep in the dataset. It is therefore a good choice for large datasets.
 
 ### Key rule
 
-The keys must be **indexed, non-null and unique together**. A single non-unique column such as `created_at` is not a
-key; add the primary key as the least significant key:
+The keys must be indexed, non-null and unique together. A single non-unique column such as `created_at` is not a
+key. Add the primary key as the least significant key:
 
 ```php
 pgsql_pagination_key_set(
@@ -192,16 +188,16 @@ pgsql_pagination_key_set(
 );
 ```
 
-- Before the first page the extractor sends one check query,
-  `SELECT 1 FROM (<query>) _flow_keyset_nulls WHERE created_at IS NULL OR id IS NULL LIMIT 1`, and throws when it
-  finds a row. On an indexed key this is an index lookup; on an unindexed key it is one full scan.
+- Before the first page, the extractor sends one check query:
+  `SELECT 1 FROM (<query>) _flow_keyset_nulls WHERE created_at IS NULL OR id IS NULL LIMIT 1`. If it finds a row, it
+  throws. On an indexed key, this is an index lookup. On a key without an index, it is one full scan.
 - Two rows with the same key throw `Keyset pagination requires unique keys`.
-- A next page that does not start at the row the previous page looked ahead to throws. This happens when the database
-  compares two different values as equal (a case- or accent-insensitive collation, `numeric` `1.0` and `1.00`) or when
-  rows change between pages.
+- The next page must start at the row that the previous page looked ahead to. If it does not, the read throws.
+  Two causes are possible. The database compares two different values as equal, for example with a case- or
+  accent-insensitive collation, or `numeric` `1.0` and `1.00`. Or rows change between pages.
 - Known limit: two such values on the same page are both read without an error. Nothing is lost.
-- ORDER BY is generated from the keys; a query's own ORDER BY must equal them. The query must not have its own
-  LIMIT or OFFSET; use `withMaximum()` or `DataFrame::limit()`.
+- ORDER BY is generated from the keys. An ORDER BY in the query must be equal to the keys. The query must not have
+  its own LIMIT or OFFSET. Use `withMaximum()` or `DataFrame::limit()`.
 - A page shorter than the batch size ends the read without another query.
 
 ### Basic Usage
@@ -236,7 +232,7 @@ data_frame()
 
 ### Composite Keys
 
-For tables with composite ordering, you can specify multiple keys:
+For tables with composite ordering, give multiple keys:
 
 ```php
 use function Flow\ETL\Adapter\PostgreSql\{from_pgsql_key_set, pgsql_pagination_key_asc, pgsql_pagination_key_desc, pgsql_pagination_key_set};
@@ -280,7 +276,7 @@ data_frame()
 | `from_pgsql_limit_offset($client, $query, $parameters)`     | Extract using LIMIT/OFFSET pagination |
 | `from_pgsql_key_set($client, $query, $keySet, $parameters)` | Extract using keyset pagination       |
 
-Each returns an extractor configured with the fluent `->withBatchSize(n)` (rows per round trip, default 1000) and `->withMaximum(n)`.
+Each function returns an extractor. Configure it with the fluent `->withBatchSize(n)` (rows for each round trip, default 1000) and `->withMaximum(n)`.
 
 ### Key Functions
 
@@ -316,7 +312,7 @@ df()
 ### Bound values
 
 `xml`, `xml_element`, `html` and `html_element` columns are bound as their markup text. An `xml` document is bound as
-its root element only: the declaration, a DOCTYPE, and comments or processing instructions outside the root are
+its root element only. The declaration, a DOCTYPE, and comments or processing instructions outside the root are
 dropped.
 
 | Column        | Value                                              | Bound                  |
@@ -326,7 +322,7 @@ dropped.
 
 ### Insert with Skip Conflicts (ON CONFLICT DO NOTHING)
 
-Skip rows that would cause a constraint violation:
+Skip the rows that cause a constraint violation:
 
 ```php
 use function Flow\ETL\Adapter\PostgreSql\{pgsql_insert_options, to_pgsql_table};
@@ -342,7 +338,7 @@ df()
 
 ### Upsert (ON CONFLICT DO UPDATE)
 
-Update existing rows on conflict using specific columns:
+On conflict, update existing rows with specific columns:
 
 ```php
 use function Flow\ETL\Adapter\PostgreSql\{pgsql_insert_options, to_pgsql_table};
@@ -380,7 +376,7 @@ df()
 
 ### Update Existing Rows
 
-Update rows matching primary key values:
+Update the rows that match primary key values:
 
 ```php
 use function Flow\ETL\Adapter\PostgreSql\{pgsql_update_options, to_pgsql_table};
@@ -401,7 +397,7 @@ df()
 
 ### Delete Rows
 
-Delete rows matching primary key values:
+Delete the rows that match primary key values:
 
 ```php
 use function Flow\ETL\Adapter\PostgreSql\{pgsql_delete_options, to_pgsql_table};
@@ -422,8 +418,8 @@ df()
 
 ### Transactional Loading
 
-`to_pgsql_transaction()` writes one or more children inside transactions: each batch of rows is written in its own
-transaction, and if any child throws, the open transaction is rolled back:
+`to_pgsql_transaction()` writes one or more children inside transactions. Each batch of rows is written in its own
+transaction. If a child throws, the open transaction rolls back:
 
 ```php
 use function Flow\ETL\Adapter\PostgreSql\{to_pgsql_table, to_pgsql_transaction};
@@ -438,19 +434,19 @@ df()
     ->run();
 ```
 
-Branches with blocking operations (`to_transformation()`, also inside `to_branch()`, with `sortBy()`,
-`aggregate()`, `groupBy()->aggregate()`, `pivot()`, window functions, `collect()`, `join()` - see
-[transformations](../core/transformations.md)) buffer the stream and deliver it when the run ends;
-`to_pgsql_transaction()` opens one final transaction around that delivery - the whole drained stream commits
-atomically, a failure during it rolls back and surfaces from `run()`. A plain loader child is written directly; a
-`to_transformation(...)` child delivers inside the same transaction. Every child's loader must use the same `Client`
-instance as the transaction - a loader holding its own `Client` escapes it.
+Some branches have blocking operations: `to_transformation()`, also inside `to_branch()`, with `sortBy()`,
+`aggregate()`, `groupBy()->aggregate()`, `pivot()`, window functions, `collect()` or `join()`. For more information,
+read [transformations](../core/transformations.md). These branches buffer the stream and deliver it at the end of the
+run. `to_pgsql_transaction()` opens one final transaction around that delivery. The full drained stream commits
+atomically. A failure during the delivery rolls back, and `run()` throws it. A plain loader child is written directly.
+A `to_transformation(...)` child delivers inside the same transaction. The loader of each child must use the same
+`Client` instance as the transaction. A loader with its own `Client` is outside the transaction.
 
-Inside the transaction every child runs throw-only: a failure rolls the batch back first, and only then the frame's
-`onError()` handler decides whether the run continues.
+Inside the transaction, each child runs throw-only. A failure first rolls back the batch. Only after that, the
+`onError()` handler of the frame decides about the rest of the run.
 
-To set the isolation level, build the transaction yourself; it applies to every transaction opened, including the
-final one:
+To set the isolation level, build the transaction yourself. The level applies to each transaction that opens, also
+the final transaction:
 
 ```php
 use Flow\ETL\Adapter\PostgreSql\IO\Loader\PostgreSqlTransaction;
@@ -479,18 +475,18 @@ new Transactional(
 
 Two helpers convert between a Flow `Schema` and a PostgreSQL table definition:
 
-- `to_pgsql_schema_table()` turns a Flow `Schema` into a `Flow\PostgreSql\Schema\Table`, which can emit `CREATE TABLE`
-  (and related index/constraint) SQL via `toSql()`.
+- `to_pgsql_schema_table()` turns a Flow `Schema` into a `Flow\PostgreSql\Schema\Table`. Its `toSql()` gives the
+  `CREATE TABLE` SQL, and the related index/constraint SQL.
 - `pgsql_table_to_flow_schema()` turns a `Flow\PostgreSql\Schema\Table` back into a Flow `Schema`.
 
-Column types are resolved through the shared `TypesMap` (Flow type → PostgreSQL column type), and per-column
-details - primary keys, unique constraints, indexes, length, precision/scale, defaults, identity, generated columns,
-and explicit type overrides - are driven by `PostgreSqlMetadata` entries attached to each schema definition.
+The shared `TypesMap` resolves the column types (Flow type → PostgreSQL column type). `PostgreSqlMetadata` entries
+on each schema definition control the details of each column: primary keys, unique constraints, indexes, length,
+precision/scale, defaults, identity, generated columns, and explicit type overrides.
 
 ### Creating a Table from a Flow Schema
 
-`to_pgsql_schema_table()` returns a table definition; call `toSql()` on it and execute each statement to create the
-table:
+`to_pgsql_schema_table()` returns a table definition. To create the table, call `toSql()` on it and execute each
+statement:
 
 ```php
 use Flow\ETL\Adapter\PostgreSql\Values\Schema\PostgreSqlMetadata;
@@ -514,7 +510,7 @@ foreach ($table->toSql() as $sql) {
 }
 ```
 
-By default the table is created in the `public` schema; pass a third argument to target another one:
+By default, the table is created in the `public` schema. For a different schema, give a third argument:
 
 ```php
 $table = to_pgsql_schema_table($schema, 'users', 'analytics');
@@ -522,8 +518,8 @@ $table = to_pgsql_schema_table($schema, 'users', 'analytics');
 
 ### Steering the Conversion with Metadata
 
-`PostgreSqlMetadata` factories return `Metadata` objects you attach to a definition via the `metadata:` argument of the
-schema DSL helpers. Combine multiple entries with `merge()`:
+`PostgreSqlMetadata` factories return `Metadata` objects. Attach them to a definition with the `metadata:` argument of
+the schema DSL helpers. Combine multiple entries with `merge()`:
 
 ```php
 use Flow\ETL\Adapter\PostgreSql\Values\Schema\PostgreSqlMetadata;
@@ -551,15 +547,14 @@ $schema = schema(
 | `PostgreSqlMetadata::identity($generation)`         | Make the column an identity column                                                    |
 | `PostgreSqlMetadata::generated($expr)`              | Make the column a generated column                                                    |
 
-Columns sharing the same primary key, unique constraint, or index name are grouped together, so composite keys are
-expressed by attaching the same name to several definitions.
+Columns with the same primary key, unique constraint, or index name are grouped together. For a composite key,
+attach the same name to several definitions.
 
 #### Ordering Columns Within an Index
 
-For composite indexes and unique constraints, column order matters. By default columns are ordered the way they appear
-in the schema. Pass an explicit `$position` (ascending, lower first) to `index()` / `indexUnique()` to control the
-order independently of schema field order - useful, for example, for a keyset-pagination index where the leading
-column must serve `ORDER BY`:
+For composite indexes and unique constraints, the column order is important. By default, the columns have the order
+of the schema. To set a different order, give an explicit `$position` (ascending, lower first) to `index()` /
+`indexUnique()`. An example is a keyset-pagination index, where the first column must serve `ORDER BY`:
 
 ```php
 use Flow\ETL\Adapter\PostgreSql\Values\Schema\PostgreSqlMetadata;
@@ -579,13 +574,13 @@ $table = to_pgsql_schema_table(
 // => CREATE INDEX orders_created_at_id_idx ON public.orders (created_at, id)
 ```
 
-Columns without an explicit position default to the end (`PHP_INT_MAX`), and schema order breaks ties - so leaving
-positions off keeps the schema-order behavior.
+Columns without an explicit position go to the end (`PHP_INT_MAX`), and the schema order decides ties. Without
+positions, the order is therefore the schema order.
 
 #### A Column in Multiple Indexes
 
-Because each index is tracked under its own metadata key, a single column can belong to several indexes at once. Chain
-`merge()` to attach more than one:
+Each index has its own metadata key, so one column can belong to several indexes at the same time. To attach more
+than one, chain `merge()`:
 
 ```php
 use Flow\ETL\Adapter\PostgreSql\Values\Schema\PostgreSqlMetadata;
@@ -599,13 +594,13 @@ $schema = schema(
 );
 ```
 
-> Index and unique-constraint names must not contain a colon (`:`) - it is reserved internally as the name/position
-> separator and passing one throws an `InvalidArgumentException`.
+> Index and unique-constraint names must not contain a colon (`:`). Internally, the colon separates the name and
+> the position. A name with a colon throws an `InvalidArgumentException`.
 
 ### Reading a Flow Schema back from a Table
 
 `pgsql_table_to_flow_schema()` takes a `Flow\PostgreSql\Schema\Table` and returns a Flow `Schema`. Combine it with the
-PostgreSQL library's catalog provider to derive a Flow schema from a live table:
+catalog provider of the PostgreSQL library to get a Flow schema from a live table:
 
 ```php
 use function Flow\ETL\Adapter\PostgreSql\pgsql_table_to_flow_schema;
@@ -619,14 +614,14 @@ $table = client_catalog_provider($client, ['public'])
 $schema = pgsql_table_to_flow_schema($table);
 ```
 
-> **Note:** The reverse conversion is intentionally lossy. Several Flow types collapse onto the same PostgreSQL type
-> (for example `json`, `list`, `map`, and `structure` all map to `jsonb`), so a column is mapped back to a single
-> canonical Flow type rather than its original one.
+> Note: The reverse conversion loses information deliberately. Several Flow types map to the same PostgreSQL type.
+> For example, `json`, `list`, `map`, and `structure` all map to `jsonb`. A column therefore maps back to one
+> canonical Flow type, not to its original type.
 
 ### Customizing the Type Mapping
 
 Both helpers accept an optional `TypesMap`. Its second constructor argument overrides the Flow type → PostgreSQL
-column type mapping (the first argument keeps overriding the value-binding types used by the loader):
+column type mapping. The first argument still overrides the value-binding types of the loader:
 
 ```php
 use Flow\ETL\Adapter\PostgreSql\Values\Schema\TypesMap;

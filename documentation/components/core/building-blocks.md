@@ -2,12 +2,12 @@
 
 [DOC_LINK:/documentation/components/core/core.md]
 
-Columns of the [Data Frame](/documentation/components/core/core.md) are described by the
-[Schema](/src/core/etl/src/Flow/ETL/Values/Schema.php) - it owns their names, order, types and nullability.
-A batch of records is represented by the [Rows](/src/core/etl/src/Flow/ETL/Values/Rows.php) class: one column per
-schema definition, and every `Rows` carries the one `Schema` that describes it.
+The [Schema](/src/core/etl/src/Flow/ETL/Values/Schema.php) describes the columns of the
+[Data Frame](/documentation/components/core/core.md). It owns their names, order, types and nullability.
+The [Rows](/src/core/etl/src/Flow/ETL/Values/Rows.php) class represents a batch of records: one column for each
+schema definition. Each `Rows` carries the one `Schema` that describes it.
 
-Let's look at the following example:
+Look at this example:
 
 ```php
 <?php
@@ -31,13 +31,13 @@ $rows = array_to_rows(
 );
 ```
 
-Extractors yield `Rows`, transformers return new `Rows`, loaders write them. A record is read back with
-`$rows->values($i)` (one row as an array), `$rows->toArray()` (every row) or `$rows->column('name')->value($i)`.
+Extractors yield `Rows`, transformers return new `Rows`, and loaders write them. To read a record back, use
+`$rows->values($i)` (one row as an array), `$rows->toArray()` (all rows) or `$rows->column('name')->value($i)`.
 
 ## Column Types
 
-Every column is described by a [Definition](/src/core/etl/src/Flow/ETL/Values/Schema/Definition.php), built with
-the matching `*_schema()` [DSL function](/src/core/etl/src/Flow/ETL/DSL/functions.php). A definition owns
+A [Definition](/src/core/etl/src/Flow/ETL/Values/Schema/Definition.php) describes each column. The matching
+`*_schema()` [DSL function](/src/core/etl/src/Flow/ETL/DSL/functions.php) builds it. A definition owns
 the column name, its [Flow Type](/documentation/components/libs/types.md), nullability and metadata.
 
 | Column       | DSL function                       | Definition                                                                                             |
@@ -62,17 +62,17 @@ the column name, its [Flow Type](/documentation/components/libs/types.md), nulla
 | XML          | `xml_schema()`                     | [XMLDefinition](/src/core/etl/src/Flow/ETL/Values/Schema/Definition/XMLDefinition.php)                 |
 | XML Element  | `xml_element_schema()`             | [XMLElementDefinition](/src/core/etl/src/Flow/ETL/Values/Schema/Definition/XMLElementDefinition.php)   |
 
-A `datetime` column has one time zone, UTC by default: `datetime_schema('at', zone: 'Europe/Warsaw')`. A value in any
-other zone is converted to it when the row is admitted, the instant unchanged.
+A `datetime` column has one time zone, UTC by default: `datetime_schema('at', zone: 'Europe/Warsaw')`. At the
+admission of the row, a value in a different zone is converted to it. The instant does not change.
 
-A column holds exactly one type. `null|T` spells a nullable column, and a nullable list element, map value or
-structure element; every other union is refused. Declare the widest common type with `str_schema()`, or
-`json_schema()` when the shape is genuinely dynamic.
+A column holds exactly one type. `null|T` writes a nullable column, and a nullable list element, map value or
+structure element. All other unions are refused. Declare the widest common type with `str_schema()`. For a shape that
+is really dynamic, use `json_schema()`.
 
-The schema is declared, never guessed: `array_to_rows()` takes it as its second argument and the
-[column backend](/documentation/components/core/column-backend.md) builds `Rows` against it, casting each value to the
-type its column declares. A value the declared type refuses aborts the batch with a `SchemaMismatchException` naming
-the column and its row.
+The schema is declared, never guessed. `array_to_rows()` takes it as its second argument. The
+[column backend](/documentation/components/core/column-backend.md) builds `Rows` against it, and casts each value to
+the type of its column. A value that the declared type refuses stops the batch with a `SchemaMismatchException`. The
+exception names the column and its row.
 
-Schema *inference* belongs to the readers, which sample a source and derive a schema from it before any
-row flows - see [Schema](/documentation/components/core/schema.md).
+Schema inference belongs to the readers. They sample a source and derive a schema from it before the first row
+flows. For more information, read [Schema](/documentation/components/core/schema.md).

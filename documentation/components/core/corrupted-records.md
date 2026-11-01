@@ -2,9 +2,10 @@
 
 [DOC_LINK:/documentation/components/core/core.md]
 
-A corrupted record is a source record that cannot become a row without losing or inventing data: a CSV line or a
-sheet row whose cells do not match the header, or a value that does not cast to the declared type. A read throws
-`CorruptedRecordException` at the first one. Route them to any loader instead:
+A corrupted record is a source record that cannot become a row without lost or invented data. One example is a CSV
+line or a sheet row with cells that do not match the header. Another example is a value that does not cast to the
+declared type. A
+read throws `CorruptedRecordException` at the first one. You can send them to a loader instead:
 
 ```php
 <?php
@@ -94,6 +95,6 @@ Output:
 | JSON array                | 1-based element number       |
 | `from_array()`, sequences | 1-based entry number         |
 
-A run that routed records logs how many and where. A corrupted record is not an extraction error. Without
-`withCorruptedRecords()` it fails the run, whatever the `ErrorHandler`. Route it to skip it. `limit()` and `offset()`
-count rows only.
+A run that routed records logs their number and destination. A corrupted record is not an extraction error. Without
+`withCorruptedRecords()`, it fails the run, for each `ErrorHandler`. To skip it, route it. `limit()` and `offset()`
+count only rows.

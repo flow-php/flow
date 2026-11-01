@@ -4,9 +4,9 @@ package: flow-php/psr3-telemetry-bridge
 
 # PSR-3 Telemetry Bridge
 
-Flow PSR-3 Telemetry Bridge exposes a [PSR-3](https://www.php-fig.org/psr/psr-3/) `LoggerInterface` implementation
-backed by Flow PHP Telemetry. Any framework or library that depends on `Psr\Log\LoggerInterface` can write through this
-adapter and have its records emitted as Telemetry log signals.
+This bridge has a [PSR-3](https://www.php-fig.org/psr/psr-3/) `LoggerInterface` implementation on Flow PHP
+Telemetry. Each framework or library that depends on `Psr\Log\LoggerInterface` can write through this adapter. Its
+records then become Telemetry log signals.
 
 [PACKAGE_NAV]
 
@@ -14,18 +14,18 @@ adapter and have its records emitted as Telemetry log signals.
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/psr3-telemetry-bridge.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/psr3-telemetry-bridge.md).
 
 ## Overview
 
 This bridge wraps `Flow\Telemetry\Logger\Logger` behind a PSR-3 `LoggerInterface`. It:
 
 - Maps PSR-3 log levels to Telemetry severities (8 → 6, customizable).
-- Performs PSR-3 `{placeholder}` interpolation against the context array (scalars and `Stringable` only).
-- Stores every context entry as a log record attribute under its raw key.
-- Routes a `Throwable` under the `exception` key through `LogRecord::setException()`, populating
+- Does PSR-3 `{placeholder}` interpolation with the context array (only scalars and `Stringable`).
+- Stores each context entry as a log record attribute under its raw key.
+- Sends a `Throwable` under the `exception` key through `LogRecord::setException()`. This fills
   `exception.type`, `exception.message`, and `exception.stacktrace`.
-- Throws `Psr\Log\InvalidArgumentException` when `log()` is called with an unknown level, per spec.
+- Throws `Psr\Log\InvalidArgumentException` for a `log()` call with an unknown level, as the specification says.
 
 ## Basic Usage
 
@@ -44,12 +44,12 @@ $psrLogger->info('User {user_id} logged in', ['user_id' => 123]);
 // → attributes: {user_id: 123}
 ```
 
-The returned `TelemetryLogger` is a drop-in `Psr\Log\LoggerInterface`, so it can be passed to anything that accepts a
+The returned `TelemetryLogger` is a drop-in `Psr\Log\LoggerInterface`. You can give it to each thing that accepts a
 PSR-3 logger (Symfony, Laravel, third-party libraries).
 
 ## Severity Mapping
 
-The default mapping collapses PSR-3's eight levels onto Telemetry's six OTEL-aligned severities:
+The default mapping maps the eight PSR-3 levels to the six OTEL-aligned Telemetry severities:
 
 | PSR-3 Level | Telemetry Severity |
 |-------------|--------------------|
@@ -62,7 +62,7 @@ The default mapping collapses PSR-3's eight levels onto Telemetry's six OTEL-ali
 | `alert`     | `FATAL`            |
 | `emergency` | `FATAL`            |
 
-Override the mapping by passing a custom `psr3_severity_mapper()` to `psr3_log_record_converter()`:
+To override the mapping, give a custom `psr3_severity_mapper()` to `psr3_log_record_converter()`:
 
 ```php
 <?php
@@ -91,7 +91,7 @@ $psrLogger = psr3_telemetry_logger($telemetry->logger('my-service'), $converter)
 
 ### Attributes
 
-Every context entry becomes an attribute on the emitted `LogRecord`, keyed verbatim:
+Each context entry becomes an attribute on the emitted `LogRecord`, with the same key:
 
 ```php
 $psrLogger->info('Request processed', [
@@ -102,7 +102,7 @@ $psrLogger->info('Request processed', [
 // attributes: {http.method: 'GET', http.status: 200, duration_ms: 12.4}
 ```
 
-Non-scalar values are normalized via `AttributeValueNormalizer`:
+`AttributeValueNormalizer` normalizes non-scalar values:
 
 - `null` → `'null'`
 - `DateTimeInterface`, `Throwable` → passed through
@@ -113,8 +113,8 @@ Non-scalar values are normalized via `AttributeValueNormalizer`:
 
 ### Exceptions
 
-A `Throwable` under the `exception` key is unpacked into the standard OTEL exception attributes via
-`LogRecord::setException()`:
+`LogRecord::setException()` unpacks a `Throwable` under the `exception` key into the standard OTEL exception
+attributes:
 
 ```php
 try {
@@ -128,14 +128,14 @@ try {
 //   exception.stacktrace: '...'
 ```
 
-The original `exception` key is **not** stored as a separate attribute. A non-`Throwable` value under `exception` is
-treated as a regular attribute.
+The original `exception` key is not stored as a separate attribute. A non-`Throwable` value under `exception` is a
+regular attribute.
 
 ### Message Interpolation
 
-Per PSR-3 §1.2, `{placeholder}` tokens in the message body are substituted with matching context entries. Only scalars
-and `Stringable` objects participate; arrays, `Throwable` instances, and plain objects are left in the template. The
-context entries remain available as attributes regardless.
+As PSR-3 §1.2 says, matching context entries replace the `{placeholder}` tokens in the message body. Only scalars
+and `Stringable` objects are used. Arrays, `Throwable` instances, and plain objects stay in the template. The context
+entries are always also available as attributes.
 
 ```php
 $psrLogger->warning('Quota exceeded for {tenant} ({used}/{limit})', [
@@ -162,7 +162,7 @@ $psrLogger = psr3_telemetry_logger(
 
 ### psr3_log_record_converter()
 
-Builds the converter that turns each PSR-3 call into a `LogRecord`. Use it to plug in a custom severity mapper or value
+Builds the converter that turns each PSR-3 call into a `LogRecord`. Use it to add a custom severity mapper or value
 normalizer.
 
 ```php ignore
@@ -174,8 +174,8 @@ $converter = psr3_log_record_converter(
 
 ### psr3_severity_mapper()
 
-Builds a `SeverityMapper`. Pass `null` (default) to use the standard PSR-3 → OTEL mapping, or a full PSR-3 → Severity
-array to override.
+Builds a `SeverityMapper`. Give `null` (default) for the standard PSR-3 → OTEL mapping, or a full PSR-3 → Severity
+array to override it.
 
 ```php
 $mapper = psr3_severity_mapper([
@@ -186,7 +186,7 @@ $mapper = psr3_severity_mapper([
 
 ### psr3_attribute_value_normalizer()
 
-Builds the default `AttributeValueNormalizer`. Provided for symmetry with the other DSL helpers; most users won't need it.
+Builds the default `AttributeValueNormalizer`. It exists for symmetry with the other DSL helpers. Most users do not need it.
 
 ```php
 $normalizer = psr3_attribute_value_normalizer();

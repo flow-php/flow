@@ -4,11 +4,11 @@
 
 [TOC]
 
-Data constraints allow you to apply business rules and data integrity checks to ensure data quality during processing. When a constraint is violated, a `ConstraintViolationException` is thrown with details about the violating row.
+Data constraints apply business rules and data integrity rules during processing, so that the data quality stays high. A violated constraint throws a `ConstraintViolationException` with details about the row.
 
 ## Unique Constraints
 
-Ensure that values in specified columns are unique across the entire dataset.
+Make sure that the values in specified columns are unique across the full dataset.
 
 ```php
 <?php
@@ -28,7 +28,7 @@ $dataFrame = data_frame()
 
 ## Multiple Column Constraints
 
-Ensure unique combinations across multiple columns:
+Make sure that combinations across multiple columns are unique:
 
 ```php
 <?php
@@ -44,7 +44,7 @@ $dataFrame = data_frame()
 
 ## Custom Constraints
 
-You can implement custom constraints by creating classes that implement the `Constraint` interface:
+For a custom constraint, create a class that implements the `Constraint` interface:
 
 ```php
 <?php

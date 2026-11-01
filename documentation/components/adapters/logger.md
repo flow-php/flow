@@ -8,15 +8,15 @@ package: flow-php/etl-adapter-logger
 
 [TOC]
 
-ETL Adapter that provides PSR Logger support for ETL.
+An ETL Adapter that adds PSR Logger support to ETL.
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/etl-adapter-logger.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/etl-adapter-logger.md).
 
 ## Loader - PsrLoggerLoader
 
-Logs each row as one record: the row's values are the log context. `TestLogger` below comes from
+Logs each row as one record. The values of the row are the log context. `TestLogger` below comes from
 `composer require --dev fig/log-test`.
 
 ```php

@@ -68,16 +68,16 @@ $config = postgresql_telemetry_config(
 
 ### Options Reference
 
-| Option              | Default | Description                                                                 |
-|---------------------|---------|-----------------------------------------------------------------------------|
-| `traceQueries`      | `true`  | Create spans for each query operation                                       |
-| `transactionSpans`  | `TransactionSpanMode::GROUPED` | `GROUPED` = one span per transaction; `PER_OPERATION` = a span per BEGIN/COMMIT/ROLLBACK; `OFF` = none |
-| `collectMetrics`    | `true`  | Record duration and row count histograms                                    |
-| `logQueries`        | `false` | Log executed queries via the telemetry logger                               |
-| `maxQueryLength`    | `1000`  | Maximum query text length in span attributes (`null` = unlimited)           |
-| `includeParameters` | `false` | Include query parameter values in span attributes                           |
-| `maxParameters`     | `10`    | Maximum number of parameters to include when `includeParameters` is enabled |
-| `maxParameterLength`| `100`   | Maximum length for each parameter value                                     |
+| Option               | Default                        | Description                                                                                            |
+|----------------------|--------------------------------|--------------------------------------------------------------------------------------------------------|
+| `traceQueries`       | `true`                         | Create spans for each query operation                                                                  |
+| `transactionSpans`   | `TransactionSpanMode::GROUPED` | `GROUPED` = one span per transaction, `PER_OPERATION` = a span per BEGIN/COMMIT/ROLLBACK, `OFF` = none |
+| `collectMetrics`     | `true`                         | Record duration and row count histograms                                                               |
+| `logQueries`         | `false`                        | Log executed queries via the telemetry logger                                                          |
+| `maxQueryLength`     | `1000`                         | Maximum query text length in span attributes (`null` = unlimited)                                      |
+| `includeParameters`  | `false`                        | Include query parameter values in span attributes                                                      |
+| `maxParameters`      | `10`                           | Maximum number of parameters to include with `includeParameters` enabled                               |
+| `maxParameterLength` | `100`                          | Maximum length for each parameter value                                                                |
 
 ### Fluent Configuration
 
@@ -107,21 +107,21 @@ $options = postgresql_telemetry_options()
 
 All query methods are traced with individual spans:
 
-- `fetch()`, `fetchOne()`, `fetchAll()` - SELECT queries
-- `fetchScalar()`, `fetchScalarInt()`, `fetchScalarString()`, etc.
-- `fetchInto()`, `fetchOneInto()`, `fetchAllInto()` - Object mapping queries
-- `execute()` - INSERT, UPDATE, DELETE operations
-- `explain()` - Query plan analysis; the BEGIN/SAVEPOINT/ROLLBACK it runs internally for ANALYZE get no span
+- `fetch()`, `fetchOne()`, `fetchAll()`: SELECT queries
+- `fetchScalar()`, `fetchScalarInt()`, `fetchScalarString()` and the other typed scalar fetch methods
+- `fetchInto()`, `fetchOneInto()`, `fetchAllInto()`: object mapping queries
+- `execute()`: INSERT, UPDATE, DELETE operations
+- `explain()`: query plan analysis. The BEGIN/SAVEPOINT/ROLLBACK that it runs internally for ANALYZE get no span
 
-Span names follow the pattern: `{OPERATION} {table}` (e.g., `SELECT users`)
+Span names follow the pattern `{OPERATION} {table}`, for example `SELECT users`.
 
 ### Transaction Lifecycle
 
 Transaction operations create hierarchical spans:
 
-- `beginTransaction()` - Opens a span for the transaction
-- `commit()` - Completes the transaction span with OK status
-- `rollBack()` - Completes the transaction span (and all nested spans)
+- `beginTransaction()`: opens a span for the transaction
+- `commit()`: completes the transaction span with OK status
+- `rollBack()`: completes the transaction span (and all nested spans)
 - Nested transactions create `SAVEPOINT` spans
 
 ```php
@@ -166,12 +166,12 @@ Spans include attributes following [OpenTelemetry database semantic conventions]
 | `db.namespace`               | Database name                                                | `mydb`                          |
 | `db.operation.name`          | SQL operation type                                           | `SELECT`, `INSERT`, `UPDATE`    |
 | `db.collection.name`         | Target table name                                            | `users`                         |
-| `db.query.text`              | SQL query text (may be truncated)                            | `SELECT * FROM users WHERE...`  |
-| `db.query.parameter.{n}`     | Parameter values (when enabled)                              | `123`, `true`                   |
+| `db.query.text`              | SQL query text (can be truncated)                            | `SELECT * FROM users WHERE...`  |
+| `db.query.parameter.{n}`     | Parameter values (only with the option enabled)              | `123`, `true`                   |
 | `db.response.returned_rows`  | Number of rows returned                                      | `42`                            |
 | `db.response.status_code`    | PostgreSQL SQLSTATE code (on error)                          | `23505`                         |
 | `server.address`             | Database host                                                | `localhost`                     |
-| `server.port`                | Database port (only if non-default)                          | `5433`                          |
+| `server.port`                | Database port (only for a non-default port)                  | `5433`                          |
 | `error.type`                 | Exception class name (on error)                              | `QueryException`                |
 
 ### Transaction-Specific Attributes
@@ -183,10 +183,10 @@ Spans include attributes following [OpenTelemetry database semantic conventions]
 
 ## Security Considerations
 
-**Query parameters are disabled by default** for security reasons. Parameter values may contain sensitive data
-(passwords, tokens, PII) that should not appear in traces.
+Query parameters are disabled by default for security reasons. Parameter values can contain sensitive data
+(passwords, tokens, PII) that must not appear in traces.
 
-Enable parameters only in development or when you're certain the data is safe:
+Enable parameters only in development, or for data that is surely safe:
 
 ```php
 <?php
@@ -202,21 +202,21 @@ Query text is automatically truncated to `maxQueryLength` (default: 1000 charact
 
 ## Metrics
 
-When `collectMetrics` is enabled, two histograms are recorded:
+With `collectMetrics` enabled, two histograms are recorded:
 
 ### `db.client.operation.duration`
 
 Duration of database operations in seconds.
 
-- **Unit**: `s` (seconds)
-- **Attributes**: `db.system.name`, `db.namespace`, `db.operation.name`, `server.address`
+- Unit: `s` (seconds)
+- Attributes: `db.system.name`, `db.namespace`, `db.operation.name`, `server.address`
 
 ### `db.client.response.returned_rows`
 
 Number of rows returned by database operations.
 
-- **Unit**: `{row}`
-- **Attributes**: `db.system.name`, `db.namespace`, `db.operation.name`
+- Unit: `{row}`
+- Attributes: `db.system.name`, `db.namespace`, `db.operation.name`
 
 ## Examples
 

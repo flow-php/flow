@@ -8,15 +8,15 @@ package: flow-php/monolog-http-bridge
 
 [TOC]
 
-Monolog HTTP Bridge is a package that iterates through LogRecord context and normalizes all instances of `Request` and `Response` from [PSR7](https://www.php-fig.org/psr/psr-7/).
+Monolog HTTP Bridge goes through the LogRecord context and normalizes all [PSR7](https://www.php-fig.org/psr/psr-7/) `Request` and `Response` instances in it.
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/monolog-http-bridge.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/monolog-http-bridge.md).
 
 ## Usage
 
-To normalize Request/Response objects in Monolog you need to register monolog Processor. 
+To normalize Request/Response objects in Monolog, register the monolog Processor.
 
 ```php
 <?php
@@ -43,20 +43,20 @@ $logger->pushHandler(new StreamHandler(__DIR__ . '/logs.txt', LogLevel::DEBUG));
 
 ## Configuration
 
-The Processor can be configured to normalize Request/Response objects in different ways.
+You can configure the Processor to normalize Request/Response objects in different ways.
 
-For more details, please refer to the following classes: 
+For more details, read these classes:
 
  - `Flow\Bridge\Monolog\Http\Config\RequestConfig`
  - `Flow\Bridge\Monolog\Http\Config\ResponseConfig`
 
 ## Sanitization
 
-The bridge provides a way to sanitize sensitive data in the normalized Request/Response objects. This is useful for masking sensitive information like passwords, tokens, and other credentials.
+The bridge can sanitize sensitive data in the normalized Request/Response objects. Use it to mask sensitive information such as passwords, tokens, and other credentials.
 
 ### Using Sanitizers
 
-You can configure sanitizers for both request and response objects:
+You can configure sanitizers for request and response objects:
 
 ```php
 <?php
@@ -93,18 +93,18 @@ $logger->pushProcessor(
 
 ### Sanitizer Types
 
-Currently, the bridge supports the following sanitizer types:
+At this time, the bridge supports these sanitizer types:
 
 #### Mask Sanitizer
 
-The Mask sanitizer replaces characters in a string with a specified character. You can configure:
+The Mask sanitizer replaces the characters of a string with a specified character. You can configure:
 
-- `character`: The character used for masking (default is '*')
-- `offset`: The position from which to start masking (default is 0, meaning mask the entire string)
+- `character`: the mask character (default is '*')
+- `offset`: the position where the mask starts (default is 0, which masks the full string)
 
 You can create a Mask sanitizer in two ways:
 
-1. Using the DSL function:
+1. With the DSL function:
 
 ```php
 use function Flow\Bridge\Monolog\Http\DSL\mask;
@@ -119,7 +119,7 @@ $sanitizer = mask('#');
 $sanitizer = mask('*', 2);
 ```
 
-2. Using an array configuration:
+2. With an array configuration:
 
 ```php
 $sanitizers = [
@@ -130,7 +130,7 @@ $sanitizers = [
 
 ### Example
 
-When you log a request with sensitive data:
+You log a request with sensitive data:
 
 ```php
 $logger->info('HTTP Request', [
@@ -138,7 +138,7 @@ $logger->info('HTTP Request', [
 ]);
 ```
 
-The sensitive fields will be masked in the log:
+The log shows the sensitive fields masked:
 
 ```json
 {

@@ -4,10 +4,10 @@
 
 [TOC]
 
-Partitioning splits written data into `column=value` directories, and lets a reader skip whole
-directories it does not need.
+Partitioning splits written data into `column=value` directories. A reader can then skip the directories that it
+does not need.
 
-Partitioning is declared on the **loader**, not on the DataFrame.
+You declare partitioning on the loader, not on the DataFrame.
 
 ## Basic Partitioning
 
@@ -69,8 +69,8 @@ output/
 
 ## Partition Placeholders
 
-A `{column}` placeholder in the destination path turns that partition into part of the file name
-instead of a directory.
+A `{column}` placeholder in the destination path puts that partition into the file name. It does not make a
+directory for it.
 
 ```php
 <?php
@@ -98,9 +98,9 @@ output/
 
 Rules:
 
-- Every placeholder must match a partition column, otherwise the write fails.
-- A path with placeholders requires partitioned rows.
-- Placeholders may appear in any segment and be combined: `/output/{date}/{department}_report.csv`.
+- Every placeholder must match a partition column. If it does not, the write fails.
+- A path with placeholders must get partitioned rows.
+- Placeholders can be in any segment of the path, and you can combine them: `/output/{date}/{department}_report.csv`.
 
 ### Reading Data Partitioned with Placeholders
 
@@ -117,23 +117,23 @@ data_frame()
     ->run();
 ```
 
-A placeholder matches any file in that location and the partition value is taken from the file name
-as-is. Appended files carry the run in their name (`sales-a1b2c3d4e5f6a7b8.csv`), which becomes part of the value.
+A placeholder matches any file in that location. The partition value is the file name, without changes. Appended
+files have the run in their name (`sales-a1b2c3d4e5f6a7b8.csv`). The run then becomes part of the value.
 
 ## The {part} placeholder
 
-`{part}` in a destination is not a partition placeholder: it is filled with the part number (`part-00003.parquet`).
-It is reserved - a partition column named `part` together with a `{part}` destination throws when the plan is
-built; rename the column.
+`{part}` in a destination is not a partition placeholder. Flow replaces it with the part number
+(`part-00003.parquet`). The name is reserved. If a partition column named `part` goes to a `{part}` destination,
+building the plan throws. Rename the column.
 
 ## Choosing Partition Columns
 
-Aim for balanced partition sizes: `date` or `department` over a unique `id`, which would create one
-tiny partition per row.
+Use columns that give partitions of similar size, for example `date` or `department`. Do not use a unique `id`.
+It makes one very small partition for each row.
 
 ## Partition Values
 
-Each value is written in full, so a typed read gets it back unchanged:
+Flow writes each value in full. A typed read gets the value back without changes:
 
 | Column type | Value                            | Directory                                       |
 |-------------|----------------------------------|-------------------------------------------------|
@@ -142,7 +142,7 @@ Each value is written in full, so a typed read gets it back unchanged:
 | `date`      | `2026-10-02`                     | `date=2026-10-02`                               |
 | `float`     | `1.0E-9`                         | `x=1.0e-9`                                      |
 
-A `datetime` column makes one directory per distinct value. For one directory per day, partition by a `date`:
+A `datetime` column makes one directory for each distinct value. For one directory for each day, partition by a `date`:
 
 ```php
 <?php
@@ -171,7 +171,7 @@ output/
 
 ## Save Modes with Partitioning
 
-The save mode decides how existing partition directories are handled.
+The save mode controls what happens to partition directories that exist.
 
 ### Overwrite
 
@@ -192,11 +192,11 @@ data_frame()
     ->run();
 ```
 
-Removes all files in the partition directories being written to; partitions not in the current
-dataset are preserved.
+Removes all files in the partition directories that the write goes to. Partitions that are not in the current
+dataset stay.
 
-**Pitfall:** two separate writes to the same partition with `overwrite()` - the second deletes the
-first. Use `append()`, or merge before writing.
+Do not write to the same partition two times with `overwrite()`. The second write deletes the first. Use `append()`,
+or merge the data before the write.
 
 ### Append
 
@@ -214,7 +214,7 @@ data_frame()
     ->run();
 ```
 
-Adds files named after the run (`sales-<run>.csv`); repeated runs accumulate files.
+Adds files named after the run (`sales-<run>.csv`). Each run adds more files.
 
 ### Ignore
 
@@ -232,7 +232,7 @@ data_frame()
     ->run();
 ```
 
-Skips the write if the partition directory exists. No error.
+If the partition directory exists, the write is skipped. There is no error.
 
 ### Exception If Exists (Default)
 
@@ -249,7 +249,7 @@ data_frame()
     ->run();
 ```
 
-Throws if any partition path already exists.
+If a partition path exists, the write throws.
 
 ## Reading Partitioned Data
 
@@ -265,23 +265,24 @@ data_frame()
     ->run();
 ```
 
-Partition values from the path become regular columns. Given a schema that does not declare a
-partition column, it is appended as a **string** column - declare it (`int_schema('date')`) to read
-it as another type. A file that also holds the partition column (`partition_by(...)->writeColumns()`) types
-it from the file schema (Parquet, Floe), so `filter(ref('date')->between(lit($from), lit($to)))` with
-`DateTimeImmutable` bounds prunes. String bounds (`lit('2026-10-02')`) are cast to the column's `date` /
-`datetime` type, so they prune too.
+Partition values from the path become regular columns. If the schema does not declare a partition column, Flow
+appends it as a string column. To read it as another type, declare it (`int_schema('date')`). A file can also hold
+the partition column (`partition_by(...)->writeColumns()`). Then the file schema (Parquet, Floe) gives the type. A
+`filter(ref('date')->between(lit($from), lit($to)))` with `DateTimeImmutable` bounds then prunes. Pruning skips the
+files that cannot match. Flow casts string bounds (`lit('2026-10-02')`) to the `date` / `datetime` type of the
+column, so they prune too.
 
 ### Partition Pruning
 
-The optimizer moves a `filter()` that reads only partition columns into the file source, which skips whole
-directories. Every format does this. A partition filter after another filter also skips directories. Parquet also
-takes a filter on a body column and skips row groups with it ([filter pushdown](/documentation/components/adapters/parquet.md#filter-pushdown)).
+The optimizer moves a `filter()` that reads only partition columns into the file source. The source then skips
+full directories. Every format does this. A partition filter after another filter also skips directories. Parquet
+also takes a filter on a body column ([filter pushdown](/documentation/components/adapters/parquet.md#filter-pushdown)) and skips row groups with it.
 For other formats, a filter on a body column stays a `Filter` step.
-If a filter moved into the source, a `limit()` after it reaches the source too ([filter pushdown](/documentation/components/adapters/parquet.md#filter-pushdown)). A partition column renamed
-with `rename()` or copied with `withColumn('day', ref('date'))` is still pruned; any other redefinition of it
-stops the push. A filter whose answer can change between two evaluations - `call()`, `now()`, `uuid()`,
-`to_date_time()` with a format that leaves fields out (`'Y-m-d'`) - still filters rows but prunes nothing.
+If a filter moved into the source, a `limit()` ([filter pushdown](/documentation/components/adapters/parquet.md#filter-pushdown)) after it goes to the source too.
+Flow still prunes a partition column that you rename with `rename()` or copy with `withColumn('day', ref('date'))`.
+Any other new definition of the column stops the push. Some filters can give a different answer each time they run.
+Examples are `call()`, `now()`, `uuid()`, and `to_date_time()` with a format that leaves fields out (`'Y-m-d'`).
+These filters still remove rows, but they prune nothing.
 
 ```php
 <?php
@@ -297,7 +298,7 @@ data_frame()
     ->run();
 ```
 
-`explain()` lists what each file's path must pass under `Files:`, what each row must pass under `Filter:`:
+`explain()` shows the test for the path of each file under `Files:`. It shows the test for each row under `Filter:`:
 
 ```text
 #3 Write
@@ -314,7 +315,7 @@ data_frame()
 
 ### Path Partitions
 
-`from_path_partitions()` reads partition metadata without opening the files.
+`from_path_partitions()` reads the partition metadata. It does not open the files.
 
 ```php
 <?php
@@ -327,12 +328,13 @@ data_frame()
     ->run();
 ```
 
-Output carries `path`, a `partitions` map, and one string column per partition (`date`, `department`), so a
-`filter()` on a partition column prunes the listing like any other file source.
+The output has `path`, a `partitions` map, and one string column for each partition (`date`, `department`). A
+`filter()` on a partition column prunes the listing, as with any other file source.
 
 ## Repartitioning
 
-`repartition()` shuffles the stream so every row sharing the given columns arrives in one batch. While the process
-stays under the memory limit it groups in memory; past it the input is partitioned into buckets first, configured with
-`config_builder()->repartition(hash_repartition()->memoryLimit(...))`. It does not write directories - use the
-loader's `partitionBy()` for that.
+`repartition()` moves rows in the stream so that all rows with the same values in the given columns are in one
+batch. While the process stays under the memory limit, it groups the rows in memory. Past the limit, it first
+partitions the input into buckets. You configure this with
+`config_builder()->repartition(hash_repartition()->memoryLimit(...))`. It does not write directories. For
+directories, use `partitionBy()` on the loader.

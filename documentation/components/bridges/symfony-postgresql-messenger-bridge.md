@@ -4,7 +4,7 @@ package: flow-php/symfony-postgresql-messenger-bridge
 
 # Symfony PostgreSQL Messenger Bridge
 
-A Symfony Messenger transport backed by Flow PHP's native PostgreSQL library. Replaces `symfony/doctrine-messenger` without requiring Doctrine DBAL - messages are stored directly in PostgreSQL using Flow's query builder and client.
+A Symfony Messenger transport on the native PostgreSQL library of Flow PHP. It replaces `symfony/doctrine-messenger` and does not need Doctrine DBAL. Messages are stored directly in PostgreSQL with the query builder and client of Flow.
 
 [PACKAGE_NAV]
 
@@ -16,17 +16,17 @@ A Symfony Messenger transport backed by Flow PHP's native PostgreSQL library. Re
 composer require flow-php/symfony-postgresql-messenger-bridge:~--FLOW_PHP_VERSION--
 ```
 
-This package is used together with the [Symfony PostgreSQL Bundle](/documentation/components/bridges/symfony-postgresql-bundle.md), which registers the transport factory and catalog provider automatically.
+Use this package together with the [Symfony PostgreSQL Bundle](/documentation/components/bridges/symfony-postgresql-bundle.md). The bundle registers the transport factory and the catalog provider automatically.
 
 ## How It Works
 
-The bridge provides a Symfony Messenger transport that stores messages in a PostgreSQL table using Flow's native `Client`. No Doctrine DBAL is involved.
+The bridge has a Symfony Messenger transport. It stores messages in a PostgreSQL table with the native `Client` of Flow. Doctrine DBAL is not used.
 
-- **Sending** inserts a row with `body`, `headers`, `queue_name`, `created_at`, and `available_at`
-- **Receiving** uses `SELECT ... FOR UPDATE SKIP LOCKED` inside a transaction for safe concurrent consumption
-- **Delayed messages** offset `available_at` by the `DelayStamp` value (in milliseconds)
-- **Redelivery** of timed-out messages is handled automatically based on `redeliver_timeout`
-- **Keepalive** refreshes `delivered_at` to prevent redelivery during long-running handlers
+- A send inserts a row with `body`, `headers`, `queue_name`, `created_at`, and `available_at`.
+- A receive uses `SELECT ... FOR UPDATE SKIP LOCKED` inside a transaction, so concurrent consumers are safe.
+- Delayed messages move `available_at` by the `DelayStamp` value (in milliseconds).
+- Timed-out messages are delivered again automatically, after `redeliver_timeout`.
+- Keepalive refreshes `delivered_at`, so that long-running handlers do not cause a second delivery.
 
 ## Configuration
 
@@ -47,7 +47,7 @@ flow_postgresql:
     schema: public                  # default
 ```
 
-This registers a `MessengerCatalogProvider` and a transport factory that can resolve any configured connection by name. The `messenger_messages` table will be included in schema diffs and migrations automatically.
+This registers a `MessengerCatalogProvider` and a transport factory that resolves each configured connection by name. Schema diffs and migrations then include the `messenger_messages` table automatically.
 
 ### 2. Configure the Messenger Transport
 
@@ -65,29 +65,29 @@ framework:
       App\Message\MyMessage: async
 ```
 
-The DSN format is `flow-pgsql://<connection_name>` where `<connection_name>` matches a connection defined under `flow_postgresql.connections`. Both `flow-pgsql://` and `flow-postgresql://` schemes are supported.
+The DSN format is `flow-pgsql://<connection_name>`. `<connection_name>` is the name of a connection under `flow_postgresql.connections`. The `flow-pgsql://` and `flow-postgresql://` schemes are both supported.
 
 ### 3. Create the Table via Migrations
 
-Because the catalog provider is registered automatically, the messenger table appears in migration diffs:
+The catalog provider is registered automatically, so the messenger table is in the migration diffs:
 
 ```bash
 php bin/console flow:migrations:diff
 php bin/console flow:migrations:migrate
 ```
 
-This is the recommended approach. The bridge does **not** implement `SetupableTransportInterface` - there is no `messenger:setup-transports` support. Use migrations for schema management.
+This is the recommended approach. The bridge does not implement `SetupableTransportInterface`, so `messenger:setup-transports` is not supported. Use migrations for schema management.
 
 ## DSN Options
 
-Options can be set in the DSN query string or in the `options` array under the transport configuration. The `options` array takes precedence over DSN query parameters.
+You can set options in the DSN query string or in the `options` array of the transport configuration. The `options` array wins over DSN query parameters.
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `queue_name` | `default` | Queue name for message routing |
-| `table_name` | `messenger_messages` | Table storing messages (must match `flow_postgresql.messenger` config) |
-| `schema` | `public` | Schema owning the table (must match `flow_postgresql.messenger` config) |
-| `redeliver_timeout` | `3600` | Seconds before a delivered-but-unacknowledged message becomes eligible for redelivery |
+| Option              | Default              | Description                                                                           |
+|---------------------|----------------------|---------------------------------------------------------------------------------------|
+| `queue_name`        | `default`            | Queue name for message routing                                                        |
+| `table_name`        | `messenger_messages` | Table that stores messages (must match the `flow_postgresql.messenger` configuration) |
+| `schema`            | `public`             | Schema that owns the table (must match the `flow_postgresql.messenger` configuration) |
+| `redeliver_timeout` | `3600`               | Seconds before a delivered but unacknowledged message can be delivered again          |
 
 Example with DSN options:
 
@@ -101,7 +101,7 @@ framework:
 
 ## Multiple Queues
 
-Multiple transports can share the same table but use different queue names:
+Multiple transports can share the same table with different queue names:
 
 ```yaml
 framework:
@@ -122,16 +122,16 @@ framework:
 
 ## Table Schema
 
-The messenger table has the following structure:
+The messenger table has this structure:
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | `bigint GENERATED ALWAYS AS IDENTITY` | Primary key |
-| `body` | `text` | Serialized message body |
-| `headers` | `text` | JSON-encoded message headers (stamps, type info) |
-| `queue_name` | `varchar(190)` | Queue name for message routing |
-| `created_at` | `timestamptz` | When the message was dispatched |
-| `available_at` | `timestamptz` | When the message becomes available for consumption |
-| `delivered_at` | `timestamptz` | When a worker picked up the message (null = not yet delivered) |
+| Column         | Type                                  | Description                                                    |
+|----------------|---------------------------------------|----------------------------------------------------------------|
+| `id`           | `bigint GENERATED ALWAYS AS IDENTITY` | Primary key                                                    |
+| `body`         | `text`                                | Serialized message body                                        |
+| `headers`      | `text`                                | JSON-encoded message headers (stamps, type info)               |
+| `queue_name`   | `varchar(190)`                        | Queue name for message routing                                 |
+| `created_at`   | `timestamptz`                         | Time of the dispatch                                           |
+| `available_at` | `timestamptz`                         | Time from which consumers can take the message                 |
+| `delivered_at` | `timestamptz`                         | Time of the pickup by a worker (null = not delivered yet)      |
 
-Three indexes are created: on `queue_name`, `available_at`, and `delivered_at`.
+The bridge creates three indexes: on `queue_name`, `available_at`, and `delivered_at`.

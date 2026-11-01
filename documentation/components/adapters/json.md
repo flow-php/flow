@@ -8,20 +8,11 @@ package: flow-php/etl-adapter-json
 
 [TOC]
 
-Flow PHP's Adapter JSON is a meticulously engineered library aimed at facilitating seamless interactions with JSON data
-within your ETL (Extract, Transform, Load) workflows. This adapter is paramount for developers seeking to effortlessly
-extract from or load data into JSON formats, ensuring a fluid and reliable data transformation experience. By utilizing
-the Adapter JSON library, developers can harness a robust set of features tailored for precise JSON data handling,
-making complex data transformations both manageable and efficient. The Adapter JSON library encapsulates a comprehensive
-set of functionalities, providing a streamlined API for engaging with JSON data, which is indispensable in modern data
-processing and transformation scenarios. This library embodies Flow PHP's commitment to offering versatile and efficient
-data processing solutions, making it a prime choice for developers dealing with JSON data in large-scale and
-data-intensive environments. With Flow PHP's Adapter JSON, managing JSON data within your ETL workflows becomes a more
-simplified and efficient task, perfectly aligning with the robust and adaptable nature of the Flow PHP ecosystem.
+The JSON adapter reads and writes JSON data in ETL (Extract, Transform, Load) pipelines.
 
 ## Installation
 
-For detailed installation instructions, see
+For the installation instructions, read
 the [installation page](/documentation/installation/packages/etl-adapter-json.md).
 
 ## Extractor
@@ -46,17 +37,17 @@ data_frame()
 Both return a `JsonExtractor`. `from_json()` reads one document: a top-level array, or the subtree selected with
 `withPointer()`.
 
-In JSON lines, a line holding only whitespace (space, tab, CR, LF, VT, FF) is skipped; this is not
-configurable.
+In JSON lines, a line with only whitespace (space, tab, CR, LF, VT, FF) is skipped. You cannot configure this.
 
-With the [`flow_php`](/documentation/components/extensions/flow-php-ext.md) extension loaded, JSON lines and a document
-holding a top-level array are read natively, as strict JSON: malformed input throws
-`RuntimeException('Malformed JSON in "<uri>" at line N: ...')` (`at element N` in a document). A pointer, or a document
-that is not an array, is read by the PHP reader.
+When the [`flow_php`](/documentation/components/extensions/flow-php-ext.md) extension is loaded, it reads JSON lines
+and a document with a top-level array natively, as strict JSON. Malformed input throws
+`RuntimeException('Malformed JSON in "<uri>" at line N: ...')` (`at element N` in a document). The PHP reader reads a
+pointer, or a document that is not an array.
 
-A value that does not cast to the type `->withSchema()` declares throws `CorruptedRecordException`, or goes to
-`->withCorruptedRecords($loader)`, see [Corrupted Records](/documentation/components/core/corrupted-records.md). Under an
-inferred schema, a key first seen after the inference sample throws `InferredSchemaException`.
+A value that does not cast to the type that `->withSchema()` declares throws `CorruptedRecordException`, or goes to
+`->withCorruptedRecords($loader)`. For more information, read
+[Corrupted Records](/documentation/components/core/corrupted-records.md). Under an inferred schema, a key that first
+shows after the inference sample throws `InferredSchemaException`.
 
 ## Loader
 
@@ -106,24 +97,30 @@ data_frame()
 {"id":2,"active":false,"price":1,"at":null,"days":[],"labels":{},"size":{"w":3,"h":4},"meta":{}}
 ```
 
-The shape follows the column type, never the data: a `list` is always `[...]`, a `map`, a `structure` and a row are
-always `{...}` (an empty map is `{}`, a map keyed `0, 1` is `{"0":...,"1":...}`), a `json` column keeps its objects and
-lists. A `datetime` / `date` is written with `withDateTimeFormat()` / `withDateFormat()` at every depth, a `time` as
-microseconds. A float has the shortest digits that read back as the same float (`1.0` is `1`, or `1.0` under
-`JSON_PRESERVE_ZERO_FRACTION`); `NAN` and the infinities are refused:
-`RuntimeException('Failed to encode JSON: Inf and NaN cannot be JSON encoded')`.
+The shape follows the column type, never the data:
 
-Floats are rendered under `serialize_precision = -1`. When the ini holds another value the writer sets it for the
-render and restores it, so `ini_set()` must be allowed; otherwise it throws
+- A `list` is always `[...]`.
+- A `map`, a `structure` and a row are always `{...}`. An empty map is `{}`, and a map with the keys `0, 1` is
+  `{"0":...,"1":...}`.
+- A `json` column keeps its objects and lists.
+- A `datetime` / `date` is written with `withDateTimeFormat()` / `withDateFormat()` at each depth, and a `time` as
+  microseconds.
+- A float has the shortest digits that read back as the same float. `1.0` is `1`, or `1.0` under
+  `JSON_PRESERVE_ZERO_FRACTION`.
+- `NAN` and the infinities are refused:
+  `RuntimeException('Failed to encode JSON: Inf and NaN cannot be JSON encoded')`.
+
+Floats are rendered under `serialize_precision = -1`. If the ini has a different value, the writer sets it for the
+render and then restores it. `ini_set()` must therefore be allowed. If it is not allowed, the writer throws
 `RuntimeException('Writing floats requires serialize_precision = -1 and ini_set() cannot change it')`.
 
-With the [`flow_php`](/documentation/components/extensions/flow-php-ext.md) extension loaded and no flags beyond
-`JSON_THROW_ON_ERROR`, `JSON_UNESCAPED_SLASHES`, `JSON_UNESCAPED_UNICODE` and `JSON_PRESERVE_ZERO_FRACTION`, the same
-bytes are rendered natively.
+The [`flow_php`](/documentation/components/extensions/flow-php-ext.md) extension renders the same bytes natively.
+This works only with the flags `JSON_THROW_ON_ERROR`, `JSON_UNESCAPED_SLASHES`, `JSON_UNESCAPED_UNICODE` and
+`JSON_PRESERVE_ZERO_FRACTION`, or a subset of them.
 
 ## JSON Schema conversion
 
-The adapter can convert [JSON Schema](https://json-schema.org) documents into Flow schemas and back.
+The adapter converts [JSON Schema](https://json-schema.org) documents into Flow schemas and back.
 
 ```php
 <?php
@@ -160,29 +157,29 @@ file.
 | empty schema `{}` / boolean schema `true`                                    | `json` (accept anything, marked in metadata)                      |
 | `enum` / `const`                                                             | scalar type derived from the values, values preserved in metadata |
 | `type: [X, "null"]`, `anyOf`/`oneOf` with a null member                      | nullable X                                                        |
-| heterogeneous `type` arrays, `anyOf`, `oneOf`                                | refused - `UnsupportedUnionTypeException`, at any depth           |
+| heterogeneous `type` arrays, `anyOf`, `oneOf`                                | refused: `UnsupportedUnionTypeException`, at any depth            |
 | `allOf`                                                                      | deep merged object schema                                         |
 
-Annotations (`description`, `title`, `default`, `examples`, constraints like `pattern` or `minimum`) of top level
-properties are preserved in definition metadata under `json_schema.*` keys and re-emitted by `schema_to_json_schema()`.
+The annotations of top level properties are preserved in definition metadata under `json_schema.*` keys.
+`schema_to_json_schema()` writes them again. Annotations are `description`, `title`, `default`, `examples` and
+constraints such as `pattern` or `minimum`.
 
 ### References
 
 `$ref` is resolved automatically:
 
 - internal pointers (`#/$defs/...`, legacy `#/definitions/...`),
-- relative file paths (resolved against the schema file location, requires loading the schema from a `Path`),
-- remote `http(s)://` documents - requires passing a PSR-18 client and a PSR-17 request factory to
-  `schema_from_json_schema()`.
+- relative file paths (resolved against the location of the schema file). The schema must load from a `Path`.
+- remote `http(s)://` documents. Give a PSR-18 client and a PSR-17 request factory to `schema_from_json_schema()`.
 
 ### Limitations
 
-- Recursive schemas cannot be represented by a Flow schema, circular references throw `CircularReferenceException`.
+- A Flow schema cannot represent recursive schemas. Circular references throw `CircularReferenceException`.
 - `$anchor`, `not`, `if`/`then`/`else`, `contains`, `patternProperties`, `unevaluatedProperties`, `unevaluatedItems`,
   `dependentSchemas`, `dependentRequired`, `$dynamicRef`, `$dynamicAnchor` and `propertyNames` are not supported and
   throw `UnsupportedKeywordException`.
-- References are inlined during conversion, `schema_to_json_schema()` does not reconstruct `$ref` structures.
+- The conversion inlines references. `schema_to_json_schema()` does not make `$ref` structures again.
 - Annotations of nested (non top level) properties are not preserved.
-- Accept-anything properties are emitted as the boolean schema `true` (an empty PHP array would serialize to a JSON
-  list); the boolean schema `false` (reject everything) cannot be represented and throws.
+- Accept-anything properties are written as the boolean schema `true`, because an empty PHP array serializes to a
+  JSON list. The boolean schema `false` (reject everything) cannot be represented and throws.
 - An empty Flow schema cannot be converted to JSON Schema and throws.

@@ -2,7 +2,7 @@
 
 [TOC]
 
-Below graph explains the process of contributing to Flow.  
+The graph below shows the process to contribute to Flow.
 
 ```mermaid
 flowchart TD
@@ -52,57 +52,57 @@ flowchart TD
 ## Project Roadmap
 
 > [!IMPORTANT]
-> Flow PHP is managed through [GitHub Projects](https://github.com/orgs/flow-php/projects/1). 
-> All code changes **MUST** first be added to the [Roadmap](https://github.com/orgs/flow-php/projects/1). 
-> 
-> Pull requests without an item in Roadmap might take significantly longer time to review or even get rejected due to missalignment
-> with project architecture or future plans. In order to save time of contributors & maintainers, we would like to review
-> the proposal before anyone starts to code. 
-> 
-> The only exception from that rule are Bug Fixes - those can be opened without opening a proposal first. 
-> However it's still recommened to reach out as sometimes bugs might not be solvable imidiatelly or at all. 
+> [GitHub Projects](https://github.com/orgs/flow-php/projects/1) manages Flow PHP.
+> First add each code change to the [Roadmap](https://github.com/orgs/flow-php/projects/1) as an item.
+>
+> A pull request without an item in the Roadmap can take much longer to review. A mismatch with the project architecture
+> or the future plans can also get it rejected. To save the time of contributors and maintainers, we want to
+> review the proposal before anyone starts to code.
+>
+> The only exception to that rule is bug fixes. You can open them without a proposal first.
+> But contact us first anyway, because some bugs cannot be fixed immediately, or at all.
 
-If the idea you are planning to work on is not yet in the [Roadmap](https://github.com/orgs/flow-php/projects/1)
-please create a new [Proposal Issue](https://github.com/flow-php/flow/issues/new?template=PROPOSAL) and wait for further guidance.
+Your idea can be missing from the [Roadmap](https://github.com/orgs/flow-php/projects/1). Then create a new
+[Proposal Issue](https://github.com/flow-php/flow/issues/new?template=PROPOSAL) and wait for more instructions.
 
-Proposal is considered "Accepted" when added to the Roadmap by one of the Core Contributors. 
-By default proposal are added to the upcoming milestone, whatevr can't be delivered during milestone due date is going
-to be moved to the next milestone.
+A proposal is "Accepted" after one of the Core Contributors adds it to the Roadmap.
+By default, proposals go into the next milestone. Work that is not done by the due date of the milestone moves to the
+milestone after it.
 
 > Weeks of coding can save you hours of planning. 
 
-Opening a pull request without reaching out first might get rejected and eventually closed.   
+A pull request without contact first can be rejected and closed.
 
-**Bug Fixes** - bug fixes are the only exception from the above rule. Bug Fixes can be opened directly without a proposal issue.
-Bug fix can should only carry fixes of existing code, additions (especially to our DSL) require a `Proposal` first. 
+Bug Fixes: bug fixes are the only exception to the rule above. You can open a bug fix directly, without a proposal
+issue. A bug fix must only fix existing code. Additions, most of all to our DSL, need a `Proposal` first.
 
 ## Issue Types 
 
-Wondering which issue type to use? Please check below guideliness 
+Use these guidelines to choose the issue type:
 
 ### Proposal 
 
 - New feature request
-- Idea of changing/extending existing behavior 
-- Something is missing and should be added
+- Idea to change or extend existing behavior
+- Something is missing and must be added
 - UX/DX improvements
 
 ### Bug 
 
-**Important** - please don't use `Bug` issue type for reporting missing features. `Bug` should be reported only against existing code that
-doesn't work as expected. When something is missing it requires a `Proposal` first. 
+Important: do not use the `Bug` issue type for missing features. Report a `Bug` only for existing code that does not
+work as expected. A missing thing needs a `Proposal` first.
 
-- Incorrect behavior of an existing code 
+- Incorrect behavior of existing code
 - Performance degradation 
 
 ### Task 
 
-- Those issues are meant to be used only by roadmap manager to split bigger items into smaller tasks 
+- Only the roadmap manager uses these issues, to split bigger items into smaller tasks
 
 ## Before coding
 
-Please make sure that you are aware of our [Architecture Decision Records](/documentation/adrs.md).
-It's mandatory to follow all of them without any exceptions unless explicitly overridden by a new ADR.
+Read our [Architecture Decision Records](/documentation/adrs.md).
+You must follow all of them without exceptions. Only a new ADR can explicitly override one.
 
 ## Next Steps
 
@@ -111,6 +111,6 @@ It's mandatory to follow all of them without any exceptions unless explicitly ov
 - [Development Guidelines](/documentation/contributing/guidelines.md)
 - [Benchmarks](/documentation/contributing/benchmarks.md)
 - Extension Development
-  - [Rust - arrow-ext & flow-php-ext](/documentation/contributing/rust.md)
-  - [C - pg-query Extension](/documentation/contributing/c.md)
-  - [WASM - Interactive Playground](/documentation/contributing/wasm.md)
+  - [Rust: arrow-ext & flow-php-ext](/documentation/contributing/rust.md)
+  - [C: pg-query Extension](/documentation/contributing/c.md)
+  - [WASM: Interactive Playground](/documentation/contributing/wasm.md)

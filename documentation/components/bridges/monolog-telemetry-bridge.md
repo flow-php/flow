@@ -4,8 +4,8 @@ package: flow-php/monolog-telemetry-bridge
 
 # Monolog Telemetry Bridge
 
-Flow Monolog Telemetry Bridge connects Monolog with Flow PHP Telemetry library, allowing you to use Monolog as your
-logging interface while exporting logs through Flow's telemetry system.
+This bridge connects Monolog with the Flow PHP Telemetry library. You use Monolog as your logging interface, and
+the logs go out through the telemetry system of Flow.
 
 [PACKAGE_NAV]
 
@@ -13,20 +13,20 @@ logging interface while exporting logs through Flow's telemetry system.
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/monolog-telemetry-bridge.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/monolog-telemetry-bridge.md).
 
 ## Overview
 
-This bridge provides a Monolog handler that forwards log records to Flow Telemetry. It allows you to:
+This bridge has a Monolog handler that sends log records to Flow Telemetry. With it, you can:
 
-- Keep using Monolog as your logging interface while leveraging Telemetry's export capabilities (console, OTLP, etc.)
-- Preserve rich context data - context values become `context.*` attributes, extra values become `extra.*` attributes
-- Automatic exception handling - Throwables in context are detected and passed to Telemetry's `setException()` method
-- Map Monolog severity levels to Telemetry severities with customizable mapping
+- Keep Monolog as your logging interface, and use the export features of Telemetry (for example console or OTLP)
+- Keep detailed context data: context values become `context.*` attributes, extra values become `extra.*` attributes
+- Handle exceptions automatically: throwables in the context go to the `setException()` method of Telemetry
+- Map Monolog severity levels to Telemetry severities, with a mapping that you can change
 
 ## Basic Usage
 
-The simplest integration requires just a few lines of code:
+The simplest integration needs only a few lines of code:
 
 ```php
 <?php
@@ -47,11 +47,11 @@ $monolog->info('User logged in', ['user_id' => 123]);
 
 ## DSL Functions
 
-The bridge provides four DSL functions for configuration and customization.
+The bridge has four DSL functions for configuration and customization.
 
 ### telemetry_handler()
 
-The main handler that forwards Monolog logs to Flow Telemetry. This is the primary function you'll use.
+The main handler that sends Monolog logs to Flow Telemetry. This is the function that you use most.
 
 ```php
 <?php
@@ -72,7 +72,7 @@ $handler = telemetry_handler(
 
 ### log_record_converter()
 
-Creates a converter for transforming Monolog LogRecord to Telemetry LogRecord. Use this when you need custom severity mapping or value normalization.
+Creates a converter that transforms a Monolog LogRecord to a Telemetry LogRecord. Use it for custom severity mapping or value normalization.
 
 ```php
 <?php
@@ -90,7 +90,7 @@ $handler = telemetry_handler($logger, $converter);
 
 ### severity_mapper()
 
-Creates a mapper for converting Monolog levels to Telemetry severities. Useful when you need different severity mapping than the defaults.
+Creates a mapper that converts Monolog levels to Telemetry severities. Use it for a severity mapping that is different from the defaults.
 
 ```php
 <?php
@@ -117,7 +117,7 @@ $mapper = severity_mapper([
 
 ### attribute_value_normalizer()
 
-Creates a normalizer for converting arbitrary PHP values to types acceptable by Telemetry attributes.
+Creates a normalizer that converts arbitrary PHP values to types that Telemetry attributes accept.
 
 ```php
 <?php
@@ -143,17 +143,17 @@ The normalizer handles:
 
 ## Context and Attributes
 
-When a Monolog log record is converted to a Telemetry log record, the data is mapped as follows:
+When a Monolog log record becomes a Telemetry log record, the data is mapped like this:
 
-| Monolog Property | Telemetry Attribute     | Description                        |
-|------------------|-------------------------|------------------------------------|
-| `message`        | `body`                  | The log message body               |
-| `channel`        | `monolog.channel`       | The Monolog channel name           |
-| `level->name`    | `monolog.level_name`    | The Monolog level name (e.g., INFO)|
-| `context.*`      | `context.*`             | Prefixed context values            |
-| `extra.*`        | `extra.*`               | Prefixed extra values              |
+| Monolog Property | Telemetry Attribute  | Description                               |
+|------------------|----------------------|-------------------------------------------|
+| `message`        | `body`               | The log message body                      |
+| `channel`        | `monolog.channel`    | The Monolog channel name                  |
+| `level->name`    | `monolog.level_name` | The Monolog level name (for example INFO) |
+| `context.*`      | `context.*`          | Prefixed context values                   |
+| `extra.*`        | `extra.*`            | Prefixed extra values                     |
 
-**Example:**
+Example:
 
 ```php
 <?php
@@ -165,7 +165,7 @@ $monolog->info('Order processed', [
 ]);
 ```
 
-Results in Telemetry attributes:
+The result is these Telemetry attributes:
 
 - `monolog.channel` → `'channel'`
 - `monolog.level_name` → `'INFO'`
@@ -175,7 +175,7 @@ Results in Telemetry attributes:
 
 ## Exception Handling
 
-Throwables in the Monolog context are automatically detected and passed to Telemetry's `setException()` method, creating structured exception attributes.
+Throwables in the Monolog context go automatically to the `setException()` method of Telemetry. It creates structured exception attributes.
 
 ```php
 <?php
@@ -190,11 +190,11 @@ try {
 }
 ```
 
-The exception is not stored as a regular `context.exception` attribute. Instead, Telemetry's `setException()` method is called, which creates standardized exception attributes following OpenTelemetry conventions.
+The exception is not stored as a regular `context.exception` attribute. Instead, the `setException()` method of Telemetry creates standard exception attributes that follow the OpenTelemetry conventions.
 
 ## Severity Mapping
 
-By default, Monolog's 8 log levels are mapped to Telemetry's 6 severity levels:
+By default, the 8 Monolog log levels map to the 6 Telemetry severity levels:
 
 | Monolog Level | Flow Telemetry Severity |
 |---------------|-------------------------|
@@ -209,7 +209,7 @@ By default, Monolog's 8 log levels are mapped to Telemetry's 6 severity levels:
 
 ### Custom Severity Mapping
 
-You can override the default mapping when you need different behavior:
+For a different behavior, override the default mapping:
 
 ```php
 <?php
@@ -237,16 +237,16 @@ $monolog->pushHandler(telemetry_handler($logger, $converter));
 
 ## Configuration Options
 
-The `telemetry_handler()` function accepts the following parameters:
+The `telemetry_handler()` function accepts these parameters:
 
 | Parameter   | Type                 | Default                    | Description                                     |
 |-------------|----------------------|----------------------------|-------------------------------------------------|
 | `logger`    | `Logger`             | (required)                 | The Flow Telemetry logger                       |
 | `converter` | `LogRecordConverter` | `new LogRecordConverter()` | Converter for transforming log records          |
 | `level`     | `Level`              | `Level::Debug`             | Minimum logging level to handle                 |
-| `bubble`    | `bool`               | `true`                     | Whether messages should bubble to other handlers|
+| `bubble`    | `bool`               | `true`                     | Whether messages bubble to other handlers       |
 
-**Level filtering example:**
+Level filtering example:
 
 ```php
 <?php
@@ -257,7 +257,7 @@ use Monolog\Level;
 $handler = telemetry_handler($logger, level: Level::Warning);
 ```
 
-**Disable bubbling example:**
+Disable bubbling example:
 
 ```php
 <?php
@@ -268,7 +268,7 @@ $handler = telemetry_handler($logger, bubble: false);
 
 ## Complete Example
 
-Here's a complete example showing integration with OTLP export:
+This complete example shows the integration with OTLP export:
 
 ```php
 <?php
@@ -336,7 +336,7 @@ try {
 
 ### Multiple Channels
 
-You can use multiple Monolog channels, each forwarding to the same Telemetry logger:
+You can use multiple Monolog channels. Each one sends to the same Telemetry logger:
 
 ```php
 <?php
@@ -353,4 +353,4 @@ $ordersLog->info('Order placed');    // monolog.channel = 'orders'
 $paymentsLog->info('Payment received'); // monolog.channel = 'payments'
 ```
 
-The `monolog.channel` attribute in Telemetry will reflect which channel each log came from.
+The `monolog.channel` attribute in Telemetry shows the channel of each log.

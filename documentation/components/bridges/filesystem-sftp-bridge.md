@@ -8,17 +8,17 @@ package: flow-php/filesystem-sftp-bridge
 
 [TOC]
 
-The Filesystem SFTP Bridge lets Flow treat an SFTP server as a filesystem, so `sftp://` paths work
-anywhere a local or cloud path does - reading, writing, listing, moving and removing files, through
-[phpseclib](https://phpseclib.com/docs/sftp).
+The Filesystem SFTP Bridge lets Flow use an SFTP server as a filesystem. It uses
+[phpseclib](https://phpseclib.com/docs/sftp) for this. `sftp://` paths then work in each place where a local or
+cloud path works: read, write, list, move and remove files.
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/filesystem-sftp-bridge.md).
+For the installation instructions, read the [installation page](/documentation/installation/packages/filesystem-sftp-bridge.md).
 
 ## Opening a connection
 
-The plain form takes the host, the user and one credential, and logs in on first use:
+The plain form takes the host, the user and one credential, and logs in at the first use:
 
 ```php
 use function Flow\Filesystem\Bridge\SFTP\DSL\sftp_filesystem;
@@ -37,8 +37,8 @@ $sftp = sftp_filesystem([
 ```
 
 A filesystem built from an already authenticated phpseclib `SFTP` client stays in this process and reads serially.
-`sftp_client()` covers the common cases and returns phpseclib's own `SFTP` object, so you can
-configure it further before handing it over.
+`sftp_client()` covers the common cases and returns the `SFTP` object of phpseclib. You can therefore configure it
+more before you give it to the filesystem.
 
 ```php
 use function Flow\Filesystem\Bridge\SFTP\DSL\{sftp_client, sftp_filesystem};
@@ -57,11 +57,11 @@ $sftp = sftp_client(
 $fstab = fstab(sftp_filesystem($sftp));
 ```
 
-Authentication failures are reported as `Flow\Filesystem\Exception\RuntimeException`; the credential
-itself never appears in the message.
+Authentication failures throw `Flow\Filesystem\Exception\RuntimeException`. The message never contains the
+credential.
 
-The **mount protocol** - the URI scheme under which the filesystem is registered in the
-`FilesystemTable` - defaults to `'sftp'`. Override it when you need to mount two servers at once:
+The mount protocol is the URI scheme of the filesystem in the `FilesystemTable`. The default is `'sftp'`. To mount
+two servers at the same time, override it:
 
 ```php
 $fstab = fstab(
@@ -72,8 +72,8 @@ $fstab = fstab(
 
 ## Usage with Flow
 
-Pass the filesystem to the source or sink that reads or writes the `sftp://` path. Hold one instance
-and pass the same one to both sides.
+Give the filesystem to the source or sink that reads or writes the `sftp://` path. Keep one instance,
+and give the same instance to both sides.
 
 ```php
 $sftp = sftp_filesystem(sftp_client($_ENV['SFTP_HOST'], $_ENV['SFTP_USER'], $_ENV['SFTP_PASSWORD']));
@@ -84,19 +84,19 @@ data_frame()
     ->run();
 ```
 
-A source or sink given a filesystem that does not serve its path throws at construction, naming the
+If the filesystem of a source or sink does not serve its path, the construction throws. The message names the
 `filesystem:` argument.
 
-Paths are absolute on the remote server and relative to the directory the SSH account is chrooted
-into, so `sftp:///upload/orders.csv` is `/upload/orders.csv` as the account sees it.
+Paths are absolute on the remote server, and relative to the chroot directory of the SSH account.
+`sftp:///upload/orders.csv` is therefore `/upload/orders.csv` for the account.
 
-Directories that do not exist yet are created when writing.
+A write creates the missing directories.
 
 ## Reading directories and patterns
 
-`list()` walks the remote tree. A path without wildcards behaves like a prefix and yields everything
-below it; a glob is matched against the entries and directories that cannot lead to a match are
-never listed, which keeps the number of round trips down on deep trees.
+`list()` goes through the remote tree. A path without wildcards works like a prefix and yields everything
+below it. A glob is matched against the entries. Directories that cannot contain a match are
+never listed. This keeps the number of round trips low on deep trees.
 
 ```php
 data_frame()
@@ -104,15 +104,15 @@ data_frame()
     ->run();
 ```
 
-`FileStatus` values returned from `list()` and `status()` carry `size` and `lastModifiedAt` taken
-from the directory listing, so `flow:filesystem:ls --long` needs no extra request per file.
+The `FileStatus` values from `list()` and `status()` carry `size` and `lastModifiedAt` from the directory
+listing. `flow:filesystem:ls` therefore needs no extra request for each file.
 
 ## Writing in blocks
 
-Writes are buffered into local blocks and each full block is uploaded on its own, so a dataset never
-has to fit in memory. `writeTo()` truncates whatever was under the path before the first block lands,
-`appendTo()` continues at the end of an existing file. Block files are removed as soon as the server
-has accepted them.
+Writes go into local blocks, and each full block is uploaded separately. A dataset therefore never
+has to fit in memory. `writeTo()` truncates the existing content of the path before the first block arrives.
+`appendTo()` continues at the end of an existing file. Block files are removed immediately after the server
+accepts them.
 
 ```php
 use function Flow\Filesystem\Bridge\SFTP\DSL\{sftp_filesystem, sftp_filesystem_options};
@@ -125,23 +125,23 @@ $filesystem = sftp_filesystem(
 );
 ```
 
-| option | default | meaning |
-|---|---|---|
-| `withBlockSize()` | 4 MB | size of a single block buffered locally before it is uploaded |
-| `withReadChunkSize()` | 1 MB | bytes `readLines()` pulls in one request when no length is given |
+| option                | default | meaning                                                       |
+|-----------------------|---------|---------------------------------------------------------------|
+| `withBlockSize()`     | 4 MB    | size of a single block buffered locally before it is uploaded |
+| `withReadChunkSize()` | 1 MB    | bytes that `readLines()` gets in one request without a length |
 
 `create()` is not supported and throws `RuntimeException`.
 
 ## Lost connections
 
-This bridge does not reconnect on your behalf. phpseclib raises `InvalidStateException` once a
-session is gone and `FileSystemException` when a path is missing or unreadable; the bridge turns the
-first into `Flow\Filesystem\Exception\RuntimeException` naming the operation that failed, and keeps
-the original exception as `previous`:
+This bridge does not reconnect for you. phpseclib throws `InvalidStateException` for a lost session. It
+throws `FileSystemException` for a missing or unreadable path. The bridge turns the first one into
+`Flow\Filesystem\Exception\RuntimeException`, which names the failed operation. It keeps the original exception as
+`previous`:
 
 ```
 SFTP session is no longer usable, cannot read /upload/orders.csv
 ```
 
-Long running pipelines against servers with an idle timeout should keep that in mind and build a
-fresh client when a run is retried.
+Long-running pipelines against servers with an idle timeout must know this. For a retry of a run, build a new
+client.

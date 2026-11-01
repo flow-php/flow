@@ -299,7 +299,7 @@ echo $query->toSql();
 
 ### RESTRICT
 
-Refuse to drop the type if any objects depend on it (default behavior):
+Refuse to drop the type while other objects depend on it (default behavior):
 
 ```php
 <?php

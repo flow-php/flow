@@ -6,11 +6,10 @@
 
 ## Introduction
 
-Transformations are a powerful abstraction in Flow PHP that allow you to modify DataFrames in a composable and reusable
-way. Unlike Transformers, which receive one batch (`Rows`) at a time, Transformations work at the DataFrame level,
-providing access to the full processing pipeline.
+A Transformation changes a DataFrame. You can combine Transformations and use them again. A Transformer gets one
+batch (`Rows`) at a time. A Transformation works on the DataFrame, so it has access to the full processing pipeline.
 
-Every Transformation implements the `Transformation` interface with a single method:
+Every Transformation implements the `Transformation` interface. The interface has one method:
 
 ```php
 interface Transformation
@@ -21,7 +20,7 @@ interface Transformation
 
 ## Using Transformations
 
-`with()` applies a transformation to a DataFrame. It accepts `Transformation` objects directly or through DSL functions.
+`with()` applies a transformation to a DataFrame. It accepts a `Transformation` object, or the result of a DSL function.
 
 ```php
 use function Flow\ETL\DSL\{df, from_array, select, drop, to_output};
@@ -45,7 +44,7 @@ df()
 
 ### Select
 
-Select specific columns from the DataFrame, keeping only the columns you need.
+Keeps only the columns that you select from the DataFrame.
 
 ```php
 use function Flow\ETL\DSL\{df, from_array, select, ref, to_output};
@@ -70,7 +69,7 @@ df()
 
 ### Drop
 
-Remove unwanted columns from the DataFrame, keeping all other columns.
+Removes the given columns from the DataFrame. All other columns stay.
 
 ```php
 use function Flow\ETL\DSL\{df, from_array, drop, ref, to_output};
@@ -95,8 +94,7 @@ df()
 
 ### Batch Size
 
-Control memory usage by setting the batch size for processing. Smaller batch sizes reduce memory consumption when
-processing large datasets.
+Sets the batch size for processing. For large datasets, a smaller batch size uses less memory.
 
 ```php
 use function Flow\ETL\Adapter\CSV\from_csv;
@@ -113,7 +111,8 @@ df()
 
 ### Batch By
 
-Keep all rows with the same value of a column in one batch. The optional minimum size joins small groups into one batch.
+Keeps all rows with the same value of a column in one batch. The second argument is a minimum size. It joins small
+groups into one batch.
 
 ```php
 use function Flow\ETL\DSL\{df, from_array, batch_by, to_output};
@@ -131,7 +130,7 @@ df()
 
 ### Add Row Index
 
-Add an index column to each row, useful for tracking row position or creating unique identifiers.
+Adds an index column to each row. Use it to record the position of a row or to make unique identifiers.
 
 ```php
 use function Flow\ETL\DSL\{df, from_array, add_row_index, to_output};
@@ -156,13 +155,13 @@ df()
     ->run();
 ```
 
-The index starts again on every run of the frame. A custom `Transformer` that keeps state between batches does the
-same by implementing `Flow\ETL\Operators\Transformer\Stateful`: its `fresh()` returns a new instance in its constructed state,
+The index starts again on every run of the frame. A custom `Transformer` that keeps state between batches can do
+the same. It must implement `Flow\ETL\Operators\Transformer\Stateful`. Its `fresh()` returns a new instance in its initial state,
 and every run uses that instance.
 
 ### Limit
 
-Restrict the number of rows processed, useful for debugging or sampling data.
+Sets the maximum number of rows to process. Use it to debug or to take a sample of the data.
 
 ```php
 use function Flow\ETL\Adapter\CSV\to_csv;
@@ -186,7 +185,7 @@ df()
 
 ### Mask Columns
 
-Replace column values with a mask string, useful for hiding sensitive information.
+Replaces column values with a mask string. Use it to hide sensitive information.
 
 ```php
 use function Flow\ETL\DSL\{df, from_array, mask_columns, to_output};
@@ -212,7 +211,7 @@ df()
 
 ## Chaining Transformations
 
-Transformations can be chained together to create complex data processing pipelines:
+You can chain Transformations into one pipeline:
 
 ```php ignore
 use function Flow\ETL\Adapter\CSV\from_csv;
@@ -231,8 +230,8 @@ df()
 
 ## Transformations as Branches
 
-`to_transformation()` and `to_branch()` are branches: each becomes its own root of the plan, fed the rows of the node it
-was written at, and planned and bound together with the rest of the frame.
+`to_transformation()` and `to_branch()` are branches. Each branch becomes a separate root of the plan. It gets the
+rows of the node where you wrote it. Flow plans and binds it together with the rest of the frame.
 
 ```php
 use function Flow\ETL\Adapter\CSV\to_csv;
@@ -245,16 +244,16 @@ df()
     ->run();
 ```
 
-A branch filters first; a `to_transformation()` inside it transforms what passed the condition. Branches nest - wherever
-a branch takes a loader, it also takes another branch or a transaction:
+A branch filters first. A `to_transformation()` inside it transforms the rows that passed the condition. Branches can
+be nested. Where a branch takes a loader, it also takes another branch or a transaction:
 
 ```php
 to_branch(ref('active')->equals(lit(true)), to_transformation($sortById, to_csv('active.csv')));
 ```
 
-The `Transformation` runs once per run over the whole stream it is fed, so `limit()` and `add_row_index()` apply across
-the stream, not per batch. A triggering verb (`fetch()`, `count()`, `schema()`, ...) inside it executes the prefix plan,
-as a terminal verb does. `onError()` inside it throws `InvalidLogicException` at `write()` - set the
+The `Transformation` runs one time for each run, over the full stream that it gets. Thus `limit()` and `add_row_index()`
+apply to the full stream, not to each batch. A triggering verb (`fetch()`, `count()`, `schema()`, ...) inside it runs
+the plan before it, as a terminal verb does. `onError()` inside it throws `InvalidLogicException` at `write()`. Set the
 error handler on the outer frame.
 
 ```php
@@ -277,36 +276,37 @@ df()
 
 ### Memory Cost
 
-Correctness is the same everywhere; what differs between operations is how much they hold, and they hold it inside the
-branch. Three groups:
+All operations give the same correct result inside a branch. They differ in how much data they hold, and they hold
+it inside the branch. There are three groups:
 
-| Cost                                   | Operations                                                                                                                            |
-|----------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
-| Grows with the whole stream            | `sortBy()`, `aggregate()`, `groupBy()->aggregate()`, `pivot()`, window functions, `collect()`, `join()`, `repartition()`              |
-| Grows with the number of distinct keys | `dropDuplicates()`, `constrain()` with a `UniqueConstraint`                                                                           |
+| Cost                                   | Operations                                                                                                                             |
+|----------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------|
+| Grows with the whole stream            | `sortBy()`, `aggregate()`, `groupBy()->aggregate()`, `pivot()`, window functions, `collect()`, `join()`, `repartition()`               |
+| Grows with the number of distinct keys | `dropDuplicates()`, `constrain()` with a `UniqueConstraint`                                                                            |
 | Constant                               | `select()`, `withColumn()`, `filter()`, `add_row_index()`, `limit()`, `until()`, `offset()`, `cache($id)`, `batch_size()`, `batchBy()` |
 
-The first group buffers - in memory, or spilled to disk by the external sort - exactly as it does on an outer frame.
-`offset()` and `cache($id)` are in the constant group: `offset()` counts the rows it skips, and `cache($id)` writes each
-batch as it passes. They need the whole stream to answer correctly, not to accumulate it.
+The first group buffers rows in memory, or spills them to disk: `sortBy()` through the external sort, and `join()` through its hash-join buckets. It does this as on an outer frame.
+`offset()` and `cache($id)` are in the constant group. `offset()` counts the rows that it skips. `cache($id)` writes
+each batch as it passes. They need the full stream for a correct result, but they do not keep it.
 
 ### Chunk Shape and Order
 
-`batch_size()`, `batchBy()` and `repartition()` change only which rows are grouped into the `Rows` handed to the branch's
-loader. No row is lost or mis-assigned.
+`batch_size()`, `batchBy()` and `repartition()` change only which rows go into each `Rows` that the loader of the
+branch gets. No row is lost or put in the wrong group.
 
-`repartition()` and `join()` also change the **order** the rows arrive in: both group their output by key rather than
-emitting it in input order. `batchBy()` preserves input order and only cuts the batches at the group boundaries.
+`repartition()` and `join()` also change the order of the rows. Both group their output by key, not in input order.
+`batchBy()` keeps the input order. It only cuts the batches at the group boundaries.
 
-`repartition()` is not constant memory. It buckets the whole stream before it can guarantee that every row sharing a key
-arrives together, so it belongs in the first group above, alongside `sortBy()` and `join()`. Writing one directory per
-key is a separate thing, declared on the loader: `to_csv(...)->partitionBy('region')`.
+`repartition()` does not use constant memory. It puts the full stream into buckets first. Only then are all rows with
+the same key together. Thus it is in the first group above, with `sortBy()` and `join()`. One directory for each key
+is a different thing, which you declare on the loader: `to_csv(...)->partitionBy(partition_by(ref('region')))`.
 
-To re-batch the pipeline itself rather than what reaches the branch's loader, call `$df->batchSize(...)` on the frame.
+To change the batches of the pipeline, and not only the batches that the loader of the branch gets, call
+`$df->batchSize(...)` on the frame.
 
 ### Failure Behaviour
 
-A branch runs under the frame's `->onError(...)` handler, and each failure is offered to it exactly once:
+A branch runs under the `->onError(...)` handler of the frame. The handler gets each failure one time:
 
 ```php
 df()
@@ -316,18 +316,18 @@ df()
     ->run();
 ```
 
-A failing step inside the `Transformation` is a transformation failure - for a blocking operation the skipped batch is
-everything it had buffered. Under the default handler the failure propagates and no loader of the run is closed.
+A failing step inside the `Transformation` is a transformation failure. For a blocking operation, the skipped batch
+is all the rows that it buffered. With the default handler, the failure goes up and no loader of the run is closed.
 
-A loader whose `closure()` fails is never offered to the handler: its own exception surfaces from `run()`.
+If the `closure()` of a loader fails, the handler does not get the failure. The exception comes out of `run()`.
 
-None of this is durability or atomicity: `closure()` both commits and closes, so a destination written up to the point
-of failure can be left behind. For all-or-nothing batches wrap the writes in a transaction -
+This does not make the writes durable or atomic. `closure()` commits and closes, so a destination can keep the data
+written before the failure. For batches that write all or nothing, put the writes in a transaction:
 `to_dbal_transaction()`, `to_pgsql_transaction()`.
 
 ## Creating Custom Transformations
 
-You can create custom transformations by implementing the `Transformation` interface:
+To make a custom transformation, implement the `Transformation` interface:
 
 ```php
 use Flow\ETL\API\{DataFrame, Transformation};
