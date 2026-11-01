@@ -321,13 +321,13 @@ filesystem bundle builds the configured form unless an HTTP client, a factory or
 
 `{part}` is reserved
 
-| Before                                                      | After                                                                                                                                                                 |
-|-------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `interface FileLoader { destination(), saveMode() }`        | `interface FileLoader extends Loader`, `+ inTask(Part $task): static`, `+ commit(string $run, int $tasks): ?FileCommit`                                               |
-| `interface PartitioningLoader { partitionBy() }`            | removed: `FileLoader` takes `partitionBy(Partitioning $partitioning): static` and `partitioning(): Partitioning`                                                      |
-| `{part}` in a destination named a partition column `part`   | `{part}` is the split part: `to_parquet('out/orders-{part}.parquet')` writes `out/orders-00000.parquet` in one process and `out/orders-0000k.parquet` per worker      |
-| `partitionBy('part')` with a `'.../{part}/...'` destination | throws `InvalidArgumentException` when the plan is built: rename the column                                                                                           |
-| SaveMode on a `{part}` destination checked per file         | checked over every existing part (`orders-*.parquet`): `ExceptionIfExists`/`Ignore` see any part, `Overwrite` removes every stale part, `Append` names carry a run id |
+| Before                                                      | After                                                                                                                                                                         |
+|-------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `interface FileLoader { destination(), saveMode() }`        | `interface FileLoader extends Loader`, `+ inTask(Part $task): static`, `+ commit(string $run, int $tasks): ?FileCommit`                                                       |
+| `interface PartitioningLoader { partitionBy() }`            | removed: `FileLoader` takes `partitionBy(Partitioning $partitioning): static` and `partitioning(): Partitioning`                                                              |
+| `{part}` in a destination named a partition column `part`   | `{part}` is the part number: `to_parquet('out/orders-{part}.parquet')` writes `out/orders-00000.parquet` in one process and one part per task when a launcher splits the read |
+| `partitionBy('part')` with a `'.../{part}/...'` destination | throws `InvalidArgumentException` when the plan is built: rename the column                                                                                                   |
+| SaveMode on a `{part}` destination checked per file         | checked over every existing part (`orders-*.parquet`): `ExceptionIfExists`/`Ignore` see any part, `Overwrite` removes every stale part, `Append` names carry a run id         |
 
 ### 20) `flow-php/filesystem` - `NativeLocalFilesystem::mv()` creates the target's parent directory
 
