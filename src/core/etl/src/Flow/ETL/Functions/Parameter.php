@@ -9,6 +9,7 @@ use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Column\Column;
 use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Schema\Definitions;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 use Flow\Types\Type\Native\BooleanType;
@@ -165,6 +166,38 @@ final readonly class Parameter
             : $this->checked($column->values(), type_integer());
 
         return $default === null ? $ints : array_map(static fn(?int $int): int => $int ?? $default, $ints);
+    }
+
+    public function asIntegerColumn(Rows $rows, Backend $backend): Column
+    {
+        $column = $this->function->eval($rows, $backend);
+
+        if (type_bare($column->type()) instanceof IntegerType) {
+            return $column;
+        }
+
+        $builder = $backend->builder(Definitions::of('value', type_integer(), true));
+        $builder->appendMany($this->checked($column->values(), type_integer()));
+
+        return $builder->finish();
+    }
+
+    /**
+     * @throws InvalidArgumentException a column of another type, which Plus, Minus and Multiply refuse when they bind
+     */
+    public function asNumberColumn(Rows $rows, Backend $backend): Column
+    {
+        $column = $this->function->eval($rows, $backend);
+        $type = type_bare($column->type());
+
+        if (!$type instanceof IntegerType && !$type instanceof FloatType) {
+            throw new InvalidArgumentException(sprintf(
+                'Expected an integer or float column, got "%s"',
+                $type->toString(),
+            ));
+        }
+
+        return $column;
     }
 
     /**

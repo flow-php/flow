@@ -55,7 +55,7 @@ final readonly class XMLFileBatches implements FileBatches
     }
 
     /**
-     * @return Generator<int, Rows, mixed, int>
+     * @return Generator<int, Rows, mixed, void>
      */
     public function batches(
         FileRead $read,
@@ -83,8 +83,6 @@ final readonly class XMLFileBatches implements FileBatches
         } finally {
             $stream->close();
         }
-
-        return 0;
     }
 
     public function close(): void {}

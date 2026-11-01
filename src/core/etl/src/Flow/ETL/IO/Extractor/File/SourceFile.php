@@ -10,9 +10,6 @@ use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_optional;
 
-/**
- * The partition values come from the path, so a read knows them without opening the file.
- */
 final readonly class SourceFile
 {
     /**

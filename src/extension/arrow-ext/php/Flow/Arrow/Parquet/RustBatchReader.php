@@ -41,6 +41,16 @@ final class RustBatchReader
     }
 
     /**
+     * The matches the plan's offset skipped: final once next() returned its first batch, or null without one.
+     *
+     * @return int<0, max>
+     */
+    public function skipped(): int
+    {
+        throw new RuntimeException('arrow extension is not loaded');
+    }
+
+    /**
      * The struct schema every batch has, before any batch is read.
      */
     public function schema(): RustArrowSchema

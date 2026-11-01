@@ -173,6 +173,78 @@ final class FilterTranslatorTest extends FlowTestCase
         static::assertSame([], (new FilterTranslator())->translate([$function], BodySchemaMother::everyLeafType()));
     }
 
+    public static function throwingInPhp(): Generator
+    {
+        yield 'a string column against an int literal' => [ref('name')->equals(lit(5))];
+        yield 'an int literal against a string column' => [lit(5)->lessThan(ref('name'))];
+        yield 'an int column against a non-integral float literal' => [ref('id')->greaterThan(lit(5.5))];
+        yield 'a datetime literal against a string column' => [
+            ref('name')->greaterThan(lit(new DateTimeImmutable('2024-01-01 12:00:00'))),
+        ];
+        yield 'a string list element against an int column' => [ref('id')->isIn(lit([1, 'a']))];
+    }
+
+    #[DataProvider('throwingInPhp')]
+    public function test_a_pushed_conjunct_runs_before_the_kept_ones_so_one_that_can_throw_in_php_is_never_translated(ScalarFunction $function): void
+    {
+        static::assertSame([], (new FilterTranslator())->translate([$function], BodySchemaMother::everyLeafType()));
+    }
+
+    public static function inexact(): Generator
+    {
+        yield 'is in holding null' => [ref('id')->isIn(lit([1, null]))];
+        yield 'a negated is in holding null' => [not(ref('id')->isIn(lit([1, null])))];
+        yield 'is in holding null inside an or' => [ref('id')->isIn(lit([1, null]))->or(ref('id')->equals(lit(5)))];
+    }
+
+    #[DataProvider('inexact')]
+    public function test_a_conjunct_whose_filter_keeps_more_rows_is_translated_as_inexact(ScalarFunction $function): void
+    {
+        static::assertFalse((new FilterTranslator())->translate(
+            [$function],
+            BodySchemaMother::everyLeafType(),
+        )[0]->exact);
+    }
+
+    public function test_a_conjunct_without_an_is_in_holding_null_is_translated_as_exact(): void
+    {
+        static::assertTrue((new FilterTranslator())->translate([ref('id')->isIn(lit([
+            1,
+            2,
+        ]))], BodySchemaMother::everyLeafType())[0]->exact);
+    }
+
+    public static function nanSensitive(): Generator
+    {
+        yield 'greater than on a float column' => [ref('price')->greaterThan(lit(2.0)), ['price']];
+        yield 'greater than or equal on a float column' => [ref('price')->greaterThanEqual(lit(2.0)), ['price']];
+        yield 'a literal on the left of less than' => [lit(2.0)->lessThan(ref('price')), ['price']];
+        yield 'a negated greater than' => [not(ref('price')->greaterThan(lit(2.0))), ['price']];
+        yield 'a negated less than' => [not(ref('price')->lessThan(lit(2.0))), []];
+        yield 'between on a float column' => [ref('price')->between(lit(1.0), lit(2.0)), ['price']];
+        yield 'the same column twice' => [
+            ref('price')->greaterThan(lit(2.0))->or(ref('price')->greaterThan(lit(5.0))),
+            ['price'],
+        ];
+        yield 'less than on a float column' => [ref('price')->lessThan(lit(2.0)), []];
+        yield 'equality on a float column' => [ref('price')->equals(lit(2.0)), []];
+        yield 'greater than on an int column' => [ref('id')->greaterThan(lit(2)), []];
+    }
+
+    /**
+     * @param list<string> $columns
+     */
+    #[DataProvider('nanSensitive')]
+    public function test_the_float_columns_ordered_with_greater_than_are_nan_sensitive(
+        ScalarFunction $function,
+        array $columns,
+    ): void {
+        static::assertSame(
+            $columns,
+            (new FilterTranslator())->translate([$function], BodySchemaMother::everyLeafType())[0]->nanSensitiveColumns,
+        );
+    }
+
     public function test_every_conjunct_is_translated_on_its_own(): void
     {
         $translated = (new FilterTranslator())->translate([
@@ -183,10 +255,12 @@ final class FilterTranslatorTest extends FlowTestCase
 
         static::assertEquals(
             [
-                new TranslatedConjunct(parquet_column('id')->greaterThan(1), ['id']),
-                new TranslatedConjunct(
+                0 => new TranslatedConjunct(parquet_column('id')->greaterThan(1), ['id'], true, []),
+                2 => new TranslatedConjunct(
                     parquet_column('name')->equals('b')->or(parquet_column('price')->lessThan(2.0)),
                     ['name', 'price'],
+                    true,
+                    [],
                 ),
             ],
             $translated,

@@ -38,14 +38,14 @@ final class PhpParquetOpenSourceTest extends FlowTestCase
 
         $read = [];
 
-        foreach ((new PhpParquetOpenSource((new Reader(
+        foreach (ParquetFilesContext::rows((new PhpParquetOpenSource((new Reader(
             engine: new PhpParquetEngine(),
         ))->readStream($filesystem->readFrom(path('memory://groups.parquet')))))->batches(
             schema(int_schema('id')),
             3,
             ParquetFilesContext::plan($filesystem, 'memory://groups.parquet', $offset, $limit),
             new PhpBackend(),
-        ) as $rows) {
+        )) as $rows) {
             static::assertLessThanOrEqual(3, $rows->count());
             $read = [...$read, ...$rows->column('id')->values()];
         }
@@ -63,12 +63,12 @@ final class PhpParquetOpenSourceTest extends FlowTestCase
 
         $names = [];
 
-        foreach ($source->batches(
+        foreach (ParquetFilesContext::rows($source->batches(
             schema(str_schema('name')),
             100,
             ParquetFilesContext::plan($filesystem, 'memory://groups.parquet'),
             new PhpBackend(),
-        ) as $rows) {
+        )) as $rows) {
             static::assertEquals(schema(str_schema('name')), $rows->schema());
             $names = [...$names, ...$rows->column('name')->values()];
         }

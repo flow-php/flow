@@ -7,7 +7,13 @@ namespace Flow\ETL\Tests\Unit\Functions;
 use Flow\ETL\Foundation\Exception\EvaluationException;
 use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Values\Column\RustBackend;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
@@ -53,5 +59,51 @@ final class MinusTest extends FlowTestCase
             ['a' => PHP_INT_MIN, 'b' => 1],
             schema(int_schema('a'), int_schema('b')),
         );
+    }
+
+    /**
+     * @return Generator<string, array{array<string, ?int>, string}>
+     */
+    public static function refusals(): Generator
+    {
+        yield 'integer overflow' => [['a' => PHP_INT_MIN, 'b' => 1], 'Minus function integer overflow (row 0)'];
+        yield 'null operand' => [['a' => null, 'b' => 1], 'Minus function requires non-null values (row 0)'];
+    }
+
+    /**
+     * @param array<string, ?int> $row
+     */
+    #[DataProvider('refusals')]
+    public function test_a_refusal_message_in_php_backend(array $row, string $message): void
+    {
+        try {
+            (new FunctionContext(flow_context(config_builder()->backend(new PhpBackend())->build())))->eval(
+                ref('a')->minus(ref('b')),
+                $row,
+                schema(int_schema('a', nullable: true), int_schema('b', nullable: true)),
+            );
+            static::fail('the operands must be refused');
+        } catch (EvaluationException $e) {
+            static::assertSame($message, $e->getMessage());
+        }
+    }
+
+    /**
+     * @param array<string, ?int> $row
+     */
+    #[DataProvider('refusals')]
+    #[RequiresPhpExtension('flow_php')]
+    public function test_a_refusal_message_in_rust_backend(array $row, string $message): void
+    {
+        try {
+            (new FunctionContext(flow_context(config_builder()->backend(new RustBackend())->build())))->eval(
+                ref('a')->minus(ref('b')),
+                $row,
+                schema(int_schema('a', nullable: true), int_schema('b', nullable: true)),
+            );
+            static::fail('the operands must be refused');
+        } catch (EvaluationException $e) {
+            static::assertSame($message, $e->getMessage());
+        }
     }
 }

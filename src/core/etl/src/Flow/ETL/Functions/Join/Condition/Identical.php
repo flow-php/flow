@@ -9,7 +9,7 @@ use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Functions\Join\Condition;
 use Flow\ETL\Functions\Reference\Reference;
 use Flow\ETL\Functions\Reference\UnresolvedReference;
-use Flow\ETL\Kernels\Comparison\ValueEquality;
+use Flow\ETL\Values\Column\ValueEquality;
 use Flow\ETL\Values\Rows;
 use SensitiveParameter;
 

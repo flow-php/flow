@@ -376,7 +376,7 @@ final class PushFilterIntoSourceTest extends FlowTestCase
         static::assertCount(0, $rows);
     }
 
-    public function test_a_partition_conjunct_after_a_kept_one_prunes_the_listing_and_stays_in_its_node(): void
+    public function test_a_partition_conjunct_after_a_kept_one_is_pushed_and_prunes_the_listing(): void
     {
         $filter = (new PushFilterIntoSource())
             ->apply(
@@ -391,17 +391,17 @@ final class PushFilterIntoSourceTest extends FlowTestCase
             ->root->children()[0];
 
         static::assertInstanceOf(Filter::class, $filter);
-        static::assertEquals(new All($value, $year), $filter->function);
+        static::assertSame($value, $filter->function);
         $read = $filter->children()[0];
         static::assertInstanceOf(Read::class, $read);
-        static::assertSame([], $read->criteria()->conjuncts);
+        static::assertSame([$year], $read->criteria()->conjuncts);
         static::assertTrue($read->criteria()->pathFilter->accept(PartitionedSourceMother::file('year=2023/month=07')));
         static::assertFalse($read->criteria()->pathFilter->accept(PartitionedSourceMother::file('year=2024/month=07')));
     }
 
-    public function test_a_partition_filter_above_a_kept_conjunct_prunes_the_listing_and_stays_a_node(): void
+    public function test_a_partition_filter_above_a_kept_conjunct_is_pushed_and_prunes_the_listing(): void
     {
-        $top = (new PushFilterIntoSource())
+        $filter = (new PushFilterIntoSource())
             ->apply(
                 NodeMother::plan(
                     new Filter(
@@ -413,14 +413,11 @@ final class PushFilterIntoSourceTest extends FlowTestCase
             )
             ->root->children()[0];
 
-        static::assertInstanceOf(Filter::class, $top);
-        static::assertSame($year, $top->function);
-        $bottom = $top->children()[0];
-        static::assertInstanceOf(Filter::class, $bottom);
-        static::assertSame($value, $bottom->function);
-        $read = $bottom->children()[0];
+        static::assertInstanceOf(Filter::class, $filter);
+        static::assertSame($value, $filter->function);
+        $read = $filter->children()[0];
         static::assertInstanceOf(Read::class, $read);
-        static::assertSame([], $read->criteria()->conjuncts);
+        static::assertSame([$year], $read->criteria()->conjuncts);
         static::assertFalse($read->criteria()->pathFilter->accept(PartitionedSourceMother::file('year=2024/month=07')));
     }
 
@@ -639,9 +636,9 @@ final class PushFilterIntoSourceTest extends FlowTestCase
         static::assertEquals([$year, $month], $read->criteria()->conjuncts);
     }
 
-    public function test_a_filter_node_that_keeps_a_conjunct_stops_the_push_of_the_filters_above_it(): void
+    public function test_a_filter_above_a_node_that_keeps_a_conjunct_is_pushed(): void
     {
-        $top = (new PushFilterIntoSource())
+        $filter = (new PushFilterIntoSource())
             ->apply(
                 NodeMother::plan(
                     new Filter(
@@ -658,14 +655,11 @@ final class PushFilterIntoSourceTest extends FlowTestCase
             )
             ->root->children()[0];
 
-        static::assertInstanceOf(Filter::class, $top);
-        static::assertSame($month, $top->function);
-        $bottom = $top->children()[0];
-        static::assertInstanceOf(Filter::class, $bottom);
-        static::assertSame($random, $bottom->function);
-        $read = $bottom->children()[0];
+        static::assertInstanceOf(Filter::class, $filter);
+        static::assertSame($random, $filter->function);
+        $read = $filter->children()[0];
         static::assertInstanceOf(Read::class, $read);
-        static::assertSame([$year], $read->criteria()->conjuncts);
+        static::assertSame([$year, $month], $read->criteria()->conjuncts);
     }
 
     public function test_a_filter_node_keeping_two_conjuncts_keeps_them_as_one_all(): void
@@ -717,7 +711,7 @@ final class PushFilterIntoSourceTest extends FlowTestCase
         static::assertNull($extractor->criteria[0]->limit);
     }
 
-    public function test_a_kept_conjunct_keeps_every_conjunct_after_it_in_its_node(): void
+    public function test_the_conjuncts_kept_in_php_stay_in_written_order_and_the_others_are_pushed(): void
     {
         $filter = (new PushFilterIntoSource())
             ->apply(
@@ -725,8 +719,10 @@ final class PushFilterIntoSourceTest extends FlowTestCase
                     new Filter(
                         new Read(PartitionedSourceMother::yearMonth()),
                         ($year = ref('year')->equals(lit(2023)))->and(
-                            $random = ref('value')->equals(random_string(2)),
-                        )->and($month = ref('month')->equals(lit('07'))),
+                            $first = ref('value')->equals(random_string(2)),
+                        )->and($month = ref('month')->equals(lit('07')))->and(
+                            $second = ref('value')->equals(random_string(3)),
+                        ),
                     ),
                 ),
                 config()->backend(),
@@ -734,10 +730,10 @@ final class PushFilterIntoSourceTest extends FlowTestCase
             ->root->children()[0];
 
         static::assertInstanceOf(Filter::class, $filter);
-        static::assertEquals(new All($random, $month), $filter->function);
+        static::assertEquals(new All($first, $second), $filter->function);
         $read = $filter->children()[0];
         static::assertInstanceOf(Read::class, $read);
-        static::assertSame([$year], $read->criteria()->conjuncts);
+        static::assertSame([$year, $month], $read->criteria()->conjuncts);
     }
 
     /**

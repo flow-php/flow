@@ -15,7 +15,10 @@ use Flow\Types\Type;
 use Flow\Types\Type\Nullability;
 use SensitiveParameter;
 
+use function array_diff_key;
+use function array_flip;
 use function array_key_exists;
+use function array_keys;
 use function array_map;
 use function array_values;
 use function Flow\Types\DSL\type_boolean;
@@ -118,30 +121,19 @@ final readonly class All implements ScalarFunction
                 break;
             }
 
-            $column = (new Selection($undecided))->evaluate($function, $rows, $backend);
-            $next = [];
+            $truths = (new Selection($undecided))->truths($function, $rows, $backend);
 
-            // @mago-ignore analysis:mixed-assignment
-            foreach ($column->values() as $k => $value) {
-                $i = $undecided[$k];
-
-                if ($value === null) {
-                    $sawNull[$i] = true;
-                    $next[] = $i;
-
-                    continue;
-                }
-
-                if (!$value) {
-                    $results[$i] = false;
-
-                    continue;
-                }
-
-                $next[] = $i;
+            foreach (array_keys($truths, null, true) as $k) {
+                $sawNull[$undecided[$k]] = true;
             }
 
-            $undecided = $next;
+            $decided = array_keys($truths, false, true);
+
+            foreach ($decided as $k) {
+                $results[$undecided[$k]] = false;
+            }
+
+            $undecided = $decided === [] ? $undecided : array_values(array_diff_key($undecided, array_flip($decided)));
         }
 
         foreach ($undecided as $i) {

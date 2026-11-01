@@ -21,9 +21,6 @@ use function min;
 
 use const PHP_INT_MAX;
 
-/**
- * A byte window of one file, read through Extractor::extract() with Criteria::withSplit().
- */
 final readonly class FileSplit implements Describable, Split
 {
     /**
@@ -75,9 +72,6 @@ final readonly class FileSplit implements Describable, Split
     }
 
     /**
-     * ceil(size / $targetBytes) windows over $file, the last one shorter; one whole-file split when its size is unknown
-     * or 0.
-     *
      * @param int<1, max> $targetBytes
      *
      * @return non-empty-list<self>
@@ -98,8 +92,6 @@ final readonly class FileSplit implements Describable, Split
     }
 
     /**
-     * A unit belongs to the split holding its midpoint; a split without a length owns them all.
-     *
      * @param iterable<ByteUnit> $units
      */
     public function owns(iterable $units): RowRange
@@ -142,12 +134,6 @@ final readonly class FileSplit implements Describable, Split
     }
 
     /**
-     * Only the window at the start of the file sees a header, a BOM or any other preamble.
-     */
-    /**
-     * The window [first ? 0 : $start ?? $end, $end ?? size) over $stream; $start and $end are the resynced record
-     * boundaries at or after this split's start and end, null when no record starts there.
-     *
      * @param null|int<0, max> $start
      * @param null|int<0, max> $end
      */

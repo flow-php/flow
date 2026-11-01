@@ -11,7 +11,7 @@ use ext_php_rs::convert::IntoZval;
 use ext_php_rs::error::Result as ZvalResult;
 use ext_php_rs::flags::{ClassFlags, DataType};
 use ext_php_rs::prelude::*;
-use ext_php_rs::types::{ZendClassObject, ZendHashTable, Zval};
+use ext_php_rs::types::{ZendClassObject, ZendHashTable, ZendObject, Zval};
 use ext_php_rs::zend::ce;
 use parquet::arrow::ArrowSchemaConverter;
 use parquet::basic::Type as PhysicalType;
@@ -34,8 +34,8 @@ use crate::parquet::sink::PhpSink;
 use crate::parquet::source::{PhpSource, PhpStream};
 use crate::parquet::write::ParquetWriter;
 use crate::php::{
-    call_method, expect_object, for_each_value, ht_for_each, ht_get, ht_insert, ht_insert_long, read_property,
-    zval_array, zval_long, zval_str, IterableArg,
+    call_handle, call_method, ce_method_ref, expect_object, find_class, for_each_value, ht_for_each, ht_get, ht_insert,
+    ht_insert_long, read_property, zval_array, zval_long, zval_str, IterableArg,
 };
 use crate::render::{exception, parquet_exception, Side};
 use crate::thrift;
@@ -44,6 +44,7 @@ const FILE_META_DATA: &str = "Flow\\Parquet\\ThriftModel\\FileMetaData";
 /// `FileMetaData::$schema`'s field id.
 const SCHEMA: i16 = 2;
 const RUNTIME: &str = "Flow\\Parquet\\Exception\\RuntimeException";
+const SKIPPED_MATCHES: &str = "Flow\\Parquet\\Reader\\SkippedMatches";
 pub const INVALID_ARGUMENT: &str = "Flow\\Parquet\\Exception\\InvalidArgumentException";
 
 fn closed() -> PhpException {
@@ -137,9 +138,16 @@ fn converted_plan(meta: &ParquetMetaData, converted: &Zval) -> Result<ReadPlan, 
         ),
         None => return Err(malformed("no 'limit'")),
     };
+    let offset = ht_get(converted, b"offset")
+        .and_then(Zval::long)
+        .and_then(|offset| usize::try_from(offset).ok())
+        .ok_or_else(|| malformed("'offset' is not an int of 0 or more"))?;
     let filter = ht_get(converted, b"filter").map(raw).transpose()?;
 
-    ReadPlan::from_selection(meta, planned, filter, limit)
+    Ok(ReadPlan {
+        offset,
+        ..ReadPlan::from_selection(meta, planned, filter, limit)?
+    })
 }
 
 /// A converter array as data: a map keyed by its keys' bytes when a key is a string, else a list of its values.
@@ -578,6 +586,9 @@ pub struct RustColumnsReader {
     columns: Vec<(Vec<u8>, ReadCell)>,
     times: Option<Times>,
     current: Option<Zval>,
+    /// The chunk read to learn the count of the `SkippedMatches` yielded before it.
+    queued: Option<Zval>,
+    skip_pending: bool,
     /// The index of `current`.
     key: i64,
     started: bool,
@@ -612,15 +623,26 @@ impl RustColumnsReader {
 
     /// At most `$batchSize` rows as lists keyed by column, `None` after the last.
     fn fetch(&mut self) -> PhpResult<Option<Zval>> {
+        if let Some(chunk) = self.queued.take() {
+            return Ok(Some(chunk));
+        }
+
         let Some(reader) = self.reader.as_mut() else {
             return Ok(None);
         };
 
-        let arrays: Vec<ArrayRef> = match reader.next() {
+        let batch = reader.next();
+        let skipped = reader.skipped();
+
+        let arrays: Vec<ArrayRef> = match batch {
             None => {
                 self.reader = None;
 
-                return Ok(None);
+                return if std::mem::take(&mut self.skip_pending) {
+                    skipped_matches(skipped).map(Some)
+                } else {
+                    Ok(None)
+                };
             }
             Some(batch) => {
                 batch
@@ -633,6 +655,12 @@ impl RustColumnsReader {
 
         for ((name, cell), array) in self.columns.iter().zip(&arrays) {
             ht_insert(&mut chunk, name, cell.values(array, self.times.as_ref())?);
+        }
+
+        if std::mem::take(&mut self.skip_pending) {
+            self.queued = Some(zval_array(chunk));
+
+            return skipped_matches(skipped).map(Some);
         }
 
         Ok(Some(zval_array(chunk)))
@@ -652,6 +680,7 @@ impl RustColumnsReader {
         let (stream, meta) = file.read()?;
         let stream = Arc::clone(stream);
         let plan = read_plan(meta, plan, &stream)?;
+        let skip_pending = plan.offset > 0;
         let refused = |error| parquet_exception(error, &stream, Side::Read);
         let mut names = Vec::with_capacity(columns.len());
 
@@ -690,6 +719,8 @@ impl RustColumnsReader {
             columns: names.into_iter().map(String::into_bytes).zip(cells).collect(),
             times,
             current: None,
+            queued: None,
+            skip_pending,
             key: 0,
             started: false,
             advanced: false,
@@ -735,6 +766,22 @@ impl RustColumnsReader {
         self.key += 1;
         self.pull()
     }
+}
+
+fn skipped_matches(count: usize) -> PhpResult<Zval> {
+    let ce = find_class(SKIPPED_MATCHES)?;
+    let mut marker = ZendObject::new(ce);
+    call_handle(
+        ce_method_ref(ce, "__construct")?,
+        Some(&mut marker),
+        &mut [zval_long(i64::try_from(count).unwrap_or(i64::MAX))],
+        "construct SkippedMatches",
+    )?;
+
+    let mut zv = Zval::new();
+    zv.set_object(&mut marker);
+
+    Ok(zv)
 }
 
 /// `Compressions::$name` as the Arrow codec name.

@@ -169,6 +169,20 @@ final class CastingColumnBuilderTest extends TestCase
         static::assertSame(0, $builder->count());
     }
 
+    public function test_append_physicals_names_the_first_refused_physical_after_accepted_ones(): void
+    {
+        $builder = (new PhpBackend())->builder(int_schema('id', nullable: true));
+
+        try {
+            $builder->appendPhysicals([1, null, 2.5, '3']);
+            static::fail('a physical of another kind must be refused');
+        } catch (InvalidArgumentException $e) {
+            static::assertSame('Cannot store a float physical in a integer column', $e->getMessage());
+        }
+
+        static::assertSame(0, $builder->count());
+    }
+
     public function test_append_physicals_stores_any_physical_of_a_null_column_as_null(): void
     {
         $builder = (new PhpBackend())->builder(null_schema('c'));

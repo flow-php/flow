@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Tests\Unit\Kernels\Comparison;
+namespace Flow\ETL\Tests\Unit\Values\Column;
 
 use DateInterval;
 use DateTimeImmutable;
 use Flow\ETL\Foundation\Exception\EvaluationException;
-use Flow\ETL\Kernels\Comparison\ValueEquality;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Values\Column\ValueEquality;
 
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\datetime_schema;

@@ -1,0 +1,14 @@
+[package]
+name = "flow-column-kernels"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+
+[dependencies]
+arrow-array.workspace = true
+arrow-buffer.workspace = true
+arrow-arith = "59"
+arrow-ord = "59"
+arrow-schema.workspace = true

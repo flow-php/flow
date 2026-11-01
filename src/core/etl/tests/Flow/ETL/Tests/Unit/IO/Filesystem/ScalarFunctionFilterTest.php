@@ -20,12 +20,30 @@ use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\path;
 use function iterator_to_array;
 use function sort;
 
 final class ScalarFunctionFilterTest extends FlowTestCase
 {
+    public function test_a_declared_partition_the_path_lacks_is_evaluated_as_null_as_the_rows_get_it(): void
+    {
+        $partitions = schema(str_schema('year', nullable: true));
+        $file = new FileStatus(path('memory://part/a.parquet'), true);
+
+        static::assertTrue((new ScalarFunctionFilter(
+            ref('year')->isNull(),
+            $partitions,
+            flow_context()->backend(),
+        ))->accept($file));
+        static::assertFalse((new ScalarFunctionFilter(
+            ref('year')->equals(lit('2023')),
+            $partitions,
+            flow_context()->backend(),
+        ))->accept($file));
+    }
+
     public function test_a_listing_keeps_the_files_of_every_partition_the_function_accepts(): void
     {
         $statuses = iterator_to_array(

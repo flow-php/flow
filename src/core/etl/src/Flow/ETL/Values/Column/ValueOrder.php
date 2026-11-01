@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Kernels\Comparison;
+namespace Flow\ETL\Values\Column;
 
 use DateInterval;
 use DateTimeImmutable;

@@ -35,7 +35,7 @@ final readonly class TextFileBatches implements FileBatches
     /**
      * The lines into the "text" column; any other column $body declares is padded as matchTo() pads it.
      *
-     * @return Generator<int, Rows, mixed, int>
+     * @return Generator<int, Rows, mixed, void>
      */
     public function batches(
         FileRead $read,
@@ -67,8 +67,6 @@ final readonly class TextFileBatches implements FileBatches
         } finally {
             $stream->close();
         }
-
-        return 0;
     }
 
     /**

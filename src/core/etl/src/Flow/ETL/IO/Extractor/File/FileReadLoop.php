@@ -30,28 +30,42 @@ final readonly class FileReadLoop
         $conjuncts = $this->criteria->conjuncts;
         $body = $this->read->fileColumns->withoutTail($schema);
         $filter = Filter::bind($schema, ...$conjuncts);
-        // a format skips by its own counts, which hold only while no conjunct drops a row
-        $skips = $batches instanceof OffsetSkippingFileBatches && $conjuncts === [];
-        $offset = $skips ? $window->offset : 0;
-        $skipping = new ReadWindow($skips ? 0 : $window->offset);
+        $skipping = new ReadWindow($window->offset);
         $skipped = 0;
         $yielded = 0;
 
         foreach ($sources as $source) {
             $constants = $this->read->fileColumns->forFile($source, $schema);
-            // a limit counts the rows the filter keeps, which a format would count before it
-            $wanted = $window->limit === null || $conjuncts !== [] ? null : $window->limit - $yielded;
+            $wanted = $window->limit === null ? null : $window->limit - $yielded;
             $file = $batches->batches(
                 $this->read,
                 $this->criteria,
                 $source,
                 $body,
                 $backend,
-                // a format that cannot skip has to produce the offset it leaves to the loop before the rows wanted
-                new ReadWindow($offset, $wanted === null ? null : $wanted + $skipping->offset - $skipped),
+                $batches instanceof OffsetSkippingFileBatches
+                    ? new ReadWindow($window->offset - $skipped, $wanted)
+                    // a format that cannot skip counts rows before the conjuncts drop them, and the offset with them
+                    : new ReadWindow(
+                        0,
+                        $wanted === null || $conjuncts !== [] ? null : $wanted + $window->offset - $skipped,
+                    ),
             );
+            $fileFilter = $filter;
 
             foreach ($file as $batch) {
+                if ($batch instanceof SkippedRows) {
+                    $skipped += $batch->count;
+
+                    continue;
+                }
+
+                if ($batch instanceof Filter) {
+                    $fileFilter = $batch;
+
+                    continue;
+                }
+
                 // a corrupted record is no row: it passes through, outside the filter and the window
                 if ($batch instanceof CorruptedRecordException) {
                     $signal = yield $batch;
@@ -63,7 +77,7 @@ final readonly class FileReadLoop
                     continue;
                 }
 
-                $filtered = $filter->filter($constants->fillRows($batch, $schema, $backend), $backend);
+                $filtered = $fileFilter->filter($constants->fillRows($batch, $schema, $backend), $backend);
                 $rows = $skipping->skip($filtered, $skipped);
                 $skipped += $filtered->count() - $rows->count();
 
@@ -83,8 +97,6 @@ final readonly class FileReadLoop
                     return;
                 }
             }
-
-            $offset -= $file->getReturn();
         }
     }
 }

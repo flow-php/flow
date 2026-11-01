@@ -10,6 +10,7 @@ use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile;
 use Flow\Parquet\ParquetFileReader;
 use Flow\Parquet\Reader\ReadPlan;
+use Iterator;
 
 use function array_keys;
 
@@ -43,7 +44,10 @@ final class FilePlan
     {
         $rows = [];
 
-        foreach ($file->reader()->readColumns($columns, 1024, $plan) as $chunk) {
+        /** @var Iterator<int, array<string, list<mixed>>> $chunks */
+        $chunks = $file->reader()->readColumns($columns, 1024, $plan);
+
+        foreach ($chunks as $chunk) {
             foreach (array_keys($chunk[$columns[0]]) as $index) {
                 $row = [];
 

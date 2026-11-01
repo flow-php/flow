@@ -14,13 +14,17 @@ use Flow\ETL\Functions\ReferenceResolver;
 use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Values\Column\RustBackend;
 use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Type;
 use Flow\Types\Type\Comparison\Operator;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\Attributes\TestWith;
 
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\definition_from_type;
@@ -100,6 +104,41 @@ final class ComparisonTest extends FlowTestCase
             ['a' => 'x'],
             schema(str_schema('a')),
         );
+    }
+
+    public function test_a_cast_error_message_in_php_backend(): void
+    {
+        try {
+            (new FunctionContext(flow_context(config_builder()->backend(new PhpBackend())->build())))->eval(
+                ref('a')->equals(lit(1)),
+                ['a' => 'x'],
+                schema(str_schema('a')),
+            );
+            static::fail('a value that does not cast must be refused');
+        } catch (EvaluationException $e) {
+            static::assertSame(
+                "Column \"a\" value 'x' cannot be cast to integer to compare: \"x\" is not a number (row 0)",
+                $e->getMessage(),
+            );
+        }
+    }
+
+    #[RequiresPhpExtension('flow_php')]
+    public function test_a_cast_error_message_in_rust_backend(): void
+    {
+        try {
+            (new FunctionContext(flow_context(config_builder()->backend(new RustBackend())->build())))->eval(
+                ref('a')->equals(lit(1)),
+                ['a' => 'x'],
+                schema(str_schema('a')),
+            );
+            static::fail('a value that does not cast must be refused');
+        } catch (EvaluationException $e) {
+            static::assertSame(
+                "Column \"a\" value 'x' cannot be cast to integer to compare: \"x\" is not a number (row 0)",
+                $e->getMessage(),
+            );
+        }
     }
 
     public function test_negations_keep_null_unknown_and_identity_defined(): void

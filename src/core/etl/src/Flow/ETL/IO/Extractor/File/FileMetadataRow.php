@@ -22,8 +22,7 @@ final readonly class FileMetadataRow implements ListedFileRow
             'base_name' => $status->path->basename(),
             'is_file' => $status->isFile(),
             'is_dir' => $status->isDirectory(),
-            // Path::extension() answers false for an extensionless file; the column is one
-            // type, so the absence is spelled null rather than a boolean in a string column.
+            // Path::extension() answers false for an extensionless file, and a string column holds no boolean
             'extension' => $extension === false ? null : $extension,
         ];
     }

@@ -20,6 +20,7 @@ bytes = "1"
 ext-php-rs = "0.16"
 flow-arrow-c = { path = "crates/flow-arrow-c" }
 flow-batch-frame = { path = "crates/flow-batch-frame" }
+flow-column-kernels = { path = "crates/flow-column-kernels" }
 flow-column-text = { path = "crates/flow-column-text" }
 flow-csv-tokenizer = { path = "crates/flow-csv-tokenizer" }
 flow-json-records = { path = "crates/flow-json-records" }

@@ -20,6 +20,7 @@ use Flow\Parquet\Reader\ColumnChunkViewer;
 use Flow\Parquet\Reader\FilteredBatches;
 use Flow\Parquet\Reader\ReadPlan;
 use Generator;
+use Iterator;
 
 use function array_keys;
 use function array_map;
@@ -150,7 +151,11 @@ final class ParquetFile
         );
 
         if ($filter === null) {
-            yield from $this->reader->readColumns($columns, $batchSize, $plan);
+            // a plan without a matched-row offset makes the reader yield chunks only
+            /** @var Iterator<int, array<string, list<mixed>>> $chunks */
+            $chunks = $this->reader->readColumns($columns, $batchSize, $plan);
+
+            yield from $chunks;
 
             return;
         }
@@ -164,7 +169,10 @@ final class ParquetFile
             $batchSize,
         );
 
-        yield from $filtered->filter($this->reader->readColumns($filtered->columns(), $batchSize, $plan));
+        /** @var Iterator<int, array<string, list<mixed>>> $chunks */
+        $chunks = $this->reader->readColumns($filtered->columns(), $batchSize, $plan);
+
+        yield from $filtered->filter($chunks);
     }
 
     /**

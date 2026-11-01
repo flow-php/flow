@@ -58,7 +58,6 @@ final class CSVFileBatchesTest extends FlowTestCase
                 iterator_to_array($file, false),
             ),
         );
-        static::assertSame(0, $file->getReturn());
     }
 
     public function test_a_file_whose_header_diverges_is_refused_before_a_row_is_read(): void

@@ -38,9 +38,6 @@ final class SourceFiles
     ) {}
 
     /**
-     * The split's path, listed, when $criteria has a split; otherwise the source's files, listed once until refresh(),
-     * that $criteria's path filter admits.
-     *
      * @return list<FileStatus>
      */
     public function statuses(Criteria $criteria = new Criteria()): array
@@ -76,10 +73,6 @@ final class SourceFiles
     }
 
     /**
-     * The files a scan reads: a sized split names its file without listing; an unsized split lists its own path (a
-     * split over the source itself, an empty listing cut into one split, still admits nothing); no split reads what
-     * the path filter admits.
-     *
      * @return list<SourceFile>
      */
     public function of(Criteria $criteria): array
@@ -98,8 +91,6 @@ final class SourceFiles
     }
 
     /**
-     * Partition name => nullable. A partition name some listed path lacks, or holds no value for, is nullable.
-     *
      * @return array<string, bool>
      */
     public function partitionNames(): array
@@ -141,10 +132,7 @@ final class SourceFiles
         return count($this->statuses());
     }
 
-    /**
-     * Unknown when any listed file reports no size. NativeLocalFilesystem::statFor() is `filesize($p) ?: null`, so it
-     * reports a zero-byte file as null.
-     */
+    // NativeLocalFilesystem::statFor() is `filesize($p) ?: null`, so a zero-byte file reports no size
     public function bytes(): Cardinality
     {
         $total = 0;
@@ -161,9 +149,6 @@ final class SourceFiles
     }
 
     /**
-     * One split per admitted file, in listing order, each covering the whole file. An empty listing gets one split
-     * over the path itself, which reads nothing.
-     *
      * @return non-empty-list<FileSplit>
      */
     public function perFile(Filter $pathFilter = new OnlyFiles()): array
@@ -178,9 +163,6 @@ final class SourceFiles
     }
 
     /**
-     * FileSplit::windows() over every admitted file, in listing order. An empty listing is one split over the path
-     * itself, which reads nothing.
-     *
      * @param int<1, max> $targetSplitBytes
      *
      * @return non-empty-list<FileSplit>

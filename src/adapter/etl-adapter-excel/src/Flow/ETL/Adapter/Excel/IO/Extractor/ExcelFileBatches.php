@@ -71,7 +71,7 @@ final readonly class ExcelFileBatches implements FileBatches
      *
      * @throws InferredSchemaException
      *
-     * @return Generator<int, CorruptedRecordException|Rows, mixed, int>
+     * @return Generator<int, CorruptedRecordException|Rows, mixed, void>
      */
     public function batches(
         FileRead $read,
@@ -128,8 +128,6 @@ final readonly class ExcelFileBatches implements FileBatches
         } finally {
             $sheet->close();
         }
-
-        return 0;
     }
 
     /**

@@ -6,6 +6,7 @@ namespace Flow\Arrow\Parquet;
 
 use Flow\Parquet\Engine\RustParquetFileReader;
 use Flow\Parquet\Reader\ReadPlan;
+use Flow\Parquet\Reader\SkippedMatches;
 use Iterator;
 use RuntimeException;
 
@@ -18,7 +19,7 @@ if (extension_loaded('arrow')) {
 /**
  * Streams once: rewind() after next() throws \Flow\Parquet\Exception\RuntimeException('RustColumnsReader cannot rewind').
  *
- * @implements Iterator<int, array<string, non-empty-list<mixed>>>
+ * @implements Iterator<int, array<string, non-empty-list<mixed>>|SkippedMatches>
  */
 final class RustColumnsReader implements Iterator
 {
@@ -32,11 +33,11 @@ final class RustColumnsReader implements Iterator
     }
 
     /**
-     * At most $batchSize rows, keyed by $columns.
+     * At most $batchSize rows, keyed by $columns; a plan with an offset yields one SkippedMatches first, or alone.
      *
-     * @return null|array<string, non-empty-list<mixed>>
+     * @return null|array<string, non-empty-list<mixed>>|SkippedMatches
      */
-    public function current(): ?array
+    public function current(): array|SkippedMatches|null
     {
         throw new RuntimeException('arrow extension is not loaded');
     }

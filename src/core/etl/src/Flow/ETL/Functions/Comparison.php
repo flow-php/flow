@@ -7,13 +7,9 @@ namespace Flow\ETL\Functions;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
-use Flow\ETL\Functions\Evaluation\ResultColumn;
 use Flow\ETL\Functions\Reference\Reference;
-use Flow\ETL\Kernels\Comparison\ValueEquality;
-use Flow\ETL\Kernels\Comparison\ValueOrder;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Column\Column;
-use Flow\ETL\Values\Column\ComparableValues;
 use Flow\ETL\Values\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Comparison\Operator;
@@ -22,7 +18,6 @@ use Flow\Types\Type\ValueComparator;
 use SensitiveParameter;
 
 use function constant;
-use function Flow\Types\DSL\type_bare;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_enum;
 use function Flow\Types\DSL\type_string;
@@ -124,67 +119,17 @@ final class Comparison implements ComparisonFunction
 
     public function eval(Rows $rows, Backend $backend): Column
     {
-        $left = $this->left->eval($rows, $backend);
-        $right = $this->right->eval($rows, $backend);
-        $order = new ValueOrder($left->type(), $right->type());
-        $results = match ($this->operator) {
-            Operator::EQUAL, Operator::NOT_EQUAL => (new ValueEquality())->equal(
-                $left,
-                $right,
-                $this->left instanceof Reference ? $this->left->to() : 'left',
-                $this->right instanceof Reference ? $this->right->to() : 'right',
-            ),
-            Operator::IDENTICAL, Operator::NOT_IDENTICAL => (new ValueEquality())->identical($left, $right),
-            Operator::GREATER_THAN => $order->lessThan(...$this->ordering($right, $left)),
-            Operator::GREATER_THAN_EQUAL => $order->lessThanOrEqual(...$this->ordering($right, $left)),
-            Operator::LESS_THAN => $order->lessThan(...$this->ordering($left, $right)),
-            Operator::LESS_THAN_EQUAL => $order->lessThanOrEqual(...$this->ordering($left, $right)),
-            Operator::DIFFERENT, Operator::SPACE_SHIP => throw new InvalidArgumentException(
-                'Comparison was built with an unsupported operator',
-            ),
-        };
-
-        return (new ResultColumn($backend))->booleans(
-            $this->operator === Operator::NOT_EQUAL || $this->operator === Operator::NOT_IDENTICAL
-                ? $this->negated($results)
-                : $results,
+        return $backend->compare(
+            $this->left->eval($rows, $backend),
+            $this->operator,
+            $this->right->eval($rows, $backend),
+            $this->left instanceof Reference ? $this->left->to() : 'left',
+            $this->right instanceof Reference ? $this->right->to() : 'right',
         );
     }
 
     private function identity(): bool
     {
         return $this->operator === Operator::IDENTICAL || $this->operator === Operator::NOT_IDENTICAL;
-    }
-
-    /**
-     * @param list<?bool> $results
-     *
-     * @return list<?bool>
-     */
-    private function negated(array $results): array
-    {
-        $negated = [];
-
-        foreach ($results as $result) {
-            $negated[] = $result === null ? null : !$result;
-        }
-
-        return $negated;
-    }
-
-    /**
-     * Columns of one type order by their comparable form, mixed types by their values.
-     *
-     * @return array{list<mixed>, list<mixed>}
-     */
-    private function ordering(Column $first, Column $second): array
-    {
-        $comparable = new ComparableValues();
-
-        return (
-            type_bare($first->type())::class === type_bare($second->type())::class
-                ? [$comparable->ordering($first), $comparable->ordering($second)]
-                : [$first->values(), $second->values()]
-        );
     }
 }

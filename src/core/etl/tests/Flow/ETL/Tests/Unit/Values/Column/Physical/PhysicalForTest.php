@@ -323,6 +323,51 @@ final class PhysicalForTest extends TestCase
         yield 'map values checked' => [type_map(type_string(), type_integer()), ['a' => 'b'], false];
         yield 'structure element checked' => [type_structure(['a' => type_integer()]), ['a' => 'x'], false];
         yield 'structure element absent' => [type_structure(['a' => type_integer()]), [], true];
+        yield 'int in a boolean column' => [type_boolean(), 1, false];
+        yield 'string in a string column' => [type_string(), 'a', true];
+        yield 'int in a string column' => [type_string(), 1, false];
+        yield 'date days' => [type_date(), 19_000, true];
+        yield 'time micros' => [type_time(), 3_600_000_000, true];
+        yield 'array in an array column' => [type_array(), ['a' => 1], true];
+        yield 'string in an array column' => [type_array(), 'a', false];
+        yield 'map of ints' => [type_map(type_string(), type_integer()), ['a' => 1], true];
+    }
+
+    /**
+     * @return Generator<string, array{Type<mixed>, list<mixed>, bool}>
+     */
+    public static function batchesOfPhysicals(): Generator
+    {
+        yield 'every physical of the kind' => [type_boolean(), [true, null, false], true];
+        yield 'one refused physical after accepted ones' => [type_integer(), [1, 2, '3'], false];
+        yield 'only nulls' => [type_string(), [null, null], true];
+        yield 'nothing' => [type_integer(), [], true];
+        yield 'uuid of a wrong length after a valid one' => [type_uuid(), [str_repeat("\0", 16), 'short'], false];
+        yield 'list with a wrong element in a later row' => [type_list(type_integer()), [[1], [2, '3']], false];
+        yield 'map with a wrong value in a later row' => [
+            type_map(type_string(), type_integer()),
+            [['a' => 1], ['b' => 'x']],
+            false,
+        ];
+        yield 'structure with a wrong element in a later row' => [
+            type_structure(['a' => type_integer()]),
+            [['a' => 1], ['a' => 'x']],
+            false,
+        ];
+        yield 'anything in a null column' => [type_null(), [1, 'x'], true];
+    }
+
+    /**
+     * @param Type<mixed> $type
+     * @param list<mixed> $physicals
+     */
+    #[DataProvider('batchesOfPhysicals')]
+    public function test_accepts_all_only_when_every_physical_is_of_the_kind(
+        Type $type,
+        array $physicals,
+        bool $accepts,
+    ): void {
+        static::assertSame($accepts, (new PhysicalFor())->acceptsAll($type, $physicals));
     }
 
     /**

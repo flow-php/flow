@@ -1,6 +1,7 @@
 //! Decodes only the row groups and byte ranges a read plan selects.
 
 use std::ops::Range;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
 use arrow_array::cast::AsArray;
@@ -8,7 +9,8 @@ use arrow_array::{make_array, Array, ArrayRef};
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field, FieldRef, Fields, Schema, SchemaRef, TimeUnit};
 use parquet::arrow::arrow_reader::{
-    ArrowPredicate, ArrowReaderMetadata, ArrowReaderOptions, RowFilter, RowSelection, RowSelector,
+    ArrowPredicate, ArrowReaderMetadata, ArrowReaderOptions, ParquetRecordBatchReader, RowFilter, RowSelection,
+    RowSelector,
 };
 use parquet::arrow::push_decoder::{ParquetPushDecoder, ParquetPushDecoderBuilder, RowGroupSelection};
 use parquet::arrow::ProjectionMask;
@@ -31,6 +33,8 @@ pub struct ReadPlan {
     pub selections: Vec<RowGroupSelection>,
     pub filter: Option<Raw>,
     pub limit: Option<usize>,
+    /// The matches skipped before any row is returned.
+    pub offset: usize,
 }
 
 impl ReadPlan {
@@ -100,6 +104,7 @@ impl ReadPlan {
             selections,
             filter,
             limit,
+            offset: 0,
         })
     }
 
@@ -149,6 +154,9 @@ impl Projected {
 
 pub struct ParquetReader {
     decoder: ParquetPushDecoder,
+    group: Option<ParquetRecordBatchReader>,
+    offset: usize,
+    matched: Arc<AtomicUsize>,
     source: Arc<dyn ReadAt + Send + Sync>,
     /// Each column's field as the file stores it, named as it was asked for.
     fields: Vec<FieldRef>,
@@ -189,10 +197,16 @@ impl ParquetReader {
             .collect::<Result<Vec<_>, _>>()?;
 
         let descr = meta.file_metadata().schema_descr();
-        let predicates = match &plan.filter {
+        let matched = Arc::new(AtomicUsize::new(0));
+        let mut predicates = match &plan.filter {
             Some(filter) => PlanPredicate::conjuncts(filter, &schema, descr)?,
             None => Vec::new(),
         };
+
+        if let Some(last) = predicates.pop() {
+            predicates.push(last.counting(Arc::clone(&matched)));
+        }
+
         let predicated = predicates
             .iter()
             .flat_map(|predicate| predicate.leaves().iter().copied())
@@ -228,16 +242,28 @@ impl ParquetReader {
             builder = builder.with_limit(limit);
         }
 
+        if plan.offset > 0 {
+            builder = builder.with_offset(plan.offset);
+        }
+
         let decoder = builder.build()?;
         let positions = positions(&schema, &projected)?;
 
         Ok(Self {
             decoder,
+            group: None,
+            offset: plan.offset,
+            matched,
             source,
             fields,
             types,
             positions,
         })
+    }
+
+    /// The matches the plan's offset skipped so far: final once the first batch is out, or the reader ended without one.
+    pub fn skipped(&self) -> usize {
+        self.offset.min(self.matched.load(Ordering::Relaxed))
     }
 
     /// The canonical type each of `fields()` is read as.
@@ -251,15 +277,25 @@ impl ParquetReader {
 
     pub fn next(&mut self) -> Option<Result<(usize, Vec<ArrayRef>), Error>> {
         let batch = loop {
-            match self.decoder.try_decode() {
+            match self.group.as_mut().and_then(Iterator::next) {
+                Some(Ok(batch)) => break batch,
+                Some(Err(error)) => return Some(Err(error.into())),
+                None => {}
+            }
+
+            match self.decoder.try_next_reader() {
                 Ok(DecodeResult::NeedsData(ranges)) => {
-                    if let Err(error) = read_ranges(self.source.as_ref(), ranges)
+                    if let Err(error) = read_coalesced(self.source.as_ref(), ranges)
                         .and_then(|(ranges, bytes)| Ok(self.decoder.push_ranges(ranges, bytes)?))
                     {
                         return Some(Err(error));
                     }
                 }
-                Ok(DecodeResult::Data(batch)) => break batch,
+                Ok(DecodeResult::Data(reader)) => {
+                    // pushed reads are coalesced, which PushBuffers never releases on its own
+                    self.decoder.clear_all_ranges();
+                    self.group = Some(reader);
+                }
                 Ok(DecodeResult::Finished) => return None,
                 Err(error) => return Some(Err(error.into())),
             }
@@ -276,8 +312,17 @@ impl ParquetReader {
     }
 }
 
-/// The bytes of `ranges`, read adjacent runs at a time and handed back per range asked: the decoder releases a pushed
-/// buffer only when its range is one it asked for.
+fn read_coalesced(source: &dyn ReadAt, ranges: Vec<Range<u64>>) -> Result<(Vec<Range<u64>>, Vec<bytes::Bytes>), Error> {
+    let reads = coalesced(ranges);
+    let bytes = reads
+        .iter()
+        .map(|read| Ok(exact(source, read.start, (read.end - read.start) as usize)?))
+        .collect::<Result<Vec<_>, Error>>()?;
+
+    Ok((reads, bytes))
+}
+
+/// The bytes of `ranges`, read adjacent runs at a time and handed back per range asked.
 fn read_ranges(source: &dyn ReadAt, ranges: Vec<Range<u64>>) -> Result<(Vec<Range<u64>>, Vec<bytes::Bytes>), Error> {
     let reads = coalesced(ranges.clone())
         .into_iter()
@@ -1080,6 +1125,17 @@ mod tests {
 
     /// `a >= 150` read for `b`, from `selectors`, `limit` rows at most.
     fn filtered(selectors: Vec<(usize, bool)>, limit: Option<usize>) -> (Vec<i64>, Arc<Counting>) {
+        let (values, source, _) = skipping(selectors, limit, 0);
+
+        (values, source)
+    }
+
+    /// `filtered()` past `offset` matches, with the matches the reader reports it skipped.
+    fn skipping(
+        selectors: Vec<(usize, bool)>,
+        limit: Option<usize>,
+        offset: usize,
+    ) -> (Vec<i64>, Arc<Counting>, usize) {
         let file = four_groups();
         let footer = Footer::read(&Bytes::from(file.clone())).unwrap();
         let source = Arc::new(Counting::new(file));
@@ -1097,7 +1153,10 @@ mod tests {
                 ])]),
             ),
         ]);
-        let plan = ReadPlan::from_selection(footer.meta(), selectors, Some(filter), limit).unwrap();
+        let plan = ReadPlan {
+            offset,
+            ..ReadPlan::from_selection(footer.meta(), selectors, Some(filter), limit).unwrap()
+        };
         let mut reader =
             ParquetReader::open(Arc::clone(&source), footer.meta(), &["b".to_string()], plan, 1_024).unwrap();
         let mut values = Vec::new();
@@ -1111,7 +1170,38 @@ mod tests {
             );
         }
 
-        (values, source)
+        (values, source, reader.skipped())
+    }
+
+    #[test]
+    fn an_offset_skips_the_matches_the_filter_keeps_and_reports_them() {
+        let (values, _, skipped) = skipping(vec![(400, false)], Some(5), 20);
+
+        assert_eq!(values, (170..175).collect::<Vec<_>>());
+        assert_eq!(skipped, 20);
+    }
+
+    #[test]
+    fn an_offset_across_row_groups_skips_the_matches_of_every_group_it_covers() {
+        let (values, _, skipped) = skipping(vec![(400, false)], None, 200);
+
+        assert_eq!(values, (350..400).collect::<Vec<_>>());
+        assert_eq!(skipped, 200);
+    }
+
+    #[test]
+    fn an_offset_past_every_match_reads_nothing_and_reports_every_match() {
+        let (values, _, skipped) = skipping(vec![(400, false)], None, 1_000);
+
+        assert_eq!(values, Vec::<i64>::new());
+        assert_eq!(skipped, 250);
+    }
+
+    #[test]
+    fn without_an_offset_nothing_is_reported_skipped() {
+        let (_, _, skipped) = skipping(vec![(400, false)], None, 0);
+
+        assert_eq!(skipped, 0);
     }
 
     #[test]

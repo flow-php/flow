@@ -32,6 +32,7 @@ final class ReadPlanMother
         ?int $limit = null,
         ?RowSelection $selection = null,
         ?RowSelection $matched = null,
+        int $offset = 0,
     ): ReadPlan {
         return new ReadPlan(
             $selection ?? RowSelection::all($rows),
@@ -39,6 +40,7 @@ final class ReadPlanMother
             new InMemoryIndexes(),
             BoundFilter::bind($filter, $schema, new Options())->rowFilter(),
             $limit,
+            $offset,
         );
     }
 }

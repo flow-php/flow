@@ -14,9 +14,6 @@ use function Flow\Types\DSL\type_array;
 use function implode;
 use function sprintf;
 
-/**
- * Types for partition columns discovered from a path.
- */
 final readonly class PartitionTypes
 {
     /**

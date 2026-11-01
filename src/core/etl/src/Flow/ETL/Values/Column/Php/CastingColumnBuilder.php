@@ -22,6 +22,7 @@ use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\StringType;
 
 use function get_debug_type;
+use function in_array;
 use function sprintf;
 
 final class CastingColumnBuilder implements ColumnBuilder
@@ -186,26 +187,29 @@ final class CastingColumnBuilder implements ColumnBuilder
         $type = $this->definition->type();
         $checkNulls = !$this->nullable && $nullCount !== 0;
 
-        // @mago-ignore analysis:mixed-assignment
-        foreach ($physicals as $position => $physical) {
-            if ($physical === null) {
-                if ($checkNulls) {
-                    throw new SchemaMismatchException($position, ColumnMismatchException::valueDoesNotMatch(
-                        $this->definition->name(),
-                        $this->definition->type()->toString(),
-                        null,
-                    ));
+        // the per-value walk only runs to name the first refused physical
+        if ($checkNulls && in_array(null, $physicals, true) || !$physicalFor->acceptsAll($type, $physicals)) {
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($physicals as $position => $physical) {
+                if ($physical === null) {
+                    if ($checkNulls) {
+                        throw new SchemaMismatchException($position, ColumnMismatchException::valueDoesNotMatch(
+                            $this->definition->name(),
+                            $this->definition->type()->toString(),
+                            null,
+                        ));
+                    }
+
+                    continue;
                 }
 
-                continue;
-            }
-
-            if (!$physicalFor->accepts($type, $physical)) {
-                throw new InvalidArgumentException(sprintf(
-                    'Cannot store a %s physical in a %s column',
-                    get_debug_type($physical),
-                    $type->toString(),
-                ));
+                if (!$physicalFor->accepts($type, $physical)) {
+                    throw new InvalidArgumentException(sprintf(
+                        'Cannot store a %s physical in a %s column',
+                        get_debug_type($physical),
+                        $type->toString(),
+                    ));
+                }
             }
         }
 

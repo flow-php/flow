@@ -18,6 +18,7 @@ const IDENTITY: &str = "Flow\\ETL\\Values\\Column\\Physical\\IdentityPhysical";
 
 pub struct TypePlan {
     pub kind: Kind,
+    pub type_name: String,
     pub type_zv: Zval,
     pub values: ValueNode,
     pub cast: CastKind,
@@ -65,6 +66,7 @@ fn json_plan(type_zv: &Zval) -> Result<Rc<TypePlan>, PhpException> {
     let physical = call_method(&instance(PHYSICAL_FOR)?, "physical", &mut [type_zv.shallow_clone()])?;
     let plan = Rc::new(TypePlan {
         kind: kind_of(&parsed).map_err(json_exception)?,
+        type_name: parsed.base().unwrap_or(&parsed).type_.clone(),
         type_zv: type_zv.shallow_clone(),
         values: kind::value_node(&parsed)
             .map_err(json_exception)?

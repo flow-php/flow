@@ -6,14 +6,12 @@ namespace Flow\ETL\Functions;
 
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
-use Flow\ETL\Functions\Evaluation\ResultColumn;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Column\Column;
 use Flow\ETL\Values\Rows;
 use Flow\Types\Type;
 use SensitiveParameter;
 
-use function array_fill;
 use function Flow\Types\DSL\type_boolean;
 
 final class IsNull implements ScalarFunction
@@ -66,22 +64,6 @@ final class IsNull implements ScalarFunction
 
     public function eval(Rows $rows, Backend $backend): Column
     {
-        $column = $this->value->eval($rows, $backend);
-
-        if ($column->nullCount() === 0) {
-            // @mago-ignore analysis:possibly-invalid-argument
-            return (new ResultColumn($backend))->of(
-                $this,
-                $rows->isEmpty() ? [] : array_fill(0, $rows->count(), false),
-            );
-        }
-
-        $results = [];
-
-        for ($i = 0, $count = $column->count(); $i < $count; $i++) {
-            $results[] = $column->isNull($i);
-        }
-
-        return (new ResultColumn($backend))->of($this, $results);
+        return $backend->isNull($this->value->eval($rows, $backend));
     }
 }

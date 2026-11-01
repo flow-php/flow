@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Context;
 
+use Flow\ETL\IO\Extractor\File\SkippedRows;
 use Flow\ETL\IO\Floe\FloeExtractor;
 use Flow\ETL\Storage\Floe\FloeFiles;
 use Flow\ETL\Storage\Floe\FloeStreamWriter;
@@ -116,6 +117,24 @@ final class FloeFilesContext
                     . '/file.floe' => array_to_rows([['text' => $day]], $schema),
             ]);
         }
+    }
+
+    /**
+     * @param iterable<Rows|SkippedRows> $batches
+     *
+     * @return list<Rows>
+     */
+    public static function rows(iterable $batches): array
+    {
+        $rows = [];
+
+        foreach ($batches as $batch) {
+            if ($batch instanceof Rows) {
+                $rows[] = $batch;
+            }
+        }
+
+        return $rows;
     }
 
     /**

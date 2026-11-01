@@ -4,13 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Functions;
 
-use Exception;
-use Flow\ETL\Foundation\Calculator\Calculator;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
-use Flow\ETL\Foundation\Exception\EvaluationException;
-use Flow\ETL\Foundation\Exception\InvalidArgumentException;
-use Flow\ETL\Functions\Evaluation\ResultColumn;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Column\Column;
 use Flow\ETL\Values\Rows;
@@ -75,30 +70,9 @@ final class Mod implements ScalarFunction
 
     public function eval(Rows $rows, Backend $backend): Column
     {
-        $lefts = (new Parameter($this->left))->asInts($rows, $backend);
-        $rights = (new Parameter($this->right))->asInts($rows, $backend);
-        $calculator = new Calculator();
-        $results = [];
-        $i = 0;
-
-        try {
-            foreach ($lefts as $i => $leftValue) {
-                $rightValue = $rights[$i];
-
-                if ($leftValue === null || $rightValue === null) {
-                    throw new InvalidArgumentException('Mod function requires non-null values');
-                }
-
-                if ($rightValue === 0) {
-                    throw new InvalidArgumentException('Mod function cannot perform modulo by zero');
-                }
-
-                $results[] = $calculator->modulus($leftValue, $rightValue);
-            }
-        } catch (Exception $e) {
-            throw EvaluationException::at($i, $e);
-        }
-
-        return (new ResultColumn($backend))->of($this, $results);
+        return $backend->modulo(
+            (new Parameter($this->left))->asIntegerColumn($rows, $backend),
+            (new Parameter($this->right))->asIntegerColumn($rows, $backend),
+        );
     }
 }

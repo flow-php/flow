@@ -56,7 +56,7 @@ final readonly class Filter implements Describable
     }
 
     /**
-     * The rows every predicate is TRUE for: each is evaluated only on the rows the ones before it kept.
+     * The rows every predicate is TRUE for, in order; a source may have applied the ones it answers before.
      */
     public function filter(Rows $rows, Backend $backend): Rows
     {

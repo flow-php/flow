@@ -14,16 +14,17 @@ final readonly class TranslatedConjunct
 {
     /**
      * @param list<string> $columns Flow column names the predicate reads
+     * @param bool $exact false when $filter keeps more rows than the Flow conjunct
+     * @param list<string> $nanSensitiveColumns float columns ordered with > or >=, where Flow keeps NaN and parquet not
      */
     public function __construct(
         public Filter $filter,
         public array $columns,
+        public bool $exact,
+        public array $nanSensitiveColumns,
     ) {}
 
-    /**
-     * True when the file stores every column the predicate reads as $body types it, or not at all. A column the file
-     * stores as another type is cast to the body's, so its statistics are of the other type.
-     */
+    // a column the file stores as another type is cast to the body's, so its statistics are of the other type
     public function readsAs(Schema $fileBody, Schema $body): bool
     {
         $comparator = new Comparator();

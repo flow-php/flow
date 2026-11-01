@@ -21,9 +21,7 @@ use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function sprintf;
 
-/**
- * Both read paths take the tail from one instance of this, in one order, so they cannot disagree.
- */
+// both read paths take the tail from one instance, in one order, so they cannot disagree
 final readonly class FileColumns
 {
     /**
@@ -112,10 +110,6 @@ final readonly class FileColumns
         ];
     }
 
-    /**
-     * $declared carries the type the read gives a partition column - a withSchema()d or a file footer type;
-     * keep() drops the body columns it brings.
-     */
     public function partitions(Schema $declared): Schema
     {
         if ($this->partitionNames === []) {
@@ -125,10 +119,7 @@ final readonly class FileColumns
         return $this->declare($declared)->keep(...array_keys($this->partitionNames));
     }
 
-    /**
-     * Takes the schema declare() already produced, so the values and the schema they are written under
-     * can never come from two different declarations.
-     */
+    // $declared is what declare() produced, so the values and their schema come from one declaration
     public function forFile(SourceFile $source, Schema $declared): FileConstants
     {
         $values = [];
@@ -156,9 +147,6 @@ final readonly class FileColumns
         ];
     }
 
-    /**
-     * So a source carrying a partition-named column in its body does not get it typed from the data.
-     */
     public function withoutTail(Schema $inferred): Schema
     {
         return $inferred->gracefulRemove(...$this->tail());

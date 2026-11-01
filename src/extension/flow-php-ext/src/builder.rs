@@ -445,30 +445,11 @@ impl RustColumnBuilder {
             .filter(|native| native.data().data_type() == &flow_batch_frame::kind::data_type(&self.plan.kind))
     }
 
-    /// `count` copies of one value, for `RustBackend::constant()`.
-    pub fn append_repeated(&mut self, pending: Pending, count: u32) -> Result<(), PhpException> {
+    pub fn append_pending(&mut self, pending: Pending) -> Result<(), PhpException> {
         match pending {
-            Pending::Null => (0..count).for_each(|_| self.values.append_null()),
-            Pending::Physical(physical) => {
-                for _ in 0..count {
-                    append_physical(&mut self.values, &self.plan.kind, &physical)?;
-                }
-            }
-            Pending::Native(native) => {
-                let mut single = KindBuilder::new(&self.plan.kind);
-                append_native(&mut single, native)?;
-                let one = arrow_array::make_array(
-                    single
-                        .finish(&self.plan.kind)
-                        .map_err(|e| invalid_argument(format!("flow_php built an invalid column: {e}")))?,
-                );
-
-                for _ in 0..count {
-                    self.values
-                        .append_from(one.as_ref(), &self.plan.kind, 0)
-                        .map_err(overflow)?;
-                }
-            }
+            Pending::Null => self.values.append_null(),
+            Pending::Physical(physical) => append_physical(&mut self.values, &self.plan.kind, &physical)?,
+            Pending::Native(native) => append_native(&mut self.values, native)?,
         }
 
         Ok(())

@@ -25,6 +25,7 @@ const ITERATOR: DataType = DataType::object("Iterator");
 const READ_PLAN: DataType = DataType::object("Flow\\Parquet\\Reader\\ReadPlan");
 const COLUMN_TYPES: DataType = DataType::object("Flow\\ETL\\IO\\Inference\\ColumnTypes");
 const TYPE_NARROWER: DataType = DataType::object("Flow\\Types\\Type\\TypeNarrower");
+const OPERATOR: DataType = DataType::object("Flow\\Types\\Type\\Comparison\\Operator");
 const REBUILD: DataType = DataType::object("Flow\\ETL\\Foundation\\Describe\\Rebuild");
 
 // ClassEntry::try_find reads EG(class_table), which MINIT has not set, so each CE is kept from its registration
@@ -272,6 +273,35 @@ pub fn register() -> Result<()> {
                 "encodeFrame",
                 vec![Arg::new("rows", ROWS), Arg::new("codec", CODEC)],
                 DataType::String,
+            ),
+            method(
+                "compare",
+                vec![
+                    Arg::new("left", COLUMN),
+                    Arg::new("operator", OPERATOR),
+                    Arg::new("right", COLUMN),
+                    Arg::new("leftName", DataType::String),
+                    Arg::new("rightName", DataType::String),
+                ],
+                COLUMN,
+            ),
+            method("isNull", vec![Arg::new("column", COLUMN)], COLUMN),
+            method("isNotNull", vec![Arg::new("column", COLUMN)], COLUMN),
+            method("add", vec![Arg::new("left", COLUMN), Arg::new("right", COLUMN)], COLUMN),
+            method(
+                "subtract",
+                vec![Arg::new("left", COLUMN), Arg::new("right", COLUMN)],
+                COLUMN,
+            ),
+            method(
+                "multiply",
+                vec![Arg::new("left", COLUMN), Arg::new("right", COLUMN)],
+                COLUMN,
+            ),
+            method(
+                "modulo",
+                vec![Arg::new("left", COLUMN), Arg::new("right", COLUMN)],
+                COLUMN,
             ),
             method(
                 "adopt",

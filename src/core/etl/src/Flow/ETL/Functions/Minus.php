@@ -24,8 +24,6 @@ use function Flow\Types\DSL\type_bare;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
-use function is_float;
-use function is_int;
 
 final class Minus implements ScalarFunction
 {
@@ -98,6 +96,13 @@ final class Minus implements ScalarFunction
 
     public function eval(Rows $rows, Backend $backend): Column
     {
+        if (!$this->exact) {
+            return $backend->subtract(
+                (new Parameter($this->left))->asNumberColumn($rows, $backend),
+                (new Parameter($this->right))->asNumberColumn($rows, $backend),
+            );
+        }
+
         $lefts = (new Parameter($this->left))->asNumbers($rows, $backend);
         $rights = (new Parameter($this->right))->asNumbers($rows, $backend);
         $calculator = new Calculator();
@@ -112,19 +117,7 @@ final class Minus implements ScalarFunction
                     throw new InvalidArgumentException('Minus function requires non-null values');
                 }
 
-                if ($this->exact) {
-                    $results[] = $calculator->subtract($left, $right);
-
-                    continue;
-                }
-
-                $result = $left - $right;
-
-                if (is_int($left) && is_int($right) && is_float($result)) {
-                    throw new InvalidArgumentException('Minus function integer overflow');
-                }
-
-                $results[] = $result;
+                $results[] = $calculator->subtract($left, $right);
             }
         } catch (Exception $e) {
             throw EvaluationException::at($i, $e);

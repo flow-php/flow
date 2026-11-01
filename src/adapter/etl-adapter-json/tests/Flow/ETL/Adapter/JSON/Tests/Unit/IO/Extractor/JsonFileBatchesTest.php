@@ -51,7 +51,6 @@ final class JsonFileBatchesTest extends FlowTestCase
                 iterator_to_array($file, false),
             )),
         );
-        static::assertSame(0, $file->getReturn());
         static::assertSame($filesystem->readFromCalls, $filesystem->closedStreams());
     }
 

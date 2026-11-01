@@ -32,9 +32,6 @@ final readonly class FooterStatistics
         $this->files = $files;
     }
 
-    /**
-     * Exact when every listed file's footer was read; otherwise the read footers are scaled to the listing.
-     */
     public function of(int $listedFiles): Statistics
     {
         $rows = $this->statistics->rows->estimate ?? 0;

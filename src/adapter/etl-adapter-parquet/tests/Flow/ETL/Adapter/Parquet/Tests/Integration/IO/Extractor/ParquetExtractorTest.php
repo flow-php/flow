@@ -265,6 +265,24 @@ final class ParquetExtractorTest extends FlowIntegrationTestCase
         static::assertLessThan(ParquetFilesContext::bytesRead($unfiltered), ParquetFilesContext::bytesRead($filtered));
     }
 
+    #[DataProvider('engines')]
+    public function test_every_batch_but_the_last_holds_the_batch_size_across_row_groups(?ParquetEngine $engine): void
+    {
+        $memory = memory_filesystem();
+        ParquetFilesContext::rowGroups($memory, 'memory://groups.parquet', 1_000, 300);
+        $sizes = [];
+
+        foreach (df()->read(from_parquet(
+            path('memory://groups.parquet'),
+            filesystem: $memory,
+            engine: $engine,
+        )->withBatchSize(128))->get() as $rows) {
+            $sizes[] = $rows->count();
+        }
+
+        static::assertSame([128, 128, 128, 128, 128, 128, 128, 104], $sizes);
+    }
+
     public function test_limit(): void
     {
         $extractor = from_parquet(path(__DIR__ . '/../../../Fixtures/orders_1k.parquet'));

@@ -18,7 +18,7 @@ final class TranslatedConjunctTest extends FlowTestCase
 {
     public function test_a_file_storing_every_column_as_the_body_types_it_is_read_as_is(): void
     {
-        static::assertTrue((new TranslatedConjunct(parquet_column('id')->equals(1), ['id', 'name']))->readsAs(
+        static::assertTrue((new TranslatedConjunct(parquet_column('id')->equals(1), ['id', 'name'], true, []))->readsAs(
             schema(int_schema('id'), str_schema('name')),
             schema(int_schema('id', nullable: true), str_schema('name', nullable: true)),
         ));
@@ -26,7 +26,12 @@ final class TranslatedConjunctTest extends FlowTestCase
 
     public function test_a_column_the_file_stores_as_another_type_is_not_read_as_is(): void
     {
-        static::assertFalse((new TranslatedConjunct(parquet_column('big')->lessThan('2'), ['id', 'big']))->readsAs(
+        static::assertFalse((new TranslatedConjunct(
+            parquet_column('big')->lessThan('2'),
+            ['id', 'big'],
+            true,
+            [],
+        ))->readsAs(
             schema(int_schema('id'), definition_from_type('big', type_numeric_string())),
             schema(int_schema('id'), str_schema('big')),
         ));
@@ -34,9 +39,11 @@ final class TranslatedConjunctTest extends FlowTestCase
 
     public function test_a_column_absent_from_the_file_is_read_as_is(): void
     {
-        static::assertTrue((new TranslatedConjunct(parquet_column('missing')->isNull(), ['missing']))->readsAs(
-            schema(int_schema('id')),
-            schema(int_schema('id'), str_schema('missing', nullable: true)),
-        ));
+        static::assertTrue((new TranslatedConjunct(
+            parquet_column('missing')->isNull(),
+            ['missing'],
+            true,
+            [],
+        ))->readsAs(schema(int_schema('id')), schema(int_schema('id'), str_schema('missing', nullable: true))));
     }
 }

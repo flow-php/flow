@@ -11,24 +11,34 @@ use Flow\ETL\Adapter\Parquet\Values\Schema\SchemaConverter;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
+use Flow\ETL\Functions\Evaluation\Filter;
+use Flow\ETL\Functions\ReferencedColumns;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\File\DerivedSchema;
 use Flow\ETL\IO\Extractor\File\FileRead;
 use Flow\ETL\IO\Extractor\File\OffsetSkippingFileBatches;
 use Flow\ETL\IO\Extractor\File\ReadWindow;
+use Flow\ETL\IO\Extractor\File\SkippedRows;
 use Flow\ETL\IO\Extractor\File\SourceFile;
+use Flow\ETL\IO\Filesystem\ScalarFunctionFilter;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
+use Flow\Filesystem\FileStatus;
+use Flow\Parquet\Data\PhysicalOrder;
 use Flow\Parquet\Filter\All;
 use Flow\Parquet\Filter\Binding\BoundFilter;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\Reader\ReadPlan;
 use Generator;
 use SensitiveParameter;
 
 use function array_diff;
+use function array_flip;
+use function array_intersect_key;
+use function count;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_optional;
@@ -37,9 +47,7 @@ use function Flow\Types\DSL\type_string;
 final class ParquetFileBatches implements OffsetSkippingFileBatches
 {
     /**
-     * The conjuncts of $translatedFor, translated once per read rather than per file.
-     *
-     * @var list<TranslatedConjunct>
+     * @var array<int, TranslatedConjunct> translated once per read, not per file
      */
     private array $conjuncts = [];
 
@@ -86,14 +94,9 @@ final class ParquetFileBatches implements OffsetSkippingFileBatches
     }
 
     /**
-     * Skips the whole file when the window's offset covers it; otherwise reads from the offset. A file of a narrower
-     * schema is matched to $body. What the conjuncts a file answers exactly prove cannot match is skipped; FileReadLoop
-     * drops the rest that does not match them. A split owns the row groups whose midpoint its byte window holds, and a
-     * window without a length owns every row group.
-     *
      * @throws InferredSchemaException
      *
-     * @return Generator<int, Rows, mixed, int>
+     * @return Generator<int, Filter|Rows|SkippedRows, mixed, void>
      */
     public function batches(
         FileRead $read,
@@ -124,12 +127,15 @@ final class ParquetFileBatches implements OffsetSkippingFileBatches
             $fileRows = $footer->rowsNumber();
             $owned = $split?->length === null ? null : $split->owns($file->units());
 
-            if ($owned === null && $window->offset >= $fileRows) {
-                return $fileRows;
+            // an offset beside conjuncts counts matching rows, which the footer does not know
+            if ($owned === null && $criteria->conjuncts === [] && $window->offset >= $fileRows) {
+                yield new SkippedRows($fileRows);
+
+                return;
             }
 
             if ($owned?->count === 0) {
-                return 0;
+                return;
             }
 
             $this->derived?->refuseDivergence($file->source()->uri(), $file->schema());
@@ -137,11 +143,75 @@ final class ParquetFileBatches implements OffsetSkippingFileBatches
             $fileBody = $read->fileColumns->withoutTail($file->schema());
             $fileBody = $fileBody->gracefulRemove(...array_diff($fileBody->names(), $body->names()));
             $fileBoundConjuncts = [];
+            $residual = [];
+            $mayHoldNaN = [];
 
-            foreach ($this->conjuncts as $conjunct) {
-                if ($conjunct->readsAs($fileBody, $body)) {
-                    $fileBoundConjuncts[] = $conjunct->filter;
+            foreach ($footer->metadata()->columnChunks() as $chunk) {
+                $column = $footer->schema()->get($chunk->flatPath());
+
+                // a missing count proves nothing, so the column may hold NaN
+                if (
+                    $column instanceof FlatColumn
+                    && PhysicalOrder::forColumn($column)->isFloatingPoint()
+                    && $chunk->statistics()?->nanCount !== 0
+                ) {
+                    $mayHoldNaN[$chunk->flatPath()] = true;
                 }
+            }
+
+            $partitions = $read->fileColumns->partitions($read->schema);
+            $referenced = new ReferencedColumns();
+
+            foreach ($criteria->conjuncts as $position => $conjunct) {
+                $translated = $this->conjuncts[$position] ?? null;
+                $partitionOnly =
+                    $translated === null
+                    && $partitions->names() !== []
+                    && array_diff($referenced->in($conjunct)->names(), $partitions->names()) === [];
+
+                // a conjunct over partition columns is one value per file, so TRUE for the file is TRUE for every row
+                if (
+                    $partitionOnly
+                    && (new ScalarFunctionFilter($conjunct, $partitions, $backend))->accept(
+                        new FileStatus($source->path, true),
+                    )
+                ) {
+                    continue;
+                }
+
+                if (
+                    $translated === null
+                    || !$translated->readsAs($fileBody, $body)
+                    || array_intersect_key($mayHoldNaN, array_flip($translated->nanSensitiveColumns)) !== []
+                ) {
+                    $residual[] = $conjunct;
+
+                    continue;
+                }
+
+                $fileBoundConjuncts[] = $translated->filter;
+
+                if (
+                    !$translated->exact
+                    || !BoundFilter::bind(
+                        $translated->filter,
+                        $footer->schema(),
+                        $file->file->options(),
+                    )->answersEveryConjunct()
+                ) {
+                    $residual[] = $conjunct;
+                }
+            }
+
+            if (count($residual) < count($criteria->conjuncts)) {
+                yield Filter::bind($read->schema, ...$residual);
+            }
+
+            $takesWindow = $residual === [];
+            $rawOffset = $criteria->conjuncts === [] ? $window->offset : 0;
+
+            if ($rawOffset > 0) {
+                yield new SkippedRows($rawOffset);
             }
 
             $opened = $file->open();
@@ -155,25 +225,23 @@ final class ParquetFileBatches implements OffsetSkippingFileBatches
                     $fileBoundConjuncts === []
                         ? null
                         : BoundFilter::bind(new All(...$fileBoundConjuncts), $footer->schema(), $file->file->options()),
-                    $owned->offset ?? $window->offset,
-                    $window->limit,
+                    $owned->offset ?? $rawOffset,
+                    $takesWindow ? $window->limit : null,
                     $owned?->count,
+                    $takesWindow ? $window->offset - $rawOffset : 0,
                 ),
                 $backend,
-            ) as $rows) {
-                yield $fileBody->isSame($body) ? $rows : $rows->matchTo($body, $backend);
+            ) as $batch) {
+                yield $batch instanceof SkippedRows || $fileBody->isSame($body)
+                    ? $batch
+                    : $batch->matchTo($body, $backend);
             }
-
-            return $owned === null ? $window->offset : 0;
         } finally {
             $opened?->close();
             $file->close();
         }
     }
 
-    /**
-     * Closes the kept first file when the read never reached it.
-     */
     public function close(): void
     {
         $this->firstFile?->close();

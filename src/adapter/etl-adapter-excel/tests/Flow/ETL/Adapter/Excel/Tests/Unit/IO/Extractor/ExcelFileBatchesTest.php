@@ -48,7 +48,6 @@ final class ExcelFileBatchesTest extends FlowTestCase
         $sampled->close();
 
         static::assertNotSame([], $rows);
-        static::assertSame(0, $fromSample->getReturn());
         static::assertSame(
             $rows,
             array_merge(...array_map(
