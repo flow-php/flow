@@ -9,9 +9,7 @@ use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 /**
- * The trace-context URL generator wraps the `router` service, which only exists when a router is
- * registered (e.g. FrameworkBundle). Drop it on router-less kernels so its hard dependency does not
- * break container compilation.
+ * Removes the generator on router-less kernels so compilation does not break.
  */
 final class TraceContextUrlGeneratorPass implements CompilerPassInterface
 {

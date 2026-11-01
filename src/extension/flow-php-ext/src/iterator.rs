@@ -1,6 +1,4 @@
-//! `Flow\ETL\Values\RustIterator`: the `\Iterator` the Rust open sources return from `batches()` / `records()` - keys 0..n,
-//! each value pulled from a Rust producer on demand. It behaves as the Generator it replaced: it streams once
-//! (`rewind()` after `next()` throws) and ends for good when the producer throws.
+//! `\Iterator` over a Rust producer; it streams once, like the Generator it replaced.
 
 use ext_php_rs::flags::ClassFlags;
 use ext_php_rs::prelude::*;

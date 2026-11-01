@@ -61,8 +61,7 @@ pub enum ReadCell {
 }
 
 impl ReadCell {
-    /// `canonical`: the type the core reads the column as; `parquet`: the field it was read from (its extension type
-    /// tells a uuid from 16 bytes), walked in parallel with the canonical type's children.
+    /// `canonical`: the type the core reads; `parquet`: the field it was read from, walked in parallel.
     pub fn new(canonical: &DataType, parquet: &Field) -> Result<Self, Error> {
         Ok(match canonical {
             DataType::Null => ReadCell::Null,
@@ -234,9 +233,7 @@ fn child(parquet: &Field, index: usize) -> Result<&Field, Error> {
     }
 }
 
-/// `TimeConverter::toDateInterval()`: `$base->diff($base->modify("+{µs} microseconds"))` - `diff()` normalises the
-/// duration into d/h and, past a month, m/d exactly as the PHP engine's value. A time of day (< 24 h) normalises into
-/// nothing, so it is built directly with `DateInterval::__set_state()`, one call instead of two.
+/// Matches `TimeConverter::toDateInterval()`; a time of day under 24 h is built directly with `__set_state()`.
 pub struct Times {
     base: Zval,
     modify: &'static Function,
@@ -376,7 +373,7 @@ impl Classes {
     }
 }
 
-/// A value a scalar cell accepted. `Copy`: a flat writer's row buffer clears without dropping anything.
+/// A value a scalar cell accepted; `Copy`, so a row buffer clears without dropping anything.
 #[derive(Clone, Copy)]
 pub enum Scalar<'a> {
     Null,

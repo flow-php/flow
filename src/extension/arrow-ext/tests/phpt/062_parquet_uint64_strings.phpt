@@ -16,7 +16,7 @@ use Flow\Parquet\Tests\Context\MemoryParquetFile;
 use Flow\Parquet\Tests\Context\ParquetRows;
 use Flow\Parquet\Writer;
 
-$fixture = __DIR__ . '/../../../../lib/parquet/tests/Flow/Parquet/Tests/Integration/Engine/Fixtures/uint64_duckdb.parquet';
+$fixture = __DIR__ . '/../../../../lib/parquet/tests/Flow/Parquet/Tests/Integration/Engine/Fixtures/uint64_external.parquet';
 $arrow = new Reader(engine: new RustParquetEngine());
 $schema = Schema::with(new FlatColumn('u', PhysicalType::INT64, logicalType: LogicalType::integer(64, false)));
 $writer = static fn(): Writer => new Writer(engine: new RustParquetEngine());

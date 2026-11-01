@@ -27,21 +27,12 @@ use function sprintf;
 use function sys_get_temp_dir;
 use function unlink;
 
-/**
- * Base for the tests that drive the WASM playground in a real browser.
- *
- * The playground is Stimulus-driven, so most steps reach the controllers through page scripts
- * rather than through the DOM. Playwright evaluates an expression, not a statement body, so every
- * script here is written as an arrow function.
- */
 abstract class EndToEndTestCase extends KernelTestCase
 {
     /** @var list<string> */
     private array $tempFiles = [];
 
-    // the registry owns the node process and the browser, and creating one launches both. PHPUnit
-    // builds a fresh test-case object per test, so holding it per instance launched a browser 165
-    // times a run; the per-test isolation comes from the session, which is still closed each time.
+    // Held statically: a per-instance registry launched a browser for every test.
     private static ?BrowserRegistry $registry = null;
 
     private ?BrowserSessionInterface $session = null;
@@ -72,11 +63,7 @@ abstract class EndToEndTestCase extends KernelTestCase
     }
 
     /**
-     * Builds the browser directly instead of using zenstruck's HasBrowser trait.
-     *
-     * The trait hard-codes `new ResponseConverter()` (HasBrowser.php:220), so the container cannot
-     * supply the fixed converter that BinarySafeResponseConverter provides - and without it every
-     * binary asset reaches the browser base64-encoded and the playground never boots.
+     * Built by hand: HasBrowser hard-codes ResponseConverter, so binary assets would arrive base64-encoded.
      */
     protected function playwrightBrowser(): PlaywrightBrowser
     {

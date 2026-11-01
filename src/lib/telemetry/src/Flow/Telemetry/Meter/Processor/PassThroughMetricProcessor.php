@@ -12,13 +12,6 @@ use Flow\Telemetry\Meter\MetricProcessor;
 use Flow\Telemetry\Signal\Signals;
 use Throwable;
 
-/**
- * Exports each metric immediately when processed.
- *
- * Unlike BatchingMetricProcessor, this processor exports metrics synchronously
- * one at a time. This is useful for debugging and development where
- * immediate visibility of metrics is more important than performance.
- */
 final readonly class PassThroughMetricProcessor implements MetricProcessor
 {
     public function __construct(

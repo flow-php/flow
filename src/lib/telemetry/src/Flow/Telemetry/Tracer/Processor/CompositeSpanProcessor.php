@@ -10,14 +10,6 @@ use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanProcessor;
 use Throwable;
 
-/**
- * Forwards spans to multiple processors.
- *
- * This is useful when you need to:
- * - Send spans to multiple backends (e.g., both console and OTLP)
- * - Combine batching with memory storage for testing
- * - Add custom processing alongside export
- */
 final readonly class CompositeSpanProcessor implements SpanProcessor
 {
     /**

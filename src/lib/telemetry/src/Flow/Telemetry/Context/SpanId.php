@@ -16,22 +16,6 @@ use function str_repeat;
 use function strlen;
 use function strtolower;
 
-/**
- * An 8-byte (64-bit) span identifier compatible with OpenTelemetry W3C Trace Context.
- *
- * SpanIds uniquely identify a span within a trace.
- * An all-zero SpanId is considered "invalid" and indicates no active span.
- *
- * Example usage:
- * ```php
- * $spanId = SpanId::generate();
- * echo $spanId->toHex(); // "00f067aa0ba902b7"
- *
- * // Invalid span ID (all zeros)
- * $invalid = SpanId::invalid();
- * echo $invalid->isValid(); // false
- * ```
- */
 final readonly class SpanId implements Stringable
 {
     public const string INVALID = '0000000000000000';

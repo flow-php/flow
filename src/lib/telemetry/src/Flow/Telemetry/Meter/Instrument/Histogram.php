@@ -27,19 +27,6 @@ use function max;
 use function min;
 
 /**
- * Histogram instrument for recording value distributions.
- *
- * Histograms track the statistical distribution of measurements,
- * including count, sum, min, max values, and bucket distributions.
- *
- * Example usage:
- * ```php
- * $histogram = $meter->createHistogram('http.request.duration', 'ms', 'Request duration');
- * $histogram->record(42.5, ['http.method' => 'GET']);
- * $histogram->record(128.3, ['http.method' => 'GET']);
- * // On collect: count=2, sum=170.8, min=42.5, max=128.3, plus bucket counts
- * ```
- *
  * @see https://opentelemetry.io/docs/specs/otel/metrics/api/#histogram
  */
 final class Histogram implements Instrument
@@ -228,12 +215,7 @@ final class Histogram implements Instrument
     }
 
     /**
-     * Find the bucket index for a given value.
-     *
-     * Bucket semantics (per OTLP spec):
-     * - Bucket 0: (-∞, bounds[0]]
-     * - Bucket i: (bounds[i-1], bounds[i]]
-     * - Bucket N: (bounds[N-1], +∞)
+     * Bucket i holds (bounds[i-1], bounds[i]]; the last bucket is unbounded above.
      */
     private function findBucketIndex(float $value): int
     {

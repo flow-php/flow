@@ -89,9 +89,7 @@ final class ArraySort implements ScalarFunction
     {
         $array = type_bare($this->ref->returns());
 
-        // Only a key sort reorders a structure's fields deterministically at bind time; a value sort's
-        // field order is data-dependent, so the operand's declared order stands. Sorting by array key
-        // rather than by a string comparator reproduces PHP's key order for integer element names.
+        // sorting by array key reproduces PHP's key order for integer element names
         if (
             $array instanceof StructureType
             && ($this->sortFunction === Sort::ksort || $this->sortFunction === Sort::krsort)

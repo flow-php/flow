@@ -62,8 +62,8 @@ delta_binary_acked_encoded_integers.parquet 100: identical
 delta_binary_acked_encoded_integers.parquet 10000: identical
 delta_byte_array_arrow_v2.parquet 100: identical
 delta_byte_array_arrow_v2.parquet 10000: identical
-delta_length_byte_array_duckdb_v2.parquet 100: identical
-delta_length_byte_array_duckdb_v2.parquet 10000: identical
+delta_length_byte_array_external_v2.parquet 100: identical
+delta_length_byte_array_external_v2.parquet 10000: identical
 lists.parquet 100: identical
 lists.parquet 10000: identical
 logical_types.parquet 100: identical

@@ -23,11 +23,6 @@ use RuntimeException;
 
 use function Flow\PostgreSql\DSL\pgsql_connection_params;
 
-/**
- * Configurable {@see Client} test double for exercising decorators. Query methods return canned
- * values (or throw a {@see QueryException} when armed via {@see self::failNextQuery()}); transaction
- * and connection methods record that they were called.
- */
 final class FakeClient implements Client
 {
     /** @var list<string> */

@@ -37,9 +37,6 @@ use function unpack;
 class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 {
     /**
-     * 100 rows cycling values that are NOT exactly representable in binary32, paired with what
-     * reading them back must produce. `10.25` is the exactly-representable control.
-     *
      * @param callable(int, float): ?float $pick
      *
      * @return array{0: list<array{float: null|float}>, 1: list<array{float: null|float}>}

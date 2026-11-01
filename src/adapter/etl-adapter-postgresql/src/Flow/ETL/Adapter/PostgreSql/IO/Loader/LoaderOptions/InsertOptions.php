@@ -4,11 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql\IO\Loader\LoaderOptions;
 
-/**
- * Configuration options for INSERT operations in PostgreSQL loader.
- *
- * Supports ON CONFLICT handling for upsert operations.
- */
 final readonly class InsertOptions
 {
     /**

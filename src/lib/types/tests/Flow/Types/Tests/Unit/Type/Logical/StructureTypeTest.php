@@ -804,11 +804,6 @@ final class StructureTypeTest extends TestCase
         static::assertSame($valid, $type->isValid($value));
     }
 
-    /**
-     * The 2x2 matrix per field kind: present/absent x null/non-null. `bool $optional` means the
-     * field may be ABSENT; a nullable element type means a PRESENT value may be null. The two are
-     * independent facts (VALUE_NULL 0x00 vs VALUE_ABSENT 0x03 in the Floe format).
-     */
     public static function required_and_optional_presence_matrix(): Generator
     {
         $required = type_structure(['a' => type_integer()]);

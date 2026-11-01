@@ -14,15 +14,12 @@ use function Flow\PostgreSql\DSL\pgsql_connection_dsn;
 use function getenv;
 
 /**
- * These tests fail rather than skip when PostgreSQL is absent: a skipped test would let `just test`
- * go green while proving nothing about what the extractors derive from result metadata. Deliberate
- * local exception to the suite-wide skip convention - do not "restore consistency".
+ * Fails rather than skips without PostgreSQL, so a green run proves the derivation.
  */
 abstract class IntegrationTestCase extends FlowTestCase
 {
     /**
-     * Outside the transaction StaticClient opens for every test, so an extractor reading through it runs its own
-     * transaction. Nothing rolls back what it commits: a test that writes through it cleans up after itself.
+     * Outside the per-test transaction: a test writing through it cleans up after itself.
      */
     protected Client $autoCommitClient;
 

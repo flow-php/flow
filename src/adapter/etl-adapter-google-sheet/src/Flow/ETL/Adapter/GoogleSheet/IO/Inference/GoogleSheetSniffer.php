@@ -16,11 +16,11 @@ final class GoogleSheetSniffer implements Sniffer
     private ?GoogleSheetSample $sample = null;
 
     /**
-     * @param int<1, max>|-1 $rowBudget
+     * @param null|int<1, max> $rowBudget - null for every row
      */
     public function __construct(
         private readonly GoogleSheetReader $reader,
-        private readonly int $rowBudget,
+        private readonly ?int $rowBudget,
         private readonly TypeNarrower $typer,
     ) {}
 
@@ -77,11 +77,11 @@ final class GoogleSheetSniffer implements Sniffer
      * The budget sized the single range when this sniffer was constructed, and sample() is memoised, so a sniff
      * folds rows already fetched.
      */
-    public function sniff(int $unit, int $rowBudget): Sample
+    public function sniff(int $unit, ?int $rowBudget): Sample
     {
         $columnTypes = ColumnTypes::sniff($this->names(), $this->sample()->rows, $rowBudget, $this->typer);
 
-        return new Sample($columnTypes->folded(), 0, $rowBudget === -1 || $columnTypes->rows() < $rowBudget);
+        return new Sample($columnTypes->folded(), 0, $rowBudget === null || $columnTypes->rows() < $rowBudget);
     }
 
     public function parts(int $unit, int $targetBytes): array

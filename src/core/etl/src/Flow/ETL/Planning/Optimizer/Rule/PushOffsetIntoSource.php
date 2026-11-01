@@ -19,10 +19,7 @@ use function array_reverse;
 use function count;
 
 /**
- * Moves the Offset nodes a file source can skip into it and removes them: those with nothing but other Offsets and
- * row preserving, transparent nodes between them and the source, so the source counts the same rows the node would.
- * Runs after PushFilterIntoSource, so a filter the source took counts first, and only for a plan with one consumer,
- * since an offset narrows every consumer of the source.
+ * Runs after PushFilterIntoSource, only for single-consumer plans.
  */
 final readonly class PushOffsetIntoSource implements Rule
 {

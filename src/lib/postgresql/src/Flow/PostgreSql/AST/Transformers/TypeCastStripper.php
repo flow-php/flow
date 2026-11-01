@@ -28,14 +28,7 @@ use LogicException;
 use function sprintf;
 
 /**
- * Strips TypeCast wrappers from a protobuf expression AST.
- *
- * PostgreSQL's pg_get_expr() returns expressions with explicit casts added
- * (e.g. 'english'::regconfig, name::text, 'A'::"char") even when the original
- * expression was written without them. Passing this modifier to
- * {@see \Flow\PostgreSql\ParsedQuery::traverse()} rewrites every TypeCast
- * wrapper in the tree to its inner arg, recursively, so that round-trip
- * comparison against user-defined expressions matches.
+ * pg_get_expr() adds casts nobody wrote; stripping them makes round-trip comparison match.
  */
 final readonly class TypeCastStripper implements NodeModifier
 {
@@ -206,8 +199,7 @@ final readonly class TypeCastStripper implements NodeModifier
     }
 
     /**
-     * Unwrap any TypeCast wrappers at the top of $node, returning the inner arg.
-     * Stacked TypeCasts are fully collapsed.
+     * Unwraps every stacked TypeCast at the top of $node.
      */
     private function unwrap(Node $node): Node
     {

@@ -12,25 +12,6 @@ use function php_uname;
 use function str_contains;
 use function strtolower;
 
-/**
- * Detects operating system information.
- *
- * Detects the following attributes:
- * - os.type: The operating system type (linux, windows, darwin, etc.)
- * - os.name: The operating system name
- * - os.version: The operating system version
- * - os.description: Human-readable description of the OS
- *
- * Uses PHP's php_uname() function to gather system information.
- *
- * Example output:
- * ```
- * os.type: darwin
- * os.name: Darwin
- * os.version: 24.0.0
- * os.description: Darwin Kernel Version 24.0.0...
- * ```
- */
 final readonly class OsDetector implements ResourceDetector
 {
     public function detect(): Resource

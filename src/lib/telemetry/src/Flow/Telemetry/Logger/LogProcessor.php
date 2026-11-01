@@ -4,12 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Logger;
 
-/**
- * Interface for processing log records.
- *
- * Implementations may collect logs for batching, export them immediately,
- * filter by severity, or perform other processing like enrichment.
- */
 interface LogProcessor
 {
     /**

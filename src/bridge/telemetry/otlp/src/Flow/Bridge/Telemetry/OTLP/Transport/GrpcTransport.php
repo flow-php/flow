@@ -44,14 +44,7 @@ use const Grpc\STATUS_UNIMPLEMENTED;
 use const Grpc\STATUS_UNKNOWN;
 
 /**
- * Asynchronous gRPC transport for OTLP using the grpc PHP extension.
- *
- * Sends are non-blocking: each Export() returns a UnaryCall whose wait()
- * is deferred until shutdown(). Requires the grpc PHP extension and
- * google/protobuf package.
- *
- * When $failover is set, prior failed batches are forwarded to it on the next
- * send()/shutdown(); a FailoverTransportException is then thrown.
+ * wait() is deferred to shutdown(); failed batches go to $failover on the next send/shutdown, then it throws.
  */
 final class GrpcTransport implements Transport
 {

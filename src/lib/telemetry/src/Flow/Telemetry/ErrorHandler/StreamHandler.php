@@ -24,12 +24,7 @@ use const LOCK_EX;
 use const LOCK_UN;
 
 /**
- * Appends formatted Throwables (one per line) to a file path or php:// stream
- * wrapper. The stream is opened lazily on the first handle() call and reused
- * across subsequent calls; __destruct() closes it.
- *
- * Concurrent writers acquire LOCK_EX around fwrite so lines never interleave;
- * flock() on TTYs and pipes returns false silently — best-effort.
+ * Lines are LOCK_EX'd best-effort; TTYs and pipes cannot lock.
  */
 final class StreamHandler implements ErrorHandler
 {

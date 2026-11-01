@@ -18,12 +18,7 @@ use function strpos;
 use function substr;
 
 /**
- * A partitioned tree is a derived fixture, so it lives in the fixture cache under a fingerprinted
- * name rather than in benchmarks/var - which Datasets::reset() wipes at every process start, making
- * every phpbench iteration rebuild the whole tree before it could measure a read.
- *
- * The read path must be a glob. from_csv() over a bare partitioned directory silently reads 0 rows,
- * and a following partition filter() then fails at bind: "Schema definition for entry ... not found."
+ * Lives in fixture cache (benchmarks/var is wiped per process); read path must be a glob or from_csv reads 0 rows.
  */
 final class PartitionedTree
 {

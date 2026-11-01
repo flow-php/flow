@@ -32,8 +32,7 @@ data_frame()
     ->write(to_dbal_table_insert($connection, 'orders'))
     ->run();
 
-// one query, many parameter sets - each set runs as its own query and its rows join the same
-// stream. This is how you shard a read across tenants, date ranges or partitions.
+// One query, many parameter sets: each set runs as its own query and its rows join the same stream.
 data_frame()
     ->read(
         from_dbal_queries(

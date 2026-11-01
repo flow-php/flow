@@ -11,10 +11,7 @@ use Symfony\Component\Cache\CacheItem;
 use function array_key_exists;
 
 /**
- * Parameters are intentionally untyped: psr/simple-cache 1.0 declares CacheInterface without
- * parameter types, so narrowing them here is an LSP violation that PHP reports as a fatal error
- * whenever the lowest supported version is installed. Untyped parameters stay compatible with
- * 1.0, 2.0 and 3.0 alike.
+ * Untyped on purpose: psr/simple-cache 1.0 declares no parameter types.
  */
 final class ArrayCache implements CacheInterface
 {

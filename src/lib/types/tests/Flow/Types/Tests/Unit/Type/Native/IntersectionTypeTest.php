@@ -252,9 +252,6 @@ final class IntersectionTypeTest extends TestCase
 
     public function test_cast_of_clock_time_reaches_the_time_member(): void
     {
-        // Deliberate behaviour change: TimeType::cast() learned HH:MM:SS, so the left member now
-        // produces a DateInterval the right member accepts. Before, both members threw on this
-        // string and the intersection threw with them.
         static::assertEquals(
             new DateInterval('PT12H34M56S'),
             type_intersection(type_time(), type_instance_of(DateInterval::class))->cast('12:34:56'),

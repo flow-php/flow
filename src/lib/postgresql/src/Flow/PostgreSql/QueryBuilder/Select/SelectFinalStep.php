@@ -7,10 +7,6 @@ namespace Flow\PostgreSql\QueryBuilder\Select;
 use Flow\PostgreSql\Protobuf\AST\SelectStmt;
 use Flow\PostgreSql\QueryBuilder\Sql;
 
-/**
- * Terminal interface for SELECT query builder.
- * Represents a complete SELECT statement that can be converted to AST.
- */
 interface SelectFinalStep extends Sql
 {
     /**

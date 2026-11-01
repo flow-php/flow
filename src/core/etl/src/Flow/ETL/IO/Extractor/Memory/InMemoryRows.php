@@ -34,11 +34,11 @@ final readonly class InMemoryRows implements Sniffer
         return [];
     }
 
-    public function sniff(int $unit, int $rowBudget): Sample
+    public function sniff(int $unit, ?int $rowBudget): Sample
     {
         $columnTypes = ColumnTypes::sniff([], $this->values(), $rowBudget, $this->typer);
 
-        return new Sample($columnTypes->folded(), 0, $rowBudget === -1 || $columnTypes->rows() < $rowBudget);
+        return new Sample($columnTypes->folded(), 0, $rowBudget === null || $columnTypes->rows() < $rowBudget);
     }
 
     public function parts(int $unit, int $targetBytes): array

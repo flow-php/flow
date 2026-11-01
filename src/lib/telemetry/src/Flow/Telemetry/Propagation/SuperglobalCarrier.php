@@ -13,25 +13,7 @@ use function strtolower;
 use function substr;
 
 /**
- * Read-only carrier backed by PHP superglobals.
- *
- * Reads context from $_SERVER (HTTP headers), $_GET, $_POST, and $_COOKIE.
- * This carrier is read-only and will throw if set() is called.
- *
- * HTTP headers in $_SERVER are normalized from HTTP_* format:
- * - HTTP_TRACEPARENT becomes 'traceparent'
- * - HTTP_X_CUSTOM_HEADER becomes 'x-custom-header'
- *
- * Example usage:
- * ```php
- * $propagator = new CompositePropagator([
- *     new W3CTraceContext(),
- *     new W3CBaggage(),
- * ]);
- *
- * $carrier = new SuperglobalCarrier();
- * $ctx = $propagator->extract($carrier);
- * ```
+ * Read-only: set() throws.
  *
  * @implements Carrier<array<string, string>>
  */

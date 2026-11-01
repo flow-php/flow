@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Flow\Telemetry;
 
 /**
- * Official OpenTelemetry semantic convention metric names emitted by Flow instrumentations.
- *
- * Flow-specific metrics use the `flow.` prefix and are named in the packages that emit them.
+ * Flow-specific metrics use the `flow.` prefix in their own package.
  */
 final class SemConvMetrics
 {

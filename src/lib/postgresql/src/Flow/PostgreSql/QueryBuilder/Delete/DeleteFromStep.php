@@ -6,10 +6,6 @@ namespace Flow\PostgreSql\QueryBuilder\Delete;
 
 use Flow\PostgreSql\QueryBuilder\Table\Table;
 
-/**
- * Entry point interface for DELETE query builder.
- * Requires specifying the table to delete from.
- */
 interface DeleteFromStep
 {
     /**

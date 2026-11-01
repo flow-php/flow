@@ -45,8 +45,7 @@ final readonly class SelectStatement implements Statement
 
     public function hasIntoClause(): bool
     {
-        // PostgreSQL attaches SELECT ... INTO to the first SELECT of a UNION / INTERSECT / EXCEPT and applies it to the
-        // whole statement, so the INTO sits down the leftmost arm, one level per set operation
+        // the INTO of a set operation sits down its leftmost arm
         for ($select = $this->stmt; $select !== null; $select = $select->getLarg()) {
             if (type_boolean()->assert($select->hasIntoClause())) {
                 return true;

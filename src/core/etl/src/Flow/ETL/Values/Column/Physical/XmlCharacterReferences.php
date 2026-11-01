@@ -14,9 +14,7 @@ use function str_starts_with;
 use function substr;
 
 /**
- * libxml2 before 2.13 serializes non-ASCII attribute characters as character references (`&#x17C;`), later versions
- * write them as UTF-8. Decoding the references of non-ASCII characters outside CDATA sections and comments gives the
- * same markup on every libxml2; references below U+0080 stay, they may escape markup.
+ * libxml2 < 2.13 writes non-ASCII as char refs; decoding them gives one markup on every version.
  */
 final readonly class XmlCharacterReferences
 {

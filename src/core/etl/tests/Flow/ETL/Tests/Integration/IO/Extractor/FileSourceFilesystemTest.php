@@ -25,9 +25,6 @@ use function Flow\Floe\DSL\to_floe;
 final class FileSourceFilesystemTest extends FlowIntegrationTestCase
 {
     /**
-     * The listing sources guard their (Filesystem, Path) pair at construction. Every file format's own source and sink
-     * run the same case through FileFormatContract in their package.
-     *
      * @param array{string, string} $dsl namespace and function name of the DSL constructor
      */
     #[TestWith([['Flow\ETL\DSL', 'files']])]

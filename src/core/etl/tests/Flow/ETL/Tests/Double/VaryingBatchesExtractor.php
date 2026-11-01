@@ -12,10 +12,6 @@ use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
 use Generator;
 
-/**
- * Yields the batches it was given, verbatim - each with the schema it was built with. The child a
- * decorator test needs when the point is that batches can disagree with each other.
- */
 final class VaryingBatchesExtractor implements Extractor
 {
     /**

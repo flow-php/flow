@@ -8,13 +8,6 @@ use Flow\Telemetry\Attributes;
 
 use function array_map;
 
-/**
- * Which attribute set on a signal an {@see AttributeFilter} inspects.
- *
- * {@see self::SIGNAL} - the signal's own attributes (span/metric/log record).
- * {@see self::RESOURCE} - the shared resource attributes (service.name, etc.).
- * {@see self::SCOPE} - the instrumentation scope attributes.
- */
 enum AttributeSource
 {
     case SIGNAL;

@@ -22,16 +22,7 @@ use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 
 /**
- * The WEAK schema — for each source, exactly what that source's own inference produces today.
- * Declaring it prices the sampling pass and nothing else; a stronger schema would additionally price
- * type strength, which is a different question. Frozen as literals rather than computed at bench
- * time, so inference drift fails loudly instead of quietly measuring something new. Arms that
- * coincide today are still independent facts — do not fold them into a shared helper.
- *
- * Every column of every source infers nullable, so there is no separate nullability rule.
- * SourceExtractorTest asserts every Source arm still equals what that source infers. The two
- * ServiceSource arms have no such guard: proving them needs a live database, so it cannot live in
- * the unit suite.
+ * Frozen literals of each source's own inference (SourceExtractorTest guards them; ServiceSource arms unguarded).
  */
 final readonly class OrdersSchema
 {

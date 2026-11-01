@@ -97,7 +97,6 @@ final class IgnoreModeTest extends FlowIntegrationTestCase
             ],
         ]);
 
-        // decided once for the destination, as Spark and DuckDB do: no partition is written
         static::assertFalse(
             $this->context->commit($this->context->path(__FUNCTION__ . '/file.txt'), ignore())->admit(true),
         );

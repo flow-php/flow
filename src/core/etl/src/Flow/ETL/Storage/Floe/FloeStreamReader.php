@@ -130,12 +130,6 @@ final class FloeStreamReader
     }
 
     /**
-     * The single strict frame-walk shared by rows() and rowsFromOffset(); they
-     * differ only in how it is seeded - start position and skip. The
-     * file carries exactly one schema, so decode state comes from the footer.
-     * Every BATCH frame yields at most batchSize rows per batch; a frame wholly
-     * inside skip is passed over without decoding.
-     *
      * @param \Generator<int, string> $chunks
      * @param int<1, max> $batchSize
      *

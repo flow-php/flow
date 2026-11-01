@@ -15,15 +15,6 @@ use Throwable;
 use function count;
 use function hrtime;
 
-/**
- * Batches log records for efficient export.
- *
- * Collects log records in memory and exports them in batches when:
- * - The batch size limit is reached
- * - The max batch age elapses since the first buffered record (when configured)
- * - flush() is explicitly called
- * - the system is shutting down
- */
 final class BatchingLogProcessor implements LogSink
 {
     /**

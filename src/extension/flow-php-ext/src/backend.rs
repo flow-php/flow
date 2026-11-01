@@ -234,9 +234,7 @@ impl RustBackend {
         Ok(ColumnValue(std::mem::take(&mut adopted)))
     }
 
-    /// One native call per Floe BATCH frame: the directory is walked in Rust and every raw, 8-byte aligned buffer is an
-    /// Arrow buffer into `$body` itself, which stays alive for as long as the columns do. `$codec` is called for the
-    /// buffers stored with a length prefix only.
+    /// One native call per Floe BATCH frame; aligned raw buffers point into `$body`, `$codec` decodes prefixed ones.
     #[php(name = "decodeFrame")]
     pub fn decode_frame(&self, body: &Zval, schema: &Zval, codec: &Zval) -> PhpResult<RowsValue> {
         let (string, bytes) =

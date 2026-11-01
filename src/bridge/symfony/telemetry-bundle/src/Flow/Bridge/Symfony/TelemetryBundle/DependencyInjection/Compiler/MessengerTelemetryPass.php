@@ -11,9 +11,7 @@ use function array_keys;
 use function array_unshift;
 
 /**
- * Injects the messenger TracingMiddleware into every message bus as the outermost middleware, so consumed
- * and produced messages are traced without the application having to register it manually. Runs before
- * Symfony's MessengerPass, which turns each "<busId>.middleware" parameter into the bus's middleware stack.
+ * Must run before MessengerPass, which turns `<busId>.middleware` into the stack.
  */
 final class MessengerTelemetryPass implements CompilerPassInterface
 {

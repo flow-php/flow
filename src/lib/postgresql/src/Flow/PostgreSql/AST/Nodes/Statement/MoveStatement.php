@@ -8,8 +8,7 @@ use Flow\PostgreSql\AST\Nodes\Statement;
 use Flow\PostgreSql\Protobuf\AST\FetchStmt;
 
 /**
- * Represents MOVE statements.
- * Note: MOVE is treated the same as FETCH in PostgreSQL parser.
+ * Parsed as FetchStmt.
  *
  * @implements Statement<FetchStmt>
  */

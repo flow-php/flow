@@ -13,8 +13,8 @@ use Flow\PostgreSql\AST\Transformers\ExplainModifier;
 use Flow\PostgreSql\AST\Transformers\KeysetColumn;
 use Flow\PostgreSql\AST\Transformers\KeysetPaginationConfig;
 use Flow\PostgreSql\AST\Transformers\KeysetPaginationModifier;
-use Flow\PostgreSql\AST\Transformers\PaginationConfig;
-use Flow\PostgreSql\AST\Transformers\PaginationModifier;
+use Flow\PostgreSql\AST\Transformers\OffsetPaginationConfig;
+use Flow\PostgreSql\AST\Transformers\OffsetPaginationModifier;
 use Flow\PostgreSql\AST\Transformers\SortOrder;
 use Flow\PostgreSql\DeparseOptions;
 use Flow\PostgreSql\Explain\Analyzer\PlanAnalyzer;
@@ -147,7 +147,7 @@ function sql_summary(string $sql, int $options = 0, int $truncateLimit = 0): str
 function sql_to_paginated_query(string $sql, int $limit, int $offset = 0): string
 {
     $query = (new Parser())->parse($sql);
-    $query->traverse(new PaginationModifier(new PaginationConfig($limit, $offset)));
+    $query->traverse(new OffsetPaginationModifier(new OffsetPaginationConfig($limit, $offset)));
 
     return $query->deparse();
 }
@@ -164,7 +164,7 @@ function sql_to_paginated_query(string $sql, int $limit, int $offset = 0): strin
 function sql_to_limited_query(string $sql, int $limit): string
 {
     $query = (new Parser())->parse($sql);
-    $query->traverse(new PaginationModifier(new PaginationConfig($limit)));
+    $query->traverse(new OffsetPaginationModifier(new OffsetPaginationConfig($limit)));
 
     return $query->deparse();
 }

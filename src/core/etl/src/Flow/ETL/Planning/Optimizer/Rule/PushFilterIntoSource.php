@@ -26,11 +26,7 @@ use function array_reverse;
 use function count;
 
 /**
- * Moves the deterministic parts of an AND the file source uses into it, which returns only the rows matching them: a
- * partition-only part, which is also pushed as a path filter so a file it rejects is never listed, and a part the
- * source prunes with. A pushed part leaves its Filter node, and a node left with no part is removed. An OR is pushed
- * only as a whole. Nodes are pushed leaf first; a part kept in a node stops the push of every part after it and of
- * every node above it, though a partition-only part after it, in its node or above, still prunes the listing.
+ * A part kept in a node stops every later push; partition-only parts still prune the listing.
  */
 final readonly class PushFilterIntoSource implements Rule
 {

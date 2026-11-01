@@ -12,13 +12,6 @@ use Flow\Telemetry\Logger\LogSink;
 use Flow\Telemetry\Signal\Signals;
 use Throwable;
 
-/**
- * Exports each log record immediately when processed.
- *
- * Unlike BatchingLogProcessor, this processor exports log records synchronously
- * one at a time. This is useful for debugging and development where
- * immediate visibility of logs is more important than performance.
- */
 final readonly class PassThroughLogProcessor implements LogSink
 {
     public function __construct(

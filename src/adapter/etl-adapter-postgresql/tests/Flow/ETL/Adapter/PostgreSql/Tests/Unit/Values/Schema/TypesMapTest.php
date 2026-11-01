@@ -145,9 +145,6 @@ final class TypesMapTest extends TestCase
 
     public function test_an_unrecognised_name_is_refused_on_the_catalog_route(): void
     {
-        // The text floor is only legitimate where the caster leaves the value as text, which is the
-        // result route. SchemaConverter reads the catalog and must keep refusing, so the user is told
-        // to map the type explicitly instead of silently receiving a string column.
         $this->expectException(TypeMappingException::class);
 
         (new TypesMap())->toFlowType(column_type_from_string('hstore'));
@@ -407,9 +404,6 @@ final class TypesMapTest extends TestCase
 
     public function test_to_flow_type_floors_an_unknown_type_name_to_string(): void
     {
-        // The result route cannot ask the catalog whether an unknown name is an enum, a domain or
-        // an extension type, and pg transmits all of them as text, so they take the string floor.
-        // Only record and the geometric types still throw - see the test below.
         static::assertEquals(type_string(), (new TypesMap())->toFlowTypeWithTextFloor(ColumnType::custom('hstore')));
     }
 }

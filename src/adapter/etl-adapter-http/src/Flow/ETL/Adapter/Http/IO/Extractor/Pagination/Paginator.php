@@ -6,11 +6,6 @@ namespace Flow\ETL\Adapter\Http\IO\Extractor\Pagination;
 
 use Psr\Http\Message\RequestInterface;
 
-/**
- * Orchestrates a {@see PaginationStrategy}: stop conditions, `>=400` handling, identical-request loop guard and
- * page-state advancement. Implement {@see PaginationStrategy} to add a new pagination style; drop to
- * {@see \Flow\ETL\Adapter\Http\IO\Extractor\NextRequestFactory} for fully bespoke request derivation.
- */
 final class Paginator
 {
     private RequestComparator $comparator;

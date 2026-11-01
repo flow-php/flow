@@ -25,18 +25,6 @@ use function count;
 use function is_scalar;
 
 /**
- * Counter instrument for recording non-negative increments.
- *
- * Counters are monotonically increasing - they only go up.
- * Use for counting occurrences: requests, errors, items processed.
- *
- * Example usage:
- * ```php
- * $counter = $meter->createCounter('http.requests', 'requests', 'Total HTTP requests');
- * $counter->add(1, ['http.method' => 'GET']);
- * $counter->add(1, ['http.method' => 'POST']);
- * ```
- *
  * @see https://opentelemetry.io/docs/specs/otel/metrics/api/#counter
  */
 final class Counter implements Instrument

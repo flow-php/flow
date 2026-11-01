@@ -11,9 +11,7 @@ use function array_map;
 use function implode;
 
 /**
- * The plan in the direction rows move: each source first, every node followed by the nodes that read it. Numbers
- * are the tree's, so one node carries one number in every format. Outputs only groups the plan's consumers, so it
- * is left out - its children already end the flow.
+ * Sources first, each node followed by its readers; Outputs is left out.
  */
 final readonly class FlowLayout implements Layout
 {
@@ -21,9 +19,9 @@ final readonly class FlowLayout implements Layout
         private TreeLayout $tree = new TreeLayout(),
     ) {}
 
-    public function render(Entry $root): string
+    public function render(RenderedNode $root): string
     {
-        /** @var SplObjectStorage<object, list<Entry>> $readers */
+        /** @var SplObjectStorage<object, list<RenderedNode>> $readers */
         $readers = new SplObjectStorage();
         $sources = [];
         $this->collect($root, $readers, $sources);
@@ -31,7 +29,7 @@ final readonly class FlowLayout implements Layout
         /** @var SplObjectStorage<object, true> $placed */
         $placed = new SplObjectStorage();
 
-        return implode("\n", array_map(fn(Entry $source): string => $this->tree->render($this->reversed(
+        return implode("\n", array_map(fn(RenderedNode $source): string => $this->tree->render($this->reversed(
             $source,
             $readers,
             $placed,
@@ -39,10 +37,10 @@ final readonly class FlowLayout implements Layout
     }
 
     /**
-     * @param SplObjectStorage<object, list<Entry>> $readers every node's readers, in the order the tree visits them
-     * @param list<Entry> $sources the entries without inputs, in the order the tree visits them
+     * @param SplObjectStorage<object, list<RenderedNode>> $readers every node's readers, in the order the tree visits them
+     * @param list<RenderedNode> $sources the entries without inputs, in the order the tree visits them
      */
-    public function collect(Entry $entry, SplObjectStorage $readers, array &$sources): void
+    public function collect(RenderedNode $entry, SplObjectStorage $readers, array &$sources): void
     {
         if ($entry->shared) {
             return;
@@ -62,10 +60,10 @@ final readonly class FlowLayout implements Layout
     }
 
     /**
-     * @param SplObjectStorage<object, list<Entry>> $readers
+     * @param SplObjectStorage<object, list<RenderedNode>> $readers
      * @param SplObjectStorage<object, true> $placed the nodes already printed, any later reach is a shared reference
      */
-    public function reversed(Entry $entry, SplObjectStorage $readers, SplObjectStorage $placed): Entry
+    public function reversed(RenderedNode $entry, SplObjectStorage $readers, SplObjectStorage $placed): RenderedNode
     {
         $placed[$entry->source] = true;
         $children = [];

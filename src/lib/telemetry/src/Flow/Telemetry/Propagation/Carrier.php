@@ -5,25 +5,6 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Propagation;
 
 /**
- * Carrier for propagating context across process boundaries.
- *
- * A carrier is the transport mechanism for context propagation headers.
- * Implementations handle specific transport types (HTTP headers, gRPC
- * metadata, message queue headers, etc.).
- *
- * Example usage:
- * ```php
- * // Inject context into a carrier
- * $carrier = new ResponseCarrier($response);
- * $propagator->inject($context, $carrier);
- * $modifiedResponse = $carrier->unwrap();
- *
- * // With fluent chaining
- * $response = (new ResponseCarrier($response))
- *     ->set('X-Custom', 'value')
- *     ->unwrap();
- * ```
- *
  * @template-covariant TWrapped
  */
 interface Carrier

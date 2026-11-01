@@ -11,12 +11,6 @@ use Opentelemetry\Proto\Collector\Logs\V1\ExportLogsServiceRequest;
 use Opentelemetry\Proto\Collector\Metrics\V1\ExportMetricsServiceRequest;
 use Opentelemetry\Proto\Collector\Trace\V1\ExportTraceServiceRequest;
 
-/**
- * Builds OTLP protobuf request messages for gRPC transmission.
- *
- * Implementations return populated protobuf request objects that the gRPC
- * transport hands directly to the generated service stubs.
- */
 interface GrpcRequestFactory
 {
     /**

@@ -45,10 +45,7 @@ final class ChainExtractor implements Extractor, Refreshable
      */
     public function extract(Backend $backend, Criteria $criteria): Generator
     {
-        // Every child's batches are projected onto the folded shape, so each yields the union
-        // rather than only the columns its own source happens to carry. A child that cannot
-        // describe itself makes the chain unable to promise one shape, so the fold is allowed to
-        // throw - on the first batch, so a chain that yields nothing reads under any declared parent.
+        // the fold throws on the first batch, so an empty chain reads under any parent schema
         $schema = null;
 
         foreach ($this->extractors as $extractor) {

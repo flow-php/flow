@@ -58,8 +58,7 @@ fn reread(error: serde_json::Error) -> PhpException {
     ext_exception(format!("flow_php failed to read validated JSON again: {error}"))
 }
 
-/// One value appended as `append_cast()` would append what `json_decode()` reads from it; `false` leaves a partial row
-/// for the caller to truncate before the PHP lane takes the whole value.
+/// One value as `append_cast()` appends what `json_decode()` reads; `false` leaves a partial row to truncate.
 fn into_column(values: &mut KindBuilder, kind: &Kind, cast: &CastKind, text: &str) -> Result<bool, PhpException> {
     if let CastKind::Optional(inner) = cast {
         if text == "null" {
@@ -341,13 +340,13 @@ impl JsonReader {
     }
 
     /// Reads the next batch into `ready`: its corrupted records, then its rows.
-    fn read(&mut self, schema: &Zval, batch_size: usize, sample_size: Option<i64>, known: &[Vec<u8>]) -> PhpResult<()> {
+    fn read(&mut self, schema: &Zval, batch_size: usize, inference: Option<&Zval>, known: &[Vec<u8>]) -> PhpResult<()> {
         let (state, rebuilt) = BatchColumns::prepare(&mut self.columns.batch, schema, batch_size, "JSON")?;
 
         if rebuilt {
             let members = MemberColumns::of(state.columns.iter().map(|column| &column.key));
 
-            self.columns.members = match sample_size {
+            self.columns.members = match inference {
                 Some(_) => members.knowing(known.iter().cloned()),
                 None => members,
             };
@@ -413,14 +412,14 @@ impl JsonReader {
 
         let uri = || zval_str(self.uri.as_bytes());
 
-        if let (Some((row, name)), Some(sample_size)) = (unknown, sample_size) {
+        if let (Some((row, name)), Some(inference)) = (unknown, inference) {
             let (offset, line) = located(self.start, lines, &self.bounds[row]);
 
             return Err(outside_the_sample(
                 &uri(),
                 offset,
                 line,
-                sample_size,
+                inference,
                 row,
                 unexpected_column(&name)?,
             ));
@@ -430,7 +429,7 @@ impl JsonReader {
         let refusals = fill(state, &self.records, &self.slots, rows, &[])?;
 
         if !refusals.is_empty() {
-            if let Some(sample_size) = sample_size {
+            if let Some(inference) = inference {
                 let first = refusals.iter().find(|refused| !refused.absent).unwrap_or(&refusals[0]);
                 let (offset, line) = located(self.start, lines, &self.bounds[first.row]);
 
@@ -438,7 +437,7 @@ impl JsonReader {
                     &uri(),
                     offset,
                     line,
-                    sample_size,
+                    inference,
                     first.row,
                     first.cause.shallow_clone(),
                 ));
@@ -534,18 +533,16 @@ impl JsonReader {
         self.framing.finish();
     }
 
-    /// Exactly `batch_size` records keyed and ordered by `schema` while that many are buffered, the remainder after
-    /// `finish()`, else none: a batch's corrupted records first, then its rows. Under an inferred schema a refused
-    /// record is an `InferredSchemaException`.
+    /// Exactly `batch_size` records while buffered, the remainder after `finish()`; corrupted records come first.
     pub fn next_columns(
         &mut self,
         schema: &Zval,
         batch_size: usize,
-        sample_size: Option<i64>,
+        inference: Option<&Zval>,
         known: &[Vec<u8>],
     ) -> PhpResult<Option<Fetched>> {
         if self.ready.is_empty() {
-            if let Err(e) = self.read(schema, batch_size, sample_size, known) {
+            if let Err(e) = self.read(schema, batch_size, inference, known) {
                 self.clear();
 
                 return Err(e);

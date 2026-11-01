@@ -11,12 +11,6 @@ use function explode;
 use function sprintf;
 use function str_replace;
 
-/**
- * Default ErrorHandler. Writes formatted Throwables via PHP's error_log() —
- * stderr in CLI by default, or the error_log ini setting otherwise.
- *
- * Matches the OTEL spec recommendation to "log to standard error output".
- */
 final readonly class ErrorLogHandler implements ErrorHandler
 {
     public function __construct(

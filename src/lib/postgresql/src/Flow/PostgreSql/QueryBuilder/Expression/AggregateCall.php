@@ -14,10 +14,6 @@ use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 use function array_values;
 use function count;
 
-/**
- * Represents an aggregate function call with optional DISTINCT, ORDER BY, and FILTER clauses.
- * Examples: COUNT(*), SUM(x), AVG(DISTINCT value), COUNT(*) FILTER (WHERE condition).
- */
 final readonly class AggregateCall implements Expression
 {
     /**

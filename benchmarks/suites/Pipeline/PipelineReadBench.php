@@ -8,10 +8,6 @@ use Flow\Benchmarks\BenchmarkRows;
 use Generator;
 use PhpBench\Attributes as Bench;
 
-/**
- * Rung 1, per source. Without a read-only rung per source, a read regression lands inside the
- * aggregate pipeline's noise band.
- */
 #[Bench\BeforeMethods('warm')]
 final class PipelineReadBench
 {

@@ -33,7 +33,7 @@ final class RowGroupChunksParityTest extends TestCase
 
     #[TestWith(['row_groups_php'])]
     #[TestWith(['row_groups_arrow'])]
-    #[TestWith(['row_groups_duckdb'])]
+    #[TestWith(['row_groups_external'])]
     #[TestWith(['../../../IO/Fixtures/pagination_row_group_1kb_5k_rows.snappy'])]
     #[TestWith(['../../../IO/Fixtures/EdgeCases/datapage_v2.snappy'])]
     public function test_the_arrow_footer_slices_give_the_zone_maps_of_the_php_footer(string $fixture): void

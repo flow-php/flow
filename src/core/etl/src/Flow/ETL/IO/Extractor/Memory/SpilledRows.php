@@ -23,10 +23,7 @@ use function strlen;
 use function unserialize;
 
 /**
- * A source that can be read only once, made replayable: every row is written to a temporary
- * schema-less spill file as it streams past, and the replay reads the file back. The source is
- * advanced exactly once, ever; the spill it produced can be replayed as often as the caller likes,
- * and lives until this object is collected.
+ * Makes a read-once source replayable; the source is advanced exactly once.
  */
 final class SpilledRows implements Sniffer
 {
@@ -157,7 +154,7 @@ final class SpilledRows implements Sniffer
      *
      * @throws InvalidLogicException when the source was already read
      */
-    public function sniff(int $unit, int $rowBudget): Sample
+    public function sniff(int $unit, ?int $rowBudget): Sample
     {
         if ($this->state !== SpillState::Fresh) {
             throw InvalidLogicException::because(self::ALREADY_CONSUMED);
@@ -201,7 +198,7 @@ final class SpilledRows implements Sniffer
 
         // InMemoryRows owns the raw-row naming; keeping a second copy here would put the "same names array_to_rows()
         // gives" invariant in two places.
-        return (new InMemoryRows($spilling()))->sniff(0, -1);
+        return (new InMemoryRows($spilling()))->sniff(0, null);
     }
 
     public function parts(int $unit, int $targetBytes): array

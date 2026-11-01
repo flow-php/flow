@@ -246,7 +246,7 @@ final class ParquetLoader implements Closure, Discardable, FileLoader, Loader
             $this->saveMode,
             $this->router,
             new ParquetFileWriterFactory(
-                $this->schema?->gracefulRemove(...$this->router->droppedNames()),
+                $this->schema?->gracefulRemove(...$this->router->pathOnlyColumns()),
                 $this->converter,
                 $this->compressions,
                 $this->options,

@@ -11,12 +11,7 @@ use function mb_strtolower;
 use function mb_substr;
 
 /**
- * Composer loads every `functions.php` in the monorepo through its `files` entry, so by the time a
- * test runs the set of defined user functions IS the set of published DSL functions - it cannot be
- * served stale.
- *
- * Short names are indexed alongside qualified ones because a fence that imports a function calls it
- * unqualified.
+ * Composer `files` loads every functions.php, so defined functions = published DSL; short names for imported calls.
  */
 final readonly class DefinedFunctions
 {

@@ -11,14 +11,6 @@ use Flow\Telemetry\Logger\LogProcessor;
 use Flow\Telemetry\Logger\LogSink;
 use Throwable;
 
-/**
- * Forwards log records to multiple processors.
- *
- * This is useful when you need to:
- * - Send logs to multiple backends (e.g., both console and OTLP)
- * - Combine batching with memory storage for testing
- * - Add custom processing alongside export
- */
 final readonly class CompositeLogProcessor implements LogSink
 {
     /**

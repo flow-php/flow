@@ -96,17 +96,15 @@ final class IsIn implements ComparisonFunction
         $nullability = new Nullability();
         $bare = $nullability->bare($haystack);
 
-        // Only a list and a map declare one element type to compare the needle against. A structure,
-        // a json or a bare array<mixed> declares none, and Parameter::asArray() iterates all of them,
-        // so asserting there would refuse haystacks eval() handles.
-        $element = match (true) {
+        // structure, json and array<mixed> declare no element type
+        $declaredElement = match (true) {
             $bare instanceof ListType => $nullability->bare($bare->element()),
             $bare instanceof MapType => $nullability->bare($bare->value()),
             default => null,
         };
 
-        if ($element !== null) {
-            (new ValueComparator())->assertComparableTypes($nullability->bare($needle), $element, '==');
+        if ($declaredElement !== null) {
+            (new ValueComparator())->assertComparableTypes($nullability->bare($needle), $declaredElement, '==');
         }
 
         return $nullability->any(type_boolean(), $haystack, $needle);

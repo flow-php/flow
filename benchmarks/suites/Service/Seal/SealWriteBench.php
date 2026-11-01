@@ -8,9 +8,7 @@ use Flow\Benchmarks\BenchmarkRows;
 use Generator;
 use PhpBench\Attributes as Bench;
 
-// Disabled until an Elasticsearch 8.x service is available locally (the installed client is 8.x and cannot talk to
-// ES 7.x). To re-enable once compose.yml's elasticsearch:8.19.0 container is up: remove #[Bench\Skip] and restore the
-// class-level #[Bench\AfterClassMethods('dropWrite')] teardown (dropped here so the disabled bench never contacts ES).
+// Disabled until an Elasticsearch 8.x service runs locally; the installed client cannot talk to ES 7.x.
 #[Bench\Skip]
 final class SealWriteBench
 {

@@ -1,6 +1,4 @@
-//! Parquet bytes from a `Flow\Filesystem\SourceStream` (`read(int $length, int $offset): string`, `size(): ?int`), and
-//! the PHP stream object both the source and the sink call into. A `NativeLocalSourceStream` is reopened by its path
-//! and read with `pread`, so no byte of it crosses PHP.
+//! Parquet bytes from a `SourceStream`; a `NativeLocalSourceStream` is reopened by path and read with `pread`.
 
 use std::cell::{Cell, RefCell};
 use std::ffi::OsStr;
@@ -79,8 +77,7 @@ fn local_file(stream: &Zval) -> Result<Option<LocalFile>, PhpException> {
     Ok(Some(LocalFile { file, size }))
 }
 
-/// A PHP stream object. An exception its method throws is kept here, for the surface to rethrow as itself once the
-/// Parquet call it broke returns. A local source stream's bytes come from [`LocalFile`] instead of its `read()`.
+/// A PHP stream object; an exception its method throws is kept for the surface to rethrow.
 pub struct PhpStream {
     stream: Zval,
     thrown: RefCell<Option<ZBox<ZendObject>>>,

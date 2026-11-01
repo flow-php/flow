@@ -288,9 +288,7 @@ final class FileCommit
     }
 
     /**
-     * Removes the existing files the moved ones replace, each glob once, the moved files themselves excluded.
-     * Nothing moved replaces every file of an unpartitioned destination; a partitioned one keeps the partitions no
-     * row was written to.
+     * A partitioned destination keeps the partitions no row was written to.
      *
      * @param array<string, Path> $moved by target URI
      */

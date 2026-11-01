@@ -11,13 +11,6 @@ use Flow\Telemetry\Filter\AttributeSource;
 use Flow\Telemetry\Meter\Metric;
 use Flow\Telemetry\Meter\MetricProcessor;
 
-/**
- * Filters metrics by their attributes.
- *
- * Wraps another MetricProcessor and forwards only the metrics that survive the
- * configured {@see AttributeFilter}. Metrics the filter drops are silently
- * discarded to reduce telemetry noise.
- */
 final readonly class AttributeFilteringMetricProcessor implements MetricProcessor
 {
     /**

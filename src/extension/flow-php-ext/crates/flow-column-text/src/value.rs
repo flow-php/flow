@@ -80,8 +80,7 @@ pub struct Renderer<'a> {
     values: Values<'a>,
 }
 
-/// Whether the native lane renders a column of `node`. Not rendered: markup; json unless it is the column itself and
-/// the format writes its stored text; a datetime or date whose format did not parse; a container holding any of those.
+/// Whether the native lane renders a column of `node`; markup, unparsed formats and their containers fall back to PHP.
 pub fn renders<M>(node: &ValueNode<M>, formats: &Formats, json_column_is_text: bool) -> bool {
     match node {
         ValueNode::Json => json_column_is_text,
@@ -106,7 +105,7 @@ fn renders_nested<M>(node: &ValueNode<M>, formats: &Formats) -> bool {
 }
 
 impl<'a> Renderer<'a> {
-    /// `None` for a column `renders()` refuses. A named zone still has to be resolved: [`Renderer::resolve`].
+    /// `None` for a column `renders()` refuses; a named zone still needs [`Renderer::resolve`].
     pub fn new<M>(node: &ValueNode<M>, kind: &'a Kind, array: &'a dyn Array, formats: &'a Formats) -> Option<Self> {
         let values = match (node, kind) {
             (_, Kind::Null) | (ValueNode::Null, _) => Values::Null,
@@ -220,7 +219,7 @@ impl<'a> Renderer<'a> {
         }
     }
 
-    /// The scalar text of a non-null value: a CSV field before quoting. A nested value is its JSON text.
+    /// The scalar text of a non-null value; a nested value is its JSON text.
     pub fn text(&self, out: &mut Vec<u8>, i: usize) -> Result<(), Error> {
         match &self.values {
             Values::Null => {}
@@ -248,8 +247,7 @@ impl<'a> Renderer<'a> {
         Ok(())
     }
 
-    /// The JSON text of row `i`, null included. As `json_encode()`, a NAN or an infinity writes `0`, raises
-    /// `non_finite` and goes on; text that is not UTF-8 stops with `Error::Utf8`.
+    /// JSON text of row `i`; NAN or infinity writes `0` and raises `non_finite`, non-UTF-8 stops with `Error::Utf8`.
     pub fn json(&self, out: &mut Vec<u8>, i: usize, flags: &Flags, non_finite: &mut bool) -> Result<(), Error> {
         if self.is_null(i) {
             out.extend_from_slice(b"null");

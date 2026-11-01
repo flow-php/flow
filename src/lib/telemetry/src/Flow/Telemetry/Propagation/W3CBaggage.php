@@ -14,31 +14,7 @@ use function urldecode;
 use function urlencode;
 
 /**
- * W3C Baggage propagator for propagating application-specific data.
- *
- * Implements the W3C Baggage specification for propagating key-value
- * pairs across service boundaries using HTTP headers.
- *
- * Header format:
- * baggage: key1=value1,key2=value2;property1;property2=propValue
- *
- * Note: Properties (metadata for baggage entries) are parsed but not preserved
- * in the current implementation as they are rarely used.
- *
- * Example usage:
- * ```php
- * $propagator = new W3CBaggage();
- *
- * // Extract from incoming request
- * $carrier = new ArrayCarrier($headers);
- * $ctx = $propagator->extract($carrier);
- * $baggage = $ctx->baggage;
- *
- * // Inject into outgoing request
- * $carrier = new ArrayCarrier();
- * $propagator->inject(new PropagationContext(baggage: $baggage), $carrier);
- * $headers = $carrier->unwrap();
- * ```
+ * Entry properties are parsed but dropped.
  *
  * @see https://www.w3.org/TR/baggage/
  */

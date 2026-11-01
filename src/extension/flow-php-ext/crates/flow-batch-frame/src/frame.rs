@@ -1,8 +1,4 @@
-//! A Floe BATCH frame body (`PhpBackend::encodeFrame()`) from one array per schema column, and back the way
-//! `PhpBackend::decodeFrame()` reads it: the directory (`rows, nodes, buffers` then `(length, nulls)` per node and
-//! `(offset, stored)` per buffer, padded to 8 bytes), then the buffer area where every stored buffer is an 8-byte length
-//! prefix (-1 = raw) and its bytes, padded to 8. A raw buffer's bytes are referenced in place when an owner keeps the
-//! body alive.
+//! A Floe BATCH frame body (`PhpBackend::encodeFrame()`) from one array per column, and back.
 
 use std::convert::Infallible;
 use std::sync::Arc;
@@ -61,9 +57,7 @@ struct Stored {
     bytes: Vec<u8>,
 }
 
-/// The mirror of `decode`: `columns` in schema order, each with its kind; one allocation of the exact frame size.
-/// Nodes come from `layout::nodes(kind, len, null_count, &buffers)` over `column::encode(data, kind)`, as
-/// `PhpBackend::encodeFrame()` computes them from `BufferLayout::nodes`.
+/// The mirror of `decode`: one allocation of the exact frame size.
 pub fn encode<C: Codec>(
     columns: &[(&ArrayData, &Kind)],
     rows: u32,
@@ -161,9 +155,7 @@ fn frame_length(directory: usize, stored: impl Iterator<Item = usize>) -> Result
     Ok(bytes as usize)
 }
 
-/// `kinds` are the schema's columns in order. With an `owner`, every raw buffer whose payload is 8-byte aligned becomes
-/// a `Buffer` into `body` kept alive by `owner`; without one, or for a misaligned or codec-decoded buffer, the bytes are
-/// copied as `column::decode` copies them.
+/// With an `owner`, aligned raw buffers are referenced in place; otherwise the bytes are copied.
 pub fn decode<C: Codec>(
     body: &[u8],
     owner: Option<&Arc<dyn Allocation>>,
@@ -655,7 +647,7 @@ mod tests {
         assert_eq!(Arc::strong_count(&body), 2);
     }
 
-    /// Drops trailing zero bytes; decodes by padding back to the prefix's length. Records every buffer it encodes.
+    /// Drops trailing zero bytes and pads them back on decode; records every buffer it encodes.
     struct TrailingZeros(Vec<usize>);
 
     impl Codec for TrailingZeros {

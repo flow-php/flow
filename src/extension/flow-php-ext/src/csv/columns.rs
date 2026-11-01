@@ -29,8 +29,7 @@ pub struct CsvColumns {
     held: Option<HeldBatch>,
 }
 
-/// One cell into its column; the cell's `ColumnMismatchException` when it is refused. A PHP-lane exception that is not
-/// a `Flow\Types` refusal escapes as thrown.
+/// One cell into its column; a non-`Flow\Types` PHP-lane exception escapes as thrown.
 fn append_cell(column: &mut BatchColumn, cell: Option<&[u8]>) -> Result<Option<Zval>, PhpException> {
     let Some(bytes) = cell else {
         if !column.nullable {
@@ -89,7 +88,7 @@ pub fn next_columns(
     schema: &Zval,
     batch_size: usize,
     uri: &Zval,
-    sample_size: Option<i64>,
+    inference: Option<&Zval>,
 ) -> Result<Option<Fetched>, PhpException> {
     if let Some(record) = pending.ready.pop_front() {
         return Ok(Some(Fetched::Corrupted(record)));
@@ -166,7 +165,7 @@ pub fn next_columns(
             column.values.truncate(row);
         }
 
-        if let Some(sample_size) = sample_size {
+        if let Some(inference) = inference {
             state.reset();
             pending.refused.clear();
 
@@ -174,7 +173,7 @@ pub fn next_columns(
                 uri,
                 reader.record_offset(),
                 reader.record_line(),
-                sample_size,
+                inference,
                 row,
                 cause,
             ));

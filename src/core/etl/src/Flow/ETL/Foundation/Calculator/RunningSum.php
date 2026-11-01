@@ -18,8 +18,7 @@ use function is_int;
 use function is_string;
 
 /**
- * IEEE addition with Neumaier compensation: the rounding error of every float addition is carried and added back once,
- * so a long run of floats does not drift. An exact addition is decimal (Calculator) over the compensated total.
+ * Neumaier-compensated float sum; exact (decimal) addition goes through Calculator.
  */
 final class RunningSum
 {

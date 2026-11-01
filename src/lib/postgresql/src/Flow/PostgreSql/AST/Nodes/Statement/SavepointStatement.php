@@ -8,8 +8,7 @@ use Flow\PostgreSql\AST\Nodes\Statement;
 use Flow\PostgreSql\Protobuf\AST\TransactionStmt;
 
 /**
- * Represents SAVEPOINT statements.
- * Note: These are parsed as TransactionStmt in PostgreSQL.
+ * Parsed as TransactionStmt.
  *
  * @implements Statement<TransactionStmt>
  */

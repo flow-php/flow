@@ -816,6 +816,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Telemetry\\DSL\\attribute_filtering_metric_processor(" + "$" + "{" + "1:processor" + "}" + ", " + "$" + "{" + "2:filter" + "}" + ")"),
         boost: 10
     },                {
+        label: "attribute_filtering_sampler",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">attribute_filtering_sampler</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">AttributeFilter</span> <span class=\"fn-param\">$filter</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Sampler</span> <span class=\"fn-param\">$delegate</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Tracer\\Sampler\\AlwaysOnSampler::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AttributeFilteringSampler</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an AttributeFilteringSampler. Drops spans whose start-time attributes match<br>the filter (or keeps ONLY matching spans when the filter\'s exclude is false), and<br>defers all other spans to the delegate sampler.<br>Only attributes available at span start are visible; attributes added later are not.<br>@param AttributeFilter $filter The attribute filter evaluated against the span\'s start attributes<br>@param Sampler $delegate Sampler that decides spans which do not match (default: AlwaysOnSampler)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\attribute_filtering_sampler(" + "$" + "{" + "1:filter" + "}" + ", " + "$" + "{" + "2:delegate" + "}" + ")"),
+        boost: 10
+    },                {
         label: "attribute_filtering_span_processor",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -834,24 +852,6 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Telemetry\\DSL\\attribute_filtering_span_processor(" + "$" + "{" + "1:processor" + "}" + ", " + "$" + "{" + "2:filter" + "}" + ")"),
         boost: 10
     },                {
-        label: "attribute_matching_sampler",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">attribute_matching_sampler</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">AttributeFilter</span> <span class=\"fn-param\">$filter</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Sampler</span> <span class=\"fn-param\">$delegate</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Tracer\\Sampler\\AlwaysOnSampler::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AttributeMatchingSampler</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Create an AttributeMatchingSampler. Drops spans whose start-time attributes match<br>the filter (or keeps ONLY matching spans when the filter\'s exclude is false), and<br>defers all other spans to the delegate sampler.<br>Only attributes available at span start are visible; attributes added later are not.<br>@param AttributeFilter $filter The attribute filter evaluated against the span\'s start attributes<br>@param Sampler $delegate Sampler that decides spans which do not match (default: AlwaysOnSampler)
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\attribute_matching_sampler(" + "$" + "{" + "1:filter" + "}" + ", " + "$" + "{" + "2:delegate" + "}" + ")"),
-        boost: 10
-    },                {
         label: "attribute_rule",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -868,6 +868,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\Telemetry\\DSL\\attribute_rule(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:mode" + "}" + ", " + "$" + "{" + "3:expected" + "}" + ", " + "$" + "{" + "4:caseSensitive" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "attribute_value_normalizer",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">attribute_value_normalizer</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AttributeValueNormalizer</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a AttributeValueNormalizer for converting arbitrary PHP values to Telemetry attribute types.<br>The normalizer handles:<br>- null → \'null\' string<br>- scalars (string, int, float, bool) → unchanged<br>- DateTimeInterface → unchanged<br>- Throwable → unchanged<br>- arrays → recursively normalized<br>- objects with __toString() → string cast<br>- objects without __toString() → class name<br>- other types → get_debug_type() result<br>Example usage:<br>\`\`\`php<br>$normalizer = attribute_value_normalizer();<br>$normalized = $normalizer->normalize($value);<br>\`\`\`
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Bridge\\Monolog\\Telemetry\\DSL\\attribute_value_normalizer()"),
         boost: 10
     },                {
         label: "average",
@@ -6037,10 +6055,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">log_record_converter</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SeverityMapper</span> <span class=\"fn-param\">$severityMapper</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ValueNormalizer</span> <span class=\"fn-param\">$valueNormalizer</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">LogRecordConverter</span>
+                    <span class=\"fn-name\">log_record_converter</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SeverityMapper</span> <span class=\"fn-param\">$severityMapper</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">AttributeValueNormalizer</span> <span class=\"fn-param\">$valueNormalizer</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">LogRecordConverter</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a LogRecordConverter for converting Monolog LogRecord to Telemetry LogRecord.<br>The converter handles:<br>- Severity mapping from Monolog Level to Telemetry Severity<br>- Message body conversion<br>- Channel and level name as monolog.* attributes<br>- Context values as context.* attributes (Throwables use setException())<br>- Extra values as extra.* attributes<br>@param null|SeverityMapper $severityMapper Custom severity mapper (defaults to standard mapping)<br>@param null|ValueNormalizer $valueNormalizer Custom value normalizer (defaults to standard normalizer)<br>Example usage:<br>\`\`\`php<br>$converter = log_record_converter();<br>$telemetryRecord = $converter->convert($monologRecord);<br>\`\`\`<br>Example with custom mapper:<br>\`\`\`php<br>$converter = log_record_converter(<br>    severityMapper: severity_mapper([<br>        Level::Debug->value => Severity::TRACE,<br>    ])<br>);<br>\`\`\`
+                    Create a LogRecordConverter for converting Monolog LogRecord to Telemetry LogRecord.<br>The converter handles:<br>- Severity mapping from Monolog Level to Telemetry Severity<br>- Message body conversion<br>- Channel and level name as monolog.* attributes<br>- Context values as context.* attributes (Throwables use setException())<br>- Extra values as extra.* attributes<br>@param null|SeverityMapper $severityMapper Custom severity mapper (defaults to standard mapping)<br>@param null|AttributeValueNormalizer $valueNormalizer Custom value normalizer (defaults to standard normalizer)<br>Example usage:<br>\`\`\`php<br>$converter = log_record_converter();<br>$telemetryRecord = $converter->convert($monologRecord);<br>\`\`\`<br>Example with custom mapper:<br>\`\`\`php<br>$converter = log_record_converter(<br>    severityMapper: severity_mapper([<br>        Level::Debug->value => Severity::TRACE,<br>    ])<br>);<br>\`\`\`
                 </div>
                             `
             return div
@@ -6112,24 +6130,6 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\PostgreSql\\DSL\\manual_catalog_provider(" + "$" + "{" + "1:catalog" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "manual_detector",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">manual_detector</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$attributes</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ManualDetector</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Create a ManualDetector.<br>@param array<string, array<array-key, mixed>|bool|\\DateTimeInterface|float|int|string|\\Throwable> $attributes Resource attributes
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\manual_detector(" + "$" + "{" + "1:attributes" + "}" + ")"),
         boost: 10
     },                {
         label: "map_schema",
@@ -6481,12 +6481,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">native_local_filesystem</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$protocol</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;file&#039;</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">NativeLocalFilesystem</span>
+                    <span class=\"fn-name\">native_local_filesystem</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$protocol</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;file&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Permissions</span> <span class=\"fn-param\">$permissions</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">NativeLocalFilesystem</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Filesystem\\DSL\\native_local_filesystem(" + "$" + "{" + "1:protocol" + "}" + ")"),
+        apply: snippet("\\Flow\\Filesystem\\DSL\\native_local_filesystem(" + "$" + "{" + "1:protocol" + "}" + ", " + "$" + "{" + "2:permissions" + "}" + ")"),
         boost: 10
     },                {
         label: "ne",
@@ -10485,6 +10485,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\PostgreSql\\DSL\\star(" + "$" + "{" + "1:table" + "}" + ")"),
         boost: 10
     },                {
+        label: "static_detector",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">static_detector</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$attributes</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StaticDetector</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a StaticDetector.<br>@param array<string, array<array-key, mixed>|bool|\\DateTimeInterface|float|int|string|\\Throwable> $attributes Resource attributes
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\static_detector(" + "$" + "{" + "1:attributes" + "}" + ")"),
+        boost: 10
+    },                {
         label: "static_factory_mapper",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -12661,24 +12679,6 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\PostgreSql\\DSL\\values_table(" + "$" + "{" + "1:rows" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "value_normalizer",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">value_normalizer</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ValueNormalizer</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Create a ValueNormalizer for converting arbitrary PHP values to Telemetry attribute types.<br>The normalizer handles:<br>- null → \'null\' string<br>- scalars (string, int, float, bool) → unchanged<br>- DateTimeInterface → unchanged<br>- Throwable → unchanged<br>- arrays → recursively normalized<br>- objects with __toString() → string cast<br>- objects without __toString() → class name<br>- other types → get_debug_type() result<br>Example usage:<br>\`\`\`php<br>$normalizer = value_normalizer();<br>$normalized = $normalizer->normalize($value);<br>\`\`\`
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\Bridge\\Monolog\\Telemetry\\DSL\\value_normalizer()"),
         boost: 10
     },                {
         label: "value_type_bigint",

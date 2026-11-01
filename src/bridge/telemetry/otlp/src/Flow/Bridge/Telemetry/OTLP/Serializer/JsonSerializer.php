@@ -40,10 +40,6 @@ use const JSON_THROW_ON_ERROR;
 use const JSON_UNESCAPED_SLASHES;
 
 /**
- * JSON serializer for OTLP wire format.
- *
- * Converts Flow Telemetry objects to the OTLP JSON wire format.
- *
  * @see https://opentelemetry.io/docs/specs/otlp/#otlphttp-request
  */
 final class JsonSerializer
@@ -708,17 +704,6 @@ final class JsonSerializer
         return $result;
     }
 
-    /**
-     * Convert SpanKind to OTLP span kind value.
-     *
-     * OTLP span kinds:
-     * 0 = SPAN_KIND_UNSPECIFIED
-     * 1 = SPAN_KIND_INTERNAL
-     * 2 = SPAN_KIND_SERVER
-     * 3 = SPAN_KIND_CLIENT
-     * 4 = SPAN_KIND_PRODUCER
-     * 5 = SPAN_KIND_CONSUMER
-     */
     private function serializeSpanKind(SpanKind $kind): int
     {
         return match ($kind) {

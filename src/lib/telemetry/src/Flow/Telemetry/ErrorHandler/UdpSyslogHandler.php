@@ -16,12 +16,6 @@ use function is_resource;
 use function sprintf;
 use function stream_socket_client;
 
-/**
- * Writes RFC 5424-style syslog frames over UDP to a remote collector.
- *
- * The socket is opened lazily on the first handle() call, persisted across
- * subsequent calls, and closed in __destruct().
- */
 final class UdpSyslogHandler implements ErrorHandler
 {
     /** @var null|resource */

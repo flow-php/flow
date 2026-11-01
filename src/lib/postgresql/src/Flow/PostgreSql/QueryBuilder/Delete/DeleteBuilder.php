@@ -27,16 +27,6 @@ use LogicException;
 use function array_map;
 use function count;
 
-/**
- * Builder for DELETE statements using a fluent step-by-step API.
- *
- * Supports:
- * - DELETE FROM table
- * - WITH clause (CTEs)
- * - USING clause (multi-table deletes)
- * - WHERE clause
- * - RETURNING clause
- */
 final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
 {
     /**

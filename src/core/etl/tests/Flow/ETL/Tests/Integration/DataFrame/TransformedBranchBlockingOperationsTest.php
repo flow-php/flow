@@ -35,16 +35,6 @@ use function Flow\ETL\DSL\sum;
 use function Flow\ETL\DSL\to_transformation;
 use function Flow\ETL\DSL\window;
 
-/**
- * A Transformation given to to_transformation() becomes a branch: one branch pipeline per run, fed batch by batch
- * and drained when the run ends. A Processor placed there therefore answers exactly as it would on the outer frame,
- * and a blocking operation buffers proportional to the data - the same cost it has outside a Transformation.
- *
- * The values below are the outer-frame ground truth: running the same operation on the outer frame produces them
- * byte for byte. If one of them starts failing, the branch regressed - do not "fix" the assertion.
- *
- * See documentation/components/core/transformations.md.
- */
 final class TransformedBranchBlockingOperationsTest extends FlowIntegrationTestCase
 {
     public function test_a_drain_failure_under_skip_rows_completes_and_drops_the_whole_buffered_batch(): void
@@ -130,8 +120,6 @@ final class TransformedBranchBlockingOperationsTest extends FlowIntegrationTestC
 
     public function test_collect_inside_a_transformation_collects_the_whole_stream(): void
     {
-        // One load of 6 rows. This is the buffering cost a blocking operation has: collect() inside a Transformation
-        // holds the stream in memory exactly as it does on an outer frame.
         $spy = new SpyLoader();
 
         df()
@@ -148,9 +136,6 @@ final class TransformedBranchBlockingOperationsTest extends FlowIntegrationTestC
 
     public function test_constrain_inside_a_transformation_accumulates_across_batches(): void
     {
-        // ConstrainedProcessor keeps its rowIndex and UniqueConstraint keeps its storage for the whole stream, so a
-        // stream-wide constraint sees the whole stream. Each batch here is internally unique on 'g' while the stream
-        // is not, and the violation is reported at row index 2, the first row of batch TWO.
         $uniqueGroup =
             new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->constrain(constraint_unique('g')));
 
@@ -165,8 +150,6 @@ final class TransformedBranchBlockingOperationsTest extends FlowIntegrationTestC
 
     public function test_drop_duplicates_inside_a_transformation_deduplicates_globally(): void
     {
-        // REGRESSION GUARD - asserts CORRECT behaviour. The distinct processor keeps its seen keys for the whole run
-        // of the branch pipeline.
         $spy = new SpyLoader();
 
         df()
@@ -198,9 +181,6 @@ final class TransformedBranchBlockingOperationsTest extends FlowIntegrationTestC
 
     public function test_join_inside_a_transformation_matches_every_row(): void
     {
-        // REGRESSION GUARD - asserts CORRECT behaviour. HashJoin reads the RIGHT side, a separate complete
-        // frame, first; it fits under the memory limit, so the left stream joins batch by batch in its own order -
-        // byte for byte what the same join gives on the outer frame.
         $spy = new SpyLoader();
 
         df()
@@ -231,9 +211,6 @@ final class TransformedBranchBlockingOperationsTest extends FlowIntegrationTestC
 
     public function test_limit_inside_a_transformation_applies_across_the_whole_stream(): void
     {
-        // REGRESSION GUARD - asserts CORRECT behaviour. A reached limit becomes Signal::STOP, which
-        // ends the fed source and terminates the fiber, so the batches fed afterwards are dropped. Identical to
-        // limiting the outer frame.
         $spy = new SpyLoader();
 
         df()
@@ -296,8 +273,6 @@ final class TransformedBranchBlockingOperationsTest extends FlowIntegrationTestC
 
     public function test_pivot_inside_a_transformation_pivots_the_whole_stream(): void
     {
-        // One pivoted set for the stream. Every row carries both pivoted columns in Schema order,
-        // the group's own value and null for the other.
         $spy = new SpyLoader();
 
         df()
@@ -382,8 +357,6 @@ final class TransformedBranchBlockingOperationsTest extends FlowIntegrationTestC
 
     public function test_until_inside_a_transformation_applies_across_the_whole_stream(): void
     {
-        // REGRESSION GUARD - asserts CORRECT behaviour. UntilTransformer is a Transformer and its STOP ends the side
-        // pipeline. Identical to running until() on the outer frame.
         $spy = new SpyLoader();
 
         df()

@@ -20,32 +20,7 @@ use function sys_get_temp_dir;
 use function unserialize;
 
 /**
- * Decorator that caches resource detection results to a file.
- *
- * Wraps another detector and caches its results. On subsequent calls,
- * if the cache file exists, it returns the cached resource instead of
- * running detection again. This is useful for expensive detection
- * operations that don't change during runtime.
- *
- * The cache is serialized using PHP's serialize/unserialize functions.
- *
- * Example usage:
- * ```php
- * // Cache default detectors to system temp directory
- * $detector = new CachingDetector(
- *     new ChainDetector(
- *         new OsDetector(),
- *         new HostDetector(),
- *         new ProcessDetector(),
- *     ),
- * );
- *
- * // Cache to custom path
- * $detector = new CachingDetector(
- *     new ChainDetector(...$detectors),
- *     '/var/cache/app/telemetry_resource.cache',
- * );
- * ```
+ * The file cache never expires: wrap only runtime-stable detection.
  */
 final readonly class CachingDetector implements ResourceDetector
 {

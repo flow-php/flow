@@ -134,11 +134,6 @@ final class FileFormatContractTest extends FlowIntegrationTestCase
         );
     }
 
-    /**
-     * OpenSpout drives ZipArchive, which takes a local path and cannot read a memory:// stream, so the read itself never
-     * crosses the Filesystem. The one call that does is the format sniff, and only an extension-less path needs it - a
-     * *.xlsx path is typed by its extension and opens nothing.
-     */
     public function test_an_extension_less_path_is_sniffed_through_the_given_filesystem(): void
     {
         $written = path($this->cacheDir->path() . '/family-excel.xlsx');

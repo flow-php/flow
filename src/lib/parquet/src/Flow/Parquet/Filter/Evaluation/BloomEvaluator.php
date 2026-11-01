@@ -24,8 +24,7 @@ use Generator;
 use function is_float;
 
 /**
- * A bloom filter proves only absence: a positive Equal or In leaf whose literals are all absent is Never, every other
- * leaf is Maybe. A row group's filter is read only for such a leaf.
+ * A bloom filter proves only absence: only positive Equal/In leaves can be Never.
  *
  * @implements FilterVisitor<Truth>
  */
@@ -82,8 +81,7 @@ final readonly class BloomEvaluator implements FilterVisitor
     }
 
     /**
-     * Never when no point of the leaf's pre-image is in the filter. A zero is checked as both -0.0 and +0.0, which
-     * compare equal but hash apart.
+     * A zero is checked as both -0.0 and +0.0, which compare equal but hash apart.
      */
     private function membership(Comparison|In $node): Truth
     {

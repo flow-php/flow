@@ -336,8 +336,6 @@ final class PostgreSqlCursorExtractorTest extends FlowTestCase
                 new Criteria(),
             ));
         } finally {
-            // The derivation happens before the transaction opens, so a refused probe leaves
-            // nothing to unwind. Deriving inside the try block would fail this.
             static::assertSame(['describe'], $client->calls);
         }
     }

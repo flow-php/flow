@@ -10,10 +10,6 @@ use Flow\Parquet\Data\DeltaBinaryPackedEncoder;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Comprehensive test for int64 delta encoding issues.
- * This test captures all the problematic int64 values and ensures they roundtrip correctly.
- */
 final class DeltaBinaryPackedInt64Test extends TestCase
 {
     /**

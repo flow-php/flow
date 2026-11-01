@@ -6,12 +6,6 @@ namespace Flow\PostgreSql\AST;
 
 use Google\Protobuf\Internal\Message;
 
-/**
- * Interface for AST node modifiers.
- *
- * Modifiers can mutate nodes in-place during traversal.
- * Unlike visitors (which are read-only collectors), modifiers are expected to change the AST.
- */
 interface NodeModifier
 {
     /**

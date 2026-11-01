@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Flow\Telemetry;
 
 /**
- * Official OpenTelemetry semantic convention attribute keys emitted by Flow instrumentations.
- *
- * Single source of truth for every official key used across the monorepo — flow-specific custom
- * keys live in per-package attribute classes and must use the `flow.` prefix instead of extending
- * any of these namespaces.
+ * Flow-specific keys live in per-package classes with the `flow.` prefix.
  *
  * @see https://opentelemetry.io/docs/specs/semconv/general/naming/
  */

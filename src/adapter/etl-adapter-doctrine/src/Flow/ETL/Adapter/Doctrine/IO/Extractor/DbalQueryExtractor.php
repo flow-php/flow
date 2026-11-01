@@ -28,12 +28,7 @@ use function count;
 use function round;
 
 /**
- * batchSize() is a yield cap, not a fetch size: fetchAllAssociative() materialises the whole result set per
- * parameter set, so lowering it cannot lower peak memory. The paginating extractors default to 1000 because
- * their number IS a round trip.
- *
- * A pushed limit is global across parameter sets - their batches are concatenated - and no set is queried
- * once it is reached. The query is a raw string, so the first queried set is never bounded server-side.
+ * batchSize() caps yields, not fetches: the whole result set materialises per parameter set.
  */
 final class DbalQueryExtractor implements BatchableExtractor, Extractor
 {

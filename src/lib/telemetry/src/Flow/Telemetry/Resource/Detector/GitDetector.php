@@ -23,25 +23,7 @@ use function strlen;
 use function trim;
 
 /**
- * Detects Git (VCS) information by shelling out to the `git` binary.
- *
- * Detects the following attributes (OpenTelemetry vcs.* semantic conventions):
- * - vcs.ref.head.revision: The current commit SHA
- * - vcs.ref.head.name: The current branch or tag name (omitted when HEAD is detached on an untagged commit)
- * - vcs.ref.head.type: The reference type ("branch" or "tag")
- * - vcs.repository.url.full: The remote "origin" URL (with any embedded credentials stripped)
- *
- * Requires the `git` binary to be available and the working directory (or the
- * provided one) to be inside a Git work tree. When neither is the case, an empty
- * Resource is returned.
- *
- * Example output:
- * ```
- * vcs.ref.head.revision: 9d59409acf479dfa0df1c3dad539b4825a8d2bcf
- * vcs.ref.head.name: main
- * vcs.ref.head.type: branch
- * vcs.repository.url.full: https://github.com/flow-php/flow.git
- * ```
+ * Empty Resource without a git binary or work tree.
  */
 final readonly class GitDetector implements ResourceDetector
 {

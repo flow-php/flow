@@ -234,13 +234,6 @@ final class SequenceExtractorTest extends FlowTestCase
         static::assertSame($extractor->schema(), $extractor->schema());
     }
 
-    /**
-     * SequenceExtractor takes no Filesystem and constructs no SpilledRows, so "it cannot spill" is a
-     * structural fact of the class rather than something an absence check could evidence - and an
-     * absence check on the shared <tmp>/flow-php-source/ would be falsified by any concurrent flow
-     * process. What is observable, and what matters, is that the source is generated afresh for the
-     * fold and again for the read.
-     */
     public function test_the_sequence_is_generated_again_for_extraction_and_never_spilled(): void
     {
         $generator = new RecordingSequenceGenerator(new MixedSequenceGenerator());

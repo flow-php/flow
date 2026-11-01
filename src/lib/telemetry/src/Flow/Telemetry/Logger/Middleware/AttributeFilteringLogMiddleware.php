@@ -11,13 +11,6 @@ use Flow\Telemetry\Filter\AttributeSource;
 use Flow\Telemetry\Logger\LogEntry;
 use Flow\Telemetry\Logger\LogMiddleware;
 
-/**
- * Drops log entries whose attributes match a configured {@see AttributeFilter}.
- *
- * Returns the entry unchanged when it survives the filter, or null to drop it
- * (short-circuiting the rest of the pipeline). The drop decision is the filter's
- * cached closure, evaluated against the configured {@see AttributeSource}s.
- */
 final readonly class AttributeFilteringLogMiddleware implements LogMiddleware
 {
     public const string SEVERITY_KEY = 'log.severity';

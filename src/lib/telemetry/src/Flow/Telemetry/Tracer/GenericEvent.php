@@ -8,17 +8,6 @@ use DateTimeImmutable;
 use Flow\Telemetry\Attributes;
 
 /**
- * Default implementation of SpanEvent.
- *
- * GenericEvent provides a simple, immutable implementation for recording
- * events within a span. Events are created with explicit timestamps.
- *
- * Example usage:
- * ```php
- * $event = GenericEvent::create('user.login', $clock->now(), ['user.id' => '12345']);
- * echo $event->name(); // "user.login"
- * ```
- *
  * @import-type TAttributeValue from Attributes
  * @import-type TAttributeValueMap from Attributes
  */

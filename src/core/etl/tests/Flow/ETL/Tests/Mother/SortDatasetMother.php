@@ -37,9 +37,6 @@ use const NAN;
 final class SortDatasetMother
 {
     /**
-     * Rows over small domains (many ties) with nulls, NaN, -0.0, numeric-looking strings and datetimes, split into
-     * 2-8 consecutive runs, sorted by 1-3 distinct random columns in random directions and null placements. "id" is unique and never a key.
-     *
      * @return SortDatasetShape
      */
     public static function random(int $seed): array

@@ -13,6 +13,7 @@ use Flow\ETL\Adapter\JSON\IO\Loader\JsonLoader;
 use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\IO\Extractor\File\FileSplit;
 use Flow\ETL\IO\Extractor\File\SourceFile;
+use Flow\ETL\IO\Inference\SchemaInference;
 use Flow\ETL\Tests\Context\DescribableFixtures as ETLDescribableFixtures;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 
@@ -33,6 +34,7 @@ final class DescribableFixtures
             JsonFileBatches::class => static fn(): Describable => new JsonFileBatches(
                 ETLDescribableFixtures::mountedFilesystem(),
                 self::jsonReader(),
+                inference: (new SchemaInference(500, unionByName: true))->everySource(),
             ),
             JsonFileReader::class => self::jsonReader(...),
             JsonLoader::class => static fn(): Describable => new JsonLoader(

@@ -14,16 +14,7 @@ use function class_exists;
 use function method_exists;
 
 /**
- * Maps database rows to objects using a user-provided public static factory method.
- *
- * The factory method must:
- * - be public,
- * - be static,
- * - accept a single parameter: array<string, mixed> $row,
- * - return an instance of $class (or a subclass).
- *
- * If the factory needs access to the mapping Context (sql/parameters/client/catalog/user-data),
- * implement Flow\PostgreSql\Client\RowMapper directly instead — this mapper intentionally hides Context.
+ * Hides the mapping Context; implement RowMapper directly to use it.
  *
  * @template T of object
  *

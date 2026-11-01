@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Psr3\Telemetry\DSL;
 
+use Flow\Bridge\Psr3\Telemetry\AttributeValueNormalizer;
 use Flow\Bridge\Psr3\Telemetry\LogRecordConverter;
 use Flow\Bridge\Psr3\Telemetry\SeverityMapper;
 use Flow\Bridge\Psr3\Telemetry\TelemetryLogger;
-use Flow\Bridge\Psr3\Telemetry\ValueNormalizer;
 use Flow\Documentation\Attribute\DocumentationDSL;
 use Flow\Documentation\Attribute\Module;
 use Flow\Documentation\Attribute\Type as DSLType;
@@ -80,19 +80,19 @@ function psr3_severity_mapper(?array $customMapping = null): SeverityMapper
 #[DocumentationDSL(module: Module::PSR3_TELEMETRY_BRIDGE, type: DSLType::HELPER)]
 function psr3_log_record_converter(
     ?SeverityMapper $severityMapper = null,
-    ?ValueNormalizer $valueNormalizer = null,
+    ?AttributeValueNormalizer $valueNormalizer = null,
 ): LogRecordConverter {
     return new LogRecordConverter(
         $severityMapper ?? psr3_severity_mapper(),
-        $valueNormalizer ?? psr3_value_normalizer(),
+        $valueNormalizer ?? psr3_attribute_value_normalizer(),
     );
 }
 
 /**
- * Create a ValueNormalizer for converting arbitrary PHP values into Telemetry attribute types.
+ * Create a AttributeValueNormalizer for converting arbitrary PHP values into Telemetry attribute types.
  */
 #[DocumentationDSL(module: Module::PSR3_TELEMETRY_BRIDGE, type: DSLType::HELPER)]
-function psr3_value_normalizer(): ValueNormalizer
+function psr3_attribute_value_normalizer(): AttributeValueNormalizer
 {
-    return new ValueNormalizer();
+    return new AttributeValueNormalizer();
 }

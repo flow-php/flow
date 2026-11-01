@@ -10,7 +10,7 @@ use Flow\Telemetry\Logger\LogProcessor;
 use Flow\Telemetry\Meter\Meter;
 use Flow\Telemetry\Meter\MeterProvider;
 use Flow\Telemetry\Meter\MetricProcessor;
-use Flow\Telemetry\Shutdown\ShutdownHandler;
+use Flow\Telemetry\Shutdown\ShutdownRegistry;
 use Flow\Telemetry\Tracer\SpanProcessor;
 use Flow\Telemetry\Tracer\Tracer;
 use Flow\Telemetry\Tracer\TracerProvider;
@@ -19,15 +19,7 @@ use SplObjectStorage;
 use function array_key_exists;
 
 /**
- * Main entry point to all telemetry operations.
- *
- * Provides unified access to tracing, metrics, and logging through
- * their respective providers. Coordinates lifecycle operations
- * (flush, shutdown) across all providers.
- *
- * Instances of Tracer, Meter, and Logger are cached by this class
- * to ensure that calling tracer/meter/logger with the same parameters
- * returns the same instance.
+ * Tracer/Meter/Logger are cached per name and version.
  */
 final class Telemetry
 {
@@ -177,7 +169,7 @@ final class Telemetry
      */
     public function registerShutdownFunction(): self
     {
-        ShutdownHandler::register($this);
+        ShutdownRegistry::register($this);
 
         return $this;
     }

@@ -12,10 +12,7 @@ use function array_key_exists;
 use function is_array;
 
 /**
- * Converts definition levels to actual values.
- * Initially this class was much simpler but in order to keep the performance and not to repeat the same operations
- * over and over again, we generate templates for each definition level.
- * It's a trade off between DX and performance but performance is more important here.
+ * Generates a template per definition level for performance.
  */
 final class DefinitionConverter
 {
@@ -117,13 +114,7 @@ final class DefinitionConverter
     }
 
     /**
-     * When recreating the value for given definition level, in order to not repeate the same dumb operation each
-     * time we encounter definition level below maximum definition level we once generate templates for each level.
-     *
-     * Repetitions->id is just a string representation of all repetitions in the column.
-     *
-     * By definition column type is irrelevant here, as if two different column types would have the same
-     * repetitions, the templates would be the same.
+     * Templates per definition level are built once; they depend on repetitions only, not on the column type.
      */
     private function generateTemplates(Repetitions $repetitions, int $maxDefinitionLevel): void
     {

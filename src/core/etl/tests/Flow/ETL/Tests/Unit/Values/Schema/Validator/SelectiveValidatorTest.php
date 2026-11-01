@@ -75,11 +75,6 @@ final class SelectiveValidatorTest extends FlowTestCase
         );
     }
 
-    /**
-     * Inverted by 08c R4's floor: a column of nothing but empty arrays used to infer as list<null>, the
-     * bottom, which no declared json column accepted. It now floors to json, which a declared array
-     * column projects onto, so the two agree.
-     */
     public function test_given_schema_inferred_from_empty_arrays_satisfies_a_declared_array_type(): void
     {
         static::assertTrue(

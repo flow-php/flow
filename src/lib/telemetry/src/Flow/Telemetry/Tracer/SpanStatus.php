@@ -4,19 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tracer;
 
-/**
- * Represents the status of a span.
- *
- * SpanStatus combines a status code with an optional description message.
- * According to OpenTelemetry specification, descriptions are only meaningful
- * for ERROR status.
- *
- * Example usage:
- * ```php
- * $status = SpanStatus::ok();
- * $status = SpanStatus::error('Connection timeout');
- * ```
- */
 final readonly class SpanStatus
 {
     public function __construct(

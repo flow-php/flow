@@ -1,7 +1,4 @@
-//! Batches across the Arrow C Data Interface, to and from another extension (arrow-ext): one batch = one struct-typed
-//! `FFI_ArrowSchema` (one child per column) plus one struct-typed `FFI_ArrowArray`. An import moves the producer's
-//! array behind a release forwarder that counts its buffers in [`imported_bytes`] for as long as they live; flow_php
-//! adds that count to its allocator's.
+//! Batches across the Arrow C Data Interface; imported buffers count in [`imported_bytes`] while they live.
 
 use std::ffi::{CStr, CString};
 use std::sync::atomic::{AtomicI64, Ordering};
@@ -146,9 +143,7 @@ unsafe extern "C" fn counted_release(array: *mut FFI_ArrowArray) {
     array.release = None;
 }
 
-/// `source` moved out (its release left NULL) behind the counting forwarder, as `expected` describes once its struct
-/// `schema` passed [`same_children`]: the row count and one array per column. A refusal before the move takes
-/// nothing; after it the forwarder owns the producer's array and releases it.
+/// Moves `source` behind the counting forwarder once `schema` passed [`same_children`]; an early refusal takes nothing.
 pub fn take(
     schema: &FFI_ArrowSchema,
     source: &mut FFI_ArrowArray,

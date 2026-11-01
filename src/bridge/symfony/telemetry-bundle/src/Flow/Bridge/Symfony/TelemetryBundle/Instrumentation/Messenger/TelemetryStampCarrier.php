@@ -7,11 +7,6 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger;
 use Flow\Telemetry\Propagation\Carrier;
 
 /**
- * Carrier implementation that wraps a TelemetryStamp.
- *
- * This carrier allows propagators to read from and write to a TelemetryStamp,
- * enabling context propagation through Symfony Messenger messages.
- *
  * @implements Carrier<TelemetryStamp>
  */
 final class TelemetryStampCarrier implements Carrier

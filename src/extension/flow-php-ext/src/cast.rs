@@ -124,8 +124,7 @@ fn engine_string(value: &Zval) -> Result<ZBox<ZendStr>, PhpException> {
         .ok_or_else(|| ext_exception("flow_php failed to convert a value to string"))
 }
 
-/// `mb_strtolower` + table match from `BooleanType::cast`. ASCII lowering
-/// suffices: no non-ASCII uppercase code point lowercases onto these words.
+/// ASCII lowering suffices: no non-ASCII uppercase code point lowercases onto these words.
 pub(crate) fn bool_from_str(bytes: &[u8]) -> Option<bool> {
     if bytes.is_empty() || bytes.len() > 5 {
         return None;
@@ -174,9 +173,7 @@ fn json_object_from(source: &Zval) -> Result<Zval, PhpException> {
     Ok(zv)
 }
 
-/// PHP's own `is_numeric()` grammar (`numeric::parse`), so the native path accepts exactly the strings
-/// `IntegerType`/`FloatType::cast` accept and bails on the rest. Yields the engine's type code together with the value
-/// one parse already computed, so the integer cast reads one parse instead of parsing the same bytes a second time.
+/// PHP's own `is_numeric()` grammar, returning the type code with the parsed value so an integer parses once.
 fn is_numeric_str(bytes: &[u8]) -> (u8, i64, f64) {
     match numeric::parse(bytes) {
         Some(Numeric::Long(value)) => (IS_LONG, value, 0.0),
@@ -185,10 +182,7 @@ fn is_numeric_str(bytes: &[u8]) -> (u8, i64, f64) {
     }
 }
 
-/// `IntegerType::cast`'s integer-shaped-text test. Text of this shape that
-/// `_is_numeric_string_ex` had to widen to a double is text that does not fit
-/// an i64, which PHP's round-trip branch refuses - the two spellings differ:
-/// `'-9223372036854775809'` throws, `'-9.223372036854776e18'` casts.
+/// Integer-shaped text `_is_numeric_string_ex` widened to a double does not fit an i64, which PHP's round-trip refuses.
 fn integer_shaped(bytes: &[u8]) -> bool {
     let body = bytes
         .iter()
@@ -221,8 +215,7 @@ fn numeric_scalar(value: &Zval) -> bool {
     }
 }
 
-/// `IntegerType::cast` of a string: `None` for any string it refuses or that needs its round-trip branch. A form feed is
-/// whitespace to `is_numeric()` but not to `trim()`, so PHP's round-trip refuses it: it bails.
+/// `IntegerType::cast` of a string; a form feed bails, since `trim()` keeps it and PHP's round-trip refuses it.
 pub(crate) fn integer_from_str(bytes: &[u8]) -> Option<i64> {
     match is_numeric_str(bytes) {
         (IS_LONG, long, _) if !bytes.contains(&0x0C) => Some(long),
@@ -305,11 +298,7 @@ pub(crate) fn parse_iso_date(bytes: &[u8]) -> Result<Option<Zval>, PhpException>
     date_from_free_form(bytes, Some(&mut utc))
 }
 
-/// Casts one leaf value natively (containers: `builder.rs` `append_cast`); `Ok(None)` bails the WHOLE column value to the
-/// PHP fallback (`Type::cast`), which reproduces results, exception classes,
-/// messages and `previous` chains by re-running the canonical implementation.
-/// PHP calls made inside a branch discard their own thrown exceptions and bail
-/// instead - mirroring the `catch (Throwable)` wrappers in the PHP casts.
+/// Casts one leaf natively; `Ok(None)` bails the whole value to `Type::cast`, which reproduces PHP's results.
 pub(crate) fn cast_value(kind: &CastKind, value: &Zval) -> Result<Option<Zval>, PhpException> {
     // Type::cast receives its argument by value; a branch that returns `value` itself must not hand
     // back the caller's reference

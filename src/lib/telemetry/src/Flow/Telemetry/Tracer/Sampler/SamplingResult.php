@@ -8,23 +8,6 @@ use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Context\TraceState;
 
 /**
- * Result of a sampling decision.
- *
- * Contains the sampling decision along with additional attributes
- * that should be added to the span and an optional updated trace state.
- *
- * Example usage:
- * ```php
- * $result = new SamplingResult(
- *     SamplingDecision::RECORD_AND_SAMPLE,
- *     ['sampling.reason' => 'head-based'],
- * );
- *
- * if ($result->decision->isSampled()) {
- *     // Create and export the span
- * }
- * ```
- *
  * @import-type TAttributeValueMap from Attributes
  */
 final readonly class SamplingResult

@@ -24,12 +24,6 @@ use function array_merge;
 use function strlen;
 use function substr;
 
-/**
- * Decorator that adds telemetry instrumentation to a PostgreSQL cursor.
- *
- * Tracks row iteration with spans and metrics, completing telemetry
- * when the cursor is freed or iteration completes.
- */
 final class TraceableCursor implements Cursor
 {
     private ?Meter $meter = null;

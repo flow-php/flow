@@ -15,14 +15,7 @@ use function substr;
 use function trim;
 
 /**
- * Parses a PostgreSQL array output literal into a PHP array.
- *
- * pg emits arrays as {a,b}; nested arrays as {{1,2},{3}}; an element is quoted when it contains a
- * comma, a brace, a quote, a backslash or leading/trailing whitespace, and inside quotes " and \
- * are backslash-escaped. An UNQUOTED NULL is the SQL null; the QUOTED "NULL" is the four-character
- * string. The empty array is {}.
- *
- * Element values come back as strings; typing them is ResultCaster's job.
+ * Unquoted NULL is SQL null, quoted "NULL" a string; elements stay strings for ResultCaster.
  */
 final readonly class ArrayLiteralParser
 {
@@ -33,12 +26,11 @@ final readonly class ArrayLiteralParser
      */
     public function parse(string $literal): array
     {
-        // pg prefixes the literal with explicit bounds whenever an array's lower bound is not 1,
-        // e.g. [2:3]={1,2}. The bounds carry no type information Flow can hold, so they are skipped.
-        $bounds = [];
+        // the bounds of an array not starting at 1 carry no type information
+        $explicitBounds = [];
 
-        if (preg_match('/^\[[\d:,]+]=/', $literal, $bounds) === 1) {
-            $literal = substr($literal, strlen($bounds[0]));
+        if (preg_match('/^\[[\d:,]+]=/', $literal, $explicitBounds) === 1) {
+            $literal = substr($literal, strlen($explicitBounds[0]));
         }
 
         $length = strlen($literal);

@@ -10,14 +10,6 @@ use Flow\Telemetry\Meter\Metric;
 use Flow\Telemetry\Meter\MetricProcessor;
 use Throwable;
 
-/**
- * Forwards metrics to multiple processors.
- *
- * This is useful when you need to:
- * - Send metrics to multiple backends (e.g., both Prometheus and OTLP)
- * - Combine batching with memory storage for testing
- * - Add custom processing alongside export
- */
 final readonly class CompositeMetricProcessor implements MetricProcessor
 {
     /**

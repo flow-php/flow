@@ -14,10 +14,6 @@ use Generator;
 
 use function Flow\ETL\DSL\from_rows;
 
-/**
- * Models Avro's reason-less refusal - the only reason-less producer in src/.
- * An empty read of one of these must stay empty rather than start throwing.
- */
 final class UndescribableRowLessExtractor implements Extractor
 {
     public function extract(Backend $backend, Criteria $criteria): Generator

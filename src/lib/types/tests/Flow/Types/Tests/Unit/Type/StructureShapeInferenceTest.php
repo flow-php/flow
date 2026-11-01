@@ -21,10 +21,6 @@ use stdClass;
 use function fclose;
 use function fopen;
 
-/**
- * Runtime companion to {@see StructureShapeInference}. The fixture is the real guard — its declared return types fail
- * `just analyze` if `type_structure()` stops resolving element shapes — and these cases keep it executed and honest.
- */
 final class StructureShapeInferenceTest extends TestCase
 {
     public function test_container_element_shapes(): void

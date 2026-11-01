@@ -15,13 +15,7 @@ use function class_exists;
 use function Flow\Types\DSL\type_instance_of;
 
 /**
- * Maps database rows directly to constructor parameters.
- *
- * Requirements:
- * - SQL column names must match constructor parameter names exactly (1:1)
- * - Class must have a constructor with all parameters
- * - Use SQL aliases if column names differ from parameter names:
- *   SELECT created_at AS createdAt FROM users
+ * Column names must equal constructor parameter names; alias in SQL otherwise.
  *
  * @template T of object
  *

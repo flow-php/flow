@@ -7,21 +7,6 @@ namespace Flow\Telemetry\Meter\Exemplar;
 use Flow\Telemetry\Tracer\SpanContext;
 use Stringable;
 
-/**
- * Determines whether an exemplar should be recorded for a metric measurement.
- *
- * ExemplarFilter is used to decide when to capture trace context alongside
- * metric data points. This enables drill-down from metrics to traces when
- * exported to backends that support exemplars.
- *
- * Example usage:
- * ```php
- * $filter = new TraceBasedExemplarFilter();
- * if ($filter->shouldSample($spanContext, 100, ['status' => 'ok'])) {
- *     // Record exemplar with trace context
- * }
- * ```
- */
 interface ExemplarFilter extends Stringable
 {
     /**

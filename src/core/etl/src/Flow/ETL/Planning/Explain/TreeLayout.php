@@ -9,7 +9,7 @@ use function implode;
 
 final readonly class TreeLayout implements Layout
 {
-    public function render(Entry $root): string
+    public function render(RenderedNode $root): string
     {
         return implode("\n", $this->lines($root, '', ''));
     }
@@ -20,7 +20,7 @@ final readonly class TreeLayout implements Layout
      *
      * @return list<string>
      */
-    public function lines(Entry $entry, string $connector, string $indent): array
+    public function lines(RenderedNode $entry, string $connector, string $indent): array
     {
         if ($entry->shared) {
             return [$connector . $entry->title() . ' (shared)'];
@@ -47,9 +47,9 @@ final readonly class TreeLayout implements Layout
     /**
      * Each child of $entry with the connector drawn before its line and the indent drawn before its children's lines.
      *
-     * @return list<array{Entry, string, string}>
+     * @return list<array{RenderedNode, string, string}>
      */
-    public function branches(Entry $entry, string $indent): array
+    public function branches(RenderedNode $entry, string $indent): array
     {
         $last = array_key_last($entry->children);
         $branches = [];

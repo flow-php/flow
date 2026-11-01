@@ -10,21 +10,6 @@ use function array_key_exists;
 use function array_merge;
 use function count;
 
-/**
- * Key-value store for data propagation across process boundaries.
- *
- * Baggage allows you to propagate arbitrary data along with a trace,
- * similar to HTTP headers but specifically designed for distributed tracing.
- *
- * All operations return new Baggage instances (immutable).
- *
- * Example usage:
- * ```php
- * $baggage = new Baggage(['user.id' => '12345']);
- * $baggage = $baggage->with('request.id', 'abc-123');
- * echo $baggage->get('user.id'); // "12345"
- * ```
- */
 final readonly class Baggage implements Countable
 {
     /**

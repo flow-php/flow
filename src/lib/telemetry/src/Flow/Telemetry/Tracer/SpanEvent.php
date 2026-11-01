@@ -7,12 +7,6 @@ namespace Flow\Telemetry\Tracer;
 use DateTimeImmutable;
 use Flow\Telemetry\Attributes;
 
-/**
- * Interface for events recorded within a span.
- *
- * Events mark significant points in time during a span's lifetime,
- * such as errors, state changes, or notable occurrences.
- */
 interface SpanEvent
 {
     /**

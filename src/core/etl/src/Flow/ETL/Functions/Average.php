@@ -13,12 +13,10 @@ use Flow\ETL\Foundation\Exception\RuntimeException;
 use Flow\ETL\Functions\Reference\Reference;
 use Flow\ETL\Functions\Window\FrameAccumulation;
 use Flow\ETL\Values\Column\Backend;
-use Flow\ETL\Values\Column\Column;
 use Flow\ETL\Values\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\StructureType;
 use SensitiveParameter;
-use WeakReference;
 
 use function count;
 use function Flow\Types\DSL\type_array;
@@ -42,12 +40,7 @@ final class Average implements AggregatingFunction, FrameAccumulating, WindowFun
 
     private ?RunningSum $runningSum = null;
 
-    private ?Column $column = null;
-
-    /**
-     * @var null|WeakReference<Rows>
-     */
-    private ?WeakReference $rows = null;
+    private readonly LastBatchColumn $column;
 
     public function __construct(
         private readonly Reference $ref,
@@ -57,6 +50,7 @@ final class Average implements AggregatingFunction, FrameAccumulating, WindowFun
         private readonly ?Window $window = null,
     ) {
         $this->outputName = $ref->hasAlias() ? $ref->name() : $ref->to() . '_avg';
+        $this->column = new LastBatchColumn($ref->base());
     }
 
     public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
@@ -157,22 +151,15 @@ final class Average implements AggregatingFunction, FrameAccumulating, WindowFun
 
     public function aggregate(Rows $rows, array $indices, Backend $backend): void
     {
-        // a window frame calls one instance with the same partition per row: resolve its column once. Weak, so a
-        // group-by aggregate never keeps the last batch it saw alive
-        if ($this->rows?->get() !== $rows) {
-            $this->rows = WeakReference::create($rows);
-            $this->column = $rows->schema()->findDefinition($this->ref->base()) === null
-                ? null
-                : $rows->column($this->ref->base());
-        }
+        $column = $this->column->of($rows);
 
-        if ($this->column === null) {
+        if ($column === null) {
             return;
         }
 
         if (count($indices) === 1) {
             // @mago-ignore analysis:mixed-assignment
-            $value = $this->column->value($indices[0]);
+            $value = $column->value($indices[0]);
 
             if (is_int($value) || is_float($value) || is_string($value) && is_numeric($value)) {
                 $this->runningSum ??= new RunningSum(new Calculator());
@@ -186,7 +173,7 @@ final class Average implements AggregatingFunction, FrameAccumulating, WindowFun
         $values = [];
 
         // @mago-ignore analysis:mixed-assignment
-        foreach ($this->column->take($indices)->values() as $value) {
+        foreach ($column->take($indices)->values() as $value) {
             if (is_int($value) || is_float($value) || is_string($value) && is_numeric($value)) {
                 $values[] = $value;
             }

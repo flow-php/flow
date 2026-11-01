@@ -19,11 +19,6 @@ use function mb_substr;
 use function sort;
 use function sprintf;
 
-/**
- * The only thing that executes the published corpus. Readers meet it in the WASM playground, which
- * has its own autoloader, its own compiled extension set and no network, so that is where it runs.
- * Execution only - output is the framework's business, not the playground's.
- */
 final class PlaygroundExamplesTest extends EndToEndTestCase
 {
     public static function published_examples(): Generator

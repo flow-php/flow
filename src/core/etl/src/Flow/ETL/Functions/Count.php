@@ -11,12 +11,10 @@ use Flow\ETL\Foundation\Exception\RuntimeException;
 use Flow\ETL\Functions\Reference\Reference;
 use Flow\ETL\Functions\Window\FrameAccumulation;
 use Flow\ETL\Values\Column\Backend;
-use Flow\ETL\Values\Column\Column;
 use Flow\ETL\Values\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\StructureType;
 use SensitiveParameter;
-use WeakReference;
 
 use function count;
 use function Flow\Types\DSL\type_integer;
@@ -26,12 +24,7 @@ final class Count implements AggregatingFunction, FrameAccumulating, WindowFunct
 {
     private int $count;
 
-    private ?Column $column = null;
-
-    /**
-     * @var null|WeakReference<Rows>
-     */
-    private ?WeakReference $rows = null;
+    private readonly ?LastBatchColumn $column;
 
     private readonly string $outputName;
 
@@ -45,6 +38,7 @@ final class Count implements AggregatingFunction, FrameAccumulating, WindowFunct
             $this->outputName = $ref->hasAlias() ? $ref->name() : $ref->to() . '_count';
         }
         $this->count = 0;
+        $this->column = $ref === null ? null : new LastBatchColumn($ref->base());
     }
 
     public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
@@ -132,32 +126,25 @@ final class Count implements AggregatingFunction, FrameAccumulating, WindowFunct
 
     public function aggregate(Rows $rows, array $indices, Backend $backend): void
     {
-        if ($this->ref === null) {
+        if ($this->column === null) {
             $this->count += count($indices);
 
             return;
         }
 
-        // a window frame calls one instance with the same partition per row: resolve its column once. Weak, so a
-        // group-by aggregate never keeps the last batch it saw alive
-        if ($this->rows?->get() !== $rows) {
-            $this->rows = WeakReference::create($rows);
-            $this->column = $rows->schema()->findDefinition($this->ref->base()) === null
-                ? null
-                : $rows->column($this->ref->base());
-        }
+        $column = $this->column->of($rows);
 
-        if ($this->column === null) {
+        if ($column === null) {
             return;
         }
 
         if (count($indices) === 1) {
-            $this->count += $this->column->isNull($indices[0]) ? 0 : 1;
+            $this->count += $column->isNull($indices[0]) ? 0 : 1;
 
             return;
         }
 
-        $this->count += count($indices) - $this->column->take($indices)->nullCount();
+        $this->count += count($indices) - $column->take($indices)->nullCount();
     }
 
     public function accumulator(): self

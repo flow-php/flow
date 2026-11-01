@@ -9,8 +9,7 @@ use function Flow\Filesystem\DSL\path;
 use function glob;
 
 /**
- * The single place a fixture path is built. The fingerprint lives in the filename rather than in a
- * sidecar so it can never drift from the bytes it describes.
+ * Fingerprint lives in the filename so it cannot drift from the bytes.
  */
 final readonly class FixturePath
 {

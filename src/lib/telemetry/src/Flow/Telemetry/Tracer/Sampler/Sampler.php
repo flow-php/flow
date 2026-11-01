@@ -7,27 +7,6 @@ namespace Flow\Telemetry\Tracer\Sampler;
 use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Tracer\Span;
 
-/**
- * Interface for sampling decisions.
- *
- * Samplers determine whether a span should be recorded and/or exported.
- * This allows controlling the volume of telemetry data while maintaining
- * the ability to trace complete transactions.
- *
- * Following OpenTelemetry, the sampling decision receives the parent Context (carrying the active span
- * and the tracing-suppression bit) alongside the span to be created.
- *
- * Example usage:
- * ```php
- * $sampler = new TraceIdRatioBasedSampler(0.1); // 10% sampling
- *
- * $result = $sampler->shouldSample($context, $span);
- *
- * if ($result->decision->isRecording()) {
- *     // Record the span
- * }
- * ```
- */
 interface Sampler
 {
     /**

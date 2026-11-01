@@ -10,14 +10,7 @@ use Generator;
 use PhpBench\Attributes as Bench;
 
 /**
- * bench_schema_inference and bench_schema_from_footer currently measure the same work: both read
- * Floe, which describes itself from its footer and never samples. The inference arm only becomes a
- * distinct measurement once it reads a source that actually samples.
- *
- * Both carry Revs because one call is far below timer resolution, and OutputTimeUnit because phpbench
- * reports mode PER REVOLUTION - more revs never raises it, so seconds would render 0.000s. Rendering
- * in milliseconds keeps one revolution meaning one schema() call, which is the quantity of interest;
- * looping inside the scenario would instead make mode mean "1000 calls".
+ * OutputTimeUnit ms because phpbench reports per revolution; inference arm equals footer arm until a sampling source.
  */
 final class SchemaBench
 {

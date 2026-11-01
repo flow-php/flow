@@ -38,11 +38,10 @@ final class Regex implements ScalarFunction
         private readonly int $flags = 0,
         ScalarFunction|int $offset = 0,
     ) {
-        // PREG_OFFSET_CAPTURE changes each match from string to [string, int]; PREG_UNMATCHED_AS_NULL
-        // makes elements nullable - both change the column's shape per flag value.
         if (($flags & PREG_OFFSET_CAPTURE) !== 0 || ($flags & PREG_UNMATCHED_AS_NULL) !== 0) {
             throw new InvalidArgumentException(
-                'Regex does not support PREG_OFFSET_CAPTURE or PREG_UNMATCHED_AS_NULL flags',
+                'Regex does not support PREG_OFFSET_CAPTURE or PREG_UNMATCHED_AS_NULL flags: they change the shape '
+                . 'of the result, so the column has no single type. Remove the flag.',
             );
         }
 

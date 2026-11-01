@@ -16,11 +16,7 @@ use function Flow\PostgreSql\DSL\agg_count;
 use function Flow\PostgreSql\DSL\select;
 
 /**
- * Transforms SELECT queries into COUNT queries for pagination.
- *
- * Wraps the original query in: SELECT COUNT(*) FROM (...) AS _count_subq
- * - Removes ORDER BY (not needed for counting)
- * - Removes LIMIT/OFFSET (we want total count)
+ * Wraps in SELECT COUNT(*) FROM (...) and drops ORDER BY, LIMIT and OFFSET.
  */
 final readonly class CountModifier implements NodeModifier
 {

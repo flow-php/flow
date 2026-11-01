@@ -8,26 +8,6 @@ use DateTimeInterface;
 use Throwable;
 
 /**
- * Entity metadata attached to all telemetry signals.
- *
- * A Resource represents the entity producing telemetry data, such as a
- * service, container, or host. Resources are immutable and provide
- * context that is attached to all traces, logs, and metrics.
- *
- * Common resource attributes include:
- * - service.name: The logical name of the service
- * - service.version: The version of the service
- * - host.name: The hostname of the machine
- * - process.pid: The process ID
- *
- * Example usage:
- * ```php
- * $resource = Resource::create([
- *     'service.name' => 'my-service',
- *     'service.version' => '1.0.0',
- * ]);
- * ```
- *
  * @import-type TAttributeValue from Attributes
  * @import-type TAttributeValueMap from Attributes
  */

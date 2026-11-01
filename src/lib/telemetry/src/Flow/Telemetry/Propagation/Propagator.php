@@ -4,27 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Propagation;
 
-/**
- * Interface for propagating context across process boundaries.
- *
- * Propagator defines how context information (like trace identifiers and
- * baggage) is injected into and extracted from carriers such as HTTP headers,
- * gRPC metadata, or message queue headers.
- *
- * Example usage:
- * ```php
- * $propagator = new W3CTraceContext();
- *
- * // Extract context from incoming request headers
- * $carrier = new ArrayCarrier($incomingHeaders);
- * $ctx = $propagator->extract($carrier);
- *
- * // Inject context into outgoing request headers
- * $carrier = new ArrayCarrier();
- * $propagator->inject($ctx, $carrier);
- * $headers = $carrier->unwrap();
- * ```
- */
 interface Propagator
 {
     /**

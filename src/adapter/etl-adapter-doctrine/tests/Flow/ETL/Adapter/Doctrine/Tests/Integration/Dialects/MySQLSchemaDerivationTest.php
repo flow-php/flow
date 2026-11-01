@@ -76,9 +76,6 @@ final class MySQLSchemaDerivationTest extends IntegrationTestCase
 
     public function test_duplicate_output_names_describe_and_collapse_last_wins(): void
     {
-        // MySQL rejects a derived table whose columns repeat a name, so wrapping this query would
-        // refuse a read that works. The raw prepare keeps both columns and the schema collapses them
-        // exactly as fetchAssociative() collapses the row.
         $connection = $this->mysqlDatabaseContext->connection();
         $connection->executeStatement('DROP TABLE IF EXISTS order_lines');
         $connection->executeStatement('CREATE TABLE order_lines (id INT NOT NULL, label VARCHAR(255))');

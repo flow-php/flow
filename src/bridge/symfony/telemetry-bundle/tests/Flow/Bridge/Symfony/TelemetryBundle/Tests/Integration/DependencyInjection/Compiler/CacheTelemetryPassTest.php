@@ -18,11 +18,6 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use function class_exists;
 use function restore_exception_handler;
 
-/**
- * The unit test proves the pass against a replica of FrameworkBundle's pool graph. This one boots the
- * real thing, so a future change to how FrameworkBundle registers its pools cannot silently un-fix the
- * bug while the replica keeps passing.
- */
 #[CoversClass(CacheTelemetryPass::class)]
 final class CacheTelemetryPassTest extends KernelTestCase
 {

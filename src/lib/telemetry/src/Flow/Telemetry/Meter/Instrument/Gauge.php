@@ -23,18 +23,6 @@ use function count;
 use function is_scalar;
 
 /**
- * Gauge instrument for recording non-additive values.
- *
- * Gauges record the current value at a point in time. Unlike counters,
- * gauge values are not summed - only the last recorded value is kept.
- *
- * Example usage:
- * ```php
- * $gauge = $meter->createGauge('system.memory.usage', 'bytes', 'Current memory usage');
- * $gauge->record(1024 * 1024 * 512, ['host' => 'server-1']);
- * $gauge->record(1024 * 1024 * 480, ['host' => 'server-1']); // Replaces previous
- * ```
- *
  * @see https://opentelemetry.io/docs/specs/otel/metrics/api/#gauge
  */
 final class Gauge implements Instrument

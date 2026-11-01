@@ -121,9 +121,9 @@ final class RustLibParityTest extends TestCase
         );
     }
 
-    public function test_the_duckdb_uint64_fixture_reads_as_decimal_strings_on_both_engines(): void
+    public function test_the_external_uint64_fixture_reads_as_decimal_strings_on_both_engines(): void
     {
-        $path = __DIR__ . '/Fixtures/uint64_duckdb.parquet';
+        $path = __DIR__ . '/Fixtures/uint64_external.parquet';
         $expected = [['col0' => '0'], ['col0' => '9223372036854775808'], ['col0' => '18446744073709551615']];
 
         static::assertSame($expected, ParquetRows::read(Reader::php()->read($path), 10));

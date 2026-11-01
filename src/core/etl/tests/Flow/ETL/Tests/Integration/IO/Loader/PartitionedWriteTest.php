@@ -19,11 +19,6 @@ use function Flow\Floe\DSL\to_floe;
 
 final class PartitionedWriteTest extends FlowIntegrationTestCase
 {
-    /**
-     * B39: one batch carrying two combinations used to reach the commit protocol's writeTo() once, with whatever
-     * stamp the batch happened to have. The loader routes it now, so both directories appear from a
-     * single batch.
-     */
     public function test_one_batch_with_two_combinations_writes_two_directories(): void
     {
         $output = $this->cacheDir->suffix('/b39');

@@ -48,8 +48,7 @@ use function is_string;
 final class ExcelLoader implements Closure, Discardable, FileLoader, Loader
 {
     /**
-     * OpenSpout measures sheet names and cut cells with mb_* functions: native mbstring, or symfony's polyfill over
-     * iconv. Its composer.json requires neither, so a worker gets whichever the parent has.
+     * OpenSpout calls mb_* functions but requires neither mbstring nor its polyfill.
      */
     private const array MULTIBYTE_EXTENSIONS = ['iconv', 'mbstring'];
 

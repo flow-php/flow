@@ -57,14 +57,6 @@ use function is_int;
 use function is_string;
 
 /**
- * Bidirectional converter between Flow PHP schemas and OpenAPI 3.0 specifications.
- *
- * This converter enables you to:
- * - Generate OpenAPI documentation from Flow schemas
- * - Parse OpenAPI specifications to create Flow schemas
- * - Preserve metadata (descriptions, examples) during conversion
- * - Support all common data types and structures
- *
  * @example Basic Flow to OpenAPI conversion
  * ```php
  * $schema = schema(

@@ -15,13 +15,7 @@ use function strlen;
 use function strpos;
 
 /**
- * A cut may land inside a quoted value, so a newline is only a candidate. A candidate is accepted when
- * $confirmations consecutive records each tokenise to $expectedFields fields - Polars' next_line_position test. Its
- * naive sibling, which trusts the first newline, is documented there as "Does not check for new line characters
- * embedded in String fields" and is deliberately not used.
- *
- * A CSV whose QUOTED CONTENT contains $confirmations consecutive lines that tokenise to the expected field count can
- * still defeat this. DuckDB and Polars accept the same risk.
+ * A newline after a cut is accepted once $confirmations consecutive records tokenise to $expectedFields fields.
  */
 final readonly class CSVRecordResync
 {

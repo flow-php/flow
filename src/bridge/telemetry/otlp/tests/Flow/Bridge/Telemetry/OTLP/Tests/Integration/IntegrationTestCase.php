@@ -9,21 +9,10 @@ use Flow\Bridge\Telemetry\OTLP\Tests\Context\TransportConfiguration;
 use Generator;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Base class for integration tests that verify telemetry data reaches the collector.
- *
- * Uses OtelContext to access shared test infrastructure and CollectorMetrics
- * to verify that telemetry was received by the collector.
- */
 abstract class IntegrationTestCase extends TestCase
 {
     protected OtelContext $otelContext;
 
-    /**
-     * Data provider that yields all available transport/serializer configurations.
-     *
-     * Configurations are automatically skipped if required extensions are not available.
-     */
     public static function transportProvider(): Generator
     {
         foreach (TransportConfiguration::available() as $config) {

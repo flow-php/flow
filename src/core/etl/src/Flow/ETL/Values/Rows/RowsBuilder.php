@@ -241,8 +241,7 @@ final class RowsBuilder
 
             // @mago-ignore analysis:mixed-assignment
             foreach ($row as $key => $value) {
-                // PHP gives back a numeric-string column name as an int key, which the positional rule
-                // would rename to eNN. A declared schema naming that column settles which one it is.
+                // PHP returns numeric-string keys as int, so a declared name wins
                 $declared = $this->schema->findDefinition((string) $key);
                 $name = $declared === null ? $columnName->of($key) : (string) $key;
 

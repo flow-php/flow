@@ -241,9 +241,6 @@ final class ResultSchemaTest extends FlowTestCase
 
     public function test_a_savepoint_is_released_when_describe_throws_something_other_than_a_query_exception(): void
     {
-        // column_type_from_string() runs a SQL parser, so a pg type whose name is a reserved word
-        // throws ParserException - a sibling of QueryException, not a subclass. Leaving the savepoint
-        // open would desynchronise the caller's own begin/commit pairing for the rest of the session.
         $client = (new SpyClient(transactionNestingLevel: 1))->willThrowFromDescribe(
             new RuntimeException('parser blew up'),
         );
@@ -282,8 +279,6 @@ final class ResultSchemaTest extends FlowTestCase
             self::class,
         );
 
-        // ResultSchema hands the parameters straight through; PgSqlClient::describe() is what
-        // substitutes nulls, so the adapter only has to prove it does not rewrite them.
         static::assertSame([[42]], $client->describeParameters);
     }
 }

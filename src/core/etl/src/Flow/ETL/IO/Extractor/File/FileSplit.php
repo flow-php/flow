@@ -98,9 +98,7 @@ final readonly class FileSplit implements Describable, Split
     }
 
     /**
-     * The rows of the units this split owns: Spark's rule (parquet-java filterFileMetaDataByMidpoint), a unit belongs
-     * to the window holding its midpoint. Units are in file order, so the owned ones are contiguous; a split without
-     * a length owns them all.
+     * A unit belongs to the split holding its midpoint; a split without a length owns them all.
      *
      * @param iterable<ByteUnit> $units
      */

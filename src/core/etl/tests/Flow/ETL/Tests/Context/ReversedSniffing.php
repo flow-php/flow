@@ -15,17 +15,12 @@ use function ksort;
 
 final class ReversedSniffing
 {
-    /**
-     * Sniffs every unit whole, last unit first, then lets infer() merge the partials in unit order - the schema a
-     * run whose units finished in the opposite order would infer. Equal to infer() over $sniffer when the result
-     * does not depend on execution order.
-     */
     public static function schema(Sniffer $sniffer, SchemaInference $inference): Schema
     {
         $samples = [];
 
         for ($unit = $sniffer->units() - 1; $unit >= 0; $unit--) {
-            $samples[$unit] = $sniffer->sniff($unit, -1);
+            $samples[$unit] = $sniffer->sniff($unit, null);
         }
 
         ksort($samples);

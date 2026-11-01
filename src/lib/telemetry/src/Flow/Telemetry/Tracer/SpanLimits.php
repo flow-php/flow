@@ -4,24 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tracer;
 
-/**
- * Configuration limits for span data.
- *
- * SpanLimits provides bounds on the amount of data a span can collect,
- * preventing unbounded memory growth and ensuring reasonable span sizes.
- *
- * Example usage:
- * ```php
- * $limits = new SpanLimits(
- *     attributeCountLimit: 32,
- *     eventCountLimit: 128,
- *     linkCountLimit: 32,
- * );
- *
- * // Use defaults
- * $defaultLimits = SpanLimits::default();
- * ```
- */
 final readonly class SpanLimits
 {
     private const int DEFAULT_ATTRIBUTE_COUNT_LIMIT = 128;

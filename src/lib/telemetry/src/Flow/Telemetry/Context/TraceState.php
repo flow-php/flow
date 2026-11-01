@@ -18,19 +18,6 @@ use function strlen;
 use function trim;
 
 /**
- * W3C Trace Context tracestate header value.
- *
- * TraceState provides vendor-specific trace identification data and enables
- * multiple tracing systems to participate in the same trace. It's an immutable
- * list of key-value pairs with ordering preserved.
- *
- * Example usage:
- * ```php
- * $state = TraceState::empty();
- * $state = $state->with('vendor', 'value');
- * echo $state->toString(); // "vendor=value"
- * ```
- *
  * @see https://www.w3.org/TR/trace-context/#tracestate-header
  */
 final readonly class TraceState implements Stringable

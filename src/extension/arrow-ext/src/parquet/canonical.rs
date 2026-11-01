@@ -1,6 +1,4 @@
-//! The cast table between what arrow-rs reads from / writes to Parquet and the canonical arrays: one arrow type per
-//! storage (the layout flow_php's columns store), keyed on the arrow `DataType` alone. Temporal and decimal
-//! casts are this module's own - `arrow_cast` rounds toward zero and nulls out overflows.
+//! Casts between arrow-rs Parquet types and the canonical arrays; temporal and decimal casts are our own.
 
 use std::fmt::Write;
 use std::sync::Arc;
@@ -51,8 +49,7 @@ fn entries(key: DataType, value: DataType) -> FieldRef {
     ))
 }
 
-/// The canonical type `canonical()` turns an array of `field`'s type into.
-// Must equal flow-batch-frame's kind::data_type() (flow-php-ext), nested names and nullability included - pinned by flow-php-ext phpt 091.
+/// Must equal flow-batch-frame's `kind::data_type()`, nested names and nullability included (phpt 091).
 pub fn canonical_type(field: &Field) -> Result<DataType, Error> {
     canonical_data_type(field.data_type()).map_err(|e| e.in_column(field.name()))
 }
@@ -376,8 +373,7 @@ fn cast(array: &ArrayRef) -> Result<ArrayRef, Error> {
     })
 }
 
-/// A canonical array as the writer schema's `target` type: the inverse retags, UTF-8 validated where Parquet requires
-/// it, nested children renamed to the target's fields. Refusals carry no column - the writer names it.
+/// A canonical array as the writer schema's `target` type; refusals carry no column, the writer names it.
 pub fn to_parquet(array: &ArrayRef, target: &DataType) -> Result<ArrayRef, Error> {
     if array.data_type() == target {
         return Ok(Arc::clone(array));

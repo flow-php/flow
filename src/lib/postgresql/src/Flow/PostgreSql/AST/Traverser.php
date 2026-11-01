@@ -25,13 +25,7 @@ use function str_replace;
 use function ucwords;
 
 /**
- * AST Traverser for PostgreSQL parse trees.
- *
- * Walks every message-typed field of every node in protobuf descriptor order and calls registered visitors and
- * modifiers for specific node types.
- * Visitors receive nodes for read-only operations (collection, analysis).
- * Modifiers receive nodes with context for mutation operations.
- * Handlers registered for ParseResult receive the whole query once, before its statements.
+ * Descriptor order; ParseResult handlers get the whole query once, before its statements.
  */
 final class Traverser
 {

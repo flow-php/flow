@@ -15,14 +15,7 @@ use function is_array;
 use function random_int;
 
 /**
- * Fixed-size reservoir using Algorithm R for uniform sampling.
- *
- * This reservoir keeps up to N exemplars, using reservoir sampling
- * to ensure that each measurement has an equal probability of being
- * selected when more than N measurements are offered.
- *
- * This is appropriate for Counter, Gauge, and UpDownCounter instruments
- * where bucket alignment is not meaningful.
+ * Algorithm R (uniform reservoir sampling).
  *
  * @see https://en.wikipedia.org/wiki/Reservoir_sampling
  */

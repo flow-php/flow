@@ -58,8 +58,7 @@ final readonly class DbalResultSchema
         } catch (ProbeRefusal $refusal) {
             $converted = $connection->getDriver()->getExceptionConverter()->convert($refusal, null);
 
-            // what the read itself throws for a table or column the query names; DBAL's SQLite converter has no case
-            // for a missing column, so there it stays the plain DriverException the read throws too
+            // DBAL's SQLite converter has no missing-column case, so its message decides
             if (
                 $converted instanceof TableNotFoundException
                 || $converted instanceof InvalidFieldNameException

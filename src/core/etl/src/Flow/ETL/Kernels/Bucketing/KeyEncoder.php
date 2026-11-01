@@ -21,10 +21,7 @@ use function serialize;
 use function strlen;
 
 /**
- * Two rows get one key exactly when their values are equal under ComparableValues::equality(): -0.0 is 0, NaN is NaN,
- * and every value is type-tagged, so the string "1" never equals "1.0" or the int 1. A column cast to a type first
- * (a join key) is tagged in that type. A column the batch does not carry is a null where $declared declares it
- * nullable; anywhere else the batch must carry it.
+ * Equal keys exactly when ComparableValues::equality() holds; every value is type-tagged.
  */
 final readonly class KeyEncoder
 {

@@ -63,6 +63,6 @@ first rows of the sheet (100 by default) through one `spreadsheets.values.get` a
 A sheet the sample already read in full is not fetched again. Every inferred column is nullable; strings that look like numbers, booleans and dates become
 those types under the API's default `FORMATTED_VALUE`; with `->withOptions(['valueRenderOption' => 'UNFORMATTED_VALUE'])`
 the API's own numbers and booleans are used as they are (dates arrive as serial numbers unless
-`dateTimeRenderOption` is `FORMATTED_STRING`). `->inferSchema(infer_schema()->sampleSize(-1))` reads the whole sheet;
+`dateTimeRenderOption` is `FORMATTED_STRING`). `->inferSchema(infer_schema()->everyRow())` reads the whole sheet;
 `->allStrings()` keeps every column a string. Empty cells are `null` (`->withEmptyToNull(false)` keeps them `""`).
 A value past the sample that does not fit the inferred type fails the read with the column and row.

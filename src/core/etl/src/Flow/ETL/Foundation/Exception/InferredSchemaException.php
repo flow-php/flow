@@ -19,8 +19,8 @@ final class InferredSchemaException extends InvalidArgumentException
         string $inferredFrom,
         array $expected,
         array $columns,
-        int $sampleSize,
-        int $filesToSniff,
+        ?int $sampleSize,
+        ?int $filesToSniff,
     ): self {
         return new self(sprintf(
             'Columns of %s do not match the schema inferred from %s: unexpected [%s], missing [%s]. The sample was '
@@ -30,8 +30,8 @@ final class InferredSchemaException extends InvalidArgumentException
             $inferredFrom,
             implode(', ', array_diff($columns, $expected)),
             implode(', ', array_diff($expected, $columns)),
-            $sampleSize === -1 ? 'all' : (string) $sampleSize,
-            $filesToSniff === -1 ? 'all' : (string) $filesToSniff,
+            $sampleSize ?? 'all',
+            $filesToSniff ?? 'all',
         ));
     }
 
@@ -70,7 +70,7 @@ final class InferredSchemaException extends InvalidArgumentException
         string $uri,
         int $offset,
         ?int $line,
-        int $sampleSize,
+        ?int $sampleSize,
         SchemaMismatchException $mismatch,
     ): self {
         return new self(
@@ -81,7 +81,7 @@ final class InferredSchemaException extends InvalidArgumentException
                 $offset,
                 $line === null ? '' : ", line {$line},",
                 $uri,
-                $sampleSize === -1 ? 'all' : (string) $sampleSize,
+                $sampleSize ?? 'all',
                 $mismatch->cause->reason(),
             ),
             0,
@@ -93,21 +93,22 @@ final class InferredSchemaException extends InvalidArgumentException
      * The refusal to raise for $mismatch, a row at its 0-based position in the whole source: past a bounded sample it
      * becomes the way out, within the sample (or with no inference behind the schema) it stays the gate's own.
      *
-     * @param null|int $sampleSize the inference's sample size, -1 for every row; null when no inference made the schema
+     * @param null|int $sampleSize the rows the schema was inferred from; null when there is no bound to outrun (a
+     *                             declared schema, or one inferred from every row)
      */
     public static function whenPastTheSample(
         string $source,
         ?int $sampleSize,
         SchemaMismatchException $mismatch,
     ): self|SchemaMismatchException {
-        if ($sampleSize === null || $sampleSize === -1 || $mismatch->rowIndex < $sampleSize) {
+        if ($sampleSize === null || $mismatch->rowIndex < $sampleSize) {
             return $mismatch;
         }
 
         return new self(
             sprintf(
                 'Row %d of %s does not fit the schema inferred from its first %d rows: %s. Infer from '
-                . 'every row with ->inferSchema(infer_schema()->sampleSize(-1)), or declare the schema with '
+                . 'every row with ->inferSchema(infer_schema()->everyRow()), or declare the schema with '
                 . '->withSchema(...).',
                 $mismatch->rowIndex,
                 $source,

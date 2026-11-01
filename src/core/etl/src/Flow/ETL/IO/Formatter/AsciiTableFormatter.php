@@ -16,7 +16,7 @@ use function str_repeat;
 final class AsciiTableFormatter implements Formatter
 {
     /**
-     * Every cell is measured once, so the column widths cost one pass over the batch (DuckDB's ComputeRenderWidths).
+     * Every cell is measured once, so the column widths cost one pass over the batch.
      */
     public function format(Rows $rows, int|bool $truncate = 20): string
     {

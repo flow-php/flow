@@ -57,11 +57,6 @@ final readonly class CacheTestContext
         $this->client->execute(drop()->table($tableName)->ifExists()->cascade());
     }
 
-    /**
-     * Make every row that has a non-null lifetime appear already-expired by
-     * zeroing its time column. Rows with a null lifetime (i.e. saved without
-     * an explicit TTL) are untouched and remain alive.
-     */
     public function expireAllExpirableCacheItems(string $tableName = 'cache_items', string $schemaName = 'public'): void
     {
         $this->client->execute(

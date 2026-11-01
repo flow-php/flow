@@ -12,8 +12,7 @@ use Flow\ETL\Planning\Logical\RowCount;
 use Flow\ETL\Planning\Logical\Transparency;
 
 /**
- * The first $limit rows of the input sorted by $columns - a Sort under a Limit, holding only $limit rows. Which rows
- * survive depends on the whole input, so it is opaque and blocking.
+ * Opaque and blocking: which rows survive depends on the whole input.
  */
 final readonly class TopN implements Node
 {

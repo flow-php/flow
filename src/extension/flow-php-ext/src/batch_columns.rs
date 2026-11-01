@@ -1,5 +1,4 @@
-//! A batch of native columns, one builder per schema definition. The readers differ only in where a cell comes from
-//! and decide what a refused record becomes.
+//! A batch of native columns, one builder per schema definition.
 
 use std::rc::Rc;
 

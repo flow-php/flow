@@ -686,9 +686,7 @@ final class PgSqlClient implements Client
     }
 
     /**
-     * The columns whose values ResultCaster converts, by name. By name, last wins, exactly as pg_fetch_all()
-     * collapses duplicate output names. A positional lookup applies the wrong column's type to the surviving
-     * value: for SELECT id AS a, label AS a it casts the text through int8 and yields 0.
+     * By name, last wins, as pg_fetch_all() collapses duplicate output names.
      *
      * @return array<string, string>
      */

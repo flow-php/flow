@@ -12,21 +12,7 @@ use function array_values;
 use function sprintf;
 
 /**
- * Decides whether a telemetry signal should be dropped based on its attributes.
- *
- * Evaluates a single root {@see Matcher} (compose them with {@see All}, {@see Any}
- * and {@see Not}) against one or more {@see AttributeSource}s. The matcher is run
- * independently against each configured source and the results are OR-combined: a
- * signal "matches" when the matcher matches in ANY of the sources. The polarity
- * ({@see $exclude}) is then applied once to that combined result - when the matcher
- * matches, the signal is dropped (exclude, the default) or kept (when exclude is
- * false, i.e. keep ONLY matching signals).
- *
- * The whole decision is baked into a single cached closure on construction: the raw
- * matcher is compiled once (see {@see CompiledMatcher}) and wrapped with the
- * per-source OR and the polarity. Processors fetch it via {@see self::dropFunction()}
- * and invoke it directly with one {@see Attributes} per source, avoiding a
- * method-call layer on the hot path.
+ * Matcher runs per source, OR-combined, then the exclude polarity is applied once.
  */
 final readonly class AttributeFilter
 {

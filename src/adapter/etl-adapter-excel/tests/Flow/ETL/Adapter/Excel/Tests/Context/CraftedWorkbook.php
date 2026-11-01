@@ -11,10 +11,6 @@ use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function md5;
 
-/**
- * fixture.xlsx with its first sheet's XML replaced. Its styles stay, so a crafted sheet may use any number format,
- * but no shared strings - inline strings and numbers only.
- */
 final class CraftedWorkbook
 {
     public static function with(string $sheetXml): string

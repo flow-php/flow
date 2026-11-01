@@ -22,11 +22,6 @@ use function array_keys;
 use function fclose;
 use function fopen;
 
-/**
- * Runtime companion to {@see TypeNarrowing}. The fixture is the real guard — its sinks fail `just analyze` if any
- * `Type` implementation stops re-narrowing `assert()`, `cast()` or `isValid()` — and these cases keep it executed and
- * honest, so a DSL function that disappears or changes shape breaks a test rather than rotting silently.
- */
 final class TypeNarrowingTest extends TestCase
 {
     public function test_assert_narrows_logical_types(): void

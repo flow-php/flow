@@ -16,6 +16,7 @@ use Flow\ETL\IO\Extractor\File\FileRead;
 use Flow\ETL\IO\Extractor\File\InferredColumns;
 use Flow\ETL\IO\Extractor\File\ReadWindow;
 use Flow\ETL\IO\Extractor\File\SourceFile;
+use Flow\ETL\IO\Inference\SchemaInference;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Rows\RecordBatch;
@@ -24,7 +25,6 @@ use Generator;
 use SensitiveParameter;
 
 use function Flow\Types\DSL\type_array;
-use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_optional;
 use function is_string;
 
@@ -34,24 +34,25 @@ final readonly class ExcelFileBatches implements FileBatches
      * @param null|ExcelSniffer $sample the open sheets of the inference this read follows, read on from where the
      *                                     sample stopped; null to parse every sheet afresh; never described
      * @param null|InferredColumns $inferred the columns every sheet must carry; null when declared or union by name
-     * @param null|int $sampleSize the inference's sample size when the schema was inferred; null when it was declared
+     * @param null|SchemaInference $inference the inference that made the schema; null when it was declared
      */
     public function __construct(
         private WorkbookReader $workbook,
         private ?ExcelSniffer $sample,
         private ?InferredColumns $inferred,
-        private ?int $sampleSize = null,
+        private ?SchemaInference $inference = null,
     ) {}
 
     public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
     {
         $inferred = type_optional(type_array())->assert($data['inferred'] ?? null);
+        $inference = type_optional(type_array())->assert($data['inference'] ?? null);
 
         return new self(
             $rebuild->of($data['workbook'] ?? null, WorkbookReader::class),
             null,
             $inferred === null ? null : InferredColumns::fromArray($inferred),
-            type_optional(type_integer())->assert($data['sample_size'] ?? null),
+            $inference === null ? null : SchemaInference::fromArray($inference),
         );
     }
 
@@ -60,7 +61,7 @@ final readonly class ExcelFileBatches implements FileBatches
         return Description::compose(self::class, [
             'workbook' => $this->workbook,
             'inferred' => $this->inferred?->normalize(),
-            'sample_size' => $this->sampleSize,
+            'inference' => $this->inference?->normalize(),
         ]);
     }
 
@@ -85,13 +86,21 @@ final readonly class ExcelFileBatches implements FileBatches
         try {
             $columns = $sheet->columns();
             $this->inferred?->refuseDivergence($source->uri(), $columns);
-            $missing = $this->sampleSize === null ? $body->missingFrom($columns) : [];
+            $missing = $this->inference === null ? $body->missingFrom($columns) : [];
 
             if ($columns !== [] && $missing !== []) {
                 throw SchemaValidationException::declaredColumnsMissing($source->uri(), $missing, $columns);
             }
 
-            $batch = new RecordBatch($body, $backend, $read->batchSize, $source->uri(), $this->sampleSize);
+            $batch = $this->inference === null
+                ? new RecordBatch($body, $backend, $read->batchSize, $source->uri())
+                : RecordBatch::inferred(
+                    $body,
+                    $backend,
+                    $read->batchSize,
+                    $source->uri(),
+                    $this->inference->sampleSize,
+                );
 
             foreach ($sheet->rows() as $number => $cells) {
                 $values = $sheet->decode($cells);

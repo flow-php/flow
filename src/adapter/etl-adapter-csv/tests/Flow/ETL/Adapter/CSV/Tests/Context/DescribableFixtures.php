@@ -15,6 +15,7 @@ use Flow\ETL\IO\Extractor\File\FileSplit;
 use Flow\ETL\IO\Extractor\File\SourceFile;
 use Flow\ETL\IO\Extractor\Grid\GridHeader;
 use Flow\ETL\IO\Inference\InferredTypes;
+use Flow\ETL\IO\Inference\SchemaInference;
 use Flow\ETL\Tests\Context\DescribableFixtures as ETLDescribableFixtures;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 
@@ -38,6 +39,7 @@ final class DescribableFixtures
                     new CSVReadOptions(false, false, false, ';', "'", '\\', 2048),
                 ),
                 ETLDescribableFixtures::inferredColumns(),
+                (new SchemaInference(filesToSniff: 3, unionByName: true))->everyRow(),
             ),
             CSVLoader::class => static fn(): Describable => new CSVLoader(
                 path('local://data/out.csv'),

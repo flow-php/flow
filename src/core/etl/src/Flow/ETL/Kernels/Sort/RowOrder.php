@@ -37,11 +37,7 @@ use const SORT_REGULAR;
 use const SORT_STRING;
 
 /**
- * The one row order of sortBy, the external merge, window peers and every check of sortedness: nulls are the smallest
- * value (first ascending, last descending) unless a column places them at the other end, NaN the largest and equal to
- * itself, -0.0 equals 0.0, strings, uuids, json, enums, xml and html compare by their physical bytes, numbers,
- * datetimes, dates and times by value, false before true. Descending is the exact reverse of ascending; rows equal on
- * every key keep their input order.
+ * Nulls smallest unless placed, NaN largest, -0.0 = 0.0, strings by bytes; ties keep input order.
  */
 final readonly class RowOrder
 {

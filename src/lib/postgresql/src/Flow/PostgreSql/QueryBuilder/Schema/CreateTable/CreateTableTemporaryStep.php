@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Schema\CreateTable;
 
 /**
- * Intermediate step after calling temporary() that allows specifying ON COMMIT behavior.
- *
- * If no ON COMMIT method is called, the default behavior is ON COMMIT DROP for backward compatibility.
+ * Without an ON COMMIT call, ON COMMIT DROP applies.
  */
 interface CreateTableTemporaryStep extends CreateTableFinalStep
 {

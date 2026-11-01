@@ -11,7 +11,7 @@ use function is_scalar;
 use function method_exists;
 
 /**
- * Resolves span attributes from an authenticated token. A null attribute name disables that field.
+ * A null attribute name disables that field.
  */
 final readonly class UserAttributeResolver
 {

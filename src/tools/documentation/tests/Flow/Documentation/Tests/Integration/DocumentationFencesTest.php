@@ -25,8 +25,7 @@ use function sprintf;
 final class DocumentationFencesTest extends TestCase
 {
     /**
-     * documentation/upgrading*.md is append-only history. Its "Before:" fences are deliberately
-     * written against APIs that no longer exist, so every such file is excluded by pattern.
+     * upgrading*.md is history: its Before: fences use APIs that no longer exist.
      */
     private const EXCLUDED = 'documentation/upgrading*.md';
 

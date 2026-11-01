@@ -26,8 +26,7 @@ use SensitiveParameter;
 use function Flow\Types\DSL\type_instance_of;
 
 /**
- * One batch per key. While the process stays under the memory limit the input is held and grouped in one pass; past
- * it, the input is partitioned into buckets and each bucket grouped on its own.
+ * One batch per key; past the memory limit, input is bucketed and grouped per bucket.
  */
 final readonly class RepartitionProcessor implements Distributable
 {

@@ -9,9 +9,7 @@ use Flow\Types\Type;
 use function Flow\Types\DSL\type_string;
 
 /**
- * SQLite has no per-column type: SQLite3Result::columnType() describes the value, not the column,
- * and sqlite3_column_decltype() is not bound in PHP. An all-string schema is a true statement about
- * it rather than a floor, and the read casts values to match.
+ * SQLite has no per-column type in PHP, so an all-string schema is true, not a floor.
  */
 final readonly class SqliteTypes implements NativeTypes
 {

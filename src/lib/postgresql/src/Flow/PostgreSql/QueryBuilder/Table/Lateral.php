@@ -11,10 +11,6 @@ use Flow\PostgreSql\QueryBuilder\Exception\InvalidTableException;
 
 use function get_debug_type;
 
-/**
- * Represents a LATERAL subquery or function reference.
- * LATERAL allows a subquery or function to reference columns from preceding tables.
- */
 final readonly class Lateral implements TableReference
 {
     /**

@@ -16,8 +16,7 @@ use function is_nan;
 use function usort;
 
 /**
- * The physical values whose decoded value satisfies a leaf, as a union of intervals. Floats compare as IEEE 754 does
- * outside NaN: -0.0 equals +0.0.
+ * Floats compare as IEEE 754 outside NaN: -0.0 equals +0.0.
  */
 final readonly class PhysicalIntervals
 {

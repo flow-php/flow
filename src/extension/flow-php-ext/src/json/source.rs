@@ -32,14 +32,19 @@ struct JsonFeed {
     shared: Rc<Shared>,
     schema: Zval,
     batch_size: usize,
-    sample_size: Option<i64>,
+    inference: Option<Zval>,
     /// The names a record may hold under an inferred schema.
     known: Vec<Vec<u8>>,
 }
 
 impl Fed for JsonFeed {
     fn next_batch(&self) -> PhpResult<Option<Fetched>> {
-        reading(&self.shared.reader, CLASS)?.next_columns(&self.schema, self.batch_size, self.sample_size, &self.known)
+        reading(&self.shared.reader, CLASS)?.next_columns(
+            &self.schema,
+            self.batch_size,
+            self.inference.as_ref(),
+            &self.known,
+        )
     }
 
     /// `SourceStream::read()` runs with no borrow held: the stream may call back into the source.
@@ -89,8 +94,7 @@ pub struct RustJsonOpenSource {
 
 #[php_impl]
 impl RustJsonOpenSource {
-    /// `$head`: the chunk the opener already read at `$offset` ('' for none); the bytes before it are JSON whitespace
-    /// after an optional BOM, which the reader would skip. `$uri` names the file in refusals.
+    /// `$head`: the chunk already read at `$offset`; the bytes before it are whitespace after an optional BOM.
     pub fn __construct(
         stream: &Zval,
         lines: bool,
@@ -115,13 +119,18 @@ impl RustJsonOpenSource {
         schema: &Zval,
         batchSize: i64,
         backend: &Zval,
-        sampleSize: Option<i64>,
+        inference: Option<&Zval>,
         known: Option<&Zval>,
     ) -> PhpResult<RustIterator> {
+        let inference = source::inference_of(inference)?;
         let mut names = Vec::new();
 
-        if sampleSize.is_some() {
-            let definitions = call_method(known.unwrap_or(schema), "definitions", &mut [])?;
+        if inference.is_some() {
+            let definitions = call_method(
+                known.filter(|zv| !zv.is_null()).unwrap_or(schema),
+                "definitions",
+                &mut [],
+            )?;
             let definitions = definitions
                 .array()
                 .ok_or_else(|| ext_exception("flow_php expected Schema::definitions() to return an array"))?;
@@ -137,7 +146,7 @@ impl RustJsonOpenSource {
             shared: Rc::clone(&self.shared),
             schema: schema.shallow_clone(),
             batch_size: batch_size_of(batchSize, "JSON")?,
-            sample_size: sampleSize,
+            inference,
             known: names,
         };
 

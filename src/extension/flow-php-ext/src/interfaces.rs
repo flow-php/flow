@@ -18,6 +18,7 @@ const COLUMN_BUILDER: DataType = DataType::object("Flow\\ETL\\Values\\Column\\Co
 const SELF: DataType = DataType::object("self");
 const ROWS: DataType = DataType::object("Flow\\ETL\\Values\\Rows");
 const SCHEMA: DataType = DataType::object("Flow\\ETL\\Values\\Schema");
+const SCHEMA_INFERENCE: DataType = DataType::object("Flow\\ETL\\IO\\Inference\\SchemaInference");
 const BACKEND: DataType = DataType::object("Flow\\ETL\\Values\\Column\\Backend");
 const CODEC: DataType = DataType::object("Flow\\ETL\\Values\\Column\\Frame\\Codec");
 const ITERATOR: DataType = DataType::object("Iterator");
@@ -323,7 +324,7 @@ pub fn register() -> Result<()> {
                     Arg::new("schema", SCHEMA),
                     Arg::new("batchSize", DataType::Long),
                     Arg::new("backend", BACKEND),
-                    Arg::new("sampleSize", DataType::Long).allow_null().default("null"),
+                    Arg::new("inference", SCHEMA_INFERENCE).allow_null().default("null"),
                 ],
                 ITERATOR,
             )
@@ -334,7 +335,7 @@ pub fn register() -> Result<()> {
                 "sniff",
                 vec![
                     Arg::new("names", DataType::Array),
-                    Arg::new("rowBudget", DataType::Long),
+                    Arg::new("rowBudget", DataType::Long).allow_null(),
                     Arg::new("typer", TYPE_NARROWER),
                 ],
                 COLUMN_TYPES,
@@ -352,7 +353,7 @@ pub fn register() -> Result<()> {
                     Arg::new("schema", SCHEMA),
                     Arg::new("batchSize", DataType::Long),
                     Arg::new("backend", BACKEND),
-                    Arg::new("sampleSize", DataType::Long).allow_null().default("null"),
+                    Arg::new("inference", SCHEMA_INFERENCE).allow_null().default("null"),
                     Arg::new("known", SCHEMA).allow_null().default("null"),
                 ],
                 ITERATOR,

@@ -8,11 +8,6 @@ use Flow\Documentation\Docs\DocumentMethodCalls;
 use Flow\Documentation\Tests\Context\FenceContext;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Asserted through DocumentMethodCalls, because a resolved type is only observable as a verdict.
- * Every case asserts a bogus call IS reported - a negative-only suite cannot tell a working
- * analyzer from a dead one.
- */
 final class InferredTypesTest extends TestCase
 {
     private FenceContext $fences;

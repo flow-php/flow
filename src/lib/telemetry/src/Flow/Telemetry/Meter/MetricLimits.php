@@ -5,26 +5,14 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Meter;
 
 /**
- * Configuration for metric cardinality limits.
- *
- * Per OpenTelemetry Metrics SDK specification, metrics need cardinality limits
- * to prevent memory exhaustion from unbounded unique attribute combinations.
- *
- * When the cardinality limit is exceeded, new attribute combinations are
- * redirected to an overflow aggregator identified by the OVERFLOW_ATTRIBUTE.
- *
- * Note: Unlike spans and logs, metrics are EXEMPT from attribute count and
- * value length limits per the OTel specification. Only cardinality is limited.
+ * Metrics are exempt from attribute count/length limits (OTel); only cardinality is limited.
  *
  * @see https://opentelemetry.io/docs/specs/otel/metrics/sdk/
  */
 final readonly class MetricLimits
 {
     /**
-     * Attribute key used to identify overflow aggregations.
-     *
-     * When cardinality limit is exceeded, measurements are aggregated
-     * into a synthetic data point with this attribute set to true.
+     * Set to true on the synthetic data point that absorbs measurements past the cardinality limit.
      */
     public const string OVERFLOW_ATTRIBUTE = 'otel.metric.overflow';
 

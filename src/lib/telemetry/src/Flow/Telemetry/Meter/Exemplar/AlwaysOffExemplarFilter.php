@@ -6,13 +6,6 @@ namespace Flow\Telemetry\Meter\Exemplar;
 
 use Flow\Telemetry\Tracer\SpanContext;
 
-/**
- * Never records exemplars.
- *
- * This filter disables exemplar collection entirely.
- * Use this when you don't need trace-to-metric correlation
- * or want to minimize overhead.
- */
 final readonly class AlwaysOffExemplarFilter implements ExemplarFilter
 {
     public function __toString(): string

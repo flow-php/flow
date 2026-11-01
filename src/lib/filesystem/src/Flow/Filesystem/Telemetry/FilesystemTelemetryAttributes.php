@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Telemetry;
 
 /**
- * Flow-specific filesystem attribute keys.
- *
- * No official filesystem semantic convention exists; per OTel naming guidance all custom keys
- * live under the `flow.filesystem.` prefix. Official keys (e.g. `error.type`) come from
- * {@see \Flow\Telemetry\SemConvAttributes}.
+ * Custom keys only, under `flow.filesystem.` (no official convention exists).
  *
  * @see https://opentelemetry.io/docs/specs/semconv/general/naming/
  */

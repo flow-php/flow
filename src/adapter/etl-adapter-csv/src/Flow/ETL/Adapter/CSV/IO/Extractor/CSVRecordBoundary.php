@@ -10,9 +10,7 @@ use function str_contains;
 use function str_replace;
 
 /**
- * A record is complete when the buffer ends outside an enclosure. An enclosure only OPENS at a field start - buffer
- * start or just after the separator, blanks allowed - which is what fgetcsv does and what counting enclosures cannot
- * express. Possessive quantifiers throughout: the pattern must stay linear on a multi-megabyte buffer.
+ * Enclosure opens only at a field start (as fgetcsv); possessive quantifiers keep it linear on large buffers.
  */
 final readonly class CSVRecordBoundary
 {

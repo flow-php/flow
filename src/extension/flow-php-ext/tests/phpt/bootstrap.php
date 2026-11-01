@@ -10,6 +10,7 @@ use Flow\ETL\Adapter\CSV\IO\Extractor\RustCSVOpenSource;
 use Flow\ETL\Adapter\CSV\IO\Loader\PhpCSVEncoder;
 use Flow\ETL\Adapter\JSON\IO\Loader\PhpJsonEncoder;
 use Flow\ETL\Adapter\Parquet\IO\Extractor\RustParquetOpenSource;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\RuntimeException;
 use Flow\ETL\IO\Inference\ColumnTypes;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
@@ -365,7 +366,7 @@ function expect_exception(callable $fn): void
     try {
         $fn();
         echo "FAIL: no exception thrown\n";
-    } catch (RuntimeException $e) {
+    } catch (InvalidArgumentException|RuntimeException $e) {
         echo get_class($e), ': ', $e->getMessage(), "\n";
     }
 }
@@ -670,7 +671,7 @@ function rust_sniff_column(array $values, Flow\Types\Type\TypeNarrower $typer, b
         true,
         $emptyToNull,
         false,
-    ))->sniff([], -1, $typer);
+    ))->sniff([], null, $typer);
 }
 
 /**
@@ -793,10 +794,6 @@ function json_leak_cells(): array
     ];
 }
 
-/**
- * A random value of the text writers' fuzz alphabet: separators, enclosures, escapes, line breaks, slashes, controls,
- * multi-byte characters; `mt_srand()` first.
- */
 function write_random_string(): string
 {
     static $alphabet = [
@@ -1022,11 +1019,6 @@ function write_random_type(int $depth): array
 }
 
 /**
- * A value of `$type` (from write_random_type()) in a random input form: as generated, in a raw form a reader hands over
- * (numeric and ISO strings, Uuid and Json objects, a datetime in another zone), in a form the cast refuses (a wrong
- * scalar, a scalar for a container, non-list keys, integer keys for string keys, a missing required element, a present
- * null, an extra key), or null; containers recurse into their elements. `mt_srand()` first.
- *
  * @param Flow\Types\Type<mixed> $type
  */
 function cast_random_input(Flow\Types\Type $type, mixed $value): mixed

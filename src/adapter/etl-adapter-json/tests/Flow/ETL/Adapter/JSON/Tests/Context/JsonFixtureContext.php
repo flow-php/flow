@@ -143,12 +143,12 @@ final class JsonFixtureContext
         int $batchSize,
         Backend $backend = new PhpBackend(),
         ?int $batches = null,
-        ?int $sampleSize = null,
+        ?SchemaInference $inference = null,
     ): string {
         $read = [];
 
         try {
-            foreach ($open->batches($schema, $batchSize, $backend, $sampleSize) as $batch) {
+            foreach ($open->batches($schema, $batchSize, $backend, $inference) as $batch) {
                 $read[] = $batch instanceof CorruptedRecordException
                     ? ['corrupted' => [
                         $batch->uri,

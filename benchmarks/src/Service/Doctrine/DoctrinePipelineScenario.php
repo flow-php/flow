@@ -17,11 +17,7 @@ use function Flow\ETL\DSL\data_frame;
 use function Flow\Floe\DSL\from_floe;
 
 /**
- * The canonical pipeline over a live DBAL connection. It does not degrade when the container is
- * down - DoctrineConnection::open() throws, because a subject that silently measures nothing is
- * worse than no subject.
- *
- * DBAL declares from driver metadata and never samples, so like parquet and floe it has no inferred arm.
+ * Throws when the container is down: a subject that silently measures nothing is worse than none.
  */
 final readonly class DoctrinePipelineScenario
 {

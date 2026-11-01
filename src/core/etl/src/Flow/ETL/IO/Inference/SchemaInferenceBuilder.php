@@ -12,14 +12,14 @@ use function Flow\Types\DSL\type_string;
 final class SchemaInferenceBuilder
 {
     /**
-     * @var int<1, max>|-1
+     * @var null|int<1, max>
      */
-    private int $filesToSniff;
+    private ?int $filesToSniff;
 
     /**
-     * @var int<1, max>|-1
+     * @var null|int<1, max>
      */
-    private int $sampleSize;
+    private ?int $sampleSize;
 
     private ?InferredTypes $types;
 
@@ -53,15 +53,34 @@ final class SchemaInferenceBuilder
         );
     }
 
+    public function everyRow(): self
+    {
+        $this->sampleSize = null;
+
+        return $this;
+    }
+
     /**
-     * @param int<1, max>|-1 $filesToSniff - sources that yielded a row; -1 sniffs every source. Leading row-less
-     *                                     sources are all opened. Ignored by a source that lists no files
+     * Leading row-less sources are all opened. Ignored by a source that lists no files.
+     */
+    public function everySource(): self
+    {
+        $this->filesToSniff = null;
+
+        return $this;
+    }
+
+    /**
+     * @param int<1, max> $filesToSniff - sources that yielded a row. Leading row-less sources are all opened.
+     *                                  Ignored by a source that lists no files
      */
     public function filesToSniff(int $filesToSniff): self
     {
-        // @mago-ignore analysis:impossible-condition,redundant-comparison,redundant-logical-operation
-        if ($filesToSniff < 1 && $filesToSniff !== -1) {
-            throw new InvalidArgumentException('Files to sniff must be greater than 0, or -1 for all sources');
+        // @mago-ignore analysis:impossible-condition,redundant-comparison
+        if ($filesToSniff < 1) {
+            throw new InvalidArgumentException(
+                'Files to sniff must be greater than 0. Use everySource() to infer from every source.',
+            );
         }
 
         $this->filesToSniff = $filesToSniff;
@@ -70,13 +89,15 @@ final class SchemaInferenceBuilder
     }
 
     /**
-     * @param int<1, max>|-1 $sampleSize - -1 observes every row
+     * @param int<1, max> $sampleSize
      */
     public function sampleSize(int $sampleSize): self
     {
-        // @mago-ignore analysis:impossible-condition,redundant-comparison,redundant-logical-operation
-        if ($sampleSize < 1 && $sampleSize !== -1) {
-            throw new InvalidArgumentException('Sample size must be greater than 0, or -1 for all rows');
+        // @mago-ignore analysis:impossible-condition,redundant-comparison
+        if ($sampleSize < 1) {
+            throw new InvalidArgumentException(
+                'Sample size must be greater than 0. Use everyRow() to infer from every row.',
+            );
         }
 
         $this->sampleSize = $sampleSize;
@@ -85,7 +106,7 @@ final class SchemaInferenceBuilder
     }
 
     /**
-     * Runs the whole-unit sniffs of sampleSize(-1), for example through a process launcher to sniff in parallel.
+     * Runs the whole-unit sniffs of everyRow(), for example through a process launcher to sniff in parallel.
      */
     public function sniffWith(Sniffs $sniffs): self
     {

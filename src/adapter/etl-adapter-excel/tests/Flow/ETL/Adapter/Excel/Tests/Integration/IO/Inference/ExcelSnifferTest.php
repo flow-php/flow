@@ -59,7 +59,7 @@ final class ExcelSnifferTest extends FlowTestCase
 
         ExcelFixtureContext::infer(
             ExcelFixtureContext::globSniffer('sniff/*', $filesystem),
-            infer_schema()->sampleSize(-1)->filesToSniff(-1)->build(),
+            infer_schema()->everyRow()->everySource()->build(),
         );
 
         static::assertSame(2, $filesystem->readFromCalls);
@@ -144,7 +144,7 @@ final class ExcelSnifferTest extends FlowTestCase
 
         ExcelFixtureContext::infer(
             ExcelFixtureContext::globSniffer('sniff/*', $filesystem),
-            infer_schema()->sampleSize(-1)->filesToSniff(1)->build(),
+            infer_schema()->everyRow()->filesToSniff(1)->build(),
         );
 
         static::assertSame(1, $filesystem->readFromCalls);
@@ -233,7 +233,7 @@ final class ExcelSnifferTest extends FlowTestCase
     {
         static::assertSame(3, ExcelFixtureContext::sniffer('sniff/a')->sniff(0, 3)->columns->rows);
         static::assertSame(1, ExcelFixtureContext::sniffer('sniff/a')->sniff(0, 1)->columns->rows);
-        static::assertSame(10, ExcelFixtureContext::sniffer('sniff/a')->sniff(0, -1)->columns->rows);
+        static::assertSame(10, ExcelFixtureContext::sniffer('sniff/a')->sniff(0, null)->columns->rows);
     }
 
     public function test_one_unit_per_sheet_and_a_sniff_reuses_the_sheet_the_header_came_from(): void
@@ -247,7 +247,7 @@ final class ExcelSnifferTest extends FlowTestCase
         $afterHeader = $filesystem->readFromCalls;
 
         // the first unit is the sheet names() read from, so its header row is already spent
-        $firstSheet = $sniffer->sniff(0, -1);
+        $firstSheet = $sniffer->sniff(0, null);
 
         static::assertSame(2, $units);
         static::assertSame(0, $beforeAnyRead);
@@ -358,7 +358,7 @@ final class ExcelSnifferTest extends FlowTestCase
 
     public function test_an_unbounded_sample_counts_the_rows_it_streamed(): void
     {
-        $sample = ExcelFixtureContext::sniffer('sniff/a')->sniff(0, -1);
+        $sample = ExcelFixtureContext::sniffer('sniff/a')->sniff(0, null);
 
         static::assertSame([10, 0, true], [$sample->columns->rows, $sample->bytes, $sample->complete]);
     }
@@ -371,7 +371,7 @@ final class ExcelSnifferTest extends FlowTestCase
         static::assertInstanceOf(ExcelSniffer::class, $unit);
         static::assertSame(1, $unit->units());
         static::assertSame($sniffer->names(), $unit->names());
-        static::assertEquals($sniffer->sniff(1, -1), $unit->sniff(0, -1));
+        static::assertEquals($sniffer->sniff(1, null), $unit->sniff(0, null));
 
         $sniffer->close();
         $unit->close();
@@ -391,7 +391,7 @@ final class ExcelSnifferTest extends FlowTestCase
 
         $rebuilt = DescribeRoundTrip::rebuilt($unit);
 
-        static::assertEquals($sniffer->sniff(1, -1), $rebuilt->sniff(0, -1));
+        static::assertEquals($sniffer->sniff(1, null), $rebuilt->sniff(0, null));
 
         $sniffer->close();
         $rebuilt->close();
@@ -404,7 +404,7 @@ final class ExcelSnifferTest extends FlowTestCase
 
     public function test_unbounded_inference_is_independent_of_execution_order(): void
     {
-        $inference = new SchemaInference(-1, -1, unionByName: true);
+        $inference = (new SchemaInference(unionByName: true))->everyRow()->everySource();
 
         static::assertEquals(
             ExcelFixtureContext::infer(ExcelFixtureContext::globSniffer('sniff/*'), $inference),

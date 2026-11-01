@@ -35,18 +35,7 @@ use const LOCK_EX;
 use const LOCK_UN;
 
 /**
- * OTLP File Exporter transport — writes JSONL to either a file path or a php://
- * stream wrapper. The handle is opened once in the constructor and reused
- * across send() calls; shutdown() closes it.
- *
- * Each send() acquires LOCK_EX around fwrite so concurrent writers (e.g. forked
- * workers sharing a redirected stdout/stderr or appending to the same log file)
- * interleave at line boundaries. flock() on TTYs and pipes returns false
- * silently — the call is best-effort and never blocks the write.
- *
- * For file paths the parent directory is created on construction when
- * $createDirectories is true, and the file mode is set to $filePermissions if
- * the file is newly created. Both options are ignored for php:// URIs.
+ * LOCK_EX per send keeps concurrent writers line-interleaved; best-effort on TTYs/pipes.
  *
  * @see https://opentelemetry.io/docs/specs/otel/protocol/file-exporter/
  */

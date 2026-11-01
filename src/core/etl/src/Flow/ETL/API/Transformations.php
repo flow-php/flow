@@ -6,10 +6,6 @@ namespace Flow\ETL\API;
 
 use function array_values;
 
-/**
- * Collection of transformations.
- * Transformations are applied in the order they are passed to the constructor.
- */
 final readonly class Transformations implements Transformation
 {
     /**

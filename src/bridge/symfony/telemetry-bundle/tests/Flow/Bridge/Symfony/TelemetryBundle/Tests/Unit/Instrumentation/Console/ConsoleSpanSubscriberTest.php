@@ -22,7 +22,7 @@ use Symfony\Component\Console\Output\NullOutput;
 #[CoversClass(ConsoleSpanSubscriber::class)]
 final class ConsoleSpanSubscriberTest extends TestCase
 {
-    public function test_exit_code_0_sets_ok_status(): void
+    public function test_exit_code_0_leaves_status_unset(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);

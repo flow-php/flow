@@ -18,13 +18,12 @@ final class BranchFiber
     private ?Fiber $fiber = null;
 
     /**
-     * The LAST fiber ran to its end. Survives drop(), so a dropped terminated run stays terminated.
+     * Survives drop(), so a dropped terminated run stays terminated.
      */
     private bool $ended = false;
 
     /**
-     * The last fiber ran to its end without throwing. A fiber the garbage collector destroyed while it was suspended is
-     * terminated too, but never completed - its PipelineSteps already discarded the side loaders.
+     * A fiber destroyed while suspended is terminated but never completed.
      */
     private bool $completed = false;
 

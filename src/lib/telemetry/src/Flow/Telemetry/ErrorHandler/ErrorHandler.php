@@ -7,12 +7,7 @@ namespace Flow\Telemetry\ErrorHandler;
 use Throwable;
 
 /**
- * Receives Throwables raised inside the SDK at runtime.
- *
- * Per the OpenTelemetry specification the SDK MUST NOT throw to user code at
- * runtime touchpoints. Components catch \Throwable from exporters/processors and
- * forward it here. Implementations MUST swallow any failure of their own (a
- * handler that itself throws is considered broken).
+ * Implementations must never throw: the SDK never throws to user code (OTel).
  *
  * @see https://opentelemetry.io/docs/specs/otel/error-handling/
  */

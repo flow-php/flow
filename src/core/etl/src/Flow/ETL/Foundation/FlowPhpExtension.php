@@ -15,8 +15,7 @@ use function sprintf;
 final readonly class FlowPhpExtension
 {
     /**
-     * The contract version this package expects from flow_php, equal to the extension's FLOW_PHP_ABI. Both sides change
-     * together whenever a class or interface the extension registers changes.
+     * Equals the extension's FLOW_PHP_ABI; both change together.
      */
     public const int ABI = 3;
 

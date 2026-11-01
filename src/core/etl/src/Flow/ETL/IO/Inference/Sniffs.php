@@ -7,7 +7,7 @@ namespace Flow\ETL\IO\Inference;
 interface Sniffs
 {
     /**
-     * Whole-unit sniffs for sampleSize(-1): units 0..$units-1, every unit sniffed with budget -1, Samples in unit order.
+     * Whole-unit sniffs for everyRow(): units 0..$units-1, every unit sniffed with budget -1, Samples in unit order.
      *
      * @param int<0, max> $units
      *

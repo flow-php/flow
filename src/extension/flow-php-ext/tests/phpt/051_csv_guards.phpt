@@ -36,4 +36,4 @@ Flow\ETL\Foundation\Exception\RuntimeException: flow_php CSV enclosure must be e
 Flow\ETL\Foundation\Exception\RuntimeException: flow_php CSV escape must be empty or exactly one byte
 Flow\ETL\Foundation\Exception\RuntimeException: flow_php CSV batch size must be greater than 0
 Flow\ETL\Foundation\Exception\RuntimeException: flow_php CSV batch size must be greater than 0
-Flow\ETL\Foundation\Exception\RuntimeException: flow_php CSV fold limit must be -1 or at least 0
+Flow\ETL\Foundation\Exception\InvalidArgumentException: Row budget must be 0 or more. Use null for every row.

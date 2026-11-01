@@ -41,7 +41,7 @@ columns.required.parquet: identical
 decimals_fixed_len.parquet: identical
 delta_binary_acked_encoded_integers.parquet: identical
 delta_byte_array_arrow_v2.parquet: identical
-delta_length_byte_array_duckdb_v2.parquet: identical
+delta_length_byte_array_external_v2.parquet: identical
 lists.parquet: identical
 logical_types.parquet: identical
 maps.parquet: identical

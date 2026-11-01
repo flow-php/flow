@@ -23,10 +23,6 @@ use function Flow\ETL\DSL\schema;
 use function getenv;
 use function max;
 
-/**
- * Base test case for testing FLow, designed mostly for unit tests.
- * In case of integration tests, use FlowIntegrationTestCase that extends this class.
- */
 abstract class FlowTestCase extends TestCase
 {
     /**

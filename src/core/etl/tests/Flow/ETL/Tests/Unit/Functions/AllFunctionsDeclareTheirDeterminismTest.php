@@ -50,8 +50,6 @@ final class AllFunctionsDeclareTheirDeterminismTest extends FlowTestCase
             static::markTestSkipped($e->getMessage());
         }
 
-        // the fixture builds Uuid through uuid7(), whose random bits generate; Ulid's fixture converts a fixed ref; a
-        // user callable is never trusted, and ToDateTime's fixture parses 'Y-m-d', leaving the time of day to the clock
         ScalarFunctionContract::declaresDeterminism(
             $function,
             !in_array(

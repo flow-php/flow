@@ -24,8 +24,7 @@ use function pack;
 use const PHP_INT_MAX;
 
 /**
- * A DECIMAL decodes to a float, exactly invertible up to precision 15 only. A byte decimal's edges are 8 big-endian
- * bytes: the Decimal order sign-extends any width.
+ * Float decode is exactly invertible only up to precision 15; byte edges are 8 sign-extended big-endian bytes.
  */
 final readonly class DecimalPreImage implements PreImage
 {

@@ -31,7 +31,7 @@ final class SchemaInferrerTest extends FlowTestCase
     /**
      * The budget decides how much of the heterogeneous fixture is seen, so each row is a different schema.
      *
-     * @return array<string, array{int<1, max>|-1, array<string, string>, array<int, int>}>
+     * @return array<string, array{null|int<1, max>, array<string, string>, array<int, int>}>
      */
     public static function budgets(): array
     {
@@ -44,7 +44,7 @@ final class SchemaInferrerTest extends FlowTestCase
                 ['a' => 'float', 'b' => 'string', 'c' => 'boolean'],
                 [0 => 10, 1 => 10, 2 => 5],
             ],
-            'unbounded' => [-1, ['a' => 'float', 'b' => 'string', 'c' => 'boolean'], [0 => 10, 1 => 10, 2 => 10]],
+            'unbounded' => [null, ['a' => 'float', 'b' => 'string', 'c' => 'boolean'], [0 => 10, 1 => 10, 2 => 10]],
         ];
     }
 
@@ -146,7 +146,7 @@ final class SchemaInferrerTest extends FlowTestCase
         static::assertEquals(
             definition_from_type('v', type_integer(), nullable: true),
             (new FakeSniffer($fixture, $typer, ['id', 'v']))
-                ->sniff(1, -1)
+                ->sniff(1, null)
                 ->columns
                 ->schema(ColumnTypesMother::floor())
                 ->get('v'),
@@ -175,7 +175,7 @@ final class SchemaInferrerTest extends FlowTestCase
             [['c' => '1']],
         ], new StringTypeNarrower(InferredTypes::default()->toArray()));
 
-        $schema = (new SchemaInferrer(new SchemaInference(-1, 2)))->infer($sniffer)->schema;
+        $schema = (new SchemaInferrer((new SchemaInference(filesToSniff: 2))->everyRow()))->infer($sniffer)->schema;
 
         static::assertSame([0, 1], $sniffer->sources->started);
         static::assertSame(['a', 'b'], array_keys($schema->definitions()));
@@ -188,15 +188,15 @@ final class SchemaInferrerTest extends FlowTestCase
             new StringTypeNarrower(InferredTypes::default()->toArray()),
         );
 
-        (new SchemaInferrer(new SchemaInference(-1, -1)))->infer($sniffer);
+        (new SchemaInferrer((new SchemaInference())->everyRow()->everySource()))->infer($sniffer);
 
-        static::assertSame([[0, -1], [1, -1], [2, -1]], $sniffer->sniffed);
+        static::assertSame([[0, null], [1, null], [2, null]], $sniffer->sniffed);
     }
 
     public function test_execution_order_does_not_change_the_schema(): void
     {
         $typer = new StringTypeNarrower(InferredTypes::default()->toArray());
-        $inference = new SchemaInference(-1, -1, unionByName: true);
+        $inference = (new SchemaInference(unionByName: true))->everyRow()->everySource();
 
         foreach ([[], ['z', 'a']] as $names) {
             $inferred = (new SchemaInferrer($inference))->infer(
@@ -238,13 +238,13 @@ final class SchemaInferrerTest extends FlowTestCase
     }
 
     /**
-     * @param int<1, max>|-1 $sampleSize
+     * @param null|int<1, max> $sampleSize
      * @param array<string, string> $expected
      * @param array<int, int> $rowsRead
      */
     #[DataProvider('budgets')]
     public function test_the_budget_decides_how_much_of_the_sample_is_seen(
-        int $sampleSize,
+        ?int $sampleSize,
         array $expected,
         array $rowsRead,
     ): void {
@@ -274,7 +274,7 @@ final class SchemaInferrerTest extends FlowTestCase
                 $merged = ColumnTypesMother::fromStrings($names)->folded();
 
                 foreach (array_slice($fixture, 0, $count) as $rows) {
-                    $merged = $merged->merge(ColumnTypes::sniff($names, $rows, -1, $typer)->folded(), true);
+                    $merged = $merged->merge(ColumnTypes::sniff($names, $rows, null, $typer)->folded(), true);
                 }
 
                 $sequential = $inferrer->infer(
@@ -297,7 +297,7 @@ final class SchemaInferrerTest extends FlowTestCase
             new StringTypeNarrower(InferredTypes::default()->toArray()),
         );
 
-        (new SchemaInferrer(new SchemaInference(-1, 1)))->infer($sniffer);
+        (new SchemaInferrer((new SchemaInference(filesToSniff: 1))->everyRow()))->infer($sniffer);
 
         static::assertSame([0], $sniffer->sources->started);
         static::assertSame([0 => 10], $sniffer->sources->rowsRead);
@@ -370,7 +370,7 @@ final class SchemaInferrerTest extends FlowTestCase
             new StringTypeNarrower(InferredTypes::default()->toArray()),
         );
 
-        (new SchemaInferrer(new SchemaInference(-1, -1)))->infer($sniffer);
+        (new SchemaInferrer((new SchemaInference())->everyRow()->everySource()))->infer($sniffer);
 
         static::assertSame([0, 1, 2], $sniffer->sources->started);
         static::assertSame([0 => 10, 1 => 10, 2 => 10], $sniffer->sources->rowsRead);
@@ -385,17 +385,15 @@ final class SchemaInferrerTest extends FlowTestCase
             ['id'],
         );
 
-        $inferred = (new SchemaInferrer(new SchemaInference(
-            sampleSize: -1,
-            filesToSniff: -1,
-            sniffs: $launcher,
-        )))->infer($sniffer);
+        $inferred = (new SchemaInferrer((new SchemaInference(sniffs: $launcher))->everyRow()->everySource()))->infer(
+            $sniffer,
+        );
 
         static::assertCount(1, $launcher->sniffs);
         static::assertSame(3, $launcher->sniffs[0][1]);
         static::assertCount(3, $inferred->units->samples);
         static::assertEquals(
-            (new SchemaInferrer(new SchemaInference(sampleSize: -1, filesToSniff: -1)))->infer($sniffer)->schema,
+            (new SchemaInferrer((new SchemaInference())->everyRow()->everySource()))->infer($sniffer)->schema,
             $inferred->schema,
         );
     }
@@ -406,7 +404,7 @@ final class SchemaInferrerTest extends FlowTestCase
         $units = self::threeSourcesOfTenRows();
         $units[] = $units[0];
 
-        (new SchemaInferrer(new SchemaInference(sampleSize: -1, filesToSniff: 2, sniffs: $launcher)))->infer(
+        (new SchemaInferrer((new SchemaInference(filesToSniff: 2, sniffs: $launcher))->everyRow()))->infer(
             new FakeSniffer($units, new StringTypeNarrower(InferredTypes::default()->toArray()), ['id']),
         );
 
@@ -439,8 +437,8 @@ final class SchemaInferrerTest extends FlowTestCase
         static::assertSame(
             ['b', 'a'],
             array_keys(
-                (new SchemaInferrer(new SchemaInference(sampleSize: -1, unionByName: true)))
-                    ->infer(new PresniffedSniffer([], [$sniffer->sniff(1, -1), $sniffer->sniff(0, -1)]))
+                (new SchemaInferrer((new SchemaInference(unionByName: true))->everyRow()))
+                    ->infer(new PresniffedSniffer([], [$sniffer->sniff(1, null), $sniffer->sniff(0, null)]))
                     ->schema->definitions(),
             ),
         );

@@ -33,7 +33,6 @@ use PHPUnit\Framework\Attributes\TestWith;
 
 use function array_keys;
 use function array_map;
-use function count;
 use function Flow\ETL\Adapter\Excel\DSL\from_excel;
 use function Flow\ETL\Adapter\Excel\DSL\is_valid_excel_sheet_name;
 use function Flow\ETL\Adapter\Excel\DSL\to_excel;
@@ -291,10 +290,6 @@ final class ExcelExtractorTest extends FlowTestCase
             ->fetch();
     }
 
-    /**
-     * b57: the sheet has no such column, so every row would carry a null under a NOT NULL
-     * declaration. Declare the column nullable if that is what the data is.
-     */
     #[DataProvider('provide_fixtures')]
     public function test_extract_excel_refuses_a_declared_column_the_sheet_lacks(string $fixtureName): void
     {
@@ -579,11 +574,6 @@ final class ExcelExtractorTest extends FlowTestCase
         $extractor->schema();
     }
 
-    /**
-     * Guards the three tests below: OpenSpout only writes a shared-strings folder when it picks the file-based
-     * cache, which depends on the runner's memory_limit and the fixture's unique-string count. If it ever picks
-     * the in-memory strategy here, those three assert nothing at all - and pass.
-     */
     public function test_the_leak_fixture_forces_the_file_based_shared_strings_cache(): void
     {
         $before = ExcelFixtureContext::sharedStringsFolders();
@@ -707,10 +697,9 @@ final class ExcelExtractorTest extends FlowTestCase
     public function test_an_unbounded_sample_is_parsed_again(): void
     {
         $filesystem = new CountingFilesystem(native_local_filesystem());
-        $extractor = from_excel(
-            ExcelFixtureContext::path('sniff/a'),
-            $filesystem,
-        )->inferSchema(infer_schema()->sampleSize(-1));
+        $extractor = from_excel(ExcelFixtureContext::path('sniff/a'), $filesystem)->inferSchema(
+            infer_schema()->everyRow(),
+        );
         $extractor->schema();
 
         ExtractedRows::of($extractor);

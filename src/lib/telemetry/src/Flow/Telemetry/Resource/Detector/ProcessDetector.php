@@ -18,27 +18,6 @@ use function is_string;
 use function posix_getpwuid;
 use function posix_getuid;
 
-/**
- * Detects process information.
- *
- * Detects the following attributes:
- * - process.pid: Process ID
- * - process.executable.path: Path to the PHP binary
- * - process.runtime.name: Always "PHP"
- * - process.runtime.version: PHP version
- * - process.command: The script being executed
- * - process.owner: Process owner username (POSIX systems only)
- *
- * Example output:
- * ```
- * process.pid: 12345
- * process.executable.path: /usr/bin/php
- * process.runtime.name: PHP
- * process.runtime.version: 8.3.0
- * process.command: /var/www/index.php
- * process.owner: www-data
- * ```
- */
 final readonly class ProcessDetector implements ResourceDetector
 {
     public function detect(): Resource

@@ -7,8 +7,7 @@ namespace Flow\Telemetry\ErrorHandler;
 use Throwable;
 
 /**
- * Fans an error out to multiple handlers. Each child invocation is wrapped so a
- * misbehaving handler cannot prevent siblings from running.
+ * A throwing child never stops its siblings.
  */
 final readonly class CompositeErrorHandler implements ErrorHandler
 {

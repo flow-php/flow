@@ -9,12 +9,7 @@ use function count;
 use function sprintf;
 
 /**
- * Raised when one or more batches failed on the primary transport.
- *
- * Each entry pairs the primary failure with the failover outcome:
- * - `failover` is null when the failover transport accepted the batch (data preserved).
- * - `failover` is a Throwable when the failover transport also rejected the batch
- *   (data lost; the only case the operator must escalate as data loss).
+ * Per entry: null failover = data preserved; Throwable failover = data lost.
  */
 final class FailoverTransportException extends TransportException
 {

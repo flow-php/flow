@@ -20,11 +20,7 @@ use function Flow\Types\DSL\type_string;
 use function uniqid;
 
 /**
- * XML and Text do not infer and cannot carry the orders schema, so they form their own family: the
- * same four verbs in the same order as the canonical shape, over one column.
- *
- * These two numbers are comparable to each other and to nothing else. The loader is to_text because a
- * one-column string frame in Floe would measure Floe's footer rather than the pipeline.
+ * XML/Text cannot carry the orders schema: comparable only to each other; to_text avoids measuring Floe's footer.
  */
 final readonly class NodePipelineScenario
 {

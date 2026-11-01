@@ -98,8 +98,7 @@ final readonly class DeltaBinaryPackedEncoder
     }
 
     /**
-     * Safe bit packing for large bit widths to avoid integer overflow.
-     * Uses manual bit manipulation with array of bytes instead of integer accumulation.
+     * Packs bytes manually so a large bit width cannot overflow an integer.
      *
      * @param array<int> $values
      */

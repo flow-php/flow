@@ -16,22 +16,6 @@ use function str_repeat;
 use function strlen;
 use function strtolower;
 
-/**
- * A 16-byte (128-bit) trace identifier compatible with OpenTelemetry W3C Trace Context.
- *
- * TraceIds are used to correlate spans across service boundaries.
- * An all-zero TraceId is considered "invalid" and indicates no active trace.
- *
- * Example usage:
- * ```php
- * $traceId = TraceId::generate();
- * echo $traceId->toHex(); // "0af7651916cd43dd8448eb211c80319c"
- *
- * // Invalid trace ID (all zeros)
- * $invalid = TraceId::invalid();
- * echo $invalid->isValid(); // false
- * ```
- */
 final readonly class TraceId implements Stringable
 {
     public const string INVALID = '00000000000000000000000000000000';

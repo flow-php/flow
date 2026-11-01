@@ -26,8 +26,7 @@ pub struct TypeJson {
 
 #[derive(Deserialize)]
 pub struct StructureElementJson {
-    // ALWAYS a JSON string - PHP casts the name on normalize(). A JSON number here
-    // would fail parse_schema for the WHOLE schema, not just this field.
+    // always a JSON string, because PHP casts the name
     pub name: String,
     #[serde(rename = "type")]
     pub type_: TypeJson,
@@ -90,9 +89,7 @@ pub fn parse_type(type_json: &[u8]) -> Result<TypeJson, Error> {
     serde_json::from_str(json).map_err(Error::TypeJson)
 }
 
-/// How a column of a Flow type is stored. `Bytes` holds every string-like type (string, non-empty and numeric
-/// strings, class strings, json, enum, timezone, xml, xml_element, html, html_element), `Timestamp` a datetime,
-/// `Duration` a time and `Int32` a date.
+/// How a column of a Flow type is stored.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Kind {
     Null,
@@ -109,8 +106,7 @@ pub enum Kind {
     Struct(Vec<Field>),
 }
 
-/// A nested child. `optional` is the structure element's flag for a structure child, and whether the child type is
-/// optional for a list element, map key or map value.
+/// A nested child; `optional` is the element's flag, or the child type's optionality inside a list or map.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Field {
     pub name: String,
@@ -206,8 +202,7 @@ pub fn field(name: &str, kind: &Kind) -> FieldRef {
     Arc::new(ArrowField::new(name, data_type(kind), true))
 }
 
-/// How a logical value is built from its physical one. `M` is what builds a markup value: [`Markup`] names the
-/// physical class, flow_php replaces it with that class's instance.
+/// How a logical value is built from its physical one; [`Markup`] names the physical class.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ValueNode<M> {
     Plain,

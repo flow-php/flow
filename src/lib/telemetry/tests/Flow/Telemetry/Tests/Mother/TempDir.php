@@ -12,11 +12,6 @@ use function rmdir;
 use function sys_get_temp_dir;
 use function uniqid;
 
-/**
- * A unique, self-cleaning temporary directory for tests that exercise the
- * filter's generated-code cache. Keeps temp-file bookkeeping out of the test
- * cases so they stay free of private members.
- */
 final class TempDir
 {
     private function __construct(

@@ -24,7 +24,7 @@ final readonly class LogicalOutline
         private bool $declarations = false,
     ) {}
 
-    public function of(Node $root): Entry
+    public function of(Node $root): RenderedNode
     {
         /** @var SplObjectStorage<Node, int> $numbers */
         $numbers = new SplObjectStorage();
@@ -37,7 +37,7 @@ final readonly class LogicalOutline
      *
      * @param SplObjectStorage<Node, int> $numbers the nodes numbered so far
      */
-    public function entry(Node $node, SplObjectStorage $numbers): Entry
+    public function entry(Node $node, SplObjectStorage $numbers): RenderedNode
     {
         if ($numbers->offsetExists($node)) {
             return $this->describe($node, $numbers[$node], [])->with([], shared: true);
@@ -59,11 +59,11 @@ final readonly class LogicalOutline
     }
 
     /**
-     * @param list<Entry> $children
+     * @param list<RenderedNode> $children
      */
-    public function describe(Node $node, ?int $number, array $children): Entry
+    public function describe(Node $node, ?int $number, array $children): RenderedNode
     {
-        return new Entry(
+        return new RenderedNode(
             $node,
             ObjectExtractor::shortName($node),
             $this->declarations ? $this->details->labelled($node) : $this->details->lines($node),

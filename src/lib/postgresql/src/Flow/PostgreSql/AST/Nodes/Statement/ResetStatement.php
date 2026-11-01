@@ -8,8 +8,7 @@ use Flow\PostgreSql\AST\Nodes\Statement;
 use Flow\PostgreSql\Protobuf\AST\VariableSetStmt;
 
 /**
- * Represents RESET statements (RESET configuration_parameter, RESET ALL).
- * Note: These are parsed as VariableSetStmt in PostgreSQL.
+ * Parsed as VariableSetStmt.
  *
  * @implements Statement<VariableSetStmt>
  */

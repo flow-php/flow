@@ -6,5 +6,5 @@ namespace Flow\ETL\Planning\Explain;
 
 interface Layout
 {
-    public function render(Entry $root): string;
+    public function render(RenderedNode $root): string;
 }

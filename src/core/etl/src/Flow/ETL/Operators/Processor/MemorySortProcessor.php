@@ -20,10 +20,6 @@ use function array_values;
 use function Flow\Types\DSL\type_array;
 use function max;
 
-/**
- * Buffers all rows and sorts them in memory. Registered by the planner when the sort algorithm is
- * memory_sort().
- */
 final readonly class MemorySortProcessor implements Distributable
 {
     public function __construct(

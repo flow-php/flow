@@ -8,24 +8,6 @@ use DateTimeImmutable;
 use Flow\Telemetry\Context\SpanId;
 use Flow\Telemetry\Context\TraceId;
 
-/**
- * Represents a sample measurement with trace context.
- *
- * Exemplars provide a link between aggregated metric data and the
- * distributed traces that contributed to that data. They capture
- * a representative measurement along with its trace context.
- *
- * Example:
- * ```php
- * $exemplar = new Exemplar(
- *     value: 125.5,
- *     timestamp: new \DateTimeImmutable(),
- *     traceId: $context->traceId,
- *     spanId: $activeSpanId,
- *     filteredAttributes: ['http.method' => 'GET'],
- * );
- * ```
- */
 final readonly class Exemplar
 {
     /**

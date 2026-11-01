@@ -10,11 +10,6 @@ use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
 use Generator;
 
-/**
- * Records every bucket id each operation was asked for, so a test can assert which storage a run was
- * routed to. BucketsStorage::get() is silent for an unknown id in every implementation, so a routing
- * miss reads zero rows rather than throwing - recording the calls is the only way to see it.
- */
 final class RecordingRowsStorage implements RowsStorage
 {
     /**

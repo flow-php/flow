@@ -17,12 +17,6 @@ use function Flow\Telemetry\DSL\attribute_filter;
 use function Flow\Telemetry\DSL\attribute_rule;
 use function Flow\Telemetry\DSL\not;
 
-/**
- * The generated (compiled) matcher and the interpreted matcher are two
- * implementations of the same semantics. This test pins them together: for every
- * matcher shape, the compiled closure and {@see Matcher::matches()} must return
- * the same result on every attribute set. If they ever diverge, this fails.
- */
 final class CompilationParityTest extends TestCase
 {
     #[DataProvider('matchers')]

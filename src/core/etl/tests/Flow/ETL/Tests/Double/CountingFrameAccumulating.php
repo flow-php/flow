@@ -22,14 +22,6 @@ use SensitiveParameter;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_optional;
 
-/**
- * Sums the referenced entry over the frame, counting how many accumulators WindowProcessor builds and
- * how many rows it feeds them. Pins the incremental strategy: a partition of n rows must never cost more
- * than n rows fed through aggregate() when the frame only grows.
- *
- * over() and withChildren() return copies, so every copy routes its counts back to the instance the
- * test holds.
- */
 final class CountingFrameAccumulating implements FrameAccumulating, WindowFunction
 {
     public int $accumulatorCalls = 0;

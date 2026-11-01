@@ -22,12 +22,6 @@ use function method_exists;
 use function strlen;
 use function substr;
 
-/**
- * Formats query parameters for telemetry output.
- *
- * Converts various PHP types to string representations suitable for
- * inclusion in OpenTelemetry span attributes.
- */
 final readonly class ParameterFormatter
 {
     /**

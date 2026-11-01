@@ -27,10 +27,6 @@ final class PartitionTest extends TestCase
     /**
      * @return array<array<string>>
      */
-    /**
-     * Characters a Hive path reserves. They used to be refused; they are now percent-encoded, so the
-     * same list is the round-trip provider.
-     */
     public static function provider_reserved_characters_values(): array
     {
         return [

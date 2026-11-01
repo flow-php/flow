@@ -17,22 +17,6 @@ use Psr\Clock\ClockInterface;
 use Throwable;
 
 /**
- * Logger implementation for emitting log records.
- *
- * A Logger is the primary interface for emitting log telemetry.
- * Log records can include severity, message body, and attributes.
- *
- * Loggers are obtained from a LoggerProvider:
- * ```php
- * $logger = $provider->logger('my-service', '1.0.0');
- * ```
- *
- * Example usage with convenience methods:
- * ```php
- * $logger->info('Processing started', ['items.count' => 100]);
- * $logger->error('Processing failed', ['error.message' => $e->getMessage()]);
- * ```
- *
  * @import-type TAttributeValue from Attributes
  * @import-type TAttributeValueMap from Attributes
  */

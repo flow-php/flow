@@ -35,11 +35,6 @@ final class TelemetryMother
         );
     }
 
-    /**
-     * A Telemetry whose tracer provider mirrors production wiring — the configured sampler composed with
-     * SuppressingSampler — over a context that already carries the suppression key. Any span created through
-     * it must be dropped, so instrumentation can be asserted to emit nothing while tracing is suppressed.
-     */
     public static function suppressed(SpanProcessor $spanProcessor): Telemetry
     {
         $clock = new SystemClock();

@@ -7,12 +7,7 @@ namespace Flow\Telemetry\Meter\Exemplar;
 use Flow\Telemetry\Tracer\SpanContext;
 
 /**
- * Records an exemplar when span context is available.
- *
- * This filter captures exemplars for all measurements that have
- * an associated span context, regardless of whether the span is sampled.
- * Use this when you want maximum observability and can afford
- * the storage overhead.
+ * Needs a span context; the sampled flag is ignored.
  */
 final readonly class AlwaysOnExemplarFilter implements ExemplarFilter
 {

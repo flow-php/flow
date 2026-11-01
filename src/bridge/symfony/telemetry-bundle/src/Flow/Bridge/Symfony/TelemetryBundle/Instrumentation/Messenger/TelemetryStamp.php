@@ -8,13 +8,6 @@ use Symfony\Component\Messenger\Stamp\StampInterface;
 
 use function strtolower;
 
-/**
- * Messenger stamp holding propagated telemetry context.
- *
- * This stamp carries trace context information (such as traceparent and tracestate headers)
- * across message dispatch/consume boundaries, enabling distributed tracing through
- * asynchronous message queues.
- */
 final readonly class TelemetryStamp implements StampInterface
 {
     /**

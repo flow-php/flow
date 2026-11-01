@@ -43,7 +43,7 @@ use Flow\Telemetry\Provider\Void\VoidSpanProcessor;
 use Flow\Telemetry\Resource;
 use Flow\Telemetry\Resource\Detector\CachingDetector;
 use Flow\Telemetry\Resource\Detector\GitDetector;
-use Flow\Telemetry\Shutdown\ShutdownHandler;
+use Flow\Telemetry\Shutdown\ShutdownRegistry;
 use Flow\Telemetry\Signal\Signals;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tests\Mother\ExporterSpy;
@@ -52,7 +52,7 @@ use Flow\Telemetry\Tracer\Processor\BatchingSpanProcessor;
 use Flow\Telemetry\Tracer\Processor\CompositeSpanProcessor;
 use Flow\Telemetry\Tracer\Sampler\AlwaysOffSampler;
 use Flow\Telemetry\Tracer\Sampler\AlwaysOnSampler;
-use Flow\Telemetry\Tracer\Sampler\AttributeMatchingSampler;
+use Flow\Telemetry\Tracer\Sampler\AttributeFilteringSampler;
 use Flow\Telemetry\Tracer\Sampler\ParentBasedSampler;
 use Flow\Telemetry\Tracer\Sampler\TraceIdRatioBasedSampler;
 use Override;
@@ -670,7 +670,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
 
     public function test_container_telemetry_is_shut_down_by_the_process_end_handler(): void
     {
-        ShutdownHandler::invoke();
+        ShutdownRegistry::invoke();
 
         $this->bootKernel([
             'config' => static function (TestKernel $kernel): void {
@@ -697,7 +697,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         /** @var SpySpanProcessor $processor */
         $processor = $container->get('app.spy_span_processor');
 
-        ShutdownHandler::invoke();
+        ShutdownRegistry::invoke();
 
         static::assertSame(1, $processor->shutdownCount);
     }
@@ -1391,7 +1391,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
 
         $container = $this->getContainer();
         static::assertInstanceOf(
-            AttributeMatchingSampler::class,
+            AttributeFilteringSampler::class,
             $container->get('flow.telemetry.tracer_provider.sampler'),
         );
         static::assertInstanceOf(

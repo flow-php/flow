@@ -12,13 +12,6 @@ use Flow\Telemetry\Tracer\Span;
 use function count;
 use function sprintf;
 
-/**
- * A typed collection of telemetry items for one signal type.
- *
- * Construct via the static factories ({@see self::logs()}, {@see self::metrics()}, {@see self::traces()}).
- * Read items via the matching accessor ({@see self::allLogs()}/{@see self::allMetrics()}/{@see self::allSpans()});
- * each accessor throws on type mismatch so the caller stays inside the correct match arm.
- */
 final readonly class Signals
 {
     /**

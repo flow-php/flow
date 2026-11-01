@@ -426,7 +426,7 @@ before flushing it to the file.
 Row group size check interval, defines how often writer will check if row group size limit is reached.
 If you set this value too high, writer might exceed row group size limit.
 
-By default tools like Spark or Hive are using 128-512Mb as a row group size.
+Common row group sizes are 128-512 MB.
 Which is great for big data, and quick processing in memory but not so great for PHP.
 
 For example, if you need to paginate over file with 1Gb of data, and you set row group size to 512Mb,

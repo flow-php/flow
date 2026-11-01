@@ -125,7 +125,7 @@ and `count()` returns `0`, matching SQL.
 `rowsBetween()` counts physical rows (SQL `ROWS` mode). `RANGE` with offsets, `GROUPS` and `EXCLUDE`
 are not supported yet.
 
-A frame on a window without `orderBy()` is permitted, matching PostgreSQL and Spark.
+A frame on a window without `orderBy()` is permitted, matching PostgreSQL.
 
 ### Ranking functions ignore frames
 

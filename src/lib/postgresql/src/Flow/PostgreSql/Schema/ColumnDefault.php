@@ -15,15 +15,7 @@ use function Flow\Types\DSL\type_instance_of;
 use function str_replace;
 
 /**
- * A column or domain default modeled as its semantic parts rather than a bare string.
- *
- * PostgreSQL stores a constant default as a (literal, type) pair — `'0'` is kept as
- * `'0'::numeric` on a numeric column and `'0'::double precision` on a double precision column.
- * Comparing only the stripped literal is blind to a stale cast (a default typed against the wrong
- * type, e.g. left behind by `ALTER COLUMN ... TYPE` without a re-issued `SET DEFAULT`). This object
- * keeps the effective cast type so {@see self::equals()} can distinguish that drift, while
- * non-constant defaults (functions, sequences, `now()`) keep comparing by their normalized
- * expression string exactly as before.
+ * Keeps the cast type so equals() catches a stale cast left by ALTER COLUMN ... TYPE.
  *
  * @import-type ColumnTypeShape from ColumnType
  *

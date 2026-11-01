@@ -99,9 +99,7 @@ final class StructureTypeReturnTypeExtension implements DynamicFunctionReturnTyp
     }
 
     /**
-     * Reads the literal `optional:` flag off each structure_element() call in the array literal.
-     * A marker whose flag cannot be read statically is treated as optional - under-promising
-     * presence is the safe direction for an array shape.
+     * An unreadable flag counts as optional: under-promising presence is the safe direction.
      *
      * @return array<array-key, bool>
      */

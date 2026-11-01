@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\HttpFoundation\Response;
 
 use Flow\Bridge\Symfony\HttpFoundation\Output;
-use Flow\Bridge\Symfony\HttpFoundation\StreamClosure;
+use Flow\Bridge\Symfony\HttpFoundation\StreamCompletionListener;
 use Flow\ETL\API\Config\ConfigBuilder;
 use Flow\ETL\API\DataFrame;
 use Flow\ETL\API\Transformation;
@@ -38,7 +38,7 @@ class FlowStreamedResponse extends StreamedResponse
         int $status = 200,
         array $headers = [],
         Config|ConfigBuilder|null $config = null,
-        private readonly ?StreamClosure $streamClosure = null,
+        private readonly ?StreamCompletionListener $streamClosure = null,
         private readonly Filesystem $filesystem = new StdOutFilesystem(),
     ) {
         if ($source instanceof DataFrame && $config !== null) {

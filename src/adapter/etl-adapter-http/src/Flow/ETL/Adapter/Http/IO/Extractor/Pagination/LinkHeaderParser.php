@@ -13,7 +13,7 @@ use function substr;
 use function trim;
 
 /**
- * Minimal RFC 8288 `Link` header parser. Malformed input yields no match (never throws).
+ * RFC 8288; malformed input yields no match, never throws.
  */
 final class LinkHeaderParser
 {

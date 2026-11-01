@@ -13,8 +13,7 @@ use crate::exception::ext_exception;
 use crate::iterator::RustIterator;
 use crate::render::runtime;
 
-/// Each chunk is held as a PHP string, so it sets the read's peak memory: 32 KB matched the PHP path's own peak on wide
-/// and narrow files. `JsonFileBatches::CHUNK` is its PHP copy.
+/// Chunks are PHP strings, so their size sets peak memory; 32 KB matches the PHP path (`JsonFileBatches::CHUNK`).
 pub const CHUNK: i64 = 1 << 15;
 
 /// What a reader hands out next.
@@ -54,6 +53,18 @@ pub trait Fed {
 }
 
 /// The batches of `fed`, each adopted by `backend` into `Rows` of `schema`, and its corrupted records as they are.
+/// The `?SchemaInference $inference` argument of `batches()`: PHP's `null` arrives as a null zval, not `None`.
+pub fn inference_of(inference: Option<&Zval>) -> PhpResult<Option<Zval>> {
+    match inference {
+        Some(zv) if zv.is_null() => Ok(None),
+        Some(zv) if zv.object().is_some() => Ok(Some(zv.shallow_clone())),
+        Some(_) => Err(ext_exception(
+            "flow_php expected the inference to be a SchemaInference or null",
+        )),
+        None => Ok(None),
+    }
+}
+
 pub fn batches(fed: impl Fed + 'static, schema: &Zval, backend: &Zval) -> PhpResult<RustIterator> {
     let adoption = Adoption::new(Definitions::of(schema)?, schema, backend);
     let mut finished = false;

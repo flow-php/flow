@@ -116,7 +116,7 @@ final class FilterParityTest extends TestCase
     /**
      * @return Generator<string, array{Filter, int}>
      */
-    public static function duckdb_filters(): Generator
+    public static function external_filters(): Generator
     {
         foreach (self::filters() as $name => [$filter, $offset]) {
             yield $name => [$filter, $offset];
@@ -155,9 +155,6 @@ final class FilterParityTest extends TestCase
     }
 
     /**
-     * Row-level cases: nulls, a struct leaf under null structs, a decimal, a timestamp, an absent column, and conjuncts
-     * bound beside one that is not. NaN, -0.0 and each operator's negation are RowEvaluatorTest's.
-     *
      * @return Generator<string, array{string, Filter}>
      */
     public static function row_filters(): Generator
@@ -351,20 +348,20 @@ final class FilterParityTest extends TestCase
         }
     }
 
-    #[DataProvider('duckdb_filters')]
-    public function test_both_engines_keep_every_duckdb_row_group_holding_a_match(Filter $filter, int $offset): void
+    #[DataProvider('external_filters')]
+    public function test_both_engines_keep_every_external_row_group_holding_a_match(Filter $filter, int $offset): void
     {
         $plans = [];
 
         foreach ([PhpParquetEngine::class, RustParquetEngine::class] as $engine) {
-            $plans[$engine] = FilePlan::of(FilterRows::file('row_groups_duckdb', $engine), $filter, $offset);
+            $plans[$engine] = FilePlan::of(FilterRows::file('row_groups_external', $engine), $filter, $offset);
         }
 
         $matching = FilterExpectations::matchingGroups(
-            FilterRows::rows(FilterRows::DUCKDB_ROWS_PER_GROUP),
+            FilterRows::rows(FilterRows::EXTERNAL_ROWS_PER_GROUP),
             $filter,
             FilterRows::schema(),
-            FilterRows::DUCKDB_ROWS_PER_GROUP,
+            FilterRows::EXTERNAL_ROWS_PER_GROUP,
             $offset,
         );
 
@@ -374,22 +371,22 @@ final class FilterParityTest extends TestCase
             [],
             array_diff($matching, FilterExpectations::keptGroups(
                 $plans[PhpParquetEngine::class]->selection,
-                FilterRows::DUCKDB_ROWS_PER_GROUP,
+                FilterRows::EXTERNAL_ROWS_PER_GROUP,
             )),
         );
     }
 
-    public function test_both_engines_read_exactly_the_matching_duckdb_rows_from_the_kept_group(): void
+    public function test_both_engines_read_exactly_the_matching_external_rows_from_the_kept_group(): void
     {
         $filter = parquet_column('id')->lessThan(100);
 
         foreach ([PhpParquetEngine::class, RustParquetEngine::class] as $engine) {
-            $file = FilterRows::file('row_groups_duckdb', $engine);
+            $file = FilterRows::file('row_groups_external', $engine);
             static::assertSame(
                 [0],
                 FilterExpectations::keptGroups(
                     FilePlan::of($file, $filter)->selection,
-                    FilterRows::DUCKDB_ROWS_PER_GROUP,
+                    FilterRows::EXTERNAL_ROWS_PER_GROUP,
                 ),
             );
             static::assertSame(range(0, 99), FilterExpectations::ids($file->values(new Query(['id'], $filter))));
@@ -427,9 +424,6 @@ final class FilterParityTest extends TestCase
     }
 
     /**
-     * Pages of the parquet-mr file start at other rows per column: int64 at 0, 200, 428, 628, 828; float at 0, 300,
-     * 628, 928. Each filter keeps pages the other column's boundaries cut through.
-     *
      * @return Generator<string, array{Filter, RowSelection, Closure(array<string, mixed>): bool}>
      */
     public static function parquet_mr_page_filters(): Generator
@@ -469,20 +463,20 @@ final class FilterParityTest extends TestCase
             ];
         }
 
-        yield 'bloom_duckdb: absent id' => [
-            'bloom_duckdb',
+        yield 'bloom_external: absent id' => [
+            'bloom_external',
             parquet_column('id')->equals(4_001),
-            RowSelection::none(FilterRows::DUCKDB_BLOOM_ROWS),
+            RowSelection::none(FilterRows::EXTERNAL_BLOOM_ROWS),
             [],
         ];
-        yield 'bloom_duckdb: in, present and absent' => [
-            'bloom_duckdb',
+        yield 'bloom_external: in, present and absent' => [
+            'bloom_external',
             parquet_column('id')->in([4_000, 4_001]),
             new RowSelection(new RowSelector(2048, false), new RowSelector(6144, true)),
             [4_000],
         ];
-        yield 'bloom_duckdb: present key' => [
-            'bloom_duckdb',
+        yield 'bloom_external: present key' => [
+            'bloom_external',
             parquet_column('key')->equals('k10000'),
             new RowSelection(new RowSelector(4096, true), new RowSelector(2048, false), new RowSelector(2048, true)),
             [10_000],

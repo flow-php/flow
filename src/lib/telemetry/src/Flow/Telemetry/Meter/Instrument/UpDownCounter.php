@@ -24,18 +24,6 @@ use function count;
 use function is_scalar;
 
 /**
- * UpDownCounter instrument for recording increments and decrements.
- *
- * Unlike Counter, UpDownCounter supports negative values and can both
- * increase and decrease. Use for tracking values that can go up and down.
- *
- * Example usage:
- * ```php
- * $counter = $meter->createUpDownCounter('queue.size', 'items', 'Current queue size');
- * $counter->add(5, ['queue.name' => 'tasks']);  // Added 5 items
- * $counter->add(-2, ['queue.name' => 'tasks']); // Removed 2 items
- * ```
- *
  * @see https://opentelemetry.io/docs/specs/otel/metrics/api/#updowncounter
  */
 final class UpDownCounter implements Instrument

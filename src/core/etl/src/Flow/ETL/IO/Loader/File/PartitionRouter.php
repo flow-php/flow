@@ -36,7 +36,7 @@ final class PartitionRouter
     /**
      * @return list<string>
      */
-    public function droppedNames(): array
+    public function pathOnlyColumns(): array
     {
         return $this->dropped;
     }

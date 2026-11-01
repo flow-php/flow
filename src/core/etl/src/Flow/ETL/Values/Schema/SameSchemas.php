@@ -8,8 +8,7 @@ use Flow\ETL\Values\Schema;
 use WeakMap;
 
 /**
- * Pairs of schemas already proved the same. A schema never changes after construction, so a proof holds for as long
- * as both live - batches of one stream compare their equal-but-distinct schemas once, not once per batch.
+ * Schemas never change, so a proof holds for as long as both live.
  */
 final class SameSchemas
 {

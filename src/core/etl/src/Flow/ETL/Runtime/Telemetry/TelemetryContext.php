@@ -358,8 +358,7 @@ final class TelemetryContext
     }
 
     /**
-     * Pins step spans to the data frame span regardless of what else has been activated in between. Derived from the
-     * current context so baggage and suppression are preserved.
+     * Derived from the current context so baggage and suppression are preserved.
      */
     private function dataFrameParent(): ?Context
     {

@@ -48,12 +48,6 @@ use function unlink;
 
 use const JSON_THROW_ON_ERROR;
 
-/**
- * End-to-end test for OTLP stream export through OTLPExporter + StreamTransport.
- *
- * Covers both file-path destinations (real filesystem boundary) and php://temp
- * memory streams. No OTel collector required.
- */
 final class StreamExportIntegrationTest extends TestCase
 {
     private string $tempDir;

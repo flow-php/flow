@@ -9,9 +9,7 @@ use function mb_strtolower;
 use function preg_match_all;
 
 /**
- * A page that defines a helper in one fence and calls it in the next is illustrative user code, not
- * a reference to the library. The scope is the file, not the fence, because the declaration and the
- * call routinely sit in different blocks.
+ * Scope is the file, not the fence: declarations and calls sit in different blocks.
  */
 final readonly class DocumentDeclarations
 {

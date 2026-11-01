@@ -14,8 +14,7 @@ use Flow\ETL\Planning\Optimizer\Rule;
 use Flow\ETL\Values\Column\Backend;
 
 /**
- * Limit(Sort(x), n) -> TopN(x, n): the sort keeps n rows instead of the whole input. A shared Sort stays for its
- * other consumers.
+ * A shared Sort stays for its other consumers.
  */
 final readonly class CombineSortAndLimit implements Rewrite, Rule
 {

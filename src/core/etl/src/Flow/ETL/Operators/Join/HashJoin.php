@@ -274,8 +274,7 @@ final readonly class HashJoin implements Describable
     }
 
     /**
-     * Pairs buckets by partition index, processed in discovery order. A bucket that received no
-     * rows was never created - a missing side means an empty side.
+     * A bucket that received no rows was never created, so a missing side is an empty side.
      *
      * @return Generator<array{?Bucket, ?Bucket}>
      */

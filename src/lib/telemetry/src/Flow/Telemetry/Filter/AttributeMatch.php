@@ -21,23 +21,12 @@ use function str_ends_with;
 use function str_starts_with;
 
 /**
- * Stateless matching primitives shared by the interpreted ({@see AttributeRule::matches()})
- * and the compiled ({@see AttributeRule::compile()}) matching paths.
- *
- * Keeping every comparison in one place guarantees the generated PHP and the
- * interpreted fallback can never diverge in behaviour.
- *
- * The value side of every primitive is an OpenTelemetry AnyValue resolved from
- * an attribute path - intrinsically untyped, so it is the one place `mixed` is
- * unavoidable. A missing path resolves to {@see self::MISSING}; every comparison
- * treats that sentinel as "no match" so a signal lacking the attribute is never
- * matched. The expected side is always a concrete scalar or DateTime.
+ * Single comparison source for interpreted and compiled paths; MISSING never matches.
  */
 final class AttributeMatch
 {
     /**
-     * Sentinel returned by {@see self::resolve()} when a path segment is absent.
-     * Distinct from any real attribute value (null values are never stored on {@see Attributes}).
+     * Sentinel for an absent path segment; null values are never stored on Attributes.
      */
     public const MISSING = "\0__flow_telemetry_missing__\0";
 
@@ -187,10 +176,7 @@ final class AttributeMatch
     }
 
     /**
-     * Order an AnyValue against the expected value with PHP's spaceship
-     * operator, or null when the resolved value is not an orderable scalar or
-     * DateTime. The comparison modes apply a single operator and never coerce -
-     * non-orderable values simply do not match.
+     * Comparison modes never coerce: a value that is not an orderable scalar or DateTime does not match.
      */
     private static function order(mixed $value, bool|float|int|string|DateTimeInterface $expected): ?int
     {

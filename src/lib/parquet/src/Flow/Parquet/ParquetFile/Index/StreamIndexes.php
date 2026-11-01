@@ -23,8 +23,7 @@ use Thrift\Exception\TException;
 use function array_key_exists;
 
 /**
- * Reads an index only when it is asked for, once. The footer is asked for each column's chunks on its own: the arrow
- * engine's RowGroupChunks hold only the columns they were built for.
+ * Footer is asked per column: arrow RowGroupChunks hold only the columns they were built for.
  */
 final class StreamIndexes implements Indexes
 {

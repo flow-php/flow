@@ -93,9 +93,6 @@ final class ExcelFixtureContext
     }
 
     /**
-     * Folders that appeared since $before. Only additions count - the temp dir is machine-global, so another
-     * process may reclaim an unrelated one while a test runs.
-     *
      * @param list<string> $before
      *
      * @return list<string>

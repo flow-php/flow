@@ -21,10 +21,7 @@ use SensitiveParameter;
 use function Flow\Types\DSL\type_integer;
 
 /**
- * Groups rows into batches by column value.
- *
- * Assumes data is pre-sorted by the batching column. When the column value changes,
- * a new batch is started.
+ * Assumes input is pre-sorted by the batching column.
  */
 final readonly class BatchingByProcessor implements Processor
 {

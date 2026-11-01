@@ -22,7 +22,7 @@ are different types, so `Schema::isSame()` and `Definition::isSame()` distinguis
 
 ## Arrays in a Schema
 
-`type_array()` declares a `json` column. The data layer has no array type - parquet, Spark and Floe all express an
+`type_array()` declares a `json` column. The data layer has no array type - parquet and Floe both express an
 array as a JSON object or a JSON collection - so a declared `array<mixed>` is projected onto `json`, and the value is
 stored as a `Flow\Types\Value\Json`, which preserves whether it was an object or a collection.
 
@@ -60,8 +60,7 @@ first row is read, decide one schema, and every batch they yield carries exactly
 `from_csv(...)->schema()`, `from_excel(...)->schema()`, `from_json(...)->schema()`, `from_json_lines(...)->schema()`
 and `from_google_sheet(...)->schema()` answer without running the pipeline. Tune the sample with
 `->inferSchema(infer_schema()->sampleSize(...)->filesToSniff(...)->types(...)->allStrings()->unionByName())`, where
-`filesToSniff()` counts files that yielded a row (DuckDB's `files_to_sniff` counts files opened; here a glob of empty
-files is opened in full) and so does nothing for Google Sheet, which reads a single sheet. `types()` restricts
+`filesToSniff()` counts files that yielded a row (a glob of empty files is opened in full) and so does nothing for Google Sheet, which reads a single sheet. `types()` restricts
 which types inference may produce (`allStrings()` is sugar for `types(type_string())`), and `unionByName()` reads
 sources with differing column sets as one wider schema, instead of rejecting them (CSV, Excel and Google Sheet,
 which check the column set against the header) or dropping the columns a later source introduces (JSON, which has no
@@ -70,7 +69,7 @@ header to check). Every inferred column is nullable, and where narrowing is not 
 `from_array()`, `from_memory()` and the `from_sequence_*()` extractors infer the same way, from their first
 `sampleSize` rows (20,480 by default). `from_array()` given a non-array iterable types every row. A row after the
 sample that does not fit the inferred type fails the read with an `InferredSchemaException` naming that row - infer
-from every row with `->inferSchema(infer_schema()->sampleSize(-1))`, or declare the schema.
+from every row with `->inferSchema(infer_schema()->everyRow())`, or declare the schema.
 
 **Sources that do not.** The rest know their schema before the first row: Parquet and Floe read it from the file,
 PostgreSQL and DBAL derive it from the query (below), and the text, XML and HTTP extractors yield fixed columns.
@@ -304,7 +303,7 @@ What each driver answers:
 - **PostgreSQL (`pgsql`)** and **MySQL (`mysqli`)** report real column types, mapped to Flow types; every derived
   column is nullable. MySQL types are read off a prepared statement, so its type probe executes nothing.
 - **SQLite (`sqlite3`, `pdo_sqlite`)** has no per-column result types, so every column describes as nullable
-  `string` and the read casts its values to match - the same model DuckDB uses for `sqlite_query()`.
+  `string` and the read casts its values to match.
 - A **parameterised query describes normally**: DBAL's `:name` and `?` placeholders are rewritten to the driver's own
   dialect and the probe binds `null` at every position (an empty list for an array-typed parameter), so it never
   sees the values you passed.

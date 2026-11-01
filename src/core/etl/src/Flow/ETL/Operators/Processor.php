@@ -12,11 +12,7 @@ use Flow\ETL\Values\Schema;
 use Generator;
 
 /**
- * Processor handles cross-batch operations that need to see multiple/all batches.
- *
- * Unlike Transformer which operates on a single batch of Rows, a Processor receives
- * the entire upstream generator and produces a new generator. This allows operations
- * like sorting, grouping, and batching that need to accumulate data across batches.
+ * Unlike a Transformer, receives the whole upstream generator, not one batch.
  */
 interface Processor extends Describable
 {

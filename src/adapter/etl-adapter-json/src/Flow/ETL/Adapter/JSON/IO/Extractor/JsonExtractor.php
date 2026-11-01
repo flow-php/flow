@@ -140,7 +140,7 @@ final class JsonExtractor implements
             new JsonFileBatches(
                 $this->files->filesystem,
                 new JsonFileReader($this->files->filesystem, $this->format, $this->pointer, $this->pointerToColumnName),
-                sampleSize: $this->schema === null ? $this->inference->sampleSize : null,
+                inference: $this->schema === null ? $this->inference : null,
             ),
             $this->corruptedRecordsLoader,
         );

@@ -9,9 +9,7 @@ use Flow\Benchmarks\BenchmarkConfig;
 use function Flow\ETL\DSL\data_frame;
 
 /**
- * A null limit runs the same pipeline with no limit() in the plan, so the pair prices what a
- * limit left in the plan costs on a local source. The remote half of the question needs
- * push-down, which this engine does not have yet.
+ * Null limit = same plan without limit(); the pair prices a limit on a local source (no push-down yet).
  */
 final readonly class LimitPushdownScenario
 {

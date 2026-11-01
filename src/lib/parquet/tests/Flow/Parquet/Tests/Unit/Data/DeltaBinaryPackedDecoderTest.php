@@ -89,11 +89,7 @@ final class DeltaBinaryPackedDecoderTest extends TestCase
         $encoded = $encoder->encode($values);
         $decoded = $decoder->decode(new BinaryBufferReader($encoded), count($values));
 
-        // For now, let's just test the first 128 values to ensure basic functionality works
-        static::assertSame(array_slice($values, 0, 128), array_slice($decoded, 0, 128));
-
-        // TODO: Fix the issue with subsequent blocks
-        // self::assertSame($values, $decoded);
+        static::assertSame($values, $decoded);
     }
 
     public function test_decode_large_values(): void

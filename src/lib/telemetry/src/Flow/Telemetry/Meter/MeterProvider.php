@@ -14,30 +14,6 @@ use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Resource;
 use Psr\Clock\ClockInterface;
 
-/**
- * Entry point for the metrics API.
- *
- * Creates and manages meters for different instrumentation scopes.
- * The behavior (void, memory, OTLP, etc.) is determined by the injected processor.
- *
- * Example usage:
- * ```php
- * // For testing with memory storage
- * $processor = new MemoryMetricProcessor(new MemoryExporter());
- * $provider = new MeterProvider($processor, new SystemClock());
- *
- * // For OTLP export
- * $processor = batching_metric_processor(otlp_exporter($transport));
- * $provider = new MeterProvider($processor, new SystemClock());
- *
- * // For void/disabled metrics
- * $provider = new MeterProvider(new VoidProcessor(), new SystemClock());
- *
- * $meter = $provider->meter('my-service', '1.0.0');
- * $counter = $meter->createCounter('requests.total');
- * $counter->add(1);
- * ```
- */
 final readonly class MeterProvider
 {
     public function __construct(

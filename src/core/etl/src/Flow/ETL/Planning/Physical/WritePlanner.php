@@ -21,9 +21,7 @@ use function count;
 use function get_debug_type;
 
 /**
- * Attaches a plan's write roots to the spine: the step each spine node gains for them. attach() is the entry;
- * the other methods are the walk it runs. A write with steps of its own becomes a branch: the pipelines the runtime
- * feeds batch by batch.
+ * A write with steps of its own becomes a branch the runtime feeds batch by batch.
  *
  * @type Leaf = array{write: Write, loader: Loader, path: list<Node>, transaction: null|Transaction}
  */

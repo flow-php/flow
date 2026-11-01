@@ -15,6 +15,7 @@ use Flow\ETL\IO\Extractor\File\FileRead;
 use Flow\ETL\IO\Extractor\File\InferredColumns;
 use Flow\ETL\IO\Extractor\File\ReadWindow;
 use Flow\ETL\IO\Extractor\File\SourceFile;
+use Flow\ETL\IO\Inference\SchemaInference;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
@@ -22,7 +23,6 @@ use Generator;
 use SensitiveParameter;
 
 use function Flow\Types\DSL\type_array;
-use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_optional;
 
 final readonly class CSVFileBatches implements FileBatches
@@ -31,22 +31,23 @@ final readonly class CSVFileBatches implements FileBatches
      * @param null|InferredColumns $inferred the columns every file must carry; null when declared or union by name
      */
     /**
-     * @param null|int $sampleSize the inference's sample size when the schema was inferred; null when it was declared
+     * @param null|SchemaInference $inference the inference that made the schema; null when it was declared
      */
     public function __construct(
         private CSVSourceOpener $opener,
         private ?InferredColumns $inferred,
-        private ?int $sampleSize = null,
+        private ?SchemaInference $inference = null,
     ) {}
 
     public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
     {
         $inferred = type_optional(type_array())->assert($data['inferred'] ?? null);
+        $inference = type_optional(type_array())->assert($data['inference'] ?? null);
 
         return new self(
             $rebuild->of($data['opener'] ?? null, CSVSourceOpener::class),
             $inferred === null ? null : InferredColumns::fromArray($inferred),
-            type_optional(type_integer())->assert($data['sample_size'] ?? null),
+            $inference === null ? null : SchemaInference::fromArray($inference),
         );
     }
 
@@ -55,7 +56,7 @@ final readonly class CSVFileBatches implements FileBatches
         return Description::compose(self::class, [
             'opener' => $this->opener,
             'inferred' => $this->inferred?->normalize(),
-            'sample_size' => $this->sampleSize,
+            'inference' => $this->inference?->normalize(),
         ]);
     }
 
@@ -82,9 +83,9 @@ final readonly class CSVFileBatches implements FileBatches
 
         try {
             // the header is resolved by the time the first batch or corrupted record is handed out
-            $checked = $this->sampleSize !== null;
+            $checked = $this->inference !== null;
 
-            foreach ($open->batches($body, $read->batchSize, $backend, $this->sampleSize) as $batch) {
+            foreach ($open->batches($body, $read->batchSize, $backend, $this->inference) as $batch) {
                 if (!$checked) {
                     $checked = true;
                     $missing = $body->missingFrom($open->headers());

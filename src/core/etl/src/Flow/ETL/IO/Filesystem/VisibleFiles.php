@@ -17,7 +17,7 @@ use function strlen;
 use function substr;
 
 /**
- * Spark's hidden-path rule (HadoopFSUtils.shouldFilterOutPathName), applied only below the root the user named.
+ * Skips files under a `.` or `_` path segment below the named root, except partition and `_metadata` segments.
  */
 final readonly class VisibleFiles implements Filter
 {

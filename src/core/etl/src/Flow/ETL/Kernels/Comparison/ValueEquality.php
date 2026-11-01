@@ -37,8 +37,7 @@ use function var_export;
 use const FILTER_VALIDATE_INT;
 
 /**
- * SQL equality: two columns of different types compare in one type, as DuckDB binds them. Numbers widen to float, a
- * date to a datetime, and a string casts to the other side's type; a string that does not cast throws.
+ * Columns of different types compare in one type: numbers widen to float, dates to datetime, strings cast or throw.
  */
 final readonly class ValueEquality
 {
@@ -234,7 +233,7 @@ final readonly class ValueEquality
     }
 
     /**
-     * A numeric string as DuckDB casts it: an integer target rounds half away from zero.
+     * An integer target rounds a numeric string half away from zero.
      */
     public function number(string $value, IntegerType|FloatType $type): int|float
     {

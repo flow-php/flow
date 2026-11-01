@@ -36,10 +36,6 @@ final class PostgreSqlCacheContext
     }
 
     /**
-     * Run the given block, then return only the INSERT queries captured by the spy.
-     * Useful when the action under test reads the cache first (which produces a SELECT)
-     * and we only care about the write side-effect.
-     *
      * @return list<array{sql: string, parameters: array<int, mixed>}>
      */
     public function onlyInsertQueries(callable $action): array

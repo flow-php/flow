@@ -11,6 +11,7 @@ use Flow\ETL\Adapter\JSON\Tests\Context\JsonFixtureContext;
 use Flow\ETL\Foundation\Exception\SchemaMismatchException;
 use Flow\ETL\IO\Extractor\File\FileSplit;
 use Flow\ETL\IO\Extractor\File\SourceFile;
+use Flow\ETL\IO\Inference\SchemaInference;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Column\PhpBackend;
@@ -76,7 +77,7 @@ final class RustJsonOpenSourceTest extends FlowTestCase
     }
 
     /**
-     * @return Generator<string, array{JsonFraming, string, Schema, ?int}>
+     * @return Generator<string, array{JsonFraming, string, Schema, ?SchemaInference}>
      */
     public static function refusal_cases(): Generator
     {
@@ -88,15 +89,30 @@ final class RustJsonOpenSourceTest extends FlowTestCase
             $id,
             null,
         ];
-        yield 'array element refused past the sample' => [JsonFraming::Array, '[{"id":1},{"id":"n/a"}]', $id, 1];
+        yield 'array element refused past the sample' => [
+            JsonFraming::Array,
+            '[{"id":1},{"id":"n/a"}]',
+            $id,
+            new SchemaInference(1),
+        ];
         yield 'lines refused and lacking a column under a declared schema' => [
             JsonFraming::Lines,
             "{\"id\":1}\r\n\n{\"id\":\"x\"}\n{\"other\":2}\n{\"id\":4}",
             $id,
             null,
         ];
-        yield 'line refused past the sample' => [JsonFraming::Lines, "{\"id\":1}\n{\"id\":\"x\"}\n", $id, 1];
-        yield 'line with a key past the sample' => [JsonFraming::Lines, "{\"id\":1}\n\n{\"id\":2,\"c\":3}\n", $id, 1];
+        yield 'line refused past the sample' => [
+            JsonFraming::Lines,
+            "{\"id\":1}\n{\"id\":\"x\"}\n",
+            $id,
+            new SchemaInference(1),
+        ];
+        yield 'line with a key past the sample' => [
+            JsonFraming::Lines,
+            "{\"id\":1}\n\n{\"id\":2,\"c\":3}\n",
+            $id,
+            new SchemaInference(1),
+        ];
     }
 
     #[DataProvider('refusal_cases')]
@@ -104,7 +120,7 @@ final class RustJsonOpenSourceTest extends FlowTestCase
         JsonFraming $format,
         string $content,
         Schema $schema,
-        ?int $sampleSize,
+        ?SchemaInference $inference,
     ): void {
         $filesystem = memory_filesystem();
         $filesystem->writeTo(path('memory://records.json'))->append($content)->close();
@@ -114,7 +130,7 @@ final class RustJsonOpenSourceTest extends FlowTestCase
             JsonFixtureContext::open($format, $source, $filesystem),
             $schema,
             2,
-            sampleSize: $sampleSize,
+            inference: $inference,
         );
 
         static::assertStringNotContainsString(SchemaMismatchException::class, $native);
@@ -123,7 +139,7 @@ final class RustJsonOpenSourceTest extends FlowTestCase
                 new PhpJsonOpenSource(JsonFixtureContext::reader($format, $filesystem), $source),
                 $schema,
                 2,
-                sampleSize: $sampleSize,
+                inference: $inference,
             ),
             $native,
         );

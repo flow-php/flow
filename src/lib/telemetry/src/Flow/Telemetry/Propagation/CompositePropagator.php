@@ -8,30 +8,7 @@ use function array_merge;
 use function array_unique;
 
 /**
- * Combines multiple Propagators into a single propagator.
- *
- * CompositePropagator allows using multiple propagation formats simultaneously.
- * On inject, all propagators are invoked. On extract, all propagators are
- * invoked and their contexts are merged.
- *
- * Example usage:
- * ```php
- * $propagator = new CompositePropagator([
- *     new W3CTraceContext(),
- *     new W3CBaggage(),
- * ]);
- *
- * // Will inject both trace context and baggage headers
- * $carrier = new ArrayCarrier();
- * $propagator->inject($ctx, $carrier);
- * $headers = $carrier->unwrap();
- *
- * // Will extract both SpanContext and Baggage into PropagationContext
- * $carrier = new ArrayCarrier($headers);
- * $ctx = $propagator->extract($carrier);
- * $spanContext = $ctx->spanContext;
- * $baggage = $ctx->baggage;
- * ```
+ * Extracted contexts are merged.
  */
 final readonly class CompositePropagator implements Propagator
 {

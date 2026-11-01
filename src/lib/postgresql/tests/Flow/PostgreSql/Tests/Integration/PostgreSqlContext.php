@@ -55,9 +55,6 @@ final class PostgreSqlContext
     }
 
     /**
-     * Drains the results of every scheduled notification and returns the errors
-     * PostgreSQL reported for them. Empty when all of them succeeded.
-     *
      * @return list<string>
      */
     public function backgroundNotifierErrors(): array
@@ -97,11 +94,6 @@ final class PostgreSqlContext
         $this->client->close();
     }
 
-    /**
-     * Reads the raw default expression stored in pg_attrdef for a column,
-     * including the implicit type cast PostgreSQL keeps (e.g. '0'::numeric).
-     * The column must have a stored default.
-     */
     public function columnDefaultExpression(string $schema, string $table, string $column): string
     {
         return $this->client->fetchScalarString(
@@ -171,12 +163,6 @@ final class PostgreSqlContext
         $this->client->execute(drop()->view($view)->ifExists()->cascade()->toSql());
     }
 
-    /**
-     * Opens an additional independent Client connected to the same database.
-     * Used by tests that need two sessions (e.g. LISTEN/NOTIFY between
-     * separate connections). The context owns the returned client and closes
-     * it during tearDown.
-     */
     public function newClient(): Client
     {
         $client = pgsql_client(pgsql_connection_dsn($this->dsn));
@@ -185,13 +171,6 @@ final class PostgreSqlContext
         return $client;
     }
 
-    /**
-     * Fires a NOTIFY on $channel with $payload after $delayMs on a dedicated
-     * connection, without blocking the caller. The delay runs server side, so
-     * the notification arrives while the caller sits in a blocking wait on its
-     * own connection. Used by tests that exercise the blocking wait path of
-     * waitForNotification().
-     */
     public function scheduleNotify(string $channel, string $payload, int $delayMs): void
     {
         $connection = pg_connect(pgsql_connection_dsn($this->dsn)->toString(), PGSQL_CONNECT_FORCE_NEW);

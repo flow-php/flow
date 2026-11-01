@@ -9,12 +9,6 @@ use Google\Protobuf\Internal\Message;
 
 use function count;
 
-/**
- * Provides context information during AST modification.
- *
- * This class gives modifiers access to the traversal state, including
- * parent nodes and depth in the tree, enabling context-aware modifications.
- */
 final readonly class ModificationContext
 {
     /**

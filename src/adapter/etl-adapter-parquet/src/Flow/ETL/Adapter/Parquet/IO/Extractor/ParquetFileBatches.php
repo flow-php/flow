@@ -136,26 +136,25 @@ final class ParquetFileBatches implements OffsetSkippingFileBatches
 
             $fileBody = $read->fileColumns->withoutTail($file->schema());
             $fileBody = $fileBody->gracefulRemove(...array_diff($fileBody->names(), $body->names()));
-            $kept = [];
+            $fileBoundConjuncts = [];
 
             foreach ($this->conjuncts as $conjunct) {
                 if ($conjunct->readsAs($fileBody, $body)) {
-                    $kept[] = $conjunct->filter;
+                    $fileBoundConjuncts[] = $conjunct->filter;
                 }
             }
 
             $opened = $file->open();
 
-            // rows matching the conjuncts the file binds; FileReadLoop drops those the rest do not match
             foreach ($opened->batches(
                 $fileBody,
                 $read->batchSize,
                 ReadPlan::forFilter(
                     $footer,
                     $file->file->indexes(),
-                    $kept === []
+                    $fileBoundConjuncts === []
                         ? null
-                        : BoundFilter::bind(new All(...$kept), $footer->schema(), $file->file->options()),
+                        : BoundFilter::bind(new All(...$fileBoundConjuncts), $footer->schema(), $file->file->options()),
                     $owned->offset ?? $window->offset,
                     $window->limit,
                     $owned?->count,

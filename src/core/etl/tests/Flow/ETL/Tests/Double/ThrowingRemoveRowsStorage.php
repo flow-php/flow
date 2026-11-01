@@ -11,10 +11,6 @@ use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
 use Generator;
 
-/**
- * Fails on remove(), which is what Buckets::clear() calls. FilesystemBuckets::remove() does real I/O
- * (closeWriter() then filesystem->rm()), so a throwing clear is reachable in production.
- */
 final class ThrowingRemoveRowsStorage implements RowsStorage
 {
     public function __construct(

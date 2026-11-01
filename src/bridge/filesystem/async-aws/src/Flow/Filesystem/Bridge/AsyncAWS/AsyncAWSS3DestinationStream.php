@@ -31,6 +31,8 @@ use function unlink;
 
 final class AsyncAWSS3DestinationStream implements DestinationStream
 {
+    private const int S3_MIN_PART_SIZE = 5 * SizeUnits::MiB_SIZE;
+
     private bool $closed;
 
     private ?string $ifNoneMatch = null;
@@ -76,14 +78,9 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
              */
             $uploadId = $response->getUploadId();
 
-            /**
-             * If the file is less than 5mb, we can just copy it to the new file
-             * and append to it. We need to read the file to memory and append it to the new file.
-             * S3 allows only the last part to be smaller than 5Mb, all other parts needs to be 5Mb+.
-             */
             $contentLength = $objectHead->getContentLength() ?? 0;
 
-            if ($contentLength < SizeUnits::mbToBytes(5)) {
+            if ($contentLength < self::S3_MIN_PART_SIZE) {
                 $blocks = new Blocks(
                     $blockSize,
                     $blockFactory,

@@ -26,10 +26,7 @@ use function intdiv;
 use function max;
 
 /**
- * PostgreSQL loader for ETL pipelines.
- *
- * Supports INSERT, UPDATE, and DELETE operations. UPDATE and DELETE issue one statement per row, so only
- * INSERT can reach the bind-parameter cap and is chunked.
+ * Only INSERT is chunked: UPDATE/DELETE issue one statement per row and never reach the bind cap.
  */
 final class PostgreSqlLoader implements Loader
 {

@@ -26,7 +26,7 @@ final class FloeStreamWriter
     private const string BATCH_MISMATCH = 'Floe write session schema is fixed and this batch does not fit it: %s.';
 
     /**
-     * Sections exist to bound a seek, so they are cut by size. Nothing else breaks one.
+     * Sections bound a seek, so only size cuts one.
      */
     private const int SECTION_MAX_ROWS = 100_000;
 

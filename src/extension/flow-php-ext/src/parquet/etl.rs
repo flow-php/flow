@@ -149,8 +149,7 @@ pub struct RustParquetFileWriter {
 
 #[php_impl]
 impl RustParquetFileWriter {
-    /// `$writer`: arrow-ext's `Flow\Parquet\Engine\RustParquetFileWriter`, which owns the stream; `$conformance`: the
-    /// run's `ParquetSchemaConformance`; `$backend`: the backend a cast column is built with.
+    /// `$writer` owns the stream; `$conformance` and `$backend` come from the run.
     pub fn __construct(writer: &Zval, conformance: &Zval, backend: &Zval) -> PhpResult<Self> {
         expect_arrow(writer, ARROW_FILE_WRITER)?;
 

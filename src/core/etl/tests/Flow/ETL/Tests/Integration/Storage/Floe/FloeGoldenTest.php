@@ -17,10 +17,7 @@ use function iterator_to_array;
 use function ord;
 
 /**
- * The committed files are the only evidence that a format change was intended. Two live writers
- * compared against each other re-baseline themselves on every change, so the bytes are pinned here
- * instead: a change that was not meant to touch the format shows up as a failure, and one that was
- * shows up as a deliberate rebaseline in the same commit.
+ * Pinned bytes: an unintended format change fails here, an intended one rebaselines in the same commit.
  */
 final class FloeGoldenTest extends FlowIntegrationTestCase
 {

@@ -9,24 +9,6 @@ use Flow\Telemetry\Context\TraceFlags;
 use Flow\Telemetry\Context\TraceId;
 use Flow\Telemetry\Context\TraceState;
 
-/**
- * Immutable identification of a span within a trace.
- *
- * SpanContext carries the identifying information that makes a span unique
- * within a trace: the trace ID, span ID, and optional parent span ID.
- * It also tracks whether the span originated from a remote process,
- * and includes trace flags and vendor-specific trace state.
- *
- * Example usage:
- * ```php
- * $context = SpanContext::create(
- *     TraceId::generate(),
- *     SpanId::generate(),
- * );
- * echo $context->traceId->toHex();
- * echo $context->traceFlags->isSampled() ? 'sampled' : 'not sampled';
- * ```
- */
 final readonly class SpanContext
 {
     public TraceFlags $traceFlags;

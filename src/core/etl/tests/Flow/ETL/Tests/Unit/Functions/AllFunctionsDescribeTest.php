@@ -67,10 +67,6 @@ final class AllFunctionsDescribeTest extends FlowTestCase
     }
 
     /**
-     * The fixtures whose describe() is null: every one would hold a value LiteralValue has no encoding for (a DOM
-     * node). The DOM functions read their node from a column, so no shipped fixture refuses - LiteralTest covers the
-     * DOM literal itself.
-     *
      * @return list<class-string<ScalarFunction>>
      */
     public static function undescribable(): array

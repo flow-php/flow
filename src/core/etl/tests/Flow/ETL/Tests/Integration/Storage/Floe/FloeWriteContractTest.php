@@ -98,11 +98,6 @@ final class FloeWriteContractTest extends FlowIntegrationTestCase
         static::assertSame([['id' => 1], ['id' => 2]], FloeStreamReaderContext::readAll($this->fs(), $path)->toArray());
     }
 
-    /**
-     * SCHEMA EVOLUTION: the reverse - a first batch WITHOUT the column and a later one WITH it -
-     * is rejected as a new column. Once append supports adding an optional column, that case
-     * belongs here too.
-     */
     public function test_a_batch_omitting_a_nullable_column_still_writes(): void
     {
         $path = $this->cacheDir->suffix('contract-absent.floe');

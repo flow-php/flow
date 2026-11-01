@@ -28,13 +28,7 @@ use function min;
 use function random_bytes;
 
 /**
- * PostgreSQL extractor using server-side cursors for memory-efficient extraction.
- *
- * Uses DECLARE CURSOR + FETCH to stream data from PostgreSQL without loading
- * the entire result set into memory. This is the only way to achieve true
- * low memory extraction with PHP's ext-pgsql.
- *
- * Note: Requires a transaction context (auto-started if not in one).
+ * Needs a transaction for DECLARE CURSOR; starts one when none is open.
  */
 final class PostgreSqlCursorExtractor implements BatchableExtractor, Extractor
 {

@@ -32,7 +32,7 @@ both engines
 | `FlatColumn::decimal()` of precision up to 18 written as FIXED_LEN_BYTE_ARRAY                                                                                          | INT32 up to precision 9, INT64 up to 18, FIXED_LEN_BYTE_ARRAY above; older files still read                                                                                                              |
 | the packer/unpacker encoded FLBA/BYTE_ARRAY decimals and UUIDs; `DecimalConverter` took INT-backed decimals only                                                       | `new DecimalConverter($physicalType, $precision, $scale, $byteLength)` and `UuidConverter` convert to the physical bytes; the packer/unpacker take them as-is                                            |
 | `FlatColumn::int32()` / `int64()` wrote converted `INT_32` / `INT_64`                                                                                                  | plain `INT32` / `INT64`, as arrow-rs                                                                                                                                                                     |
-| a column with a logical type and no converted type written without one (DuckDB read a logical `UINT_64` as signed)                                                     | the converted type derived from the logical type, as arrow-rs; a `FlatColumn` whose converted and logical types disagree is refused, on read and write                                                   |
+| a column with a logical type and no converted type written without one (other readers read a logical `UINT_64` as signed)                                              | the converted type derived from the logical type, as arrow-rs; a `FlatColumn` whose converted and logical types disagree is refused, on read and write                                                   |
 | the arrow writer named map entries `m.entries.key`                                                                                                                     | `m.key_value.key` (LogicalTypes.md): `COLUMNS_*` options keyed by `...key_value.key` address the same leaf on both engines                                                                               |
 | the arrow writer wrote `FlatColumn::enum()` as `STRING`                                                                                                                | `ENUM`                                                                                                                                                                                                   |
 | `Option::ARROW_BATCH_SIZE`, read by nothing                                                                                                                            | removed                                                                                                                                                                                                  |
@@ -229,13 +229,13 @@ The `arrow` extension must be rebuilt.
 Schema inference samples a source through one contract. Each adapter builds its `Sniffer` inside `schema()`; a unit is
 one
 listed file (one sheet range, one in-memory dataset). A bounded `sampleSize` still drains one budget across the units in
-listing order; `sampleSize(-1)` sniffs every unit whole and independently and merges the partials in unit order, so the
+listing order; `everyRow()` sniffs every unit whole and independently and merges the partials in unit order, so the
 result does not depend on the order the units ran in.
 
 | Before                                                                          | After                                                                                                                                                                                                                          |
 |---------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `Flow\ETL\Schema\Inference\SchemaSampler`, `SniffsColumnTypes`                  | `Flow\ETL\IO\Inference\Sniffer` - `names(): list<string>`, `units(): int`, `sniff(int $unit, int $rowBudget): Sample`, `bytes(int $unit): int`, `parts(int $unit, int $targetBytes): non-empty-list<Sniffer>`, `close(): void` |
-| `new SchemaInferrer($inference, $typer)->infer($names, $samples)`               | `new SchemaInferrer($inference)->infer($sniffer): Inferred` (`->schema`, `->units`) - the narrower is the sniffer's; `sampleSize(-1)` sniffs through `infer_schema()->sniffWith($launcher)`, in this process by default        |
+| `new SchemaInferrer($inference, $typer)->infer($names, $samples)`               | `new SchemaInferrer($inference)->infer($sniffer): Inferred` (`->schema`, `->units`) - the narrower is the sniffer's; `everyRow()` sniffs through `infer_schema()->sniffWith($launcher)`, in this process by default            |
 | `SchemaInferrer::sniff($names, $rows, $rowBudget)`                              | `ColumnTypes::sniff($names, $rows, $rowBudget, $typer)`                                                                                                                                                                        |
 | `CSVOpenSource::sniff($names, $rowBudget, $inference, $typer)`                  | `CSVOpenSource::sniff($names, $rowBudget, $typer)` (PHP, adaptive and `flow_php` native sources)                                                                                                                               |
 | `CSVFileReader::samples()`, `CSVFileSample`, `CSVSamples`                       | `CSVSniffer(CSVSourceOpener $opener, $sources, InferredTypes $candidates, ?CSVHeader $header = null)` - `header()`; what a sniff read is on its `Sample`                                                                       |
@@ -245,8 +245,9 @@ result does not depend on the order the units ran in.
 | `WorkbookSampler($workbook, $files)`                                            | `ExcelSniffer($workbook, $files, InferredTypes $candidates, ?ExcelHeader $header = null)`                                                                                                                                      |
 | `GoogleSheetSampler($reader, $rowBudget)`                                       | `GoogleSheetSniffer($reader, $rowBudget, $typer)`                                                                                                                                                                              |
 | `InMemoryRows::samples()`, `SpilledRows::samples()`                             | `sniff(0, $rowBudget)` - one unit, no header                                                                                                                                                                                   |
-| `sampleSize(-1)`: `filesToSniff` counted files that yielded a row               | `sampleSize(-1)`: every listed unit up to `filesToSniff` is sniffed whole and independently; empty files count                                                                                                                 |
+| `everyRow()`: `filesToSniff` counted files that yielded a row                   | `everyRow()`: every listed unit up to `filesToSniff` is sniffed whole and independently; empty files count                                                                                                                     |
 | `ColumnTypes::merge()`, `ColumnTypes::schema()`                                 | `ColumnTypes::folded(): SniffedColumns`, then `SniffedColumns::merge()` / `schema()`                                                                                                                                           |
+| `infer_schema()->sampleSize(-1)`, `->filesToSniff(-1)`                          | `infer_schema()->everyRow()`, `->everySource()`; `sampleSize()` and `filesToSniff()` refuse anything below 1                                                                                                                   |
 
 ---
 
@@ -944,7 +945,7 @@ renamed `JoinType`.
 
 ### 61) `flow-php/etl` - `=` and join keys of two types compare in one type
 
-When the plan is built, comparisons and join keys of different types are cast to one type, as DuckDB does. Numbers
+When the plan is built, comparisons and join keys of different types are cast to one type. Numbers
 widen to float, a date widens to a datetime, and a string casts to the other side's type. An integral string casts
 exactly, other numeric strings round half away from zero for an integer side. A value that cannot be cast now throws
 instead of not matching. `===` and `!==` still compare without a cast.
@@ -957,7 +958,7 @@ instead of not matching. `===` and `!==` still compare without a cast.
 
 ### 62) `flow-php/etl` - NaN is the largest value, uuid, json, xml, enum and html sort by their stored form
 
-NaN equals NaN and orders after every number, as in DuckDB. This holds in `=`, `>`, `<` and `between`. It also holds
+NaN equals NaN and orders after every number. This holds in `=`, `>`, `<` and `between`. It also holds
 in `sortBy()`, `groupBy()`, `batchBy()` and window peers.
 
 | Before                                                | After                                                                               |
@@ -1814,19 +1815,19 @@ before).
 Every file write runs through one `FileCommit`. Files that replace others (Overwrite) and every parallel task's files
 are written under a temporary output inside the destination, then moved into place; the other modes write in place.
 The save mode decides once for the whole destination. Readers skip the temporary output of a running or crashed write
-by Spark's hidden-path rule.
+because it sits under a `.` or `_` path segment.
 
 | Before                                                                                    | After                                                                                                                                                                                   |
 |-------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `FilesSink`                                                                               | `FileCommit`: a task stages its files, the job commits them; a serial write is one task                                                                                                 |
 | Overwrite wrote `._flow_php_tmp.<file>` beside each file                                  | every Overwrite and every parallel task writes under `<destination dir>/.flow-tmp-<run>-<hash>/` first; an aborted parallel write leaves the destination directory behind, empty        |
 | Append beside an existing plain file: `<name>_<random>.<ext>`                             | `<name>-<run>.<ext>`                                                                                                                                                                    |
-| Ignore / ExceptionIfExists on a partitioned plain destination: decided per partition file | decided once over `<dir>/**/<name>.<ext>`: an existing file in any partition skips (Ignore) or refuses (ExceptionIfExists) the whole write, as Spark and DuckDB do                      |
+| Ignore / ExceptionIfExists on a partitioned plain destination: decided per partition file | decided once over `<dir>/**/<name>.<ext>`: an existing file in any partition skips (Ignore) or refuses (ExceptionIfExists) the whole write                                              |
 | Overwrite removed `<name>*.<ext>` in each written partition (`data_backup.csv` too)       | removes only `<name>.<ext>` and `<name>-<run>.<ext>`, partitioned or not; files an older Append named `<name>_<random>.<ext>` stay                                                      |
 | Overwrite removed the stale files, then moved the new ones                                | moves first, then removes: a failed commit leaves duplicates, never loses the old files                                                                                                 |
 | a write without rows touched nothing                                                      | Overwrite empties an unpartitioned destination (a partitioned one keeps every partition); ExceptionIfExists over an existing destination throws; Ignore and Append write nothing        |
 | `to_excel()->saveMode(ignore())` over an existing workbook overwrote it                   | keeps it                                                                                                                                                                                |
-| file extractors and `files()` list every file the path matches                            | skip a file under a `.` or `_` path segment below the path's static part, except segments with `=`, `_metadata` and `_common_metadata` (Spark's rule); a path you name yourself is read |
+| file extractors and `files()` list every file the path matches                            | skip a file under a `.` or `_` path segment below the path's static part, except segments with `=`, `_metadata` and `_common_metadata`; a path you name yourself is read                |
 
 ### 118) `flow-php/etl` - a limit ends the stream without an exception
 
@@ -1969,6 +1970,21 @@ public function transform(DataFrame $dataFrame): DataFrame
     return $dataFrame;
 }
 ```
+
+---
+
+### 130) `flow-php/telemetry`, `flow-php/postgresql`, `flow-php/symfony-http-foundation-bridge`,
+
+`flow-php/monolog-telemetry-bridge`, `flow-php/psr3-telemetry-bridge` - types renamed for what they do
+
+| Before                                                                                   | After                                                           |
+|------------------------------------------------------------------------------------------|-----------------------------------------------------------------|
+| `Flow\Bridge\Symfony\HttpFoundation\StreamClosure`                                       | `StreamCompletionListener`                                      |
+| `Flow\Telemetry\Tracer\Sampler\AttributeMatchingSampler`, `attribute_matching_sampler()` | `AttributeFilteringSampler`, `attribute_filtering_sampler()`    |
+| `Flow\Telemetry\Resource\Detector\ManualDetector`, `manual_detector()`                   | `StaticDetector`, `static_detector()`                           |
+| `Flow\PostgreSql\AST\Transformers\PaginationModifier`, `PaginationConfig`                | `OffsetPaginationModifier`, `OffsetPaginationConfig`            |
+| `Flow\Bridge\Monolog\Telemetry\ValueNormalizer`, `value_normalizer()`                    | `AttributeValueNormalizer`, `attribute_value_normalizer()`      |
+| `Flow\Bridge\Psr3\Telemetry\ValueNormalizer`, `psr3_value_normalizer()`                  | `AttributeValueNormalizer`, `psr3_attribute_value_normalizer()` |
 
 ## Upgrading from 0.45.x to 0.46.x
 

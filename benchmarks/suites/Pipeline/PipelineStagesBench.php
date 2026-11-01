@@ -9,11 +9,7 @@ use Generator;
 use PhpBench\Attributes as Bench;
 
 /**
- * Rungs 2 and 3. Rungs 1 and 4 live in PipelineReadBench and OrdersPipelineBench, and
- * --group=pipeline-<source> runs all four.
- *
- * Deltas between rungs are descriptive only: subtracting two independently timed runs adds their
- * variances, so a delta is far noisier than either rung and never supports a regression claim.
+ * Rung deltas are descriptive only: subtracting two timed runs adds their variances.
  */
 #[Bench\BeforeMethods('warm')]
 final class PipelineStagesBench

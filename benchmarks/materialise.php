@@ -7,9 +7,6 @@ use Flow\Benchmarks\Datasets\Datasets;
 
 require __DIR__ . '/../bootstrap.php';
 
-// Datasets::reset() (benchmarks/bootstrap.php) wipes benchmarks/var and refuses any path that does
-// not contain /benchmarks/var. Fixtures live in benchmarks/datasets, so nothing here interacts with it.
-
 $rows = BenchmarkRows::count();
 $windowRows = BenchmarkRows::windowCount();
 

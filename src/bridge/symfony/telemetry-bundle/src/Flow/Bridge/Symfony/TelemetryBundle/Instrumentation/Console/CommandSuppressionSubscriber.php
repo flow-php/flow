@@ -15,19 +15,7 @@ use function array_map;
 use function array_pop;
 
 /**
- * Suppresses tracing for the entire execution of the configured commands (long-running worker commands),
- * so their between-work activity (transport polls, idle-tick co-listeners, …) does not surface. A
- * suppression flag is attached to the telemetry context when a matching command starts and detached when it
- * terminates; the SuppressingSampler then drops any span created while it is set. Instrumentation that must
- * still be traced lifts the suppression around its own work (e.g. the messenger middleware per message).
- *
- * The flag is attached above ConsoleSpanSubscriber's COMMAND priority (10000) so the command's own console
- * span is created non-recording, and detached below its TERMINATE priority (-10000) so that span completes
- * first.
- *
- * Scopes are stacked per COMMAND/TERMINATE pair (Symfony dispatches them balanced, also for commands nested
- * via Application::run()), so a nested command's TERMINATE detaches its own entry instead of tearing down
- * the suppression of the enclosing command.
+ * Priorities wrap ConsoleSpanSubscriber (±10000); scopes stack per COMMAND/TERMINATE for nested commands.
  */
 final class CommandSuppressionSubscriber implements EventSubscriberInterface
 {

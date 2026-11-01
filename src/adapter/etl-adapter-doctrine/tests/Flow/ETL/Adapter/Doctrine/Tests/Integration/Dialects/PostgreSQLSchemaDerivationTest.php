@@ -80,8 +80,6 @@ final class PostgreSQLSchemaDerivationTest extends IntegrationTestCase
 
     public function test_the_probe_never_binds_the_callers_values(): void
     {
-        // 'not-an-integer' would make PostgreSQL refuse this query outright. Describing it succeeds,
-        // which is only possible because the probe binds null at every position instead.
         static::assertSame(
             ['id', 'name'],
             from_dbal_query($this->pgsqlDatabaseContext->connection(), 'SELECT id, name FROM orders WHERE id > :min', [

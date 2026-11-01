@@ -10,8 +10,7 @@ use Flow\ETL\Functions\Reference\Reference;
 use function Flow\ETL\DSL\ref;
 
 /**
- * The orders fixture spreads rows over 5 sellers and a full year of created_at, so these two keys
- * give ~5 and ~365 partitions. There is no synthetic fixture behind a third point and none is invented.
+ * Orders fixture gives ~5 (seller) and ~365 (created_at day) partitions; no third fixture exists.
  */
 enum PartitionCardinality: string
 {

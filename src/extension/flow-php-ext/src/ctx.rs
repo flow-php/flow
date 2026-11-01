@@ -146,9 +146,7 @@ pub fn property_offset(ce: &ClassEntry, name: &str) -> Result<u32, PhpException>
     Ok(unsafe { (*info).offset })
 }
 
-/// Moves an owned zval directly into a declared-property slot (what native
-/// unserialize() effectively does). Only valid on a freshly created object of
-/// a plain userland class when the zval matches the declared type exactly.
+/// Moves an owned zval into a declared-property slot of a fresh plain object whose type the zval matches exactly.
 pub fn write_slot(obj: &mut ZendObject, offset: u32, value: Zval) {
     unsafe {
         let slot = std::ptr::from_mut(obj).cast::<u8>().add(offset as usize).cast::<Zval>();
@@ -156,8 +154,7 @@ pub fn write_slot(obj: &mut ZendObject, offset: u32, value: Zval) {
     }
 }
 
-/// Reads one property with `BP_VAR_R` semantics; `ZendObject::get_property` passes `BP_VAR_W`, which trips the
-/// readonly-property guard.
+/// Reads with `BP_VAR_R`: `ZendObject::get_property` passes `BP_VAR_W`, which trips the readonly guard.
 pub fn read_property(obj: &ZendObject, name: &str) -> Result<Zval, PhpException> {
     let handler = unsafe { obj.handlers.as_ref() }
         .and_then(|handlers| handlers.read_property)
@@ -251,10 +248,7 @@ pub fn call_handle_on(
     Ok(retval)
 }
 
-/// [`call_handle`] that hands a PHP exception thrown by the callee back to the
-/// caller as the exception OBJECT, so the caller can surface it verbatim or
-/// replace it with one of its own. Taking it also clears the pending exception,
-/// leaving the engine ready for the next call.
+/// Returns a PHP exception thrown by the callee as the object, clearing the pending exception.
 pub fn call_handle_catching(
     func: &Function,
     object: Option<&ZendObject>,
@@ -294,10 +288,7 @@ pub fn transparent_exception(exception: &mut ZendObject) -> PhpException {
     PhpException::from_message(String::new()).with_object(zv)
 }
 
-/// [`call_handle_catching`] with the exception object already re-raised as
-/// itself, ready to propagate via `?` or to discard with `let Ok(x) = .. else`.
-/// Callers that only need the bail branch can use [`call_handle_catching`]
-/// directly instead.
+/// [`call_handle_catching`] with the exception already re-raised, ready for `?`.
 pub fn call_handle_transparent(
     func: &Function,
     object: Option<&ZendObject>,
@@ -306,8 +297,7 @@ pub fn call_handle_transparent(
     call_handle_catching(func, object, args).map_err(|mut exception| transparent_exception(&mut exception))
 }
 
-/// Calls a pre-resolved function handle. Argument zvals stay caller-owned
-/// (the engine copies what it keeps), so cached zvals pass as shallow clones.
+/// Argument zvals stay caller-owned, so cached zvals pass as shallow clones.
 pub fn call_handle(
     func: &Function,
     object: Option<&mut ZendObject>,

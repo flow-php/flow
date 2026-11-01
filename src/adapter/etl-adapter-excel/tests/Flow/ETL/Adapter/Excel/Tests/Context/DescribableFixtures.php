@@ -17,6 +17,7 @@ use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\IO\Extractor\File\SourceFile;
 use Flow\ETL\IO\Extractor\Grid\GridHeader;
 use Flow\ETL\IO\Inference\InferredTypes;
+use Flow\ETL\IO\Inference\SchemaInference;
 use Flow\ETL\Tests\Context\DescribableFixtures as ETLDescribableFixtures;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 
@@ -47,6 +48,7 @@ final class DescribableFixtures
                 self::workbook(),
                 null,
                 ETLDescribableFixtures::inferredColumns(),
+                (new SchemaInference(filesToSniff: 3, unionByName: true))->everyRow(),
             ),
             WorkbookReader::class => self::workbook(...),
         ];

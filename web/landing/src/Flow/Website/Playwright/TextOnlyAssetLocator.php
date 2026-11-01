@@ -11,14 +11,7 @@ use function mb_strtolower;
 use function str_starts_with;
 
 /**
- * Hides binary assets from playwright-symfony's in-process AssetServer.
- *
- * That server corrupts every binary body it serves (see BinarySafeResponseConverter for the trace),
- * and it is `final`, so it cannot be subclassed. Its locators can be replaced though: returning null
- * for a binary asset makes `AssetServer::handle()` miss, and PlaywrightKernelClient then falls back
- * to the kernel - where the fixed converter serves the bytes correctly.
- *
- * Text assets keep the fast in-process path. Remove this class once upstream is fixed.
+ * Workaround: binary assets bypass the corrupting AssetServer; remove once fixed upstream.
  */
 final readonly class TextOnlyAssetLocator implements AssetLocatorInterface
 {

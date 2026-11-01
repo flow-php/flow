@@ -115,16 +115,16 @@ $mapper = severity_mapper([
 ]);
 ```
 
-### value_normalizer()
+### attribute_value_normalizer()
 
 Creates a normalizer for converting arbitrary PHP values to types acceptable by Telemetry attributes.
 
 ```php
 <?php
 
-use function Flow\Bridge\Monolog\Telemetry\DSL\value_normalizer;
+use function Flow\Bridge\Monolog\Telemetry\DSL\attribute_value_normalizer;
 
-$normalizer = value_normalizer();
+$normalizer = attribute_value_normalizer();
 $normalized = $normalizer->normalize($value);
 ```
 

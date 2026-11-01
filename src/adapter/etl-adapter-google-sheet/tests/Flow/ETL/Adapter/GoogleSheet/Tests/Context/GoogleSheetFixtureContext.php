@@ -21,10 +21,6 @@ use Google\Service\Sheets\ValueRange;
 use function array_values;
 use function Flow\ETL\Adapter\GoogleSheet\from_google_sheet_columns;
 
-/**
- * Builds every unit-test subject, so no test needs a private helper. In-process doubles only - nothing here
- * touches an HTTP stack; the integration queue is Tests\GoogleSheetsContext.
- */
 final class GoogleSheetFixtureContext
 {
     public static function columns(string $sheet = 'sheet', string $from = 'A', string $to = 'B'): Columns
@@ -58,11 +54,11 @@ final class GoogleSheetFixtureContext
     }
 
     /**
-     * @param int<1, max>|-1 $rowBudget
+     * @param null|int<1, max> $rowBudget
      */
     public static function sniffer(
         SpySpreadsheetsValuesResource $values,
-        int $rowBudget = 20_480,
+        ?int $rowBudget = 20_480,
         int $rowCount = 100,
         GoogleSheetReadOptions $options = new GoogleSheetReadOptions(),
     ): GoogleSheetSniffer {

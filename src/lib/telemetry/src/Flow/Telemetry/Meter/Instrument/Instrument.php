@@ -7,16 +7,6 @@ namespace Flow\Telemetry\Meter\Instrument;
 use Flow\Telemetry\Meter\Metric;
 
 /**
- * Base interface for metric instruments.
- *
- * Instruments are responsible for recording measurements and aggregating
- * them internally. Each instrument type has different aggregation semantics:
- *
- * - Counter: Sum aggregation (monotonically increasing)
- * - UpDownCounter: Sum aggregation (bidirectional)
- * - Gauge: Last value aggregation
- * - Histogram: Distribution aggregation (count, sum, min, max)
- *
  * @see https://opentelemetry.io/docs/specs/otel/metrics/api/
  */
 interface Instrument

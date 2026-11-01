@@ -9,9 +9,7 @@ use function array_pop;
 use function count;
 
 /**
- * Aggregates finished-test statuses per open test suite so the suite span can carry the official
- * `test.suite.run.status` attribute. Suites nest, so every finished test counts towards all
- * currently open suites.
+ * Suites nest: every finished test counts toward all open suites.
  *
  * @see https://opentelemetry.io/docs/specs/semconv/registry/attributes/test/
  */

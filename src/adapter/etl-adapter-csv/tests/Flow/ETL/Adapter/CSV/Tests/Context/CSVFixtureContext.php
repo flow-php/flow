@@ -234,12 +234,12 @@ final class CSVFixtureContext
         Schema $schema,
         int $batchSize,
         Backend $backend = new PhpBackend(),
-        ?int $sampleSize = null,
+        ?SchemaInference $inference = null,
     ): array|InferredSchemaException|SchemaMismatchException {
         $batches = [];
 
         try {
-            foreach ($open->batches($schema, $batchSize, $backend, $sampleSize) as $batch) {
+            foreach ($open->batches($schema, $batchSize, $backend, $inference) as $batch) {
                 $batches[] = $batch instanceof CorruptedRecordException
                     ? ['corrupted' => [
                         $batch->uri,
@@ -270,9 +270,9 @@ final class CSVFixtureContext
         Schema $schema,
         int $batchSize,
         Backend $backend = new PhpBackend(),
-        ?int $sampleSize = null,
+        ?SchemaInference $inference = null,
     ): string {
-        $batches = self::batches($open, $schema, $batchSize, $backend, $sampleSize);
+        $batches = self::batches($open, $schema, $batchSize, $backend, $inference);
 
         if ($batches instanceof InferredSchemaException) {
             return $batches::class . ': ' . $batches->getMessage();
@@ -460,11 +460,11 @@ final class CSVFixtureContext
      * The fixture's fold observed row by row over the PHP records with $inference's string ladder, and sniffed by
      * CSVSniffer - natively when the extension is loaded.
      *
-     * @param int<0, max>|-1 $rowBudget
+     * @param null|int<0, max> $rowBudget
      *
      * @return array{SniffedColumns, SniffedColumns}
      */
-    public static function sniffBothWays(string $fixture, int $rowBudget, SchemaInference $inference): array
+    public static function sniffBothWays(string $fixture, ?int $rowBudget, SchemaInference $inference): array
     {
         $open = self::openPhp($fixture);
         $names = $open->columns();

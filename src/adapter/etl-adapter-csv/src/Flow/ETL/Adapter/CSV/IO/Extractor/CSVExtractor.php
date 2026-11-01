@@ -143,7 +143,7 @@ final class CSVExtractor implements
                         $this->derived->from(),
                     )
                     : null,
-                $this->schema === null ? $this->inference->sampleSize : null,
+                $this->schema === null ? $this->inference : null,
             ),
             $this->corruptedRecordsLoader,
         );

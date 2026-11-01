@@ -16,12 +16,12 @@ use function Flow\Filesystem\DSL\path;
 
 final class BloomFilterReaderTest extends TestCase
 {
-    public function test_every_value_duckdb_wrote_is_in_its_row_group_filter(): void
+    public function test_every_value_an_external_writer_wrote_is_in_its_row_group_filter(): void
     {
-        $fixture = __DIR__ . '/../Engine/Fixtures/Filters/bloom_duckdb.parquet';
+        $fixture = __DIR__ . '/../Engine/Fixtures/Filters/bloom_external.parquet';
         $metadata = Reader::php()->read($fixture)->metadata();
         $reader = new BloomFilterReader(native_local_filesystem()->readFrom(path($fixture)));
-        $rows = FilterRows::bloomRows(FilterRows::DUCKDB_BLOOM_ROWS);
+        $rows = FilterRows::bloomRows(FilterRows::EXTERNAL_BLOOM_ROWS);
         $first = 0;
         $missing = [];
 
@@ -42,7 +42,7 @@ final class BloomFilterReaderTest extends TestCase
             $first += $rowGroup->rowsCount();
         }
 
-        static::assertSame(FilterRows::DUCKDB_BLOOM_ROWS, $first);
+        static::assertSame(FilterRows::EXTERNAL_BLOOM_ROWS, $first);
         static::assertSame([], $missing);
     }
 }

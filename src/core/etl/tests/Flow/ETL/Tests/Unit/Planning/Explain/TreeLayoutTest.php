@@ -24,8 +24,8 @@ use Flow\ETL\Planning\Logical\Writes;
 use Flow\ETL\Storage\Memory\ArrayMemory;
 use Flow\ETL\Tests\Double\RecordingTransaction;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\ETL\Tests\Mother\EntryMother;
 use Flow\ETL\Tests\Mother\NodeMother;
+use Flow\ETL\Tests\Mother\RenderedNodeMother;
 
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
@@ -37,14 +37,14 @@ final class TreeLayoutTest extends FlowTestCase
 {
     public function test_a_leaf_has_no_branches(): void
     {
-        static::assertSame([], (new TreeLayout())->branches(EntryMother::named('Read', 1), '│  '));
+        static::assertSame([], (new TreeLayout())->branches(RenderedNodeMother::named('Read', 1), '│  '));
     }
 
     public function test_branches_keep_the_rail_open_for_every_child_but_the_last(): void
     {
-        $first = EntryMother::named('Read', 2);
-        $second = EntryMother::named('Read', 3);
-        $third = EntryMother::named('Read', 4);
+        $first = RenderedNodeMother::named('Read', 2);
+        $second = RenderedNodeMother::named('Read', 3);
+        $third = RenderedNodeMother::named('Read', 4);
 
         static::assertSame(
             [
@@ -52,7 +52,7 @@ final class TreeLayoutTest extends FlowTestCase
                 [$second, '│  ├─ ', '│  │  '],
                 [$third,  '│  └─ ', '│     '],
             ],
-            (new TreeLayout())->branches(EntryMother::named('Read', 1, [$first, $second, $third]), '│  '),
+            (new TreeLayout())->branches(RenderedNodeMother::named('Read', 1, [$first, $second, $third]), '│  '),
         );
     }
 

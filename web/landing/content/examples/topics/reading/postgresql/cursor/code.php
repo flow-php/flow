@@ -32,9 +32,7 @@ data_frame()
     ->write(to_pgsql_table($client, 'orders'))
     ->run();
 
-// a server-side cursor: the result set stays in PostgreSQL and rows are fetched in batches, so a
-// billion-row query costs the same memory as a small one. No ORDER BY requirement, one snapshot.
-// $1 is bound by position - this extractor uses native placeholders, not named ones.
+// A server-side cursor fetches rows in batches, so a billion-row query costs the same memory as a small one.
 data_frame()
     ->read(
         from_pgsql_cursor(

@@ -49,7 +49,7 @@ final class SpilledRowsTest extends FlowTestCase
         ];
         $spill = new SpilledRows($rows, memory_filesystem(), path('memory://tmp'));
 
-        $spill->sniff(0, -1);
+        $spill->sniff(0, null);
 
         static::assertEquals($rows, iterator_to_array($spill->rows(), false));
     }
@@ -58,7 +58,7 @@ final class SpilledRowsTest extends FlowTestCase
     {
         $spill = new SpilledRows([['id' => 1], ['id' => 2]], memory_filesystem(), path('memory://tmp'));
 
-        $spill->sniff(0, -1);
+        $spill->sniff(0, null);
 
         // The source was read once; the FILE it produced is re-readable, so repeated terminal
         // operations on the wrapping DataFrame behave the way they do for an array source.
@@ -71,12 +71,12 @@ final class SpilledRowsTest extends FlowTestCase
     {
         $spill = new SpilledRows([['id' => 1]], memory_filesystem(), path('memory://tmp'));
 
-        $spill->sniff(0, -1);
+        $spill->sniff(0, null);
 
         $this->expectException(InvalidLogicException::class);
         $this->expectExceptionMessage('The dataset was already consumed');
 
-        $spill->sniff(0, -1);
+        $spill->sniff(0, null);
     }
 
     public function test_a_source_that_throws_mid_spill_leaves_the_sampler_abandoned(): void
@@ -92,7 +92,7 @@ final class SpilledRowsTest extends FlowTestCase
         $spill = new SpilledRows($source(), $filesystem, path('memory://tmp'));
 
         try {
-            $spill->sniff(0, -1);
+            $spill->sniff(0, null);
         } catch (RuntimeException) {
         }
 
@@ -114,7 +114,7 @@ final class SpilledRowsTest extends FlowTestCase
         $spill = new SpilledRows([['id' => 1]], $filesystem, path('memory://tmp'));
         $path = $spill->path();
 
-        $spill->sniff(0, -1);
+        $spill->sniff(0, null);
 
         static::assertNotNull($filesystem->status($path));
 
@@ -129,7 +129,7 @@ final class SpilledRowsTest extends FlowTestCase
 
         $spill = new SpilledRows([['id' => 1]], new ThrowingRmFilesystem(memory_filesystem()), path('memory://tmp'));
 
-        $spill->sniff(0, -1);
+        $spill->sniff(0, null);
 
         unset($spill);
     }
@@ -146,7 +146,7 @@ final class SpilledRowsTest extends FlowTestCase
         };
         $spill = new SpilledRows($source(), $filesystem, path('memory://tmp'));
 
-        $spill->sniff(0, -1);
+        $spill->sniff(0, null);
 
         static::assertLessThan(
             200,
@@ -169,7 +169,7 @@ final class SpilledRowsTest extends FlowTestCase
         };
         $spill = new SpilledRows($source(), $filesystem, path('memory://tmp'), bufferSize: 1);
 
-        $spill->sniff(0, -1);
+        $spill->sniff(0, null);
 
         static::assertSame(
             ['writeTo', 'pull', 'append', 'pull', 'append', 'pull', 'append', 'close'],
@@ -197,7 +197,7 @@ final class SpilledRowsTest extends FlowTestCase
         $spill = new SpilledRows($source(), memory_filesystem(), path('memory://tmp'));
 
         try {
-            $spill->sniff(0, -1);
+            $spill->sniff(0, null);
         } catch (RuntimeException) {
         }
 
@@ -212,7 +212,7 @@ final class SpilledRowsTest extends FlowTestCase
         $filesystem = memory_filesystem();
         $spill = new SpilledRows([['id' => 1], ['id' => 2], ['id' => 3]], $filesystem, path('memory://tmp'));
 
-        $spill->sniff(0, -1);
+        $spill->sniff(0, null);
 
         static::assertSame(SpillState::Spilled, $spill->state());
         static::assertCount(3, iterator_to_array($filesystem->readFrom($spill->path())->readLines("\n"), false));
@@ -222,12 +222,12 @@ final class SpilledRowsTest extends FlowTestCase
     {
         $spill = new SpilledRows([['id' => 1]], memory_filesystem(), path('memory://tmp'));
 
-        $spill->sniff(0, -1);
+        $spill->sniff(0, null);
 
         $this->expectException(InvalidLogicException::class);
         $this->expectExceptionMessage('The dataset was already consumed');
 
-        $spill->sniff(0, -1);
+        $spill->sniff(0, null);
     }
 
     public function test_the_row_budget_is_ignored_and_the_whole_source_is_still_spilled(): void
@@ -246,7 +246,7 @@ final class SpilledRowsTest extends FlowTestCase
         $spill = new SpilledRows([['id' => 1]], $filesystem, path('memory://tmp'));
         $path = $spill->path();
 
-        $spill->sniff(0, -1);
+        $spill->sniff(0, null);
         iterator_to_array($spill->rows(), false);
 
         static::assertSame(SpillState::Spilled, $spill->state());
@@ -263,7 +263,7 @@ final class SpilledRowsTest extends FlowTestCase
         $spill = new SpilledRows([['id' => 1], ['id' => 2]], $filesystem, path('memory://tmp'));
         $path = $spill->path();
 
-        $spill->sniff(0, -1);
+        $spill->sniff(0, null);
 
         foreach ($spill->rows() as $_row) {
             break;

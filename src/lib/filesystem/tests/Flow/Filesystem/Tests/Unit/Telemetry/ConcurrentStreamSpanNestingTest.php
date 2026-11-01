@@ -15,12 +15,6 @@ use PHPUnit\Framework\TestCase;
 use function Flow\Telemetry\DSL\memory_span_processor;
 use function Flow\Telemetry\DSL\void_exporter;
 
-/**
- * Streams outlive their lexical scope, so several are open at once - one bucket writer per hash bucket, one
- * partition writer per partition, one cursor per merged run. If a stream span became the active span, each
- * later stream would be parented to whichever one happened to still be open, producing a staircase as deep as
- * the number of concurrent streams instead of a flat list of siblings.
- */
 final class ConcurrentStreamSpanNestingTest extends TestCase
 {
     public function test_concurrently_open_destination_streams_produce_sibling_spans(): void

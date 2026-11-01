@@ -24,10 +24,6 @@ use function count;
 use function Flow\ETL\DSL\array_to_rows;
 use function min;
 
-/**
- * Each file is a list of `id` values. Skips the window's offset, honours its limit and records every window it was
- * given, by URI, and how often it was closed.
- */
 final class InMemoryFileBatches implements OffsetSkippingFileBatches
 {
     /**

@@ -32,7 +32,7 @@ final readonly class PresniffedSniffer implements Sniffer
         return $this->names;
     }
 
-    public function sniff(int $unit, int $rowBudget): Sample
+    public function sniff(int $unit, ?int $rowBudget): Sample
     {
         return $this->samples[$unit];
     }

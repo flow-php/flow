@@ -352,11 +352,6 @@ final class FloeStreamWriterTest extends TestCase
         ));
     }
 
-    /**
-     * SCHEMA EVOLUTION: pins that an undeclared column is ALWAYS rejected. If adding an optional
-     * column becomes legal, this test states the rule that has to change - a mandatory column
-     * must still be rejected.
-     */
     public function test_column_absent_from_the_session_schema_throws(): void
     {
         $writer = FloeStreamWriter::create(

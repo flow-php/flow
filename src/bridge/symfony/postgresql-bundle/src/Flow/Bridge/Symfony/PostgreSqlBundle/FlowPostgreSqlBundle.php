@@ -14,7 +14,7 @@ use Flow\Bridge\Symfony\PostgreSqlBundle\DependencyInjection\Compiler\CommandLoc
 use Flow\Bridge\Symfony\PostgreSqlBundle\Generator\TwigMigrationGenerator;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Messenger\FlowPostgreSqlTransportFactory;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Profiler\ProfilerClient;
-use Flow\Bridge\Symfony\PostgreSqlBundle\Profiler\ProfilerController;
+use Flow\Bridge\Symfony\PostgreSqlBundle\Profiler\ExplainQueryController;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Repository\FilesystemMigrationRepository;
 use Flow\Bridge\Symfony\PostgreSQLCache\CacheCatalogProvider;
 use Flow\Bridge\Symfony\PostgreSQLCache\FlowPostgreSqlCacheAdapter;
@@ -661,13 +661,13 @@ final class FlowPostgreSqlBundle extends AbstractBundle
         $locator->addTag('container.service_locator');
         $container->setDefinition('flow.postgresql.profiler.client_locator', $locator);
 
-        $controller = new Definition(ProfilerController::class, [
+        $controller = new Definition(ExplainQueryController::class, [
             new Reference('twig'),
             new Reference('flow.postgresql.profiler.client_locator'),
             new Reference('profiler'),
         ]);
         $controller->setPublic(true);
-        $container->setDefinition(ProfilerController::class, $controller);
+        $container->setDefinition(ExplainQueryController::class, $controller);
     }
 
     private function isDebug(ContainerBuilder $container): bool

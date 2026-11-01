@@ -6,12 +6,12 @@ namespace Flow\Bridge\Psr3\Telemetry\Tests\Unit;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Flow\Bridge\Psr3\Telemetry\AttributeValueNormalizer;
 use Flow\Bridge\Psr3\Telemetry\Exception\InvalidArgumentException;
 use Flow\Bridge\Psr3\Telemetry\LogRecordConverter;
 use Flow\Bridge\Psr3\Telemetry\SeverityMapper;
 use Flow\Bridge\Psr3\Telemetry\Tests\Fixtures\InterpolationBackedEnumFixture;
 use Flow\Bridge\Psr3\Telemetry\Tests\Fixtures\InterpolationUnitEnumFixture;
-use Flow\Bridge\Psr3\Telemetry\ValueNormalizer;
 use Flow\Telemetry\Logger\Severity;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LogLevel;
@@ -48,9 +48,13 @@ final class LogRecordConverterTest extends TestCase
 
     public function test_default_normalizer_handles_null_in_attributes(): void
     {
-        $record = (new LogRecordConverter(valueNormalizer: new ValueNormalizer()))->convert(LogLevel::INFO, 'msg', [
-            'nullable' => null,
-        ]);
+        $record = (new LogRecordConverter(valueNormalizer: new AttributeValueNormalizer()))->convert(
+            LogLevel::INFO,
+            'msg',
+            [
+                'nullable' => null,
+            ],
+        );
 
         static::assertSame('null', $record->attributes->get('nullable'));
     }

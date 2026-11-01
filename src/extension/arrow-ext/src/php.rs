@@ -114,8 +114,7 @@ pub fn property_offset(ce: &ClassEntry, name: &str) -> Result<u32, PhpException>
     Ok(unsafe { (*info).offset })
 }
 
-/// Reads one property with `BP_VAR_R` semantics; `ZendObject::get_property` passes `BP_VAR_W`, which trips the
-/// readonly-property guard.
+/// Reads with `BP_VAR_R`: `ZendObject::get_property` passes `BP_VAR_W`, which trips the readonly guard.
 pub fn read_property(obj: &ZendObject, name: &str) -> Result<Zval, PhpException> {
     let handler = unsafe { obj.handlers.as_ref() }
         .and_then(|handlers| handlers.read_property)
@@ -163,9 +162,7 @@ pub fn call_method(object: &Zval, method: &str, args: &mut [Zval]) -> Result<Zva
     call_handle_transparent(ce_method_ref(ce, method)?, Some(object), args)
 }
 
-/// Calls a pre-resolved function handle and hands a PHP exception thrown by the callee back to the caller as the
-/// exception OBJECT, so the caller can surface it verbatim or replace it with one of its own. Taking it also clears
-/// the pending exception, leaving the engine ready for the next call.
+/// Calls a function handle and returns a thrown PHP exception as the object, clearing the pending exception.
 pub fn call_handle_catching(
     func: &Function,
     object: Option<&ZendObject>,
@@ -214,8 +211,7 @@ pub fn call_handle_transparent(
     call_handle_catching(func, object, args).map_err(|mut exception| transparent_exception(&mut exception))
 }
 
-/// Calls a pre-resolved function handle. Argument zvals stay caller-owned
-/// (the engine copies what it keeps), so cached zvals pass as shallow clones.
+/// Argument zvals stay caller-owned, so cached zvals pass as shallow clones.
 pub fn call_handle(
     func: &Function,
     object: Option<&mut ZendObject>,
@@ -411,7 +407,7 @@ pub extern "C" fn request_shutdown(_type: i32, _module_number: i32) -> i32 {
     0
 }
 
-/// The only access to `Ctx`. `f` must not call PHP code: PHP re-entering arrow would alias the `&mut Ctx`.
+/// The only access to `Ctx`; `f` must not call PHP code, which would alias the `&mut Ctx`.
 pub fn with_ctx<R>(f: impl FnOnce(&mut Ctx) -> PhpResult<R>) -> PhpResult<R> {
     let globals = unsafe { GLOBALS.get_mut() };
 

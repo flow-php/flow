@@ -31,9 +31,7 @@ use function Flow\Types\DSL\type_integer;
 use function max;
 
 /**
- * Keeps the first $limit rows by $columns while it reads, so it never holds more than twice $limit rows plus one
- * batch. Sorts the same way MemorySortProcessor does: it emits the rows a sort followed by a limit would, though rows
- * with equal keys may come in another order than an external sort leaves them.
+ * Holds at most 2×$limit rows plus one batch; ties may order unlike ExternalSort.
  */
 final readonly class TopNProcessor implements Distributable
 {

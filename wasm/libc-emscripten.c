@@ -1,7 +1,5 @@
 /*
- * libc functions PHP calls that Emscripten leaves out of its libc build (tools/system_libs.py excludes musl's
- * src/legacy and src/process). Defined here so the link runs with -sERROR_ON_UNDEFINED_SYMBOLS=1 instead of turning
- * them into stubs that abort the runtime when called.
+ * libc functions Emscripten's libc build leaves out, defined so the link runs with -sERROR_ON_UNDEFINED_SYMBOLS=1.
  */
 
 #include <errno.h>

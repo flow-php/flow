@@ -15,30 +15,6 @@ use Flow\Telemetry\Tracer\Sampler\ParentBasedSampler;
 use Flow\Telemetry\Tracer\Sampler\Sampler;
 use Psr\Clock\ClockInterface;
 
-/**
- * Entry point for the tracing API.
- *
- * Creates and manages tracers for different instrumentation scopes.
- * The behavior (void, memory, OTLP, etc.) is determined by the injected processor.
- *
- * Example usage:
- * ```php
- * // For testing with memory storage
- * $processor = new MemorySpanProcessor(new MemoryExporter());
- * $provider = new TracerProvider($processor, new SystemClock());
- *
- * // For OTLP export
- * $processor = batching_span_processor(otlp_exporter($transport));
- * $provider = new TracerProvider($processor, new SystemClock());
- *
- * // For void/disabled tracing
- * $provider = new TracerProvider(new VoidProcessor(), new SystemClock());
- *
- * $tracer = $provider->tracer('my-service', '1.0.0');
- * $span = $tracer->span('operation');
- * $tracer->complete($span);
- * ```
- */
 final readonly class TracerProvider
 {
     public function __construct(

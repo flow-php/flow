@@ -23,23 +23,6 @@ use function ksort;
 use function method_exists;
 
 /**
- * Immutable container for telemetry attributes.
- *
- * Attributes are key-value pairs attached to spans, logs, metrics, resources,
- * and events. Values can be strings, integers, floats, booleans, DateTimeInterface,
- * Throwable, or arbitrarily nested arrays per the OTel AnyValue specification.
- *
- * Example usage:
- * ```php
- * $attributes = Attributes::create([
- *     'user.id' => '12345',
- *     'user.roles' => ['admin', 'user'],
- *     'user.address' => ['city' => 'Berlin', 'country' => 'DE'],
- *     'timestamp' => new \DateTimeImmutable(),
- *     'error' => $exception,
- * ]);
- * ```
- *
  * @type TAttributeValue = array<array-key, mixed>|bool|\DateTimeInterface|float|int|string|\Throwable
  * @type TAttributeValueMap = array<string, TAttributeValue>
  */

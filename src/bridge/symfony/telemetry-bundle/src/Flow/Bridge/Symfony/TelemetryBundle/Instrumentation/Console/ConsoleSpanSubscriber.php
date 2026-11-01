@@ -31,9 +31,7 @@ final class ConsoleSpanSubscriber implements EventSubscriberInterface
     private readonly array $excludeRules;
 
     /**
-     * Commands nested via Application::run() dispatch balanced COMMAND/TERMINATE pairs, so entries are
-     * stacked — a nested command's TERMINATE completes its own span, not the enclosing command's.
-     * Excluded commands push null to keep the pairs balanced.
+     * Nested commands dispatch balanced pairs, so entries stack; an excluded command pushes null.
      *
      * @var array<null|array{span: Span, tracer: Tracer, scope: Scope, error: null|Throwable}>
      */
@@ -133,9 +131,6 @@ final class ConsoleSpanSubscriber implements EventSubscriberInterface
         $exitCode = $event->getExitCode();
         $span->setAttribute(SemConvAttributes::PROCESS_EXIT_CODE, $exitCode);
 
-        // OTEL spec: instrumentation leaves the status Unset on success; only a non-zero exit is an error.
-        // When an exception caused the failure, error.type is its class; the exit code is the fallback for
-        // exception-less failures.
         if ($exitCode !== 0) {
             $error = $entry['error'];
             $span->setAttribute(SemConvAttributes::ERROR_TYPE, $error !== null ? $error::class : (string) $exitCode);

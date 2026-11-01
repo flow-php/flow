@@ -1,6 +1,4 @@
-//! `Flow\Arrow\Parquet\RustBatchReader` and the Arrow C Data carriers: one batch = one struct-typed `FFI_ArrowSchema` (one
-//! child per column) plus one struct-typed `FFI_ArrowArray`. The carrier owns both until a consumer moves the array
-//! out; any extension's internal class exposing the two addresses is accepted.
+//! One batch is a struct-typed `FFI_ArrowSchema` plus `FFI_ArrowArray`, owned until a consumer moves the array out.
 
 use std::collections::HashMap;
 use std::ffi::{c_char, CStr};

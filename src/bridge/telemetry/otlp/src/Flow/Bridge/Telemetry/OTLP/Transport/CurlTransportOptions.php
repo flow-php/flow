@@ -23,23 +23,6 @@ use const CURLOPT_SSLKEY;
 use const CURLOPT_TIMEOUT_MS;
 use const CURLOPT_URL;
 
-/**
- * Configuration options for CurlTransport.
- *
- * Provides a fluent interface for configuring curl transport options.
- *
- * Example usage:
- * ```php
- * $options = otlp_curl_options()
- *     ->withTimeout(2000)
- *     ->withConnectTimeout(500)
- *     ->withHeader('Authorization', 'Bearer token')
- *     ->withCompression()
- *     ->withSslVerification(verifyPeer: true);
- *
- * $transport = otlp_curl_transport($endpoint, $serializer, $options);
- * ```
- */
 final class CurlTransportOptions
 {
     public const int DEFAULT_CONNECT_TIMEOUT_MS = 250;

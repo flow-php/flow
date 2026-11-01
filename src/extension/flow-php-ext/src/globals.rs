@@ -31,7 +31,7 @@ pub extern "C" fn request_shutdown(_type: i32, _module_number: i32) -> i32 {
     0
 }
 
-/// The only access to `Ctx`. `f` must not call PHP code: PHP re-entering flow_php would alias the `&mut Ctx`.
+/// The only access to `Ctx`; `f` must not call PHP code, which would alias the `&mut Ctx`.
 pub fn with_ctx<R>(f: impl FnOnce(&mut Ctx) -> PhpResult<R>) -> PhpResult<R> {
     let globals = unsafe { GLOBALS.get_mut() };
 

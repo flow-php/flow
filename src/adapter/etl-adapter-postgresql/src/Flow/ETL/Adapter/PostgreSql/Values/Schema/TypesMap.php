@@ -180,9 +180,7 @@ final readonly class TypesMap
     private function resolve(string $name, bool $floorUnrecognised): Type
     {
         if (str_starts_with($name, '_')) {
-            // pg carries no dimensionality: int4[] and int4[][] are both _int4, so the schema takes
-            // the one-dimensional reading. The element is nullable because a pg array may hold SQL
-            // NULLs, which the caster preserves and a non-nullable element type would destroy.
+            // pg has no array dimensionality, and elements can be NULL
             return type_list(type_optional($this->resolve(substr($name, 1), $floorUnrecognised)));
         }
 
@@ -209,8 +207,7 @@ final readonly class TypesMap
             'tstzrange',
             'daterange',
                 => type_string(),
-            // A composite has no columns to describe and a geometric value is structured, so a
-            // string floor would misrepresent either one.
+            // a string floor would misrepresent a composite or a geometric value
             'record',
             'point',
             'line',

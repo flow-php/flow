@@ -8,21 +8,6 @@ use DateTimeImmutable;
 use Flow\Telemetry\Meter\Exemplar;
 use Flow\Telemetry\Tracer\SpanContext;
 
-/**
- * Stores a bounded collection of exemplars for metric aggregation.
- *
- * ExemplarReservoir determines how many and which exemplars to keep
- * during the metric collection period. Different reservoir types
- * implement different sampling strategies appropriate for their
- * associated instrument types.
- *
- * Example usage:
- * ```php
- * $reservoir = new SimpleFixedSizeExemplarReservoir(5);
- * $reservoir->offer(100, ['status' => 'ok'], $spanContext, $timestamp);
- * $exemplars = $reservoir->collect();
- * ```
- */
 interface ExemplarReservoir
 {
     /**

@@ -10,8 +10,7 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 
 /**
- * $min and $max are decoded physical values the column order trusts, null when there is none. $allNaN: every value
- * that is not null is NaN.
+ * $allNaN: every non-null value is NaN; $min and $max are null when the column order trusts none.
  */
 final readonly class ZoneMap
 {

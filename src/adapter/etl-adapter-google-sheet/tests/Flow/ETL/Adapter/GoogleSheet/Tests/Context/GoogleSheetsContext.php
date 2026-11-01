@@ -41,20 +41,11 @@ final readonly class GoogleSheetsContext
         return array_column($this->history->getArrayCopy(), 'request');
     }
 
-    /**
-     * One fixture per PASS, each queued behind a `spreadsheet.json`, because every pass reads the grid size before
-     * its values call. A cold undeclared read is two passes - the sample, then the batch - so it takes two
-     * fixtures; a declared read is one pass and takes one. The queue is strictly FIFO.
-     */
     public function sheets(string ...$fixtureFiles): Sheets
     {
         return $this->sheetsOfGrid(__DIR__ . '/../Fixtures/spreadsheet.json', ...$fixtureFiles);
     }
 
-    /**
-     * The same queue over a chosen grid. A grid larger than the sample budget is what forces the read to be a real
-     * second fetch rather than being served from the sample.
-     */
     public function sheetsOfGrid(string $gridFixture, string ...$fixtureFiles): Sheets
     {
         $responses = [];

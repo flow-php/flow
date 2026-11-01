@@ -63,8 +63,8 @@ final class InferredSchemaExceptionTest extends FlowTestCase
             'file:///orders/part-01.csv',
             ['id'],
             [],
-            -1,
-            -1,
+            null,
+            null,
         );
 
         static::assertStringContainsString('at most all rows over at most all sources', $exception->getMessage());
@@ -79,18 +79,14 @@ final class InferredSchemaExceptionTest extends FlowTestCase
         static::assertInstanceOf(InferredSchemaException::class, $exception);
         static::assertSame(
             'Row 3 of from_array() does not fit the schema inferred from its first 2 rows: column "code": could not '
-            . "convert 'x' (string) to integer. Infer from every row with ->inferSchema(infer_schema()->sampleSize(-1)), "
+            . "convert 'x' (string) to integer. Infer from every row with ->inferSchema(infer_schema()->everyRow()), "
             . 'or declare the schema with ->withSchema(...).',
             $exception->getMessage(),
         );
         static::assertSame($mismatch, $exception->getPrevious());
     }
 
-    /**
-     * @param null|-1|positive-int $sampleSize null when the schema was declared, not inferred
-     */
     #[TestWith([null])]
-    #[TestWith([-1])]
     #[TestWith([5])]
     public function test_a_refusal_the_sample_does_not_explain_stays_the_gate_s_own(?int $sampleSize): void
     {
@@ -123,7 +119,7 @@ final class InferredSchemaExceptionTest extends FlowTestCase
             'file:///a.xlsx',
             7,
             null,
-            -1,
+            null,
             new SchemaMismatchException(0, ColumnMismatchException::missingColumn('id')),
         );
 

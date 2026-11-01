@@ -12,13 +12,7 @@ use function Flow\Floe\DSL\to_floe;
 use function uniqid;
 
 /**
- * Rungs 2 and 3 of the ladder. They project five columns of the same five types as rung 4, but rung
- * 4's fifth column is the concatenated contact string where these write email — so the r4 - r3 delta
- * carries a small loader-payload difference on top of the transform. That residual is stated, not
- * hidden, and no delta is gate-able.
- *
- * Subtractability across the three bench classes holds only because every one of them uses stock
- * runner settings, BenchmarkConfig::builder() and OrdersSchema::of().
+ * Rungs 2-3; r4 - r3 includes a small loader-payload difference (contact vs email).
  */
 final readonly class StageScenario
 {

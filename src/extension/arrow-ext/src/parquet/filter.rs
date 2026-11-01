@@ -1,8 +1,4 @@
-//! The row filter `ReadPlanConverter::toExtension()` sends as `'filter'`, evaluated by arrow-rs's push decoder on the
-//! predicate leaves of each row group before the projected leaves are decoded, one predicate per root conjunct. A row
-//! is kept only when the filter is TRUE: `Not` is pushed down to the leaves as a polarity, so every node yields the
-//! rows it is TRUE for, and a NULL (a null value, an absent column) is TRUE in neither polarity. Floats compare as
-//! IEEE 754: NaN is false, -0.0 equals +0.0.
+//! The row filter arrow-rs's push decoder runs: a row is kept only when TRUE; NULL is TRUE in neither polarity.
 
 use std::cmp::Ordering;
 

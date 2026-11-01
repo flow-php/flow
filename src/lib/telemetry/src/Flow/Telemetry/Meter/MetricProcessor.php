@@ -4,12 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Meter;
 
-/**
- * Interface for processing metric measurements.
- *
- * Implementations may collect metrics for batching, export them immediately,
- * or perform other processing like filtering or aggregation.
- */
 interface MetricProcessor
 {
     /**

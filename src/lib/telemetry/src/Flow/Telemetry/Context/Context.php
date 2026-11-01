@@ -7,18 +7,7 @@ namespace Flow\Telemetry\Context;
 use Flow\Telemetry\Tracer\SpanContext;
 
 /**
- * Telemetry context carrier holding the active span and baggage.
- *
- * Follows the OpenTelemetry context model: a Context either carries the currently active span (its
- * SpanContext) — making the next span its child within the same trace — or carries none, making the next
- * span a new trace root. Trace id is always derived from the active span; it is never stored independently.
- *
- * Example usage:
- * ```php
- * $context = Context::root();
- * $context = $context->withActiveSpan($span->context());
- * echo $context->traceId()?->toHex();
- * ```
+ * Trace id is derived from the active span, never stored.
  */
 final class Context
 {

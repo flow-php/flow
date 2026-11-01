@@ -13,20 +13,6 @@ use function ord;
 use function sprintf;
 use function substr;
 
-/**
- * Sampler that samples a configurable percentage of traces.
- *
- * The sampling decision is deterministic based on the trace ID,
- * ensuring that all spans in a trace are sampled consistently
- * across different services.
- *
- * Example usage:
- * ```php
- * // Sample 10% of traces
- * $sampler = new TraceIdRatioBasedSampler(0.1);
- * $result = $sampler->shouldSample($context, $span);
- * ```
- */
 final readonly class TraceIdRatioBasedSampler implements Sampler
 {
     private int $threshold;
@@ -71,9 +57,7 @@ final readonly class TraceIdRatioBasedSampler implements Sampler
     }
 
     /**
-     * Convert trace ID bytes to a deterministic integer for comparison.
-     *
-     * Uses the lower 8 bytes of the trace ID for the comparison.
+     * Uses the lower 8 bytes of the trace ID.
      */
     private function traceIdToInt(TraceId $traceId): int
     {

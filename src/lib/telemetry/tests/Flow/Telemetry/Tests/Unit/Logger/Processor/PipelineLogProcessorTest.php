@@ -69,8 +69,6 @@ final class PipelineLogProcessorTest extends TestCase
     public function test_dropping_middleware_skips_later_middleware(): void
     {
         $sink = new LogProcessorSpy();
-        // severity drop happens before the enricher; if the enricher still ran and
-        // forwarded, the sink would receive an entry. It must not.
         $pipeline = pipeline_log_processor([
             severity_filtering_log_middleware(Severity::WARN),
             enriching_log_middleware(['stage' => 'unreached']),

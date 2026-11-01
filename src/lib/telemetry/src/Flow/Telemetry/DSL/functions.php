@@ -86,9 +86,9 @@ use Flow\Telemetry\Resource\Detector\ComposerDetector;
 use Flow\Telemetry\Resource\Detector\EnvironmentDetector;
 use Flow\Telemetry\Resource\Detector\GitDetector;
 use Flow\Telemetry\Resource\Detector\HostDetector;
-use Flow\Telemetry\Resource\Detector\ManualDetector;
 use Flow\Telemetry\Resource\Detector\OsDetector;
 use Flow\Telemetry\Resource\Detector\ProcessDetector;
+use Flow\Telemetry\Resource\Detector\StaticDetector;
 use Flow\Telemetry\Resource\ResourceDetector;
 use Flow\Telemetry\Sanitizer\UrlSanitizer;
 use Flow\Telemetry\Telemetry;
@@ -98,7 +98,7 @@ use Flow\Telemetry\Tracer\Processor\BatchingSpanProcessor;
 use Flow\Telemetry\Tracer\Processor\PassThroughSpanProcessor;
 use Flow\Telemetry\Tracer\Sampler\AlwaysOffSampler;
 use Flow\Telemetry\Tracer\Sampler\AlwaysOnSampler;
-use Flow\Telemetry\Tracer\Sampler\AttributeMatchingSampler;
+use Flow\Telemetry\Tracer\Sampler\AttributeFilteringSampler;
 use Flow\Telemetry\Tracer\Sampler\ParentBasedSampler;
 use Flow\Telemetry\Tracer\Sampler\Sampler;
 use Flow\Telemetry\Tracer\Sampler\TraceIdRatioBasedSampler;
@@ -893,7 +893,7 @@ function parent_based_sampler(Sampler $root = new AlwaysOnSampler()): ParentBase
 }
 
 /**
- * Create an AttributeMatchingSampler. Drops spans whose start-time attributes match
+ * Create an AttributeFilteringSampler. Drops spans whose start-time attributes match
  * the filter (or keeps ONLY matching spans when the filter's exclude is false), and
  * defers all other spans to the delegate sampler.
  *
@@ -903,11 +903,11 @@ function parent_based_sampler(Sampler $root = new AlwaysOnSampler()): ParentBase
  * @param Sampler $delegate Sampler that decides spans which do not match (default: AlwaysOnSampler)
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function attribute_matching_sampler(
+function attribute_filtering_sampler(
     AttributeFilter $filter,
     Sampler $delegate = new AlwaysOnSampler(),
-): AttributeMatchingSampler {
-    return new AttributeMatchingSampler($filter, $delegate);
+): AttributeFilteringSampler {
+    return new AttributeFilteringSampler($filter, $delegate);
 }
 
 /**
@@ -1040,14 +1040,14 @@ function git_detector(?string $workingDirectory = null, string $gitBinary = 'git
 }
 
 /**
- * Create a ManualDetector.
+ * Create a StaticDetector.
  *
  * @param array<string, array<array-key, mixed>|bool|\DateTimeInterface|float|int|string|\Throwable> $attributes Resource attributes
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function manual_detector(array $attributes): ManualDetector
+function static_detector(array $attributes): StaticDetector
 {
-    return new ManualDetector($attributes);
+    return new StaticDetector($attributes);
 }
 
 /**

@@ -874,11 +874,6 @@ final class CSVExtractorTest extends FlowTestCase
         );
     }
 
-    /**
-     * Pins the half that is NOT closed: with no declared schema there is no Schema::add() to
-     * refuse, and the row-value write still clobbers the source column. The value-write sites are
-     * deliberately untouched in this phase.
-     */
     public function test_without_a_declared_schema_the_metadata_column_still_overwrites_silently(): void
     {
         static::assertStringEndsWith(
@@ -1320,10 +1315,6 @@ final class CSVExtractorTest extends FlowTestCase
         self::assertExtractedRowsCount(2, $extractor, flow_context(config()), criteria: new Criteria(2));
     }
 
-    /**
-     * p3's divergence: the fixture's own header is `group,id,value`, so before D4 extract() emitted
-     * `group` first while schema() never mentioned it at all. Both now emit the partition block last.
-     */
     public function test_schema_and_extract_agree_on_partition_columns(): void
     {
         $extractor = from_csv(__DIR__ . '/../../../Fixtures/partitioned/group=*/*.csv')->withSchema(schema(
@@ -1560,7 +1551,7 @@ final class CSVExtractorTest extends FlowTestCase
 
     public function test_sample_size_minus_one_agrees_on_both_paths(): void
     {
-        $inference = infer_schema()->sampleSize(-1)->build();
+        $inference = infer_schema()->everyRow()->build();
 
         static::assertEquals(
             CSVFixtureContext::inferPhp($inference, 'orders_flow.csv'),

@@ -10,13 +10,7 @@ use Flow\Telemetry\Logger\LogMiddleware;
 use Flow\Telemetry\Logger\LogRecord;
 
 /**
- * Merges a fixed set of attributes into every log entry that passes through.
- *
- * The configured attributes act as defaults: an attribute already present on the
- * record (set at the call site) wins over the enricher of the same key. Because
- * {@see LogEntry} and {@see LogRecord} are immutable, enrichment returns a new
- * entry carrying a new record - this is the spec-endorsed "modify the log record"
- * step of a LogRecordProcessor, modelled immutably.
+ * Attributes already on the record win over the enriched defaults.
  */
 final readonly class EnrichingLogMiddleware implements LogMiddleware
 {

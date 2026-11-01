@@ -4,12 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tracer;
 
-/**
- * Interface for processing spans when they start and end.
- *
- * Implementations may collect spans for batching, export them immediately,
- * or perform other processing like filtering or sampling.
- */
 interface SpanProcessor
 {
     /**

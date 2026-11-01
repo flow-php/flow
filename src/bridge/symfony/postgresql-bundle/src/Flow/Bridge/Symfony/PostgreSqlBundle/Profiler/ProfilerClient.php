@@ -361,12 +361,7 @@ final class ProfilerClient implements Client
     }
 
     /**
-     * Application code location that issued the query, for the Web Profiler "caller" column.
-     *
-     * A backtrace frame's file/line is the *call site* (where the frame's function was called from),
-     * while class/function is the callee. So the application caller is the file/line of the
-     * shallowest instrumentation frame — the last frame belonging to this decorator or to the
-     * PostgreSQL client itself before control crosses into application code.
+     * The caller is the file/line of the shallowest frame inside this decorator or the client.
      */
     private function callerLocation(): ?string
     {
