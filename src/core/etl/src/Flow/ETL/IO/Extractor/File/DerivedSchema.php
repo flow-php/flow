@@ -11,9 +11,6 @@ use Flow\ETL\Values\Schema\Validator\StrictValidator;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_string;
 
-/**
- * The schema a self-describing format derived from its first file, which every file it reads must match.
- */
 final readonly class DerivedSchema
 {
     /**

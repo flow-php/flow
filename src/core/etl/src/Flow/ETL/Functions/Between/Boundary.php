@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Functions\Between;
 
-use Flow\ETL\Kernels\Comparison\ValueOrder;
+use Flow\ETL\Values\Column\ValueOrder;
 
 enum Boundary
 {

@@ -4,19 +4,32 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Functions\Evaluation;
 
+use DateTimeImmutable;
 use Flow\ETL\Foundation\Exception\EvaluationException;
 use Flow\ETL\Functions\Evaluation\Selection;
 use Flow\ETL\Functions\ReferenceResolver;
 use Flow\ETL\Tests\Double\FailingOnValuesFunction;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Values\Schema\Definition;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 use function array_keys;
+use function array_map;
 use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+
+use const NAN;
 
 final class SelectionTest extends FlowTestCase
 {
@@ -70,5 +83,40 @@ final class SelectionTest extends FlowTestCase
         );
         static::assertSame(['v'], array_keys($spy->seen[0]->columns()));
         static::assertSame(2, $spy->seen[0]->count());
+    }
+
+    /**
+     * @return Generator<string, array{Definition<mixed>, list<mixed>, list<?bool>}>
+     */
+    public static function truthsByKind(): Generator
+    {
+        yield 'boolean' => [bool_schema('v', nullable: true), [true, false, null], [true, false, null]];
+        yield 'integer' => [int_schema('v', nullable: true), [0, 2, null], [false, true, null]];
+        yield 'float' => [float_schema('v'), [0.0, -0.0, NAN, 1.5], [false, false, true, true]];
+        yield 'string' => [str_schema('v'), ['', '0', 'a'], [false, false, true]];
+        yield 'datetime at the epoch' => [datetime_schema('v'), [new DateTimeImmutable('@0')], [true]];
+        yield 'list' => [list_schema('v', type_list(type_integer())), [[], [1]], [false, true]];
+    }
+
+    /**
+     * @param Definition<mixed> $definition
+     * @param list<mixed> $values
+     * @param list<?bool> $truths
+     */
+    #[DataProvider('truthsByKind')]
+    public function test_truths_are_the_php_truthiness_of_each_logical_value(
+        Definition $definition,
+        array $values,
+        array $truths,
+    ): void {
+        $rows = array_to_rows(array_map(static fn(mixed $value): array => [
+            'v' => $value,
+        ], $values), schema($definition));
+
+        static::assertSame($truths, (new Selection(array_keys($values)))->truths(
+            (new ReferenceResolver())->resolve(ref('v'), $rows->schema()),
+            $rows,
+            flow_context()->backend(),
+        ));
     }
 }

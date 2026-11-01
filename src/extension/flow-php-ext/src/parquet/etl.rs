@@ -5,6 +5,8 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::Arc;
 
+use arrow_array::ArrayRef;
+use arrow_select::concat::concat;
 use ext_php_rs::convert::IntoZval;
 use ext_php_rs::flags::ClassFlags;
 use ext_php_rs::prelude::*;
@@ -15,7 +17,10 @@ use crate::arrow_c;
 use crate::backend::{adopt_batch, native_column, Adoption, Definitions};
 use crate::batch_columns::HeldBatch;
 use crate::column::RustColumn;
-use crate::ctx::{call_method, column_key, construct, find_class, ht_for_each, ht_insert, zval_long, zval_str};
+use crate::ctx::{
+    call_method, column_key, construct, expect_object, find_class, ht_for_each, ht_insert, read_property, zval_long,
+    zval_str,
+};
 use crate::exception::ext_exception;
 use crate::interfaces::{file_writer_ce, parquet_open_source_ce};
 use crate::iterator::RustIterator;
@@ -24,20 +29,64 @@ use crate::plan::TypePlan;
 const FILE_READER: &str = "Flow\\Parquet\\Engine\\RustParquetFileReader";
 const ARROW_FILE_WRITER: &str = "Flow\\Parquet\\Engine\\RustParquetFileWriter";
 const BATCH_READER: &str = "Flow\\Arrow\\Parquet\\RustBatchReader";
+const SKIPPED_ROWS: &str = "Flow\\ETL\\IO\\Extractor\\File\\SkippedRows";
 
-/// The next Arrow C batch of `RustBatchReader` as `RustColumn`s under `columns`' plans.
-fn next_batch(
+type Imported = (usize, Vec<ArrayRef>);
+
+// PhpParquetOpenSource fills every batch across row groups, so a group's remainder is carried into the next batch
+fn next_full_batch(
     batches: &Zval,
     expected: &Expected,
     columns: &[(Vec<u8>, Rc<TypePlan>)],
+    batch_size: usize,
+    carried: &mut Option<Imported>,
 ) -> PhpResult<Option<HeldBatch>> {
-    let batch = call_method(batches, "next", &mut [])?;
+    loop {
+        if carried.as_ref().is_some_and(|(count, _)| *count >= batch_size) {
+            let (full, rest) = split(carried.take().expect("checked above"), batch_size);
+            *carried = rest;
 
-    if batch.is_null() {
-        return Ok(None);
+            return held(full, columns).map(Some);
+        }
+
+        let batch = call_method(batches, "next", &mut [])?;
+
+        if batch.is_null() {
+            return carried.take().map(|rest| held(rest, columns)).transpose();
+        }
+
+        let imported = arrow_c::import(&batch, expected, columns)?;
+        *carried = Some(match carried.take() {
+            Some(head) => joined(head, imported)?,
+            None => imported,
+        });
     }
+}
 
-    let (count, arrays) = arrow_c::import(&batch, expected, columns)?;
+fn split((count, arrays): Imported, at: usize) -> (Imported, Option<Imported>) {
+    let head = arrays.iter().map(|array| array.slice(0, at)).collect();
+    let rest = (count > at).then(|| {
+        (
+            count - at,
+            arrays.iter().map(|array| array.slice(at, count - at)).collect(),
+        )
+    });
+
+    ((at, head), rest)
+}
+
+fn joined((head_count, head): Imported, (tail_count, tail): Imported) -> PhpResult<Imported> {
+    let arrays = head
+        .iter()
+        .zip(&tail)
+        .map(|(head, tail)| concat(&[head.as_ref(), tail.as_ref()]))
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| ext_exception(format!("flow_php failed to carry rows across row groups: {e}")))?;
+
+    Ok((head_count + tail_count, arrays))
+}
+
+fn held((count, arrays): Imported, columns: &[(Vec<u8>, Rc<TypePlan>)]) -> PhpResult<HeldBatch> {
     let mut held = ZendHashTable::with_capacity(columns.len() as u32);
 
     for ((name, plan), array) in columns.iter().zip(arrays) {
@@ -46,7 +95,15 @@ fn next_batch(
         ht_insert(&mut held, name, native);
     }
 
-    Ok(Some(HeldBatch { columns: held, count }))
+    Ok(HeldBatch { columns: held, count })
+}
+
+fn skipped_rows(batches: &Zval) -> PhpResult<Zval> {
+    let count = call_method(batches, "skipped", &mut [])?
+        .long()
+        .ok_or_else(|| ext_exception("flow_php expected RustBatchReader::skipped() to return an int"))?;
+
+    Ok(construct(find_class(SKIPPED_ROWS)?, &mut [zval_long(count)])?.into_zval(false)?)
 }
 
 /// `$object` is arrow-ext's `$class`: the only object whose Arrow state flow_php can read.
@@ -115,11 +172,32 @@ impl RustParquetOpenSource {
 
         let expected = arrow_c::check_schema(&call_method(&batches, "schema", &mut [])?, &columns)?;
         let adoption = Adoption::new(definitions, schema, backend);
+        let mut reports_skipped = read_property(expect_object(plan, "a ReadPlan")?, "offset")?
+            .long()
+            .unwrap_or(0)
+            > 0;
+        let mut first_rows: Option<Zval> = None;
+        let mut carried: Option<Imported> = None;
+        // RustBatchReader's constructor refused a batch size below 1
+        let batch_size = batchSize as usize;
 
         Ok(RustIterator::new(Box::new(move || {
-            next_batch(&batches, &expected, &columns)?
+            if let Some(rows) = first_rows.take() {
+                return Ok(Some(rows));
+            }
+
+            let rows = next_full_batch(&batches, &expected, &columns, batch_size, &mut carried)?
                 .map(|batch| adopt_batch(&adoption, batch))
-                .transpose()
+                .transpose()?;
+
+            if !std::mem::take(&mut reports_skipped) {
+                return Ok(rows);
+            }
+
+            // the reader's count is final once its first batch, or its end, is reached
+            first_rows = rows;
+
+            Ok(Some(skipped_rows(&batches)?))
         })))
     }
 

@@ -25,9 +25,7 @@ use function array_diff;
 use function array_reverse;
 use function count;
 
-/**
- * A part kept in a node stops every later push; partition-only parts still prune the listing.
- */
+// a pushed part never throws, so it may run before the parts kept in PHP, which stay in written order
 final readonly class PushFilterIntoSource implements Rule
 {
     public function apply(LogicalPlan $plan, Backend $backend): LogicalPlan
@@ -49,7 +47,6 @@ final readonly class PushFilterIntoSource implements Rule
         $replacements = new SplObjectStorage();
         $removals = [];
         $filters = [];
-        $blocked = false;
 
         for ($node = $plan->root; $node->children() !== []; $node = $node->children()[0]) {
             if ($node instanceof Node\Filter && $this->reachedByEveryConsumer($node, ...$consumerInputs)) {
@@ -74,13 +71,12 @@ final readonly class PushFilterIntoSource implements Rule
                 $referenced = $columns->in($atLeaf)->names();
                 $partitionOnly = $referenced !== [] && array_diff($referenced, $names) === [];
 
-                // a file the conjunct rejects holds no row its filter keeps, whatever a kept conjunct before it does
+                // a file the conjunct rejects holds no row its filter keeps
                 if ($partitionOnly) {
                     $read = $read->withPathFilter(new ScalarFunctionFilter($atLeaf, $partitions, $backend));
                 }
 
-                // a conjunct after a kept one would be evaluated on rows the kept one removes
-                if ($blocked || $kept !== [] || !$partitionOnly && !$extractor->prunes($atLeaf)) {
+                if (!$partitionOnly && !$extractor->prunes($atLeaf)) {
                     $kept[] = $conjunct;
 
                     continue;
@@ -97,9 +93,6 @@ final readonly class PushFilterIntoSource implements Rule
                     count($kept) === 1 ? $kept[0] : new All(...$kept),
                 );
             }
-
-            // a filter above a kept conjunct would be evaluated on rows that conjunct removes
-            $blocked = $blocked || $kept !== [];
         }
 
         if ($read !== $leaf) {
@@ -112,13 +105,11 @@ final readonly class PushFilterIntoSource implements Rule
     }
 
     /**
-     * Every consumer must read through $filter. Otherwise pushing its predicate into the source narrows what
-     * another consumer reads - the filter analogue of PushLimitIntoSource's every-consumer agreement.
-     *
      * @param Node ...$consumerInputs LogicalPlan::consumerInputs()
      */
     public function reachedByEveryConsumer(Node\Filter $filter, Node ...$consumerInputs): bool
     {
+        // a predicate pushed into the source narrows what every other consumer of it reads
         foreach ($consumerInputs as $input) {
             for ($node = $input; $node !== $filter; $node = $node->children()[0] ?? null) {
                 if ($node === null) {
@@ -130,15 +121,6 @@ final readonly class PushFilterIntoSource implements Rule
         return true;
     }
 
-    /**
-     * $predicate as $leaf sees it, or null when it may not be evaluated there instead of above $filter.
-     * Another Filter is TRANSPARENT here: it only removes rows, so the order two filters drop rows in does not change
-     * which rows survive both. Limit/Offset/Until/Distinct/Discard are not: they make WHICH rows arrive depend on
-     * what the source read.
-     *
-     * A node that redefines a column the predicate reads blocks it, unless the column is a plain alias of a
-     * column below (Rename, a WithColumn of a bare reference): the predicate is rewritten to read that column.
-     */
     public function predicateAtLeaf(Node\Filter $filter, Read $leaf, ScalarFunction $predicate): ?ScalarFunction
     {
         $columns = new ReferencedColumns();
@@ -148,6 +130,7 @@ final readonly class PushFilterIntoSource implements Rule
                 return null;
             }
 
+            // the order two filters drop rows in does not change which rows survive both
             if ($node->rowCount() === RowCount::reducing && !$node instanceof Node\Filter) {
                 return null;
             }

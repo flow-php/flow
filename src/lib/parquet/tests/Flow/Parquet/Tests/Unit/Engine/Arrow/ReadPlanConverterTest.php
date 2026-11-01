@@ -129,7 +129,7 @@ final class ReadPlanConverterTest extends TestCase
     public function test_the_row_filter_crosses_as_a_tree_of_physical_leaves(Filter $filter, array $expected): void
     {
         static::assertSame(
-            ['selectors' => [[4, false]], 'filter' => $expected, 'limit' => null],
+            ['selectors' => [[4, false]], 'filter' => $expected, 'limit' => null, 'offset' => 0],
             ReadPlanConverter::toExtension(ReadPlanMother::rowFiltered(
                 4,
                 $filter,
@@ -159,12 +159,36 @@ final class ReadPlanConverterTest extends TestCase
     public function test_the_limit_crosses_beside_the_filter(): void
     {
         static::assertSame(
-            ['selectors' => [[4, false]], 'filter' => ['leaf' => 'is_null', 'path' => ['id']], 'limit' => 2],
+            [
+                'selectors' => [[4, false]],
+                'filter' => ['leaf' => 'is_null', 'path' => ['id']],
+                'limit' => 2,
+                'offset' => 0,
+            ],
             ReadPlanConverter::toExtension(ReadPlanMother::rowFiltered(
                 4,
                 parquet_column('id')->isNull(),
                 Schema::with(FlatColumn::int64('id')),
                 2,
+            )),
+        );
+    }
+
+    public function test_the_offset_crosses_beside_the_limit(): void
+    {
+        static::assertSame(
+            [
+                'selectors' => [[4, false]],
+                'filter' => ['leaf' => 'is_null', 'path' => ['id']],
+                'limit' => 2,
+                'offset' => 1,
+            ],
+            ReadPlanConverter::toExtension(ReadPlanMother::rowFiltered(
+                4,
+                parquet_column('id')->isNull(),
+                Schema::with(FlatColumn::int64('id')),
+                2,
+                offset: 1,
             )),
         );
     }
@@ -191,7 +215,7 @@ final class ReadPlanConverterTest extends TestCase
     public function test_the_selection_crosses_as_file_absolute_count_and_skip_pairs(): void
     {
         static::assertSame(
-            ['selectors' => [[2, true], [3, false]], 'limit' => null],
+            ['selectors' => [[2, true], [3, false]], 'limit' => null, 'offset' => 0],
             ReadPlanConverter::toExtension(ReadPlan::window(5, new InMemoryIndexes(), 2)),
         );
     }

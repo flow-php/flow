@@ -14,6 +14,8 @@ use Flow\ETL\Values\Schema\Definition\StringDefinition;
 use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Path\Filter;
 
+use function array_key_exists;
+
 final readonly class ScalarFunctionFilter implements Filter
 {
     private ScalarFunction $resolved;
@@ -41,17 +43,27 @@ final readonly class ScalarFunctionFilter implements Filter
 
     public function accept(FileStatus $status): bool
     {
+        $given = [];
+
+        foreach ($status->path->partitions()->toArray() as $partition) {
+            $given[$partition->name] = $partition->value;
+        }
+
         $values = [];
         $definitions = [];
 
-        foreach ($status->path->partitions()->toArray() as $partition) {
-            // findDefinition(), not get(): a source that declares no partition columns hands an empty schema
-            // here, and Schema::get() would throw.
-            $definition = $this->partitions->findDefinition($partition->name);
-            $definitions[] = $definition ?? new StringDefinition($partition->name, nullable: true);
-            $values[$partition->name] = $definition === null
-                ? $partition->value
-                : FileColumns::partitionValue($definition, $partition->name, $partition->value, $status->path);
+        // every declared partition gets the value the rows get, NULL when the path lacks it
+        foreach ($this->partitions->definitions() as $definition) {
+            $name = $definition->name();
+            $definitions[] = $definition;
+            $values[$name] = FileColumns::partitionValue($definition, $name, $given[$name] ?? null, $status->path);
+        }
+
+        foreach ($given as $name => $value) {
+            if (!array_key_exists($name, $values)) {
+                $definitions[] = new StringDefinition($name, nullable: true);
+                $values[$name] = $value;
+            }
         }
 
         $schema = new Schema(...$definitions);

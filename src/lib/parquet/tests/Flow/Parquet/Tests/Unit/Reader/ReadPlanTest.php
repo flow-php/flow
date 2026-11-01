@@ -78,6 +78,65 @@ final class ReadPlanTest extends TestCase
         static::assertSame(3, $plan->limit);
     }
 
+    public function test_a_negative_offset_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('A read plan offset cannot be negative, got -1');
+
+        new ReadPlan(RowSelection::all(3), RowSelection::none(3), new InMemoryIndexes(), offset: -1);
+    }
+
+    public function test_an_offset_without_a_row_filter_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('A read plan offset counts the rows its row filter keeps, and it has none');
+
+        new ReadPlan(RowSelection::all(3), RowSelection::none(3), new InMemoryIndexes(), offset: 1);
+    }
+
+    public function test_an_offset_beside_a_wholly_bound_filter_counts_the_rows_the_row_filter_keeps(): void
+    {
+        $footer = FooterMother::idGroups([1, 2], [3, 4], [5, 6]);
+        $filter = BoundFilter::bind(parquet_column('id')->greaterThan(1), $footer->schema(), new Options());
+
+        $plan = ReadPlan::forFilter($footer, new InMemoryIndexes(), $filter, limit: 3, offset: 2);
+
+        static::assertEquals(RowSelection::all(6), $plan->selection);
+        static::assertSame($filter, $plan->rowFilter);
+        static::assertSame(2, $plan->offset);
+        static::assertSame(3, $plan->limit);
+    }
+
+    public function test_an_offset_without_a_filter_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'An offset counts the rows returned, which a plan cannot honour unless the file answers every conjunct of '
+            . 'its filter exactly',
+        );
+
+        ReadPlan::forFilter(FooterMother::idGroups([1, 2]), new InMemoryIndexes(), null, offset: 1);
+    }
+
+    #[DataProvider('filters_not_wholly_bound')]
+    public function test_an_offset_beside_a_filter_not_wholly_bound_is_refused(Filter $filter): void
+    {
+        $footer = new SpyFooter(Schema::with(FlatColumn::int64('id')), 10);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'An offset counts the rows returned, which a plan cannot honour unless the file answers every conjunct of '
+            . 'its filter exactly',
+        );
+
+        ReadPlan::forFilter(
+            $footer,
+            new InMemoryIndexes(),
+            BoundFilter::bind($filter, $footer->schema(), new Options()),
+            offset: 1,
+        );
+    }
+
     public function test_a_limit_beside_an_empty_all_reads_the_window_without_a_row_filter(): void
     {
         $footer = FooterMother::idGroups([1, 2], [3, 4], [5, 6]);

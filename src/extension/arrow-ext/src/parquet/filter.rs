@@ -1,6 +1,8 @@
 //! The row filter arrow-rs's push decoder runs: a row is kept only when TRUE; NULL is TRUE in neither polarity.
 
 use std::cmp::Ordering;
+use std::sync::atomic::AtomicUsize;
+use std::sync::Arc;
 
 use arrow_array::cast::AsArray;
 use arrow_array::types::{
@@ -59,6 +61,7 @@ pub struct PlanPredicate {
     leaves: Vec<usize>,
     mask: ProjectionMask,
     root: Compiled,
+    matched: Option<Arc<AtomicUsize>>,
 }
 
 impl PlanPredicate {
@@ -74,9 +77,18 @@ impl PlanPredicate {
                     mask: ProjectionMask::leaves(descr, leaves.iter().copied()),
                     leaves,
                     root,
+                    matched: None,
                 })
             })
             .collect()
+    }
+
+    /// Adds the rows it keeps to `matched`; on the last conjunct that is every match of the file.
+    pub fn counting(self, matched: Arc<AtomicUsize>) -> Self {
+        Self {
+            matched: Some(matched),
+            ..self
+        }
     }
 
     /// The parquet leaf of each path the conjunct reads.
@@ -91,7 +103,13 @@ impl ArrowPredicate for PlanPredicate {
     }
 
     fn evaluate(&mut self, batch: RecordBatch) -> Result<BooleanArray, ArrowError> {
-        Ok(BooleanArray::new(self.root.truth(&batch, false)?, None))
+        let kept = BooleanArray::new(self.root.truth(&batch, false)?, None);
+
+        if let Some(matched) = &self.matched {
+            matched.fetch_add(kept.true_count(), std::sync::atomic::Ordering::Relaxed);
+        }
+
+        Ok(kept)
     }
 }
 

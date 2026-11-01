@@ -14,8 +14,5 @@ interface ListedFileRow
      */
     public function row(FileStatus $status): array;
 
-    /**
-     * The body columns of a row, before the partition columns are declared.
-     */
     public function schema(): Schema;
 }

@@ -11,6 +11,7 @@ use Flow\ETL\Values\Column\Frame\Codec;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
 use Flow\ETL\Values\Schema\Definition;
+use Flow\Types\Type\Comparison\Operator;
 use RuntimeException;
 use SensitiveParameter;
 
@@ -38,6 +39,46 @@ final class RustBackend implements Backend, Describable
     }
 
     public function builder(Definition $definition): ColumnBuilder
+    {
+        throw new RuntimeException('flow_php extension is not loaded');
+    }
+
+    public function compare(
+        Column $left,
+        Operator $operator,
+        Column $right,
+        string $leftName,
+        string $rightName,
+    ): Column {
+        throw new RuntimeException('flow_php extension is not loaded');
+    }
+
+    public function isNull(Column $column): Column
+    {
+        throw new RuntimeException('flow_php extension is not loaded');
+    }
+
+    public function isNotNull(Column $column): Column
+    {
+        throw new RuntimeException('flow_php extension is not loaded');
+    }
+
+    public function add(Column $left, Column $right): Column
+    {
+        throw new RuntimeException('flow_php extension is not loaded');
+    }
+
+    public function subtract(Column $left, Column $right): Column
+    {
+        throw new RuntimeException('flow_php extension is not loaded');
+    }
+
+    public function multiply(Column $left, Column $right): Column
+    {
+        throw new RuntimeException('flow_php extension is not loaded');
+    }
+
+    public function modulo(Column $left, Column $right): Column
     {
         throw new RuntimeException('flow_php extension is not loaded');
     }

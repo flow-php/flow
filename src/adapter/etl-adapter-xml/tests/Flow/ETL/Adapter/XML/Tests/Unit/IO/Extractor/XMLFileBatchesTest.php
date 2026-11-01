@@ -41,7 +41,6 @@ final class XMLFileBatchesTest extends FlowTestCase
             [[['node' => '<row><id>1</id></row>'], ['node' => '<row><id>2</id></row>']]],
             array_map(static fn(Rows $rows): array => $rows->toArray(), iterator_to_array($file, false)),
         );
-        static::assertSame(0, $file->getReturn());
         static::assertSame($filesystem->readFromCalls, $filesystem->closedStreams());
     }
 

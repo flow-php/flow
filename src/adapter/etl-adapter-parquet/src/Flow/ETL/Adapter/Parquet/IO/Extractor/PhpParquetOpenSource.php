@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\IO\Extractor;
 
+use Flow\ETL\IO\Extractor\File\SkippedRows;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Rows\RowsBuilder;
@@ -11,6 +12,7 @@ use Flow\ETL\Values\Schema;
 use Flow\ETL\Values\Schema\Definition;
 use Flow\Parquet\ParquetFile;
 use Flow\Parquet\Reader\ReadPlan;
+use Flow\Parquet\Reader\SkippedMatches;
 use Generator;
 
 use function array_map;
@@ -23,7 +25,7 @@ final class PhpParquetOpenSource implements ParquetOpenSource
     ) {}
 
     /**
-     * @return Generator<int, Rows>
+     * @return Generator<int, Rows|SkippedRows>
      */
     public function batches(Schema $schema, int $batchSize, ReadPlan $plan, Backend $backend): Generator
     {
@@ -33,6 +35,12 @@ final class PhpParquetOpenSource implements ParquetOpenSource
         ));
 
         foreach ($this->file->reader()->readColumns($names, $batchSize, $plan) as $chunk) {
+            if ($chunk instanceof SkippedMatches) {
+                yield new SkippedRows($chunk->count);
+
+                continue;
+            }
+
             $builder = new RowsBuilder($schema, $backend);
 
             foreach ($names as $name) {

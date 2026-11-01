@@ -67,7 +67,7 @@ final readonly class CSVFileBatches implements FileBatches
      *
      * @throws InferredSchemaException|SchemaValidationException
      *
-     * @return Generator<int, CorruptedRecordException|Rows, mixed, int>
+     * @return Generator<int, CorruptedRecordException|Rows, mixed, void>
      */
     public function batches(
         FileRead $read,
@@ -104,8 +104,6 @@ final readonly class CSVFileBatches implements FileBatches
         } finally {
             $open->close();
         }
-
-        return 0;
     }
 
     public function close(): void {}

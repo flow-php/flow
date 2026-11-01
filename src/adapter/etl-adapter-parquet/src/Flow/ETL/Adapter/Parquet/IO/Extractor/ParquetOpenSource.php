@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\IO\Extractor;
 
+use Flow\ETL\IO\Extractor\File\SkippedRows;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
@@ -23,7 +24,7 @@ interface ParquetOpenSource
      *
      * @param int $batchSize refused below 1
      *
-     * @return Iterator<int, Rows>
+     * @return Iterator<int, Rows|SkippedRows>
      */
     public function batches(Schema $schema, int $batchSize, ReadPlan $plan, Backend $backend): Iterator;
 

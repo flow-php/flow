@@ -2,13 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Kernels\Comparison;
+namespace Flow\ETL\Values\Column;
 
 use Flow\ETL\Foundation\Exception\EvaluationException;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
-use Flow\ETL\Values\Column\Column;
-use Flow\ETL\Values\Column\ComparableValues;
-use Flow\ETL\Values\Column\PhpBackend;
 use Flow\ETL\Values\Schema\Definitions;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Type;

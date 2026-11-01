@@ -28,6 +28,7 @@ use Flow\Parquet\Filter\Any as ParquetAny;
 use Flow\Parquet\Filter\Binding\LiteralDomain;
 use Flow\Parquet\Filter\Comparison as ParquetComparison;
 use Flow\Parquet\Filter\Filter;
+use Flow\Parquet\Filter\Not as ParquetNot;
 use Flow\Parquet\Filter\Operator;
 use Flow\Types\Type;
 use Flow\Types\Type\Comparison\Operator as ComparisonOperator;
@@ -45,6 +46,8 @@ use Flow\Types\Value\Uuid;
 use function abs;
 use function array_filter;
 use function array_map;
+use function array_merge;
+use function array_unique;
 use function array_values;
 use function ctype_digit;
 use function floor;
@@ -58,33 +61,73 @@ use function is_int;
 use function is_nan;
 use function is_string;
 
-/**
- * A conjunct is pushed only when the parquet filter keeps every row the Flow predicate keeps; anything it cannot
- * prove that for is left to FileReadLoop.
- */
 final readonly class FilterTranslator
 {
     /**
      * @param list<ScalarFunction> $conjuncts
      *
-     * @return list<TranslatedConjunct> one per translatable conjunct
+     * @return array<int, TranslatedConjunct> keyed by the position in $conjuncts
      */
     public function translate(array $conjuncts, Schema $body): array
     {
         $translated = [];
 
-        foreach ($conjuncts as $conjunct) {
+        foreach ($conjuncts as $position => $conjunct) {
             $parquet = $this->filter($conjunct, $body);
 
             if ($parquet !== null) {
-                $translated[] = new TranslatedConjunct(
+                $translated[$position] = new TranslatedConjunct(
                     $parquet,
                     array_values((new ReferencedColumns())->in($conjunct)->names()),
+                    !$this->listsNull($conjunct),
+                    array_values(array_unique($this->nanSensitiveColumns($parquet, $body))),
                 );
             }
         }
 
         return $translated;
+    }
+
+    // Flow orders NaN above every number, parquet's IEEE 754 comparisons never match it
+    /**
+     * @return list<string>
+     */
+    private function nanSensitiveColumns(Filter $filter, Schema $body): array
+    {
+        return match (true) {
+            $filter instanceof ParquetAll, $filter instanceof ParquetAny => array_merge([], ...array_map(
+                fn(Filter $child): array => $this->nanSensitiveColumns($child, $body),
+                $filter->filters,
+            )),
+            $filter instanceof ParquetNot => $this->nanSensitiveColumns($filter->filter, $body),
+            $filter instanceof ParquetComparison
+                && ($filter->operator === Operator::GreaterThan || $filter->operator === Operator::GreaterThanOrEqual)
+                && type_bare($body->get($filter->column->path)->type()) instanceof FloatType
+                => [$filter->column->path],
+            default => [],
+        };
+    }
+
+    // the NULL dropped from a pushed IN list turns Flow's NULL rows into FALSE, which a NOT then keeps
+    private function listsNull(FunctionTree $function): bool
+    {
+        if ($function instanceof IsIn) {
+            $haystack = $function->children()[0];
+            // @mago-expect analysis:mixed-assignment
+            $list = $haystack instanceof Literal ? $haystack->value() : null;
+
+            if (is_array($list) && in_array(null, $list, true)) {
+                return true;
+            }
+        }
+
+        foreach ($function->children() as $child) {
+            if ($this->listsNull($child)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function filter(ScalarFunction $function, Schema $body): ?Filter

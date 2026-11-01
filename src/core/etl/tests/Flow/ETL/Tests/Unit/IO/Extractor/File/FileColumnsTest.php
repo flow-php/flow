@@ -8,9 +8,17 @@ use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\IO\Extractor\File\FileColumns;
 use Flow\ETL\IO\Extractor\File\SourceFile;
 use Flow\ETL\Tests\Context\FileColumnsContext;
+use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Values\Schema\Definition;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\enum_schema;
+use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\partition_types;
 use function Flow\ETL\DSL\schema;
@@ -61,6 +69,26 @@ final class FileColumnsTest extends FlowTestCase
             new SourceFile(path('memory://orders/year=abc/part-0.parquet')),
             $fileColumns->declare(schema()),
         );
+    }
+
+    /**
+     * @return Generator<string, array{Definition}>
+     */
+    public static function nullable_partition_definitions(): Generator
+    {
+        yield 'string' => [str_schema('p', nullable: true)];
+        yield 'int' => [int_schema('p', nullable: true)];
+        yield 'float' => [float_schema('p', nullable: true)];
+        yield 'bool' => [bool_schema('p', nullable: true)];
+        yield 'date' => [date_schema('p', nullable: true)];
+        yield 'datetime' => [datetime_schema('p', nullable: true)];
+        yield 'enum' => [enum_schema('p', BackedStringEnum::class, nullable: true)];
+    }
+
+    #[DataProvider('nullable_partition_definitions')]
+    public function test_a_partition_value_the_path_lacks_is_null_for_every_nullable_type(Definition $definition): void
+    {
+        static::assertNull(FileColumns::partitionValue($definition, 'p', null, path('memory://orders/data.parquet')));
     }
 
     public function test_a_missing_partition_under_a_not_null_declaration_is_null(): void

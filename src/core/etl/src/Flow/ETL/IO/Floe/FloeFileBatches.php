@@ -12,6 +12,7 @@ use Flow\ETL\IO\Extractor\File\DerivedSchema;
 use Flow\ETL\IO\Extractor\File\FileRead;
 use Flow\ETL\IO\Extractor\File\OffsetSkippingFileBatches;
 use Flow\ETL\IO\Extractor\File\ReadWindow;
+use Flow\ETL\IO\Extractor\File\SkippedRows;
 use Flow\ETL\IO\Extractor\File\SourceFile;
 use Flow\ETL\Storage\Floe\FloeStreamReader;
 use Flow\ETL\Values\Column\Backend;
@@ -67,7 +68,7 @@ final readonly class FloeFileBatches implements OffsetSkippingFileBatches
      *
      * @throws InferredSchemaException
      *
-     * @return Generator<int, Rows, mixed, int>
+     * @return Generator<int, Rows|SkippedRows, mixed, void>
      */
     public function batches(
         FileRead $read,
@@ -90,12 +91,18 @@ final readonly class FloeFileBatches implements OffsetSkippingFileBatches
             $fileRows = $reader->totalRows();
             $owned = $split?->length === null ? null : $split->owns($file->units());
 
-            if ($owned === null && $window->offset >= $fileRows) {
-                return $fileRows;
+            // it answers no conjunct, so beside one it takes neither the offset nor the limit
+            $takesWindow = $criteria->conjuncts === [];
+            $offset = $takesWindow ? $window->offset : 0;
+
+            if ($owned === null && $offset >= $fileRows && $offset > 0) {
+                yield new SkippedRows($fileRows);
+
+                return;
             }
 
             if ($owned?->count === 0) {
-                return 0;
+                return;
             }
 
             $this->derived?->refuseDivergence($file->source()->uri(), $file->schema());
@@ -106,10 +113,14 @@ final readonly class FloeFileBatches implements OffsetSkippingFileBatches
             $projects = !$fileBody->isSame($file->schema());
             $matches = !$fileBody->isSame($body);
 
+            if ($owned === null && $offset > 0) {
+                yield new SkippedRows($offset);
+            }
+
             foreach ($reader->rows(
                 $read->batchSize,
-                $owned->offset ?? $window->offset,
-                $owned->count ?? $window->limit,
+                $owned->offset ?? $offset,
+                $owned->count ?? ($takesWindow ? $window->limit : null),
             ) as $rows) {
                 if ($projects) {
                     $rows = $rows->project($fileBody, $backend);
@@ -117,8 +128,6 @@ final readonly class FloeFileBatches implements OffsetSkippingFileBatches
 
                 yield $matches ? $rows->matchTo($body, $backend) : $rows;
             }
-
-            return $owned === null ? $window->offset : 0;
         } finally {
             $reader->close();
         }

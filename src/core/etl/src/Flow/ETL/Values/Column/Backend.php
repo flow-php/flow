@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Values\Column;
 
 use Flow\ETL\Foundation\Exception\ColumnMismatchException;
+use Flow\ETL\Foundation\Exception\EvaluationException;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\OffsetOverflow;
 use Flow\ETL\Values\Column\Frame\Codec;
 use Flow\ETL\Values\Column\Frame\FloeException;
@@ -12,6 +14,7 @@ use Flow\ETL\Values\Column\Frame\FrameTooLarge;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
 use Flow\ETL\Values\Schema\Definition;
+use Flow\Types\Type\Comparison\Operator;
 
 use function interface_exists;
 
@@ -59,6 +62,43 @@ interface Backend
      * @throws FrameTooLarge a body past the 4 GiB frame length
      */
     public function encodeFrame(Rows $rows, Codec $codec): string;
+
+    /**
+     * @throws EvaluationException a value that does not cast to the type the pair compares in, named by $leftName or
+     *                             $rightName
+     * @throws InvalidArgumentException for Operator::DIFFERENT and Operator::SPACE_SHIP
+     */
+    public function compare(
+        Column $left,
+        Operator $operator,
+        Column $right,
+        string $leftName,
+        string $rightName,
+    ): Column;
+
+    public function isNull(Column $column): Column;
+
+    public function isNotNull(Column $column): Column;
+
+    /**
+     * @throws EvaluationException a null operand or an integer overflow
+     */
+    public function add(Column $left, Column $right): Column;
+
+    /**
+     * @throws EvaluationException a null operand or an integer overflow
+     */
+    public function subtract(Column $left, Column $right): Column;
+
+    /**
+     * @throws EvaluationException a null operand or an integer overflow
+     */
+    public function multiply(Column $left, Column $right): Column;
+
+    /**
+     * @throws EvaluationException a null operand, or a zero or negative modulus
+     */
+    public function modulo(Column $left, Column $right): Column;
 
     /**
      * The same values in this backend's storage: $column itself when this backend owns it, otherwise one copy through

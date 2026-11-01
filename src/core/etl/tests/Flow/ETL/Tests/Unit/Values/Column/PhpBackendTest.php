@@ -10,6 +10,7 @@ use DateTimeZone;
 use Dom\HTMLDocument;
 use Dom\HTMLElement;
 use Flow\ETL\Foundation\Exception\ColumnMismatchException;
+use Flow\ETL\Foundation\Exception\EvaluationException;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\SchemaMismatchException;
 use Flow\ETL\Tests\Context\FrameContext;
@@ -25,12 +26,14 @@ use Flow\ETL\Tests\Mother\XmlMother;
 use Flow\ETL\Values\Column\Frame\Codec;
 use Flow\ETL\Values\Column\Frame\FloeException;
 use Flow\ETL\Values\Column\Frame\NoopCodec;
+use Flow\ETL\Values\Column\Php\ConstantColumn;
 use Flow\ETL\Values\Column\PhpBackend;
 use Flow\ETL\Values\Column\Physical\HtmlDocumentPhysical;
 use Flow\ETL\Values\Column\Physical\HtmlElementPhysical;
 use Flow\ETL\Values\Column\ValueColumn;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema\Definition;
+use Flow\Types\Type\Comparison\Operator;
 use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid;
 use Generator;
@@ -956,6 +959,125 @@ final class PhpBackendTest extends TestCase
         static::assertSame(
             '03000000000000000000000000000000',
             bin2hex((new PhpBackend())->encodeFrame(array_to_rows([[], [], []], schema()), new NoopCodec())),
+        );
+    }
+
+    public function test_is_null_of_a_column_without_nulls_is_a_constant_column(): void
+    {
+        $column = (new PhpBackend())->isNull(ColumnMother::of(int_schema('a', nullable: true), [1, 2]));
+
+        static::assertInstanceOf(ConstantColumn::class, $column);
+        static::assertSame([false, false], $column->values());
+    }
+
+    public function test_is_not_null_of_a_column_without_nulls_is_a_constant_column(): void
+    {
+        $column = (new PhpBackend())->isNotNull(ColumnMother::of(int_schema('a', nullable: true), [1, 2]));
+
+        static::assertInstanceOf(ConstantColumn::class, $column);
+        static::assertSame([true, true], $column->values());
+    }
+
+    public function test_is_null_answers_per_row_and_never_null(): void
+    {
+        $column = (new PhpBackend())->isNull(ColumnMother::of(int_schema('a', nullable: true), [1, null]));
+
+        static::assertSame([false, true], $column->values());
+        static::assertSame(0, $column->nullCount());
+    }
+
+    public function test_is_not_null_answers_per_row_and_never_null(): void
+    {
+        $column = (new PhpBackend())->isNotNull(ColumnMother::of(int_schema('a', nullable: true), [1, null]));
+
+        static::assertSame([true, false], $column->values());
+        static::assertSame(0, $column->nullCount());
+    }
+
+    public function test_compare_negates_equality_and_keeps_null_unknown(): void
+    {
+        $column = (new PhpBackend())->compare(
+            ColumnMother::of(int_schema('a', nullable: true), [1, null, 3]),
+            Operator::NOT_EQUAL,
+            ColumnMother::of(int_schema('b'), [1, 2, 4]),
+            'a',
+            'b',
+        );
+
+        static::assertSame([false, null, true], $column->values());
+        static::assertSame(1, $column->nullCount());
+    }
+
+    public function test_compare_orders_greater_than_as_the_swapped_less_than(): void
+    {
+        static::assertSame(
+            [false, true, false],
+            (new PhpBackend())
+                ->compare(
+                    ColumnMother::of(int_schema('a'), [1, 2, 3]),
+                    Operator::GREATER_THAN,
+                    ColumnMother::of(int_schema('b'), [2, 1, 3]),
+                    'a',
+                    'b',
+                )
+                ->values(),
+        );
+    }
+
+    public function test_compare_refuses_an_operator_a_comparison_does_not_support(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Comparison was built with an unsupported operator');
+
+        (new PhpBackend())->compare(
+            ColumnMother::of(int_schema('a'), [1]),
+            Operator::SPACE_SHIP,
+            ColumnMother::of(int_schema('b'), [1]),
+            'a',
+            'b',
+        );
+    }
+
+    public function test_add_of_two_integer_columns_is_an_integer_column(): void
+    {
+        $column = (new PhpBackend())->add(
+            ColumnMother::of(int_schema('a'), [1, -2]),
+            ColumnMother::of(int_schema('b'), [2, 2]),
+        );
+
+        static::assertSame('integer', $column->type()->toString());
+        static::assertSame([3, 0], $column->values());
+    }
+
+    public function test_subtract_with_a_float_side_is_a_float_column(): void
+    {
+        $column = (new PhpBackend())->subtract(
+            ColumnMother::of(int_schema('a'), [1, 3]),
+            ColumnMother::of(float_schema('b'), [0.5, 3.0]),
+        );
+
+        static::assertSame('float', $column->type()->toString());
+        static::assertSame([0.5, 0.0], $column->values());
+    }
+
+    public function test_multiply_refuses_an_integer_overflow_at_its_row(): void
+    {
+        $this->expectException(EvaluationException::class);
+        $this->expectExceptionMessage('Multiply function integer overflow (row 1)');
+
+        (new PhpBackend())->multiply(
+            ColumnMother::of(int_schema('a'), [2, PHP_INT_MAX]),
+            ColumnMother::of(int_schema('b'), [2, 2]),
+        );
+    }
+
+    public function test_modulo_folds_a_negative_remainder_under_a_positive_modulus(): void
+    {
+        static::assertSame(
+            [2, 1],
+            (new PhpBackend())
+                ->modulo(ColumnMother::of(int_schema('a'), [-7, 7]), ColumnMother::of(int_schema('b'), [3, 3]))
+                ->values(),
         );
     }
 }

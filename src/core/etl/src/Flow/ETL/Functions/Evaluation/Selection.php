@@ -10,8 +10,11 @@ use Flow\ETL\Functions\ScalarFunction;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Column\Column;
 use Flow\ETL\Values\Rows;
+use Flow\Types\Type\Native\BooleanType;
 
+use function array_map;
 use function count;
+use function Flow\Types\DSL\type_bare;
 
 final readonly class Selection
 {
@@ -48,5 +51,21 @@ final readonly class Selection
         } catch (EvaluationException $e) {
             throw EvaluationException::at($this->indices[$e->rowIndex], $e);
         }
+    }
+
+    /**
+     * @return list<?bool> null for null, PHP truthiness of the logical value otherwise
+     */
+    public function truths(ScalarFunction $function, Rows $rows, Backend $backend): array
+    {
+        $column = $this->evaluate($function, $rows, $backend);
+
+        if (type_bare($column->type()) instanceof BooleanType) {
+            /** @var list<?bool> */
+            return $column->physicals();
+        }
+
+        // @mago-expect analysis:mixed-operand
+        return array_map(static fn(mixed $value): ?bool => $value === null ? null : (bool) $value, $column->values());
     }
 }

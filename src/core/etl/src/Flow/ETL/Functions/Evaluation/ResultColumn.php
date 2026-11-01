@@ -15,22 +15,13 @@ use Flow\Types\Type\Logical\HTMLElementType;
 use Flow\Types\Type\Logical\HTMLType;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
-use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\XMLElementType;
 use Flow\Types\Type\Logical\XMLType;
 use Flow\Types\Type\Native\ArrayType;
-use Flow\Types\Type\Native\BooleanType;
-use Flow\Types\Type\Native\FloatType;
-use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\NullType;
-use Flow\Types\Type\Native\StringType;
 
-use function array_filter;
-use function array_keys;
-use function count;
 use function Flow\Types\DSL\type_bare;
-use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_optional;
 
@@ -69,19 +60,6 @@ final readonly class ResultColumn
 
         // nullable on purpose: only the step that stores the column (withColumn/filter gate) enforces NOT NULL, as today
         return $this->typed($returns instanceof NullType ? $returns : type_optional(type_bare($returns)), $values);
-    }
-
-    /**
-     * A kernel's predicate results are the physicals of a nullable boolean column.
-     *
-     * @param list<?bool> $results
-     */
-    public function booleans(array $results): Column
-    {
-        $builder = $this->backend->builder(Definitions::of('value', type_boolean(), true));
-        $builder->appendPhysicals($results, count(array_keys($results, null, true)));
-
-        return $builder->finish();
     }
 
     /**
@@ -138,28 +116,6 @@ final readonly class ResultColumn
      */
     public function typed(Type $type, array $values): Column
     {
-        $bare = type_bare($type);
-        $isNative = match ($bare::class) {
-            BooleanType::class => 'is_bool',
-            IntegerType::class => 'is_int',
-            FloatType::class => 'is_float',
-            StringType::class => 'is_string',
-            default => null,
-        };
-
-        // values that already hold the column's PHP type are its physicals: no definition, no casting builder - both
-        // counts are C-speed passes, no per-value PHP call
-        if ($isNative !== null && $type instanceof OptionalType) {
-            $nulls = count(array_keys($values, null, true));
-
-            if ((count(array_filter($values, $isNative)) + $nulls) === count($values)) {
-                $builder = $this->backend->builder(Definitions::of('value', $type));
-                $builder->appendPhysicals($values, $nulls);
-
-                return $builder->finish();
-            }
-        }
-
         if (!$this->holdsLosslessly($type)) {
             return new ValueColumn($values);
         }

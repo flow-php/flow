@@ -59,8 +59,6 @@ final class InMemoryUnskippableFileBatches implements FileBatches
         foreach ($kept === [] ? [] : array_chunk($kept, $read->batchSize) as $chunk) {
             yield array_to_rows(array_map(static fn(int $id): array => ['id' => $id], $chunk), $body, $backend);
         }
-
-        return 0;
     }
 
     public function close(): void {}

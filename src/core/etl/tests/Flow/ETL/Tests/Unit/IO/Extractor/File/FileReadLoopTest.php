@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\IO\Extractor\File;
 
 use Flow\ETL\Foundation\Exception\CorruptedRecordException;
+use Flow\ETL\Functions\Evaluation\Filter;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\File\FileReadLoop;
 use Flow\ETL\IO\Extractor\File\ReadWindow;
@@ -43,6 +44,65 @@ final class FileReadLoopTest extends FlowTestCase
                 'memory://orders/year=2023/a.csv' => [1, 2],
                 'memory://orders/year=2024/b.csv' => [3],
             ]), flow_context()->backend(), new ReadWindow()))),
+        );
+    }
+
+    public function test_a_corrupted_record_passes_through_outside_the_filter_and_the_window(): void
+    {
+        static::assertSame(
+            [
+                [
+                    'Corrupted record at offset 4, line 2, of memory://a.csv: reason: "x". Route corrupted records to a loader with ->withCorruptedRecords($loader).',
+                ],
+                [['id' => 3]],
+            ],
+            array_map(
+                static fn(CorruptedRecordException|Rows $batch): array => (
+                    $batch instanceof Rows ? $batch->toArray() : [$batch->getMessage()]
+                ),
+                iterator_to_array(
+                    (new FileReadLoop(
+                        FileReadMother::of(schema(int_schema('id')), FileColumnsContext::discovering(names: []), 10),
+                        new Criteria(conjuncts: [ref('id')->greaterThan(lit(1))]),
+                    ))->read(
+                        [new SourceFile(path('memory://a.csv'))],
+                        new InMemoryFileBatches(['memory://a.csv' => [1, 2, 3]], corrupted: [
+                            'memory://a.csv' => new CorruptedRecordException('memory://a.csv', 4, 2, 'reason', 'x'),
+                        ]),
+                        flow_context()->backend(),
+                        new ReadWindow(offset: 1, limit: 1),
+                    ),
+                    false,
+                ),
+            ),
+        );
+    }
+
+    public function test_a_filter_a_file_yields_applies_to_that_file_only(): void
+    {
+        $schema = schema(int_schema('id'));
+
+        static::assertSame(
+            [[['id' => 1], ['id' => 2], ['id' => 3]], [['id' => 5]]],
+            array_map(
+                static fn(CorruptedRecordException|Rows $batch): array => (
+                    $batch instanceof Rows ? $batch->toArray() : [$batch->getMessage()]
+                ),
+                iterator_to_array(
+                    (new FileReadLoop(
+                        FileReadMother::of($schema, FileColumnsContext::discovering(names: []), 10),
+                        new Criteria(conjuncts: [ref('id')->greaterThan(lit(1))]),
+                    ))->read(
+                        [new SourceFile(path('memory://a.parquet')), new SourceFile(path('memory://b.parquet'))],
+                        new InMemoryFileBatches(['memory://a.parquet' => [1, 2, 3], 'memory://b.parquet' => [1, 5]], [
+                            'memory://a.parquet' => Filter::bind($schema),
+                        ]),
+                        flow_context()->backend(),
+                        new ReadWindow(),
+                    ),
+                    false,
+                ),
+            ),
         );
     }
 
@@ -267,7 +327,7 @@ final class FileReadLoopTest extends FlowTestCase
             ),
         );
         static::assertEquals(
-            ['memory://a.csv' => [new ReadWindow(0)], 'memory://b.csv' => [new ReadWindow(0)]],
+            ['memory://a.csv' => [new ReadWindow(2)], 'memory://b.csv' => [new ReadWindow(0)]],
             $batches->windows,
         );
     }
@@ -333,7 +393,7 @@ final class FileReadLoopTest extends FlowTestCase
                 ),
             ),
         );
-        static::assertEquals(['memory://a.csv' => [new ReadWindow()]], $batches->windows);
+        static::assertEquals(['memory://a.csv' => [new ReadWindow(1, 2)]], $batches->windows);
     }
 
     public function test_the_loop_skips_the_offset_after_the_filter_for_a_format_that_cannot_skip(): void
@@ -396,7 +456,80 @@ final class FileReadLoopTest extends FlowTestCase
             ),
         );
         static::assertEquals(
-            ['memory://a.csv' => [new ReadWindow()], 'memory://b.csv' => [new ReadWindow()]],
+            ['memory://a.csv' => [new ReadWindow(0, 2)], 'memory://b.csv' => [new ReadWindow(0, 1)]],
+            $batches->windows,
+        );
+    }
+
+    public function test_the_rows_a_format_yields_after_its_skipped_rows_are_not_sliced_again(): void
+    {
+        $schema = schema(int_schema('id'));
+
+        static::assertSame(
+            [[['id' => 11], ['id' => 12]]],
+            array_map(
+                static fn(CorruptedRecordException|Rows $batch): array => (
+                    $batch instanceof Rows ? $batch->toArray() : [$batch->getMessage()]
+                ),
+                iterator_to_array(
+                    (new FileReadLoop(
+                        FileReadMother::of($schema, FileColumnsContext::discovering(names: []), 10),
+                        new Criteria(conjuncts: [ref('id')->greaterThan(lit(9))]),
+                    ))->read(
+                        [new SourceFile(path('memory://a.parquet'))],
+                        new InMemoryFileBatches(
+                            ['memory://a.parquet' => [10, 11, 12]],
+                            ['memory://a.parquet' => Filter::bind($schema)],
+                            answering: ['memory://a.parquet'],
+                        ),
+                        flow_context()->backend(),
+                        new ReadWindow(offset: 1),
+                    ),
+                    false,
+                ),
+            ),
+        );
+    }
+
+    public function test_a_file_with_a_residual_between_exact_files_is_sliced_by_the_loop(): void
+    {
+        $schema = schema(int_schema('id'));
+        $batches = new InMemoryFileBatches(
+            ['memory://a.parquet' => [3, 4, 5], 'memory://b.parquet' => [1, 2, 3, 4], 'memory://c.parquet' => [6, 7]],
+            ['memory://a.parquet' => Filter::bind($schema), 'memory://c.parquet' => Filter::bind($schema)],
+            answering: ['memory://a.parquet', 'memory://c.parquet'],
+        );
+
+        static::assertSame(
+            [[['id' => 4]], [['id' => 6]]],
+            array_map(
+                static fn(CorruptedRecordException|Rows $batch): array => (
+                    $batch instanceof Rows ? $batch->toArray() : [$batch->getMessage()]
+                ),
+                iterator_to_array(
+                    (new FileReadLoop(
+                        FileReadMother::of($schema, FileColumnsContext::discovering(names: []), 10),
+                        new Criteria(conjuncts: [ref('id')->greaterThan(lit(2))]),
+                    ))->read(
+                        [
+                            new SourceFile(path('memory://a.parquet')),
+                            new SourceFile(path('memory://b.parquet')),
+                            new SourceFile(path('memory://c.parquet')),
+                        ],
+                        $batches,
+                        flow_context()->backend(),
+                        new ReadWindow(offset: 4, limit: 2),
+                    ),
+                    false,
+                ),
+            ),
+        );
+        static::assertEquals(
+            [
+                'memory://a.parquet' => [new ReadWindow(4, 2)],
+                'memory://b.parquet' => [new ReadWindow(1, 2)],
+                'memory://c.parquet' => [new ReadWindow(0, 1)],
+            ],
             $batches->windows,
         );
     }

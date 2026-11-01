@@ -62,8 +62,6 @@ final readonly class FileRead
     }
 
     /**
-     * The files $criteria reads, through $batches.
-     *
      * @return Generator<int, CorruptedRecordException|Rows, null|Signal, void>
      */
     public function scan(Backend $backend, Criteria $criteria, FileBatches $batches): Generator

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Tests\Unit\Kernels\Comparison;
+namespace Flow\ETL\Tests\Unit\Values\Column;
 
 use DateInterval;
 use DateTimeImmutable;
-use Flow\ETL\Kernels\Comparison\ValueOrder;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Values\Column\ValueOrder;
 use PHPUnit\Framework\Attributes\TestWith;
 
 use function Flow\Types\DSL\type_boolean;

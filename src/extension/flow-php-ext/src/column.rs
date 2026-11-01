@@ -54,6 +54,10 @@ impl RustColumn {
         Self { data, plan }
     }
 
+    pub fn of_type(data: ArrayRef, type_class: &'static str) -> Result<Self, PhpException> {
+        Ok(Self::new(data, type_plan(&instance(type_class)?)?))
+    }
+
     pub fn data(&self) -> &ArrayRef {
         &self.data
     }

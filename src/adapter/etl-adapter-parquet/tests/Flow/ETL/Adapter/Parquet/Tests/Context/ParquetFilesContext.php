@@ -8,6 +8,8 @@ use Flow\ETL\Adapter\Parquet\IO\Extractor\ParquetSourceFileOpener;
 use Flow\ETL\Adapter\Parquet\IO\Loader\ParquetSchemaConformance;
 use Flow\ETL\Adapter\Parquet\IO\Loader\RustParquetFileWriter;
 use Flow\ETL\Adapter\Parquet\Values\Schema\SchemaConverter;
+use Flow\ETL\Functions\Evaluation\Filter;
+use Flow\ETL\IO\Extractor\File\SkippedRows;
 use Flow\ETL\Tests\Double\ClosingSpySourceStream;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Values\Column\PhpBackend;
@@ -31,8 +33,10 @@ use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Reader\ReadPlan;
 use Flow\Parquet\Writer;
+use Flow\Parquet\Writer\StatisticsLevel;
 
 use function array_count_values;
+use function array_keys;
 use function array_map;
 use function array_sum;
 use function Flow\ETL\Adapter\Parquet\to_parquet;
@@ -92,10 +96,7 @@ final class ParquetFilesContext
         }
     }
 
-    /**
-     * Ids 1..$rows, cut into row groups of about half a kilobyte (90 rows) - the PHP engine, because it honours a row
-     * group size that small.
-     */
+    // the PHP engine, because only it honours a row group size of half a kilobyte (90 rows)
     public static function writeRowGroups(Filesystem $filesystem, string $uri, int $rows): void
     {
         $options = Options::default()->set(Option::ROW_GROUP_SIZE_BYTES, 1024)->set(
@@ -135,6 +136,80 @@ final class ParquetFilesContext
     }
 
     /**
+     * @param iterable<Filter|Rows|SkippedRows> $batches
+     *
+     * @return list<Rows>
+     */
+    public static function rows(iterable $batches): array
+    {
+        $rows = [];
+
+        foreach ($batches as $batch) {
+            if ($batch instanceof Rows) {
+                $rows[] = $batch;
+            }
+        }
+
+        return $rows;
+    }
+
+    /**
+     * @param iterable<Filter|Rows|SkippedRows> $batches
+     *
+     * @return list<int>
+     */
+    public static function skippedRows(iterable $batches): array
+    {
+        $skipped = [];
+
+        foreach ($batches as $batch) {
+            if ($batch instanceof SkippedRows) {
+                $skipped[] = $batch->count;
+            }
+        }
+
+        return $skipped;
+    }
+
+    /**
+     * @param iterable<Filter|Rows|SkippedRows> $batches
+     */
+    public static function yieldedFilter(iterable $batches): ?Filter
+    {
+        foreach ($batches as $batch) {
+            return $batch instanceof Filter ? $batch : null;
+        }
+
+        return null;
+    }
+
+    /**
+     * @param list<float> $scores
+     */
+    public static function scores(
+        Filesystem $filesystem,
+        string $uri,
+        array $scores,
+        StatisticsLevel $statistics = StatisticsLevel::PAGE,
+    ): void {
+        $options = Options::default()->set(Option::ROW_GROUP_SIZE_BYTES, 1)->set(
+            Option::ROW_GROUP_SIZE_CHECK_INTERVAL,
+            3,
+        )->set(Option::STATISTICS_LEVEL, $statistics);
+        $writer = new Writer(options: $options, engine: new PhpParquetEngine(options: $options));
+        $writer->openForStream(
+            $filesystem->writeTo(path($uri)),
+            Schema::with(FlatColumn::int64('id'), FlatColumn::double('score')),
+        );
+        $writer->writeBatch(array_map(
+            static fn(int $id, float $score): array => ['id' => $id, 'score' => $score],
+            array_keys($scores),
+            $scores,
+        ));
+        $writer->close();
+    }
+
+    /**
      * @return list<array<array-key, mixed>>
      */
     public static function phpEngineValues(Filesystem $filesystem, string $uri): array
@@ -165,8 +240,6 @@ final class ParquetFilesContext
     }
 
     /**
-     * An int64 `id` column written by PhpParquetEngine with DELTA_BINARY_PACKED.
-     *
      * @param list<int> $ids
      */
     public static function deltaEncoded(Filesystem $filesystem, string $uri, array $ids): void
@@ -179,8 +252,6 @@ final class ParquetFilesContext
     }
 
     /**
-     * How often each path was opened through the filesystem, by path.
-     *
      * @return array<string, int>
      */
     public static function opensPerFile(CountingFilesystem $filesystem): array
@@ -190,9 +261,6 @@ final class ParquetFilesContext
             ->path(), $filesystem->openedStreams));
     }
 
-    /**
-     * Bytes read through every stream the filesystem opened.
-     */
     public static function bytesRead(CountingFilesystem $filesystem): int
     {
         return array_sum(array_map(
@@ -202,8 +270,6 @@ final class ParquetFilesContext
     }
 
     /**
-     * The chunks of the given columns in the given row groups, by file uri.
-     *
      * @param array<string, array<string, list<int>>> $groups
      *
      * @return list<ColumnChunk>
@@ -227,8 +293,6 @@ final class ParquetFilesContext
     }
 
     /**
-     * The bytes of the offset indexes of the given columns in the given row groups, by file uri.
-     *
      * @param array<string, array<string, list<int>>> $groups
      */
     public static function offsetIndexBytes(Filesystem $filesystem, array $groups): int
@@ -240,8 +304,6 @@ final class ParquetFilesContext
     }
 
     /**
-     * The bytes of the column and offset indexes of the given columns in the given row groups, by file uri.
-     *
      * @param array<string, array<string, list<int>>> $groups
      */
     public static function pageIndexBytes(Filesystem $filesystem, array $groups): int
@@ -254,9 +316,6 @@ final class ParquetFilesContext
         ));
     }
 
-    /**
-     * A PHP-engine opener of every column under the default options.
-     */
     public static function opener(Filesystem $filesystem): ParquetSourceFileOpener
     {
         return new ParquetSourceFileOpener(
@@ -269,22 +328,22 @@ final class ParquetFilesContext
     }
 
     /**
-     * @param iterable<Rows> $batches
+     * @param iterable<Filter|Rows|SkippedRows> $batches
      */
     public static function rowCount(iterable $batches): int
     {
         $count = 0;
 
         foreach ($batches as $rows) {
-            $count += $rows->count();
+            if ($rows instanceof Rows) {
+                $count += $rows->count();
+            }
         }
 
         return $count;
     }
 
     /**
-     * A `UINT_64` column `big`, one row group per value.
-     *
      * @param list<int|string> $values
      */
     public static function unsignedInt64(Filesystem $filesystem, string $uri, array $values): void

@@ -12,6 +12,7 @@ use Flow\ETL\Values\Column\PhpBackend;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
 use Flow\ETL\Values\Schema\Definition;
+use Flow\Types\Type\Comparison\Operator;
 
 /**
  * A PHP backend whose native memory is whatever the test reports - far above PHP's own allocations, so a memory limit
@@ -37,6 +38,46 @@ final class ReportedMemoryBackend implements Backend
     public function builder(Definition $definition): ColumnBuilder
     {
         return $this->php->builder($definition);
+    }
+
+    public function compare(
+        Column $left,
+        Operator $operator,
+        Column $right,
+        string $leftName,
+        string $rightName,
+    ): Column {
+        return $this->php->compare($left, $operator, $right, $leftName, $rightName);
+    }
+
+    public function isNull(Column $column): Column
+    {
+        return $this->php->isNull($column);
+    }
+
+    public function isNotNull(Column $column): Column
+    {
+        return $this->php->isNotNull($column);
+    }
+
+    public function add(Column $left, Column $right): Column
+    {
+        return $this->php->add($left, $right);
+    }
+
+    public function subtract(Column $left, Column $right): Column
+    {
+        return $this->php->subtract($left, $right);
+    }
+
+    public function multiply(Column $left, Column $right): Column
+    {
+        return $this->php->multiply($left, $right);
+    }
+
+    public function modulo(Column $left, Column $right): Column
+    {
+        return $this->php->modulo($left, $right);
     }
 
     public function constant(Definition $definition, mixed $value, int $count): Column

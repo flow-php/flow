@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Values\Column;
 
+use Exception;
+use Flow\ETL\Foundation\Calculator\Calculator;
 use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\ColumnMismatchException;
+use Flow\ETL\Foundation\Exception\EvaluationException;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\SchemaMismatchException;
 use Flow\ETL\Values\Column\Frame\Codec;
@@ -27,11 +30,22 @@ use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
 use Flow\ETL\Values\Schema\Definition;
 use Flow\ETL\Values\Schema\Definition\NullDefinition;
+use Flow\ETL\Values\Schema\Definitions;
+use Flow\Types\Type\Comparison\Operator;
+use Flow\Types\Type\Native\IntegerType;
 use SensitiveParameter;
 
+use function array_keys;
 use function array_sum;
 use function array_values;
+use function count;
+use function Flow\Types\DSL\type_bare;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_integer;
 use function intdiv;
+use function is_float;
+use function is_int;
 use function pack;
 use function range;
 use function sprintf;
@@ -325,6 +339,230 @@ final readonly class PhpBackend implements Backend, Describable
         }
 
         return $body;
+    }
+
+    public function compare(
+        Column $left,
+        Operator $operator,
+        Column $right,
+        string $leftName,
+        string $rightName,
+    ): Column {
+        $order = new ValueOrder($left->type(), $right->type());
+        $comparable = new ComparableValues();
+        $results = match ($operator) {
+            Operator::EQUAL, Operator::NOT_EQUAL => (new ValueEquality())->equal($left, $right, $leftName, $rightName),
+            Operator::IDENTICAL, Operator::NOT_IDENTICAL => (new ValueEquality())->identical($left, $right),
+            Operator::GREATER_THAN => $order->lessThan(...$comparable->orderings($right, $left)),
+            Operator::GREATER_THAN_EQUAL => $order->lessThanOrEqual(...$comparable->orderings($right, $left)),
+            Operator::LESS_THAN => $order->lessThan(...$comparable->orderings($left, $right)),
+            Operator::LESS_THAN_EQUAL => $order->lessThanOrEqual(...$comparable->orderings($left, $right)),
+            Operator::DIFFERENT, Operator::SPACE_SHIP => throw new InvalidArgumentException(
+                'Comparison was built with an unsupported operator',
+            ),
+        };
+
+        if ($operator === Operator::NOT_EQUAL || $operator === Operator::NOT_IDENTICAL) {
+            foreach ($results as $i => $result) {
+                $results[$i] = $result === null ? null : !$result;
+            }
+        }
+
+        $builder = $this->builder(Definitions::of('value', type_boolean(), true));
+        $builder->appendPhysicals($results, count(array_keys($results, null, true)));
+
+        return $builder->finish();
+    }
+
+    public function isNull(Column $column): Column
+    {
+        if ($column->nullCount() === 0) {
+            return $this->constant(Definitions::of('value', type_boolean(), true), false, $column->count());
+        }
+
+        $results = [];
+
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($column->physicals() as $physical) {
+            $results[] = $physical === null;
+        }
+
+        $builder = $this->builder(Definitions::of('value', type_boolean(), true));
+        $builder->appendPhysicals($results, 0);
+
+        return $builder->finish();
+    }
+
+    public function isNotNull(Column $column): Column
+    {
+        if ($column->nullCount() === 0) {
+            return $this->constant(Definitions::of('value', type_boolean(), true), true, $column->count());
+        }
+
+        $results = [];
+
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($column->physicals() as $physical) {
+            $results[] = $physical !== null;
+        }
+
+        $builder = $this->builder(Definitions::of('value', type_boolean(), true));
+        $builder->appendPhysicals($results, 0);
+
+        return $builder->finish();
+    }
+
+    public function add(Column $left, Column $right): Column
+    {
+        $rights = $right->physicals();
+        $results = [];
+        $i = 0;
+
+        try {
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($left->physicals() as $i => $leftValue) {
+                // @mago-ignore analysis:mixed-assignment
+                $rightValue = $rights[$i];
+
+                if (!(is_int($leftValue) || is_float($leftValue)) || !(is_int($rightValue) || is_float($rightValue))) {
+                    throw new InvalidArgumentException('Plus function requires non-null values');
+                }
+
+                $result = $leftValue + $rightValue;
+
+                if (is_int($leftValue) && is_int($rightValue) && is_float($result)) {
+                    throw new InvalidArgumentException('Plus function integer overflow');
+                }
+
+                $results[] = $result;
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
+        }
+
+        $builder = $this->builder(Definitions::of(
+            'value',
+            type_bare($left->type()) instanceof IntegerType && type_bare($right->type()) instanceof IntegerType
+                ? type_integer()
+                : type_float(),
+            true,
+        ));
+        $builder->appendPhysicals($results, 0);
+
+        return $builder->finish();
+    }
+
+    public function subtract(Column $left, Column $right): Column
+    {
+        $rights = $right->physicals();
+        $results = [];
+        $i = 0;
+
+        try {
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($left->physicals() as $i => $leftValue) {
+                // @mago-ignore analysis:mixed-assignment
+                $rightValue = $rights[$i];
+
+                if (!(is_int($leftValue) || is_float($leftValue)) || !(is_int($rightValue) || is_float($rightValue))) {
+                    throw new InvalidArgumentException('Minus function requires non-null values');
+                }
+
+                $result = $leftValue - $rightValue;
+
+                if (is_int($leftValue) && is_int($rightValue) && is_float($result)) {
+                    throw new InvalidArgumentException('Minus function integer overflow');
+                }
+
+                $results[] = $result;
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
+        }
+
+        $builder = $this->builder(Definitions::of(
+            'value',
+            type_bare($left->type()) instanceof IntegerType && type_bare($right->type()) instanceof IntegerType
+                ? type_integer()
+                : type_float(),
+            true,
+        ));
+        $builder->appendPhysicals($results, 0);
+
+        return $builder->finish();
+    }
+
+    public function multiply(Column $left, Column $right): Column
+    {
+        $rights = $right->physicals();
+        $results = [];
+        $i = 0;
+
+        try {
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($left->physicals() as $i => $leftValue) {
+                // @mago-ignore analysis:mixed-assignment
+                $rightValue = $rights[$i];
+
+                if (!(is_int($leftValue) || is_float($leftValue)) || !(is_int($rightValue) || is_float($rightValue))) {
+                    throw new InvalidArgumentException('Multiply function requires non-null values');
+                }
+
+                $result = $leftValue * $rightValue;
+
+                if (is_int($leftValue) && is_int($rightValue) && is_float($result)) {
+                    throw new InvalidArgumentException('Multiply function integer overflow');
+                }
+
+                $results[] = $result;
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
+        }
+
+        $builder = $this->builder(Definitions::of(
+            'value',
+            type_bare($left->type()) instanceof IntegerType && type_bare($right->type()) instanceof IntegerType
+                ? type_integer()
+                : type_float(),
+            true,
+        ));
+        $builder->appendPhysicals($results, 0);
+
+        return $builder->finish();
+    }
+
+    public function modulo(Column $left, Column $right): Column
+    {
+        $calculator = new Calculator();
+        $rights = $right->physicals();
+        $results = [];
+        $i = 0;
+
+        try {
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($left->physicals() as $i => $leftValue) {
+                // @mago-ignore analysis:mixed-assignment
+                $rightValue = $rights[$i];
+
+                if (!is_int($leftValue) || !is_int($rightValue)) {
+                    throw new InvalidArgumentException('Mod function requires non-null values');
+                }
+
+                if ($rightValue === 0) {
+                    throw new InvalidArgumentException('Mod function cannot perform modulo by zero');
+                }
+
+                $results[] = $calculator->modulus($leftValue, $rightValue);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
+        }
+
+        $builder = $this->builder(Definitions::of('value', type_integer(), true));
+        $builder->appendPhysicals($results, 0);
+
+        return $builder->finish();
     }
 
     public function adopt(Definition $definition, Column $column): Column

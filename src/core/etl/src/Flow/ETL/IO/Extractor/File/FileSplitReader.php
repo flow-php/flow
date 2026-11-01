@@ -44,9 +44,6 @@ final readonly class FileSplitReader implements Describable, Reader, CorruptedRe
         return $this->corruptedRecordsLoader;
     }
 
-    /**
-     * Null when the reject loader does not describe: such a read runs only in this process.
-     */
     public function describe(): ?Description
     {
         return Description::compose(self::class, [

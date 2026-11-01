@@ -39,7 +39,6 @@ final class TextFileBatchesTest extends FlowTestCase
             [[['text' => 'a'], ['text' => 'b']], [['text' => 'c']]],
             array_map(static fn(Rows $rows): array => $rows->toArray(), iterator_to_array($file, false)),
         );
-        static::assertSame(0, $file->getReturn());
         static::assertSame($filesystem->readFromCalls, $filesystem->closedStreams());
     }
 

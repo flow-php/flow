@@ -1,10 +1,12 @@
 mod alloc;
+mod arithmetic;
 mod arrow_c;
 mod backend;
 mod batch_columns;
 mod builder;
 mod cast;
 mod column;
+mod compare;
 mod corrupted;
 mod csv;
 mod ctx;

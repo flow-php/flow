@@ -98,4 +98,18 @@ final class AnyTest extends FlowTestCase
                 ->values(),
         );
     }
+
+    public function test_a_non_boolean_conjunct_counts_by_its_truthiness(): void
+    {
+        static::assertSame(
+            [false, true, false, null],
+            (new FunctionContext(flow_context()))
+                ->column(
+                    any(ref('i')),
+                    [['i' => 0], ['i' => 2], ['i' => 0], ['i' => null]],
+                    schema(int_schema('i', nullable: true)),
+                )
+                ->values(),
+        );
+    }
 }

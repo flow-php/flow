@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Unit\IO\Extractor;
 
+use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetFilesContext;
 use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetSourceFileContext;
 use Flow\ETL\Foundation\Exception\RuntimeException;
 use Flow\ETL\Foundation\FlowPhpExtension;
@@ -40,12 +41,12 @@ final class ParquetSourceFileTest extends FlowTestCase
         $source = $file->open();
         $counts = [];
 
-        foreach ($source->batches(
+        foreach (ParquetFilesContext::rows($source->batches(
             schema(int_schema('id')),
             400,
             ReadPlan::forFilter($file->file->reader()->footer(), $file->file->indexes(), null, 100, 850),
             new PhpBackend(),
-        ) as $rows) {
+        )) as $rows) {
             $counts[] = $rows->count();
         }
 

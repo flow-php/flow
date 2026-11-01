@@ -12,6 +12,7 @@ use Flow\ETL\Values\Column\Frame\Codec;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
 use Flow\ETL\Values\Schema\Definition;
+use Flow\Types\Type\Comparison\Operator;
 use SensitiveParameter;
 
 final readonly class AdaptiveBackend implements Backend, Describable
@@ -56,6 +57,46 @@ final readonly class AdaptiveBackend implements Backend, Describable
     public function encodeFrame(Rows $rows, Codec $codec): string
     {
         return $this->backend->encodeFrame($rows, $codec);
+    }
+
+    public function compare(
+        Column $left,
+        Operator $operator,
+        Column $right,
+        string $leftName,
+        string $rightName,
+    ): Column {
+        return $this->backend->compare($left, $operator, $right, $leftName, $rightName);
+    }
+
+    public function isNull(Column $column): Column
+    {
+        return $this->backend->isNull($column);
+    }
+
+    public function isNotNull(Column $column): Column
+    {
+        return $this->backend->isNotNull($column);
+    }
+
+    public function add(Column $left, Column $right): Column
+    {
+        return $this->backend->add($left, $right);
+    }
+
+    public function subtract(Column $left, Column $right): Column
+    {
+        return $this->backend->subtract($left, $right);
+    }
+
+    public function multiply(Column $left, Column $right): Column
+    {
+        return $this->backend->multiply($left, $right);
+    }
+
+    public function modulo(Column $left, Column $right): Column
+    {
+        return $this->backend->modulo($left, $right);
     }
 
     public function adopt(Definition $definition, Column $column): Column

@@ -140,6 +140,13 @@ Evaluated on the rows read:
 - `json` columns (except `isNull`/`isNotNull`), ordering on `uuid`
 - a column that the file stores as a different type than the read type
 
+If the reader answers every part of the filter for a file, an `offset()` skips matching rows of that file without
+reading their other columns.
+
+The pushed parts run first, also before an earlier part that is evaluated on the rows read. The parts evaluated on
+the rows read keep their written order. A `greaterThan` or `greaterThanEqual` on a float column is pushed only into files whose
+statistics prove that no value is NaN.
+
 Partition columns do not filter rows. They list fewer files ([partitioning](/documentation/components/core/partitioning.md)).
 
 `explain()` shows the filter and the limit under `Read`. It does not show what the reader skipped:

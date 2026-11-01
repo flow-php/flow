@@ -69,6 +69,7 @@ impl RustArrowSchema {
 #[php(name = "Flow\\Arrow\\Parquet\\RustBatchReader", flags = ClassFlags::Final)]
 pub struct RustBatchReader {
     reader: Option<ParquetReader>,
+    skipped: usize,
     stream: Arc<PhpStream>,
     /// The projection: canonical children named by column, each with its `SOURCE_TYPE`.
     fields: Fields,
@@ -103,6 +104,7 @@ impl RustBatchReader {
 
         Ok(Self {
             reader: Some(reader),
+            skipped: 0,
             stream,
             fields,
         })
@@ -122,7 +124,10 @@ impl RustBatchReader {
             return Ok(None);
         };
 
-        let (rows, arrays) = match reader.next() {
+        let batch = reader.next();
+        self.skipped = reader.skipped();
+
+        let (rows, arrays) = match batch {
             None => {
                 self.reader = None;
 
@@ -140,6 +145,11 @@ impl RustBatchReader {
             schema: exported.1,
             rows,
         }))
+    }
+
+    /// The matches the plan's offset skipped: final once `next()` returned its first batch, or null without one.
+    pub fn skipped(&self) -> i64 {
+        i64::try_from(self.skipped).unwrap_or(i64::MAX)
     }
 
     pub fn close(&mut self) {

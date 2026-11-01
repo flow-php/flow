@@ -15,9 +15,6 @@ use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
 
-/**
- * The columns an inferred schema was derived from, which every file a grid format reads must carry.
- */
 final readonly class InferredColumns
 {
     /**
@@ -59,8 +56,6 @@ final readonly class InferredColumns
     }
 
     /**
-     * Refuses a file whose own columns (header) are not the inferred ones; a file with no columns passes.
-     *
      * @param list<string> $columns the file's columns, constant columns and duplicates allowed
      *
      * @throws InferredSchemaException

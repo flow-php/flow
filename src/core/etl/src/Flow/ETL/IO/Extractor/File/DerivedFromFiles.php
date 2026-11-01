@@ -19,9 +19,6 @@ final class DerivedFromFiles
     private ?FooterStatistics $footers = null;
 
     /**
-     * Schema::merge() returns its argument on an empty receiver, so first-file-only is this same fold
-     * with a break. The first file stays open: whoever yielded it keeps it for the read that follows, or closes it.
-     *
      * @param Generator<int, SelfDescribingFile> $files an unstarted generator, keyed from 0
      */
     public function fold(Generator $files, bool $unionByName): Schema
@@ -50,6 +47,7 @@ final class DerivedFromFiles
                 }
             }
 
+            // Schema::merge() returns its argument on an empty receiver, so a first-file read is this fold with a break
             if (!$unionByName) {
                 break;
             }
@@ -61,8 +59,6 @@ final class DerivedFromFiles
     }
 
     /**
-     * The footers the fold reads, derived once: statistics() never opens a footer schema() already did.
-     *
      * @param Generator<int, SelfDescribingFile> $files an unstarted generator
      */
     public function footers(Generator $files, bool $unionByName): FooterStatistics
@@ -72,9 +68,6 @@ final class DerivedFromFiles
         return $this->footers ?? throw InvalidLogicException::because('No footer was folded: the schema was learned');
     }
 
-    /**
-     * The file the folded or learned schema was read from; '' until a fold or learn() ran, or when none was named.
-     */
     public function from(): string
     {
         return $this->from;

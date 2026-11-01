@@ -137,6 +137,18 @@ final readonly class ComparableValues
     }
 
     /**
+     * @return array{list<mixed>, list<mixed>}
+     */
+    public function orderings(Column $first, Column $second): array
+    {
+        return (
+            type_bare($first->type())::class === type_bare($second->type())::class
+                ? [$this->ordering($first), $this->ordering($second)]
+                : [$first->values(), $second->values()]
+        );
+    }
+
+    /**
      * @return list<mixed> PHP <, <=, <=> on these order the values; uuid, json, enum, xml and html by their physical
      *                     bytes
      */

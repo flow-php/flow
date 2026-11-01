@@ -24,6 +24,7 @@ final readonly class ReadPlan
      * @param Indexes $indexes the file's page indexes, read once for planning and reading
      * @param null|BoundFilter $rowFilter evaluated on every selected row outside $matched; a row is read when true
      * @param null|int $limit the rows returned at most, counted after $rowFilter
+     * @param int $offset the rows skipped before any is returned, counted after $rowFilter
      */
     public function __construct(
         public RowSelection $selection,
@@ -31,6 +32,7 @@ final readonly class ReadPlan
         public Indexes $indexes,
         public ?BoundFilter $rowFilter = null,
         public ?int $limit = null,
+        public int $offset = 0,
     ) {
         if ($selection->totalRows() !== $matched->totalRows()) {
             throw new InvalidArgumentException('A read plan selection and its matched rows must cover the same rows');
@@ -42,6 +44,16 @@ final readonly class ReadPlan
 
         if ($limit !== null && $limit < 0) {
             throw new InvalidArgumentException('A read plan limit cannot be negative, got ' . $limit);
+        }
+
+        if ($offset < 0) {
+            throw new InvalidArgumentException('A read plan offset cannot be negative, got ' . $offset);
+        }
+
+        if ($offset > 0 && $rowFilter === null) {
+            throw new InvalidArgumentException(
+                'A read plan offset counts the rows its row filter keeps, and it has none',
+            );
         }
     }
 
@@ -55,6 +67,7 @@ final readonly class ReadPlan
      *                        conjuncts are not all evaluated on rows, as the rows returned would still be filtered
      * @param null|int $rawRows rows of the file from $rawOffset the plan covers at most, counted before any is
      *                          evaluated - a byte window's row groups; null for all of them
+     * @param int $offset rows skipped before any is returned, counted after the row filter: refused like $limit
      */
     public static function forFilter(
         Footer $footer,
@@ -63,8 +76,16 @@ final readonly class ReadPlan
         int $rawOffset = 0,
         ?int $limit = null,
         ?int $rawRows = null,
+        int $offset = 0,
     ): self {
         $rows = $footer->rowsNumber();
+
+        if ($offset > 0 && ($filter === null || !$filter->answersEveryConjunct())) {
+            throw new InvalidArgumentException(
+                'An offset counts the rows returned, which a plan cannot honour unless the file answers every conjunct '
+                . 'of its filter exactly',
+            );
+        }
 
         if ($filter === null || $limit === 0) {
             return self::window(
@@ -93,7 +114,7 @@ final readonly class ReadPlan
             $pruned = $pruner->prune($filter, $pruned);
         }
 
-        return new self($pruned->selected, $pruned->matched, $indexes, $filter->rowFilter(), $limit);
+        return new self($pruned->selected, $pruned->matched, $indexes, $filter->rowFilter(), $limit, $offset);
     }
 
     /**
