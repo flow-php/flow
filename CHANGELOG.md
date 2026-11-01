@@ -1,6 +1,7 @@
-## [Unreleased] - 2026-10-31
+## [Unreleased] - 2026-11-01
 
 ### Added
+- [#2715](https://github.com/flow-php/flow/pull/2715) - **flow-php/etl - infer_schema()->everyRow() and ->everySource()** - [@norberttech](https://github.com/norberttech)
 - [#2714](https://github.com/flow-php/flow/pull/2714) - **flow-php/etl - #[NoDiscard] on every DataFrame verb** - [@norberttech](https://github.com/norberttech)
 - [#2713](https://github.com/flow-php/flow/pull/2713) - **flow-php/etl - Statistics::$processes with the OS peak memory of the parent and of every worker** - [@norberttech](https://github.com/norberttech)
 - [#2713](https://github.com/flow-php/flow/pull/2713) - **flow-php/etl - Report::normalize() for a JSON form of the run report** - [@norberttech](https://github.com/norberttech)
@@ -45,6 +46,17 @@
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/arrow-ext - page-range reads and row filtering through arrow-rs** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2715](https://github.com/flow-php/flow/pull/2715) - **flow-php/etl - sampleSize() and filesToSniff() refuse values below 1** - [@norberttech](https://github.com/norberttech)
+- [#2715](https://github.com/flow-php/flow/pull/2715) - **flow-php/etl - a negative sniff row budget is refused; null means every row** - [@norberttech](https://github.com/norberttech)
+- [#2715](https://github.com/flow-php/flow/pull/2715) - **flow-php/telemetry - AttributeMatchingSampler renamed to AttributeFilteringSampler** - [@norberttech](https://github.com/norberttech)
+- [#2715](https://github.com/flow-php/flow/pull/2715) - **flow-php/telemetry - ManualDetector renamed to StaticDetector** - [@norberttech](https://github.com/norberttech)
+- [#2715](https://github.com/flow-php/flow/pull/2715) - **flow-php/postgresql - PaginationModifier/PaginationConfig renamed to OffsetPaginationModifier/OffsetPaginationConfig** - [@norberttech](https://github.com/norberttech)
+- [#2715](https://github.com/flow-php/flow/pull/2715) - **flow-php/symfony-http-foundation-bridge - StreamClosure renamed to StreamCompletionListener** - [@norberttech](https://github.com/norberttech)
+- [#2715](https://github.com/flow-php/flow/pull/2715) - **flow-php/monolog-telemetry-bridge - ValueNormalizer renamed to AttributeValueNormalizer** - [@norberttech](https://github.com/norberttech)
+- [#2715](https://github.com/flow-php/flow/pull/2715) - **flow-php/psr3-telemetry-bridge - ValueNormalizer renamed to AttributeValueNormalizer** - [@norberttech](https://github.com/norberttech)
+- [#2715](https://github.com/flow-php/flow/pull/2715) - **flow-php/telemetry-otlp-bridge - JSON serializers moved to Serializer\Json** - [@norberttech](https://github.com/norberttech)
+- [#2715](https://github.com/flow-php/flow/pull/2715) - **flow-php/etl-adapter-excel - the non-local path error explains why and what to do** - [@norberttech](https://github.com/norberttech)
+- [#2715](https://github.com/flow-php/flow/pull/2715) - **flow-php/etl - comments and docblocks cut to self-descriptive code** - [@norberttech](https://github.com/norberttech)
 - [#2714](https://github.com/flow-php/flow/pull/2714) - **flow-php/etl - DataFrame is immutable, every verb returns a new frame** - [@norberttech](https://github.com/norberttech)
 - [#2714](https://github.com/flow-php/flow/pull/2714) - **flow-php/etl - DataFrame constructor takes Node, Writes and FlowContext** - [@norberttech](https://github.com/norberttech)
 - [#2714](https://github.com/flow-php/flow/pull/2714) - **flow-php/etl - onError() returns a new frame** - [@norberttech](https://github.com/norberttech)
@@ -125,6 +137,8 @@
 - [#2687](https://github.com/flow-php/flow/pull/2687) - **flow-php/flow - updated dev dependencies, mago 1.57 and GitHub Actions** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2715](https://github.com/flow-php/flow/pull/2715) - **flow-php/doctrine-dbal-bulk - table definitions are cached per connection, not shared across connections** - [@norberttech](https://github.com/norberttech)
+- [#2715](https://github.com/flow-php/flow/pull/2715) - **flow-php/flow-php-ext - an explicit null inference no longer reads as an inferred schema** - [@norberttech](https://github.com/norberttech)
 - [#2714](https://github.com/flow-php/flow/pull/2714) - **flow-php/etl - fetch($limit), display() and printRows() no longer change the frame** - [@norberttech](https://github.com/norberttech)
 - [#2714](https://github.com/flow-php/flow/pull/2714) - **flow-php/etl - a frame reused for several queries returns correct results** - [@norberttech](https://github.com/norberttech)
 - [#2714](https://github.com/flow-php/flow/pull/2714) - **flow-php/etl - bloom filter fpp error prints NAN without a PHP 8.5 warning** - [@norberttech](https://github.com/norberttech)
@@ -163,6 +177,7 @@
 - [b5d097](https://github.com/flow-php/flow/commit/b5d097c5cabde914624be59774dd8a8d6fafe294) - **bump setup-php to 2.40.0 in extension release workflows** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2715](https://github.com/flow-php/flow/pull/2715) - **flow-php/etl - the -1 "all" sentinel of schema inference** - [@norberttech](https://github.com/norberttech)
 - [#2714](https://github.com/flow-php/flow/pull/2714) - **flow-php/etl - InvalidLogicException::transformationReturnedAnotherFrame()** - [@norberttech](https://github.com/norberttech)
 - [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl-adapter-google-sheet - withDropExtraColumns()** - [@norberttech](https://github.com/norberttech)
 - [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - LimitReachedException, replaced by the Limiting contract** - [@norberttech](https://github.com/norberttech)
