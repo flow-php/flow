@@ -107,13 +107,9 @@ final class ArrayExtractor implements BatchableExtractor, Extractor, InfersSchem
         $inPlace = $this->inPlace();
         $sample = $this->schema === null && $inPlace !== null ? $this->inference : null;
         $schema = $this->describe();
-        $batches = new RecordBatch(
-            $schema,
-            $backend,
-            $this->batchSize(),
-            sampleSize: $this->schema === null ? $sample->sampleSize ?? -1 : null,
-            known: $schema,
-        );
+        $batches = $this->schema === null
+            ? RecordBatch::inferred($schema, $backend, $this->batchSize(), null, $sample?->sampleSize, $schema)
+            : new RecordBatch($schema, $backend, $this->batchSize(), known: $schema);
 
         try {
             foreach ($batches->of($this->source?->rows() ?? $inPlace ?? $this->dataset) as $rows) {
@@ -183,25 +179,18 @@ final class ArrayExtractor implements BatchableExtractor, Extractor, InfersSchem
             )->schema;
         }
 
-        // ??=, not =: a schema() that threw left the sampler holding a half-read source, and rebuilding
-        // it here would read that source a second time - silently returning 0 columns for a shape whose
-        // exhaustion is quiet, such as NoRewindIterator or a database cursor. Reusing it lets the
-        // sampler's own state machine refuse.
         $this->source ??= new SpilledRows(
             $this->dataset,
             $this->filesystem,
             $this->spillRoot ?? $this->filesystem->getSystemTmpDir(),
         );
 
-        // The budget is forced to -1 because SpilledRows writes every row regardless, so stopping the
-        // typing early would buy only the cheap half and pay for it with a guess no error can name. The
-        // candidate set is carried over - it is a floor, not a bound.
-        return $this->derivedSchema = (new SchemaInferrer(new SchemaInference(
-            sampleSize: -1,
-            filesToSniff: -1,
-            types: $this->inference->types,
-            unionByName: $this->inference->unionByName,
-        )))->infer($this->source)->schema;
+        // SpilledRows writes every row, so the inference reads every row
+        return $this->derivedSchema = (new SchemaInferrer(
+            (new SchemaInference(types: $this->inference->types, unionByName: $this->inference->unionByName))
+                ->everyRow()
+                ->everySource(),
+        ))->infer($this->source)->schema;
     }
 
     public function statistics(): Statistics

@@ -21,10 +21,6 @@ use function array_chunk;
 use function array_map;
 use function Flow\ETL\DSL\array_to_rows;
 
-/**
- * Each file is a list of `id` values, every one of them yielded whatever the window: a format that cannot skip rows.
- * Records every window it was given, by URI.
- */
 final class InMemoryUnskippableFileBatches implements FileBatches
 {
     /**

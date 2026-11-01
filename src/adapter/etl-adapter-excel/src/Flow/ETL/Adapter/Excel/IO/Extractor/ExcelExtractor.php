@@ -75,9 +75,6 @@ final class ExcelExtractor implements
 
     private int $sampledFiles = 0;
 
-    /**
-     * What the last inference's samples read; null until one ran. Kept apart from $sampled, which extract() takes.
-     */
     private ?SampledUnits $sampledUnits = null;
 
     private ?Loader $corruptedRecordsLoader = null;
@@ -98,10 +95,9 @@ final class ExcelExtractor implements
         $this->filesystem = $filesystem;
 
         if (!$this->path->isLocal()) {
-            // We can't use resources (returned by \fopen) since they are not supported by the OpenSpout library.
-            // They are not supported because OpenSpout library uses php built in ZipArchive library, which doesn't support resources, only local paths.
             throw new InvalidArgumentException(
-                'Only local filesystem paths are supported by ExcelExtractor due to the limitation of underlying library.',
+                'ExcelExtractor reads local files only: OpenSpout opens them with ZipArchive, which needs a local path. '
+                . 'Copy the file to a local path first.',
             );
         }
 
@@ -165,7 +161,7 @@ final class ExcelExtractor implements
                         $this->derived->from(),
                     )
                     : null,
-                $this->schema === null ? $this->inference->sampleSize : null,
+                $this->schema === null ? $this->inference : null,
             ),
             $this->corruptedRecordsLoader,
         ))->extract($backend, $criteria);
@@ -189,7 +185,7 @@ final class ExcelExtractor implements
                         $this->derived->from(),
                     )
                     : null,
-                $this->schema === null ? $this->inference->sampleSize : null,
+                $this->schema === null ? $this->inference : null,
             ),
             $this->corruptedRecordsLoader,
         );

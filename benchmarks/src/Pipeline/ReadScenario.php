@@ -10,8 +10,7 @@ use Flow\ETL\IO\Extractor;
 use function Flow\ETL\DSL\data_frame;
 
 /**
- * Rung 1 of the ladder. It must carry the same config and the same declared schema as the rungs above
- * it, or its number is not subtractable from theirs.
+ * Rung 1: same config and declared schema as higher rungs, or its number is not subtractable.
  */
 final readonly class ReadScenario
 {

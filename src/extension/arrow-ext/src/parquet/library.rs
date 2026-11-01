@@ -281,8 +281,7 @@ impl RustParquetFileReader {
 
 #[php_impl]
 impl RustParquetFileReader {
-    /// Reads and decodes the footer; owns the stream from here on. `$int96AsDatetime`: false refuses to read an
-    /// INT96 column, which arrow reads only as a datetime.
+    /// Reads the footer and owns the stream; `$int96AsDatetime` false refuses an INT96 column.
     #[php(defaults(int96AsDatetime = true))]
     pub fn __construct(stream: &Zval, int96AsDatetime: bool) -> PhpResult<Self> {
         let stream = Arc::new(PhpStream::new(stream)?);
@@ -309,7 +308,7 @@ impl RustParquetFileReader {
         })
     }
 
-    /// Closes the stream; any later call throws. A footer taken before stays readable.
+    /// Closes the stream; a footer taken before stays readable.
     pub fn close(&mut self) -> PhpResult<()> {
         self.open()?;
         self.closed = true;
@@ -948,8 +947,7 @@ impl RustParquetFileWriter {
 
 #[php_impl]
 impl RustParquetFileWriter {
-    /// `$schema` / `$options`: `Flow\Parquet\Engine\Arrow\SchemaConverter` / `OptionsConverter::toExtension()`;
-    /// `$batchSize` rows per `ParquetWriter::write`.
+    /// `$schema`/`$options` from `SchemaConverter`/`OptionsConverter::toExtension()`; `$batchSize` rows per write.
     pub fn __construct(
         stream: &Zval,
         schema: &ZendHashTable,
@@ -1082,8 +1080,7 @@ impl RustParquetFileWriter {
         for_each_value(rows.0, |row| self.write_row(row))
     }
 
-    /// An Arrow C Data struct batch another extension exported, moved out of `$batch`: its children by writer column
-    /// name, a writer column the batch lacks as nulls, a child the writer lacks ignored. Buffered rows go first.
+    /// Moves out another extension's Arrow C Data batch: missing writer columns are nulls, extra children are ignored.
     #[php(name = "writeArrowBatch")]
     pub fn write_arrow_batch(&mut self, batch: &Zval) -> PhpResult<()> {
         self.open()?;

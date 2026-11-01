@@ -9,9 +9,7 @@ use Flow\ETL\API\DataFrame;
 use Flow\ETL\Functions\Reference\Reference;
 
 /**
- * Both arms derive the key even though only the high-cardinality one partitions by it, so the pair
- * differs by partition key alone. Deriving it only for `high` would fold a per-row temporal transform
- * into the delta the axis exists to measure.
+ * Both arms derive the key so the pair differs by partition key alone.
  */
 final readonly class WindowPartitioning
 {

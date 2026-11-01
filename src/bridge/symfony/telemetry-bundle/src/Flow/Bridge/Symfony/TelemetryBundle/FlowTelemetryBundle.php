@@ -96,7 +96,7 @@ use Flow\Telemetry\Resource\Detector\ComposerDetector;
 use Flow\Telemetry\Resource\Detector\EnvironmentDetector;
 use Flow\Telemetry\Resource\Detector\GitDetector;
 use Flow\Telemetry\Resource\Detector\HostDetector;
-use Flow\Telemetry\Resource\Detector\ManualDetector;
+use Flow\Telemetry\Resource\Detector\StaticDetector;
 use Flow\Telemetry\Resource\Detector\OsDetector;
 use Flow\Telemetry\Resource\Detector\ProcessDetector;
 use Flow\Telemetry\Telemetry;
@@ -106,7 +106,7 @@ use Flow\Telemetry\Tracer\Processor\AttributeFilteringSpanProcessor;
 use Flow\Telemetry\Tracer\Processor\PassThroughSpanProcessor;
 use Flow\Telemetry\Tracer\Sampler\AlwaysOffSampler;
 use Flow\Telemetry\Tracer\Sampler\AlwaysOnSampler;
-use Flow\Telemetry\Tracer\Sampler\AttributeMatchingSampler;
+use Flow\Telemetry\Tracer\Sampler\AttributeFilteringSampler;
 use Flow\Telemetry\Tracer\Sampler\ParentBasedSampler;
 use Flow\Telemetry\Tracer\Sampler\SuppressingSampler;
 use Flow\Telemetry\Tracer\Sampler\TraceIdRatioBasedSampler;
@@ -163,6 +163,11 @@ final class FlowTelemetryBundle extends AbstractBundle
     private const string PSR18_TRACEABLE_CLIENT = 'Flow\\Bridge\\Psr18\\Telemetry\\PSR18TraceableClient';
 
     private const string SECURITY_TOKEN_STORAGE_INTERFACE = 'Symfony\\Component\\Security\\Core\\Authentication\\Token\\Storage\\TokenStorageInterface';
+
+    private const array TRANSPORT_TIMEOUT_DEFAULTS = [
+        'curl' => ['timeout_ms' => CurlTransportOptions::DEFAULT_TIMEOUT_MS],
+        'async_curl' => ['connect_timeout_ms' => AsyncCurlTransportOptions::DEFAULT_CONNECT_TIMEOUT_MS],
+    ];
 
     private const string URL_GENERATOR_INTERFACE = 'Symfony\\Component\\Routing\\Generator\\UrlGeneratorInterface';
 
@@ -1006,19 +1011,7 @@ final class FlowTelemetryBundle extends AbstractBundle
                     return $v;
                 }
 
-                // Per-type timeout defaults that differ from the shared schema node defaults.
-                // The synchronous curl transport blocks for the whole request, so it gets a generous
-                // request budget; the async transport idles between pumps, so it gets a generous connect
-                // budget. Injecting here (before node defaults merge) keeps grpc/stream on the shared defaults.
-                $resolvedType = $v['type'] ?? 'curl';
-
-                if ($resolvedType === 'curl' && !array_key_exists('timeout_ms', $v)) {
-                    $v['timeout_ms'] = CurlTransportOptions::DEFAULT_TIMEOUT_MS;
-                }
-
-                if ($resolvedType === 'async_curl' && !array_key_exists('connect_timeout_ms', $v)) {
-                    $v['connect_timeout_ms'] = AsyncCurlTransportOptions::DEFAULT_CONNECT_TIMEOUT_MS;
-                }
+                $v += self::TRANSPORT_TIMEOUT_DEFAULTS[$v['type'] ?? 'curl'] ?? [];
 
                 if (($v['type'] ?? null) === 'grpc' && array_key_exists('connect_timeout_ms', $v)) {
                     throw new InvalidConfigurationException(
@@ -1665,10 +1658,6 @@ final class FlowTelemetryBundle extends AbstractBundle
     }
 
     /**
-     * Wraps the configured export processor in a composite that also tees records to
-     * the running console command output, and registers the supporting holder and
-     * event subscriber. Returns the id of the composite to use as the provider's processor.
-     *
      * @param array<array-key, mixed> $config
      */
     private function buildConsoleOutputLogging(
@@ -1995,7 +1984,7 @@ final class FlowTelemetryBundle extends AbstractBundle
                     $samplerServiceId . '.delegate',
                     $builder,
                 );
-                $definition = new Definition(AttributeMatchingSampler::class);
+                $definition = new Definition(AttributeFilteringSampler::class);
                 $definition->setArgument(0, new Reference($filterServiceId));
                 $definition->setArgument(1, new Reference($delegateServiceId));
                 $builder->setDefinition($samplerServiceId, $definition);
@@ -2010,10 +1999,6 @@ final class FlowTelemetryBundle extends AbstractBundle
     }
 
     /**
-     * Build a leaf sampler (always_on / always_off / trace_id_ratio) from a { type, ratio } config
-     * fragment and return its service id. Used for the attribute_matching delegate and the
-     * parent_based root.
-     *
      * @param array<array-key, mixed> $config
      */
     private function buildDelegateSampler(array $config, string $serviceId, ContainerBuilder $builder): string
@@ -2442,11 +2427,6 @@ final class FlowTelemetryBundle extends AbstractBundle
     }
 
     /**
-     * Recursively build a matcher tree from config and return a reference to its
-     * root service. A node is either a composite - exactly one of `all`/`any`
-     * (a list of child matchers) or `not` (a single child matcher) - or a leaf
-     * rule carrying a `path`. The four kinds are mutually exclusive.
-     *
      * @param mixed $node
      */
     private function buildMatcher(mixed $node, string $serviceId, ContainerBuilder $builder): Reference
@@ -2801,10 +2781,6 @@ final class FlowTelemetryBundle extends AbstractBundle
         return $node;
     }
 
-    /**
-     * Ordered list of log pipeline middleware. Only meaningful for the log `pipeline`
-     * processor type; each entry is one of enriching / attribute_filtering / severity_filtering.
-     */
     private function logMiddlewareNode(): ArrayNodeDefinition
     {
         $builder = new \Symfony\Component\Config\Definition\Builder\TreeBuilder('middleware');
@@ -2862,10 +2838,6 @@ final class FlowTelemetryBundle extends AbstractBundle
         return $node;
     }
 
-    /**
-     * Terminal processor (sink) for a log pipeline. Only meaningful for the log
-     * `pipeline` processor type.
-     */
     private function sinkNode(): ArrayNodeDefinition
     {
         $builder = new \Symfony\Component\Config\Definition\Builder\TreeBuilder('sink');
@@ -3057,9 +3029,6 @@ final class FlowTelemetryBundle extends AbstractBundle
             $container->import(__DIR__ . '/Resources/config/instrumentation/console.php');
         }
 
-        // Excluded commands are fully suppressed (the command and everything nested under it). Registered
-        // independently of console spans so worker suppression still applies when console tracing is off;
-        // an empty exclude list traces everything, including messenger:consume.
         if ($excludeCommands !== []) {
             $suppressionSubscriber = new Definition(CommandSuppressionSubscriber::class);
             $suppressionSubscriber->setArgument(0, new Reference('flow.telemetry.context_storage'));
@@ -3313,9 +3282,7 @@ final class FlowTelemetryBundle extends AbstractBundle
     }
 
     /**
-     * Auto-detect the profiler only when WebProfilerBundle is actually wired into the kernel, not
-     * merely installed in vendor. Detection is by registered class (the "kernel.bundles" value),
-     * which is stable across Symfony 6.4/7.4/8.0 regardless of the bundle's registration key.
+     * Detected by registered class, not by vendor presence: stable across Symfony versions.
      */
     private function isWebProfilerBundleRegistered(ContainerBuilder $builder): bool
     {
@@ -3393,9 +3360,6 @@ final class FlowTelemetryBundle extends AbstractBundle
     }
 
     /**
-     * Wire scope (constructor arg 3) and signal (constructor arg 4) attribute defaults onto a
-     * tracer/meter/logger factory definition. Each is an {@see Attributes} service, or null when empty.
-     *
      * @param array<array-key, mixed> $config a single tracer/meter/logger configuration entry
      */
     private static function applyScopeAndSignalAttributes(Definition $definition, array $config): void
@@ -3728,7 +3692,7 @@ final class FlowTelemetryBundle extends AbstractBundle
         }
 
         if (count($customAttributes) > 0) {
-            $manualDefinition = new Definition(ManualDetector::class);
+            $manualDefinition = new Definition(StaticDetector::class);
             $manualDefinition->setArgument(0, $customAttributes);
             $builder->setDefinition('flow.telemetry.resource.detector.custom', $manualDefinition);
             $staticDetectorRefs[] = new Reference('flow.telemetry.resource.detector.custom');

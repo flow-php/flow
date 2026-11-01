@@ -159,7 +159,7 @@ final class FileSchemaCommandTest extends TestCase
 
         static::assertSame(Command::FAILURE, $tester->getStatusCode());
         static::assertStringContainsString(
-            'Schema files to sniff must be greater than 0, or -1 for all sources.',
+            'Schema files to sniff must be greater than 0, or -1 for every source.',
             $tester->getDisplay(),
         );
     }
@@ -174,7 +174,7 @@ final class FileSchemaCommandTest extends TestCase
 
         static::assertSame(Command::FAILURE, $tester->getStatusCode());
         static::assertStringContainsString(
-            'Schema sample size must be greater than 0, or -1 for all rows.',
+            'Schema sample size must be greater than 0, or -1 for every row.',
             $tester->getDisplay(),
         );
     }

@@ -45,9 +45,7 @@ use const CURLINFO_TOTAL_TIME;
 use const CURLOPT_TIMEOUT_MS;
 
 /**
- * Asynchronous HTTP transport for OTLP using curl_multi for non-blocking I/O.
- * Requests are queued and executed asynchronously, with results processed on
- * subsequent send() calls, on tick(), or on shutdown().
+ * Results are processed on the next send(), tick() or shutdown().
  */
 final class AsyncCurlTransport implements Transport
 {

@@ -38,13 +38,6 @@ final class UnlistenBuilderTest extends TestCase
         static::assertSame('UNLISTEN my_channel', unlisten('my_channel')->toSql());
     }
 
-    /**
-     * The protobuf path cannot express the `UNLISTEN *` wildcard — libpg_query
-     * treats `conditionname = "*"` as a literal channel name and emits
-     * `UNLISTEN "*"` instead. This test pins that behavior so the limitation
-     * is documented in code and surfaces in CI if upstream libpg_query ever
-     * changes.
-     */
     public function test_wildcard_is_treated_as_literal_channel_name(): void
     {
         static::assertSame('UNLISTEN "*"', unlisten('*')->toSql());

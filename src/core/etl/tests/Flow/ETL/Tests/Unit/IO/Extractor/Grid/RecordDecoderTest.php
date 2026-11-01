@@ -141,9 +141,7 @@ final class RecordDecoderTest extends FlowTestCase
     }
 
     /**
-     * b88, pinned as it behaves rather than as it should: `1` and `true` both stringify to `'1'`, and the later
-     * value wins under a repeated key, so the row loses a column. Not specific to a typed header - `a,a` does the same
-     * in CSV - and not introduced by inference.
+     * Pins current behaviour (b88): a repeated key keeps the later value, so the row loses a column.
      */
     public function test_two_header_cells_with_the_same_name_collapse_the_row_to_one_column(): void
     {

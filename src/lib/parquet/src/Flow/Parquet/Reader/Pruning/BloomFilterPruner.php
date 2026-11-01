@@ -13,8 +13,7 @@ use Flow\Parquet\Reader\RowSelection;
 use Flow\Parquet\Reader\RowSelector;
 
 /**
- * Drops the row groups whose bloom filters prove no row matches. It proves no match, so matched is unchanged; a group
- * that selects no row, or whose selected rows are all matched already, reads no filter.
+ * Groups with no selected or no unmatched rows read no filter.
  */
 final readonly class BloomFilterPruner implements Pruner
 {

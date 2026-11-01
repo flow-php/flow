@@ -19,11 +19,6 @@ use Generator;
 use function array_values;
 use function Flow\Filesystem\DSL\path;
 
-/**
- * A file source that records the criteria of every read, so a test can prove what the planner pushed reached the
- * read - and that the instance itself was left alone. It returns only the rows matching the criteria's filter, past its
- * offset, and prunes with every conjunct or with none.
- */
 final class RecordingFileExtractor implements FileExtractor
 {
     /**

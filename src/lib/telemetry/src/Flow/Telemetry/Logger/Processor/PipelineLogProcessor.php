@@ -11,18 +11,6 @@ use Flow\Telemetry\Logger\LogSink;
 
 use function array_values;
 
-/**
- * Runs a log entry through an ordered chain of {@see LogMiddleware} and forwards
- * the survivors to a single {@see LogSink}.
- *
- * Each middleware may enrich the entry (returning a new one) or drop it (returning
- * null); a drop short-circuits the chain so later middleware and the sink never see
- * it. The pipeline owns no buffer of its own - {@see self::flush()} and
- * {@see self::shutdown()} delegate to the sink, since middleware are stateless.
- *
- * This models the OpenTelemetry LogRecordProcessor pipeline: processors registered
- * in order, each able to modify the record, with mutations visible to the next.
- */
 final readonly class PipelineLogProcessor implements LogProcessor
 {
     /**

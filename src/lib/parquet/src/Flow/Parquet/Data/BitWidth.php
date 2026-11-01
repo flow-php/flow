@@ -35,18 +35,12 @@ final class BitWidth
         $maxInt = max($ints);
         $minInt = min($ints);
 
-        // If all values are 0, no bits needed
         if ($maxInt === 0 && $minInt === 0) {
             return 0;
         }
 
-        // If we have negative values, we need to treat them as unsigned
-        // or use the full bit width. For delta encoding, relative deltas
-        // should always be non-negative, but due to overflow we might get
-        // negative wrapped values that need to be treated as large unsigned values.
+        // a negative delta is an overflowed unsigned value, so it takes all 64 bits
         if ($minInt < 0) {
-            // For negative values in the range, we need full 64-bit width
-            // because they represent large unsigned values that wrapped around
             return 64;
         }
 

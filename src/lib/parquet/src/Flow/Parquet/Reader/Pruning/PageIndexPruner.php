@@ -19,9 +19,7 @@ use function count;
 use function sort;
 
 /**
- * A row group is cut at the page boundaries of every filtered column; each part is evaluated with, per column, the
- * page holding it. A group where a filtered column has no usable page index is kept whole; a group whose selected rows
- * are all matched already reads no index.
+ * A column without a usable page index keeps the group whole.
  */
 final readonly class PageIndexPruner implements Pruner
 {

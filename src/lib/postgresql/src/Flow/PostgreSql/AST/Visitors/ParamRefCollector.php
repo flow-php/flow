@@ -10,13 +10,6 @@ use Flow\PostgreSql\Protobuf\AST\ParamRef;
 use function array_map;
 use function max;
 
-/**
- * A visitor that collects all ParamRef (parameter reference) nodes.
- *
- * Useful for finding the maximum parameter number used in a query,
- * which is needed for keyset pagination when merging user parameters
- * with cursor values.
- */
 final class ParamRefCollector implements NodeVisitor
 {
     /**

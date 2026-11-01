@@ -38,13 +38,13 @@ function http_parquet_output(): ParquetOutput
 }
 
 /**
- * Create a StreamClosure from a callable.
+ * Create a StreamCompletionListener from a callable.
  *
  * @param callable(?Report): void $callback
  */
-function http_on_complete(callable $callback): StreamClosure
+function http_on_complete(callable $callback): StreamCompletionListener
 {
-    return new readonly class($callback) implements StreamClosure {
+    return new readonly class($callback) implements StreamCompletionListener {
         public function __construct(
             /** @var callable(?Report): void */
             private mixed $callback,

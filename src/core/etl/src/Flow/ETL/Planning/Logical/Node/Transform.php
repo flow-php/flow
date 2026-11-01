@@ -11,8 +11,7 @@ use Flow\ETL\Planning\Logical\RowCount;
 use Flow\ETL\Planning\Logical\Transparency;
 
 /**
- * A user transformer: nothing about its effect on the rows is known, but a Transformer sees one batch at a time so it cannot block.
- * A Stateful one runs as its fresh() instance, so every run starts from the state it was built in.
+ * Effect unknown but never blocking; a Stateful one runs as its fresh() instance.
  */
 final readonly class Transform implements Node
 {

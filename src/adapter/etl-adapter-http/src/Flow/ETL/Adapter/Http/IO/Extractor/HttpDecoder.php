@@ -17,8 +17,7 @@ use function mb_substr;
 use function sprintf;
 
 /**
- * A row carries the body as raw text, so response_body holds one type whatever the content type is.
- * Pagination, which needs to navigate into a structured body, calls structuredBody() instead.
+ * Rows carry the raw body so response_body has one type; pagination uses structuredBody().
  */
 final class HttpDecoder
 {

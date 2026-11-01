@@ -25,8 +25,7 @@ use WeakMap;
 final readonly class Executor
 {
     /**
-     * The contexts of the plans this executor is advancing right now. Every DataFrame has its own context, so a
-     * context advanced twice at once is a plan reading back from itself.
+     * A context advanced twice at once is a plan reading back from itself.
      *
      * @var WeakMap<FlowContext, true>
      */

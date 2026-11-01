@@ -10,12 +10,7 @@ use Flow\Telemetry\Tracer\Span;
 use function sprintf;
 
 /**
- * Enforces OpenTelemetry tracing suppression as a Sampler: when the parent context carries the
- * suppression bit, the span is dropped (non-recording, never exported); otherwise the decision is
- * deferred to the wrapped sampler.
- *
- * This is the single enforcement point for the context-scoped suppression key, composed over whatever
- * sampler is configured, so suppression takes precedence over any sampling strategy.
+ * The single tracing-suppression enforcement point, wrapping any sampler.
  */
 final readonly class SuppressingSampler implements Sampler
 {

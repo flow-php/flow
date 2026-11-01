@@ -17,9 +17,7 @@ use function substr;
 use const XML_ELEMENT_NODE;
 
 /**
- * Element physicals are "\x01<child index path>\0<markup length>\0<element markup><owner document markup>", the path
- * counting element children from the document element. Earlier builds wrote "\0<path>\0<owner document markup>", and
- * before that bare element markup.
+ * Format: "\x01<path>\0<markup length>\0<element><owner document>"; older builds wrote legacy forms.
  */
 final readonly class ElementPosition
 {

@@ -9,14 +9,6 @@ namespace Flow\Benchmarks\Datasets;
  */
 enum FixtureFormat: string
 {
-    /**
-     * Every derived fixture is from_parquet(root) -> to_X(), and the root itself is
-     * FakeRandomOrdersExtractor -> to_parquet, so these six trees are in the byte-producing
-     * chain of every fixture regardless of its format. Floe lives inside src/core/etl/src.
-     *
-     * benchmarks/src/Datasets is in the chain because TextDataset and SellersDataset build their
-     * rows in PHP rather than delegating to an adapter, so their bytes change with this tree.
-     */
     private const CHAIN = [
         'src/core/etl/src',
         'src/core/etl/tests/Flow/ETL/Tests/Double/FakeRandomOrdersExtractor.php',

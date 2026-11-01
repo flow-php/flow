@@ -8,6 +8,7 @@ use Flow\ETL\Adapter\CSV\IO\Extractor\CSVReadOptions;
 use Flow\ETL\Adapter\CSV\Tests\Context\CSVFixtureContext;
 use Flow\ETL\Adapter\CSV\Tests\Double\LengthCapturingSourceStream;
 use Flow\ETL\Foundation\Exception\ColumnMismatchException;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\IO\Inference\ColumnTypes;
 use Flow\ETL\IO\Inference\InferredTypes;
 use Flow\ETL\IO\Inference\SchemaInference;
@@ -307,12 +308,12 @@ final class RustCSVOpenSourceTest extends FlowTestCase
     }
 
     /**
-     * @param int<0, max>|-1 $rowBudget
+     * @param null|int<0, max> $rowBudget
      */
     #[TestWith([2, 2])]
-    #[TestWith([-1, 5])]
+    #[TestWith([null, 5])]
     #[TestWith([10, 5])]
-    public function test_sniff_folds_at_most_the_row_budget(int $rowBudget, int $rows): void
+    public function test_sniff_folds_at_most_the_row_budget(?int $rowBudget, int $rows): void
     {
         if (!extension_loaded('flow_php')) {
             static::markTestSkipped('flow_php extension is not loaded');
@@ -334,6 +335,25 @@ final class RustCSVOpenSourceTest extends FlowTestCase
         }
     }
 
+    public function test_sniff_refuses_a_negative_row_budget_like_the_php_lane(): void
+    {
+        if (!extension_loaded('flow_php')) {
+            static::markTestSkipped('flow_php extension is not loaded');
+        }
+
+        $open = CSVFixtureContext::openNative('five_rows.csv');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Row budget must be 0 or more. Use null for every row.');
+
+        try {
+            // @mago-expect analysis:invalid-argument
+            $open->sniff(['id', 'name'], -1, new StringTypeNarrower(InferredTypes::default()->toArray()));
+        } finally {
+            $open->close();
+        }
+    }
+
     public function test_sniff_folds_date_and_time_zone_columns_like_observing_the_records(): void
     {
         if (!extension_loaded('flow_php')) {
@@ -349,12 +369,12 @@ final class RustCSVOpenSourceTest extends FlowTestCase
             CSVFixtureContext::openNativeStream(
                 new LengthCapturingSourceStream($contents, path('s3://bucket/a.csv')),
             )->records(),
-            -1,
+            null,
             $typer,
         );
         $sniffed = CSVFixtureContext::openNativeStream(
             new LengthCapturingSourceStream($contents, path('s3://bucket/a.csv')),
-        )->sniff($names, -1, $typer);
+        )->sniff($names, null, $typer);
 
         static::assertEquals(
             $observed->folded()->schema(new TypeFloor($inference->candidates())),
@@ -628,7 +648,7 @@ final class RustCSVOpenSourceTest extends FlowTestCase
     }
 
     /**
-     * @return Generator<string, array{0: string, 1: Schema, 2: positive-int, 3?: CSVReadOptions, 4?: ?int, 5?: int<0, max>}>
+     * @return Generator<string, array{0: string, 1: Schema, 2: positive-int, 3?: CSVReadOptions, 4?: ?SchemaInference, 5?: int<0, max>}>
      */
     public static function batch_parity_cases(): Generator
     {
@@ -677,7 +697,13 @@ final class RustCSVOpenSourceTest extends FlowTestCase
             2,
             (new CSVReadOptions())->withMissingColumnsAsNull(true),
         ];
-        yield 'refused past the sample' => ["id,name\n1,a\n2,b\nx,c\n", $idName, 2, new CSVReadOptions(), 2];
+        yield 'refused past the sample' => [
+            "id,name\n1,a\n2,b\nx,c\n",
+            $idName,
+            2,
+            new CSVReadOptions(),
+            new SchemaInference(2),
+        ];
         yield 'window past the first byte' => [
             "e00,e01\n1,a\n2\n3,c\n",
             schema(str_schema('e00'), str_schema('e01', nullable: true)),
@@ -698,7 +724,7 @@ final class RustCSVOpenSourceTest extends FlowTestCase
         Schema $schema,
         int $batchSize,
         CSVReadOptions $options = new CSVReadOptions(),
-        ?int $sampleSize = null,
+        ?SchemaInference $inference = null,
         int $windowStart = 0,
     ): void {
         if (!extension_loaded('flow_php')) {
@@ -714,13 +740,13 @@ final class RustCSVOpenSourceTest extends FlowTestCase
                 CSVFixtureContext::openPhpStream($stream(), $options),
                 $schema,
                 $batchSize,
-                sampleSize: $sampleSize,
+                inference: $inference,
             ),
             CSVFixtureContext::batchesOutcome(
                 CSVFixtureContext::openNativeStream($stream(), $options),
                 $schema,
                 $batchSize,
-                sampleSize: $sampleSize,
+                inference: $inference,
             ),
         );
     }

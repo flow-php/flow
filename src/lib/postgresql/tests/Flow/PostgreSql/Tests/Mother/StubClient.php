@@ -17,10 +17,6 @@ use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use RuntimeException;
 
-/**
- * Inert Client used by Context-related ObjectMothers. Every method throws —
- * tests that exercise the Client must use a different double.
- */
 final class StubClient implements Client
 {
     public function beginTransaction(): void

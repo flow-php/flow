@@ -15,8 +15,7 @@ use function sprintf;
 final readonly class ArrowExtension
 {
     /**
-     * The contract version this package expects from arrow-ext, equal to the extension's FLOW_ARROW_ABI. Both sides
-     * change together whenever a registered class or interface, or the schema, options or values crossing them, change.
+     * Equals the extension's FLOW_ARROW_ABI; both change together.
      */
     public const int ABI = 3;
 

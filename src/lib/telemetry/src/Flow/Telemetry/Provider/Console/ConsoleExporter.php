@@ -33,12 +33,6 @@ use function sprintf;
 use function strtoupper;
 use function substr;
 
-/**
- * Unified console exporter for logs, metrics, and spans.
- *
- * Outputs telemetry to the console in human-readable formatted tables with
- * optional ANSI colors. Dispatches on batch type and renders accordingly.
- */
 final readonly class ConsoleExporter implements Exporter
 {
     private const int LOG_MIN_WIDTH = 40;

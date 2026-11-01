@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Operators\Transformer;
 
 /**
- * A step that keeps state between batches. Every run of a frame starts from its own fresh instance, so the state never
- * carries over from an earlier run. A parallel read never ships it to a worker: one instance sees every batch.
+ * Every run starts from a fresh instance; a parallel read never ships it to a worker.
  */
 interface Stateful
 {

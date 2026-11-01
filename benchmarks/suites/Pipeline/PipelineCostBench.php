@@ -9,8 +9,7 @@ use Generator;
 use PhpBench\Attributes as Bench;
 
 /**
- * Per-cost subjects. Every one reads CSV with a declared schema so the read leg is constant and the
- * subject prices only the thing it names.
+ * Every subject reads CSV with a declared schema so the read leg is constant.
  */
 #[Bench\BeforeMethods('warm')]
 final class PipelineCostBench

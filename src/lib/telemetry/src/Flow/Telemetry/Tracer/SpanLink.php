@@ -7,19 +7,6 @@ namespace Flow\Telemetry\Tracer;
 use Flow\Telemetry\Attributes;
 
 /**
- * A link from one span to another.
- *
- * Links are used to associate spans that are causally related but not
- * in a direct parent-child relationship. Common use cases include:
- * - Batch operations where one span triggers multiple others
- * - Fan-in/fan-out patterns
- * - Linking to spans from previous traces
- *
- * Example usage:
- * ```php
- * $link = SpanLink::create($otherSpanContext, ['reason' => 'batch']);
- * ```
- *
  * @import-type TAttributeValue from Attributes
  * @import-type TAttributeValueMap from Attributes
  */

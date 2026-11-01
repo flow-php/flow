@@ -19,14 +19,7 @@ use function strlen;
 use function substr;
 
 /**
- * Blocks is a collection of blocks that are filled with data.
- * Each file can be created from a single block or multiple blocks.
- * Blocks are mostly used by remote filesystems as a performance optimization technique.
- * Filesystem is appending into the blocks, whenever Block is full BlockLifecycle::filled(Block $block) is triggered
- * which allows to upload the block to the remote filesystem.
- *
- * Blocks are created by BlockFactory and filled with data by the Blocks collection.
- * in most cases BlockFactory implementation is just creating blocks in a local filesystem tmp directory.
+ * BlockLifecycle::filled() fires per full block so remote filesystems upload it.
  */
 final class Blocks
 {

@@ -21,22 +21,7 @@ use Psr\Clock\ClockInterface;
 use Throwable;
 
 /**
- * Meter for creating metric instruments.
- *
- * A Meter creates instruments for a specific instrumentation scope.
- * Instruments are cached and returned by name - calling createCounter()
- * twice with the same name returns the same Counter instance.
- *
- * Example usage:
- * ```php
- * $meter = $meterProvider->meter('my-service', '1.0.0');
- *
- * $counter = $meter->createCounter('requests.total', 'requests', 'Total requests');
- * $counter->add(1, ['http.method' => 'GET']);
- *
- * $histogram = $meter->createHistogram('request.duration', 'ms', 'Request duration');
- * $histogram->record(42.5, ['http.status' => 200]);
- * ```
+ * Instruments are cached by name: same name, same instance.
  *
  * @see https://opentelemetry.io/docs/specs/otel/metrics/api/#meter
  */

@@ -152,7 +152,7 @@ final class RecordBatchTest extends FlowTestCase
 
     public function test_under_an_inferred_schema_a_refused_record_past_the_sample_is_a_schema_error(): void
     {
-        $batch = new RecordBatch(schema(int_schema('id')), new PhpBackend(), 2, 'file:///orders.csv', 2);
+        $batch = RecordBatch::inferred(schema(int_schema('id')), new PhpBackend(), 2, 'file:///orders.csv', 2);
         $batch->add(['id' => 1], 1);
         $batch->add(['id' => 2], 2);
         $batch->add(['id' => 3], 3);
@@ -167,7 +167,7 @@ final class RecordBatchTest extends FlowTestCase
 
     public function test_under_an_inferred_schema_without_a_uri_the_refusal_is_left_to_the_reader(): void
     {
-        $batch = new RecordBatch(schema(int_schema('id')), new PhpBackend(), 2, sampleSize: 2);
+        $batch = RecordBatch::inferred(schema(int_schema('id')), new PhpBackend(), 2, null, 2);
         $batch->add(['id' => 1], 1);
         $batch->add(['id' => 2], 2);
         $batch->add(['id' => 3], 3);
@@ -180,13 +180,7 @@ final class RecordBatchTest extends FlowTestCase
 
     public function test_under_an_inferred_schema_a_keyed_record_refuses_a_key_the_schema_lacks(): void
     {
-        $batch = new RecordBatch(
-            schema(int_schema('a')),
-            new PhpBackend(),
-            1,
-            sampleSize: 1,
-            known: schema(int_schema('a')),
-        );
+        $batch = RecordBatch::inferred(schema(int_schema('a')), new PhpBackend(), 1, null, 1, schema(int_schema('a')));
 
         $this->expectException(SchemaMismatchException::class);
         $this->expectExceptionMessage('column "c" (row 0) is not declared by the schema');
@@ -196,7 +190,7 @@ final class RecordBatchTest extends FlowTestCase
 
     public function test_under_an_inferred_schema_a_keyed_record_keeps_a_key_the_known_schema_declares(): void
     {
-        $batch = new RecordBatch(
+        $batch = RecordBatch::inferred(
             schema(int_schema('a')),
             new PhpBackend(),
             1,
@@ -213,7 +207,7 @@ final class RecordBatchTest extends FlowTestCase
 
     public function test_under_an_inferred_schema_a_keyed_record_key_past_the_sample_names_the_record(): void
     {
-        $batch = new RecordBatch(
+        $batch = RecordBatch::inferred(
             schema(int_schema('a')),
             new PhpBackend(),
             1,
@@ -233,7 +227,7 @@ final class RecordBatchTest extends FlowTestCase
 
     public function test_under_an_inferred_schema_a_grid_record_keeps_a_partition_column_its_header_carries(): void
     {
-        $batch = new RecordBatch(schema(int_schema('a')), new PhpBackend(), 1, 'file:///group=1/a.csv', 1);
+        $batch = RecordBatch::inferred(schema(int_schema('a')), new PhpBackend(), 1, 'file:///group=1/a.csv', 1);
 
         [$rows] = $batch->add(['a' => '1', 'group' => '2'], 4, 2, '1,2', ['1', '2']);
 

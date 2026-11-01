@@ -42,16 +42,7 @@ use function max;
 use function sprintf;
 
 /**
- * Applies keyset (cursor-based) pagination to SELECT queries.
- *
- * Keyset pagination is more efficient than OFFSET for large datasets because
- * it uses indexed WHERE conditions instead of skipping rows.
- *
- * For first page (no cursor): Just adds LIMIT
- * For subsequent pages: Adds WHERE (col1, col2) > ($1, $2) AND existing_where
- *
- * Automatically detects existing query parameters and appends keyset placeholders
- * at the end (e.g., if query has $1, $2, keyset uses $3, $4, etc.)
+ * Keyset placeholders are numbered after the query's existing parameters.
  */
 final class KeysetPaginationModifier implements NodeModifier
 {

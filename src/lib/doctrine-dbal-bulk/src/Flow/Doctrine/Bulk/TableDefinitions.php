@@ -5,26 +5,31 @@ declare(strict_types=1);
 namespace Flow\Doctrine\Bulk;
 
 use Doctrine\DBAL\Connection;
+use WeakMap;
+
+use function array_key_exists;
 
 final class TableDefinitions
 {
     /**
-     * @var array<string, TableDefinition>
+     * @var WeakMap<Connection, array<string, TableDefinition>>
      */
-    private array $tables = [];
+    private WeakMap $tables;
 
-    public function __construct() {}
+    public function __construct()
+    {
+        $this->tables = new WeakMap();
+    }
 
     public function get(string $name, Connection $connection): TableDefinition
     {
-        foreach ($this->tables as $table) {
-            if ($table->name() === $name) {
-                return $table;
-            }
+        $tables = $this->tables[$connection] ?? [];
+
+        if (!array_key_exists($name, $tables)) {
+            $tables[$name] = new TableDefinition($name, $connection);
+            $this->tables[$connection] = $tables;
         }
 
-        $this->tables[$name] = new TableDefinition($name, $connection);
-
-        return $this->tables[$name];
+        return $tables[$name];
     }
 }

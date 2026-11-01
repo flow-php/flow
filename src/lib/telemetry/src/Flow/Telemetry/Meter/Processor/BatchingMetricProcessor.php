@@ -15,15 +15,6 @@ use Throwable;
 use function count;
 use function hrtime;
 
-/**
- * Batches metrics for efficient export.
- *
- * Collects metrics in memory and exports them in batches when:
- * - The batch size limit is reached
- * - The max batch age elapses since the first buffered metric (when configured)
- * - flush() is explicitly called
- * - the system is shutting down
- */
 final class BatchingMetricProcessor implements MetricProcessor
 {
     /**

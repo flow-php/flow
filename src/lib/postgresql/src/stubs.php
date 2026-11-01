@@ -3,9 +3,6 @@
 declare(strict_types=1);
 
 /**
- * This file provides stubs for the pg_query extension functions for static analysis.
- * These functions are provided by the pg_query extension (flow-php/pg-query-ext).
- *
  * @codeCoverageIgnore
  */
 if (!function_exists('pg_query_parse')) {

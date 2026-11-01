@@ -16,6 +16,7 @@ use Flow\ETL\IO\Extractor\File\FileRead;
 use Flow\ETL\IO\Extractor\File\FileSplit;
 use Flow\ETL\IO\Extractor\File\ReadWindow;
 use Flow\ETL\IO\Extractor\File\SourceFile;
+use Flow\ETL\IO\Inference\SchemaInference;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
@@ -24,7 +25,7 @@ use Generator;
 use SensitiveParameter;
 use Throwable;
 
-use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_optional;
 use function str_starts_with;
 use function strlen;
@@ -46,15 +47,17 @@ final readonly class JsonFileBatches implements FileBatches
         private Filesystem $filesystem,
         private JsonFileReader $reader,
         private ?FlowPhpExtension $extension = null,
-        private ?int $sampleSize = null,
+        private ?SchemaInference $inference = null,
     ) {}
 
     public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
     {
+        $inference = type_optional(type_array())->assert($data['inference'] ?? null);
+
         return new self(
             $rebuild->of($data['filesystem'] ?? null, ConfiguredFilesystem::class)->filesystem(),
             $rebuild->of($data['reader'] ?? null, JsonFileReader::class),
-            sampleSize: type_optional(type_integer())->assert($data['sample_size'] ?? null),
+            inference: $inference === null ? null : SchemaInference::fromArray($inference),
         );
     }
 
@@ -63,7 +66,7 @@ final readonly class JsonFileBatches implements FileBatches
         return Description::compose(self::class, [
             'filesystem' => new ConfiguredFilesystem($this->filesystem),
             'reader' => $this->reader,
-            'sample_size' => $this->sampleSize,
+            'inference' => $this->inference?->normalize(),
         ]);
     }
 
@@ -81,7 +84,7 @@ final readonly class JsonFileBatches implements FileBatches
         $open = $this->open($source, $criteria->split);
 
         try {
-            yield from $open->batches($body, $read->batchSize, $backend, $this->sampleSize, $read->schema);
+            yield from $open->batches($body, $read->batchSize, $backend, $this->inference, $read->schema);
         } finally {
             $open->close();
         }

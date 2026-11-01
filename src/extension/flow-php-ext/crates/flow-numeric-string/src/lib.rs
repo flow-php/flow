@@ -1,7 +1,4 @@
-//! PHP 8's `_is_numeric_string_ex(str, len, &lval, &dval, allow_errors = false, NULL, NULL)` as Rust: the grammar
-//! behind `is_numeric()`, `(int)` and `(float)` of a string. The function body is identical from PHP 8.1 to master, so
-//! one mirror serves every PHP version flow_php builds against. The engine reads a NUL-terminated zend_string; this
-//! mirror reads a slice, so a CSV cell is checked in place instead of being copied NUL-terminated first.
+//! PHP 8's `_is_numeric_string_ex()` over a slice, so a CSV cell is checked in place.
 
 use std::cmp::Ordering;
 

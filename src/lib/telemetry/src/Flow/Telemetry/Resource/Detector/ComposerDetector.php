@@ -14,20 +14,7 @@ use function class_exists;
 use function explode;
 
 /**
- * Detects service information from Composer's InstalledVersions.
- *
- * Uses Composer's InstalledVersions class (available when using Composer's autoloader)
- * to detect service name and version from the root package.
- *
- * The service name is derived from the package name (vendor prefix is removed).
- * The version is taken from the root package's pretty version or version.
- *
- * Example usage:
- * ```php
- * $detector = new ComposerDetector();
- * $resource = $detector->detect();
- * // Returns: service.name => "my-app", service.version => "1.0.0"
- * ```
+ * service.name is the root package name without the vendor prefix.
  */
 final readonly class ComposerDetector implements ResourceDetector
 {

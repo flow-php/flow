@@ -5,12 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\PHPUnit\Telemetry;
 
 /**
- * Flow-specific PHPUnit attribute keys.
- *
- * Official test semantic convention keys (`test.case.name`, `test.case.result.status`,
- * `test.suite.name`, `test.suite.run.status`) come from {@see \Flow\Telemetry\SemConvAttributes};
- * per OTel naming guidance flow-custom keys must not extend the `test.` namespace and live under
- * `flow.phpunit.` instead.
+ * Custom keys only, under `flow.phpunit.`; official `test.*` keys live in SemConvAttributes.
  *
  * @see https://opentelemetry.io/docs/specs/semconv/general/naming/
  */

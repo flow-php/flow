@@ -1,5 +1,4 @@
-//! `DateTimeInterface::format()` (ext/date `date_format()`) for the letters the native writers render, over an
-//! instant in µs and the column zone. Any other letter makes the format unparseable: the column is rendered in PHP.
+//! `DateTimeInterface::format()` for the letters the native writers render; any other letter falls back to PHP.
 
 use crate::int;
 

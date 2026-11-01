@@ -519,9 +519,6 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
 
     public function test_require_trace_context_suppresses_lower_level_instrumentation(): void
     {
-        // Same reasoning as test_terminate_phase_write_is_suppressed_on_excluded_path: require_trace_context
-        // must suppress the whole request via a context-scoped suppression, not merely skip the request span.
-        // A request with no traceparent must drop DBAL/cache-style spans emitted during kernel.terminate too.
         $kernel = $this->bootKernel([
             'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestBundle(FrameworkBundle::class);
@@ -1342,6 +1339,59 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         static::assertSame('code=REDACTED&state=abc', $span->attributes()['url.query']);
     }
 
+    public function test_url_path_attribute_excludes_the_query_string(): void
+    {
+        $kernel = $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestBundle(FrameworkBundle::class);
+                $kernel->addTestExtensionConfig('framework', [
+                    'router' => [
+                        'utf8' => true,
+                        'resource' => __DIR__ . '/../../../Fixtures/config/routes.php',
+                    ],
+                    'http_method_override' => false,
+                    'handle_all_throwables' => true,
+                ]);
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => 'memory',
+                        ],
+                    ],
+                    'instrumentation' => [
+                        'http_kernel' => ['enabled' => true],
+                        'console' => ['enabled' => false],
+                        'messenger' => false,
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var Router $router */
+        $router = $container->get('router');
+        $router->getRouteCollection()->add('test_callback', new Route('/cb', [
+            '_controller' => TestController::class . '::index',
+        ]));
+
+        $request = Request::create('/cb?state=abc', 'GET');
+        $kernel->terminate($request, $kernel->handle($request));
+
+        /** @var MemorySpanProcessor $processor */
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
+        $span = array_values(array_filter(
+            $processor->endedSpans(),
+            static fn(Span $s): bool => $s->kind() === SpanKind::SERVER,
+        ))[0];
+
+        static::assertSame('/cb', $span->attributes()['url.path']);
+        static::assertSame('state=abc', $span->attributes()['url.query']);
+    }
+
     public function test_names_span_from_route_when_response_is_returned_before_the_controller(): void
     {
         $kernel = $this->bootKernel([
@@ -1571,9 +1621,6 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
             '_controller' => TestController::class . '::index',
         ]));
 
-        // A real sub-request (render(controller(...))) is dispatched from within the main request, so
-        // the kernel's request stack is non-empty and services are not reset between the two spans.
-        // Issuing it as a separate top-level handle() would instead trip Symfony's services_resetter.
         /** @var EventDispatcherInterface $dispatcher */
         $dispatcher = $container->get('event_dispatcher');
         $dispatcher->addListener(
@@ -1812,11 +1859,6 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
 
     public function test_terminate_phase_write_is_suppressed_on_excluded_path(): void
     {
-        // The bindhq orphan scenario: http_kernel excludes /_wdt (the web debug toolbar the browser fetches
-        // after every dev page), so no request span is created. PageListener does NOT ignore /_wdt, so its
-        // kernel.terminate system_events INSERT runs for the excluded request. Excluding a path now suppresses
-        // tracing for the whole request, so that write (and any other DBAL/cache work) is dropped instead of
-        // orphaning into its own root trace.
         $kernel = $this->bootKernel([
             'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestBundle(FrameworkBundle::class);

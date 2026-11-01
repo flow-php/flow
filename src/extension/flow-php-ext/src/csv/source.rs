@@ -22,17 +22,17 @@ use crate::batch_columns::batch_size_of;
 use crate::csv::columns::{next_columns, CsvColumns};
 use crate::csv::fold::{string_values, Fold};
 use crate::csv::CsvReader;
-use crate::ctx::{call_function, call_method, call_static, ht_insert, zval_long, zval_str};
+use crate::ctx::{call_function, call_method, call_static, ht_insert, null_zval, zval_long, zval_str};
 use crate::exception::ext_exception;
 use crate::interfaces::csv_open_source_ce;
 use crate::iterator::RustIterator;
-use crate::render::runtime;
+use crate::render::{invalid_argument, runtime};
 use crate::source::{self, reading, window_start, Fed, Fetched, CHUNK, RANGE_SOURCE_STREAM};
 
 const CLASS: &str = "RustCSVOpenSource";
 const RECORDS_BATCH: usize = 1000;
 const NATIVE_LOCAL_SOURCE_STREAM: &str = "Flow\\Filesystem\\Stream\\NativeLocalSourceStream";
-/// One pread of a local file (DuckDB's CSV buffers are 2 MB): about 512 per GiB. `CHUNK` stays the PHP arm's.
+/// One pread of a local file, about 512 per GiB; `CHUNK` stays the PHP arm's.
 const NATIVE_CHUNK: usize = 2 << 20;
 const STRING_TYPE_NARROWER: &str = "Flow\\Types\\Type\\Native\\String\\StringTypeNarrower";
 const COLUMN_TYPES: &str = "Flow\\ETL\\IO\\Inference\\ColumnTypes";
@@ -168,8 +168,7 @@ impl Shared {
         result
     }
 
-    /// `$stream->iterate($chunkSize)`, the generator one consuming method feeds from; `None` on the native arm, which
-    /// reads the file itself.
+    /// `$stream->iterate($chunkSize)`; `None` on the native arm, which reads the file itself.
     fn chunks(&self) -> PhpResult<Option<Zval>> {
         match &self.feed {
             Feed::Native { .. } => Ok(None),
@@ -177,9 +176,7 @@ impl Shared {
         }
     }
 
-    /// The next `NATIVE_CHUNK` of the file's window, or the next chunk of `chunks`, fed to the reader; false at the
-    /// window's end, at EOF before it, or once the generator is exhausted. The generator runs with no borrow held: the
-    /// stream may call back into the source.
+    /// The next chunk fed to the reader; the generator runs with no borrow held, since the stream may call back.
     fn feed(&self, chunks: &Option<Zval>) -> PhpResult<bool> {
         match &self.feed {
             Feed::Native { file, uri, at, end } => {
@@ -244,7 +241,7 @@ struct CsvFeed {
     schema: Zval,
     batch_size: usize,
     uri: Zval,
-    sample_size: Option<i64>,
+    inference: Option<Zval>,
 }
 
 impl Fed for CsvFeed {
@@ -256,7 +253,7 @@ impl Fed for CsvFeed {
                 &self.schema,
                 self.batch_size,
                 &self.uri,
-                self.sample_size,
+                self.inference.as_ref(),
             )
         })
     }
@@ -390,7 +387,7 @@ impl RustCSVOpenSource {
         schema: &Zval,
         batchSize: i64,
         backend: &Zval,
-        sampleSize: Option<i64>,
+        inference: Option<&Zval>,
     ) -> PhpResult<RustIterator> {
         let fed = CsvFeed {
             shared: Rc::clone(&self.shared),
@@ -398,7 +395,7 @@ impl RustCSVOpenSource {
             schema: schema.shallow_clone(),
             batch_size: batch_size_of(batchSize, "CSV")?,
             uri: call_method(&call_method(&self.shared.stream, "path", &mut [])?, "uri", &mut [])?,
-            sample_size: sampleSize,
+            inference: source::inference_of(inference)?,
         };
 
         source::batches(fed, schema, backend)
@@ -413,9 +410,11 @@ impl RustCSVOpenSource {
     }
 
     /// `ColumnTypes::sniff()` over `records()`; a `StringTypeNarrower` without its HTML and XML rungs folds natively.
-    pub fn sniff(&self, names: &ZendHashTable, rowBudget: i64, typer: &Zval) -> PhpResult<ColumnTypesValue> {
-        if rowBudget < -1 {
-            return Err(ext_exception("flow_php CSV fold limit must be -1 or at least 0"));
+    pub fn sniff(&self, names: &ZendHashTable, rowBudget: Option<i64>, typer: &Zval) -> PhpResult<ColumnTypesValue> {
+        if rowBudget.is_some_and(|budget| budget < 0) {
+            return Err(invalid_argument(
+                "Row budget must be 0 or more. Use null for every row.".to_string(),
+            ));
         }
 
         if !folds_natively(typer)? {
@@ -427,7 +426,12 @@ impl RustCSVOpenSource {
             return call_static(
                 COLUMN_TYPES,
                 "sniff",
-                &mut [names_zv, records, zval_long(rowBudget), typer.shallow_clone()],
+                &mut [
+                    names_zv,
+                    records,
+                    rowBudget.map_or_else(null_zval, zval_long),
+                    typer.shallow_clone(),
+                ],
             )
             .map(ColumnTypesValue);
         }
@@ -452,22 +456,19 @@ impl RustCSVOpenSource {
         }
 
         let mut fold = Fold::new(string_values(names), &candidates)?;
-        let remaining = |fold: &Fold| match rowBudget {
-            -1 => None,
-            budget => Some((budget as u64).saturating_sub(fold.rows())),
-        };
+        let remaining = |fold: &Fold| rowBudget.map(|budget| (budget as u64).saturating_sub(fold.rows()));
         let chunks = self.shared.chunks()?;
 
         while self.shared.feed(&chunks)? {
             let limit = remaining(&fold);
             self.shared.with(|reading| reading.reader.fold(&mut fold, limit))?;
 
-            if rowBudget != -1 && fold.rows() >= rowBudget as u64 {
+            if rowBudget.is_some_and(|budget| fold.rows() >= budget as u64) {
                 break;
             }
         }
 
-        if rowBudget == -1 || fold.rows() < rowBudget as u64 {
+        if rowBudget.is_none_or(|budget| fold.rows() < budget as u64) {
             self.shared.finish()?;
             let limit = remaining(&fold);
             self.shared.with(|reading| reading.reader.fold(&mut fold, limit))?;

@@ -21,10 +21,6 @@ final class PartitionedSourceMother
         return schema(int_schema('year'), str_schema('month'));
     }
 
-    /**
-     * One row per partition. The double ignores the pushed path filter, so only the scan's filter or a Filter node
-     * the planner kept can drop the other partition's row.
-     */
     public static function yearMonth(): RecordingFileExtractor
     {
         return (new RecordingFileExtractor(

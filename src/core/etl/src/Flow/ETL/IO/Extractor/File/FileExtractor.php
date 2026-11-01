@@ -11,8 +11,7 @@ use Flow\ETL\Values\Schema;
 use Flow\Filesystem\Path;
 
 /**
- * A source that lists files under a path. Its schema is a property of the source - derived from the full
- * listing - and a pruned read does not change it.
+ * The schema comes from the full listing; a pruned read does not change it.
  */
 interface FileExtractor extends Extractor, Refreshable
 {

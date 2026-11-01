@@ -9,8 +9,7 @@ use Flow\ETL\API\Transformation;
 use Flow\ETL\Functions\Literal;
 
 /**
- * Mask columns in DataFrame by replacing their values with a mask.
- * If column does not exist in DataFrame, it will be added with a mask value.
+ * A missing column is added holding the mask.
  */
 final readonly class MaskColumns implements Transformation
 {

@@ -7,10 +7,6 @@ namespace Flow\ETL\Tests\Double;
 use Flow\ETL\IO\Transaction;
 use Throwable;
 
-/**
- * Logs `begin`, `commit` and `rollback` in order; each can be made to fail. A failing rollback() breaks the
- * Transaction contract on purpose, so the caller's defence can be tested.
- */
 final class RecordingTransaction implements Transaction
 {
     /**

@@ -16,31 +16,7 @@ use function trim;
 use function urldecode;
 
 /**
- * Detects resource attributes from environment variables.
- *
- * Reads the following OpenTelemetry standard environment variables:
- * - OTEL_SERVICE_NAME: Sets service.name attribute
- * - OTEL_RESOURCE_ATTRIBUTES: Sets additional attributes in key=value,key2=value2 format
- *
- * Attributes from OTEL_RESOURCE_ATTRIBUTES follow the format specified by OpenTelemetry:
- * ```
- * OTEL_RESOURCE_ATTRIBUTES=key1=value1,key2=value2
- * ```
- *
- * Per the OpenTelemetry Resource SDK specification, the `,` and `=` characters in keys and
- * values MUST be percent-encoded (other characters MAY be percent-encoded); both keys and
- * values are percent-decoded:
- * ```
- * OTEL_RESOURCE_ATTRIBUTES=key=value%2Cwith%2Ccommas
- * ```
- *
- * OTEL_SERVICE_NAME takes precedence over service.name in OTEL_RESOURCE_ATTRIBUTES.
- *
- * Example:
- * ```bash
- * export OTEL_SERVICE_NAME=my-service
- * export OTEL_RESOURCE_ATTRIBUTES=service.version=1.0.0,deployment.environment.name=production
- * ```
+ * OTEL_SERVICE_NAME wins over service.name in OTEL_RESOURCE_ATTRIBUTES.
  */
 final readonly class EnvironmentDetector implements ResourceDetector
 {

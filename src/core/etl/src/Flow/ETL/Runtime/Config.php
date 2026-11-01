@@ -23,10 +23,6 @@ use Psr\Clock\ClockInterface;
 
 use function array_map;
 
-/**
- * Immutable configuration that can be used to initialize many contexts.
- * Configuration must not be changed after it's passed to FlowContext.
- */
 final readonly class Config
 {
     private Planner $planner;

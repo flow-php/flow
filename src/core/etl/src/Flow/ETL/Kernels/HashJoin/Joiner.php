@@ -41,7 +41,7 @@ final readonly class Joiner
      */
     public function join(JoinSide $left, JoinSide $right, bool $buildLeft = false): Generator
     {
-        $role = $buildLeft ? Role::buildLeft($this->type) : Role::buildRight($this->type);
+        $role = $buildLeft ? BuildSide::buildLeft($this->type) : BuildSide::buildRight($this->type);
         $builtSide = $buildLeft ? $left : $right;
         $probeSide = $buildLeft ? $right : $left;
         [$build, $buildSchema] = $this->build($builtSide);

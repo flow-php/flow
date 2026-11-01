@@ -103,13 +103,13 @@ sits between the Tracer and the unified `Exporter`. The `exporter()` accessor re
 Makes sampling decisions for traces. Determines whether a span should be recorded and exported based on configurable
 rules.
 
-| Implementation             | Package              | Description                                                                                              |
-|----------------------------|----------------------|----------------------------------------------------------------------------------------------------------|
-| `AlwaysOnSampler`          | `flow-php/telemetry` | Records all traces                                                                                       |
-| `AlwaysOffSampler`         | `flow-php/telemetry` | Records no traces                                                                                        |
-| `TraceIdRatioBasedSampler` | `flow-php/telemetry` | Records a configurable percentage of traces                                                              |
-| `ParentBasedSampler`       | `flow-php/telemetry` | Inherits sampling decision from parent span context                                                      |
-| `AttributeMatchingSampler` | `flow-php/telemetry` | Drops spans matching an `AttributeFilter` (start-time attributes), defers the rest to a delegate sampler |
+| Implementation              | Package              | Description                                                                                              |
+|-----------------------------|----------------------|----------------------------------------------------------------------------------------------------------|
+| `AlwaysOnSampler`           | `flow-php/telemetry` | Records all traces                                                                                       |
+| `AlwaysOffSampler`          | `flow-php/telemetry` | Records no traces                                                                                        |
+| `TraceIdRatioBasedSampler`  | `flow-php/telemetry` | Records a configurable percentage of traces                                                              |
+| `ParentBasedSampler`        | `flow-php/telemetry` | Inherits sampling decision from parent span context                                                      |
+| `AttributeFilteringSampler` | `flow-php/telemetry` | Drops spans matching an `AttributeFilter` (start-time attributes), defers the rest to a delegate sampler |
 
 ---
 

@@ -1,7 +1,4 @@
-//! Float text: the shortest digits that read back as the same float, laid out as `zend_gcvt()` lays them out in its
-//! `serialize_precision = -1` mode (what `json_encode()` writes), whatever the `precision` and `serialize_precision`
-//! inis hold. `{:e}` is the digit source: like `zend_dtoa()` mode 0 it is the shortest correctly rounded string, and
-//! the one place they differ, a value exactly halfway between its two shortest candidates, is settled the dtoa way.
+//! Float text as `json_encode()` writes it: the shortest round-trip digits, laid out as `zend_gcvt()` does.
 
 use std::io::Write;
 
@@ -93,9 +90,7 @@ fn gcvt(out: &mut Vec<u8>, value: f64) {
     }
 }
 
-/// Whether `value` is exactly halfway between the two `digits`-digit decimals nearest it: as `M * 2^e` with `M` odd and
-/// `e < 0` its exact decimal expansion is the digits of `M * 5^-e`, so the halfway case is that integer having one
-/// digit more than `digits` (its last digit is then a 5). `M * 5^-e` has at most 18 digits here, so `-e <= 25`.
+/// Whether `value` is exactly halfway between its two nearest `digits`-digit decimals.
 fn halfway(value: f64, digits: usize) -> bool {
     let bits = value.to_bits();
     let biased = (bits >> 52 & 0x7ff) as i32;

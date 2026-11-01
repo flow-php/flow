@@ -16,15 +16,6 @@ use InvalidArgumentException;
 
 use function count;
 
-/**
- * Represents a VALUES clause as a table reference: (VALUES (expr, expr), (expr, expr)).
- *
- * Usage:
- *   values_table(
- *       row(literal(1), literal('Alice')),
- *       row(literal(2), literal('Bob'))
- *   )->as('t', ['id', 'name'])
- */
 final readonly class ValuesTable implements TableReference
 {
     /**

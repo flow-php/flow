@@ -50,9 +50,7 @@ final class CacheExtractor implements Extractor, Refreshable
                 'from_cache("%s") was handed no cache and no plan bound the config\'s one: read it through a DataFrame',
                 $this->id,
             );
-        // A declared schema describes both arms. Without one, schema() answers from whichever source
-        // it can reach - the fallback when no cache was handed in - and the fallback's shape says
-        // nothing about what a hit holds, because the cache is normally written after transformations.
+        // a fallback's shape says nothing about a cache hit
         $declared = $this->schema;
 
         if (!$cache->has($this->id)) {

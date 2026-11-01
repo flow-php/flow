@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\IO\Inference;
 
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Native\NullType;
@@ -21,9 +22,7 @@ use function trim;
 final class ColumnTypes
 {
     /**
-     * First-seen order: header names first, then names met only in rows. Keyed by array-key, not string:
-     * PHP re-keys a numeric column name to int on the way into the array, so the name is stringified again
-     * in schema(), the one place it leaves this class.
+     * Keyed by array-key: PHP turns a numeric column name into an int key.
      *
      * @var array<array-key, Type<mixed>>
      */
@@ -65,10 +64,15 @@ final class ColumnTypes
     /**
      * @param list<string> $names - columns known before any row; [] when the format carries none (JSON)
      * @param iterable<int, array<array-key, mixed>> $rows - one unit's rows, unstarted
-     * @param int<0, max>|-1 $rowBudget - rows to observe, 0 for none, -1 for all of them
+     * @param null|int<0, max> $rowBudget - rows to observe, 0 for none, null for every row
      */
-    public static function sniff(array $names, iterable $rows, int $rowBudget, TypeNarrower $typer): self
+    public static function sniff(array $names, iterable $rows, ?int $rowBudget, TypeNarrower $typer): self
     {
+        // @mago-ignore analysis:impossible-condition,redundant-comparison,redundant-logical-operation
+        if ($rowBudget !== null && $rowBudget < 0) {
+            throw new InvalidArgumentException('Row budget must be 0 or more. Use null for every row.');
+        }
+
         $columns = new self($names, $typer);
 
         if ($rowBudget === 0) {
@@ -78,7 +82,7 @@ final class ColumnTypes
         foreach ($rows as $row) {
             $columns->observe($row);
 
-            if ($rowBudget !== -1 && $columns->rows() >= $rowBudget) {
+            if ($rowBudget !== null && $columns->rows() >= $rowBudget) {
                 break;
             }
         }

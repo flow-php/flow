@@ -16,12 +16,6 @@ use function array_slice;
 use function count;
 use function sprintf;
 
-/**
- * Exporter that stores telemetry batches in memory for direct access.
- *
- * Useful for testing and inspection where you need direct access
- * to exported data without serialization.
- */
 final class MemoryExporter implements Exporter
 {
     /**

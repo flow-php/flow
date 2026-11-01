@@ -94,7 +94,7 @@ final class FlatColumn implements Column
             throw new InvalidArgumentException('Precision must be between 1 and 38, ' . $precision . ' given.');
         }
 
-        // arrow-rs, parquet-mr and DuckDB: INT32 up to precision 9, INT64 up to 18, FIXED_LEN_BYTE_ARRAY above
+        // INT32 up to precision 9, INT64 up to 18, FIXED_LEN_BYTE_ARRAY above
         if ($precision <= 18) {
             return new self(
                 $name,

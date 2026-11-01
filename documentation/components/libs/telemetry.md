@@ -766,15 +766,15 @@ to drop spans - a dropped span never records, so it never reaches a processor or
 > default of `parentbased_always_on`. Spans whose parent is unsampled are now dropped. To restore the
 > previous behaviour, pass `always_on_sampler()` explicitly.
 
-| Sampler                    | DSL                                              | Behavior                                                                                                        |
-|----------------------------|--------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
-| `AlwaysOnSampler`          | `always_on_sampler()`                            | Record + sample every span                                                                                      |
-| `AlwaysOffSampler`         | `always_off_sampler()`                           | Drop every span                                                                                                 |
-| `TraceIdRatioBasedSampler` | `trace_id_ratio_based_sampler($ratio)`           | Sample a deterministic fraction of traces                                                                       |
-| `ParentBasedSampler`       | `parent_based_sampler($root)`                    | Honor the parent's decision; use the root sampler for parentless spans (the default)                            |
-| `AttributeMatchingSampler` | `attribute_matching_sampler($filter, $delegate)` | Drop spans whose **start-time** attributes match an `AttributeFilter`, deferring the rest to a delegate sampler |
+| Sampler                     | DSL                                               | Behavior                                                                                                        |
+|-----------------------------|---------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
+| `AlwaysOnSampler`           | `always_on_sampler()`                             | Record + sample every span                                                                                      |
+| `AlwaysOffSampler`          | `always_off_sampler()`                            | Drop every span                                                                                                 |
+| `TraceIdRatioBasedSampler`  | `trace_id_ratio_based_sampler($ratio)`            | Sample a deterministic fraction of traces                                                                       |
+| `ParentBasedSampler`        | `parent_based_sampler($root)`                     | Honor the parent's decision; use the root sampler for parentless spans (the default)                            |
+| `AttributeFilteringSampler` | `attribute_filtering_sampler($filter, $delegate)` | Drop spans whose **start-time** attributes match an `AttributeFilter`, deferring the rest to a delegate sampler |
 
-`AttributeMatchingSampler` reuses the same matcher stack as the [filtering processors](#filtering-by-attributes) - the
+`AttributeFilteringSampler` reuses the same matcher stack as the [filtering processors](#filtering-by-attributes) - the
 `AttributeFilter` (matcher tree, compiled drop-closure, `sources`, `exclude` polarity). A match drops the span (the
 default) or keeps only matching spans (`exclude: false`); everything else is decided by the `$delegate` sampler, so it
 composes with ratio/parent-based sampling. It only sees attributes available at span start - end-state attributes
@@ -788,12 +788,12 @@ concern.
 use Flow\Telemetry\Filter\MatchMode;
 
 use function Flow\Telemetry\DSL\attribute_filter;
-use function Flow\Telemetry\DSL\attribute_matching_sampler;
+use function Flow\Telemetry\DSL\attribute_filtering_sampler;
 use function Flow\Telemetry\DSL\attribute_rule;
 use function Flow\Telemetry\DSL\trace_id_ratio_based_sampler;
 
 // Drop health-check spans; sample everything else at 10%
-$sampler = attribute_matching_sampler(
+$sampler = attribute_filtering_sampler(
     attribute_filter(attribute_rule('http.route', MatchMode::EQUAL, '/health')),
     trace_id_ratio_based_sampler(0.1),
 );
@@ -958,7 +958,7 @@ This returns a `Resource` with attributes from OS, host, process, Composer, and 
 | ProcessDetector     | `process_detector()`                 | `process.pid`, `process.executable.path`, `process.runtime.name`, `process.runtime.version`, `process.command`, `process.owner` |
 | ComposerDetector    | `composer_detector()`                | `service.name`, `service.version`                                                                                               |
 | EnvironmentDetector | `environment_detector()`             | Reads `OTEL_SERVICE_NAME`, `OTEL_RESOURCE_ATTRIBUTES`                                                                           |
-| ManualDetector      | `manual_detector($attributes)`       | User-specified attributes                                                                                                       |
+| StaticDetector      | `static_detector($attributes)`       | User-specified attributes                                                                                                       |
 | CachingDetector     | `caching_detector($detector, $path)` | Caches wrapped detector's result to file                                                                                        |
 | ChainDetector       | `chain_detector(...$detectors)`      | Combines multiple detectors                                                                                                     |
 
@@ -970,12 +970,12 @@ conflicting attribute keys:
 ```php
 <?php
 
-use function Flow\Telemetry\DSL\{chain_detector, os_detector, host_detector, manual_detector};
+use function Flow\Telemetry\DSL\{chain_detector, os_detector, host_detector, static_detector};
 
 $resource = chain_detector(
     os_detector(),
     host_detector(),
-    manual_detector(['service.name' => 'my-api', 'service.version' => '2.0.0']),
+    static_detector(['service.name' => 'my-api', 'service.version' => '2.0.0']),
 )->detect();
 ```
 
@@ -986,9 +986,9 @@ When you need full control over resource attributes:
 ```php
 <?php
 
-use function Flow\Telemetry\DSL\manual_detector;
+use function Flow\Telemetry\DSL\static_detector;
 
-$resource = manual_detector([
+$resource = static_detector([
     'service.name' => 'order-service',
     'service.version' => '1.0.0',
     'deployment.environment.name' => 'production',

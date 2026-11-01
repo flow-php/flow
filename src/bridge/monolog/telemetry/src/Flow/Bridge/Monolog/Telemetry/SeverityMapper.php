@@ -8,26 +8,6 @@ use Flow\Bridge\Monolog\Telemetry\Exception\InvalidArgumentException;
 use Flow\Telemetry\Logger\Severity;
 use Monolog\Level;
 
-/**
- * Maps Monolog log levels to Flow Telemetry severity levels.
- *
- * Provides a configurable mapping from Monolog's 8 levels to Telemetry's 6 severity levels.
- * By default:
- * - DEBUG → DEBUG
- * - INFO, NOTICE → INFO
- * - WARNING → WARN
- * - ERROR → ERROR
- * - CRITICAL, ALERT, EMERGENCY → FATAL
- *
- * Custom mappings can be provided to override the defaults.
- *
- * Example with custom mapping:
- * ```php
- * $mapper = new SeverityMapper([
- *     Level::Notice->value => Severity::WARN,  // Override: NOTICE → WARN instead of INFO
- * ]);
- * ```
- */
 final readonly class SeverityMapper
 {
     /**

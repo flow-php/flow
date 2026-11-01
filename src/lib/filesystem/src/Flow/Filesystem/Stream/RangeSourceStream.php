@@ -17,8 +17,7 @@ use function str_contains;
 use function strlen;
 
 /**
- * Bytes [$start, $end) of another stream, seen as a whole stream: offsets are relative to $start, size() is the
- * window's length. Reads go through the inner stream's read(), so a remote stream fetches only the window.
+ * Reads go through the inner read(), so a remote stream fetches only the window.
  */
 final readonly class RangeSourceStream implements SourceStream
 {

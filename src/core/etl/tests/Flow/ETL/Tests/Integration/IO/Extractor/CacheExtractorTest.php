@@ -209,10 +209,6 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
         );
     }
 
-    /**
-     * A cache entry that has not been written yet has no columns, which is an answer. Reaching into
-     * the FlowContext for a cache would make describing a source need a running pipeline.
-     */
     public function test_schema_is_not_derivable_without_a_cache_instance(): void
     {
         $this->expectException(SchemaNotDerivableException::class);

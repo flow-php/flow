@@ -13,11 +13,7 @@ use Flow\PostgreSql\QueryBuilder\Exception\UnsupportedNodeException;
 use function in_array;
 
 /**
- * Represents SQL standard value functions like CURRENT_TIMESTAMP, CURRENT_DATE, CURRENT_TIME.
- *
- * These are special SQL keywords that return values based on the current transaction time.
- * Unlike regular functions, they don't use parentheses and are represented in PostgreSQL's
- * AST as SQLValueFunction nodes rather than FuncCall nodes.
+ * Keywords without parentheses (CURRENT_DATE); a SQLValueFunction node, not FuncCall.
  */
 final readonly class SQLValueFunctionExpression implements Expression
 {

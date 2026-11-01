@@ -4,23 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Logger;
 
-/**
- * Configuration limits for log record data.
- *
- * LogRecordLimits provides bounds on the amount of data a log record can collect,
- * preventing unbounded memory growth and ensuring reasonable log record sizes.
- *
- * Example usage:
- * ```php
- * $limits = new LogRecordLimits(
- *     attributeCountLimit: 64,
- *     attributeValueLengthLimit: 1024,
- * );
- *
- * // Use defaults
- * $defaultLimits = LogRecordLimits::default();
- * ```
- */
 final readonly class LogRecordLimits
 {
     private const int DEFAULT_ATTRIBUTE_COUNT_LIMIT = 128;

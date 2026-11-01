@@ -25,11 +25,6 @@ use function Flow\Types\DSL\type_optional;
 use function in_array;
 use function sprintf;
 
-/**
- * Passes an integer operand through, failing on the listed values: with the failing row's coordinate
- * (EvaluationException), without one (a plain Exception) or as an Error. Every copy the resolver makes reports its
- * eval() calls and the batches it saw to the instance the test holds.
- */
 final class FailingOnValuesFunction implements ScalarFunction
 {
     use ScalarFunctionChain;

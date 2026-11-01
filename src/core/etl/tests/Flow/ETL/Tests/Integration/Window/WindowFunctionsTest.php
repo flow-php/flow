@@ -240,11 +240,6 @@ final class WindowFunctionsTest extends FlowTestCase
         );
     }
 
-    /**
-     * b59: the shuffle used to key on Partition::fromValue(), which truncates a datetime to Y-m-d,
-     * while the window keyed on the raw value. Two timestamps on one day interleaved inside a single
-     * shuffled group and every row came back as its own partition (n = 1, 2, 3, 4).
-     */
     public function test_window_partitions_on_datetime_keep_full_precision(): void
     {
         $rows = data_frame()

@@ -14,12 +14,7 @@ use Flow\PostgreSql\Client\Types\ValueType;
 use function is_string;
 
 /**
- * Converts values to PostgreSQL `timestamp` (without time zone).
- *
- * PostgreSQL discards any offset on a `timestamp` column, so a DateTimeInterface
- * is first normalized to UTC and then formatted without an offset. This keeps the
- * stored wall-clock in UTC and preserves the instant instead of letting the
- * database silently drop the timezone. For `timestamptz` use {@see TimestampTzConverter}.
+ * Normalized to UTC first, since a timestamp column drops the offset.
  */
 final class TimestampConverter implements ValueConverter
 {

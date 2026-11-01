@@ -14,20 +14,7 @@ use function implode;
 use function sprintf;
 
 /**
- * Maps a console OutputInterface verbosity to the minimum log {@see Severity} displayed.
- *
- * Translated to Flow's OpenTelemetry severity scale. Flow has no NOTICE level (the
- * PSR-3 bridge already collapses NOTICE into INFO), so - unlike Monolog - there is
- * no rung between WARN and INFO. The defaults therefore keep the terminal quiet by
- * default and reveal exactly one more severity per -v step:
- *
- *   QUIET        => ERROR
- *   NORMAL       => ERROR
- *   VERBOSE  -v  => WARN
- *   VERY..  -vv  => INFO
- *   DEBUG  -vvv  => DEBUG
- *
- * TRACE is never reached by the default ladder; opt into it via verbosity_levels.
+ * Flow has no NOTICE, so each -v reveals one more severity; TRACE only via verbosity_levels.
  */
 final readonly class ConsoleVerbosityLevels
 {

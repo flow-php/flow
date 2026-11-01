@@ -16,13 +16,6 @@ use SensitiveParameter;
 
 use function Flow\Types\DSL\type_array;
 
-/**
- * Collects all rows from the upstream generator into a single batch.
- *
- * This processor consumes the entire input generator and yields
- * all rows as a single Rows batch. Use with caution on large datasets
- * as it loads everything into memory.
- */
 final readonly class CollectingProcessor implements Processor
 {
     public function __construct(

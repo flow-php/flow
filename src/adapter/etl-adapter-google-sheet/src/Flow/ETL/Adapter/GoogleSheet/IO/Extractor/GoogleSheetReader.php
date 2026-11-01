@@ -68,12 +68,12 @@ final readonly class GoogleSheetReader
     }
 
     /**
-     * @param int<1, max>|-1 $rows
+     * @param null|int<1, max> $rows - null for every row
      */
-    public function sample(int $rows): GoogleSheetSample
+    public function sample(?int $rows): GoogleSheetSample
     {
         $rowCount = $this->rowCount();
-        $range = $rows === -1
+        $range = $rows === null
             ? new SheetRange($this->columns, 1, $rowCount, $rowCount)
             : new SheetRange($this->columns, 1, $rows + ($this->readOptions->withHeader ? 1 : 0), $rowCount);
 

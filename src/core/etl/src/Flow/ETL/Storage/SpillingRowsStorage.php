@@ -18,10 +18,7 @@ use function array_keys;
 use function min;
 
 /**
- * Keeps rows in memory while the process stays under the memory limit. The first time it passes the limit every
- * key moves its full batches to $disk; from then on a key writes to $disk each time it holds a full batch, so every
- * frame on $disk holds exactly $batchSize rows and memory stays bounded by one batch per key. The rest of a key stays
- * buffered and is read after its frames.
+ * Past the memory limit, every frame on $disk holds exactly $batchSize rows.
  */
 final class SpillingRowsStorage implements RowsStorage
 {

@@ -162,8 +162,7 @@ impl CsvReader {
         self.finished
     }
 
-    /// The field of the header named `name` (the last of duplicates, as `array_combine()` keeps it); `None` before the
-    /// header resolved or when no header has that name.
+    /// The field of the header named `name`, the last of duplicates as `array_combine()` keeps it.
     pub fn field_of(&mut self, name: &[u8]) -> Option<usize> {
         self.resolve_headers();
         let headers = self.headers.as_ref()?;
@@ -329,9 +328,7 @@ impl CsvReader {
         false
     }
 
-    /// `RecordDecoder::decode()`'s verdict on the current record against a header of `headers` names: why it is
-    /// corrupted, or `None`. An extra empty field loses nothing; a missing one is null only under
-    /// `missing_columns_as_null`.
+    /// `RecordDecoder::decode()`'s verdict on the current record: why it is corrupted, or `None`.
     fn corruption(&self, headers: usize) -> Option<String> {
         let fields = self.record.field_count();
         let extra = (headers..fields).any(|index| match self.tokenizer.field(&self.record, index) {
@@ -407,8 +404,7 @@ impl CsvReader {
     }
 }
 
-/// `Records::decode()` for one cell: a cell past the record's end is null, a present `''` is null under `emptyToNull`;
-/// `None` is null.
+/// `Records::decode()` for one cell; `None` is null.
 fn cell_value<'a>(tokenizer: &'a Tokenizer, record: &'a Record, index: usize, empty_to_null: bool) -> Option<&'a [u8]> {
     match tokenizer.field(record, index) {
         Field::Value(value) if !(empty_to_null && value.is_empty()) => Some(value),

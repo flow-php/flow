@@ -15,10 +15,7 @@ use Flow\PostgreSql\QueryBuilder\Expression\Literal;
 use function Flow\Types\DSL\type_instance_of;
 
 /**
- * Wraps an Expression as a Condition for use in WHERE/HAVING/JOIN ON clauses.
- *
- * Used for boolean columns (e.g., WHERE is_active) and boolean literals (e.g., WHERE true).
- * The AST output is identical to the wrapped expression — this is a type-system bridge only.
+ * Type bridge only: the AST is the wrapped expression's.
  */
 final readonly class BooleanCondition implements Condition
 {

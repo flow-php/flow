@@ -44,10 +44,6 @@ use function range;
 
 use const PHP_INT_MAX;
 
-/**
- * The write and read cases every file format runs, so a fix in one loader or extractor that the others lack shows up
- * as a red format. Each case writes under $cacheDir, which the calling test owns.
- */
 final readonly class FileFormatContract
 {
     public function __construct(
@@ -264,10 +260,6 @@ final readonly class FileFormatContract
         Assert::assertCount(2, $extractor->splits(new Criteria(), PHP_INT_MAX));
     }
 
-    /**
-     * A format writer emits its footer when it closes, so closing a dead run's writer turns a half-written file into
-     * a complete, readable one. Whatever the save mode, that file must not be left at the destination.
-     */
     public function aFailedRunLeavesNoFileAtTheDestination(FileFormat $format): void
     {
         $destination = $this->cacheDir->suffix('aborted.' . $format->extension());

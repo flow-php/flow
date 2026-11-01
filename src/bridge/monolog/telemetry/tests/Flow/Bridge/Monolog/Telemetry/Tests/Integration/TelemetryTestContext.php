@@ -15,11 +15,6 @@ use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tracer\Tracer;
 use Flow\Telemetry\Tracer\TracerProvider;
 
-/**
- * Test context for Telemetry integration tests.
- *
- * Provides pre-configured telemetry components for testing the Monolog-Telemetry bridge.
- */
 final readonly class TelemetryTestContext
 {
     public function __construct(
@@ -45,12 +40,6 @@ final readonly class TelemetryTestContext
         return new self($processor, $logger);
     }
 
-    /**
-     * Create a context with tracing support for testing trace context propagation.
-     *
-     * Both logger and tracer share the same context storage, enabling
-     * automatic trace_id and span_id correlation in log entries.
-     */
     public static function createWithTracing(
         ?Resource $resource = null,
         string $scope = 'test-app',

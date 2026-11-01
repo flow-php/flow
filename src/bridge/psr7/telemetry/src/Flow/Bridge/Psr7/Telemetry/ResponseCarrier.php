@@ -8,28 +8,7 @@ use Flow\Telemetry\Propagation\Carrier;
 use Psr\Http\Message\ResponseInterface;
 
 /**
- * Read-write carrier backed by PSR-7 ResponseInterface.
- *
- * Reads and writes context to HTTP response headers.
- * Due to PSR-7's immutability, use unwrap() to retrieve
- * the modified response after calling set().
- *
- * Example usage:
- * ```php
- * $propagator = new CompositePropagator([
- *     new W3CTraceContext(),
- *     new W3CBaggage(),
- * ]);
- *
- * $carrier = new ResponseCarrier($response);
- * $propagator->inject($spanContext, $carrier);
- * $response = $carrier->unwrap(); // Get modified response
- *
- * // Or with fluent chaining
- * $response = (new ResponseCarrier($response))
- *     ->set('X-Custom', 'value')
- *     ->unwrap();
- * ```
+ * PSR-7 is immutable: call unwrap() after set() to get the modified response.
  *
  * @implements Carrier<ResponseInterface>
  */

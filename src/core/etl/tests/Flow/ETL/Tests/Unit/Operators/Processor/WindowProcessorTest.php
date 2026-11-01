@@ -228,11 +228,6 @@ final class WindowProcessorTest extends FlowTestCase
         );
     }
 
-    /**
-     * row_number() ignores the frame entirely, so it must not be memoised even though an unordered
-     * window produces identical bounds for every row. Memoising on frame constancy alone - without a
-     * signal from the function - writes 1 into every row of the partition.
-     */
     public function test_row_number_is_not_memoised_by_a_constant_frame(): void
     {
         $partition = array_to_rows(
@@ -383,11 +378,6 @@ final class WindowProcessorTest extends FlowTestCase
         }
     }
 
-    /**
-     * The window invariant: a running sum over [1, 2.5, 3] used to produce IntegerEntry, FloatEntry,
-     * FloatEntry in one Rows - the column now carries one Definition for the whole run. The input
-     * column is declared float because a batch can no longer hold two numeric types under one name.
-     */
     public function test_a_running_sum_over_mixed_numerics_yields_one_definition(): void
     {
         $batches = WindowProcessorContext::batches(

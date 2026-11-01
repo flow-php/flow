@@ -111,7 +111,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         GoogleSheetFixtureContext::extractor(
             GoogleSheetFixtureContext::serviceWithoutSheets(GoogleSheetFixtureContext::values()),
         )
-            ->inferSchema(infer_schema()->sampleSize(-1))
+            ->inferSchema(infer_schema()->everyRow())
             ->schema();
     }
 
@@ -306,7 +306,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         $extractor = GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(100, $values));
 
         $extractor->inferSchema(infer_schema()->sampleSize(2))->schema();
-        $extractor->inferSchema(infer_schema()->sampleSize(-1))->schema();
+        $extractor->inferSchema(infer_schema()->everyRow())->schema();
 
         static::assertSame('sheet!A1:B3', $values->getCalls[0][1]);
         static::assertSame('sheet!A1:B100', $values->getCalls[1][1]);

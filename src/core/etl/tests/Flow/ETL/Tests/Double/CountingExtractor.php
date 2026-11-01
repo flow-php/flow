@@ -19,11 +19,6 @@ use Generator;
 use function array_values;
 use function Flow\ETL\DSL\rows;
 
-/**
- * Counts how many times extract() was pulled, so a test can prove the plan bind read no row, and how
- * many batches it yielded, so a test can prove Signal::STOP reached it. The rows are held in memory and
- * re-sliced at its own batch size, so replaying them yields the same rows every time.
- */
 final class CountingExtractor implements BatchableExtractor, Extractor
 {
     private BatchSize $batchSize;

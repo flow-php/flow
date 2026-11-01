@@ -704,8 +704,6 @@ final class ParquetExtractorTest extends FlowIntegrationTestCase
 
     public function test_the_second_file_is_asked_for_the_remainder_of_the_limit(): void
     {
-        // 01_1000.parquet fills the first batch; 02_500.parquet must be read up to the 200 rows still
-        // wanted, not up to the full limit again
         $batches = iterator_to_array(
             FlowTestCase::extracted(
                 from_parquet(path(__DIR__ . '/../../../Fixtures/Pagination/*.parquet'))->withBatchSize(1000),

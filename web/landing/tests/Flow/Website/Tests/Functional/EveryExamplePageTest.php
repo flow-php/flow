@@ -19,10 +19,6 @@ use function mb_strlen;
 use function mb_substr;
 use function sprintf;
 
-/**
- * A published example that 500s is invisible to the playground sweep, which only ever visits
- * /playground/. This walks the pages a reader actually opens.
- */
 final class EveryExamplePageTest extends WebTestCase
 {
     public static function example_pages(): Generator

@@ -29,12 +29,6 @@ use Psr\Clock\ClockInterface;
 use function array_filter;
 use function array_values;
 
-/**
- * Integration tests for signal attribute limits.
- *
- * These tests verify the complete path from Provider → Signal → Processor
- * with custom limits configured.
- */
 final class SignalLimitsIntegrationTest extends TestCase
 {
     private ClockInterface $clock;

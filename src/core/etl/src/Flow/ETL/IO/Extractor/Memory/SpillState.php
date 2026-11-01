@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\IO\Extractor\Memory;
 
 /**
- * The lifecycle of one SpilledRows. Split into states rather than carried as booleans because the
- * reachable-but-unnamed fourth state - "spilled K of N rows, then the source threw" - is where a bool
- * pair silently re-streams a half-consumed source and loses rows.
+ * Not a bool pair: "spilled K of N, then the source threw" must never re-stream the source.
  */
 enum SpillState
 {

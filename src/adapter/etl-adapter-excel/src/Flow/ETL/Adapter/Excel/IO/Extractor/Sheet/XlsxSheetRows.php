@@ -39,9 +39,7 @@ use function strspn;
 use function trim;
 
 /**
- * One XLSX sheet's rows, every cell formatted by OpenSpout's own CellValueFormatter - only the walk over the sheet
- * XML is Flow's. OpenSpout's RowIterator sends each XML node through a reflection callback and toggles libxml's
- * error mode around every read, which costs more than formatting the cells.
+ * Own XML walk replaces OpenSpout's RowIterator (reflection callback + libxml toggling per node).
  *
  * @import-type SheetCellValue from SheetCells
  */

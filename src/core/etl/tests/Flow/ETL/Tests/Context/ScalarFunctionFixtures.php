@@ -199,11 +199,6 @@ use const PREG_SET_ORDER;
 use const STR_PAD_LEFT;
 
 /**
- * One constructable instance per ScalarFunction class, built against schema() below, paired with
- * the exact Type that class declares over that schema. The map is explicit rather than reflected:
- * derived declarations need type-correct operands (Plus needs numeric columns, OnEach a list),
- * which no placeholder heuristic can supply.
- *
  * @type Fixture = array{factory: callable(): ScalarFunction, returns: null|Type<mixed>}
  */
 final class ScalarFunctionFixtures
@@ -276,9 +271,6 @@ final class ScalarFunctionFixtures
         );
     }
 
-    /**
-     * Three rows under schema(): two of values, the last all null. `html` stays null - a document needs PHP 8.4.
-     */
     public static function rows(Backend $backend): Rows
     {
         $document = new DOMDocument();

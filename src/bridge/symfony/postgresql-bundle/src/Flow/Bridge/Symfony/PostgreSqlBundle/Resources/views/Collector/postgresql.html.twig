@@ -60,7 +60,7 @@
 
 {% block panel %}
     {% if 'explain' == page %}
-        {{ render(controller('Flow\\Bridge\\Symfony\\PostgreSqlBundle\\Profiler\\ProfilerController::explainAction', {
+        {{ render(controller('Flow\\Bridge\\Symfony\\PostgreSqlBundle\\Profiler\\ExplainQueryController::explainAction', {
             token: token,
             connection: request.query.get('connection'),
             query: request.query.get('query'),

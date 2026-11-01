@@ -11,14 +11,7 @@ use Symfony\Component\Console\Event\ConsoleTerminateEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
- * Drains buffered telemetry when a console command terminates.
- *
- * Terminate is only a flush point - it never shuts telemetry down, because
- * the terminating command is not necessarily the last work of the process:
- * it may be a command nested inside another command via Application::run(),
- * or a message handler's sub-command inside a long-running messenger worker.
- * Transport shutdown happens once, at real process end, through the shutdown
- * function registered by Telemetry::registerShutdownFunction().
+ * Flushes, never shuts down: the command may be nested or inside a worker; shutdown runs at process end.
  */
 final readonly class ConsoleFlushSubscriber implements EventSubscriberInterface
 {

@@ -131,8 +131,7 @@ enum Document {
     Closed,
 }
 
-/// Splits fed bytes into records without parsing values: lines on `\n`, a document's elements on its depth-0 `,` and
-/// `]`. Holds the unframed input only.
+/// Splits fed bytes into records without parsing values: lines, or a document's depth-0 elements.
 pub struct Framing {
     lines: bool,
     input: Vec<u8>,
@@ -361,8 +360,7 @@ fn code_unit(bytes: &[u8], at: usize) -> Option<u16> {
     u16::from_str_radix(std::str::from_utf8(hex).ok()?, 16).ok()
 }
 
-/// Whether a `\u` escape of `bytes` is a UTF-16 surrogate without its pair, which `json_decode()` refuses and serde
-/// checks only when it unescapes a string. A backslash outside a string is serde's syntax error, so every one is walked.
+/// Whether a `\u` escape is an unpaired surrogate, which `json_decode()` refuses and serde checks only in strings.
 fn lone_surrogate(bytes: &[u8]) -> bool {
     let mut i = 0;
     let mut low_expected_at = None;

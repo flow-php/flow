@@ -38,11 +38,6 @@ final class FloeGoldenContext
         return self::directory($version)->suffix('/' . $name . '.floe');
     }
 
-    /**
-     * Rewrites every golden file from the batches above. Committed on purpose: fixtures are only
-     * trustworthy when the thing that made them is reviewable and reproducible by someone who is not
-     * the author.
-     */
     public static function regenerate(string $version = self::VERSION_DIRECTORY): void
     {
         $filesystem = new NativeLocalFilesystem();

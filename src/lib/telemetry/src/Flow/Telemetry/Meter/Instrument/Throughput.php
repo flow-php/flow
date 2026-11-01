@@ -27,19 +27,7 @@ use function is_scalar;
 use function round;
 
 /**
- * Throughput instrument for tracking rate of items processed over time.
- *
- * Throughput tracks accumulated count and calculates rate (count/time unit).
- * Unlike Gauge which replaces values, Throughput accumulates via add() calls.
- * The timer starts from the first add() call for each attribute combination.
- *
- * Example usage:
- * ```php
- * $throughput = $meter->createThroughput('flow.etl.rows.throughput', 'rows', 'Rows processed per second');
- * $throughput->add(100, ['source' => 'csv']); // Process 100 rows
- * $throughput->add(150, ['source' => 'csv']); // Process 150 more rows
- * $metrics = $throughput->collect(); // Returns rate as value (rows/s)
- * ```
+ * The rate timer starts at the first add() per attribute set.
  */
 final class Throughput implements Instrument
 {

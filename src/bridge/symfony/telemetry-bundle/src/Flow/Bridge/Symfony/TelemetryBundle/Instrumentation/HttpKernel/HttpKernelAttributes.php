@@ -5,10 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel;
 
 /**
- * Flow-specific HttpKernel attribute keys.
- *
- * Official HTTP semantic convention keys come from {@see \Flow\Telemetry\SemConvAttributes};
- * per OTel naming guidance flow-custom keys live under the `flow.symfony.` prefix.
+ * Custom keys only, under `flow.symfony.`; official keys live in SemConvAttributes.
  *
  * @see https://opentelemetry.io/docs/specs/semconv/general/naming/
  */

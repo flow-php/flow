@@ -627,7 +627,7 @@ final class JsonExtractorTest extends FlowTestCase
     }
 
     /**
-     * @param int<1, max>|-1 $filesToSniff
+     * @param int<1, max> $filesToSniff
      */
     #[TestWith(['glob_with_empty', 10])]
     #[TestWith(['glob_empty_first', 10])]

@@ -6,12 +6,6 @@ namespace Flow\PostgreSql\AST;
 
 use Google\Protobuf\Internal\Message;
 
-/**
- * Interface for AST node visitors.
- *
- * Visitors are registered for specific node types and only receive nodes of that type.
- * Use the static nodeClasses() method to declare which node types this visitor handles.
- */
 interface NodeVisitor
 {
     /**

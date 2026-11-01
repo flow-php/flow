@@ -142,7 +142,7 @@ Above example will add a new column `time` to the dataset with the current times
 ## Collecting Telemetry After Streaming
 
 When streaming large datasets, you may want to collect telemetry data such as total row counts, execution time,
-or memory usage after the streaming completes. Flow provides a `StreamClosure` mechanism that gets called
+or memory usage after the streaming completes. Flow provides a `StreamCompletionListener` mechanism that gets called
 with a `Report` containing statistics about the streamed data.
 
 To receive a `Report`, you need to:

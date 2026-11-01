@@ -6,14 +6,6 @@ namespace Flow\Telemetry\Exporter;
 
 use Flow\Telemetry\Signal\Signals;
 
-/**
- * Interface for exporting telemetry signals to external systems.
- *
- * Exporters are responsible for transmitting log, metric, and span batches
- * to backends like OTLP collectors, console output, or in-memory stores.
- *
- * The signal type is carried on the {@see Signal::$type} discriminator.
- */
 interface Exporter
 {
     /**

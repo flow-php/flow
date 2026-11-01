@@ -12,12 +12,7 @@ use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanProcessor;
 
 /**
- * Filters spans by their attributes.
- *
- * Wraps another SpanProcessor and forwards only the spans that survive the
- * configured {@see AttributeFilter}. The decision is made at {@see self::onEnd()}
- * because span attributes are only fully populated once the span has ended;
- * {@see self::onStart()} is always delegated unchanged.
+ * Decides at onEnd(): attributes are complete only once the span ends.
  */
 final readonly class AttributeFilteringSpanProcessor implements SpanProcessor
 {

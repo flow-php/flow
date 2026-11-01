@@ -1,8 +1,4 @@
-//! Schema inference over CSV cells, exactly as `ColumnTypes::observe()` + `StringTypeNarrower::narrow()` +
-//! `TypeWidener::widen()` fold them, for the closed set of types a CSV cell can narrow to. `date_parse()` and
-//! `new DateTimeZone('+HH:MM')` are called back into PHP, each behind a Rust pre-filter that is a necessary condition
-//! of the PHP predicate, so parity on those rungs holds by construction. A JSON cell is accepted natively and only a
-//! native reject is re-asked through `json_validate()`.
+//! Schema inference over CSV cells exactly as the PHP fold; each PHP callback sits behind a necessary Rust pre-filter.
 
 use std::collections::HashMap;
 
@@ -273,8 +269,7 @@ fn is_json_shaped(value: &[u8]) -> bool {
     )
 }
 
-/// PHP 8 `is_numeric()` on a string: optional leading and trailing whitespace, optional sign,
-/// `digits[.digits] | .digits | digits.`, optional exponent. No hex, no `INF`/`NAN`.
+/// PHP 8 `is_numeric()` on a string: no hex, no `INF`/`NAN`.
 fn is_numeric(value: &[u8]) -> bool {
     let mut position = value.iter().take_while(|byte| is_space(**byte)).count();
     let end = value.len()

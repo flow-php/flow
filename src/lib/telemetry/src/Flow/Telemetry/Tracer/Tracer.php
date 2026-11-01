@@ -20,46 +20,6 @@ use Psr\Clock\ClockInterface;
 use Throwable;
 
 /**
- * Creates and manages spans within a trace.
- *
- * Tracer is the primary API for distributed tracing. It creates spans,
- * manages parent-child relationships through the shared Context (the active span lives in the Context and
- * the parent is derived from it), and delegates span lifecycle events to a SpanProcessor.
- *
- * Example usage - a leaf span, which never needs to become the active span:
- * ```php
- * $span = $tracer->span('process-order');
- * try {
- *     // do work
- *     $span->setStatus(SpanStatus::ok());
- * } catch (\Throwable $e) {
- *     $span->recordException($e)->setStatus(SpanStatus::error($e->getMessage()));
- *     throw $e;
- * } finally {
- *     $tracer->complete($span);
- * }
- * ```
- *
- * When spans created inside must nest under this one, activate it and detach the scope before completing:
- * ```php
- * $span = $tracer->span('process-order');
- * $scope = $tracer->activate($span);
- * try {
- *     // spans started here become children of $span
- * } finally {
- *     $scope->detach();
- *     $tracer->complete($span);
- * }
- * ```
- *
- * Or use the trace() helper:
- * ```php
- * $result = $tracer->trace('process-order', function() {
- *     // do work
- *     return $result;
- * });
- * ```
- *
  * @import-type TAttributeValueMap from Attributes
  */
 final class Tracer
@@ -194,8 +154,7 @@ final class Tracer
     ): Span {
         $context = $this->contextStorage->current();
 
-        // OTEL spec: the sampler receives the parent Context, not the ambient one. Dropping only the active
-        // span for a root span keeps suppression and baggage, which are not parent-child properties.
+        // the sampler receives the parent context, not the ambient one
         $parentContext = match (true) {
             $parent === false => $context->withoutActiveSpan(),
             $parent !== null => $parent,

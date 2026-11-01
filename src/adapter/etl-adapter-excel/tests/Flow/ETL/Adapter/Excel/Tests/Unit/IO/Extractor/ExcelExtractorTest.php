@@ -42,7 +42,8 @@ final class ExcelExtractorTest extends FlowTestCase
         // the supports() guard passes because the mount matches; isLocal() is what rejects it
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(
-            'Only local filesystem paths are supported by ExcelExtractor due to the limitation of underlying library.',
+            'ExcelExtractor reads local files only: OpenSpout opens them with ZipArchive, which needs a local path. '
+            . 'Copy the file to a local path first.',
         );
 
         from_excel(path('remote://unknown_file.xlsx'), native_local_filesystem('remote'));

@@ -10,10 +10,6 @@ use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 use function array_keys;
 use function array_values;
 
-/**
- * Builder for WHEN NOT MATCHED clause in MERGE statement.
- * Supports INSERT and DO NOTHING actions.
- */
 final readonly class MergeWhenNotMatched
 {
     private function __construct(

@@ -5,10 +5,7 @@ declare(strict_types=1);
 namespace Flow\Telemetry;
 
 /**
- * Cache instrumentation attribute keys and span names shared by Flow cache instrumentations.
- *
- * No official cache semantic convention exists yet; these keys follow the direction of the
- * open proposal and will be aligned once it lands.
+ * No official cache semconv yet; keys follow the open proposal.
  *
  * @see https://github.com/open-telemetry/semantic-conventions/issues/1747
  */

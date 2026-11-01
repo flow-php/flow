@@ -195,16 +195,13 @@ final class FloeLoader implements Closure, Discardable, FileLoader, Loader
 
     private function frame(): FileWrite
     {
-        // partitionBy() keeps the partition columns in the path rather than the body, so the file schema must not
-        // declare them either. Every other declared column stays - a batch that does not carry one is the writer's
-        // to refuse.
         return $this->frame ??= new FileWrite(
             $this->filesystem,
             $this->path,
             $this->saveMode,
             $this->router,
             new FloeFileWriterFactory(
-                $this->schema?->gracefulRemove(...$this->router->droppedNames()),
+                $this->schema?->gracefulRemove(...$this->router->pathOnlyColumns()),
                 $this->metadata,
                 $this->options,
             ),

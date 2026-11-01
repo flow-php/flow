@@ -5,21 +5,6 @@ declare(strict_types=1);
 namespace Flow\Telemetry;
 
 /**
- * Represents the instrumentation scope (library) producing telemetry.
- *
- * InstrumentationScope identifies the library or application component
- * that is generating telemetry data. This information is attached to
- * all telemetry (spans, logs, metrics) for attribution and filtering.
- *
- * Example usage:
- * ```php
- * $scope = new InstrumentationScope(
- *     name: 'my-service',
- *     version: '1.2.3',
- *     schemaUrl: 'https://opentelemetry.io/schemas/1.21.0',
- * );
- * ```
- *
  * @see https://opentelemetry.io/docs/specs/otel/glossary/#instrumentation-scope
  *
  * @import-type TAttributeValue from Attributes

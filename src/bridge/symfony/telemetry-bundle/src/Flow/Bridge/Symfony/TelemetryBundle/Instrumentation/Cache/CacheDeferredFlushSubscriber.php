@@ -18,16 +18,7 @@ use Symfony\Component\Messenger\Event\WorkerMessageHandledEvent;
 use function class_exists;
 
 /**
- * Symfony cache pools defer writes and flush them from the pool's own commit path at object destruction,
- * outside any request/message span. On a Doctrine DBAL pool each of those writes therefore surfaces as an
- * orphan doctrine.dbal.* span (statement.prepare/execute, transaction.begin/commit), one trace per query.
- *
- * This subscriber drains the deferred writes at a controlled point — request/command termination and after
- * each consumed message — inside a single "cache.flush" span, so the writes group under one trace instead of
- * orphaning, and the pool has nothing left to flush at destruction. It commits the inner (untraced) adapters
- * so idle pools do not emit empty per-pool cache spans; only real DBAL work nests under the flush span. When
- * the surrounding context suppresses tracing (e.g. a messenger worker's receive loop), the flush is silently
- * non-recording while still draining the queue.
+ * Pools flush at destruction outside any span; draining here groups DBAL writes under one cache.flush span.
  */
 final readonly class CacheDeferredFlushSubscriber implements EventSubscriberInterface
 {

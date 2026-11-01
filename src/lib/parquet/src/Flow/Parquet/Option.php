@@ -171,7 +171,7 @@ enum Option
      *
      * Default value is 32Mb
      *
-     * In order to be more aligned with apache spark and hadoop, this value should be set between 128 and 512Mb.
+     * Recommended: 128-512 MB.
      * https://parquet.apache.org/docs/file-format/configurations/#row-group-size
      */
     case ROW_GROUP_SIZE_BYTES;

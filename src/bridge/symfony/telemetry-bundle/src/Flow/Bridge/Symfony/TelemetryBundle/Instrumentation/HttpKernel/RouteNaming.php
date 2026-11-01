@@ -9,10 +9,6 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel;
  */
 enum RouteNaming: string
 {
-    /**
-     * The route path template, e.g. /orders/{id} — the OpenTelemetry HTTP semantic-conventions value
-     * for http.route. Requires the router to resolve the template from the route name.
-     */
     case Path = 'path';
 
     /**

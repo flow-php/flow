@@ -7,22 +7,7 @@ namespace Flow\Telemetry\Propagation;
 use function strtolower;
 
 /**
- * Carrier backed by an associative array.
- *
- * Provides case-insensitive key lookup for HTTP header compatibility.
- * Keys are stored in their original case but lookups ignore case.
- *
- * Example usage:
- * ```php
- * // Extract from incoming request headers
- * $carrier = new ArrayCarrier($request->getHeaders());
- * $spanContext = $propagator->extract($carrier);
- *
- * // Inject into outgoing request
- * $carrier = new ArrayCarrier();
- * $propagator->inject($spanContext, $carrier);
- * $headers = $carrier->unwrap();
- * ```
+ * Key lookups are case-insensitive (HTTP headers).
  *
  * @implements Carrier<array<string, string>>
  */

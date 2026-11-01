@@ -139,11 +139,6 @@ use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
 
-/**
- * One instance of every Describable etl ships, with every constructor argument away from its default, so a parameter
- * that describe() or fromDescription() forgets changes the rebuilt object. The helpers several packages share stay
- * here; each package's own Tests\Context\DescribableFixtures holds its classes.
- */
 final class DescribableFixtures
 {
     /**

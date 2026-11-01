@@ -9,8 +9,7 @@ use Flow\PostgreSql\Protobuf\AST\RangeSubselect;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
 /**
- * Represents a subquery as a table reference: (SELECT ...).
- * Note: Subqueries in FROM clause must be aliased in actual SQL.
+ * A FROM subquery must be aliased.
  */
 final readonly class SubqueryReference implements TableReference
 {

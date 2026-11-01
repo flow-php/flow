@@ -15,19 +15,6 @@ use function str_pad;
 use function strlen;
 
 /**
- * W3C Trace Context trace flags (single byte).
- *
- * TraceFlags contain information about the trace. Currently defined flags:
- * - SAMPLED (bit 0): Whether the trace should be sampled/exported
- * - RANDOM (bit 1): Whether the trace-id was randomly generated
- *
- * Example usage:
- * ```php
- * $flags = TraceFlags::default();
- * $flags = $flags->withSampled(true);
- * echo $flags->toHex(); // "01"
- * ```
- *
  * @see https://www.w3.org/TR/trace-context/#trace-flags
  */
 final readonly class TraceFlags implements Stringable

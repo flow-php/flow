@@ -20,17 +20,7 @@ use function sprintf;
 use function sys_get_temp_dir;
 
 /**
- * Works around a bug in playwright-php/playwright-symfony v0.10.0 that corrupts every binary
- * response.
- *
- * The upstream converter base64-encodes a binary body and marks it `isBase64: true`
- * (`ResponseConverter.php:91-93`). That flag is then handed straight to Playwright by the Node
- * bridge (`playwright-server.js:124`, `route.fulfill(command.options)`), and Playwright has no such
- * option - so the base64 text is served as the body. The browser receives `AGFz...` where the wasm
- * magic number should be, and the playground cannot boot; web fonts fail the same way.
- *
- * `path` IS a real Playwright fulfill option, so the decoded bytes are written to a temp file and
- * the response is fulfilled from there instead. Remove this class once upstream is fixed.
+ * Workaround: playwright-symfony 0.10.0 serves base64 text for binary bodies; remove once fixed upstream.
  */
 final class BinarySafeResponseConverter extends ResponseConverter
 {

@@ -14,10 +14,7 @@ use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
 
 /**
- * Generic operator condition for any binary operator (e.g., @>, <@, &&, ~, @@).
- *
- * Unlike Comparison which only supports standard comparison operators (=, <>, <, <=, >, >=),
- * OperatorCondition accepts any valid PostgreSQL operator string.
+ * Any PostgreSQL binary operator; Comparison covers only =, <>, <, <=, >, >=.
  */
 final readonly class OperatorCondition implements Condition
 {

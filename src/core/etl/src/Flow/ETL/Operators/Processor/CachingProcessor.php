@@ -19,10 +19,7 @@ use SensitiveParameter;
 use Throwable;
 
 /**
- * Caches pipeline output for reuse.
- *
- * If a cache with the given id already exists, data passes through unchanged.
- * Otherwise, each batch is cached before being yielded.
+ * An existing cache id passes data through unchanged.
  */
 final readonly class CachingProcessor implements Processor
 {

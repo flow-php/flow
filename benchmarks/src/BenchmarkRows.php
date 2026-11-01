@@ -7,11 +7,7 @@ namespace Flow\Benchmarks;
 use function getenv;
 
 /**
- * The row counts every bench provider and materialise.php resolve through. They must agree: a fixture
- * set materialised for a different count leaves the first timed run generating one.
- *
- * phpbench's own --parameters cannot carry this - it replaces a subject's whole parameter set rather
- * than merging into it, so any subject with a second provider would lose that axis.
+ * Providers and materialise.php must agree; phpbench --parameters replaces rather than merges a parameter set.
  */
 final class BenchmarkRows
 {

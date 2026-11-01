@@ -19,15 +19,12 @@ use function substr;
 use const JSON_ERROR_NONE;
 
 /**
- * JSON Machine tokenizes a document in PHP, one character class at a time. The elements of a top-level array are
- * found here instead by one PCRE match per element - which runs in C - and decoded by json_decode(), about eight
- * times faster on the orders fixture. Anything this does not recognise goes to JSON Machine.
+ * One PCRE match per top-level element (~8x JSON Machine); anything unrecognised falls back to JSON Machine.
  */
 final readonly class JsonArrayElements
 {
     /**
-     * One balanced object or array at the cursor. A string may hold any bracket; every quantifier is possessive, so
-     * PCRE never backtracks into an element.
+     * Possessive quantifiers keep PCRE from backtracking into an element.
      */
     private const string ELEMENT = '/\G(\{(?:[^{}"]++|"(?:[^"\\\\]++|\\\\.)*+"|(?1))*+\}|\[(?:[^\[\]"]++|"(?:[^"\\\\]++|\\\\.)*+"|(?1))*+\])/s';
 

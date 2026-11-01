@@ -28,9 +28,9 @@ final readonly class BoxLayout implements Layout
 
     private const int TEXT = 25;
 
-    public function render(Entry $root): string
+    public function render(RenderedNode $root): string
     {
-        /** @var list<array{entry: Entry, column: int, depth: int, parent: ?int}> $boxes */
+        /** @var list<array{entry: RenderedNode, column: int, depth: int, parent: ?int}> $boxes */
         $boxes = [];
         $this->place($root, 0, 0, null, $boxes);
 
@@ -71,9 +71,9 @@ final readonly class BoxLayout implements Layout
     }
 
     /**
-     * @param list<array{entry: Entry, column: int, depth: int, parent: ?int}> $boxes
+     * @param list<array{entry: RenderedNode, column: int, depth: int, parent: ?int}> $boxes
      */
-    public function place(Entry $entry, int $column, int $depth, ?int $parent, array &$boxes): void
+    public function place(RenderedNode $entry, int $column, int $depth, ?int $parent, array &$boxes): void
     {
         $boxes[] = ['entry' => $entry, 'column' => $column, 'depth' => $depth, 'parent' => $parent];
         $index = count($boxes) - 1;
@@ -84,7 +84,7 @@ final readonly class BoxLayout implements Layout
         }
     }
 
-    public function span(Entry $entry): int
+    public function span(RenderedNode $entry): int
     {
         return $entry->children === [] ? 1 : array_sum(array_map($this->span(...), $entry->children));
     }
@@ -92,7 +92,7 @@ final readonly class BoxLayout implements Layout
     /**
      * @return list<string>
      */
-    public function content(Entry $entry): array
+    public function content(RenderedNode $entry): array
     {
         $title = $entry->title();
 
@@ -136,7 +136,7 @@ final readonly class BoxLayout implements Layout
     /**
      * @param list<list<string>> $canvas
      */
-    public function box(array &$canvas, Entry $entry, int $x, int $y, int $height, bool $hasParent): void
+    public function box(array &$canvas, RenderedNode $entry, int $x, int $y, int $height, bool $hasParent): void
     {
         $inner = self::WIDTH - 2;
         $center = $x + intdiv(self::WIDTH, 2);
@@ -170,8 +170,8 @@ final readonly class BoxLayout implements Layout
      * Draws the line from a box's right edge to each child after the first; the first child sits right below it.
      *
      * @param list<list<string>> $canvas
-     * @param array{entry: Entry, column: int, depth: int, parent: ?int} $box
-     * @param list<array{entry: Entry, column: int, depth: int, parent: ?int}> $boxes
+     * @param array{entry: RenderedNode, column: int, depth: int, parent: ?int} $box
+     * @param list<array{entry: RenderedNode, column: int, depth: int, parent: ?int}> $boxes
      */
     public function links(array &$canvas, array $box, array $boxes, int $top, int $height): void
     {

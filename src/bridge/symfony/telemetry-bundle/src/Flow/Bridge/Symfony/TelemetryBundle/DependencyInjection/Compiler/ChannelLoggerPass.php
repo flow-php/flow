@@ -22,30 +22,7 @@ use function str_replace;
 use function ucwords;
 
 /**
- * Routes services to a named telemetry logger based on their logging channel.
- *
- * Two populations are handled:
- *
- *  - Services explicitly opting in via the "flow.telemetry.channel" tag
- *    (typically through the #[WithTelemetryChannel] attribute). A missing or
- *    empty channel here is a configuration error and throws.
- *  - When "flow.telemetry.capture_framework_channels" is enabled, services
- *    Symfony tags "monolog.logger" (router, request, http_client, cache,
- *    messenger, …). This makes the bundle a drop-in for MonologBundle's channel
- *    routing without Monolog. We do not own that tag, so a tag without a usable
- *    channel is skipped rather than treated as an error.
- *
- * For each routed service the channel's PSR-3 logger is bound to its autowired
- * LoggerInterface argument and the native Flow Logger to its autowired Logger
- * argument; every explicit "logger" reference (in constructor arguments and method
- * calls) is rewritten to the PSR-3 logger, preserving the reference's
- * invalid-behavior flag. Per channel, both a "LoggerInterface $<channel>Logger" and
- * a "Logger $<channel>Logger" autowiring alias are registered so any service can
- * request a channel logger by named argument. Each channel is synthesized on demand
- * carrying a "flow.log.channel" attribute; where it is placed - the instrumentation scope,
- * every emitted record, or both - is governed by the
- * "flow.telemetry.channel_attribute_target" parameter (default "both"). A logger
- * already declared under that name (e.g. the always-present "default") is reused as-is.
+ * Own tag without a channel throws; framework `monolog.logger` tag without one is skipped (we do not own it).
  */
 final class ChannelLoggerPass implements CompilerPassInterface
 {

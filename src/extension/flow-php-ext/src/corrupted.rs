@@ -5,7 +5,9 @@ use ext_php_rs::exception::PhpException;
 use ext_php_rs::types::{ZendHashTable, Zval};
 
 use crate::builder::throw;
-use crate::ctx::{call_method, call_static, construct, find_class, null_zval, zval_long, zval_str};
+use crate::ctx::{
+    call_method, call_static, construct, expect_object, find_class, null_zval, read_property, zval_long, zval_str,
+};
 use crate::exception::ext_exception;
 
 const COLUMN_MISMATCH: &str = "Flow\\ETL\\Foundation\\Exception\\ColumnMismatchException";
@@ -106,7 +108,7 @@ pub fn outside_the_sample(
     uri: &Zval,
     offset: u64,
     line: Option<u64>,
-    sample_size: i64,
+    inference: &Zval,
     row: usize,
     cause: Zval,
 ) -> PhpException {
@@ -116,11 +118,12 @@ pub fn outside_the_sample(
             let mut mismatch_zv = Zval::new();
             mismatch_zv.set_object(&mut mismatch);
             let [uri, offset, line] = located(uri, offset, line);
+            let sample_size = read_property(expect_object(inference, "a SchemaInference")?, "sampleSize")?;
 
             call_static(
                 INFERRED_SCHEMA,
                 "outsideTheSample",
-                &mut [uri, offset, line, zval_long(sample_size), mismatch_zv],
+                &mut [uri, offset, line, sample_size, mismatch_zv],
             )
         });
 

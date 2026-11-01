@@ -206,12 +206,6 @@ final class ArrayExtractorTest extends FlowTestCase
         $extractor->inferSchema(infer_schema()->allStrings());
     }
 
-    /**
-     * Every iterable shape - rewindable or not - is described exactly and yields its rows once. There is
-     * no rewindability predicate: is_array() takes the free in-place double read and everything else
-     * takes the spill, which is correct for a rewindable ArrayIterator too. It merely pays the spill for
-     * a source it could have re-read; guessing the other way loses rows silently.
-     */
     #[TestWith(['array'])]
     #[TestWith(['ArrayIterator'])]
     #[TestWith(['ArrayObject'])]
@@ -345,9 +339,6 @@ final class ArrayExtractorTest extends FlowTestCase
     }
 
     /**
-     * An int-keyed row is a positional record. The derived schema must name its columns exactly as
-     * array_to_rows() does, or the schema names never match the entries.
-     *
      * @param list<array<mixed>> $dataset
      * @param list<non-empty-string> $expected
      */
@@ -371,12 +362,7 @@ final class ArrayExtractorTest extends FlowTestCase
         );
         static::assertSame(
             'string',
-            from_array($dataset)
-                ->inferSchema(infer_schema()->sampleSize(-1))
-                ->schema()
-                ->get('code')
-                ->type()
-                ->toString(),
+            from_array($dataset)->inferSchema(infer_schema()->everyRow())->schema()->get('code')->type()->toString(),
         );
 
         $this->expectException(InferredSchemaException::class);

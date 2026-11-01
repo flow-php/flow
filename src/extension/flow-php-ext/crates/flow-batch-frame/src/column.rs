@@ -1,8 +1,4 @@
-//! One column's buffers in the canonical form of `Column::encode()`, and back (`Backend::decode()`).
-//!
-//! Canonical: validity '' when the rows hold no null, else packed LSB-first from bit 0 with zero padding; a null slot
-//! zeroed (0, 0.0, bit 0, 16 zero bytes, offset not advanced, structure children null under a null parent); offsets
-//! from 0 over exactly the rows' bytes and children, whatever slice or selection the array is.
+//! One column's buffers in the canonical form of `Column::encode()`, and back.
 
 use std::ptr::NonNull;
 use std::sync::Arc;
@@ -45,8 +41,7 @@ pub fn encode(data: &ArrayData, kind: &Kind) -> Result<Vec<Vec<u8>>, Error> {
     Ok(out)
 }
 
-/// `ColumnDecoder::decode()` + `PhpBackend::decode()`: the same refusals in the same order. The result's data type is
-/// `data_type(kind)`. A top-level null under NOT NULL is not refused here (`Rows::fromColumns` does).
+/// Mirrors `ColumnDecoder::decode()` + `PhpBackend::decode()`: the same refusals in the same order.
 pub fn decode(kind: &Kind, buffers: &[&[u8]], len: u32, null_count: u32) -> Result<ArrayData, Error> {
     decode_sources(
         kind,
@@ -252,8 +247,7 @@ fn fixed<T: ArrowPrimitiveType>(array: &dyn Array, rows: &Rows, valid: Option<&[
     bytes
 }
 
-/// Offsets from 0 over the valid rows' ranges (a null row's range is dropped), and the child rows those ranges select.
-/// Compaction only shrinks an i32 array's ranges, so the offsets stay within i32.
+/// Offsets from 0 over the valid rows' ranges, and the child rows they select.
 fn compact(offsets: &[i32], rows: &Rows, valid: Option<&[bool]>) -> (Vec<u8>, Rows) {
     if let (Rows::Range { start, len }, None) = (rows, valid) {
         return (
@@ -281,8 +275,7 @@ fn compact(offsets: &[i32], rows: &Rows, valid: Option<&[bool]>) -> (Vec<u8>, Ro
     (packed, Rows::Indices(children))
 }
 
-/// Native string offsets are i64; a frame's are u32 the PHP decoder reads, capped at i32 like PHP's own encode(). A
-/// longer range is refused, so a writer can split the batch (FloeStreamWriter halves it).
+/// Frame string offsets are u32 capped at i32, so a longer range is refused and the writer splits the batch.
 fn frame_offsets(offsets: &[i64]) -> Result<Vec<u8>, Error> {
     let mut packed = Vec::with_capacity(offsets.len() * 4);
 
@@ -576,7 +569,7 @@ fn fixed_values(buffer: Source<'_, '_>, width: u64, len: u32, values: Values) ->
     Ok(buffer.buffer())
 }
 
-/// `Offsets::unpack()`: exactly (len + 1) * 4 bytes, from 0, monotonic. Returns the last offset.
+/// `Offsets::unpack()`: exactly (len + 1) * 4 bytes, from 0, monotonic; returns the last offset.
 fn check_offsets(buffer: &[u8], len: u32, of: Of) -> Result<u32, Error> {
     let expected = (len as u64 + 1) * 4;
 

@@ -52,10 +52,6 @@ use function Flow\Types\DSL\type_is_nullable;
 use function restore_error_handler;
 use function set_error_handler;
 
-/**
- * Four members on 13 classes with no shared base means returns() can drift per class - and a single
- * missing type_optional() wrapper is invisible to any signature. This scan is the enforcement.
- */
 final class AllAggregatesDeclareTheirTypeTest extends FlowTestCase
 {
     /**

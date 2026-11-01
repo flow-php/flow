@@ -144,7 +144,7 @@ final class CSVSniffer implements Describable, Sniffer
         return $parts;
     }
 
-    public function sniff(int $unit, int $rowBudget): Sample
+    public function sniff(int $unit, ?int $rowBudget): Sample
     {
         $open = $this->window === null
             ? $this->opener->open($this->sources[$unit])
@@ -156,7 +156,7 @@ final class CSVSniffer implements Describable, Sniffer
             return new Sample(
                 $columnTypes->folded(),
                 $open->producedBytes(),
-                $rowBudget === -1 || $columnTypes->rows() < $rowBudget,
+                $rowBudget === null || $columnTypes->rows() < $rowBudget,
             );
         } finally {
             $open->close();

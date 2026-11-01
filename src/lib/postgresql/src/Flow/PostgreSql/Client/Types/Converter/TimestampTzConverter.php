@@ -11,13 +11,6 @@ use Flow\PostgreSql\Client\Types\ValueType;
 
 use function is_string;
 
-/**
- * Converts values to PostgreSQL `timestamptz` (timestamp with time zone).
- *
- * The timezone offset is kept in the formatted value; PostgreSQL reads it and
- * normalizes the instant to UTC on store. For naive `timestamp` columns use
- * {@see TimestampConverter} instead.
- */
 final class TimestampTzConverter implements ValueConverter
 {
     public function supportedTypes(): array

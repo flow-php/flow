@@ -8,8 +8,7 @@ use Flow\PostgreSql\AST\Nodes\Statement;
 use Flow\PostgreSql\Protobuf\AST\VacuumStmt;
 
 /**
- * Represents ANALYZE statements.
- * Note: ANALYZE is parsed as VacuumStmt in PostgreSQL.
+ * Parsed as VacuumStmt.
  *
  * @implements Statement<VacuumStmt>
  */

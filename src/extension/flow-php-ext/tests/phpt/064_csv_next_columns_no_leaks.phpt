@@ -7,6 +7,7 @@ RustCSVOpenSource::batches() leaks neither PHP memory nor native allocations
 require __DIR__ . '/bootstrap.php';
 
 use Flow\ETL\Adapter\CSV\IO\Extractor\RustCSVOpenSource;
+use Flow\ETL\IO\Inference\SchemaInference;
 use Flow\ETL\Values\Column\RustBackend;
 use Flow\Filesystem\Stream\MemorySourceStream;
 
@@ -27,7 +28,7 @@ $cycle = static function () use ($raw, $schema, $refusing): void {
     }
 
     try {
-        foreach ((new RustCSVOpenSource(new MemorySourceStream("name\nx\n"), ',', '"', '\\', true, true, true))->batches($refusing, 2, new RustBackend(), 1) as $batch) {
+        foreach ((new RustCSVOpenSource(new MemorySourceStream("name\nx\n"), ',', '"', '\\', true, true, true))->batches($refusing, 2, new RustBackend(), new SchemaInference(1)) as $batch) {
         }
 
         throw new LogicException('a refused cell past the sample was accepted');

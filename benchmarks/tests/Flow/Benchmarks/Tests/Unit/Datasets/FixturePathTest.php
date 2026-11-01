@@ -16,10 +16,6 @@ use function mkdir;
 use function str_contains;
 use function unlink;
 
-/**
- * FixturePath always resolves under Paths::datasets(). These tests therefore use a prefix no real
- * fixture uses, and prune() only ever globs its own prefix and row count.
- */
 final class FixturePathTest extends TestCase
 {
     public function test_path_carries_the_fingerprint_segment(): void

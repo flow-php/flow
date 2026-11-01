@@ -33,8 +33,7 @@ final readonly class FooterStatistics
     }
 
     /**
-     * Exact when every listed file's footer was read; otherwise the read footers are scaled to the listing
-     * (DuckDB's rule, parquet_extension.cpp:866-877).
+     * Exact when every listed file's footer was read; otherwise the read footers are scaled to the listing.
      */
     public function of(int $listedFiles): Statistics
     {

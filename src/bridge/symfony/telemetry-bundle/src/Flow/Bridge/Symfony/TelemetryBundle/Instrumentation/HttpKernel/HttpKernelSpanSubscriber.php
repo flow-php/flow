@@ -128,14 +128,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         $path = $request->getPathInfo();
 
         if (!$this->shouldTraceByPath($path, $method)) {
-            // Excluding a path must not merely skip its own span: lower-level auto-instrumentation (DBAL,
-            // cache) and app kernel.terminate listeners still run for this request and would otherwise emit
-            // orphan root spans. Suppress tracing for the whole request instead, so the SuppressingSampler
-            // drops every span created until the suppression scope is detached on finish_request/terminate.
-            $request->attributes->set(
-                self::SUPPRESSION_SCOPE_ATTRIBUTE,
-                $this->contextStorage->attach($this->contextStorage->current()->withSuppressedTracing()),
-            );
+            $this->suppressTracingForWholeRequest($request);
 
             return;
         }
@@ -143,14 +136,8 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         if ($event->isMainRequest() && $this->contextPropagation) {
             $this->extractContextFromRequest($request);
 
-            // No inbound context means no upstream sampling decision to honour. Suppress the whole request
-            // rather than skipping just this span, so lower-level instrumentation (DBAL, cache) and
-            // kernel.terminate listeners do not emit orphan root spans - same reasoning as an excluded path.
             if ($this->requireTraceContext && $this->contextStorage->current()->activeSpan() === null) {
-                $request->attributes->set(
-                    self::SUPPRESSION_SCOPE_ATTRIBUTE,
-                    $this->contextStorage->attach($this->contextStorage->current()->withSuppressedTracing()),
-                );
+                $this->suppressTracingForWholeRequest($request);
 
                 return;
             }
@@ -158,14 +145,9 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
 
         $kind = $event->isMainRequest() ? SpanKind::SERVER : SpanKind::INTERNAL;
 
-        // OTEL HTTP semconv: the span name must be low-cardinality, so start with just the method and
-        // upgrade to "{method} {route}" once the route is known (see finalizeSpanName). The raw path stays
-        // on the url.path attribute.
         $tracer = $this->telemetry->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'));
         $attributes = [
             SemConvAttributes::HTTP_REQUEST_METHOD => $method,
-            // OTEL HTTP semconv: url.path must not carry the query string; url.query is separate
-            // and url.full is a client-span attribute, so it has no place on a server span.
             SemConvAttributes::URL_PATH => $request->getPathInfo(),
             SemConvAttributes::URL_SCHEME => $request->getScheme(),
             SemConvAttributes::SERVER_ADDRESS => $request->getHost(),
@@ -187,8 +169,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
 
         $request->attributes->set(self::SPAN_ATTRIBUTE, $span);
         $request->attributes->set(self::TRACER_ATTRIBUTE, $tracer);
-        // activated: the request span is the root logical scope - controller, DBAL and cache spans nest under
-        // it. Attached after the propagation scope, so it must be detached before it.
+        // detached before the propagation scope in completeSpan()
         $request->attributes->set(self::REQUEST_SCOPE_ATTRIBUTE, $tracer->activate($span));
     }
 
@@ -208,8 +189,6 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
 
         $span->setAttribute(SemConvAttributes::HTTP_RESPONSE_STATUS_CODE, $statusCode);
 
-        // OTEL HTTP semconv: for SpanKind.SERVER the span status MUST be left unset for 1xx-4xx; only
-        // 5xx (or other server-caused failures) is an Error. A 4xx is the client's fault, not the server's.
         if ($statusCode >= 500) {
             $span->setStatus(SpanStatus::error("HTTP {$statusCode}"));
             $span->setAttribute(SemConvAttributes::ERROR_TYPE, (string) $statusCode);
@@ -240,6 +219,14 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
     {
         $this->completeSpan($event->getRequest());
         $this->detachSuppressionScope($event->getRequest());
+    }
+
+    private function suppressTracingForWholeRequest(Request $request): void
+    {
+        $request->attributes->set(
+            self::SUPPRESSION_SCOPE_ATTRIBUTE,
+            $this->contextStorage->attach($this->contextStorage->current()->withSuppressedTracing()),
+        );
     }
 
     private function detachSuppressionScope(Request $request): void
@@ -313,8 +300,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
     {
         $propagationContext = $this->propagator->extract(new RequestCarrier($request));
 
-        // Links and full-page navigations cannot send headers, so optionally fall back to the query
-        // string. Headers win when both are present.
+        // links and navigations cannot send headers, so the query string is the fallback
         if ($propagationContext->spanContext === null && $this->contextPropagationQuery) {
             $propagationContext = $this->propagator->extract(new QueryCarrier($request));
         }

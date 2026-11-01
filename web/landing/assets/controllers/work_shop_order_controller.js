@@ -1,8 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Polar appends ?checkout_id=<uuid> to the success URL. Anything that isn't a
-// UUID is someone playing with the query string, so we leave the block hidden
-// rather than render it.
+// Anything that is not a UUID in checkout_id leaves the block hidden.
 const CHECKOUT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export default class extends Controller {

@@ -7,8 +7,7 @@ namespace Flow\ETL\Planning\Logical;
 use Flow\ETL\Planning\Physical\Planner;
 
 /**
- * A frame's plan, frozen: the logical plan and the planner it is planned with. Later verbs on the frame do not reach
- * it.
+ * Frozen: later verbs on the frame do not reach it.
  */
 final readonly class Plan
 {

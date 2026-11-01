@@ -16,8 +16,7 @@ use Flow\ETL\Values\Column\Backend;
 use SplObjectStorage;
 
 /**
- * Columns no consumer reads are not copied into the rows an expand emits (Spark: ColumnPruning setting
- * Generate.unrequiredChildIndex).
+ * Columns no consumer reads are not copied into the rows an expand emits.
  */
 final readonly class PushProjectionIntoExpand implements Rule
 {

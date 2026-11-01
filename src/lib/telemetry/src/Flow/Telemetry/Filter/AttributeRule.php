@@ -14,10 +14,6 @@ use function is_string;
 use function sprintf;
 use function var_export;
 
-/**
- * A single attribute-matching rule: a path into an attribute set, a comparison
- * {@see MatchMode}, and an expected value. The leaf {@see Matcher}.
- */
 final readonly class AttributeRule implements CompilableMatcher
 {
     private const PATTERN_MODES = [
@@ -144,12 +140,7 @@ final readonly class AttributeRule implements CompilableMatcher
     }
 
     /**
-     * Expression yielding the value at the path, or {@see AttributeMatch::MISSING}
-     * when absent - the same contract as {@see AttributeMatch::resolve()}.
-     *
-     * A single-segment top-level lookup is inlined to get() (top-level attributes
-     * are never null, so a null result means absent). Nested paths delegate to
-     * resolve(), which preserves the absent-vs-present-null distinction.
+     * Top-level attributes are never null, so a single-segment lookup inlines get().
      */
     private function resolveExpression(Compilation $compilation): string
     {

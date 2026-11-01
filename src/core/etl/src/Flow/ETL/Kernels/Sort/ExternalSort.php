@@ -24,8 +24,7 @@ use function min;
 use function sprintf;
 
 /**
- * Sorts in memory while the process stays under the memory limit; past it, sorted runs are spilled and
- * block-merged. With a limit, only the first $limit rows are produced - every run and every merge stops there.
+ * With a limit, every run and merge stops at $limit rows.
  */
 final readonly class ExternalSort
 {

@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\JSON\IO\Extractor;
 use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\IO\Extractor\File\FileSplit;
 use Flow\ETL\IO\Extractor\File\SourceFile;
+use Flow\ETL\IO\Inference\SchemaInference;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Rows\RecordBatch;
@@ -28,10 +29,19 @@ final readonly class PhpJsonOpenSource implements JsonOpenSource
         Schema $schema,
         int $batchSize,
         Backend $backend,
-        ?int $sampleSize = null,
+        ?SchemaInference $inference = null,
         ?Schema $known = null,
     ): Generator {
-        $batch = new RecordBatch($schema, $backend, $batchSize, $this->source->uri(), $sampleSize, $known ?? $schema);
+        $batch = $inference === null
+            ? new RecordBatch($schema, $backend, $batchSize, $this->source->uri(), $known ?? $schema)
+            : RecordBatch::inferred(
+                $schema,
+                $backend,
+                $batchSize,
+                $this->source->uri(),
+                $inference->sampleSize,
+                $known ?? $schema,
+            );
         $read = new JsonReadProgress();
 
         foreach ($this->reader->sample($this->source, $read, $this->window) as $values) {

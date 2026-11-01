@@ -12,13 +12,6 @@ use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanProcessor;
 use Throwable;
 
-/**
- * Exports each span immediately when it ends.
- *
- * Unlike BatchingSpanProcessor, this processor exports spans synchronously
- * one at a time. This is useful for debugging and development where
- * immediate visibility of spans is more important than performance.
- */
 final readonly class PassThroughSpanProcessor implements SpanProcessor
 {
     public function __construct(

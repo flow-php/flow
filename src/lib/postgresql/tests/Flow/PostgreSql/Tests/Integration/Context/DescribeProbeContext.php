@@ -13,10 +13,6 @@ use function Flow\PostgreSql\DSL\create;
 
 final class DescribeProbeContext
 {
-    /**
-     * A temporary table covering the types a describe answer has to report. Temporary tables are
-     * dropped with the session, so no teardown is needed.
-     */
     public static function createTable(Client $client, string $table): void
     {
         $client->execute(

@@ -9,11 +9,6 @@ use Generator;
 use IteratorAggregate;
 
 /**
- * Cursor for lazy iteration over large result sets.
- * Use Client::cursor() to obtain a cursor.
- *
- * Supports both raw array iteration and object mapping via RowMapper.
- *
  * @extends \IteratorAggregate<int, array<string, mixed>>
  */
 interface Cursor extends Countable, IteratorAggregate

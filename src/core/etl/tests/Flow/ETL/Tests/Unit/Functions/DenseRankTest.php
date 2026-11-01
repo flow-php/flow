@@ -27,10 +27,6 @@ final class DenseRankTest extends FlowTestCase
         static::assertSame($original, $copy);
     }
 
-    /**
-     * PostgreSQL parity. Before this was a single pass over the sorted partition, dense_rank() ignored
-     * the ORDER BY direction and always ranked descending, so the lowest salary got rank 3 here.
-     */
     public function test_dense_rank_over_ascending_order(): void
     {
         static::assertSame(

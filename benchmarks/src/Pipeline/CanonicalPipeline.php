@@ -15,17 +15,7 @@ use function Flow\Floe\DSL\to_floe;
 use function uniqid;
 
 /**
- * The one pipeline shape every source is measured through, so a source's number differs only by its
- * read leg. Every subject that claims to be comparable with the others must run through here.
- *
- * withColumn is the only verb that adds a column, so it forces schema widening at plan-bind time.
- * filter is deliberately non-selective - created_at is never null - so the row count reaching the loader
- * cannot move for a second reason. select re-converges every source onto the same five columns, so the
- * loader does identical work whatever was read. Floe stores typed values, adding no stringification the
- * source had not already paid.
- *
- * The output path is unique per call because a fixed path re-run across iterations and revolutions would
- * measure overwrite behaviour.
+ * Every comparable subject runs through here so sources differ only by their read leg.
  */
 final readonly class CanonicalPipeline
 {

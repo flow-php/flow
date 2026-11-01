@@ -15,10 +15,6 @@ use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
 use SensitiveParameter;
 
-/**
- * Closes a cycle only on the second batch, so the re-entry lands after the pipeline has already
- * yielded once. A cycle closing on the first batch is caught before Pipeline::process() ever parks.
- */
 final class ReadsBackOnSecondBatch implements Transformer
 {
     public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static

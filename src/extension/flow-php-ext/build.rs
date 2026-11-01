@@ -82,8 +82,7 @@ fn git(args: &[&str]) -> Option<String> {
         .filter(|stdout| !stdout.is_empty())
 }
 
-/// `0.44.1-65-g4525c4adc` (git describe) becomes `0.45.0-dev+65.g4525c4adc`: commits past a tag are a pre-release of the
-/// next minor, outside Composer's `<0.45` conflict of the libraries. A tag, or any other string, passes through.
+/// Commits past a tag become a pre-release of the next minor: `0.44.1-65-gX` becomes `0.45.0-dev+65.gX`.
 fn as_semver(describe: &str) -> String {
     let mut parts = describe.rsplitn(3, '-');
 

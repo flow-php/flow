@@ -38,15 +38,14 @@ final class RegexAll implements ScalarFunction
         private readonly int $flags = 0,
         ScalarFunction|int $offset = 0,
     ) {
-        // PREG_OFFSET_CAPTURE and PREG_UNMATCHED_AS_NULL change each match's shape;
-        // PREG_SET_ORDER transposes the whole result - all three change the column's type per flag value.
         if (
             ($flags & PREG_OFFSET_CAPTURE) !== 0
             || ($flags & PREG_UNMATCHED_AS_NULL) !== 0
             || ($flags & PREG_SET_ORDER) !== 0
         ) {
             throw new InvalidArgumentException(
-                'RegexAll does not support PREG_OFFSET_CAPTURE, PREG_UNMATCHED_AS_NULL or PREG_SET_ORDER flags',
+                'RegexAll does not support PREG_OFFSET_CAPTURE, PREG_UNMATCHED_AS_NULL or PREG_SET_ORDER flags: they '
+                . 'change the shape of the result, so the column has no single type. Remove the flag.',
             );
         }
 

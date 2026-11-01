@@ -8,10 +8,7 @@ use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Signal\Signals;
 
 /**
- * Gates a wrapped exporter behind a runtime flag. When disabled, batches are
- * dropped without reaching the wrapped exporter, while callers still observe a
- * successful export. Enables toggling export on or off via configuration
- * (including environment variables) without rewiring the container.
+ * When disabled, batches are dropped but export still reports success.
  */
 final readonly class ConditionalExporter implements Exporter
 {

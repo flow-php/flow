@@ -11,10 +11,7 @@ use Mago\Sdk\Analyzer\Type\KeyedArrayType;
 use Mago\Sdk\Analyzer\Type\NamedObjectType;
 
 /**
- * Derives the array shape a `Flow\Types\DSL\type_structure()` call represents. Beyond Mago's
- * built-in `flow-php` plugin it understands `structure_element()` marker values: the member type
- * comes from the element's first type parameter and a literal `optional: true` second parameter
- * (TOptional) makes the shape key possibly undefined.
+ * Beyond Mago's flow-php plugin: reads structure_element() markers; literal `optional: true` makes the key optional.
  */
 final readonly class TypeStructureShape
 {

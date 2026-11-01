@@ -1,7 +1,4 @@
-//! CSV records and fields exactly as the PHP path produces them: `CSVLineReader` assembles a record (a `\n` ends it
-//! only outside an enclosure, the record is `rtrim($buffer, "\r\n")`, the first one loses its BOM) and `str_getcsv()`
-//! splits it - a port of `php_fgetcsv()` (`ext/standard/file.c`) in one pass over the read buffer. A field is a slice
-//! of that buffer; only a field a doubled enclosure or bytes after its closing enclosure change is rebuilt.
+//! CSV records and fields exactly as the PHP path produces them: a one-pass port of `php_fgetcsv()`.
 
 use std::io;
 use std::ops::Range;
@@ -53,8 +50,7 @@ enum Span {
     Unescaped(Range<usize>),
 }
 
-/// One record's fields; no field at all is a blank line (`str_getcsv('')` is `[null]`). The buffer spans stay valid
-/// until the tokenizer's next `feed()` or `fill_with()`.
+/// One record's fields, valid until the next `feed()` or `fill_with()`; no field is a blank line.
 #[derive(Default)]
 pub struct Record {
     /// Where the record begins in the tokenizer's buffer.
@@ -124,8 +120,7 @@ const BOMS: [&[u8]; 5] = [
     b"\xFE\xFF",
 ];
 
-/// Resumable across chunk boundaries: `feed` or `fill_with` add bytes, `next` yields the next complete record or
-/// returns `false` while it is not yet closed. A record left open at EOF is emitted as-is (PHP's `unterminated` case).
+/// Resumable across chunk boundaries; a record left open at EOF is emitted as-is.
 pub struct Tokenizer {
     dialect: Dialect,
     table: Table,
@@ -218,8 +213,7 @@ impl Tokenizer {
         }
     }
 
-    /// The 1-based line `record` starts on among every byte fed; valid until the next `feed()`. Each byte is counted
-    /// once: records only move forward.
+    /// The 1-based line `record` starts on, valid until the next `feed()`.
     pub fn line(&mut self, record: &Record) -> u64 {
         self.count_newlines_to(record.start);
 
@@ -300,8 +294,7 @@ impl Tokenizer {
         true
     }
 
-    /// Scans the unseen bytes up to `limit`, closing each field at its end; `Some` is the position of the `\n` that
-    /// ends the record. Without `newline_ends` a `\n` is one more field byte: `str_getcsv()` over an assembled line.
+    /// Scans unseen bytes up to `limit`; `Some` is the `\n` that ends the record when `newline_ends` is set.
     fn scan(&mut self, limit: usize, newline_ends: bool) -> Option<usize> {
         let Dialect {
             separator,

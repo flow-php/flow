@@ -1,6 +1,4 @@
-//! The text of column values as the PHP writers render it (`Flow\ETL\Values\Column\TextValues` plus each encoder's syntax),
-//! read straight from the arrow arrays. No PHP types: a named time zone's transitions come in through
-//! [`date::Transitions`].
+//! Column value text as the PHP writers render it, read straight from the arrow arrays.
 
 pub mod date;
 pub mod float;

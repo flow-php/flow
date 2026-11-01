@@ -46,7 +46,7 @@ data_frame()
 Both return a `JsonExtractor`. `from_json()` reads one document: a top-level array, or the subtree selected with
 `withPointer()`.
 
-In JSON lines, a line holding only whitespace (space, tab, CR, LF, VT, FF) is skipped, as DuckDB does; this is not
+In JSON lines, a line holding only whitespace (space, tab, CR, LF, VT, FF) is skipped; this is not
 configurable.
 
 With the [`flow_php`](/documentation/components/extensions/flow-php-ext.md) extension loaded, JSON lines and a document

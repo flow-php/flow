@@ -35,7 +35,7 @@ final class FlowTelemetryDataCollector extends DataCollector implements LateData
 {
     private ?Span $requestSpan = null;
 
-    private ?DateTimeImmutable $requestSpanEnd = null;
+    private ?DateTimeImmutable $responseSentAt = null;
 
     /**
      * @param list<InstrumentRow> $configuredInstruments
@@ -51,12 +51,10 @@ final class FlowTelemetryDataCollector extends DataCollector implements LateData
         // @mago-expect analysis:mixed-assignment
         $span = $request->attributes->get(HttpKernelSpanSubscriber::SPAN_ATTRIBUTE);
 
-        // The HTTP server span completes on kernel.terminate, after the profiler saves the profile, so it
-        // never reaches the store. Capture it here while still open and snapshot the response moment as its
-        // display end; the real span keeps ending (and exporting) on terminate untouched.
+        // the server span completes after the profile is saved
         if ($span instanceof Span) {
             $this->requestSpan = $span;
-            $this->requestSpanEnd = new DateTimeImmutable();
+            $this->responseSentAt = new DateTimeImmutable();
         }
     }
 
@@ -66,7 +64,7 @@ final class FlowTelemetryDataCollector extends DataCollector implements LateData
         // profiler saves the profile.
         $this->telemetry->flush();
 
-        $spans = $this->normalizeSpans($this->exporter->spans(), $this->requestSpan, $this->requestSpanEnd);
+        $spans = $this->normalizeSpans($this->exporter->spans(), $this->requestSpan, $this->responseSentAt);
 
         $timelineDurationMs = 0.0;
 
@@ -89,7 +87,7 @@ final class FlowTelemetryDataCollector extends DataCollector implements LateData
     {
         $this->data = [];
         $this->requestSpan = null;
-        $this->requestSpanEnd = null;
+        $this->responseSentAt = null;
         $this->exporter->reset();
     }
 

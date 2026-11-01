@@ -6,11 +6,11 @@ namespace Flow\Bridge\Monolog\Telemetry\Tests\Unit;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Flow\Bridge\Monolog\Telemetry\AttributeValueNormalizer;
 use Flow\Bridge\Monolog\Telemetry\LogRecordConverter;
 use Flow\Bridge\Monolog\Telemetry\SeverityMapper;
 use Flow\Bridge\Monolog\Telemetry\Tests\Fixtures\InterpolationBackedEnumFixture;
 use Flow\Bridge\Monolog\Telemetry\Tests\Fixtures\InterpolationUnitEnumFixture;
-use Flow\Bridge\Monolog\Telemetry\ValueNormalizer;
 use Flow\Telemetry\Logger\Severity;
 use Generator;
 use Monolog\Level;
@@ -60,7 +60,7 @@ final class LogRecordConverterTest extends TestCase
 
     public function test_accepts_custom_value_normalizer(): void
     {
-        $normalizer = new ValueNormalizer();
+        $normalizer = new AttributeValueNormalizer();
         $converter = new LogRecordConverter(valueNormalizer: $normalizer);
 
         $record = new LogRecord(

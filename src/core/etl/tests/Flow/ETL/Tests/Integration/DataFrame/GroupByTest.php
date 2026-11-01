@@ -751,13 +751,6 @@ final class GroupByTest extends FlowIntegrationTestCase
             });
     }
 
-    /**
-     * A group with a whole-number minimum and a group with a fractional one used to yield
-     * IntegerEntry and FloatEntry side by side in one Rows - the declared type now comes from the
-     * bind, once for the whole run. Scope: groups spilled into separate buckets still bind against
-     * their own bucket's schema, so cross-bucket variance for a column typed differently per group
-     * remains until Rows carries one stream-wide schema.
-     */
     public function test_the_output_definition_does_not_vary_between_groups(): void
     {
         $rows = df()

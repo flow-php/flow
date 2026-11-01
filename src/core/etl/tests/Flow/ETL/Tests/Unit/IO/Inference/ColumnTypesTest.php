@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\IO\Inference;
 
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\IO\Inference\ColumnTypes;
 use Flow\ETL\IO\Inference\InferredTypes;
 use Flow\ETL\Tests\Double\RecordingSources;
@@ -437,7 +438,7 @@ final class ColumnTypesTest extends FlowTestCase
         $partial = ColumnTypes::sniff(
             ['ghost'],
             [['a' => '1']],
-            -1,
+            null,
             new StringTypeNarrower(InferredTypes::default()->toArray()),
         );
 
@@ -476,12 +477,21 @@ final class ColumnTypesTest extends FlowTestCase
             $bare->observe($row);
         }
 
-        $partial = ColumnTypes::sniff([], $rows, -1, new StringTypeNarrower(InferredTypes::default()->toArray()));
+        $partial = ColumnTypes::sniff([], $rows, null, new StringTypeNarrower(InferredTypes::default()->toArray()));
 
         static::assertSame(2, $partial->rows());
         static::assertEquals(
             $bare->folded()->schema(ColumnTypesMother::floor()),
             $partial->folded()->schema(ColumnTypesMother::floor()),
         );
+    }
+
+    public function test_a_negative_row_budget_is_refused_instead_of_read_as_a_budget(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Row budget must be 0 or more. Use null for every row.');
+
+        // @mago-expect analysis:invalid-argument
+        ColumnTypes::sniff([], [['a' => '1']], -1, new StringTypeNarrower(InferredTypes::default()->toArray()));
     }
 }

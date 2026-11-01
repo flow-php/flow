@@ -27,12 +27,6 @@ use function Flow\Telemetry\DSL\telemetry;
 use function Flow\Telemetry\DSL\tracer_provider;
 use function getenv;
 
-/**
- * Test context for OTLP integration tests.
- *
- * Centralizes all test dependencies like HTTP clients, factories, and collector metrics.
- * This context is initialized once and provides access to all shared test infrastructure.
- */
 final class OtelContext
 {
     private static ?self $instance = null;
@@ -98,11 +92,6 @@ final class OtelContext
         return $this->collectorMetrics;
     }
 
-    /**
-     * Create a Telemetry instance configured for the given transport configuration.
-     *
-     * Creates separate transport instances for each exporter to avoid shutdown race conditions.
-     */
     public function createTelemetry(TransportConfiguration $config, ?Resource $resource = null): Telemetry
     {
         $resource ??= resource([

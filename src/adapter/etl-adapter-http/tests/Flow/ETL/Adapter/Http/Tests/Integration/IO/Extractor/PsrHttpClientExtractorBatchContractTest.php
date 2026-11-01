@@ -24,10 +24,6 @@ use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function iterator_to_array;
 
-/**
- * One exchange is one row. The dynamic and paginated extractors yield one row per batch; the static one does too
- * unless withBatchSize() groups exchanges, and it never sends more requests than the limit asks for.
- */
 final class PsrHttpClientExtractorBatchContractTest extends FlowTestCase
 {
     public function test_a_stopped_dynamic_extractor_sends_no_further_request(): void

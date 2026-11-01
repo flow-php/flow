@@ -25,10 +25,6 @@ use Flow\Parquet\Tests\Double\ToStringUuid;
 
 use function str_repeat;
 
-/**
- * The write-acceptance matrix: one optional column `c` of each target type against each input value. Targets and
- * inputs are named, so data providers carry names and tests build the objects.
- */
 final class WriteAcceptance
 {
     public static function input(string $name): mixed

@@ -18,30 +18,6 @@ use function sprintf;
 use function strlen;
 
 /**
- * W3C Trace Context propagator for distributed tracing.
- *
- * Implements the W3C Trace Context specification for propagating
- * trace context across service boundaries using HTTP headers.
- *
- * Headers used:
- * - traceparent: {version}-{trace-id}-{parent-id}-{trace-flags}
- * - tracestate: Vendor-specific key-value pairs
- *
- * Example usage:
- * ```php
- * $propagator = new W3CTraceContext();
- *
- * // Extract from incoming request
- * $carrier = new ArrayCarrier($headers);
- * $ctx = $propagator->extract($carrier);
- * $spanContext = $ctx->spanContext;
- *
- * // Inject into outgoing request
- * $carrier = new ArrayCarrier();
- * $propagator->inject(new PropagationContext($spanContext), $carrier);
- * $headers = $carrier->unwrap();
- * ```
- *
  * @see https://www.w3.org/TR/trace-context/
  */
 final readonly class W3CTraceContext implements Propagator

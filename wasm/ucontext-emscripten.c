@@ -1,13 +1,5 @@
 /*
- * getcontext() / makecontext() / swapcontext() for Emscripten, built on its fiber API (needs -sASYNCIFY).
- *
- * PHP built with --disable-fiber-asm switches Fiber stacks through these three calls (Zend/zend_fibers.c), and
- * Emscripten's libc has none of them. Only what zend_fibers.c does is supported; anything else aborts with a message:
- *   - getcontext() on a context that makecontext() prepares next,
- *   - makecontext() with no arguments, uc_link == NULL and uc_stack set,
- *   - swapcontext() from the running context to a prepared or previously saved one. The main context is never
- *     passed to getcontext() (zend_fiber_init() points it at uninitialised memory), so the running context is
- *     tracked here, and the main one is captured at the first swap.
+ * getcontext()/makecontext()/swapcontext() on Emscripten fibers, only as zend_fibers.c uses them.
  */
 
 #include <emscripten/fiber.h>
@@ -17,11 +9,7 @@
 #include <ucontext.h>
 
 /*
- * At a swap, Asyncify spills the wasm locals of every frame on the stack into the context's buffer: about 1.2 bytes
- * per byte of C stack in use (measured on PHP 8.5: ~336 against ~276 bytes per nested internal callback).
- * A Fiber gives half of its own stack to the buffer, so nesting is bounded by the stack as on native PHP, at no extra
- * memory. The main context is captured at its first swap, from Flow's pipeline loop (~1.3 KB measured); 256 KB covers
- * ~750 nested internal callbacks there. Overflowing either buffer traps in Asyncify ("unreachable"), never corrupts.
+ * Asyncify spills about 1.2 bytes per byte of C stack in use; a Fiber gives half its stack, the main context 256 KB.
  */
 #define FLOW_UCONTEXT_MAIN_ASYNCIFY_SIZE (256 * 1024)
 #define FLOW_UCONTEXT_MIN_STACK_SIZE (64 * 1024)

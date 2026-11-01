@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Planning\Logical;
 
 use Flow\ETL\Planning\Explain\BoxLayout;
-use Flow\ETL\Planning\Explain\Entry;
 use Flow\ETL\Planning\Explain\FlowLayout;
 use Flow\ETL\Planning\Explain\LogicalOutline;
 use Flow\ETL\Planning\Explain\PhysicalOutline;
+use Flow\ETL\Planning\Explain\RenderedNode;
 use Flow\ETL\Planning\Explain\TreeLayout;
 use Flow\ETL\Planning\Physical\PhysicalPlan;
 
@@ -30,7 +30,7 @@ final readonly class Explain
         return $this->render((new PhysicalOutline())->of($plan), $format);
     }
 
-    public function render(Entry $root, Format $format): string
+    public function render(RenderedNode $root, Format $format): string
     {
         return (match ($format) {
             Format::tree, Format::declarations => new TreeLayout(),

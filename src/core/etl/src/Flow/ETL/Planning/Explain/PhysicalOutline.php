@@ -23,12 +23,14 @@ final readonly class PhysicalOutline
      * The plan the executor runs: one entry per pipeline, each reading the one under it. A pipeline ends at the
      * processor that needs every row before it emits, so the split is where rows stop flowing through.
      */
-    public function of(PhysicalPlan $plan): Entry
+    public function of(PhysicalPlan $plan): RenderedNode
     {
-        return new Entry($plan, 'Physical plan', $this->schema($plan), null, false, [$this->pipeline($plan->root())]);
+        return new RenderedNode($plan, 'Physical plan', $this->schema($plan), null, false, [$this->pipeline(
+            $plan->root(),
+        )]);
     }
 
-    public function pipeline(Pipeline $pipeline): Entry
+    public function pipeline(Pipeline $pipeline): RenderedNode
     {
         $lines = [];
         $children = [];
@@ -57,7 +59,7 @@ final readonly class PhysicalOutline
 
         $input = $pipeline->input();
 
-        return new Entry(
+        return new RenderedNode(
             $pipeline,
             'Pipeline #' . $pipeline->id,
             $lines,
@@ -70,11 +72,11 @@ final readonly class PhysicalOutline
     /**
      * A joined frame is planned apart, so its pipelines are numbered apart too - the name says which side they are.
      */
-    public function joined(PhysicalPlan $right): Entry
+    public function joined(PhysicalPlan $right): RenderedNode
     {
         $root = $this->pipeline($right->root());
 
-        return new Entry($right, 'Right side: ' . $root->name, $root->lines, null, false, $root->children);
+        return new RenderedNode($right, 'Right side: ' . $root->name, $root->lines, null, false, $root->children);
     }
 
     /**

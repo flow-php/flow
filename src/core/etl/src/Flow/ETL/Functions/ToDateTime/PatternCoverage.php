@@ -8,9 +8,7 @@ use function str_contains;
 use function strlen;
 
 /**
- * Which fields a DateTimeImmutable::createFromFormat() pattern parses. Without `!` or `|` every field the pattern
- * leaves out comes from the clock: no time field means the current time of day, a missing date part means today's.
- * One parsed time field resets the other time fields.
+ * Without `!` or `|`, a field the pattern leaves out comes from the clock.
  */
 final readonly class PatternCoverage
 {

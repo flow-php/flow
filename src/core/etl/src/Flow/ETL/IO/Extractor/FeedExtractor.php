@@ -12,12 +12,7 @@ use Flow\ETL\Values\Schema;
 use Generator;
 
 /**
- * Feeds a pipeline from outside, one batch per feed() call. When starved it suspends the enclosing
- * Fiber instead of ending the stream; finish() ends it. The trailing empty Rows after each batch keeps
- * the source one yield ahead of PipelineSteps::execute()'s current()/next() protocol, so a fed batch is processed in the
- * same resume that fed it and a late Signal::STOP still lands on a live yield.
- *
- * Must be driven from inside a Fiber - extract() calls Fiber::suspend().
+ * Must be driven inside a Fiber: extract() suspends when starved, finish() ends the stream.
  */
 final class FeedExtractor implements Extractor
 {

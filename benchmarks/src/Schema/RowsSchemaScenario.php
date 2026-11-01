@@ -12,13 +12,7 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
 /**
- * Guards that Rows::schema() stays an O(1) getter rather than recomputing per row.
- *
- * The assertion is a SHAPE, not a level: the mode must be FLAT across batch size. No threshold
- * policy can express that, so it is checked by hand at the baseline - the modes must agree within
- * the noise band - and nothing automated evaluates it.
- *
- * One call makes CALLS invocations because a single one is far below timer resolution.
+ * Guards Rows::schema() is O(1): mode must be flat across batch size, checked by hand at baseline.
  */
 final class RowsSchemaScenario
 {

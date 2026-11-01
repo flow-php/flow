@@ -12,29 +12,6 @@ use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Resource;
 use Psr\Clock\ClockInterface;
 
-/**
- * Entry point for the logging API.
- *
- * Creates and manages loggers for different instrumentation scopes.
- * The behavior (void, memory, OTLP, etc.) is determined by the injected processor.
- *
- * Example usage:
- * ```php
- * // For testing with memory storage
- * $processor = new MemoryLogProcessor(new MemoryExporter());
- * $provider = new LoggerProvider($processor, new SystemClock());
- *
- * // For OTLP export
- * $processor = batching_log_processor(otlp_exporter($transport));
- * $provider = new LoggerProvider($processor, new SystemClock());
- *
- * // For void/disabled logging
- * $provider = new LoggerProvider(new VoidProcessor(), new SystemClock());
- *
- * $logger = $provider->logger('my-service', '1.0.0');
- * $logger->info('Application started');
- * ```
- */
 final readonly class LoggerProvider
 {
     public function __construct(

@@ -71,8 +71,6 @@ final readonly class FlowManifestRenderer
                 continue;
             }
 
-            // Only fire when the paragraph is exactly the placeholder. Avoid
-            // accidentally hijacking text that happens to equal the marker.
             if ($owner->firstChild() !== $node || $node->next() !== null) {
                 continue;
             }

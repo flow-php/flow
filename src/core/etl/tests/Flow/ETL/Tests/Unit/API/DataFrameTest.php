@@ -1016,10 +1016,6 @@ final class DataFrameTest extends FlowTestCase
         static::assertCount(0, $rows->schema()->definitions());
     }
 
-    /**
-     * A step may add, drop or retype columns, so the source schema is no longer the output schema. Answering this
-     * case needs the output schema computed without executing, which is not built yet.
-     */
     public function test_fetch_does_not_claim_the_source_schema_when_a_step_reshapes_the_rows(): void
     {
         $rows = data_frame()

@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\JSON\IO\Extractor;
 use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\SchemaMismatchException;
+use Flow\ETL\IO\Inference\SchemaInference;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
@@ -27,7 +28,7 @@ interface JsonOpenSource
      * record handed up in record order. This instance is consumed afterwards.
      *
      * @param int<1, max> $batchSize
-     * @param null|int $sampleSize the inference's sample size when $schema was inferred; null when it was declared
+     * @param null|SchemaInference $inference the inference that made $schema; null when it was declared
      * @param null|Schema $known the schema the user sees, $schema plus the file's own columns
      *
      * @throws InferredSchemaException|SchemaMismatchException a refused record under an inferred schema
@@ -38,7 +39,7 @@ interface JsonOpenSource
         Schema $schema,
         int $batchSize,
         Backend $backend,
-        ?int $sampleSize = null,
+        ?SchemaInference $inference = null,
         ?Schema $known = null,
     ): Iterator;
 }

@@ -34,8 +34,7 @@ data_frame()
     ->write(to_dbal_table_insert($connection, 'orders'))
     ->run();
 
-// LIMIT/OFFSET makes the database skip every row of every earlier page. Keyset remembers the last
-// row instead and asks for what follows it, so page 500 costs the same as page 1.
+// Keyset remembers the last row instead of skipping earlier pages, so page 500 costs the same as page 1.
 data_frame()
     ->read(
         from_dbal_key_set_qb(

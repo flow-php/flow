@@ -75,9 +75,6 @@ use function sort;
 final class AllFunctionsDeclareTheirTypeTest extends FlowTestCase
 {
     /**
-     * The declared nullable set: 23 unconditional + 7 composed + 25 null-propagating predicates.
-     * Aggregate counts alone are satisfied by any 50 - these 50 are the ones a worker gets wrong.
-     *
      * @return list<class-string<ScalarFunction>>
      */
     public static function declared_nullable_classes(): array

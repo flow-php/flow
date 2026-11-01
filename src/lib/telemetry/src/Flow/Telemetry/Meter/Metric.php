@@ -10,23 +10,6 @@ use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Resource;
 
 /**
- * Represents a single metric measurement.
- *
- * A Metric captures a point-in-time measurement with its metadata,
- * including the instrument type, value, and categorization attributes.
- *
- * Example:
- * ```php
- * $metric = new Metric(
- *     name: 'http.requests',
- *     type: MetricType::COUNTER,
- *     value: 1,
- *     attributes: Attributes::create(['http.method' => 'GET']),
- *     timestamp: new \DateTimeImmutable(),
- *     scope: $instrumentationScope,
- * );
- * ```
- *
  * @import-type TAttributeValue from Attributes
  */
 final readonly class Metric

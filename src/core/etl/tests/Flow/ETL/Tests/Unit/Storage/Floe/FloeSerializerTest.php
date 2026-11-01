@@ -47,10 +47,6 @@ final class FloeSerializerTest extends TestCase
     }
 
     /**
-     * Heterogeneous rows no longer round-trip byte-for-type-exact: one write
-     * session carries one schema, so absent-in-some-row columns widen to nullable.
-     * That residue is covered by test_heterogeneous_rows_round_trip_unpadded_but_union_widened.
-     *
      * @return array<string, array{Rows}>
      */
     public static function exactRoundTripValues(): array
@@ -93,9 +89,6 @@ final class FloeSerializerTest extends TestCase
     public function test_heterogeneous_rows_round_trip_unpadded_but_union_widened(): void
     {
         $serializer = new FloeSerializer(new AdaptiveBackend());
-        // one write session = one schema: rows keep their own columns (unpadded) but
-        // column types widen to the batch union - id and name become nullable because
-        // each is absent from some row. Values are unchanged; only nullability widens.
         $value = array_to_rows(
             [['id' => 1], ['id' => 2, 'name' => 'John'], ['name' => 'Jane']],
             schema(int_schema('id', nullable: true), str_schema('name', nullable: true)),

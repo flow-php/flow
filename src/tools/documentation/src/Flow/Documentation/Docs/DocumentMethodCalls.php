@@ -28,12 +28,7 @@ use function sprintf;
 use function str_starts_with;
 
 /**
- * Method calls a page makes on a receiver whose class is known, and that the class does not declare.
- *
- * Only a call whose receiver resolves to a real class produces a verdict. That is deliberate: asking
- * merely whether SOME class anywhere declares a method by that name cannot tell a rename from a
- * coincidence - `Cost::total()` was renamed to `totalCost()`, but an unrelated dependency also has a
- * `total()`, so a name-only check stays silent on a defect it exists to find.
+ * Only resolved receivers give a verdict; a name-only check cannot tell a rename from a coincidence.
  */
 final readonly class DocumentMethodCalls
 {

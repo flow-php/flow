@@ -18,8 +18,7 @@ use function is_float;
 use function is_int;
 
 /**
- * UINT_64 decodes to a digit string; its physical value is the INT64 bit pattern, ordered unsigned. A float compares
- * numerically, a fraction lying between two integers.
+ * Physical value is the INT64 bit pattern ordered unsigned; decoded value is a digit string.
  */
 final readonly class UnsignedInt64PreImage implements PreImage
 {

@@ -10,15 +10,7 @@ use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tracer\SpanContext;
 
 /**
- * Complete log entry ready for processing.
- *
- * LogEntry wraps the user-provided LogRecord together with
- * contextual information resolved at emit time:
- * - InstrumentationScope from the Logger
- * - SpanContext from the context storage (for trace correlation)
- * - Resolved timestamp
- *
- * This is the internal type passed to LogProcessor and Exporter implementations.
+ * LogRecord plus scope, span context and timestamp resolved at emit.
  *
  * @import-type TAttributeValue from \Flow\Telemetry\Attributes
  * @import-type TAttributeValueMap from \Flow\Telemetry\Attributes

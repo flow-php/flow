@@ -16,8 +16,7 @@ use Flow\ETL\Runtime\FlowContext;
 use WeakMap;
 
 /**
- * Builds the runtime step of each branch and transaction of one run, once: a fiber restarted over the same pipeline
- * runs the steps a BranchLoader forwards its discard() to. Never shared between runs.
+ * One instance per run, never shared; builds each branch step once.
  */
 final class WriteLoaderFactory
 {

@@ -1,5 +1,4 @@
-//! Every refusal the crate returns, as data. The wording belongs to the caller: flow_php renders each variant into the
-//! message its pure-PHP twin throws, so a message change never moves this crate.
+//! Every refusal as data; flow_php renders the message its PHP twin throws.
 
 use arrow_schema::{ArrowError, DataType};
 
@@ -38,8 +37,7 @@ pub enum Part {
     Base,
 }
 
-/// `node` is a pre-order index in one column's node tree (the map entries node counts); `column` and `buffer` are
-/// indexes in a frame body.
+/// `node` is a pre-order index in one column's node tree; `column` and `buffer` index a frame body.
 #[derive(Debug)]
 pub enum Error {
     SchemaJsonUtf8,

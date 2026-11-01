@@ -19,7 +19,7 @@ final readonly class SchemaInferrer
     ) {}
 
     /**
-     * sampleSize(-1) sniffs every unit whole, through the inference's Sniffs when it takes them, and merges the samples
+     * everyRow() sniffs every unit whole, through the inference's Sniffs when it takes them, and merges the samples
      * in unit order; a bounded sample drains one row budget across the units in listing order, counting a unit toward
      * filesToSniff only when it yielded a row.
      */
@@ -28,10 +28,10 @@ final readonly class SchemaInferrer
         $floor = new TypeFloor($this->inference->candidates());
         $samples = [];
 
-        if ($this->inference->sampleSize === -1) {
+        if ($this->inference->sampleSize === null) {
             $units = max(
                 0,
-                $this->inference->filesToSniff === -1
+                $this->inference->filesToSniff === null
                     ? $sniffer->units()
                     : min($this->inference->filesToSniff, $sniffer->units()),
             );
@@ -41,7 +41,7 @@ final readonly class SchemaInferrer
                 $samples = [];
 
                 for ($unit = 0; $unit < $units; $unit++) {
-                    $samples[] = $sniffer->sniff($unit, -1);
+                    $samples[] = $sniffer->sniff($unit, null);
                 }
             }
         } else {
@@ -49,7 +49,7 @@ final readonly class SchemaInferrer
             $sniffed = 0;
 
             for ($unit = 0; $unit < $sniffer->units(); $unit++) {
-                if ($this->inference->filesToSniff !== -1 && $sniffed >= $this->inference->filesToSniff) {
+                if ($this->inference->filesToSniff !== null && $sniffed >= $this->inference->filesToSniff) {
                     break;
                 }
 

@@ -12,10 +12,7 @@ use function is_string;
 use function str_starts_with;
 
 /**
- * The process memory a spilling algorithm (sort, TopN, join build) lets the whole process reach before it spills - the
- * limit is compared with the process's usage, never with the algorithm's own buffer, so a sort and a join in one
- * pipeline together stay under it. FLOW_MAX_MEMORY when set, otherwise 70% of PHP's memory_limit, and 1 GiB when PHP's
- * memory_limit is -1 - an unlimited algorithm would grow until the OS kills PHP.
+ * Compared with process usage; FLOW_MAX_MEMORY, else 70% of memory_limit, else 1 GiB.
  */
 final readonly class MemoryLimit
 {

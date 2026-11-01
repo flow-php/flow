@@ -21,21 +21,6 @@ use function mb_strlen;
 use function mb_substr;
 
 /**
- * Represents a single operation within a trace.
- *
- * A Span is the primary building block of a trace, representing a single
- * operation with a start time, end time, attributes, events, and links.
- * Spans are mutable during their lifetime and can accumulate state.
- *
- * Example usage:
- * ```php
- * $span = new Span('process-order', $context, SpanKind::INTERNAL, new \DateTimeImmutable());
- * $span->setAttribute('order.id', '12345')
- *      ->recordEvent(GenericEvent::create('validation.passed', new \DateTimeImmutable()))
- *      ->setStatus(SpanStatus::ok())
- *      ->end();
- * ```
- *
  * @see https://opentelemetry.io/docs/specs/otel/trace/api/#span
  *
  * @import-type TAttributeValue from Attributes

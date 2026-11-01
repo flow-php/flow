@@ -661,13 +661,13 @@ For more control, you can use modifier objects directly with `traverse()`:
 ```php
 <?php
 
-use Flow\PostgreSql\AST\Transformers\{CountModifier, KeysetColumn, KeysetPaginationConfig, KeysetPaginationModifier, PaginationConfig, PaginationModifier, SortOrder};
+use Flow\PostgreSql\AST\Transformers\{CountModifier, KeysetColumn, KeysetPaginationConfig, KeysetPaginationModifier, OffsetPaginationConfig, OffsetPaginationModifier, SortOrder};
 
 use function Flow\PostgreSql\DSL\sql_parse;
 
 // Offset pagination modifier
 $query = sql_parse('SELECT * FROM users ORDER BY id');
-$query->traverse(new PaginationModifier(new PaginationConfig(limit: 10, offset: 20)));
+$query->traverse(new OffsetPaginationModifier(new OffsetPaginationConfig(limit: 10, offset: 20)));
 echo $query->deparse(); // SELECT * FROM users ORDER BY id LIMIT 10 OFFSET 20
 
 // Count modifier
@@ -695,12 +695,12 @@ other modifiers:
 ```php
 <?php
 
-use Flow\PostgreSql\AST\Transformers\{ExplainConfig, ExplainModifier, PaginationConfig, PaginationModifier};
+use Flow\PostgreSql\AST\Transformers\{ExplainConfig, ExplainModifier, OffsetPaginationConfig, OffsetPaginationModifier};
 
 use function Flow\PostgreSql\DSL\sql_parse;
 
 $query = sql_parse('SELECT * FROM users ORDER BY id');
-$query->traverse(new PaginationModifier(new PaginationConfig(limit: 10)));
+$query->traverse(new OffsetPaginationModifier(new OffsetPaginationConfig(limit: 10)));
 $query->traverse(new ExplainModifier(ExplainConfig::forEstimate()));
 echo $query->deparse(); // EXPLAIN (COSTS 1, FORMAT "json") SELECT * FROM users ORDER BY id LIMIT 10
 ```
@@ -710,12 +710,12 @@ Pass `param()` instead of a number to leave the value to the query's parameters 
 ```php
 <?php
 
-use Flow\PostgreSql\AST\Transformers\{PaginationConfig, PaginationModifier};
+use Flow\PostgreSql\AST\Transformers\{OffsetPaginationConfig, OffsetPaginationModifier};
 
 use function Flow\PostgreSql\DSL\{param, sql_parse};
 
 $query = sql_parse('SELECT * FROM users WHERE active = $1 ORDER BY id');
-$query->traverse(new PaginationModifier(new PaginationConfig(limit: param(2), offset: param(3))));
+$query->traverse(new OffsetPaginationModifier(new OffsetPaginationConfig(limit: param(2), offset: param(3))));
 echo $query->deparse(); // SELECT * FROM users WHERE active = $1 ORDER BY id LIMIT $2 OFFSET $3
 ```
 
@@ -789,7 +789,7 @@ catalog_comparator()->compare($current, $target, dropIfExists: true);
 ```php
 <?php
 
-use Flow\PostgreSql\AST\Transformers\{PaginationConfig, PaginationModifier};
+use Flow\PostgreSql\AST\Transformers\{OffsetPaginationConfig, OffsetPaginationModifier};
 use Flow\PostgreSql\Exception\{ParserException, ExtensionNotLoadedException, PaginationException};
 
 use function Flow\PostgreSql\DSL\sql_parse;
@@ -805,7 +805,7 @@ try {
 try {
     // OFFSET without ORDER BY throws exception
     $query = sql_parse('SELECT * FROM users');
-    $query->traverse(new PaginationModifier(new PaginationConfig(limit: 10, offset: 5)));
+    $query->traverse(new OffsetPaginationModifier(new OffsetPaginationConfig(limit: 10, offset: 5)));
 } catch (PaginationException $e) {
     echo "Pagination error: " . $e->getMessage();
     // "OFFSET without ORDER BY produces non-deterministic results"

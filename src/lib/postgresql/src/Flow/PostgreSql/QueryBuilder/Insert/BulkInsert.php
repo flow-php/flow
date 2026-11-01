@@ -16,12 +16,7 @@ use function implode;
 use function sprintf;
 
 /**
- * Optimized bulk INSERT query builder for high-performance multi-row inserts.
- *
- * Unlike InsertBuilder which uses immutable patterns (O(n²) for n rows),
- * this class generates SQL directly using string operations (O(n) complexity).
- *
- * Uses PostgreSQL-style numbered placeholders ($1, $2, $3...).
+ * Builds the SQL string directly: O(n) where the immutable InsertBuilder is O(n²).
  */
 final readonly class BulkInsert implements Sql
 {

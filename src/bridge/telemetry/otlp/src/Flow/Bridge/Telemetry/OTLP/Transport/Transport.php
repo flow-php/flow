@@ -6,14 +6,6 @@ namespace Flow\Bridge\Telemetry\OTLP\Transport;
 
 use Flow\Telemetry\Signal\Signals;
 
-/**
- * Interface for sending telemetry data to OTLP backends.
- *
- * Transports handle the actual network communication to OTLP collectors
- * (HTTP, gRPC) or local sinks (file, stream).
- *
- * The signal type (traces, metrics, logs) is carried on the {@see Signal::$type} discriminator.
- */
 interface Transport
 {
     /**

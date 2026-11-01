@@ -7,24 +7,6 @@ namespace Flow\Telemetry\Propagation;
 use Flow\Telemetry\Context\Baggage;
 use Flow\Telemetry\Tracer\SpanContext;
 
-/**
- * Value object containing propagated context information.
- *
- * PropagationContext holds both trace context (SpanContext) and application
- * data (Baggage) that can be propagated across process boundaries.
- *
- * Example usage:
- * ```php
- * $propagator = new CompositePropagator([
- *     new W3CTraceContext(),
- *     new W3CBaggage(),
- * ]);
- *
- * $ctx = $propagator->extract($carrier);
- * $spanContext = $ctx->spanContext;
- * $baggage = $ctx->baggage;
- * ```
- */
 final readonly class PropagationContext
 {
     public function __construct(

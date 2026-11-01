@@ -50,9 +50,7 @@ final class GoogleSheetExtractor implements
     private BatchSize $batchSize;
 
     /**
-     * Core defaults to 20 480. A sheet range is an HTTP
-     * request and the range clamps to the grid, so that default samples the WHOLE sheet for anything under
-     * ~20 000 rows - and the read then fetches it again.
+     * A sheet range is an HTTP request clamped to the grid, so the core default would sample the whole sheet.
      */
     private const int SAMPLE_ROWS = 100;
 
@@ -134,13 +132,9 @@ final class GoogleSheetExtractor implements
         // than fetching the same rows again; nothing can have diverged from a schema read off these very rows
         $sheetRows = ($sampledNow ? $sniffer->rows() : null) ?? $reader->rows($this->rowsPerPage);
         $uri = sprintf('google-sheet://%s/%s', $this->spreadsheetId, $this->columnRange->sheetName);
-        $batch = new RecordBatch(
-            $schema,
-            $backend,
-            $this->batchSize(),
-            $uri,
-            $this->schema === null ? $this->inference->sampleSize : null,
-        );
+        $batch = $this->schema === null
+            ? RecordBatch::inferred($schema, $backend, $this->batchSize(), $uri, $this->inference->sampleSize)
+            : new RecordBatch($schema, $backend, $this->batchSize(), $uri);
 
         foreach ($this->recordBatches($batch, $uri, $sheetRows, $base, $checked) as $rows) {
             $yielded += $rows instanceof Rows ? $rows->count() : 0;

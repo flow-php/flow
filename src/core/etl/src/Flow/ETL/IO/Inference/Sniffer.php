@@ -22,9 +22,9 @@ interface Sniffer
     public function names(): array;
 
     /**
-     * @param int<0, max>|-1 $rowBudget rows to observe from this unit, 0 for none, -1 for all of them
+     * @param null|int<0, max> $rowBudget rows to observe from this unit, 0 for none, null for every row
      */
-    public function sniff(int $unit, int $rowBudget): Sample;
+    public function sniff(int $unit, ?int $rowBudget): Sample;
 
     /**
      * Live one-unit sniffers that together cover $unit (unit 0 of each; the parent-resolved header and candidate

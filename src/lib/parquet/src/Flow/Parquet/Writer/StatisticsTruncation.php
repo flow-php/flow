@@ -19,8 +19,7 @@ use function strlen;
 use function substr;
 
 /**
- * arrow-rs 60 column/writer/mod.rs truncate_min_value / truncate_max_value. A truncated bound is not exact; a bound
- * that cannot be truncated (or whose increment fails) is returned as given.
+ * Port of arrow-rs 60 truncate_min_value/truncate_max_value.
  */
 final readonly class StatisticsTruncation
 {

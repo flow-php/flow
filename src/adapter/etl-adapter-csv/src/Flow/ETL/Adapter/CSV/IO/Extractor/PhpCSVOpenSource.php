@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\CSV\IO\Extractor;
 
 use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\IO\Inference\ColumnTypes;
+use Flow\ETL\IO\Inference\SchemaInference;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Rows\RecordBatch;
@@ -40,13 +41,19 @@ final class PhpCSVOpenSource implements CSVOpenSource
     /**
      * @return Generator<int, CorruptedRecordException|Rows>
      */
-    public function batches(Schema $schema, int $batchSize, Backend $backend, ?int $sampleSize = null): Generator
-    {
+    public function batches(
+        Schema $schema,
+        int $batchSize,
+        Backend $backend,
+        ?SchemaInference $inference = null,
+    ): Generator {
         $uri = $this->stream->path()->uri();
         $position = $this->stream instanceof RangeSourceStream ? $this->stream->start() : 0;
         // a window cut past the file's start cannot know how many lines came before it
         $line = $position === 0 ? 1 : null;
-        $batch = new RecordBatch($schema, $backend, $batchSize, $uri, $sampleSize);
+        $batch = $inference === null
+            ? new RecordBatch($schema, $backend, $batchSize, $uri)
+            : RecordBatch::inferred($schema, $backend, $batchSize, $uri, $inference->sampleSize);
 
         foreach ($this->lineReader->readLines($this->stream) as $record) {
             $offset = $position;
@@ -146,7 +153,7 @@ final class PhpCSVOpenSource implements CSVOpenSource
         return $this->producedRows;
     }
 
-    public function sniff(array $names, int $rowBudget, TypeNarrower $typer): ColumnTypes
+    public function sniff(array $names, ?int $rowBudget, TypeNarrower $typer): ColumnTypes
     {
         return ColumnTypes::sniff($names, $this->records(), $rowBudget, $typer);
     }

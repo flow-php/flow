@@ -44,7 +44,9 @@ final class SchemaInferenceTest extends FlowTestCase
     public function test_normalize_round_trips_with_and_without_candidates(): void
     {
         $default = new SchemaInference();
-        $custom = new SchemaInference(-1, -1, new InferredTypes(type_integer(), type_date()), true);
+        $custom = (new SchemaInference(types: new InferredTypes(type_integer(), type_date()), unionByName: true))
+            ->everyRow()
+            ->everySource();
 
         static::assertSame(
             ['sample_size' => 20_480, 'files_to_sniff' => 10, 'types' => null, 'union_by_name' => false],
@@ -56,16 +58,23 @@ final class SchemaInferenceTest extends FlowTestCase
             $custom->normalize()['types'],
         );
         static::assertEquals($custom, SchemaInference::fromArray($custom->normalize()));
+        static::assertSame([null, null], [$custom->normalize()['sample_size'], $custom->normalize()['files_to_sniff']]);
     }
 
-    #[TestWith([0, 10, 'Sample size must be greater than 0, or -1 for all rows'])]
-    #[TestWith([-2, 10, 'Sample size must be greater than 0, or -1 for all rows'])]
-    #[TestWith([100, 0, 'Files to sniff must be greater than 0, or -1 for all sources'])]
-    public function test_a_size_below_one_other_than_minus_one_is_refused(
-        int $sampleSize,
-        int $filesToSniff,
-        string $message,
-    ): void {
+    public function test_every_row_with_a_finite_files_to_sniff_round_trips(): void
+    {
+        $inference = (new SchemaInference(filesToSniff: 3))->everyRow();
+
+        static::assertSame([null, 3], [$inference->sampleSize, $inference->filesToSniff]);
+        static::assertEquals($inference, SchemaInference::fromArray($inference->normalize()));
+    }
+
+    #[TestWith([0, 10, 'Sample size must be greater than 0. Use everyRow() to infer from every row.'])]
+    #[TestWith([-1, 10, 'Sample size must be greater than 0. Use everyRow() to infer from every row.'])]
+    #[TestWith([100, 0, 'Files to sniff must be greater than 0. Use everySource() to infer from every source.'])]
+    #[TestWith([100, -1, 'Files to sniff must be greater than 0. Use everySource() to infer from every source.'])]
+    public function test_a_size_below_one_is_refused(int $sampleSize, int $filesToSniff, string $message): void
+    {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage($message);
 

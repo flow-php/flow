@@ -127,10 +127,10 @@ final class ExcelSniffer implements Describable, Sniffer
      * A bounded sample keeps what it parsed for take(); an unbounded one parses every row, so it streams and closes
      * as it goes. Either way the fold stops advancing a sheet once its budget is spent.
      */
-    public function sniff(int $unit, int $rowBudget): Sample
+    public function sniff(int $unit, ?int $rowBudget): Sample
     {
         $sheet = $this->sheets[$unit] ??= $this->workbook->sheet($this->files[$unit]);
-        $sample = new WorkbookSheetSample($sheet, $rowBudget === -1 ? $sheet->rows() : $sheet->sample());
+        $sample = new WorkbookSheetSample($sheet, $rowBudget === null ? $sheet->rows() : $sheet->sample());
 
         return new Sample(
             ColumnTypes::sniff($this->names(), $sample, $rowBudget, $this->typer)->folded(),

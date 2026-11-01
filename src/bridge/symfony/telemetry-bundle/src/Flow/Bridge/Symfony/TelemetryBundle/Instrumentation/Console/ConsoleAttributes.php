@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Console;
 
 /**
- * Flow-specific console attribute keys.
- *
- * Official keys (e.g. `process.exit.code`, `error.type`) come from
- * {@see \Flow\Telemetry\SemConvAttributes}; per OTel naming guidance flow-custom keys live under
- * the `flow.symfony.` prefix. The signal attribute has no registry home, hence the flow key.
+ * Custom keys only, under `flow.symfony.`; official keys live in SemConvAttributes.
  *
  * @see https://opentelemetry.io/docs/specs/semconv/general/naming/
  */

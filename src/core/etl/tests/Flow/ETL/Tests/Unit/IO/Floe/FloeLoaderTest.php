@@ -200,10 +200,6 @@ final class FloeLoaderTest extends TestCase
         static::assertSame([1, 2, 3], $ids);
     }
 
-    /**
-     * The loader strips only what partitionBy() moved into the path. A declared column the rows do
-     * not carry stays declared, and refusing it is the writer's job.
-     */
     public function test_a_declared_column_the_rows_do_not_carry_is_refused_not_dropped(): void
     {
         $filesystem = memory_filesystem();

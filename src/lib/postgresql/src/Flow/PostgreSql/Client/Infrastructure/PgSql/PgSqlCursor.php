@@ -26,9 +26,7 @@ final class PgSqlCursor implements Cursor
     private ?array $columnMetaCache = null;
 
     /**
-     * The columns whose values ResultCaster converts, by name. pg_fetch_assoc() collapses duplicate output
-     * names last-wins, so the type lookup collapses the same way. Cached beside the meta list because
-     * convertRow() needs it for every row.
+     * By name, last wins, as pg_fetch_assoc() collapses duplicate output names.
      *
      * @var null|array<string, string>
      */

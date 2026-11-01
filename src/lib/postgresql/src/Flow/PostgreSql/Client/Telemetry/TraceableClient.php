@@ -39,12 +39,6 @@ use function rsort;
 use function strlen;
 use function substr;
 
-/**
- * Decorator that adds telemetry instrumentation to a PostgreSQL client.
- *
- * Wraps all query and transaction operations with spans, metrics, and logs
- * following OpenTelemetry semantic conventions for database operations.
- */
 final class TraceableClient implements Client
 {
     private ?Logger $logger = null;
@@ -605,8 +599,7 @@ final class TraceableClient implements Client
     }
 
     /**
-     * Low-cardinality attribute subset for metrics. Query text and parameter values are deliberately
-     * excluded so each distinct SQL string does not spawn its own metric series.
+     * Query text and parameters are excluded so each SQL string does not spawn its own metric series.
      *
      * @return array<string, string>
      */
@@ -667,8 +660,7 @@ final class TraceableClient implements Client
     }
 
     /**
-     * Low-cardinality attribute subset for the transaction duration metric. Excludes server.address and the
-     * savepoint label so the metric stays low-cardinality.
+     * Excludes server.address and the savepoint label to stay low-cardinality.
      *
      * @return array<string, int|string>
      */

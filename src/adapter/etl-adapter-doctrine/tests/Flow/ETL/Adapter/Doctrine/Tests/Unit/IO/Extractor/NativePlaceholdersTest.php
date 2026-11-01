@@ -95,10 +95,7 @@ final class NativePlaceholdersTest extends FlowTestCase
 
     public function test_dollar_quoting_is_rewritten_inside_because_dbal_does_not_tokenise_it(): void
     {
-        // DBAL's parser does not know $$...$$, and DBAL's own pgsql driver runs the same parser on
-        // every prepare(), so a :name inside dollar-quoting never worked through DBAL. The probe
-        // must describe the statement DBAL executes, so it pins DBAL's behaviour, not PostgreSQL's
-        // grammar. When a DBAL upgrade fixes the parser this test fails and the expectation flips.
+        // Pins DBAL's parser, which ignores $$...$$; the expectation flips when DBAL fixes it.
         static::assertEquals(
             new RewrittenSql('SELECT $$ $1 $$ FROM t', 1),
             (new NativePlaceholders())->toPostgreSql('SELECT $$ :nope $$ FROM t'),

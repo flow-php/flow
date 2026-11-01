@@ -1,7 +1,4 @@
-//! Row groups of a Parquet file as canonical arrays: only the groups a read plan selects rows of are decoded, and only
-//! the byte ranges arrow-rs's push decoder asks for are read - the selected pages when a plan skips rows inside a
-//! group, whole projected chunks otherwise. Every projected column is checked against the cast table before the first
-//! batch.
+//! Decodes only the row groups and byte ranges a read plan selects.
 
 use std::ops::Range;
 use std::sync::Arc;
@@ -162,7 +159,7 @@ pub struct ParquetReader {
 }
 
 impl ParquetReader {
-    /// `source`: the file's bytes (`PhpStream`); `meta`: its footer without page indexes, which `plan` was built from. Offset indexes are loaded for the projected and predicate leaves of the groups the plan reads in part, and of every planned group when the plan has a row filter.
+    /// `source`: the file's bytes; `meta`: its footer without page indexes, which `plan` was built from.
     pub fn open<R: ReadAt + Send + Sync + 'static>(
         source: Arc<R>,
         meta: &Arc<ParquetMetaData>,
@@ -383,8 +380,7 @@ fn coalesced(mut ranges: Vec<Range<u64>>) -> Vec<Range<u64>> {
     merged
 }
 
-/// The struct child at `path` under `schema`'s roots and whether it or a struct above it is nullable; `Err` holds the
-/// field a segment is no child of, `None` when no root is named `path[0]`.
+/// The struct child at `path` and whether it or a parent is nullable; `None` when no root is `path[0]`.
 pub fn struct_field<'a>(schema: &'a Schema, path: &[String]) -> Result<(&'a Field, bool), Option<&'a Field>> {
     let mut field = schema.field_with_name(&path[0]).map_err(|_| None)?;
     let mut nullable = field.is_nullable();
@@ -435,11 +431,7 @@ fn child(array: &ArrayRef, path: &[String]) -> Result<ArrayRef, Error> {
     }))
 }
 
-/// The inferred schema with every leaf read as the type `canonical()` retags without a copy: an INT96 leaf as
-/// `Timestamp(µs, "UTC")` (exact over years 1 to 9999, where arrow-rs's default nanoseconds wrap outside 1677-2262),
-/// a string or binary leaf - dictionary- or view-encoded in the file's `ARROW:schema` too - as `LargeUtf8` or
-/// `LargeBinary` (i64 offsets written once, no dictionary expansion into i32 offsets); `None` when no leaf changes.
-/// Every other leaf keeps its inferred type: `apply_hint` has no arm for them and refuses the whole file.
+/// The inferred schema with INT96 read as µs UTC timestamps and strings as large types; `None` when no leaf changes.
 fn canonical_hint(schema: &SchemaRef, descr: &SchemaDescriptor) -> Option<SchemaRef> {
     let mut leaf = 0;
     let mut hinted = false;
@@ -480,9 +472,7 @@ fn canonical_hinted(field: &FieldRef, descr: &SchemaDescriptor, leaf: &mut usize
     Arc::new(Field::clone(field).with_data_type(data_type))
 }
 
-/// The type a leaf is read as when it is not its inferred one. A dictionary of strings or binaries is read plain: the
-/// file's dictionary pages still decode once per value, into i64 offsets instead of a `Dictionary(Int32, Utf8)`
-/// arrow-rs would otherwise expand.
+/// A dictionary of strings or binaries is read plain, into i64 offsets.
 fn leaf_hint(inferred: &DataType, column: &ColumnDescriptor) -> Option<DataType> {
     if column.physical_type() == Type::INT96 {
         let micros = DataType::Timestamp(TimeUnit::Microsecond, Some("UTC".into()));

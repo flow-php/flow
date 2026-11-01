@@ -7,10 +7,6 @@ namespace Flow\PostgreSql\QueryBuilder\Merge;
 use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 
-/**
- * Builder for WHEN MATCHED clause in MERGE statement.
- * Supports UPDATE, DELETE, and DO NOTHING actions.
- */
 final readonly class MergeWhenMatched
 {
     private function __construct(

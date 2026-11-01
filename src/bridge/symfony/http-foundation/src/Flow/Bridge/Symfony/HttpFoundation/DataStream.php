@@ -37,7 +37,7 @@ final class DataStream
 
     private int $status = Response::HTTP_OK;
 
-    private ?StreamClosure $streamClosure = null;
+    private ?StreamCompletionListener $streamClosure = null;
 
     /**
      * @var array<Transformation>
@@ -106,7 +106,7 @@ final class DataStream
      * The closure receives the Report from DataFrame execution.
      * Note: Report will be null unless Analyze is configured via config().
      */
-    public function onComplete(StreamClosure $streamClosure): self
+    public function onComplete(StreamCompletionListener $streamClosure): self
     {
         $this->streamClosure = $streamClosure;
 

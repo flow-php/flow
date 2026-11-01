@@ -8,12 +8,6 @@ use function preg_match;
 use function strtoupper;
 use function trim;
 
-/**
- * Extracts semantic attributes from SQL queries for telemetry purposes.
- *
- * Parses SQL statements to identify the operation type (SELECT, INSERT, etc.)
- * and target table/collection for OpenTelemetry span attributes.
- */
 final readonly class QueryAttributesExtractor
 {
     /**

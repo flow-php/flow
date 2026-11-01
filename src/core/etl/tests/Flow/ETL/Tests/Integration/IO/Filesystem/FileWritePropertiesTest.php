@@ -20,10 +20,6 @@ use function Flow\Floe\DSL\from_floe;
 use function Flow\Floe\DSL\to_floe;
 use function iterator_to_array;
 
-/**
- * The write-side properties of the commit protocol: Overwrite's tmp->final rename with its stale sweep, and a save mode
- * per loader. The per-format properties (a header written once, a close tag once per file) run in their adapter.
- */
 final class FileWritePropertiesTest extends FlowIntegrationTestCase
 {
     public function test_overwrite_promotes_the_temporary_output(): void

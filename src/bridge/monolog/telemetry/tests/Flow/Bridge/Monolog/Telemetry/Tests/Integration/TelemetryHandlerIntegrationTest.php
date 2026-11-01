@@ -6,10 +6,10 @@ namespace Flow\Bridge\Monolog\Telemetry\Tests\Integration;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use Flow\Bridge\Monolog\Telemetry\AttributeValueNormalizer;
 use Flow\Bridge\Monolog\Telemetry\LogRecordConverter;
 use Flow\Bridge\Monolog\Telemetry\SeverityMapper;
 use Flow\Bridge\Monolog\Telemetry\TelemetryHandler;
-use Flow\Bridge\Monolog\Telemetry\ValueNormalizer;
 use Flow\Telemetry\Logger\Severity;
 use Flow\Telemetry\Resource;
 use InvalidArgumentException;
@@ -27,7 +27,7 @@ use function Flow\Bridge\Monolog\Telemetry\DSL\telemetry_handler;
 
 #[CoversClass(TelemetryHandler::class)]
 #[CoversClass(LogRecordConverter::class)]
-#[CoversClass(ValueNormalizer::class)]
+#[CoversClass(AttributeValueNormalizer::class)]
 #[CoversClass(SeverityMapper::class)]
 final class TelemetryHandlerIntegrationTest extends TestCase
 {

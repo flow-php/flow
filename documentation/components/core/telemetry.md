@@ -321,7 +321,7 @@ pass_through_log_processor($exporter)
 | `always_off_sampler()`           | Drop every span                                                       |
 | `trace_id_ratio_based_sampler()` | Sample a deterministic fraction of traces                             |
 | `parent_based_sampler()`         | Honor the parent's decision; root sampler for parentless spans        |
-| `attribute_matching_sampler()`   | Drop spans matching an attribute filter, defer the rest to a delegate |
+| `attribute_filtering_sampler()`  | Drop spans matching an attribute filter, defer the rest to a delegate |
 
 ### Exporters (Console)
 

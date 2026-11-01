@@ -7,10 +7,7 @@ namespace Flow\PostgreSql\Client;
 use Flow\PostgreSql\Client\Types\ValueType;
 
 /**
- * Wrapper for values that need explicit type specification.
- *
- * Use when automatic type detection doesn't produce the desired PostgreSQL type.
- * The targetType specifies which PostgreSQL type the value should be converted to.
+ * Use when automatic type detection picks the wrong PostgreSQL type.
  */
 final readonly class TypedValue
 {

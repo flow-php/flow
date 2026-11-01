@@ -10,6 +10,8 @@ use Flow\ETL\Runtime\Config;
 use Flow\ETL\Runtime\FlowContext;
 use Flow\ETL\Runtime\Telemetry\TelemetryContext;
 use Flow\ETL\Runtime\Telemetry\TelemetryOptions;
+use Flow\ETL\Storage\FilesystemRowsStorage;
+use Flow\Filesystem\Path;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LogEntry;
 use Flow\Telemetry\Logger\LoggerProvider;
@@ -28,7 +30,12 @@ use function array_keys;
 use function array_map;
 use function array_values;
 use function Flow\ETL\DSL\config_builder;
+use function Flow\ETL\DSL\filesystem_cache;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\Filesystem\DSL\filesystem_telemetry_config;
+use function Flow\Filesystem\DSL\filesystem_telemetry_options;
+use function Flow\Filesystem\DSL\native_local_filesystem;
+use function Flow\Filesystem\DSL\traceable_filesystem;
 use function sort;
 
 final class MemoryTelemetryContext
@@ -82,6 +89,15 @@ final class MemoryTelemetryContext
             $this->telemetry->meter('flow-php'),
             $this->options,
         );
+    }
+
+    public function traceableStorage(Path $cacheDir): FilesystemRowsStorage
+    {
+        return filesystem_cache($cacheDir, traceable_filesystem(native_local_filesystem(), filesystem_telemetry_config(
+            $this->telemetry,
+            new FakeClock(),
+            filesystem_telemetry_options(collect_metrics: false),
+        )));
     }
 
     /**

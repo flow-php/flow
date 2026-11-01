@@ -195,9 +195,6 @@ final class UnionTypeTest extends TestCase
 
     public function test_cast_of_clock_time_resolves_to_the_time_member(): void
     {
-        // Deliberate behaviour change: TimeType::cast() learned HH:MM:SS, so the time member now
-        // answers a clock string the union as a whole rejects. Before, both members threw on it
-        // and the union threw with them.
         static::assertEquals(
             new DateInterval('PT12H34M56S'),
             type_union(type_time(), type_integer())->cast('12:34:56'),

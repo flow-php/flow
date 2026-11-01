@@ -60,11 +60,13 @@ final class RecordBatch
      */
     private readonly ?array $known;
 
+    private bool $inferred = false;
+
+    private ?int $sampleSize = null;
+
     /**
      * @param int<1, max> $batchSize
      * @param null|string $uri the file the records come from; null for a source that is not a file
-     * @param null|int $sampleSize the inference's sample size when the schema was inferred, -1 for every row; null for a
-     *                             declared schema
      * @param null|Schema $known a keyed reader's (JSON, array, sequence) full schema, $schema's columns and those it
      *                           leaves out; under an inferred schema a key it lacks was first seen past the sample.
      *                           A grid reader passes none: its header is checked once per file
@@ -74,10 +76,28 @@ final class RecordBatch
         private readonly Backend $backend,
         private readonly int $batchSize,
         private readonly ?string $uri = null,
-        private readonly ?int $sampleSize = null,
         ?Schema $known = null,
     ) {
         $this->known = $known?->definitions();
+    }
+
+    /**
+     * @param int<1, max> $batchSize
+     * @param null|int<1, max> $sampleSize the rows the schema was inferred from; null for every row
+     */
+    public static function inferred(
+        Schema $schema,
+        Backend $backend,
+        int $batchSize,
+        ?string $uri,
+        ?int $sampleSize,
+        ?Schema $known = null,
+    ): self {
+        $batch = new self($schema, $backend, $batchSize, $uri, $known);
+        $batch->inferred = true;
+        $batch->sampleSize = $sampleSize;
+
+        return $batch;
     }
 
     /**
@@ -151,9 +171,8 @@ final class RecordBatch
     public function flush(): array
     {
         $known = $this->known;
-        $sampleSize = $this->sampleSize;
 
-        if ($sampleSize !== null && $known !== null) {
+        if ($this->inferred && $known !== null) {
             $columnName = new ColumnName();
 
             foreach ($this->records as $index => $record) {
@@ -165,7 +184,6 @@ final class RecordBatch
 
                     throw $this->outsideTheSample(
                         new SchemaMismatchException($index, ColumnMismatchException::unexpectedColumn((string) $key)),
-                        $sampleSize,
                     );
                 }
             }
@@ -183,8 +201,8 @@ final class RecordBatch
                 ->appendRows($this->records)
                 ->finish();
         } catch (SchemaMismatchException $mismatch) {
-            if ($sampleSize !== null) {
-                throw $this->outsideTheSample($mismatch, $sampleSize);
+            if ($this->inferred) {
+                throw $this->outsideTheSample($mismatch);
             }
 
             return $this->recordByRecord();
@@ -201,10 +219,8 @@ final class RecordBatch
      * A file's refusal names the record; a source that is not a file is named by its reader, which places the refusal
      * by its position among every record added.
      */
-    private function outsideTheSample(
-        SchemaMismatchException $mismatch,
-        int $sampleSize,
-    ): InferredSchemaException|SchemaMismatchException {
+    private function outsideTheSample(SchemaMismatchException $mismatch): InferredSchemaException|SchemaMismatchException
+    {
         $index = $mismatch->rowIndex;
 
         return $this->uri === null
@@ -213,7 +229,7 @@ final class RecordBatch
                 $this->uri,
                 $this->offsets[$index],
                 $this->lines[$index],
-                $sampleSize,
+                $this->sampleSize,
                 $mismatch,
             );
     }
@@ -250,9 +266,7 @@ final class RecordBatch
     }
 
     /**
-     * A batch with a refused record, in one pass: each record is tried alone, then the accepted ones are built at once.
-     * A refused record leaves the values of its other columns in the trial builder, so a refusal starts a new one. The
-     * records refused here and by refuse() leave in source order.
+     * A refused record leaves its values in the trial builder, so a refusal starts a new one.
      *
      * @return list<CorruptedRecordException|Rows>
      */

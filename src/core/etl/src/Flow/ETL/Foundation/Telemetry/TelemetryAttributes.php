@@ -5,10 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Foundation\Telemetry;
 
 /**
- * Flow-specific ETL attribute keys.
- *
- * Per OTel naming guidance all custom keys live under the `flow.etl.` prefix; official keys
- * (e.g. `error.type`) come from {@see \Flow\Telemetry\SemConvAttributes}.
+ * Custom keys live under `flow.etl.`; official keys come from SemConvAttributes.
  *
  * @see https://opentelemetry.io/docs/specs/semconv/general/naming/
  */

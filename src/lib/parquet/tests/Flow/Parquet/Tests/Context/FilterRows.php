@@ -34,16 +34,15 @@ use function sprintf;
 use const NAN;
 
 /**
- * The rows of the Filters files: four row groups of `$rowsPerGroup` rows, row i has id i. The PHP and arrow files hold
- * groups of 10; the DuckDB one groups of 2048, the smallest DuckDB writes.
+ * Row i has id i, in four row groups: 10 rows each in the PHP and arrow files, 2048 in the external one.
  */
 final class FilterRows
 {
     public const string FIXTURES = __DIR__ . '/../Integration/Engine/Fixtures/Filters/';
 
-    public const int DUCKDB_BLOOM_ROWS = 8192;
+    public const int EXTERNAL_BLOOM_ROWS = 8192;
 
-    public const int DUCKDB_ROWS_PER_GROUP = 2048;
+    public const int EXTERNAL_ROWS_PER_GROUP = 2048;
 
     public const int ROWS_PER_GROUP = 10;
 

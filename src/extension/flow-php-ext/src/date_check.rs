@@ -115,8 +115,7 @@ pub fn checkdate(month: i64, day: i64, year: i64) -> bool {
     day <= days
 }
 
-/// Epoch microseconds of `YYYY-MM-DDTHH:MM:SS[.f]` (1–6 fraction digits) + `Z` or `±HH:MM`, every field in range - the
-/// instant `DateTimeType::cast` yields, computed without timelib. `None` for every other string, which timelib parses.
+/// Epoch microseconds of an ISO-8601 instant with `Z` or `±HH:MM`; `None` leaves the string to timelib.
 pub fn iso_instant_micros(bytes: &[u8]) -> Option<i64> {
     let byte_at = |at: usize| bytes.get(at).copied();
     let number = |at: usize, count: usize| -> Option<i64> {

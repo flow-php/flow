@@ -30,7 +30,7 @@ final readonly class LogRecordConverter
 
     public function __construct(
         private SeverityMapper $severityMapper = new SeverityMapper(),
-        private ValueNormalizer $valueNormalizer = new ValueNormalizer(),
+        private AttributeValueNormalizer $valueNormalizer = new AttributeValueNormalizer(),
     ) {}
 
     public function convert(LogRecord $record): TelemetryLogRecord

@@ -12,15 +12,7 @@ use function strlen;
 use function substr;
 
 /**
- * Parses and represents qualified SQL identifiers like schema.table or table.column.
- *
- * Handles dot notation parsing while respecting double-quoted identifiers.
- * Examples:
- * - "users" → parts: ["users"]
- * - "public.users" → parts: ["public", "users"]
- * - '"my.table"' → parts: ["my.table"] (quoted, not split)
- * - 'public."my.table"' → parts: ["public", "my.table"]
- * - "schema.table.column" → parts: ["schema", "table", "column"]
+ * Splits on dots outside double quotes.
  */
 final readonly class QualifiedIdentifier
 {

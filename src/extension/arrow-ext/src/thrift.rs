@@ -1,6 +1,4 @@
-//! Thrift compact-protocol bytes as the PHP objects of the classes the Thrift compiler generates: each class's static
-//! `$_TSPEC` says which field id is which property and of which type, as the generated `read()` does. No Parquet
-//! knowledge here.
+//! Thrift compact-protocol bytes as the generated PHP classes, driven by each class's `$_TSPEC`.
 
 use std::collections::HashMap;
 use std::ops::Range;
@@ -182,10 +180,7 @@ fn store_thrift_specs(class: &str, specs: &Rc<Specs>) -> Result<(), PhpException
     })
 }
 
-/// `class`'s instance decoded from `bytes`; with `field`, only that field of the root is decoded and returned (null
-/// when absent), the fields before it skipped and the ones after it never read. STRUCT → object (created without its constructor, public properties set by
-/// `var`), LIST → list, BOOL/BYTE/I16/I32/I64/DOUBLE/STRING (binary) → scalars; an unknown id, or a known one of another
-/// type, is skipped by the compact skip rules.
+/// Decodes `class` from `bytes`; with `field`, only that root field is decoded (null when absent).
 pub fn decode(bytes: &[u8], class: &str, field: Option<i16>) -> Result<Zval, PhpException> {
     let specs = match thrift_specs(class)? {
         Some(specs) => specs,

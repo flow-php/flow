@@ -16,7 +16,7 @@ $raw = "id,json,at,zone,offset,dup,dup\n1,\"{\"\"a\"\":1}\",2024-01-01 10:00:00,
 
 $cycle = static function () use ($typer, $raw): void {
     (new RustCSVOpenSource(new MemorySourceStream($raw), ',', '"', '\\', true, true, true))
-        ->sniff(['id', 'json'], -1, $typer);
+        ->sniff(['id', 'json'], null, $typer);
     rust_sniff_column(['+99:60', '{"a":[1,2]}', '2024-01-01', ...json_leak_cells()], $typer);
 };
 

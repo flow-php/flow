@@ -25,9 +25,7 @@ use function interface_exists;
 use function is_string;
 
 /**
- * Scope is one .md file, in fence order, because pages routinely assign a variable in one block and
- * use it several blocks later. Nothing is guessed: a variable is typed only when a declaration says
- * what it is, so an unresolvable receiver yields no verdict rather than a wrong one.
+ * Typed only from a declaration; an unresolvable receiver yields no verdict.
  */
 final class InferredTypes
 {

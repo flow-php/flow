@@ -49,9 +49,6 @@ final class PlanBindTest extends FlowTestCase
     ];
 
     /**
-     * One plan per bind class of the step table. The exclusion the plan names - a refused bind (joinEach) - is
-     * covered by its own tests.
-     *
      * @return Generator<string, array{callable(): DataFrame}>
      */
     public static function plans(): Generator
@@ -398,11 +395,6 @@ final class PlanBindTest extends FlowTestCase
         static::assertEquals($df->schema(), $df->fetch()->schema());
     }
 
-    /**
-     * The bucketing pair's metadata hop carries {id, totalRows} between the producer and its
-     * consumer, and the plan declares the pre-bucketing schema. The invariant holds over the pair
-     * because the hop never leaves it - so the pair's output is what has to be asserted.
-     */
     public function test_the_bucketing_pair_declares_its_own_output_not_the_metadata_hop(): void
     {
         $df = df()->read(from_array(self::ROWS))->repartition(ref('group'));

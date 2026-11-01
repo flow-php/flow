@@ -22,11 +22,7 @@ use function Flow\PostgreSql\DSL\star;
 use function Flow\PostgreSql\DSL\table;
 
 /**
- * The canonical pipeline over a live PostgreSQL client. It does not degrade when the container is
- * down - PostgresqlConnection::open() throws, because a subject that silently measures nothing is
- * worse than no subject.
- *
- * The driver describe-query declares the schema and never samples, so there is no inferred arm.
+ * Throws when the container is down: a subject that silently measures nothing is worse than none.
  */
 final readonly class PostgresqlPipelineScenario
 {

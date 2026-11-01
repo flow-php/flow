@@ -8,8 +8,7 @@ use Flow\PostgreSql\AST\Nodes\Statement;
 use Flow\PostgreSql\Protobuf\AST\SelectStmt;
 
 /**
- * Represents VALUES statements (standalone VALUES clause).
- * Note: VALUES is a variant of SelectStmt in PostgreSQL.
+ * Parsed as a SelectStmt variant.
  *
  * @implements Statement<SelectStmt>
  */

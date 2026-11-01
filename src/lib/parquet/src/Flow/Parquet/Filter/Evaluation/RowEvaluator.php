@@ -27,9 +27,7 @@ use function sprintf;
 use function str_starts_with;
 
 /**
- * The rows a filter is TRUE for, on undecoded physical values: floats compare as IEEE 754 (NaN is false, -0.0 equals
- * +0.0), every other type in its physical order. Not is pushed down to the leaves as a polarity, so a NULL is TRUE in
- * neither.
+ * Not is pushed to leaves as polarity, so NULL is TRUE in neither; NaN is false.
  *
  * @implements FilterVisitor<list<bool>>
  */

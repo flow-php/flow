@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Flow\Benchmarks\Datasets;
 
 /**
- * One source-tree walk per tree per process. Warmed from a #[Bench\BeforeMethods] method so no
- * timed window ever pays for it.
+ * Warm from #[BeforeMethods] so no timed window pays for the tree walk.
  */
 final class DigestCache
 {

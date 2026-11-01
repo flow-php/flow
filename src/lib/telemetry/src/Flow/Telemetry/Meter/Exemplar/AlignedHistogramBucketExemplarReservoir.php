@@ -14,15 +14,7 @@ use function is_array;
 use function max;
 
 /**
- * Histogram-aligned reservoir keeping one exemplar per bucket.
- *
- * This reservoir stores at most one exemplar per histogram bucket,
- * providing representative samples across the entire value range.
- * When multiple measurements fall into the same bucket, the latest
- * one is kept.
- *
- * This is appropriate for Histogram instruments where bucket alignment
- * provides meaningful samples across the value distribution.
+ * Latest measurement per bucket wins.
  */
 final class AlignedHistogramBucketExemplarReservoir implements ExemplarReservoir
 {

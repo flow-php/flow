@@ -69,13 +69,9 @@ final class SequenceExtractor implements BatchableExtractor, Extractor, InfersSc
     {
         $sample = $this->schema === null ? $this->inference : null;
         $schema = $this->describe();
-        $batches = new RecordBatch(
-            $schema,
-            $backend,
-            $this->batchSize(),
-            sampleSize: $sample?->sampleSize,
-            known: $schema,
-        );
+        $batches = $sample === null
+            ? new RecordBatch($schema, $backend, $this->batchSize(), known: $schema)
+            : RecordBatch::inferred($schema, $backend, $this->batchSize(), null, $sample->sampleSize, $schema);
 
         try {
             foreach ($batches->of($this->records()) as $rows) {
@@ -138,11 +134,8 @@ final class SequenceExtractor implements BatchableExtractor, Extractor, InfersSc
             }
         };
 
-        // No spill: generate() returns a fresh Generator per call, so extract() gets its own pass and
-        // spilling a generated sequence would write gigabytes to learn "integer".
-        //
-        // No seeded name either: PHP re-keys a canonical-integer column name to an int inside $items, so
-        // InMemoryRows renames it through ColumnName and a raw seed would describe a second, empty column.
+        // no spill: generate() is re-runnable
+        // no seeded name: PHP re-keys integer names
         return $this->derivedSchema = (new SchemaInferrer($this->inference))->infer(new InMemoryRows($items()))->schema;
     }
 

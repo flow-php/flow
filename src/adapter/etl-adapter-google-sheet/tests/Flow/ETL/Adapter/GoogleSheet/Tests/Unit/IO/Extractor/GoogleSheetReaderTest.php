@@ -90,7 +90,7 @@ final class GoogleSheetReaderTest extends FlowTestCase
     {
         $values = GoogleSheetFixtureContext::values(SheetValuesMother::range([['id', 'name']]));
 
-        GoogleSheetFixtureContext::reader(GoogleSheetFixtureContext::service(100, $values))->sample(-1);
+        GoogleSheetFixtureContext::reader(GoogleSheetFixtureContext::service(100, $values))->sample(null);
 
         static::assertSame('sheet!A1:B100', $values->getCalls[0][1]);
     }
@@ -159,7 +159,7 @@ final class GoogleSheetReaderTest extends FlowTestCase
 
         GoogleSheetFixtureContext::reader(
             GoogleSheetFixtureContext::serviceWithoutSheets(GoogleSheetFixtureContext::values()),
-        )->sample(-1);
+        )->sample(null);
     }
 
     public function test_rows_page_the_sheet_by_rows_per_page(): void

@@ -9,9 +9,7 @@ use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Filter;
 
 /**
- * Attaches partitions extracted from partition placeholders in the pattern path to the file status
- * before delegating to the decorated filter. This way filters like partition pruning can see
- * partitions that are part of the file name instead of name=value directories.
+ * Lets partition pruning see partitions from file-name placeholders, not only name=value directories.
  */
 final readonly class PlaceholderPartitions implements Filter
 {

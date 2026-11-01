@@ -56,10 +56,7 @@ final readonly class FloeMerger
     }
 
     /**
-     * Splicing copies source row frames verbatim, so it is only valid when every
-     * source's schema is structurally identical to the merged footer schema -
-     * column order included, since row bytes are laid out in schema order.
-     * Sources that merely reconcile are re-encoded by the compact path instead.
+     * Splicing copies row frames verbatim, so every source schema must equal the footer's, column order included.
      *
      * @param array<int, FooterLocation> $layouts
      */

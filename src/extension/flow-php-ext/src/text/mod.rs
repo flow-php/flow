@@ -9,9 +9,7 @@ use flow_column_text::date::{Transition, Transitions};
 use crate::ctx::{self, call_method, ht_get, zval_long};
 use crate::exception::ext_exception;
 
-/// `DateTimeZone::getTransitions($min, $max + 1)`: the offset in force at `$min`, then every change up to and including
-/// `$max`. PHP built against the system tzdata (Debian, Ubuntu) leaves out a transition at exactly the end of the range,
-/// PHP's bundled database keeps it.
+/// `DateTimeZone::getTransitions($min, $max + 1)`; system tzdata builds drop a transition exactly at the range end.
 pub struct PhpTransitions;
 
 impl Transitions for PhpTransitions {

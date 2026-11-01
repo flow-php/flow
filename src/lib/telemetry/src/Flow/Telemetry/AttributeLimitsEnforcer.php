@@ -13,12 +13,6 @@ use function mb_strlen;
 use function mb_substr;
 
 /**
- * Stateless service that enforces attribute limits per OpenTelemetry specification.
- *
- * Applies two types of limits:
- * - Count limit: keeps first N attributes, drops the rest
- * - Value length limit: truncates string values using UTF-8 safe substring
- *
  * @see https://opentelemetry.io/docs/specs/otel/common/
  */
 final readonly class AttributeLimitsEnforcer

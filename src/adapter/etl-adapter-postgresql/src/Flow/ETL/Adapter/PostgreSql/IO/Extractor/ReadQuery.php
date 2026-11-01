@@ -12,8 +12,8 @@ use Flow\PostgreSql\AST\Nodes\Statement\SelectStatement;
 use Flow\PostgreSql\AST\Transformers\CountModifier;
 use Flow\PostgreSql\AST\Transformers\KeysetPaginationConfig;
 use Flow\PostgreSql\AST\Transformers\KeysetPaginationModifier;
-use Flow\PostgreSql\AST\Transformers\PaginationConfig;
-use Flow\PostgreSql\AST\Transformers\PaginationModifier;
+use Flow\PostgreSql\AST\Transformers\OffsetPaginationConfig;
+use Flow\PostgreSql\AST\Transformers\OffsetPaginationModifier;
 use Flow\PostgreSql\Exception\ParserException;
 use Flow\PostgreSql\ParsedQuery;
 use Flow\PostgreSql\Protobuf\AST\Node;
@@ -138,7 +138,7 @@ final readonly class ReadQuery
     {
         return $this
             ->copy()
-            ->traverse(new PaginationModifier(new PaginationConfig(param($first), param($first + 1))))
+            ->traverse(new OffsetPaginationModifier(new OffsetPaginationConfig(param($first), param($first + 1))))
             ->deparse();
     }
 

@@ -17,21 +17,6 @@ use function str_starts_with;
 use function strtolower;
 use function trim;
 
-/**
- * Detects host information.
- *
- * Detects the following attributes:
- * - host.name: The hostname of the machine
- * - host.arch: The CPU architecture (amd64, arm64, etc.)
- * - host.id: Unique host identifier (from /etc/machine-id on Linux)
- *
- * Example output:
- * ```
- * host.name: my-laptop
- * host.arch: arm64
- * host.id: 123e4567-e89b-12d3-a456-426614174000
- * ```
- */
 final readonly class HostDetector implements ResourceDetector
 {
     public function detect(): Resource

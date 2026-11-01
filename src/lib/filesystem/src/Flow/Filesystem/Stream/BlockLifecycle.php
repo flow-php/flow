@@ -4,10 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Stream;
 
-/**
- * A callback interface representing block of data lifecycle.
- * Methods of this interface are called by the Blocks collection.
- */
 interface BlockLifecycle
 {
     /**

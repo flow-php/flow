@@ -8,7 +8,7 @@ use Flow\Telemetry\Filter\MatchMode;
 use Flow\Telemetry\Tests\Mother\TempDir;
 use Flow\Telemetry\Tracer\Sampler\AlwaysOffSampler;
 use Flow\Telemetry\Tracer\Sampler\AlwaysOnSampler;
-use Flow\Telemetry\Tracer\Sampler\AttributeMatchingSampler;
+use Flow\Telemetry\Tracer\Sampler\AttributeFilteringSampler;
 use Flow\Telemetry\Tracer\Sampler\ParentBasedSampler;
 use Flow\Telemetry\Tracer\Sampler\TraceIdRatioBasedSampler;
 use PHPUnit\Framework\TestCase;
@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
 use function Flow\Telemetry\DSL\always_off_sampler;
 use function Flow\Telemetry\DSL\always_on_sampler;
 use function Flow\Telemetry\DSL\attribute_filter;
-use function Flow\Telemetry\DSL\attribute_matching_sampler;
+use function Flow\Telemetry\DSL\attribute_filtering_sampler;
 use function Flow\Telemetry\DSL\attribute_rule;
 use function Flow\Telemetry\DSL\parent_based_sampler;
 use function Flow\Telemetry\DSL\trace_id_ratio_based_sampler;
@@ -48,14 +48,14 @@ final class SamplerFunctionsTest extends TestCase
         static::assertInstanceOf(ParentBasedSampler::class, parent_based_sampler(trace_id_ratio_based_sampler(0.1)));
     }
 
-    public function test_attribute_matching_sampler_returns_sampler(): void
+    public function test_attribute_filtering_sampler_returns_sampler(): void
     {
         $tmp = TempDir::create();
 
         try {
             static::assertInstanceOf(
-                AttributeMatchingSampler::class,
-                attribute_matching_sampler(attribute_filter(
+                AttributeFilteringSampler::class,
+                attribute_filtering_sampler(attribute_filter(
                     attribute_rule('x', MatchMode::EQUAL, 'y'),
                     cacheDir: $tmp->path(),
                 )),

@@ -28,8 +28,7 @@ use function substr;
 use const STR_PAD_LEFT;
 
 /**
- * One task of a file write: the {part} it fills, zero-padded, and the run it belongs to, appended to the name under
- * Append. One naming rule for the serial writer (part 0) and the parallel commit.
+ * One naming rule for the serial writer (part 0) and the parallel commit.
  */
 final readonly class Part
 {

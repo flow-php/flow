@@ -1,0 +1,54 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\Bridge\Monolog\Telemetry;
+
+use DateTimeInterface;
+use Throwable;
+
+use function array_map;
+use function get_debug_type;
+use function is_array;
+use function is_object;
+use function is_scalar;
+use function method_exists;
+
+final readonly class AttributeValueNormalizer
+{
+    /**
+     * @return string|int|float|bool|DateTimeInterface|Throwable|array<array-key, mixed>
+     */
+    public function normalize(mixed $value): string|int|float|bool|DateTimeInterface|Throwable|array
+    {
+        if ($value === null) {
+            return 'null';
+        }
+
+        if (is_scalar($value)) {
+            return $value;
+        }
+
+        if ($value instanceof DateTimeInterface) {
+            return $value;
+        }
+
+        if ($value instanceof Throwable) {
+            return $value;
+        }
+
+        if (is_array($value)) {
+            return array_map(fn($v) => $this->normalize($v), $value);
+        }
+
+        if (is_object($value)) {
+            if (method_exists($value, '__toString')) {
+                return (string) $value;
+            }
+
+            return $value::class;
+        }
+
+        return get_debug_type($value);
+    }
+}

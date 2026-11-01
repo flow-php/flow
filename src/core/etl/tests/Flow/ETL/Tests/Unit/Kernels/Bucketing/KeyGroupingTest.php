@@ -65,8 +65,6 @@ final class KeyGroupingTest extends FlowTestCase
     {
         $schema = schema(datetime_schema('at'), int_schema('v'));
 
-        // Partition::fromValue() truncates a datetime to Y-m-d; KeyEncoder keys its microseconds, so two
-        // times on the same day stay two groups
         static::assertSame(
             [[1, 3], [2, 4]],
             KeyGroupingContext::groupedValuesOf(

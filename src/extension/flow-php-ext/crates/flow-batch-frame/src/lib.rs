@@ -1,7 +1,4 @@
-//! Flow's batch layout in Rust: one column's buffers in the canonical form of `Flow\ETL\Values\Column\Column::encode()` and
-//! back (`column`), the builders that append rows into that form (`builder`), the kind and value shape of every Flow
-//! type (`kind`) and the keys columns are held by (`key`). The pure-PHP classes in flow-php/etl are the reference; this
-//! crate holds no PHP types and no message text.
+//! Flow's batch layout in Rust; the pure-PHP classes in flow-php/etl are the reference.
 
 // Floe is little-endian by construction; a big-endian host could never match its bytes.
 #[cfg(target_endian = "big")]

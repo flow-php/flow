@@ -1,6 +1,4 @@
-//! `Flow\ETL\Values\Column\RustColumnBuilder`: `CastingColumnBuilder` over arrow storage. A value takes the native lane
-//! where `cast.rs` casts it natively; every other value, and every value the native lane refuses, runs PHP's
-//! `$type->cast()` then `$physical->toPhysical()`, so results and refusals are PHP's own.
+//! `CastingColumnBuilder` over arrow storage; what the native lane does not cast runs PHP's cast, so results match.
 
 // `appendPhysicals()`'s `$nullCount`: ext-php-rs names a PHP parameter after its Rust identifier and binds it in a
 // generated handler, which an `allow` on the method, the impl block or the parameter does not reach
@@ -135,8 +133,7 @@ fn nested(kind: &Kind) -> bool {
     matches!(kind, Kind::List(_) | Kind::Map(..) | Kind::Struct(_))
 }
 
-/// Casts `value` straight into `builder`, element by element. `Ok(false)`: Rust does not cast this value, and the row
-/// is left half-appended for the caller to truncate before the PHP lane casts the whole value.
+/// Casts `value` into `builder`; `Ok(false)` leaves a half-appended row for the caller to truncate.
 fn append_cast(
     builder: &mut KindBuilder,
     kind: &Kind,
@@ -249,9 +246,7 @@ fn append_cast(
     }
 }
 
-/// One value, as `RustColumnBuilder::appendMany()` appends it: a null is refused under NOT NULL; a nested value
-/// takes `append_cast()`, a leaf the native lane, and what neither casts the PHP lane. Exceptions other than
-/// `Flow\Types` ones escape as thrown.
+/// One value as `RustColumnBuilder::appendMany()` appends it; non-`Flow\Types` exceptions escape as thrown.
 pub fn append_one(
     values: &mut KindBuilder,
     plan: &TypePlan,
@@ -425,8 +420,7 @@ impl RustColumnBuilder {
         }
     }
 
-    /// One value cast and appended. With a `position`, refusals are `appendMany()`'s `SchemaMismatchException` at it;
-    /// without, `append()`'s `ColumnMismatchException`.
+    /// With a `position`, refusals are `appendMany()`'s `SchemaMismatchException`, else `append()`'s.
     fn append_value(&mut self, value: &Zval, position: Option<&dyn Fn() -> Zval>) -> Result<(), PhpException> {
         match append_one(&mut self.values, &self.plan, &self.definition, self.nullable, value)? {
             Append::Done => Ok(()),
@@ -536,9 +530,7 @@ impl RustColumnBuilder {
         result
     }
 
-    /// `ColumnBuilder::appendPhysicals()`: physical values as they are. A null under NOT NULL is refused at its
-    /// position, a physical of another kind as `append_physical()` refuses it; `$nullCount` is the PHP builders' hint,
-    /// this builder counts nulls as it appends.
+    /// `ColumnBuilder::appendPhysicals()`: physical values as they are, a null under NOT NULL refused at its position.
     #[php(name = "appendPhysicals")]
     pub fn append_physicals(&mut self, physicals: &ZendHashTable, nullCount: Option<i64>) -> PhpResult<()> {
         let _ = nullCount;

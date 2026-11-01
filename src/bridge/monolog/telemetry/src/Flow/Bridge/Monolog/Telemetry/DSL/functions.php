@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Monolog\Telemetry\DSL;
 
+use Flow\Bridge\Monolog\Telemetry\AttributeValueNormalizer;
 use Flow\Bridge\Monolog\Telemetry\LogRecordConverter;
 use Flow\Bridge\Monolog\Telemetry\SeverityMapper;
 use Flow\Bridge\Monolog\Telemetry\TelemetryHandler;
-use Flow\Bridge\Monolog\Telemetry\ValueNormalizer;
 use Flow\Documentation\Attribute\DocumentationDSL;
 use Flow\Documentation\Attribute\Module;
 use Flow\Documentation\Attribute\Type as DSLType;
@@ -18,7 +18,7 @@ use Flow\Telemetry\Logger\Severity;
 use Monolog\Level;
 
 /**
- * Create a ValueNormalizer for converting arbitrary PHP values to Telemetry attribute types.
+ * Create a AttributeValueNormalizer for converting arbitrary PHP values to Telemetry attribute types.
  *
  * The normalizer handles:
  * - null → 'null' string
@@ -32,14 +32,14 @@ use Monolog\Level;
  *
  * Example usage:
  * ```php
- * $normalizer = value_normalizer();
+ * $normalizer = attribute_value_normalizer();
  * $normalized = $normalizer->normalize($value);
  * ```
  */
 #[DocumentationDSL(module: Module::MONOLOG_TELEMETRY_BRIDGE, type: DSLType::HELPER)]
-function value_normalizer(): ValueNormalizer
+function attribute_value_normalizer(): AttributeValueNormalizer
 {
-    return new ValueNormalizer();
+    return new AttributeValueNormalizer();
 }
 
 /**
@@ -86,7 +86,7 @@ function severity_mapper(?array $customMapping = null): SeverityMapper
  * - Extra values as extra.* attributes
  *
  * @param null|SeverityMapper $severityMapper Custom severity mapper (defaults to standard mapping)
- * @param null|ValueNormalizer $valueNormalizer Custom value normalizer (defaults to standard normalizer)
+ * @param null|AttributeValueNormalizer $valueNormalizer Custom value normalizer (defaults to standard normalizer)
  *
  * Example usage:
  * ```php
@@ -106,9 +106,12 @@ function severity_mapper(?array $customMapping = null): SeverityMapper
 #[DocumentationDSL(module: Module::MONOLOG_TELEMETRY_BRIDGE, type: DSLType::HELPER)]
 function log_record_converter(
     ?SeverityMapper $severityMapper = null,
-    ?ValueNormalizer $valueNormalizer = null,
+    ?AttributeValueNormalizer $valueNormalizer = null,
 ): LogRecordConverter {
-    return new LogRecordConverter($severityMapper ?? new SeverityMapper(), $valueNormalizer ?? new ValueNormalizer());
+    return new LogRecordConverter(
+        $severityMapper ?? new SeverityMapper(),
+        $valueNormalizer ?? new AttributeValueNormalizer(),
+    );
 }
 
 /**

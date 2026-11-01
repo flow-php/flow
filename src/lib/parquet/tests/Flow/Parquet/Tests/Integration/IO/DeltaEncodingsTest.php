@@ -120,7 +120,7 @@ final class DeltaEncodingsTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_delta_length_byte_array_written_by_duckdb(string $engineClass): void
+    public function test_reading_delta_length_byte_array_written_by_an_external_writer(string $engineClass): void
     {
         static::assertSame(
             [
@@ -132,7 +132,7 @@ final class DeltaEncodingsTest extends ParquetIntegrationTestCase
             ],
             iterator_to_array(
                 (new Reader(engine: ParquetEngineMother::create($engineClass)))
-                    ->read(__DIR__ . '/Fixtures/delta_length_byte_array_duckdb_v2.parquet')
+                    ->read(__DIR__ . '/Fixtures/delta_length_byte_array_external_v2.parquet')
                     ->values(),
                 false,
             ),

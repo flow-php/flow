@@ -14,11 +14,7 @@ use function Flow\PostgreSql\DSL\pgsql_connection_dsn;
 use function getenv;
 
 /**
- * Tests run in declaration order. The sequence proves:
- * 1. Normal test data is rolled back
- * 2. #[SkipTransactionRollback] on method lets data persist
- * 3. Normal test after skip is back in a transaction
- * 4. Nested transactions are still rolled back by the extension.
+ * The tests depend on their declaration order.
  */
 final class SkipTransactionRollbackIntegrationTest extends TestCase
 {

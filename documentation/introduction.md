@@ -90,7 +90,7 @@ batch carries the schema that types its columns.
 Flow is not a database engine, a query planner, or a distributed compute
 framework. It runs inside any PHP runtime - CLI, FPM, queue worker - and
 processes rows in constant memory. If you need cluster-scale joins or SQL
-planning, reach for Spark or Trino. If you need ergonomic, type-safe data
+planning, reach for a distributed engine. If you need ergonomic, type-safe data
 pipelines inside a PHP application, you're in the right place.
 
 ## Get help

@@ -58,13 +58,13 @@ final readonly class SchemaInferenceOptions
         $filesToSniff = option_int_nullable('schema-files-to-sniff', $input);
 
         if ($sampleSize !== null && $sampleSize < 1 && $sampleSize !== -1) {
-            $style->error('Schema sample size must be greater than 0, or -1 for all rows.');
+            $style->error('Schema sample size must be greater than 0, or -1 for every row.');
 
             return false;
         }
 
         if ($filesToSniff !== null && $filesToSniff < 1 && $filesToSniff !== -1) {
-            $style->error('Schema files to sniff must be greater than 0, or -1 for all sources.');
+            $style->error('Schema files to sniff must be greater than 0, or -1 for every source.');
 
             return false;
         }
@@ -72,11 +72,11 @@ final readonly class SchemaInferenceOptions
         $inference = infer_schema();
 
         if ($sampleSize !== null) {
-            $inference = $inference->sampleSize($sampleSize);
+            $inference = $sampleSize === -1 ? $inference->everyRow() : $inference->sampleSize($sampleSize);
         }
 
         if ($filesToSniff !== null) {
-            $inference = $inference->filesToSniff($filesToSniff);
+            $inference = $filesToSniff === -1 ? $inference->everySource() : $inference->filesToSniff($filesToSniff);
         }
 
         if (option_bool('schema-all-strings', $input)) {

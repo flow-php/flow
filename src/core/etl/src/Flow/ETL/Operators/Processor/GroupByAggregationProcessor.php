@@ -36,9 +36,7 @@ use function Flow\Types\DSL\type_instance_of;
 use function serialize;
 
 /**
- * Aggregates in one pass while the process stays under the memory limit. Past it, the rest of the stream is partitioned
- * into buckets and each bucket aggregated on its own; the groups aggregated before the limit are merged into the bucket
- * their key hashes to.
+ * Past the memory limit, the rest is bucketed by key hash and aggregated per bucket.
  */
 final readonly class GroupByAggregationProcessor implements Distributable
 {
@@ -201,8 +199,7 @@ final readonly class GroupByAggregationProcessor implements Distributable
                 return;
             }
 
-            // SQL's scalar aggregate: no input and no grouping key is one row of the initial accumulators,
-            // not no row. Only reachable bound - an unbound plan has no schema to type the defaults with.
+            // SQL scalar aggregate: no input still yields one row
             if ($shape !== null && $this->groupBy->isGlobal()) {
                 yield (new AggregatedGroups($this->groupBy, $shape))->rows([new Group(
                     new GroupKey([], serialize([])),

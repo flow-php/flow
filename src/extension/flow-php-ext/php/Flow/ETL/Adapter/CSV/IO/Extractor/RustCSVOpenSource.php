@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV\IO\Extractor;
 
 use Flow\ETL\IO\Inference\ColumnTypes;
+use Flow\ETL\IO\Inference\SchemaInference;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\RustIterator;
@@ -43,8 +44,12 @@ final class RustCSVOpenSource implements CSVOpenSource
     /**
      * @return RustIterator<Rows>
      */
-    public function batches(Schema $schema, int $batchSize, Backend $backend, ?int $sampleSize = null): RustIterator
-    {
+    public function batches(
+        Schema $schema,
+        int $batchSize,
+        Backend $backend,
+        ?SchemaInference $inference = null,
+    ): RustIterator {
         throw new RuntimeException('flow_php extension is not loaded');
     }
 
@@ -81,7 +86,7 @@ final class RustCSVOpenSource implements CSVOpenSource
         throw new RuntimeException('flow_php extension is not loaded');
     }
 
-    public function sniff(array $names, int $rowBudget, TypeNarrower $typer): ColumnTypes
+    public function sniff(array $names, ?int $rowBudget, TypeNarrower $typer): ColumnTypes
     {
         throw new RuntimeException('flow_php extension is not loaded');
     }

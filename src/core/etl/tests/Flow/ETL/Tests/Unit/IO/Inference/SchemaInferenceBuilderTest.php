@@ -23,7 +23,7 @@ final class SchemaInferenceBuilderTest extends FlowTestCase
      */
     public static function invalidBounds(): array
     {
-        return [[0], [-2], [-100]];
+        return [[0], [-1], [-100]];
     }
 
     public function test_all_strings_is_sugar_for_a_string_only_candidate_set(): void
@@ -77,25 +77,30 @@ final class SchemaInferenceBuilderTest extends FlowTestCase
     }
 
     #[DataProvider('invalidBounds')]
-    public function test_files_to_sniff_rejects_anything_below_one_except_minus_one(int $filesToSniff): void
+    public function test_files_to_sniff_rejects_anything_below_one(int $filesToSniff): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Files to sniff must be greater than 0, or -1 for all sources');
+        $this->expectExceptionMessage('Use everySource() to infer from every source.');
 
         // @mago-ignore analysis:possibly-invalid-argument
         infer_schema()->filesToSniff($filesToSniff);
     }
 
-    public function test_minus_one_is_accepted_for_both_bounds(): void
+    public function test_every_row_and_every_source_lift_both_bounds(): void
     {
-        static::assertEquals(new SchemaInference(-1, -1), infer_schema()->sampleSize(-1)->filesToSniff(-1)->build());
+        static::assertEquals(new SchemaInference(null, null), infer_schema()->everyRow()->everySource()->build());
+    }
+
+    public function test_every_row_keeps_a_finite_files_to_sniff(): void
+    {
+        static::assertEquals(new SchemaInference(null, 2), infer_schema()->filesToSniff(2)->everyRow()->build());
     }
 
     #[DataProvider('invalidBounds')]
-    public function test_sample_size_rejects_anything_below_one_except_minus_one(int $sampleSize): void
+    public function test_sample_size_rejects_anything_below_one(int $sampleSize): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Sample size must be greater than 0, or -1 for all rows');
+        $this->expectExceptionMessage('Use everyRow() to infer from every row.');
 
         // @mago-ignore analysis:possibly-invalid-argument
         infer_schema()->sampleSize($sampleSize);

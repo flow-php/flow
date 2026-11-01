@@ -28,29 +28,25 @@ final class TableDefinitionsTest extends TestCase
         yield 'long name' => ['very_long_table_name_with_many_characters'];
     }
 
-    /**
-     * This test documents a potential issue in the caching logic.
-     * The current implementation searches through all cached tables by name,
-     * but the key in the array is also the name. This makes the search inefficient
-     * and potentially problematic if the same name is used with different connections.
-     */
-    public function test_caching_logic_inefficiency(): void
+    public function test_one_connection_reuses_its_definition(): void
     {
         $tableDefinitions = new TableDefinitions();
-        $connection1 = $this->createConnectionWithTable('users');
-        $connection2 = $this->createConnectionWithTable('users');
+        $connection = $this->createConnectionWithTable('users');
 
-        $definition1 = $tableDefinitions->get('users', $connection1);
-        $definition2 = $tableDefinitions->get('users', $connection2);
+        static::assertSame($tableDefinitions->get('users', $connection), $tableDefinitions->get('users', $connection));
+    }
 
-        // This test documents that the current implementation will return the same
-        // TableDefinition instance even with different connections, which might not
-        // be the intended behavior since the TableDefinition holds a reference to
-        // the specific connection.
-        static::assertSame($definition1, $definition2);
+    public function test_the_same_table_name_on_another_connection_gets_that_connection_s_definition(): void
+    {
+        $tableDefinitions = new TableDefinitions();
+        $tableDefinitions->get('users', $this->createConnectionWithTable('users'))->dbalColumn('name');
 
-        // The cached definition will still use the first connection
-        static::assertSame($connection1->getDatabasePlatform(), $definition1->platform());
+        $other = $this->createSQLiteConnection();
+        $other->createSchemaManager()->createTable(new Table('users', [
+            new Column('email', Type::getType(Types::STRING), ['length' => 255]),
+        ]));
+
+        static::assertInstanceOf(Column::class, $tableDefinitions->get('users', $other)->dbalColumn('email'));
     }
 
     public function test_construct_creates_empty_table_definitions(): void
@@ -174,19 +170,14 @@ final class TableDefinitionsTest extends TestCase
         static::assertSame('id', $column->getName());
     }
 
-    public function test_get_with_different_connections_for_same_name(): void
+    public function test_get_with_different_connections_for_same_name_keeps_separate_definitions(): void
     {
         $tableDefinitions = new TableDefinitions();
-        $connection1 = $this->createConnectionWithTable('users');
-        $connection2 = $this->createConnectionWithTable('users');
 
-        $tableDefinition1 = $tableDefinitions->get('users', $connection1);
-        $tableDefinition2 = $tableDefinitions->get('users', $connection2);
-
-        // NOTE: This reveals a potential issue - the caching logic only checks by name,
-        // not by connection. This means the same TableDefinition instance will be reused
-        // even with different connections, which might not be the intended behavior.
-        static::assertSame($tableDefinition1, $tableDefinition2);
+        static::assertNotSame(
+            $tableDefinitions->get('users', $this->createConnectionWithTable('users')),
+            $tableDefinitions->get('users', $this->createConnectionWithTable('users')),
+        );
     }
 
     public function test_get_with_different_table_names_maintains_separate_cache(): void

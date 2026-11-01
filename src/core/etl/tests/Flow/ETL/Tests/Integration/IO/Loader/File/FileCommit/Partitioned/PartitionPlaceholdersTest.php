@@ -81,7 +81,6 @@ final class PartitionPlaceholdersTest extends FlowIntegrationTestCase
 
     public function test_overwrite_mode_sweeps_appended_siblings_of_a_placeholder_file(): void
     {
-        // an earlier Append run leaves 123456-PL-<run>.csv next to 123456-PL.csv; Overwrite must clear both
         $this->context->files([
             __FUNCTION__ => [
                 '123456-PL.csv' => 'existing content',

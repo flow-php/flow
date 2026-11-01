@@ -1,6 +1,4 @@
-//! Arrow storage for one column kind, appended row by row and finished into the `ArrayData` whose data type is
-//! `kind::data_type(kind)`: `finish` copies the buffers and keeps the rows, `take` moves them out and keeps the
-//! capacity. A null row is stored the canonical way: zeroed slot, offset not advanced, every structure child null.
+//! Arrow storage for one column kind; a null row is a zeroed slot with its offset not advanced.
 
 use arrow_array::cast::AsArray;
 use arrow_array::types::{Date32Type, DurationMicrosecondType, Float64Type, Int64Type, TimestampMicrosecondType};
@@ -11,7 +9,7 @@ use arrow_schema::ArrowError;
 
 use crate::kind::{data_type, Kind};
 
-/// List and map offsets are i32 (D5): the last offset a row would reach past `i32::MAX`. String offsets are i64.
+/// List and map offsets are i32, string offsets i64.
 pub struct OffsetOverflow(pub u64);
 
 pub enum KindBuilder {
@@ -376,10 +374,7 @@ impl KindBuilder {
         Ok(())
     }
 
-    /// The rows appended so far, their buffers moved into the array without a copy; the builder is left empty with
-    /// the capacity the rows took, so the next batch of the same size allocates nothing. The offsets are pushed
-    /// monotone by construction and every buffer is sized by the same appends, so the array is built unchecked; the
-    /// `arrow-validate` feature (`make test`) re-validates it.
+    /// Moves the rows out without a copy and keeps the capacity; built unchecked, re-validated under `arrow-validate`.
     pub fn take(&mut self, kind: &Kind) -> ArrayData {
         let builder = ArrayData::builder(data_type(kind)).len(self.len());
 

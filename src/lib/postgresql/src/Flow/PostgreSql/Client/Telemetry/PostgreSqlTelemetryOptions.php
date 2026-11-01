@@ -4,12 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client\Telemetry;
 
-/**
- * Configuration options for PostgreSQL client telemetry.
- *
- * Controls which telemetry signals (traces, metrics, logs) are enabled
- * and how query information is captured.
- */
 final readonly class PostgreSqlTelemetryOptions
 {
     /**

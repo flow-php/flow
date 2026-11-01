@@ -23,23 +23,6 @@ use const CURLOPT_SSLKEY;
 use const CURLOPT_TIMEOUT_MS;
 use const CURLOPT_URL;
 
-/**
- * Configuration options for AsyncCurlTransport.
- *
- * Provides a fluent interface for configuring the asynchronous curl_multi transport.
- *
- * Example usage:
- * ```php
- * $options = otlp_async_curl_options()
- *     ->withTimeout(2000)
- *     ->withConnectTimeout(500)
- *     ->withHeader('Authorization', 'Bearer token')
- *     ->withCompression()
- *     ->withSslVerification(verifyPeer: true);
- *
- * $transport = otlp_async_curl_transport($endpoint, $serializer, $options);
- * ```
- */
 final class AsyncCurlTransportOptions
 {
     public const int DEFAULT_CONNECT_TIMEOUT_MS = 1500;

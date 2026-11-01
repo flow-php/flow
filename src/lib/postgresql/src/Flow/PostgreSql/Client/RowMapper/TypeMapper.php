@@ -10,12 +10,6 @@ use Flow\Types\Type;
 use Throwable;
 
 /**
- * Maps database rows to typed values using flow-php/types.
- *
- * When $next is null, the mapper returns the value produced by $type->cast().
- * When $next is provided, the cast result is forwarded to $next->map() and its
- * return value becomes the mapper's output.
- *
  * @template TType
  * @template TOut
  *

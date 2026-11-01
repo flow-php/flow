@@ -8,11 +8,6 @@ use Flow\Telemetry\Resource;
 use Flow\Telemetry\Resource\Attribute\DeploymentAttribute;
 use Flow\Telemetry\Resource\ResourceDetector;
 
-/**
- * Detects deployment environment from Symfony kernel environment.
- *
- * Sets deployment.environment.name attribute to the Symfony kernel environment value.
- */
 final readonly class SymfonyDeploymentDetector implements ResourceDetector
 {
     public function __construct(

@@ -13,19 +13,7 @@ use Flow\ETL\Values\SchemaValidator;
 use SensitiveParameter;
 
 /**
- * Compatibility for combining or evolving datasets - the same invariant a merge,
- * an append and a per-batch validation all need: combining `expected` and `given`
- * must never leave a row holding null in a column that is non-nullable somewhere.
- *
- * - a shared column must keep a compatible type and must not widen to nullable
- *   where the expected side is non-nullable (its rows would then read as null),
- * - a column in `expected` but absent from `given` is allowed only when nullable
- *   (given's rows read it as null),
- * - a column in `given` but absent from `expected` is allowed only when nullable
- *   (expected's rows read it as null).
- *
- * A required (non-nullable) column that is dropped, added, or type-changed is
- * therefore incompatible.
+ * Combining expected and given must never put null into a column non-nullable on either side.
  */
 final class EvolvingValidator implements Describable, SchemaValidator
 {

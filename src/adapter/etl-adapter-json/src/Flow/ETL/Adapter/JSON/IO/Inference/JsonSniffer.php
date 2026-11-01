@@ -83,7 +83,7 @@ final readonly class JsonSniffer implements Describable, Sniffer
         return [];
     }
 
-    public function sniff(int $unit, int $rowBudget): Sample
+    public function sniff(int $unit, ?int $rowBudget): Sample
     {
         $sample = new JsonFileSample($this->reader, $this->sources[$unit], $this->window);
         $columnTypes = ColumnTypes::sniff([], $sample, $rowBudget, new InstanceOfTypeNarrower());

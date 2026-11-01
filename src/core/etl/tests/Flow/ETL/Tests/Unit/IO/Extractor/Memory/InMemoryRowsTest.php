@@ -37,6 +37,9 @@ final class InMemoryRowsTest extends FlowTestCase
     public function test_sniff_folds_at_most_its_budget(): void
     {
         static::assertSame(1, (new InMemoryRows([['id' => 1], ['id' => 2], ['id' => 3]]))->sniff(0, 1)->columns->rows);
-        static::assertSame(3, (new InMemoryRows([['id' => 1], ['id' => 2], ['id' => 3]]))->sniff(0, -1)->columns->rows);
+        static::assertSame(
+            3,
+            (new InMemoryRows([['id' => 1], ['id' => 2], ['id' => 3]]))->sniff(0, null)->columns->rows,
+        );
     }
 }

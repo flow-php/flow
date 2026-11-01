@@ -44,11 +44,6 @@ final class SourceExtractorTest extends TestCase
         );
     }
 
-    /**
-     * The drift guard above cannot see this branch: because the frozen literal equals live inference,
-     * comparing schemas passes whether or not withSchema() was applied. Comparing the extractors
-     * themselves does distinguish them - withSchema() returns a clone carrying the schema.
-     */
     #[DataProvider('sources_taking_a_schema')]
     public function test_inferred_mode_attaches_no_schema(Source $source): void
     {
@@ -60,11 +55,6 @@ final class SourceExtractorTest extends TestCase
         );
     }
 
-    /**
-     * The frozen literal only prices the sampling pass honestly while it still equals what inference
-     * produces. This is the drift guard: if inference changes, this fails loudly instead of the
-     * declared arm quietly measuring something else.
-     */
     #[DataProvider('sources')]
     public function test_the_frozen_schema_still_equals_what_the_source_infers(Source $source): void
     {

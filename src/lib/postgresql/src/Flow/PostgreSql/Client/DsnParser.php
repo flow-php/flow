@@ -16,11 +16,7 @@ use function str_starts_with;
 use function urldecode;
 
 /**
- * Parses PostgreSQL DSN (Data Source Name) strings into ConnectionParameters.
- *
- * Supports standard PostgreSQL URL formats commonly used in environment variables:
- * - postgres://user:password@host:port/database?options
- * - postgresql://user:password@host:port/database?options
+ * Accepts postgres:// and postgresql:// URLs.
  */
 final readonly class DsnParser
 {

@@ -20,10 +20,7 @@ use const NAN;
 use const PHP_INT_SIZE;
 
 /**
- * Casts PostgreSQL result values to unambiguous PHP types.
- *
- * Uses string type names from pg_field_type() for portability (OIDs can vary with extensions).
- * Anything without an explicit arm stays a string for higher layers to interpret.
+ * Keys on pg_field_type() names, not OIDs; an unknown type stays a string.
  */
 final readonly class ResultCaster
 {
@@ -47,8 +44,7 @@ final readonly class ResultCaster
             'bytea' => $this->castBytea($value),
             'timestamp' => $this->castTimestamp($value),
             'timetz' => $this->castTimeTz($value),
-            // Checked last so a typed column never pays for it. No array type name can reach an
-            // explicit arm above: every one of them starts with an underscore.
+            // last, so a typed column never pays for it; array type names start with an underscore
             default => $typeName !== null && str_starts_with($typeName, '_')
                 ? $this->castElements($this->arrayLiteralParser->parse($value), substr($typeName, 1))
                 : $value,
@@ -97,9 +93,7 @@ final readonly class ResultCaster
     }
 
     /**
-     * `timestamp` (without time zone) values are stored in UTC by TimestampConverter.
-     * The database returns them without an offset, so we tag them as UTC to keep the
-     * instant intact once a higher layer parses the string into a DateTimeInterface.
+     * TimestampConverter stores `timestamp` in UTC, so values are tagged UTC to keep the instant.
      */
     private function castTimestamp(string $value): string
     {
@@ -111,8 +105,7 @@ final readonly class ResultCaster
     }
 
     /**
-     * TimeType is DateInterval-backed and carries no offset, so timetz keeps its clock time and
-     * drops the zone. A stated, accepted loss.
+     * timetz keeps its clock time and drops the zone: TimeType carries no offset.
      */
     private function castTimeTz(string $value): string
     {

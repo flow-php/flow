@@ -49,9 +49,6 @@ final class PipelinesMother
     }
 
     /**
-     * A plan over chain(): Described (bound, no refusal) unless $described is false. Its schema is empty: a plan
-     * built here is read for its pipelines, never for the columns it returns.
-     *
      * @param list<JoinStep|Loader|Processor|BranchPipeline|TransactionGroup|Transformer> $steps
      */
     public static function plan(

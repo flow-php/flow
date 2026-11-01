@@ -89,15 +89,14 @@ final readonly class TracingMiddleware implements MiddlewareInterface
 
         $busName = $busNameStamp instanceof BusNameStamp ? $busNameStamp->getBusName() : 'default';
 
-        // OTEL messaging semconv: messaging.destination.name is the queue/topic - the transport in
-        // Symfony terms. It is only known on the consume side; on dispatch the routing to a
-        // transport has not happened yet.
-        $transportName = $receivedStamp instanceof ReceivedStamp ? $receivedStamp->getTransportName() : null;
+        $consumedFromTransport = $receivedStamp instanceof ReceivedStamp ? $receivedStamp->getTransportName() : null;
 
         $spanName = match ($this->messageNaming) {
             MessageNaming::MessageName => "{$operation} " . self::shortClassName($messageClass),
             MessageNaming::MessageFqcn => "{$operation} {$messageClass}",
-            MessageNaming::Transport => $transportName !== null ? "{$operation} {$transportName}" : $operation,
+            MessageNaming::Transport => $consumedFromTransport !== null
+                ? "{$operation} {$consumedFromTransport}"
+                : $operation,
         };
 
         $attributes = [
@@ -108,8 +107,8 @@ final readonly class TracingMiddleware implements MiddlewareInterface
             MessengerAttributes::ATTR_BUS => $busName,
         ];
 
-        if ($transportName !== null) {
-            $attributes[SemConvAttributes::MESSAGING_DESTINATION_NAME] = $transportName;
+        if ($consumedFromTransport !== null) {
+            $attributes[SemConvAttributes::MESSAGING_DESTINATION_NAME] = $consumedFromTransport;
         }
 
         if ($transportIdStamp instanceof TransportMessageIdStamp) {
@@ -125,8 +124,8 @@ final readonly class TracingMiddleware implements MiddlewareInterface
             SemConvAttributes::MESSAGING_OPERATION_NAME => $operation,
         ];
 
-        if ($transportName !== null) {
-            $metricAttributes[SemConvAttributes::MESSAGING_DESTINATION_NAME] = $transportName;
+        if ($consumedFromTransport !== null) {
+            $metricAttributes[SemConvAttributes::MESSAGING_DESTINATION_NAME] = $consumedFromTransport;
         }
 
         $processDuration = $meter !== null && $isReceived
@@ -176,14 +175,11 @@ final readonly class TracingMiddleware implements MiddlewareInterface
             }
         }
 
-        // A worker-consumed message starts its own trace (linked to the producer), per the OTEL messaging
-        // conventions — the queue wait must not be absorbed into the producer's trace. A synchronously
-        // received message is handled in-process, so it stays a child of the current trace.
+        // a worker-consumed message starts its own trace, linked to the producer
         $span = $this->traceHandler
             ? $tracer->span($spanName, $kind, $attributes, $links, $isWorkerConsumed ? false : null)
             : null;
-        // activated: the handler span is a logical scope - everything the handler does nests under it.
-        // Attached after $propagationScope, so it must be detached before it.
+        // detached before $propagationScope
         $spanScope = $span === null ? null : $tracer->activate($span);
 
         if (!$isReceived) {

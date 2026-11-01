@@ -20,10 +20,6 @@ use function Flow\ETL\DSL\ref;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Floe\DSL\to_floe;
 
-/**
- * The listing sources, which read the id from the path partition. Every file format runs the same case through
- * FileFormatContract in its own package.
- */
 final class FileExtractorScanTest extends FlowIntegrationTestCase
 {
     #[TestWith(['files'])]

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\IO\Extractor;
 
+use Flow\ETL\IO\Inference\SchemaInference;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\RustIterator;
@@ -36,7 +37,7 @@ final class RustJsonOpenSource implements JsonOpenSource
         Schema $schema,
         int $batchSize,
         Backend $backend,
-        ?int $sampleSize = null,
+        ?SchemaInference $inference = null,
         ?Schema $known = null,
     ): RustIterator {
         throw new RuntimeException('flow_php extension is not loaded');

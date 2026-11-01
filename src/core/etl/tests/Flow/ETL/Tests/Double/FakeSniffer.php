@@ -14,7 +14,7 @@ use function count;
 final class FakeSniffer implements Sniffer
 {
     /**
-     * @var list<array{int, int}> unit, row budget - in call order
+     * @var list<array{int, ?int}> unit, row budget - in call order
      */
     public array $sniffed = [];
 
@@ -44,12 +44,12 @@ final class FakeSniffer implements Sniffer
         return $this->names;
     }
 
-    public function sniff(int $unit, int $rowBudget): Sample
+    public function sniff(int $unit, ?int $rowBudget): Sample
     {
         $this->sniffed[] = [$unit, $rowBudget];
         $columnTypes = ColumnTypes::sniff($this->names, $this->sources->source($unit), $rowBudget, $this->typer);
 
-        return new Sample($columnTypes->folded(), 0, $rowBudget === -1 || $columnTypes->rows() < $rowBudget);
+        return new Sample($columnTypes->folded(), 0, $rowBudget === null || $columnTypes->rows() < $rowBudget);
     }
 
     public function parts(int $unit, int $targetBytes): array

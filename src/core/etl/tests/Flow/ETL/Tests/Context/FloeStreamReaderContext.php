@@ -216,11 +216,6 @@ final class FloeStreamReaderContext
         return $filesystem->readFrom($path)->content();
     }
 
-    /**
-     * Writes a complete file then rewrites it with the FOOTER frame stripped -
-     * a crashed writer that flushed complete frames but never closed. Strict
-     * rows() throws on the missing trailer.
-     */
     public static function writeWithoutFooter(Filesystem $filesystem, Path $path, Rows $rows): void
     {
         $writer = (new FloeFiles($filesystem, new AdaptiveBackend()))->create($path, $rows->schema());

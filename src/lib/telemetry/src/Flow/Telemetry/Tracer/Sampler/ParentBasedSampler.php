@@ -9,25 +9,6 @@ use Flow\Telemetry\Tracer\Span;
 
 use function sprintf;
 
-/**
- * Sampler that respects the parent span's sampling decision.
- *
- * This sampler ensures sampling consistency across a trace:
- * - If the parent was sampled, this span is sampled
- * - If the parent was not sampled, this span is not sampled
- * - For root spans (no parent), delegates to the configured root sampler
- *
- * This is the recommended sampler for most production deployments as it
- * ensures complete traces while maintaining sampling decisions made upstream.
- *
- * Example usage:
- * ```php
- * $sampler = new ParentBasedSampler(
- *     new TraceIdRatioBasedSampler(0.01), // 1% for root spans
- * );
- * $result = $sampler->shouldSample($context, $span);
- * ```
- */
 final readonly class ParentBasedSampler implements Sampler
 {
     /**

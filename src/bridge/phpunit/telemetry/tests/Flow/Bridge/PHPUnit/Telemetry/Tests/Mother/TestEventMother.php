@@ -101,10 +101,6 @@ final class TestEventMother
         return new Info(...$arguments);
     }
 
-    /**
-     * PHPUnit 13 extended Snapshot::__construct() from 4 to 7 arguments, adding trailing CpuTime
-     * values. See createInfo() for the reflective rationale.
-     */
     private static function createSnapshot(): Snapshot
     {
         $arguments = [

@@ -11,25 +11,6 @@ use Flow\Telemetry\Sanitizer\StackTrace;
 use Throwable;
 
 /**
- * Value object representing a log record.
- *
- * LogRecord is an immutable data container for log information including
- * severity, body, attributes, timestamp, and exception details.
- *
- * All setter methods return a new instance for fluent configuration.
- *
- * Example usage:
- * ```php
- * $record = (new LogRecord())
- *     ->setSeverity(Severity::ERROR)
- *     ->setBody('Database connection failed')
- *     ->setAttribute('db.host', 'localhost')
- *     ->setAttribute('db.port', 5432)
- *     ->setException($exception);
- *
- * $logger->emit($record);
- * ```
- *
  * @import-type TAttributeValue from Attributes
  * @import-type TAttributeValueMap from Attributes
  */

@@ -9,11 +9,7 @@ use Generator;
 use PhpBench\Attributes as Bench;
 
 /**
- * Rung 4 of the ladder: read -> withColumn -> filter -> select -> write, one subject per source.
- *
- * Parquet, Floe, Doctrine and PostgreSQL have no inferred arm on purpose. They declare from metadata
- * (footer / driver describe-query) and never sample, so the inferred-vs-declared comparison is
- * meaningless for them - that is the finding, not an omission.
+ * Parquet/Floe/Doctrine/PostgreSQL have no inferred arm: they declare from metadata, never sample.
  */
 #[Bench\BeforeMethods('warm')]
 final class OrdersPipelineBench

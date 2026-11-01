@@ -13,10 +13,7 @@ use flow_batch_frame::frame::Codec;
 use crate::ctx::{call_method, zval_str};
 use crate::exception::ext_exception;
 
-/// The frame body's zend_string, held (refcount + 1) for as long as any Arrow buffer points into it; the engine
-/// separates every later PHP write to the string, so the bytes under the buffers never change. The pointer comes from
-/// the zval itself, never from a `&ZendStr`: a write through a pointer derived from a shared reference is undefined
-/// behaviour, and the optimizer did drop it.
+/// Held while buffers point into it; the pointer comes from the zval, never a `&ZendStr` (writing through that is UB).
 pub struct FrameBody(*mut zend_string);
 
 impl FrameBody {

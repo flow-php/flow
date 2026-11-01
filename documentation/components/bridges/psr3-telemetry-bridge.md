@@ -102,7 +102,7 @@ $psrLogger->info('Request processed', [
 // attributes: {http.method: 'GET', http.status: 200, duration_ms: 12.4}
 ```
 
-Non-scalar values are normalized via `ValueNormalizer`:
+Non-scalar values are normalized via `AttributeValueNormalizer`:
 
 - `null` → `'null'`
 - `DateTimeInterface`, `Throwable` → passed through
@@ -168,7 +168,7 @@ normalizer.
 ```php ignore
 $converter = psr3_log_record_converter(
     severityMapper: psr3_severity_mapper([...]),
-    valueNormalizer: psr3_value_normalizer(),
+    valueNormalizer: psr3_attribute_value_normalizer(),
 );
 ```
 
@@ -184,10 +184,10 @@ $mapper = psr3_severity_mapper([
 ]);
 ```
 
-### psr3_value_normalizer()
+### psr3_attribute_value_normalizer()
 
-Builds the default `ValueNormalizer`. Provided for symmetry with the other DSL helpers; most users won't need it.
+Builds the default `AttributeValueNormalizer`. Provided for symmetry with the other DSL helpers; most users won't need it.
 
 ```php
-$normalizer = psr3_value_normalizer();
+$normalizer = psr3_attribute_value_normalizer();
 ```
