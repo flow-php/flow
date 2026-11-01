@@ -1,6 +1,7 @@
 ## [Unreleased] - 2026-11-01
 
 ### Added
+- [#2717](https://github.com/flow-php/flow/pull/2717) - **flow-php/parquet - Option::ROW_GROUP_MAXIMUM_ROWS_COUNT caps row groups by rows on both engines** - [@norberttech](https://github.com/norberttech)
 - [#2715](https://github.com/flow-php/flow/pull/2715) - **flow-php/etl - infer_schema()->everyRow() and ->everySource()** - [@norberttech](https://github.com/norberttech)
 - [#2714](https://github.com/flow-php/flow/pull/2714) - **flow-php/etl - #[NoDiscard] on every DataFrame verb** - [@norberttech](https://github.com/norberttech)
 - [#2713](https://github.com/flow-php/flow/pull/2713) - **flow-php/etl - Statistics::$processes with the OS peak memory of the parent and of every worker** - [@norberttech](https://github.com/norberttech)
@@ -46,6 +47,8 @@
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/arrow-ext - page-range reads and row filtering through arrow-rs** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2717](https://github.com/flow-php/flow/pull/2717) - **flow-php/arrow-ext - FLOW_ARROW_ABI is 2, one bump since 0.46.0** - [@norberttech](https://github.com/norberttech)
+- [#2717](https://github.com/flow-php/flow/pull/2717) - **flow-php/flow-php-ext - FLOW_PHP_ABI is 2, one bump since 0.46.0** - [@norberttech](https://github.com/norberttech)
 - [2c0f7b](https://github.com/flow-php/flow/commit/2c0f7b9a4e38be745d1316914150aaaf68414438) - **chore: update docker/login github action** - [@norberttech](https://github.com/norberttech)
 - [#2715](https://github.com/flow-php/flow/pull/2715) - **flow-php/etl - sampleSize() and filesToSniff() refuse values below 1** - [@norberttech](https://github.com/norberttech)
 - [#2715](https://github.com/flow-php/flow/pull/2715) - **flow-php/etl - a negative sniff row budget is refused; null means every row** - [@norberttech](https://github.com/norberttech)
@@ -138,6 +141,9 @@
 - [#2687](https://github.com/flow-php/flow/pull/2687) - **flow-php/flow - updated dev dependencies, mago 1.57 and GitHub Actions** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2717](https://github.com/flow-php/flow/pull/2717) - **flow-php/parquet - arrow engine writes Flow's created_by and no ARROW:schema key, like the PHP engine** - [@norberttech](https://github.com/norberttech)
+- [#2717](https://github.com/flow-php/flow/pull/2717) - **flow-php/arrow-ext - filtered reads no longer hold a whole row group of decoded filter columns in memory** - [@norberttech](https://github.com/norberttech)
+- [#2717](https://github.com/flow-php/flow/pull/2717) - **flow-php/etl - from_sequence_number() no longer builds the whole integer sequence in memory** - [@norberttech](https://github.com/norberttech)
 - [#2715](https://github.com/flow-php/flow/pull/2715) - **flow-php/doctrine-dbal-bulk - table definitions are cached per connection, not shared across connections** - [@norberttech](https://github.com/norberttech)
 - [#2715](https://github.com/flow-php/flow/pull/2715) - **flow-php/flow-php-ext - an explicit null inference no longer reads as an inferred schema** - [@norberttech](https://github.com/norberttech)
 - [#2714](https://github.com/flow-php/flow/pull/2714) - **flow-php/etl - fetch($limit), display() and printRows() no longer change the frame** - [@norberttech](https://github.com/norberttech)
