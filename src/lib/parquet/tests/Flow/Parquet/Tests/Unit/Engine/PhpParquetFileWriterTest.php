@@ -13,6 +13,7 @@ use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Exception\ValidationException;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\RowGroup;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\Reader;
@@ -153,6 +154,83 @@ final class PhpParquetFileWriterTest extends TestCase
         )));
         static::assertSame([['id' => 1], ['id' => 2], ['id' => 3]], iterator_to_array($parquet->values(), false));
         static::assertCount(3, $parquet->metadata()->rowGroups()->all());
+    }
+
+    public function test_a_batch_closes_row_groups_at_the_maximum_rows_count(): void
+    {
+        $memory = memory_filesystem();
+        $file = ParquetFileWriterMother::open(
+            new PhpParquetEngine(),
+            $memory->writeTo(path('memory://file.parquet')),
+            Options::default()->set(Option::ROW_GROUP_MAXIMUM_ROWS_COUNT, 300),
+        );
+
+        $file->writeBatch(array_map(static fn(int $id): array => ['id' => $id], range(1, 1000)));
+        $file->close();
+
+        static::assertSame(
+            [300, 300, 300, 100],
+            array_map(
+                static fn(RowGroup $group): int => $group->rowsCount(),
+                (new Reader(engine: new PhpParquetEngine()))
+                    ->readStream($memory->readFrom(path('memory://file.parquet')))
+                    ->metadata()
+                    ->rowGroups()
+                    ->all(),
+            ),
+        );
+    }
+
+    public function test_columns_close_row_groups_at_the_maximum_rows_count(): void
+    {
+        $memory = memory_filesystem();
+        $file = ParquetFileWriterMother::open(
+            new PhpParquetEngine(),
+            $memory->writeTo(path('memory://file.parquet')),
+            Options::default()->set(Option::ROW_GROUP_MAXIMUM_ROWS_COUNT, 300),
+        );
+
+        $file->writeColumns(['id' => range(1, 1000)]);
+        $file->close();
+
+        static::assertSame(
+            [300, 300, 300, 100],
+            array_map(
+                static fn(RowGroup $group): int => $group->rowsCount(),
+                (new Reader(engine: new PhpParquetEngine()))
+                    ->readStream($memory->readFrom(path('memory://file.parquet')))
+                    ->metadata()
+                    ->rowGroups()
+                    ->all(),
+            ),
+        );
+    }
+
+    public function test_rows_close_row_groups_at_the_maximum_rows_count(): void
+    {
+        $memory = memory_filesystem();
+        $file = ParquetFileWriterMother::open(
+            new PhpParquetEngine(),
+            $memory->writeTo(path('memory://file.parquet')),
+            Options::default()->set(Option::ROW_GROUP_MAXIMUM_ROWS_COUNT, 300),
+        );
+
+        foreach (range(1, 1000) as $id) {
+            $file->writeRow(['id' => $id]);
+        }
+        $file->close();
+
+        static::assertSame(
+            [300, 300, 300, 100],
+            array_map(
+                static fn(RowGroup $group): int => $group->rowsCount(),
+                (new Reader(engine: new PhpParquetEngine()))
+                    ->readStream($memory->readFrom(path('memory://file.parquet')))
+                    ->metadata()
+                    ->rowGroups()
+                    ->all(),
+            ),
+        );
     }
 
     public function test_columns_of_different_lengths_are_refused(): void

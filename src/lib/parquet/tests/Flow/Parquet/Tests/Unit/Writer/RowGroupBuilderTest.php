@@ -440,6 +440,44 @@ final class RowGroupBuilderTest extends TestCase
         );
     }
 
+    public function test_a_row_group_is_full_at_the_maximum_rows_count(): void
+    {
+        $options = (new Options())->set(Option::ROW_GROUP_MAXIMUM_ROWS_COUNT, 3);
+        $builder = new RowGroupBuilder(
+            Schema::with(FlatColumn::int32('id')),
+            Compressions::UNCOMPRESSED,
+            $options,
+            new DremelShredder(new ColumnDataValidator(), DataConverter::initialize($options)),
+        );
+
+        $builder->addRows([['id' => 1], ['id' => 2]]);
+
+        static::assertSame(1, $builder->rowsLeft());
+        static::assertFalse($builder->isFull());
+
+        $builder->addRows([['id' => 3]]);
+
+        static::assertSame(0, $builder->rowsLeft());
+        static::assertTrue($builder->isFull());
+    }
+
+    #[TestWith([0])]
+    #[TestWith([-1])]
+    public function test_a_row_group_maximum_rows_count_below_one_is_refused(int $rows): void
+    {
+        $options = (new Options())->set(Option::ROW_GROUP_MAXIMUM_ROWS_COUNT, $rows);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('ROW_GROUP_MAXIMUM_ROWS_COUNT must be greater than 0, ' . $rows . ' given');
+
+        new RowGroupBuilder(
+            Schema::with(FlatColumn::int32('id')),
+            Compressions::UNCOMPRESSED,
+            $options,
+            new DremelShredder(new ColumnDataValidator(), DataConverter::initialize($options)),
+        );
+    }
+
     #[TestWith([0])]
     #[TestWith([-1])]
     public function test_a_page_maximum_rows_count_below_one_is_refused(int $rows): void

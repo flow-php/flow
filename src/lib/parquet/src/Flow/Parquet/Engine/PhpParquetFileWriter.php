@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Engine;
 
-use Composer\InstalledVersions;
 use Flow\Filesystem\DestinationStream;
 use Flow\Parquet\Dremel\DremelShredder;
 use Flow\Parquet\Dremel\Validator\ColumnDataValidator;
@@ -32,14 +31,12 @@ use Flow\Parquet\ThriftModel\OffsetIndex as ThriftOffsetIndex;
 use Flow\Parquet\Writer\ColumnLists;
 use Flow\Parquet\Writer\RowGroupBuilder;
 
-use function array_chunk;
 use function array_map;
 use function array_slice;
 use function array_values;
 use function fclose;
 use function fopen;
 use function is_array;
-use function max;
 use function min;
 use function pack;
 use function stream_get_contents;
@@ -84,7 +81,7 @@ final class PhpParquetFileWriter implements ParquetFileWriter
             new RowGroups([]),
             0,
             $options->getInt(Option::WRITER_VERSION),
-            'flow-php parquet version ' . InstalledVersions::getRootPackage()['pretty_version'],
+            ParquetFile::createdBy(),
             array_map(ColumnOrder::forWriting(...), array_values($schema->columnsFlat())),
         );
         $this->rowGroupBuilder = new RowGroupBuilder(
@@ -148,11 +145,12 @@ final class PhpParquetFileWriter implements ParquetFileWriter
             return;
         }
 
-        /** @var int<1, max> $interval */
-        $interval = $this->rowGroupSizeCheckInterval;
+        $rows = array_values($rows);
+        $count = count($rows);
 
-        foreach (array_chunk($rows, $interval) as $chunk) {
-            $this->rowGroupBuilder->addRows($chunk);
+        for ($offset = 0; $offset < $count; $offset += $length) {
+            $length = min($this->rowGroupSizeCheckInterval, $this->rowGroupBuilder->rowsLeft(), $count - $offset);
+            $this->rowGroupBuilder->addRows(array_slice($rows, $offset, $length));
 
             if ($this->rowGroupBuilder->isFull()) {
                 $this->flushRowGroup($stream);
@@ -165,11 +163,8 @@ final class PhpParquetFileWriter implements ParquetFileWriter
         $stream = $this->stream ?? throw new RuntimeException('Writer is not open');
         $count = (new ColumnLists())->length($columns);
 
-        /** @var int<1, max> $interval */
-        $interval = $this->rowGroupSizeCheckInterval;
-
-        for ($offset = 0; $offset < $count; $offset += $interval) {
-            $length = min($interval, $count - $offset);
+        for ($offset = 0; $offset < $count; $offset += $length) {
+            $length = min($this->rowGroupSizeCheckInterval, $this->rowGroupBuilder->rowsLeft(), $count - $offset);
             $slices = [];
 
             foreach ($columns as $name => $values) {
@@ -190,7 +185,8 @@ final class PhpParquetFileWriter implements ParquetFileWriter
         $this->rowGroupBuilder->addRow($row);
 
         if (
-            ($this->rowGroupBuilder->rowsCount() % $this->rowGroupSizeCheckInterval) === 0
+            $this->rowGroupBuilder->rowsLeft() === 0
+            || ($this->rowGroupBuilder->rowsCount() % $this->rowGroupSizeCheckInterval) === 0
             && $this->rowGroupBuilder->isFull()
         ) {
             $this->flushRowGroup($stream);

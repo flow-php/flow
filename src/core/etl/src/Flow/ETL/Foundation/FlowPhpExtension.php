@@ -17,7 +17,7 @@ final readonly class FlowPhpExtension
     /**
      * Equals the extension's FLOW_PHP_ABI; both change together.
      */
-    public const int ABI = 3;
+    public const int ABI = 2;
 
     public function __construct(
         public bool $loaded,

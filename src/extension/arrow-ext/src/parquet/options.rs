@@ -280,6 +280,20 @@ fn apply_writer_options(
     let codec = parse_compression(compression_str, gzip_level, brotli_level, zstd_level)?;
     builder = builder.set_compression(codec);
 
+    if let Some(val) = options.get("ROW_GROUP_MAXIMUM_ROWS_COUNT").and_then(|z| z.long()) {
+        if val < 1 {
+            return Err(format!(
+                "ROW_GROUP_MAXIMUM_ROWS_COUNT must be greater than 0, {val} given"
+            ));
+        }
+
+        builder = builder.set_max_row_group_row_count(Some(val as usize));
+    }
+
+    if let Some(created_by) = options.get("CREATED_BY").and_then(|z| z.str()) {
+        builder = builder.set_created_by(created_by.to_string());
+    }
+
     if let Some(val) = options.get("ROW_GROUP_SIZE_BYTES").and_then(|z| z.long()) {
         if val < 1 {
             return Err(format!("ROW_GROUP_SIZE_BYTES must be greater than 0, {val} given"));

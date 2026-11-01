@@ -31,6 +31,6 @@ $writer->close();
 ?>
 --EXPECT--
 bool(true)
-int(3)
+int(2)
 bool(true)
 bool(true)

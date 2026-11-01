@@ -26,7 +26,11 @@ final class ArrowExtensionTest extends TestCase
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            'The loaded arrow extension (0.46.0, ABI 4) does not match flow-php/parquet (ABI 3). Rebuild or upgrade '
+            'The loaded arrow extension (0.46.0, ABI '
+            . (ArrowExtension::ABI + 1)
+            . ') does not match flow-php/parquet (ABI '
+            . ArrowExtension::ABI
+            . '). Rebuild or upgrade '
             . 'arrow-ext to the version of flow-php/parquet, or stop loading it to use the PHP implementation.',
         );
 

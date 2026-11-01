@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet;
 
+use Composer\InstalledVersions;
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Filter\Binding\BoundFilter;
@@ -50,6 +51,11 @@ final class ParquetFile
     public function __destruct()
     {
         $this->close();
+    }
+
+    public static function createdBy(): string
+    {
+        return 'flow-php parquet version ' . InstalledVersions::getRootPackage()['pretty_version'];
     }
 
     public function close(): void

@@ -7,6 +7,7 @@ namespace Flow\Parquet\Engine\Arrow;
 use Flow\Parquet\BloomFilter\BloomFilterOptions;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\Writer\StatisticsLevel;
@@ -38,6 +39,7 @@ final class OptionsConverter
             Option::GZIP_COMPRESSION_LEVEL,
             Option::BROTLI_COMPRESSION_LEVEL,
             Option::ZSTD_COMPRESSION_LEVEL,
+            Option::ROW_GROUP_MAXIMUM_ROWS_COUNT,
             Option::ROW_GROUP_SIZE_BYTES,
             Option::PAGE_SIZE_BYTES,
             Option::PAGE_MAXIMUM_ROWS_COUNT,
@@ -56,6 +58,7 @@ final class OptionsConverter
         }
 
         $result['ARROW_WRITE_BATCH_SIZE'] = $options->getInt(Option::ARROW_WRITE_BATCH_SIZE);
+        $result['CREATED_BY'] = ParquetFile::createdBy();
         $result['STATISTICS_LEVEL'] = $options->getEnum(Option::STATISTICS_LEVEL, StatisticsLevel::class)->name;
 
         $columnsCompressions = $options->getArray(Option::COLUMNS_COMPRESSIONS);
