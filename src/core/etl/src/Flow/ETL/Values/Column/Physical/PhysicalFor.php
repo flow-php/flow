@@ -192,7 +192,7 @@ final readonly class PhysicalFor
     }
 
     /**
-     * @param StructureType<mixed> $type
+     * @param StructureType<array<array-key, mixed>> $type
      */
     public function supportsElements(StructureType $type): bool
     {
@@ -258,7 +258,7 @@ final readonly class PhysicalFor
     }
 
     /**
-     * @param StructureType<mixed> $type
+     * @param StructureType<array<array-key, mixed>> $type
      *
      * @return array<array-key, Physical>
      */
@@ -356,7 +356,7 @@ final readonly class PhysicalFor
     }
 
     /**
-     * @param StructureType<mixed> $type
+     * @param StructureType<array<array-key, mixed>> $type
      * @param array<array-key, mixed> $physical
      */
     public function acceptsElements(StructureType $type, array $physical): bool

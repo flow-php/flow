@@ -8,3 +8,4 @@ phpbench.json
 benchmarks/datasets/
 benchmarks/var/
 .env
+/.github/tools/azurite/node_modules/
