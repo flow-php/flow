@@ -1,6 +1,11 @@
-## [Unreleased] - 2026-11-01
+## [Unreleased] - 2026-11-02
 
 ### Added
+- [#2721](https://github.com/flow-php/flow/pull/2721) - **flow-php/etl - Native sort, group ids and grouped sum/avg/count kernels behind Backend** - [@norberttech](https://github.com/norberttech)
+- [#2721](https://github.com/flow-php/flow/pull/2721) - **flow-php/etl - Projection pushdown of the columns a plan outputs into file sources** - [@norberttech](https://github.com/norberttech)
+- [#2721](https://github.com/flow-php/flow/pull/2721) - **flow-php/parquet - readStoredColumns() and writeStoredColumns() exchanging dates, timestamps, times and uuids as stored values** - [@norberttech](https://github.com/norberttech)
+- [#2721](https://github.com/flow-php/flow/pull/2721) - **flow-php/flow-php-ext - RustGroupTable, native sort and grouped totals/counts** - [@norberttech](https://github.com/norberttech)
+- [#2721](https://github.com/flow-php/flow/pull/2721) - **flow-php/arrow-ext - Stored column reads and writes** - [@norberttech](https://github.com/norberttech)
 - [#2717](https://github.com/flow-php/flow/pull/2717) - **flow-php/parquet - Option::ROW_GROUP_MAXIMUM_ROWS_COUNT caps row groups by rows on both engines** - [@norberttech](https://github.com/norberttech)
 - [#2715](https://github.com/flow-php/flow/pull/2715) - **flow-php/etl - infer_schema()->everyRow() and ->everySource()** - [@norberttech](https://github.com/norberttech)
 - [#2714](https://github.com/flow-php/flow/pull/2714) - **flow-php/etl - #[NoDiscard] on every DataFrame verb** - [@norberttech](https://github.com/norberttech)
@@ -47,6 +52,19 @@
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/arrow-ext - page-range reads and row filtering through arrow-rs** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2721](https://github.com/flow-php/flow/pull/2721) - **flow-php/etl - Filters evaluate each AND conjunct on its own** - [@norberttech](https://github.com/norberttech)
+- [#2721](https://github.com/flow-php/flow/pull/2721) - **flow-php/etl - count() reads no columns** - [@norberttech](https://github.com/norberttech)
+- [#2721](https://github.com/flow-php/flow/pull/2721) - **flow-php/etl - Sum and avg of one column share one running total** - [@norberttech](https://github.com/norberttech)
+- [#2721](https://github.com/flow-php/flow/pull/2721) - **flow-php/etl - External sort spills in batch-size frames and releases its buffer** - [@norberttech](https://github.com/norberttech)
+- [#2721](https://github.com/flow-php/flow/pull/2721) - **flow-php/etl - Parallel partial aggregates take the grouped path** - [@norberttech](https://github.com/norberttech)
+- [#2721](https://github.com/flow-php/flow/pull/2721) - **flow-php/etl - Floe files are read in exact windows** - [@norberttech](https://github.com/norberttech)
+- [#2721](https://github.com/flow-php/flow/pull/2721) - **flow-php/etl - Sort values moved to Values\Sort and KeyEncoder to Values\Grouping** - [@norberttech](https://github.com/norberttech)
+- [#2721](https://github.com/flow-php/flow/pull/2721) - **flow-php/etl-adapter-parquet - Filter-only columns are decoded only where statistics leave the filter open** - [@norberttech](https://github.com/norberttech)
+- [#2721](https://github.com/flow-php/flow/pull/2721) - **flow-php/etl-adapter-parquet - Reads and writes stored values instead of PHP objects** - [@norberttech](https://github.com/norberttech)
+- [#2721](https://github.com/flow-php/flow/pull/2721) - **flow-php/arrow-ext - Skips the row filter on row groups whose statistics prove every row matches** - [@norberttech](https://github.com/norberttech)
+- [#2721](https://github.com/flow-php/flow/pull/2721) - **flow-php/arrow-ext - Builds datetimes without a string parse on verified PHP layouts** - [@norberttech](https://github.com/norberttech)
+- [#2721](https://github.com/flow-php/flow/pull/2721) - **flow-php/arrow-ext - Out-of-range values are refused with InvalidArgumentException** - [@norberttech](https://github.com/norberttech)
+- [#2721](https://github.com/flow-php/flow/pull/2721) - **flow-php/flow-php-ext - Floe frames are validated once** - [@norberttech](https://github.com/norberttech)
 - [c24a25](https://github.com/flow-php/flow/commit/c24a254bdd6bdffb5e247b214a8f9ce634df03f1) - **chore: simplify documentation** - [@norberttech](https://github.com/norberttech)
 - [4be1dc](https://github.com/flow-php/flow/commit/4be1dcb9fee1599aa9f250a4feafd9dd5d485d3a) - **docs(flow-php/etl): {part} writes one part per task, not per worker** - [@norberttech](https://github.com/norberttech)
 - [#2717](https://github.com/flow-php/flow/pull/2717) - **flow-php/arrow-ext - FLOW_ARROW_ABI is 2, one bump since 0.46.0** - [@norberttech](https://github.com/norberttech)
@@ -143,6 +161,7 @@
 - [#2687](https://github.com/flow-php/flow/pull/2687) - **flow-php/flow - updated dev dependencies, mago 1.57 and GitHub Actions** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2721](https://github.com/flow-php/flow/pull/2721) - **flow-php/etl-adapter-parquet - Partitioned reads with metadata columns declared _input_file_uri twice** - [@norberttech](https://github.com/norberttech)
 - [#2717](https://github.com/flow-php/flow/pull/2717) - **flow-php/parquet - arrow engine writes Flow's created_by and no ARROW:schema key, like the PHP engine** - [@norberttech](https://github.com/norberttech)
 - [#2717](https://github.com/flow-php/flow/pull/2717) - **flow-php/arrow-ext - filtered reads no longer hold a whole row group of decoded filter columns in memory** - [@norberttech](https://github.com/norberttech)
 - [#2717](https://github.com/flow-php/flow/pull/2717) - **flow-php/etl - from_sequence_number() no longer builds the whole integer sequence in memory** - [@norberttech](https://github.com/norberttech)
@@ -186,6 +205,9 @@
 - [b5d097](https://github.com/flow-php/flow/commit/b5d097c5cabde914624be59774dd8a8d6fafe294) - **bump setup-php to 2.40.0 in extension release workflows** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2721](https://github.com/flow-php/flow/pull/2721) - **flow-php/etl - Aggregators::aggregate() and Aggregators::merge()** - [@norberttech](https://github.com/norberttech)
+- [#2721](https://github.com/flow-php/flow/pull/2721) - **flow-php/etl - Group and GroupKey** - [@norberttech](https://github.com/norberttech)
+- [#2721](https://github.com/flow-php/flow/pull/2721) - **flow-php/etl-adapter-parquet - ParquetEncoder and the value converters** - [@norberttech](https://github.com/norberttech)
 - [#2715](https://github.com/flow-php/flow/pull/2715) - **flow-php/etl - the -1 "all" sentinel of schema inference** - [@norberttech](https://github.com/norberttech)
 - [#2714](https://github.com/flow-php/flow/pull/2714) - **flow-php/etl - InvalidLogicException::transformationReturnedAnotherFrame()** - [@norberttech](https://github.com/norberttech)
 - [#2712](https://github.com/flow-php/flow/pull/2712) - **flow-php/etl-adapter-google-sheet - withDropExtraColumns()** - [@norberttech](https://github.com/norberttech)
