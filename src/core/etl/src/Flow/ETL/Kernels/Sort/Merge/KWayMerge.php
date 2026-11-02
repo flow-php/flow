@@ -4,18 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Kernels\Sort\Merge;
 
-use Flow\ETL\Kernels\Sort\RowOrder;
-use Flow\ETL\Kernels\Sort\SortColumn;
-use Flow\ETL\Kernels\Sort\SortKey;
 use Flow\ETL\Values\BatchSize;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
+use Flow\ETL\Values\Sort\RowOrder;
+use Flow\ETL\Values\Sort\SortColumn;
 use Generator;
 
 use function array_filter;
-use function array_map;
-use function array_slice;
 use function array_values;
 
 final readonly class KWayMerge
@@ -77,8 +74,6 @@ final readonly class KWayMerge
             $bound = $cursors[$frontier]->keys();
             $boundIndex = $cursors[$frontier]->batch()->count() - 1;
             $slices = [];
-            /** @var list<list<SortKey>> $sliceKeys per slice, one key per column */
-            $sliceKeys = [];
 
             foreach ($cursors as $position => $cursor) {
                 $from = $cursor->index();
@@ -96,31 +91,17 @@ final readonly class KWayMerge
                         ->batch()
                         ->slice($from, $to - $from)
                         ->matchTo($schema, $this->backend);
-                    $sliceKeys[] = array_map(static fn(SortKey $key): SortKey => $key->slice(
-                        $from,
-                        $to - $from,
-                    ), $cursor->keys());
                     $cursor->advance($to);
                 }
             }
 
             $cursors = array_values(array_filter($cursors, static fn(BucketCursor $cursor): bool => $cursor->valid()));
             $block = Rows::concat($slices[0]->schema(), $this->backend, ...$slices);
-            // the block's keys are the cursors' keys sliced, never recomputed from the rows
-            $blockKeys = [];
-
-            foreach ($sliceKeys[0] as $position => $first) {
-                $blockKeys[] = SortKey::concat($first, ...array_map(
-                    static fn(array $keys): SortKey => $keys[$position],
-                    array_slice($sliceKeys, 1),
-                ));
-            }
-
             $pending = Rows::concat(
                 $pending->schema(),
                 $this->backend,
                 $pending,
-                $block->gather($order->permutation($blockKeys, $block->count())),
+                $this->backend->sort($block, $this->columns),
             );
 
             while ($pending->count() >= $this->batchSize->size) {

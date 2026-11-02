@@ -143,6 +143,15 @@ pub fn register() -> Result<()> {
                 ],
                 ITERATOR,
             ),
+            method(
+                "readStoredColumns",
+                vec![
+                    Arg::new("columns", DataType::Array),
+                    Arg::new("batchSize", DataType::Long),
+                    Arg::new("plan", READ_PLAN),
+                ],
+                ITERATOR,
+            ),
         ],
         vec![],
     )?;
@@ -154,6 +163,11 @@ pub fn register() -> Result<()> {
             method("writeBatch", vec![Arg::new("rows", DataType::Iterable)], DataType::Void),
             method(
                 "writeColumns",
+                vec![Arg::new("columns", DataType::Array)],
+                DataType::Void,
+            ),
+            method(
+                "writeStoredColumns",
                 vec![Arg::new("columns", DataType::Array)],
                 DataType::Void,
             ),

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Kernels\Sort\Merge;
 
-use Flow\ETL\Kernels\Sort\RowOrder;
-use Flow\ETL\Kernels\Sort\SortKey;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
+use Flow\ETL\Values\Sort\RowOrder;
+use Flow\ETL\Values\Sort\SortKey;
 use Generator;
 
 final class BucketCursor

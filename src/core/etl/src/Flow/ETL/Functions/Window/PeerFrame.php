@@ -6,9 +6,9 @@ namespace Flow\ETL\Functions\Window;
 
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
-use Flow\ETL\Kernels\Sort\RowOrder;
-use Flow\ETL\Kernels\Sort\SortColumn;
 use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Sort\RowOrder;
+use Flow\ETL\Values\Sort\SortColumn;
 use SensitiveParameter;
 use WeakMap;
 

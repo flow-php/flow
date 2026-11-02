@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Planning\Logical\Node;
 
+use Flow\ETL\Operators\Processor\RequiredColumns;
 use Flow\ETL\Planning\Logical\Node\Select;
 use Flow\ETL\Planning\Logical\Redefined;
 use Flow\ETL\Planning\Logical\RowCount;
 use Flow\ETL\Planning\Logical\Transparency;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\NodeMother;
+
+use function Flow\ETL\DSL\ref;
 
 final class SelectTest extends FlowTestCase
 {
@@ -43,5 +46,16 @@ final class SelectTest extends FlowTestCase
         static::assertSame(RowCount::preserving, $node->rowCount());
         static::assertSame(Transparency::transparent, $node->transparency());
         static::assertEquals(Redefined::allBut('id'), $node->redefines());
+    }
+
+    public function test_a_select_requires_exactly_its_columns_whatever_is_above(): void
+    {
+        static::assertEquals(
+            RequiredColumns::only('a', 'b'),
+            (new Select(NodeMother::read(), [
+                'a',
+                ref('b'),
+            ]))->requiredInputColumns(RequiredColumns::allBut('x')),
+        );
     }
 }

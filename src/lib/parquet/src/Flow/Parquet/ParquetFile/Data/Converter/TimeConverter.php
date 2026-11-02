@@ -14,16 +14,17 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\ParquetFile\Schema\TimeUnit;
 
-use function Flow\Parquet\floor_div;
 use function get_debug_type;
-use function is_int;
 use function sprintf;
 
 final readonly class TimeConverter implements Converter
 {
-    public function __construct(
-        private TimeUnit $unit,
-    ) {}
+    private StoredTemporalConverter $stored;
+
+    public function __construct(TimeUnit $unit)
+    {
+        $this->stored = StoredTemporalConverter::micros($unit);
+    }
 
     public static function forColumn(FlatColumn $column, Options $options): ?self
     {
@@ -36,15 +37,7 @@ final readonly class TimeConverter implements Converter
 
     public function fromParquetType(mixed $data): DateInterval
     {
-        if (!is_int($data)) {
-            throw new InvalidArgumentException(sprintf('Expected int, got %s', get_debug_type($data)));
-        }
-
-        return $this->toDateInterval(match ($this->unit) {
-            TimeUnit::MILLISECONDS => $data * 1_000,
-            TimeUnit::MICROSECONDS => $data,
-            TimeUnit::NANOSECONDS => floor_div($data, 1_000),
-        });
+        return $this->toDateInterval($this->stored->fromParquetType($data));
     }
 
     public function toParquetType(mixed $data): int
@@ -53,13 +46,7 @@ final readonly class TimeConverter implements Converter
             throw new InvalidArgumentException(sprintf('Expected DateInterval, got %s', get_debug_type($data)));
         }
 
-        $micros = $this->toInt($data);
-
-        return match ($this->unit) {
-            TimeUnit::MILLISECONDS => floor_div($micros, 1_000),
-            TimeUnit::MICROSECONDS => $micros,
-            TimeUnit::NANOSECONDS => $micros * 1_000,
-        };
+        return $this->stored->toParquetType($this->toInt($data));
     }
 
     private function toDateInterval(int $microseconds): DateInterval

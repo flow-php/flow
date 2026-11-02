@@ -635,6 +635,44 @@ mod tests {
     }
 
     #[test]
+    fn a_corrupt_column_is_refused_in_place_as_when_copied() {
+        let column = |len: u32, nulls: u32, buffers: Vec<Option<(i64, Vec<u8>)>>| Column {
+            nodes: vec![(len, nulls)],
+            buffers,
+        };
+        let cases = [
+            (Kind::Int64, column(2, 0, vec![None, raw(&[0; 10])])),
+            (Kind::Uuid, column(1, 0, vec![None, raw(&[0; 15])])),
+            (Kind::Boolean, column(9, 0, vec![None, raw(&[0])])),
+            (Kind::Int64, column(2, 0, vec![raw(&[0b01]), raw(&i64s(&[1, 2]))])),
+            (Kind::Int64, column(9, 1, vec![raw(&[0xfe]), raw(&i64s(&[0; 9]))])),
+            (Kind::Bytes, column(1, 0, vec![None, raw(&u32s(&[1, 2])), raw(b"ab")])),
+            (
+                Kind::Bytes,
+                column(2, 0, vec![None, raw(&u32s(&[0, 100, 3])), raw(b"abc")]),
+            ),
+            (Kind::Bytes, column(1, 0, vec![None, raw(&u32s(&[0, 3])), raw(b"ab")])),
+            (Kind::Bytes, column(2, 0, vec![None, raw(&u32s(&[0, 2])), raw(b"ab")])),
+        ];
+
+        for (kind, column) in cases {
+            let frame = body(column.nodes[0].0, &[column]);
+            let (owned, shared, _) = owner(&frame);
+            let in_place = decode(&owned, Some(&shared), &[&kind], &mut Noop)
+                .err()
+                .map(|failure| format!("{failure:?}"));
+
+            assert!(in_place.is_some(), "{kind:?} decoded in place");
+            assert_eq!(
+                in_place,
+                decode(&frame, None, &[&kind], &mut Noop)
+                    .err()
+                    .map(|failure| format!("{failure:?}"))
+            );
+        }
+    }
+
+    #[test]
     fn drops_the_owner_with_the_last_buffer() {
         let int = Kind::Int64;
         let frame = body(2, &[int_column(&[1, 2])]);

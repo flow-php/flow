@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Planning\Logical\Node;
 
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Operators\Processor\RequiredColumns;
 use Flow\ETL\Planning\Logical\Node\Offset;
 use Flow\ETL\Planning\Logical\Redefined;
 use Flow\ETL\Planning\Logical\RowCount;
@@ -53,5 +54,13 @@ final class OffsetTest extends FlowTestCase
 
         // @mago-ignore analysis:invalid-argument
         new Offset(NodeMother::read(), -1);
+    }
+
+    public function test_an_offset_passes_the_demand_through(): void
+    {
+        static::assertEquals(
+            RequiredColumns::only('x'),
+            (new Offset(NodeMother::read(), 5))->requiredInputColumns(RequiredColumns::only('x')),
+        );
     }
 }

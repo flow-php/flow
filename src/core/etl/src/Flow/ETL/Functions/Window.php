@@ -15,7 +15,7 @@ use Flow\ETL\Functions\Window\PeerFrame;
 use Flow\ETL\Functions\Window\RowsFrame;
 use Flow\ETL\Functions\Window\WholePartitionFrame;
 use Flow\ETL\Functions\Window\WindowFrame;
-use Flow\ETL\Kernels\Sort\SortColumn;
+use Flow\ETL\Values\Sort\SortColumn;
 use SensitiveParameter;
 
 use function array_map;

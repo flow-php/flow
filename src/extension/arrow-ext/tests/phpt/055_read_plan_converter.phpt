@@ -1,5 +1,5 @@
 --TEST--
-arrow reads a plan through ReadPlanConverter::toExtension(), called by name: file-absolute (row count, skip) selectors, the row filter tree and the limit and offset counted after it
+arrow reads a plan through ReadPlanConverter::toExtension(), called by name: file-absolute (row count, skip) selectors of the rows read and of the rows proven to match, the row filter tree and the limit and offset counted after it
 --SKIPIF--
 <?php if (!extension_loaded("arrow")) die("skip arrow extension not loaded"); ?>
 --FILE--
@@ -55,8 +55,8 @@ echo json_encode($ids), "\n";
 ?>
 --EXPECT--
 bool(true)
-{"selectors":[[1,true],[2,false],[2,true],[1,false]],"limit":null,"offset":0}
+{"selectors":[[1,true],[2,false],[2,true],[1,false]],"matched":[[1,true],[2,false],[2,true],[1,false]],"limit":null,"offset":0}
 [2,3,6]
 Flow\Parquet\Exception\InvalidArgumentException: A read plan over 5 rows cannot read a file of 6 rows
-{"selectors":[[6,false]],"filter":{"and":[{"leaf":"intervals","path":["id"],"intervals":[[2,true,2,true],[3,true,3,true],[6,true,6,true]]},{"not":{"leaf":"is_null","path":["id"]}},{"leaf":"absent","is_null":true}]},"limit":2,"offset":0}
+{"selectors":[[6,false]],"matched":[[6,true]],"filter":{"and":[{"leaf":"intervals","path":["id"],"intervals":[[2,true,2,true],[3,true,3,true],[6,true,6,true]]},{"not":{"leaf":"is_null","path":["id"]}},{"leaf":"absent","is_null":true}]},"limit":2,"offset":0}
 [2,3]

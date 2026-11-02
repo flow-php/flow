@@ -6,9 +6,9 @@ namespace Flow\ETL\Tests\Mother;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use Flow\ETL\Kernels\Sort\SortColumn;
 use Flow\ETL\Values\NullsOrder;
 use Flow\ETL\Values\Schema;
+use Flow\ETL\Values\Sort\SortColumn;
 
 use function array_slice;
 use function array_splice;

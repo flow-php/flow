@@ -83,7 +83,7 @@ impl PlanPredicate {
             .collect()
     }
 
-    /// Adds the rows it keeps to `matched`; on the last conjunct that is every match of the file.
+    /// Adds the rows it keeps to `matched`.
     pub fn counting(self, matched: Arc<AtomicUsize>) -> Self {
         Self {
             matched: Some(matched),

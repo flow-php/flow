@@ -6,10 +6,10 @@ namespace Flow\ETL\Operators\Constraint;
 
 use Flow\ETL\Functions\Reference\Reference;
 use Flow\ETL\Functions\Reference\References;
-use Flow\ETL\Kernels\Bucketing\KeyEncoder;
 use Flow\ETL\Kernels\Bucketing\SeenKeys;
 use Flow\ETL\Operators\Constraint;
 use Flow\ETL\Operators\Transformer\Stateful;
+use Flow\ETL\Values\Grouping\KeyEncoder;
 use Flow\ETL\Values\Rows;
 use Flow\Types\Type\TypedValueFormatter;
 

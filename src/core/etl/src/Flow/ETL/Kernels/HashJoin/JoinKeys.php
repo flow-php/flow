@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Kernels\HashJoin;
 
-use Flow\ETL\Kernels\Bucketing\KeyEncoder;
 use Flow\ETL\Values\Column\ValueEquality;
+use Flow\ETL\Values\Grouping\KeyEncoder;
 use Flow\ETL\Values\Schema;
 use Flow\Types\Type;
 

@@ -70,6 +70,11 @@ final class RustParquetFileWriter implements ParquetFileWriter
         throw new RuntimeException('arrow extension is not loaded');
     }
 
+    public function writeStoredColumns(array $columns): void
+    {
+        throw new RuntimeException('arrow extension is not loaded');
+    }
+
     /**
      * @param array<array-key, mixed> $row a writer column the row lacks is null
      */

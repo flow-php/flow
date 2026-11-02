@@ -52,4 +52,13 @@ final class RustParquetFileReader implements ParquetFileReader
     {
         throw new RuntimeException('arrow extension is not loaded');
     }
+
+    /**
+     * @param list<string> $columns resolved names, never empty
+     * @param int $batchSize upper bound of rows per chunk, refused below 1
+     */
+    public function readStoredColumns(array $columns, int $batchSize, ReadPlan $plan): RustColumnsReader
+    {
+        throw new RuntimeException('arrow extension is not loaded');
+    }
 }

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Context;
 
 use Flow\ETL\Functions\Reference\Reference;
-use Flow\ETL\Kernels\Sort\RowOrder;
-use Flow\ETL\Kernels\Sort\SortColumn;
 use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Sort\RowOrder;
+use Flow\ETL\Values\Sort\SortColumn;
 
 use function array_map;
 use function array_values;

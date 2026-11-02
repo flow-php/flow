@@ -102,6 +102,27 @@ final class PhpParquetFileReader implements ParquetFileReader
      */
     public function readColumns(array $columns, int $batchSize, ReadPlan $plan): Generator
     {
+        return $this->read($columns, $batchSize, $plan, DataConverter::initialize($this->options));
+    }
+
+    /**
+     * @param list<string> $columns
+     * @param int $batchSize refused below 1, as the arrow engine refuses it
+     *
+     * @return Generator<int, array<string, list<mixed>>|SkippedMatches>
+     */
+    public function readStoredColumns(array $columns, int $batchSize, ReadPlan $plan): Generator
+    {
+        return $this->read($columns, $batchSize, $plan, DataConverter::stored($this->options));
+    }
+
+    /**
+     * @param list<string> $columns
+     *
+     * @return Generator<int, array<string, list<mixed>>|SkippedMatches>
+     */
+    private function read(array $columns, int $batchSize, ReadPlan $plan, DataConverter $converter): Generator
+    {
         $this->open || throw new RuntimeException('Reader is not open');
 
         if ($batchSize < 1) {
@@ -118,7 +139,7 @@ final class PhpParquetFileReader implements ParquetFileReader
 
         $columnReader = new ColumnReader(
             new SelectedPages(new ColumnChunkReader(new PageReader($this->byteOrder, $this->options), $this->options)),
-            new DremelAssembler(DataConverter::initialize($this->options)),
+            new DremelAssembler($converter),
         );
 
         if ($plan->selection->totalRows() !== $metadata->rowsNumber()) {

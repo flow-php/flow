@@ -121,6 +121,27 @@ final class CriteriaTest extends FlowTestCase
         static::assertSame($split, $criteria->withPathFilter(new RejectingFilter())->split);
     }
 
+    public function test_pushed_columns_keep_each_name_once(): void
+    {
+        static::assertSame(['a', 'b'], (new Criteria())->withColumns('a', 'b', 'a')->columns);
+    }
+
+    public function test_a_second_push_of_columns_keeps_only_the_columns_both_name_in_the_first_order(): void
+    {
+        static::assertSame(['a', 'c'], (new Criteria())->withColumns('a', 'b', 'c')->withColumns('c', 'a')->columns);
+    }
+
+    public function test_pushed_columns_survive_every_other_push(): void
+    {
+        $criteria = (new Criteria())->withColumns('a', 'b');
+
+        static::assertSame(['a', 'b'], $criteria->withFilter(ref('a')->greaterThan(lit(1)))->columns);
+        static::assertSame(['a', 'b'], $criteria->withLimit(3)->columns);
+        static::assertSame(['a', 'b'], $criteria->withOffset(2)->columns);
+        static::assertSame(['a', 'b'], $criteria->withPathFilter(new RejectingFilter())->columns);
+        static::assertSame(['a', 'b'], $criteria->withSplit(new FileSplit(path('memory://a.csv'), 0, 10))->columns);
+    }
+
     public function test_an_offset_below_zero_is_refused(): void
     {
         $this->expectException(InvalidArgumentException::class);

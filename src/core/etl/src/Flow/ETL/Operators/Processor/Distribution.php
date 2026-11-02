@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Operators\Processor;
 
 use Flow\ETL\Kernels\HashJoin\JoinKeys;
-use Flow\ETL\Kernels\Sort\SortColumn;
 use Flow\ETL\Operators\Processor;
+use Flow\ETL\Values\Sort\SortColumn;
 
 final readonly class Distribution
 {

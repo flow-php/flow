@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Planning\Logical\Node;
 
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Operators\Processor\RequiredColumns;
 use Flow\ETL\Planning\Logical\Node\Limit;
 use Flow\ETL\Planning\Logical\Redefined;
 use Flow\ETL\Planning\Logical\RowCount;
@@ -52,5 +53,13 @@ final class LimitTest extends FlowTestCase
         $this->expectExceptionMessage('Limit can\'t be lower or equal zero, given: 0');
 
         new Limit(NodeMother::read(), 0);
+    }
+
+    public function test_a_limit_passes_the_demand_through(): void
+    {
+        static::assertEquals(
+            RequiredColumns::only('x'),
+            NodeMother::limit(NodeMother::read(), 5)->requiredInputColumns(RequiredColumns::only('x')),
+        );
     }
 }

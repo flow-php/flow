@@ -8,7 +8,7 @@ use arrow_array::types::{Date32Type, DurationMicrosecondType, Float64Type, Int64
 use arrow_array::{make_array, Array, ArrowPrimitiveType};
 use arrow_buffer::alloc::Allocation;
 use arrow_buffer::{Buffer, ToByteSlice};
-use arrow_data::ArrayData;
+use arrow_data::{ArrayData, ArrayDataBuilder};
 use arrow_schema::DataType;
 
 use crate::error::{Error, Of, Role, Values};
@@ -446,7 +446,7 @@ fn decode_node(
         }
     };
 
-    builder.build().map_err(Error::Arrow)
+    built(builder)
 }
 
 fn decode_nested(
@@ -512,12 +512,12 @@ fn decode_nested(
             let DataType::Map(entries, _) = data_type(kind) else {
                 unreachable!("a map kind has a map data type")
             };
-            let entries = ArrayData::builder(entries.data_type().clone())
-                .len(length as usize)
-                .add_child_data(keys)
-                .add_child_data(values)
-                .build()
-                .map_err(Error::Arrow)?;
+            let entries = built(
+                ArrayData::builder(entries.data_type().clone())
+                    .len(length as usize)
+                    .add_child_data(keys)
+                    .add_child_data(values),
+            )?;
 
             builder.add_buffer(offsets.buffer()).add_child_data(entries)
         }
@@ -536,7 +536,12 @@ fn decode_nested(
         _ => unreachable!("decode_nested takes a nested kind"),
     };
 
-    builder.build().map_err(Error::Arrow)
+    built(builder)
+}
+
+fn built(builder: ArrayDataBuilder) -> Result<ArrayData, Error> {
+    // SAFETY: check_offsets, fixed_values, validity, nodes_at and fits_i32 refuse every array build() would refuse
+    unsafe { builder.skip_validation(true) }.build().map_err(Error::Arrow)
 }
 
 /// `Some` bitmap only when it holds a null: the canonical form omits it otherwise.

@@ -68,4 +68,9 @@ final readonly class ExpandColumn implements Node
     {
         return $this->column instanceof Definition ? $this->column->name() : $this->column;
     }
+
+    public function requiredInputColumns(RequiredColumns $output): RequiredColumns
+    {
+        return $output->beforeWriting($this->name(), $this->function);
+    }
 }

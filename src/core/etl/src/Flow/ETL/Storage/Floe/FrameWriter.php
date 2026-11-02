@@ -31,8 +31,18 @@ final class FrameWriter
 
     public function frame(int $type, string $body): void
     {
-        $this->buffer .= Format::frame($type, $body);
         $this->position += Format::FRAME_HEADER_LENGTH + strlen($body);
+
+        // a body past the buffer goes to the stream as it is, so it is never copied into the buffer
+        if (strlen($body) >= $this->bufferSize) {
+            $this->flush();
+            $this->stream->append(Format::frameHeader($type, strlen($body)));
+            $this->stream->append($body);
+
+            return;
+        }
+
+        $this->buffer .= Format::frame($type, $body);
         $this->flushIfFull();
     }
 

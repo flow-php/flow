@@ -15,10 +15,12 @@ use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Memory\MemoryBudget;
 use Flow\ETL\Values\Memory\Unit;
 use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Sort\SortColumn;
 use Generator;
 
 use function array_chunk;
 use function array_map;
+use function array_splice;
 use function count;
 use function min;
 use function sprintf;
@@ -93,24 +95,36 @@ final readonly class ExternalSort
                 $schema ??= $batch->schema();
                 $buffer[] = $batch->matchTo($schema, $backend);
 
-                // the whole process, not this buffer: another spilling step in the pipeline holds memory too
-                if ($budget->exceeded()) {
-                    $runs[] = $this->spill($this->sorted($buffer, $limit, $backend), $runId, count($runs));
-                    $buffer = [];
+                // the spill concats the buffer, so it needs room for a second copy of it
+                if ($budget->exceededWith(2)) {
+                    // spliced out, so neither the buffer nor its concat outlives the spill
+                    $runs[] = $this->spill(
+                        $this->sorted(Rows::concat($schema, $backend, ...array_splice($buffer, 0)), $limit, $backend),
+                        $runId,
+                        count($runs),
+                    );
                     $budget->released();
                 }
             }
 
             if ($runs === []) {
-                if ($buffer !== []) {
-                    yield from $this->sorted($buffer, $limit, $backend)->chunks($this->batchSize->size);
+                if ($schema !== null) {
+                    yield from $this->sorted(
+                        Rows::concat($schema, $backend, ...array_splice($buffer, 0)),
+                        $limit,
+                        $backend,
+                    )->chunks($this->batchSize->size);
                 }
 
                 return;
             }
 
-            if ($buffer !== []) {
-                $runs[] = $this->spill($this->sorted($buffer, $limit, $backend), $runId, count($runs));
+            if ($buffer !== [] && $schema !== null) {
+                $runs[] = $this->spill(
+                    $this->sorted(Rows::concat($schema, $backend, ...array_splice($buffer, 0)), $limit, $backend),
+                    $runId,
+                    count($runs),
+                );
             }
 
             $merger = new KWayMerge($this->columns, $backend, $this->batchSize);
@@ -196,14 +210,11 @@ final readonly class ExternalSort
     }
 
     /**
-     * @param list<Rows> $buffer
      * @param null|int $limit
      */
-    public function sorted(array $buffer, ?int $limit, Backend $backend): Rows
+    public function sorted(Rows $all, ?int $limit, Backend $backend): Rows
     {
-        $all = Rows::concat($buffer[0]->schema(), $backend, ...$buffer);
-        $order = new RowOrder($this->columns);
-        $sorted = $all->gather($order->permutation($order->keys($all), $all->count()));
+        $sorted = $backend->sort($all, $this->columns);
 
         return $limit === null ? $sorted : $sorted->take($limit);
     }
@@ -211,7 +222,11 @@ final readonly class ExternalSort
     public function spill(Rows $run, string $runId, int $index): BucketRun
     {
         $bucketId = sprintf('sort-%s-%d', $runId, $index);
-        $this->spill->storage()->append($bucketId, $run);
+        // one frame per batch, so a merge cursor decodes one batch of the run at a time
+        foreach ($run->chunks($this->batchSize->size) as $chunk) {
+            $this->spill->storage()->append($bucketId, $chunk);
+        }
+
         $this->spill->storage()->close($bucketId);
         $this->spill->add(new Bucket($bucketId, $run->count(), $index));
 

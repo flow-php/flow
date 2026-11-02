@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Planning\Optimizer\Rule;
 
-use Flow\ETL\Functions\Reference\References;
-use Flow\ETL\Functions\ReferencedColumns;
-use Flow\ETL\Functions\ScalarFunction\UnpackResults;
 use Flow\ETL\Operators\Processor\RequiredColumns;
 use Flow\ETL\Planning\Logical\LogicalPlan;
 use Flow\ETL\Planning\Logical\Node;
@@ -33,7 +30,7 @@ final readonly class PushProjectionIntoExpand implements Rule
                     $demands[$node] = $demands->offsetExists($node) ? $demands[$node]->union($required) : $required;
                 }
 
-                $required = $this->below($node, $required);
+                $required = $node->requiredInputColumns($required);
             }
         }
 
@@ -47,28 +44,5 @@ final readonly class PushProjectionIntoExpand implements Rule
         }
 
         return $replacements->count() === 0 ? $plan : $plan->transformUp(new ReplaceNodes($replacements));
-    }
-
-    /**
-     * What the node's row input must hold so that $above holds what its consumers read.
-     */
-    public function below(Node $node, RequiredColumns $above): RequiredColumns
-    {
-        $refs = new ReferencedColumns();
-
-        return match (true) {
-            $node instanceof Node\Select => RequiredColumns::only(...References::init(...$node->columns)->names()),
-            $node instanceof Node\Drop => $above->without(...References::init(...$node->columns)->names()),
-            // an unpack writes "name.*", known only once bound: keep the demand, add what it reads
-            ($node instanceof Node\WithColumn || $node instanceof Node\ExpandColumn)
-                && $node->function instanceof UnpackResults
-                => $above->with(...$refs->in($node->function)->names()),
-            $node instanceof Node\WithColumn, $node instanceof Node\ExpandColumn => $above
-                ->without($node->name())
-                ->with(...$refs->in($node->function)->names()),
-            $node instanceof Node\Filter => $above->with(...$refs->in($node->function)->names()),
-            $node instanceof Node\Limit, $node instanceof Node\Offset => $above,
-            default => RequiredColumns::all(),
-        };
     }
 }

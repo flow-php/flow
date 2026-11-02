@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Kernels\Bucketing;
 
 use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Grouping\KeyEncoder;
 use Flow\ETL\Values\Rows;
 use Generator;
 

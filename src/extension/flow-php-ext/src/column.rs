@@ -66,6 +66,10 @@ impl RustColumn {
         &self.plan
     }
 
+    pub fn is_null_at(&self, row: usize) -> bool {
+        matches!(self.kind(), Kind::Null) || self.data.is_null(row)
+    }
+
     fn kind(&self) -> &Kind {
         &self.plan.kind
     }
@@ -223,9 +227,7 @@ impl RustColumn {
 
     #[php(name = "isNull")]
     pub fn is_null(&self, i: i64) -> PhpResult<bool> {
-        let row = self.row(i)?;
-
-        Ok(matches!(self.kind(), Kind::Null) || self.data.is_null(row))
+        Ok(self.is_null_at(self.row(i)?))
     }
 
     #[php(name = "nullCount")]

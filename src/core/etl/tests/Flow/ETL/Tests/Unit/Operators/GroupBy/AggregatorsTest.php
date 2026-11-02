@@ -28,11 +28,14 @@ final class AggregatorsTest extends FlowTestCase
     public function test_fresh_drops_state(): void
     {
         $aggregators = new Aggregators(count(), sum(ref('v')));
-        $aggregators->aggregate(
-            array_to_rows([['v' => 1], ['v' => 2]], schema(int_schema('v'))),
-            [0, 1],
-            flow_context()->backend(),
-        );
+
+        foreach ($aggregators as $aggregator) {
+            $aggregator->aggregate(
+                array_to_rows([['v' => 1], ['v' => 2]], schema(int_schema('v'))),
+                [0, 1],
+                flow_context()->backend(),
+            );
+        }
 
         $fresh = $aggregators->fresh();
 

@@ -24,7 +24,6 @@ use Flow\ETL\IO\Formatter\Schema\SchemaFormatter;
 use Flow\ETL\IO\Loader;
 use Flow\ETL\IO\Loader\StreamLoader;
 use Flow\ETL\IO\Loader\StreamLoader\Output;
-use Flow\ETL\Kernels\Sort\SortColumn;
 use Flow\ETL\Operators\Constraint;
 use Flow\ETL\Operators\GroupBy;
 use Flow\ETL\Operators\GroupBy\Aggregators;
@@ -50,6 +49,7 @@ use Flow\ETL\Values\Schema;
 use Flow\ETL\Values\Schema\Definition;
 use Flow\ETL\Values\Schema\Validator\StrictValidator;
 use Flow\ETL\Values\SchemaValidator;
+use Flow\ETL\Values\Sort\SortColumn;
 use Generator;
 use NoDiscard;
 

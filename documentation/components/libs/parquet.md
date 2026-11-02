@@ -369,7 +369,14 @@ The file is the same as the file that `writeBatch()` writes for the same rows. A
 same way as by `writeBatch()`. Lists of different lengths are refused:
 `InvalidArgumentException('writeColumns() takes lists of one length, got "id": 3, "name": 2')`.
 
-A custom `ParquetFileWriter` implements `writeColumns(array $columns): void`.
+A custom `ParquetFileWriter` implements `writeColumns(array $columns): void` and
+`writeStoredColumns(array $columns): void`, a custom `ParquetFileReader` implements `readColumns()` and
+`readStoredColumns()`. The stored methods take and return DATE as days since 1970-01-01, TIMESTAMP as microseconds
+since the epoch, TIME as microseconds since midnight and UUID as its 16 bytes:
+
+```php
+$writer->writeStoredColumns(['day' => [19_782], 'at' => [1_234_567_890_123_456], 'id' => [random_bytes(16)]]);
+```
 
 ### Writing a single row
 

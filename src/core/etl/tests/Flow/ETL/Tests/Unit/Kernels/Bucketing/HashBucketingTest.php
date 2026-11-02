@@ -7,10 +7,10 @@ namespace Flow\ETL\Tests\Unit\Kernels\Bucketing;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
 use Flow\ETL\Kernels\Bucketing\HashBucketing;
-use Flow\ETL\Kernels\Bucketing\KeyEncoder;
 use Flow\ETL\Storage\MemoryRowsStorage;
 use Flow\ETL\Tests\Context\RowsStorageContext;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Values\Grouping\KeyEncoder;
 
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;

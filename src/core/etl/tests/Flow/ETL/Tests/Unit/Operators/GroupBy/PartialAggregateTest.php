@@ -28,7 +28,7 @@ final class PartialAggregateTest extends FlowTestCase
 
         static::assertSame($inner->partial(), $partial->value());
         static::assertSame(
-            ['aggregated' => 2, 'sum' => ['int' => 4, 'float' => null, 'compensation' => 0.0]],
+            ['count' => 2, 'sum' => ['int' => 4, 'float' => null, 'compensation' => 0.0]],
             $partial->value(),
         );
         static::assertSame('v_sum', $partial->outputName());
@@ -52,7 +52,7 @@ final class PartialAggregateTest extends FlowTestCase
         $left->merge($right->partial(), flow_context()->backend());
 
         static::assertSame(
-            ['aggregated' => 4, 'sum' => ['int' => 14, 'float' => null, 'compensation' => 0.0]],
+            ['count' => 4, 'sum' => ['int' => 14, 'float' => null, 'compensation' => 0.0]],
             $left->value(),
         );
     }

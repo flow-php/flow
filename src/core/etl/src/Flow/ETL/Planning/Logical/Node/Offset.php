@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Planning\Logical\Node;
 
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Operators\Processor\RequiredColumns;
 use Flow\ETL\Planning\Logical\Node;
 use Flow\ETL\Planning\Logical\Redefined;
 use Flow\ETL\Planning\Logical\RowCount;
@@ -54,5 +55,10 @@ final readonly class Offset implements Node
     public function redefines(): Redefined
     {
         return Redefined::none();
+    }
+
+    public function requiredInputColumns(RequiredColumns $output): RequiredColumns
+    {
+        return $output;
     }
 }

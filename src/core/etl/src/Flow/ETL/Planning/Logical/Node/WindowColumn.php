@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Planning\Logical\Node;
 
 use Flow\ETL\Functions\WindowFunction;
+use Flow\ETL\Operators\Processor\RequiredColumns;
 use Flow\ETL\Planning\Logical\Node;
 use Flow\ETL\Planning\Logical\Redefined;
 use Flow\ETL\Planning\Logical\RowCount;
@@ -56,5 +57,10 @@ final readonly class WindowColumn implements Node
     public function name(): string
     {
         return $this->column instanceof Definition ? $this->column->name() : $this->column;
+    }
+
+    public function requiredInputColumns(RequiredColumns $output): RequiredColumns
+    {
+        return RequiredColumns::all();
     }
 }

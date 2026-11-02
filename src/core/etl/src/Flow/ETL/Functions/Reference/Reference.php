@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Functions\Reference;
 
 use Flow\ETL\Functions\ScalarFunction;
-use Flow\ETL\Kernels\Sort\SortColumn;
 use Flow\ETL\Values\NullsOrder;
+use Flow\ETL\Values\Sort\SortColumn;
 
 interface Reference extends ScalarFunction
 {

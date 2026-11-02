@@ -24,7 +24,7 @@ use crate::php::{
     call_handle_transparent, ce_method_ref, find_class, ht_for_each, ht_get, ht_insert, ht_insert_long, read_property,
     zval_long, zval_str,
 };
-use crate::values::{date_from_days, datetime_days, datetime_from_micros, datetime_micros, uuid_bytes, uuid_text};
+use crate::values::{datetime_days, datetime_from_micros, datetime_micros, uuid_bytes, uuid_text, Instants};
 
 const UUID: &str = "arrow.uuid";
 
@@ -55,32 +55,43 @@ pub enum ReadCell {
     Date,
     Timestamp,
     Time,
+    /// `Date32` as the days since 1970-01-01 it stores, for `readStoredColumns()`.
+    Days,
+    /// `Timestamp(µs)` as the microseconds since the epoch it stores, for `readStoredColumns()`.
+    TimestampMicros,
+    /// `Duration(µs)` as the microseconds since midnight it stores, for `readStoredColumns()`.
+    TimeMicros,
     List(Box<ReadCell>),
     Map(Box<ReadCell>, Box<ReadCell>),
     Struct(Vec<(Vec<u8>, ReadCell)>),
 }
 
 impl ReadCell {
-    /// `canonical`: the type the core reads; `parquet`: the field it was read from, walked in parallel.
-    pub fn new(canonical: &DataType, parquet: &Field) -> Result<Self, Error> {
+    /// `canonical` is read from the `parquet` field walked in parallel; `stored` keeps temporal ints and UUID bytes.
+    pub fn new(canonical: &DataType, parquet: &Field, stored: bool) -> Result<Self, Error> {
         Ok(match canonical {
             DataType::Null => ReadCell::Null,
             DataType::Boolean => ReadCell::Bool,
             DataType::Int64 => ReadCell::Int,
             DataType::Float64 => ReadCell::Float,
             DataType::LargeBinary => ReadCell::Bytes,
-            DataType::FixedSizeBinary(16) if is_uuid(parquet) => ReadCell::Uuid,
+            DataType::FixedSizeBinary(16) if is_uuid(parquet) && !stored => ReadCell::Uuid,
             DataType::FixedSizeBinary(16) => ReadCell::Bytes,
+            DataType::Date32 if stored => ReadCell::Days,
             DataType::Date32 => ReadCell::Date,
+            DataType::Timestamp(_, _) if stored => ReadCell::TimestampMicros,
             DataType::Timestamp(_, _) => ReadCell::Timestamp,
+            DataType::Duration(_) if stored => ReadCell::TimeMicros,
             DataType::Duration(_) => ReadCell::Time,
-            DataType::List(element) => ReadCell::List(Box::new(Self::new(element.data_type(), child(parquet, 0)?)?)),
+            DataType::List(element) => {
+                ReadCell::List(Box::new(Self::new(element.data_type(), child(parquet, 0)?, stored)?))
+            }
             DataType::Map(entries, _) => {
                 let DataType::Struct(fields) = entries.data_type() else {
                     return Err(unsupported(canonical));
                 };
                 let parquet_entries = child(parquet, 0)?;
-                let key = Self::new(fields[0].data_type(), child(parquet_entries, 0)?)?;
+                let key = Self::new(fields[0].data_type(), child(parquet_entries, 0)?, stored)?;
 
                 if !matches!(key, ReadCell::Int | ReadCell::Bytes | ReadCell::Uuid) {
                     return Err(Error::MapKey {
@@ -91,7 +102,7 @@ impl ReadCell {
 
                 ReadCell::Map(
                     Box::new(key),
-                    Box::new(Self::new(fields[1].data_type(), child(parquet_entries, 1)?)?),
+                    Box::new(Self::new(fields[1].data_type(), child(parquet_entries, 1)?, stored)?),
                 )
             }
             DataType::Struct(fields) => ReadCell::Struct(
@@ -101,7 +112,7 @@ impl ReadCell {
                     .map(|(index, field)| {
                         Ok((
                             field.name().as_bytes().to_vec(),
-                            Self::new(field.data_type(), child(parquet, index)?)?,
+                            Self::new(field.data_type(), child(parquet, index)?, stored)?,
                         ))
                     })
                     .collect::<Result<_, Error>>()?,
@@ -115,7 +126,7 @@ impl ReadCell {
         match self {
             ReadCell::Null => "null",
             ReadCell::Bool => "bool",
-            ReadCell::Int => "int",
+            ReadCell::Int | ReadCell::Days | ReadCell::TimestampMicros | ReadCell::TimeMicros => "int",
             ReadCell::Float => "float",
             ReadCell::Bytes | ReadCell::Uuid => "string",
             ReadCell::Date | ReadCell::Timestamp => "DateTimeImmutable",
@@ -136,10 +147,12 @@ impl ReadCell {
 
     /// Every value of `array` as a PHP list.
     pub fn values(&self, array: &ArrayRef, times: Option<&Times>) -> Result<Zval, PhpException> {
+        let instants = Instants::default();
         let mut list = ZendHashTable::with_capacity(u32::try_from(array.len()).unwrap_or(u32::MAX));
 
         for row in 0..array.len() {
-            list.push(self.value(array.as_ref(), row, times)?).map_err(collected)?;
+            list.push(self.value(array.as_ref(), row, times, &instants)?)
+                .map_err(collected)?;
         }
 
         let mut zv = Zval::new();
@@ -148,7 +161,13 @@ impl ReadCell {
         Ok(zv)
     }
 
-    fn value(&self, array: &dyn Array, row: usize, times: Option<&Times>) -> Result<Zval, PhpException> {
+    fn value(
+        &self,
+        array: &dyn Array,
+        row: usize,
+        times: Option<&Times>,
+        instants: &Instants,
+    ) -> Result<Zval, PhpException> {
         let mut zv = Zval::new();
 
         if array.is_null(row) {
@@ -167,10 +186,13 @@ impl ReadCell {
                 });
             }
             ReadCell::Uuid => zv = zval_str(&uuid_text(array.as_fixed_size_binary().value(row))),
-            ReadCell::Date => zv = date_from_days(i64::from(array.as_primitive::<Date32Type>().value(row)))?,
+            ReadCell::Date => zv = instants.date(i64::from(array.as_primitive::<Date32Type>().value(row)))?,
             ReadCell::Timestamp => {
-                zv = datetime_from_micros(array.as_primitive::<TimestampMicrosecondType>().value(row), b"+00:00")?;
+                zv = instants.timestamp(array.as_primitive::<TimestampMicrosecondType>().value(row))?;
             }
+            ReadCell::Days => zv = zval_long(i64::from(array.as_primitive::<Date32Type>().value(row))),
+            ReadCell::TimestampMicros => zv = zval_long(array.as_primitive::<TimestampMicrosecondType>().value(row)),
+            ReadCell::TimeMicros => zv = zval_long(array.as_primitive::<DurationMicrosecondType>().value(row)),
             ReadCell::Time => {
                 zv = times
                     .ok_or_else(|| ext_exception("arrow Parquet reader has no TIME base"))?
@@ -183,7 +205,7 @@ impl ReadCell {
 
                 for index in offsets[row] as usize..offsets[row + 1] as usize {
                     values
-                        .push(element.value(list.values().as_ref(), index, times)?)
+                        .push(element.value(list.values().as_ref(), index, times, instants)?)
                         .map_err(collected)?;
                 }
 
@@ -195,9 +217,9 @@ impl ReadCell {
                 let mut entries = ZendHashTable::with_capacity((offsets[row + 1] - offsets[row]) as u32);
 
                 for index in offsets[row] as usize..offsets[row + 1] as usize {
-                    let entry = value.value(map.values().as_ref(), index, times)?;
+                    let entry = value.value(map.values().as_ref(), index, times, instants)?;
 
-                    match key.value(map.keys().as_ref(), index, times)? {
+                    match key.value(map.keys().as_ref(), index, times, instants)? {
                         k if k.is_long() => ht_insert_long(&mut entries, k.long().unwrap_or_default(), entry),
                         k => ht_insert(&mut entries, k.zend_str().map_or(&b""[..], |key| key.as_bytes()), entry),
                     }
@@ -210,7 +232,7 @@ impl ReadCell {
                 let mut values = ZendHashTable::with_capacity(children.len() as u32);
 
                 for ((name, child), column) in children.iter().zip(structure.columns()) {
-                    ht_insert(&mut values, name, child.value(column.as_ref(), row, times)?);
+                    ht_insert(&mut values, name, child.value(column.as_ref(), row, times, instants)?);
                 }
 
                 zv.set_hashtable(values);
@@ -669,6 +691,12 @@ pub enum WriteCell {
     Date,
     Timestamp,
     Time,
+    /// DATE for `writeStoredColumns()`: an int of days since 1970-01-01.
+    StoredDate,
+    /// TIMESTAMP or TIME for `writeStoredColumns()`: an int of microseconds since the epoch or since midnight.
+    StoredMicros,
+    /// UUID for `writeStoredColumns()`: the 16 bytes it is stored as.
+    StoredUuid,
     List(Box<WriteCell>, bool),
     Map(Box<WriteCell>, Box<WriteCell>, bool),
     Struct(Vec<(Vec<u8>, WriteCell, bool)>),
@@ -745,6 +773,31 @@ impl WriteCell {
         })
     }
 
+    /// Takes stored values where `self` takes objects; it builds the same values.
+    pub fn stored(&self) -> WriteCell {
+        match self {
+            WriteCell::Bool => WriteCell::Bool,
+            WriteCell::Int => WriteCell::Int,
+            WriteCell::UInt64 => WriteCell::UInt64,
+            WriteCell::Float => WriteCell::Float,
+            WriteCell::Decimal => WriteCell::Decimal,
+            WriteCell::Bytes => WriteCell::Bytes,
+            WriteCell::Uuid | WriteCell::StoredUuid => WriteCell::StoredUuid,
+            WriteCell::Date | WriteCell::StoredDate => WriteCell::StoredDate,
+            WriteCell::Timestamp | WriteCell::Time | WriteCell::StoredMicros => WriteCell::StoredMicros,
+            WriteCell::List(element, nullable) => WriteCell::List(Box::new(element.stored()), *nullable),
+            WriteCell::Map(key, value, nullable) => {
+                WriteCell::Map(Box::new(key.stored()), Box::new(value.stored()), *nullable)
+            }
+            WriteCell::Struct(children) => WriteCell::Struct(
+                children
+                    .iter()
+                    .map(|(name, child, nullable)| (name.clone(), child.stored(), *nullable))
+                    .collect(),
+            ),
+        }
+    }
+
     /// `value` as this scalar cell accepts it, a null only where `nullable`; a nested cell refuses it as not an
     /// array.
     pub fn check_scalar<'a>(&self, value: &'a Zval, nullable: bool, classes: &Classes) -> Result<Scalar<'a>, Refusal> {
@@ -804,6 +857,16 @@ impl WriteCell {
                     None => fallback_micros(datetime)?,
                 })
             }
+            WriteCell::StoredUuid => Scalar::Uuid(
+                value
+                    .zend_str()
+                    .and_then(|bytes| <[u8; 16]>::try_from(bytes.as_bytes()).ok())
+                    .ok_or_else(|| refused("16 UUID bytes", value))?,
+            ),
+            WriteCell::StoredDate => Scalar::Date(
+                i32::try_from(value.long().ok_or_else(|| refused("int", value))?).map_err(|_| Refusal::Overflow)?,
+            ),
+            WriteCell::StoredMicros => Scalar::Micros(value.long().ok_or_else(|| refused("int", value))?),
             WriteCell::Time => {
                 let interval = value
                     .object()
@@ -1140,6 +1203,8 @@ fn interval_micros(interval: &ZendObject, value: &Zval) -> Result<i64, Refusal> 
 pub struct WriteColumn {
     pub name: String,
     pub cell: WriteCell,
+    /// `cell` as `writeStoredColumns()` checks values: what it accepts differs, what it builds does not.
+    pub stored: WriteCell,
     pub nullable: bool,
     pub builder: ColumnBuilder,
 }
@@ -1151,6 +1216,7 @@ impl WriteColumn {
         Ok(Self {
             name: target.name().clone(),
             builder: ColumnBuilder::new(&canonical, capacity),
+            stored: cell.stored(),
             cell,
             nullable: target.is_nullable(),
         })

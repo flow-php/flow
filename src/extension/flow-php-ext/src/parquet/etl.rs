@@ -39,12 +39,12 @@ fn next_full_batch(
     expected: &Expected,
     columns: &[(Vec<u8>, Rc<TypePlan>)],
     batch_size: usize,
-    carried: &mut Option<Imported>,
+    carried: &mut Vec<Imported>,
 ) -> PhpResult<Option<HeldBatch>> {
     loop {
-        if carried.as_ref().is_some_and(|(count, _)| *count >= batch_size) {
-            let (full, rest) = split(carried.take().expect("checked above"), batch_size);
-            *carried = rest;
+        if carried.iter().map(|(count, _)| count).sum::<usize>() >= batch_size {
+            let (full, rest) = split(joined(std::mem::take(carried))?, batch_size);
+            carried.extend(rest);
 
             return held(full, columns).map(Some);
         }
@@ -52,14 +52,14 @@ fn next_full_batch(
         let batch = call_method(batches, "next", &mut [])?;
 
         if batch.is_null() {
-            return carried.take().map(|rest| held(rest, columns)).transpose();
+            return if carried.is_empty() {
+                Ok(None)
+            } else {
+                held(joined(std::mem::take(carried))?, columns).map(Some)
+            };
         }
 
-        let imported = arrow_c::import(&batch, expected, columns)?;
-        *carried = Some(match carried.take() {
-            Some(head) => joined(head, imported)?,
-            None => imported,
-        });
+        carried.push(arrow_c::import(&batch, expected, columns)?);
     }
 }
 
@@ -75,15 +75,26 @@ fn split((count, arrays): Imported, at: usize) -> (Imported, Option<Imported>) {
     ((at, head), rest)
 }
 
-fn joined((head_count, head): Imported, (tail_count, tail): Imported) -> PhpResult<Imported> {
-    let arrays = head
-        .iter()
-        .zip(&tail)
-        .map(|(head, tail)| concat(&[head.as_ref(), tail.as_ref()]))
+// pieces are concatenated once per batch: joining each one onto the carried head copies it again per row group
+fn joined(mut pieces: Vec<Imported>) -> PhpResult<Imported> {
+    if pieces.len() == 1 {
+        return Ok(pieces.remove(0));
+    }
+
+    let count = pieces.iter().map(|(count, _)| count).sum();
+    let arrays = (0..pieces[0].1.len())
+        .map(|column| {
+            concat(
+                &pieces
+                    .iter()
+                    .map(|(_, arrays)| arrays[column].as_ref())
+                    .collect::<Vec<_>>(),
+            )
+        })
         .collect::<Result<Vec<_>, _>>()
         .map_err(|e| ext_exception(format!("flow_php failed to carry rows across row groups: {e}")))?;
 
-    Ok((head_count + tail_count, arrays))
+    Ok((count, arrays))
 }
 
 fn held((count, arrays): Imported, columns: &[(Vec<u8>, Rc<TypePlan>)]) -> PhpResult<HeldBatch> {
@@ -177,7 +188,7 @@ impl RustParquetOpenSource {
             .unwrap_or(0)
             > 0;
         let mut first_rows: Option<Zval> = None;
-        let mut carried: Option<Imported> = None;
+        let mut carried: Vec<Imported> = Vec::new();
         // RustBatchReader's constructor refused a batch size below 1
         let batch_size = batchSize as usize;
 

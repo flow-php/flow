@@ -36,6 +36,9 @@ final class FileCommit
     /** @var array<string, DestinationStream> */
     private array $streams = [];
 
+    /** @var array<string, Path> by task name */
+    private array $filled = [];
+
     /**
      * The directory the parts land in: the static part of a pattern, the parent of a plain file.
      */
@@ -361,7 +364,8 @@ final class FileCommit
      */
     private function target(Part $task, array $partitions): Path
     {
-        $destination = $task->fill($this->destination);
+        // a task's {part} is fixed for the run, and open() runs for every written batch
+        $destination = $this->filled[$task->name()] ??= $task->fill($this->destination);
 
         if (count($partitions)) {
             return $destination->addPartitions(...$partitions);

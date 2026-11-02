@@ -1,6 +1,8 @@
 //! PHP value construction through the engine's C date API.
 
+use std::cell::OnceCell;
 use std::ffi::{c_char, c_int, c_uint, c_void};
+use std::sync::OnceLock;
 
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::types::{ZendObject, Zval};
@@ -202,6 +204,131 @@ pub fn datetime_from_micros(micros: i64, zone: &[u8]) -> Result<Zval, PhpExcepti
     )
 }
 
+// one prototype per zone, cloned per value: a string parse and a setTimezone() call per value cost 0.5 µs each
+#[derive(Default)]
+pub struct Instants {
+    offset_zero: OnceCell<Zval>,
+    utc: OnceCell<Zval>,
+}
+
+impl Instants {
+    pub fn timestamp(&self, micros: i64) -> Result<Zval, PhpException> {
+        if !clones_verified()? {
+            return datetime_from_micros(micros, b"+00:00");
+        }
+
+        // SAFETY: clones_verified() proved TimelibTime matches this PHP's timelib_time
+        unsafe { datetime_at(prototype(&self.offset_zero, b"+00:00")?, micros) }
+    }
+
+    pub fn date(&self, days: i64) -> Result<Zval, PhpException> {
+        if !clones_verified()? {
+            return date_from_days(days);
+        }
+
+        let Some(micros) = days.checked_mul(86_400_000_000) else {
+            return date_from_days(days);
+        };
+
+        // SAFETY: clones_verified() proved TimelibTime matches this PHP's timelib_time
+        unsafe { datetime_at(prototype(&self.utc, b"UTC")?, micros) }
+    }
+}
+
+/// Zend API numbers of PHP 8.3, 8.4 and 8.5, whose timelib (2022.14-2022.17) lays `timelib_time` out as `TimelibTime`.
+const VERIFIED_LAYOUT_APIS: [u32; 3] = [20_230_831, 20_240_924, 20_250_925];
+
+fn layout_verified_for(api: u32) -> bool {
+    VERIFIED_LAYOUT_APIS.contains(&api)
+}
+
+static CLONES_VERIFIED: OnceLock<bool> = OnceLock::new();
+
+// a clone's timelib_time is written only where TimelibTime matches it, any other PHP keeps the parse path
+fn clones_verified() -> Result<bool, PhpException> {
+    if let Some(verified) = CLONES_VERIFIED.get() {
+        return Ok(*verified);
+    }
+
+    let verified = layout_verified_for(ext_php_rs::ffi::ZEND_MODULE_API_NO) && {
+        let probe = datetime_from_micros(1_234_567_890_123_456, b"+00:00")?;
+
+        probe.object().and_then(timelib_time).is_some_and(|time| {
+            (time.y, time.m, time.d, time.h, time.i, time.s, time.us, time.sse)
+                == (2009, 2, 13, 23, 31, 30, 123_456, 1_234_567_890)
+        })
+    };
+
+    Ok(*CLONES_VERIFIED.get_or_init(|| verified))
+}
+
+fn prototype<'a>(cell: &'a OnceCell<Zval>, zone: &[u8]) -> Result<&'a ZendObject, PhpException> {
+    if cell.get().is_none() {
+        let _ = cell.set(datetime_from_micros(0, zone)?);
+    }
+
+    cell.get()
+        .and_then(Zval::object)
+        .ok_or_else(|| ext_exception("arrow expected a datetime prototype"))
+}
+
+// the prototype's zone has no offset, so the local fields written here are the UTC ones
+/// # Safety
+/// `TimelibTime` must match this PHP's `timelib_time` layout, which `clones_verified()` checks.
+unsafe fn datetime_at(prototype: &ZendObject, micros: i64) -> Result<Zval, PhpException> {
+    let seconds = micros.div_euclid(1_000_000);
+    let days = seconds.div_euclid(86_400);
+    let second_of_day = seconds.rem_euclid(86_400);
+    let (year, month, day) = civil_from_days(days);
+    // SAFETY: a live object's handlers pointer is valid for its lifetime
+    let clone_obj = unsafe { (*prototype.handlers).clone_obj }
+        .ok_or_else(|| ext_exception("arrow expected a datetime to be cloneable"))?;
+    // SAFETY: clone_obj reads the prototype and returns a new object, it never writes the prototype
+    let object = unsafe { clone_obj(std::ptr::from_ref(prototype).cast_mut()) };
+    let mut datetime = Zval::new();
+
+    // SAFETY: clone_obj returns a new object holding one reference, which the zval takes over
+    unsafe {
+        datetime.set_object(&mut *object);
+        (*object).gc.refcount -= 1;
+    }
+
+    // SAFETY: the caller guarantees the layout; date_object_clone gave the clone its own timelib_time
+    let time = unsafe {
+        &mut **std::ptr::from_mut(&mut *object)
+            .cast::<u8>()
+            .wrapping_sub(PHP_DATE_OBJ_STD_OFFSET)
+            .cast::<*mut TimelibTime>()
+    };
+    time.y = year;
+    time.m = month;
+    time.d = day;
+    time.h = second_of_day / 3_600;
+    time.i = second_of_day / 60 % 60;
+    time.s = second_of_day % 60;
+    time.us = micros.rem_euclid(1_000_000);
+    time.sse = seconds;
+
+    Ok(datetime)
+}
+
+fn civil_from_days(days: i64) -> (i64, i64, i64) {
+    let days = days + 719_468;
+    let era = days.div_euclid(146_097);
+    let day_of_era = days.rem_euclid(146_097);
+    let year_of_era = (day_of_era - day_of_era / 1_460 + day_of_era / 36_524 - day_of_era / 146_096) / 365;
+    let day_of_year = day_of_era - (365 * year_of_era + year_of_era / 4 - year_of_era / 100);
+    let month_index = (5 * day_of_year + 2) / 153;
+    let day = day_of_year - (153 * month_index + 2) / 5 + 1;
+    let month = if month_index < 10 {
+        month_index + 3
+    } else {
+        month_index - 9
+    };
+
+    (year_of_era + era * 400 + i64::from(month <= 2), month, day)
+}
+
 /// `new DateTimeImmutable('@' . ($days * 86_400))` in UTC.
 pub fn date_from_days(days: i64) -> Result<Zval, PhpException> {
     let mut time_str = format!("@{}\0", days * 86_400);
@@ -254,4 +381,30 @@ pub fn uuid_bytes(text: &[u8]) -> Option<[u8; 16]> {
     }
 
     digits.next().is_none().then_some(bytes)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn only_the_verified_php_minors_write_into_a_cloned_timelib_time() {
+        assert!(layout_verified_for(20_230_831));
+        assert!(layout_verified_for(20_240_924));
+        assert!(layout_verified_for(20_250_925));
+        assert!(!layout_verified_for(20_220_829));
+        assert!(!layout_verified_for(20_260_000));
+    }
+
+    #[test]
+    fn days_round_trip_through_the_civil_calendar() {
+        for days in [-719_528_i64, -1, 0, 1, 11_016, 2_932_896, -1_000_000, 1_000_000] {
+            let (year, month, day) = civil_from_days(days);
+
+            assert_eq!(days_from_civil(year, month, day), Some(days));
+        }
+
+        assert_eq!(civil_from_days(0), (1970, 1, 1));
+        assert_eq!(civil_from_days(11_016), (2000, 2, 29));
+    }
 }

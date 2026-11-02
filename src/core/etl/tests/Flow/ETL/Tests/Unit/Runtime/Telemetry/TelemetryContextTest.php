@@ -18,6 +18,7 @@ use Flow\ETL\Planning\Optimizer\Rule\PushFilterIntoSource;
 use Flow\ETL\Planning\Optimizer\Rule\PushLimitIntoSource;
 use Flow\ETL\Planning\Optimizer\Rule\PushOffsetIntoSource;
 use Flow\ETL\Planning\Optimizer\Rule\PushProjectionIntoExpand;
+use Flow\ETL\Planning\Optimizer\Rule\PushProjectionIntoSource;
 use Flow\ETL\Runtime\Telemetry\StepKind;
 use Flow\ETL\Runtime\Telemetry\TelemetryContext;
 use Flow\ETL\Runtime\Telemetry\TelemetryOptions;
@@ -793,6 +794,7 @@ final class TelemetryContextTest extends FlowTestCase
                 PushLimitIntoSource::class,
                 CountFromStatistics::class,
                 PushProjectionIntoExpand::class,
+                PushProjectionIntoSource::class,
             ],
             $debugLogs[0]->record->attributes->get('optimizer_rules'),
         );

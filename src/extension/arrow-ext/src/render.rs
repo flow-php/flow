@@ -47,7 +47,7 @@ pub fn parquet_exception(error: Error, stream: &PhpStream, side: Side) -> PhpExc
             ),
         ),
         (Error::Overflow { column, row }, _) => exception(
-            RUNTIME,
+            INVALID_ARGUMENT,
             format!("Parquet column \"{column}\" row {row} holds a value out of the range arrow stores it in"),
         ),
         (Error::InvalidUtf8 { column, row }, _) => exception(

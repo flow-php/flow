@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Functions;
 
+use Flow\ETL\Tests\Context\BackendsContext;
 use Flow\ETL\Tests\Context\FunctionContext;
+use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Column\PhpBackend;
-use Flow\ETL\Values\Column\RustBackend;
-use PHPUnit\Framework\Attributes\RequiresPhpExtension;
+use PHPUnit\Framework\Attributes\DataProviderExternal;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\ETL\DSL\config_builder;
@@ -19,9 +20,10 @@ use function Flow\Types\DSL\type_boolean;
 
 final class IsNotNullTest extends TestCase
 {
-    public function test_answers_per_row_in_php_backend(): void
+    #[DataProviderExternal(BackendsContext::class, 'backends')]
+    public function test_answers_per_row(Backend $backend): void
     {
-        $column = (new FunctionContext(flow_context(config_builder()->backend(new PhpBackend())->build())))->column(
+        $column = (new FunctionContext(flow_context(config_builder()->backend($backend)->build())))->column(
             ref('a')->isNotNull(),
             [['a' => 1], ['a' => null], ['a' => 3]],
             schema(int_schema('a', nullable: true)),
@@ -32,24 +34,10 @@ final class IsNotNullTest extends TestCase
         static::assertSame(0, $column->nullCount());
     }
 
-    #[RequiresPhpExtension('flow_php')]
-    public function test_answers_per_row_in_rust_backend(): void
+    #[DataProviderExternal(BackendsContext::class, 'backends')]
+    public function test_a_column_without_nulls_answers(Backend $backend): void
     {
-        $column = (new FunctionContext(flow_context(config_builder()->backend(new RustBackend())->build())))->column(
-            ref('a')->isNotNull(),
-            [['a' => 1], ['a' => null], ['a' => 3]],
-            schema(int_schema('a', nullable: true)),
-        );
-
-        static::assertSame([true, false, true], $column->values());
-        static::assertEquals(type_boolean(), $column->type());
-        static::assertSame(0, $column->nullCount());
-    }
-
-    #[RequiresPhpExtension('flow_php')]
-    public function test_a_column_without_nulls_answers_in_rust_backend(): void
-    {
-        $column = (new FunctionContext(flow_context(config_builder()->backend(new RustBackend())->build())))->column(
+        $column = (new FunctionContext(flow_context(config_builder()->backend($backend)->build())))->column(
             ref('a')->isNotNull(),
             [['a' => 1], ['a' => 2]],
             schema(int_schema('a', nullable: true)),

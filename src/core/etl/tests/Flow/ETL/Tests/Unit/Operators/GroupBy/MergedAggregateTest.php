@@ -69,8 +69,8 @@ final class MergedAggregateTest extends FlowTestCase
     {
         $inner = AggregatorFixtures::resolved(Sum::class);
         $partials = array_to_rows([
-            ['v_sum' => ['aggregated' => 1, 'sum' => ['int' => 3, 'float' => null, 'compensation' => 0.0]]],
-            ['v_sum' => ['aggregated' => 1, 'sum' => ['int' => 7, 'float' => null, 'compensation' => 0.0]]],
+            ['v_sum' => ['count' => 1, 'sum' => ['int' => 3, 'float' => null, 'compensation' => 0.0]]],
+            ['v_sum' => ['count' => 1, 'sum' => ['int' => 7, 'float' => null, 'compensation' => 0.0]]],
         ], schema(structure_schema('v_sum', $inner->partialType())));
         $left = new MergedAggregate($inner);
         $left->aggregate($partials, [0], flow_context()->backend());

@@ -16,6 +16,11 @@ final class ClosingSpySourceStream implements SourceStream
 
     public int $readBytes = 0;
 
+    /**
+     * @var list<int> the length each read() asked for, in order
+     */
+    public array $reads = [];
+
     public function __construct(
         private readonly SourceStream $stream,
     ) {}
@@ -57,6 +62,7 @@ final class ClosingSpySourceStream implements SourceStream
     {
         $bytes = $this->stream->read($length, $offset);
         $this->readBytes += strlen($bytes);
+        $this->reads[] = $length;
 
         return $bytes;
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Planning\Logical\Node;
 
+use Flow\ETL\Operators\Processor\RequiredColumns;
 use Flow\ETL\Planning\Logical\Node\WithColumn;
 use Flow\ETL\Planning\Logical\Redefined;
 use Flow\ETL\Planning\Logical\RowCount;
@@ -11,9 +12,11 @@ use Flow\ETL\Planning\Logical\Transparency;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\NodeMother;
 
+use function Flow\ETL\DSL\concat;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\schema;
 
 final class WithColumnTest extends FlowTestCase
 {
@@ -83,5 +86,31 @@ final class WithColumnTest extends FlowTestCase
         $node = new WithColumn(NodeMother::read(), int_schema('copy'), ref('id'));
 
         static::assertEquals(Redefined::names('copy'), $node->redefines());
+    }
+
+    public function test_a_with_column_replaces_its_own_name_with_what_it_reads(): void
+    {
+        $node = new WithColumn(NodeMother::read(), 'y', concat(ref('a'), ref('b')));
+
+        static::assertEquals(
+            RequiredColumns::only('x', 'a', 'b'),
+            $node->requiredInputColumns(RequiredColumns::only('x', 'y')),
+        );
+        static::assertEquals(
+            RequiredColumns::allBut('z', 'y'),
+            $node->requiredInputColumns(RequiredColumns::allBut('a', 'z')),
+        );
+    }
+
+    public function test_an_unpack_keeps_the_demand_and_adds_what_it_reads(): void
+    {
+        static::assertEquals(
+            RequiredColumns::only('s', 'm'),
+            (new WithColumn(
+                NodeMother::read(),
+                's',
+                ref('m')->unpack(schema(int_schema('a'))),
+            ))->requiredInputColumns(RequiredColumns::only('s')),
+        );
     }
 }

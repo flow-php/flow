@@ -10,8 +10,6 @@ use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Functions\AggregatingFunction;
 use Flow\ETL\Functions\Reference\Reference;
 use Flow\ETL\Functions\ReferenceResolver;
-use Flow\ETL\Values\Column\Backend;
-use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
 use IteratorAggregate;
 use Traversable;
@@ -36,16 +34,6 @@ final readonly class Aggregators implements Countable, IteratorAggregate
     }
 
     /**
-     * @param list<int> $indices
-     */
-    public function aggregate(Rows $rows, array $indices, Backend $backend): void
-    {
-        foreach ($this->aggregators as $aggregator) {
-            $aggregator->aggregate($rows, $indices, $backend);
-        }
-    }
-
-    /**
      * The same aggregators without state: withChildren(children()) builds each one anew.
      */
     public function fresh(): self
@@ -61,16 +49,6 @@ final readonly class Aggregators implements Countable, IteratorAggregate
     public function count(): int
     {
         return count($this->aggregators);
-    }
-
-    /**
-     * Folds $other's partial states into these, pairwise; $other aggregated rows that come after these.
-     */
-    public function merge(self $other, Backend $backend): void
-    {
-        foreach ($this->aggregators as $position => $aggregator) {
-            $aggregator->merge($other->aggregators[$position]->partial(), $backend);
-        }
     }
 
     public function first(): AggregatingFunction

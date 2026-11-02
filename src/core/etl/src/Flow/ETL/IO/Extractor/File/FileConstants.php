@@ -50,6 +50,15 @@ final readonly class FileConstants
             $added[$name] = $backend->constant($declared->get($name), $value, $rows->count());
         }
 
-        return $rows->withColumns($declared, $added);
+        $present = [];
+
+        // a source may leave out a declared column no node above it reads
+        foreach ($declared->names() as $name) {
+            if (array_key_exists($name, $added) || $rows->schema()->findDefinition($name) !== null) {
+                $present[] = $name;
+            }
+        }
+
+        return $rows->withColumns($declared->keep(...$present), $added);
     }
 }

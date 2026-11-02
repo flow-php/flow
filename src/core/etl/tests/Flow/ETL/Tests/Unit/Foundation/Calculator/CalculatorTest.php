@@ -10,8 +10,17 @@ use DivisionByZeroError;
 use Flow\ETL\Foundation\Calculator\Calculator;
 use Flow\ETL\Foundation\Calculator\Rounding;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Tests\Context\DecimalDivisionContext;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
+
+use function array_filter;
+use function array_values;
+use function count;
+use function ini_get;
+use function ini_set;
+use function mt_rand;
+use function mt_srand;
 
 final class CalculatorTest extends TestCase
 {
@@ -257,5 +266,75 @@ final class CalculatorTest extends TestCase
         }
 
         static::assertSame($output, (new Calculator())->subtract($a, $b));
+    }
+
+    public function test_divide_answers_the_decimal_division_at_every_rounding_edge(): void
+    {
+        $dividends = [0, 0.0, -0.0, 1, -1, 7, 1.005, -1.005, 1.015, 2.675, 0.125, 0.5, 1.5, 2.5, -2.5, 1e-7, 5e-324];
+        $dividends = [...$dividends, 123_456_789.125, 1e15, 9_007_199_254_740_991, -9_007_199_254_740_991];
+        $dividends = [...$dividends, 9_007_199_254_740_992, 9_007_199_254_740_993, 9.007199254740992e15, 1e300];
+
+        foreach ([1.005, 2.675, 0.125, 1.25e-5, 12.345, -12.345, 0.5, 1e-7] as $edge) {
+            $dividends[] = DecimalDivisionContext::adjacent($edge, 1);
+            $dividends[] = DecimalDivisionContext::adjacent($edge, -1);
+        }
+
+        static::assertSame(
+            [],
+            DecimalDivisionContext::mismatches($dividends, [1, 3, 7, -3, 1_000_000_007, 0.1], [0, 2, 6]),
+        );
+    }
+
+    public function test_divide_answers_the_decimal_division_over_a_seeded_sweep(): void
+    {
+        mt_srand(2026);
+        $calculator = new Calculator();
+        $roundings = array_values(array_filter(
+            Rounding::cases(),
+            static fn(Rounding $r): bool => $r !== Rounding::UNNECESSARY,
+        ));
+        $mismatches = [];
+
+        for ($case = 0; $case < 1_000; $case++) {
+            $decimals = mt_rand(0, 6);
+            $a = match ($case % 3) {
+                0 => mt_rand(-1_000_000_000, 1_000_000_000) / (10 ** $decimals),
+                1 => mt_rand(-1_000_000, 1_000_000),
+                default => (mt_rand(-1_000_000, 1_000_000) + 0.5) / (10 ** $decimals),
+            };
+            $mismatch = DecimalDivisionContext::mismatch(
+                $calculator,
+                $a,
+                mt_rand(1, 3) === 1 ? mt_rand(1, 10) : mt_rand(1, 100_000),
+                mt_rand(0, 6),
+                $roundings[mt_rand(0, count($roundings) - 1)],
+            );
+
+            if ($mismatch !== null) {
+                $mismatches[] = $mismatch;
+            }
+        }
+
+        mt_srand();
+
+        static::assertSame([], $mismatches);
+    }
+
+    public function test_divide_answers_the_decimal_division_under_every_float_precision(): void
+    {
+        $precision = ini_get('precision');
+
+        try {
+            foreach (['-1', '17', '3', '1'] as $setting) {
+                ini_set('precision', $setting);
+
+                static::assertSame(
+                    [],
+                    DecimalDivisionContext::mismatches([1.005, 2.675, 123.456, -0.125], [1, 3, 7], [0, 2, 4]),
+                );
+            }
+        } finally {
+            ini_set('precision', (string) $precision);
+        }
     }
 }

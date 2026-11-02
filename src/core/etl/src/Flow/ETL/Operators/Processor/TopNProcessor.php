@@ -12,15 +12,13 @@ use Flow\ETL\Foundation\RandomValueGenerator;
 use Flow\ETL\Kernels\Sort\ExternalSort;
 use Flow\ETL\Kernels\Sort\ExternalSortConfig;
 use Flow\ETL\Kernels\Sort\MemorySortConfig;
-use Flow\ETL\Kernels\Sort\RowOrder;
-use Flow\ETL\Kernels\Sort\SortColumn;
 use Flow\ETL\Operators\BoundStep;
-use Flow\ETL\Operators\Processor;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Memory\BoundedRead;
 use Flow\ETL\Values\Memory\MemoryBudget;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
+use Flow\ETL\Values\Sort\SortColumn;
 use Generator;
 use SensitiveParameter;
 
@@ -137,7 +135,7 @@ final readonly class TopNProcessor implements Distributable
 
             // trimming only past twice the limit keeps the re-sorts amortised
             if ($kept->count() > (2 * $this->limit)) {
-                $kept = $this->top($kept);
+                $kept = $this->top($kept, $backend);
             }
 
             // past the memory limit the kept rows and the rest of the stream go to the spilling sort; a trimmed row
@@ -155,13 +153,11 @@ final readonly class TopNProcessor implements Distributable
             return;
         }
 
-        yield from $this->top($kept)->chunks($maxSize);
+        yield from $this->top($kept, $backend)->chunks($maxSize);
     }
 
-    public function top(Rows $rows): Rows
+    public function top(Rows $rows, Backend $backend): Rows
     {
-        $order = new RowOrder($this->columns);
-
-        return $rows->gather($order->permutation($order->keys($rows), $rows->count()))->take($this->limit);
+        return $backend->sort($rows, $this->columns)->take($this->limit);
     }
 }

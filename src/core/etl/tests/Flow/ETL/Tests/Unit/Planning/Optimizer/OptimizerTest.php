@@ -14,6 +14,7 @@ use Flow\ETL\Planning\Optimizer\Rule\PushFilterIntoSource;
 use Flow\ETL\Planning\Optimizer\Rule\PushLimitIntoSource;
 use Flow\ETL\Planning\Optimizer\Rule\PushOffsetIntoSource;
 use Flow\ETL\Planning\Optimizer\Rule\PushProjectionIntoExpand;
+use Flow\ETL\Planning\Optimizer\Rule\PushProjectionIntoSource;
 use Flow\ETL\Tests\Double\RecordingRule;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\NodeMother;
@@ -70,6 +71,7 @@ final class OptimizerTest extends FlowTestCase
                 PushLimitIntoSource::class,
                 CountFromStatistics::class,
                 PushProjectionIntoExpand::class,
+                PushProjectionIntoSource::class,
             ],
             array_map(static fn($rule) => $rule::class, Optimizer::default()->rules()),
         );
@@ -85,6 +87,7 @@ final class OptimizerTest extends FlowTestCase
                 PushOffsetIntoSource::class,
                 CountFromStatistics::class,
                 PushProjectionIntoExpand::class,
+                PushProjectionIntoSource::class,
             ],
             array_map(
                 static fn($rule) => $rule::class,

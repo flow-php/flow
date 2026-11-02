@@ -11,6 +11,7 @@ use Flow\Parquet\ParquetFile\Data\Converter\Int32DateConverter;
 use Flow\Parquet\ParquetFile\Data\Converter\Int64DateTimeConverter;
 use Flow\Parquet\ParquetFile\Data\Converter\Int96DateTimeConverter;
 use Flow\Parquet\ParquetFile\Data\Converter\JsonConverter;
+use Flow\Parquet\ParquetFile\Data\Converter\StoredTemporalConverter;
 use Flow\Parquet\ParquetFile\Data\Converter\TimeConverter;
 use Flow\Parquet\ParquetFile\Data\Converter\UnsignedInt32Converter;
 use Flow\Parquet\ParquetFile\Data\Converter\UnsignedInt64Converter;
@@ -46,6 +47,17 @@ final class DataConverter
             Int96DateTimeConverter::class,
             DecimalConverter::class,
             UuidConverter::class,
+            JsonConverter::class,
+            UnsignedInt32Converter::class,
+            UnsignedInt64Converter::class,
+        ], $options);
+    }
+
+    public static function stored(Options $options): self
+    {
+        return new self([
+            StoredTemporalConverter::class,
+            DecimalConverter::class,
             JsonConverter::class,
             UnsignedInt32Converter::class,
             UnsignedInt64Converter::class,

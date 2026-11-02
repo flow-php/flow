@@ -13,6 +13,7 @@ use Flow\ETL\Planning\Optimizer\Rule\PushFilterIntoSource;
 use Flow\ETL\Planning\Optimizer\Rule\PushLimitIntoSource;
 use Flow\ETL\Planning\Optimizer\Rule\PushOffsetIntoSource;
 use Flow\ETL\Planning\Optimizer\Rule\PushProjectionIntoExpand;
+use Flow\ETL\Planning\Optimizer\Rule\PushProjectionIntoSource;
 use Flow\ETL\Values\Column\Backend;
 
 use function array_diff;
@@ -42,6 +43,7 @@ final readonly class Optimizer
             new PushLimitIntoSource(),
             new CountFromStatistics(),
             new PushProjectionIntoExpand(),
+            new PushProjectionIntoSource(),
         );
     }
 

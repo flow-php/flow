@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Functions\Reference;
 
-use Flow\ETL\Kernels\Sort\SortColumn;
 use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\NullsOrder;
+use Flow\ETL\Values\Sort\SortColumn;
 use Flow\ETL\Values\SortOrder;
 
 use function Flow\ETL\DSL\flow_context;

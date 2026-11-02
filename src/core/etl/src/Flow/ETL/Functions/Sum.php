@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Functions;
 
-use Flow\ETL\Foundation\Calculator\Calculator;
 use Flow\ETL\Foundation\Calculator\RunningSum;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
@@ -12,27 +11,22 @@ use Flow\ETL\Foundation\Exception\RuntimeException;
 use Flow\ETL\Functions\Reference\Reference;
 use Flow\ETL\Functions\Window\FrameAccumulation;
 use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Column\Column;
+use Flow\ETL\Values\Column\GroupedTotals;
 use Flow\ETL\Values\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\StructureType;
 use SensitiveParameter;
 
-use function count;
-use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_float;
-use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_optional;
-use function Flow\Types\DSL\type_structure;
-use function is_numeric;
 
-final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunction
+final class Sum implements AggregatesNumericTotal, FrameAccumulating, WindowFunction
 {
-    private int $aggregated = 0;
-
     private readonly string $outputName;
 
-    private ?RunningSum $runningSum = null;
+    private readonly NumericTotal $total;
 
     private readonly LastBatchColumn $column;
 
@@ -42,6 +36,7 @@ final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunctio
         private readonly ?Window $window = null,
     ) {
         $this->outputName = $ref->hasAlias() ? $ref->name() : $ref->to() . '_sum';
+        $this->total = new NumericTotal($exact);
         $this->column = new LastBatchColumn($ref->base());
     }
 
@@ -65,35 +60,17 @@ final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunctio
 
     public function merge(array $partial, Backend $backend): void
     {
-        $data = $this->partialType()->assert($partial);
-        $aggregated = type_integer()->assert($data['aggregated']);
-
-        if ($aggregated === 0) {
-            return;
-        }
-
-        $this->runningSum ??= new RunningSum(new Calculator());
-        $this->runningSum->merge(
-            RunningSum::fromPartial(type_array()->assert($data['sum']), new Calculator()),
-            $this->exact,
-        );
-        $this->aggregated += $aggregated;
+        $this->total->merge($partial);
     }
 
     public function partial(): array
     {
-        return [
-            'aggregated' => $this->aggregated,
-            'sum' => $this->runningSum?->partial() ?? RunningSum::emptyPartial(),
-        ];
+        return $this->total->partial();
     }
 
     public function partialType(): StructureType
     {
-        return type_structure([
-            'aggregated' => type_integer(),
-            'sum' => RunningSum::partialType(),
-        ]);
+        return NumericTotal::partialType();
     }
 
     /**
@@ -139,39 +116,14 @@ final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunctio
     {
         $column = $this->column->of($rows);
 
-        if ($column === null) {
-            return;
+        if ($column !== null) {
+            $this->total->aggregate($column, $indices);
         }
+    }
 
-        if (count($indices) === 1) {
-            // @mago-ignore analysis:mixed-assignment
-            $value = $column->value($indices[0]);
-
-            if (is_int($value) || is_float($value) || is_string($value) && is_numeric($value)) {
-                $this->runningSum ??= new RunningSum(new Calculator());
-                $this->runningSum->add($value, $this->exact);
-                $this->aggregated++;
-            }
-
-            return;
-        }
-
-        $values = [];
-
-        // @mago-ignore analysis:mixed-assignment
-        foreach ($column->take($indices)->values() as $value) {
-            if (is_int($value) || is_float($value) || is_string($value) && is_numeric($value)) {
-                $values[] = $value;
-            }
-        }
-
-        if ($values === []) {
-            return;
-        }
-
-        $this->runningSum ??= new RunningSum(new Calculator());
-        $this->runningSum->addAll($values, $this->exact);
-        $this->aggregated += count($values);
+    public function exact(): bool
+    {
+        return $this->exact;
     }
 
     public function accumulator(): self
@@ -213,13 +165,16 @@ final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunctio
         return type_optional(type_float());
     }
 
+    public function groupValues(GroupedTotals $totals, Backend $backend): Column
+    {
+        return $totals->sums();
+    }
+
     public function value(): ?float
     {
-        if ($this->aggregated === 0 || $this->runningSum === null) {
-            return null;
-        }
+        $sum = $this->total->sum();
 
-        return (float) $this->runningSum->value();
+        return $sum === null ? null : (float) $sum;
     }
 
     public function toString(): string

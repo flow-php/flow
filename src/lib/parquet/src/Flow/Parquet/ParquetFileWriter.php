@@ -30,6 +30,13 @@ interface ParquetFileWriter
     public function writeColumns(array $columns): void;
 
     /**
+     * writeColumns() with every DATE, TIMESTAMP, TIME and UUID value, at any depth, as readStoredColumns() reads it.
+     *
+     * @param array<string, list<mixed>> $columns as writeColumns()
+     */
+    public function writeStoredColumns(array $columns): void;
+
+    /**
      * @param array<array-key, mixed> $row
      */
     public function writeRow(array $row): void;

@@ -15,14 +15,16 @@ use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\ParquetFile\Schema\TimeUnit;
 
 use function Flow\Parquet\floor_div;
-use function intdiv;
 use function sprintf;
 
 final readonly class Int64DateTimeConverter implements Converter
 {
-    public function __construct(
-        private TimeUnit $unit,
-    ) {}
+    private StoredTemporalConverter $stored;
+
+    public function __construct(TimeUnit $unit)
+    {
+        $this->stored = StoredTemporalConverter::micros($unit);
+    }
 
     public static function forColumn(FlatColumn $column, Options $options): ?self
     {
@@ -33,12 +35,7 @@ final readonly class Int64DateTimeConverter implements Converter
 
     public function fromParquetType(mixed $data): DateTimeImmutable
     {
-        /** @var int $data */
-        $totalMicros = match ($this->unit) {
-            TimeUnit::MILLISECONDS => $data * 1_000,
-            TimeUnit::MICROSECONDS => $data,
-            TimeUnit::NANOSECONDS => floor_div($data, 1_000),
-        };
+        $totalMicros = $this->stored->fromParquetType($data);
         $seconds = floor_div($totalMicros, 1_000_000);
 
         $dateTime = DateTimeImmutable::createFromFormat('U.u', sprintf(
@@ -48,7 +45,7 @@ final readonly class Int64DateTimeConverter implements Converter
         ));
 
         if ($dateTime === false) {
-            throw new RuntimeException('Failed to convert INT64 to DateTime, given: ' . $data);
+            throw new RuntimeException('Failed to convert INT64 to DateTime, given: ' . $totalMicros);
         }
 
         return $dateTime;
@@ -57,22 +54,17 @@ final readonly class Int64DateTimeConverter implements Converter
     public function toParquetType(mixed $data): int
     {
         /** @var DateTimeInterface $data */
-        $totalMicros = ($data->getTimestamp() * 1_000_000) + (int) $data->format('u');
-
-        if (
-            $this->unit === TimeUnit::NANOSECONDS
-            && ($totalMicros > intdiv(PHP_INT_MAX, 1_000) || $totalMicros < intdiv(PHP_INT_MIN, 1_000))
-        ) {
-            throw new InvalidArgumentException(sprintf(
-                'DateTime %s is outside the TIMESTAMP(NANOS) range 1677-09-21 – 2262-04-11',
-                $data->format(DATE_ATOM),
-            ));
+        try {
+            return $this->stored->toParquetType(($data->getTimestamp() * 1_000_000) + (int) $data->format('u'));
+        } catch (InvalidArgumentException $e) {
+            throw new InvalidArgumentException(
+                sprintf(
+                    'DateTime %s is outside the TIMESTAMP(NANOS) range 1677-09-21 – 2262-04-11',
+                    $data->format(DATE_ATOM),
+                ),
+                0,
+                $e,
+            );
         }
-
-        return match ($this->unit) {
-            TimeUnit::MILLISECONDS => floor_div($totalMicros, 1_000),
-            TimeUnit::MICROSECONDS => $totalMicros,
-            TimeUnit::NANOSECONDS => $totalMicros * 1_000,
-        };
     }
 }

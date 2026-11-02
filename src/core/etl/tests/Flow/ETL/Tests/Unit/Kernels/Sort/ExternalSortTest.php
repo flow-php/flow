@@ -30,6 +30,7 @@ use function array_filter;
 use function array_map;
 use function array_merge;
 use function array_sum;
+use function array_values;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\external_sort;
@@ -42,6 +43,8 @@ use function iterator_to_array;
 use function range;
 use function serialize;
 use function str_starts_with;
+
+use const ARRAY_FILTER_USE_KEY;
 
 final class ExternalSortTest extends FlowTestCase
 {
@@ -100,6 +103,27 @@ final class ExternalSortTest extends FlowTestCase
             'sort-',
         )));
         static::assertSame([], $storage->liveBucketIds());
+    }
+
+    public function test_a_spilled_run_is_written_in_frames_of_at_most_the_batch_size(): void
+    {
+        $storage = new RecordingRowsStorage(new MemoryRowsStorage());
+
+        static::assertSame(
+            [0, 1, 2, 3, 4, 10, 11, 12, 13, 14],
+            IdRows::ids(ExternalSortMother::spilling([ref('id')->asc()], $storage, batchSize: 2)->sort(
+                IdRows::batches([14, 10, 12, 11, 13], [4, 0, 2, 1, 3]),
+                config()->backend(),
+            )),
+        );
+        static::assertSame(
+            [[2, 2, 1], [2, 2, 1]],
+            array_values(array_filter(
+                $storage->rowCounts,
+                static fn(string $bucket): bool => str_starts_with($bucket, 'sort-'),
+                ARRAY_FILTER_USE_KEY,
+            )),
+        );
     }
 
     public function test_descending_single_column(): void

@@ -31,8 +31,11 @@ use Flow\ETL\Values\Column\PhpBackend;
 use Flow\ETL\Values\Column\Physical\HtmlDocumentPhysical;
 use Flow\ETL\Values\Column\Physical\HtmlElementPhysical;
 use Flow\ETL\Values\Column\ValueColumn;
+use Flow\ETL\Values\NullsOrder;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema\Definition;
+use Flow\ETL\Values\Sort\SortColumn;
+use Flow\ETL\Values\SortOrder;
 use Flow\Types\Type\Comparison\Operator;
 use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid;
@@ -1078,6 +1081,45 @@ final class PhpBackendTest extends TestCase
             (new PhpBackend())
                 ->modulo(ColumnMother::of(int_schema('a'), [-7, 7]), ColumnMother::of(int_schema('b'), [3, 3]))
                 ->values(),
+        );
+    }
+
+    public function test_sort_keeps_rows_with_equal_keys_in_input_order(): void
+    {
+        static::assertSame(
+            ['b', 'd', 'a', 'c'],
+            (new PhpBackend())
+                ->sort(
+                    array_to_rows(
+                        [
+                            ['k' => 2, 'v' => 'a'],
+                            ['k' => 1, 'v' => 'b'],
+                            ['k' => 2, 'v' => 'c'],
+                            ['k' => 1, 'v' => 'd'],
+                        ],
+                        schema(int_schema('k'), str_schema('v')),
+                        new PhpBackend(),
+                    ),
+                    [new SortColumn('k')],
+                )
+                ->reduceToArray('v'),
+        );
+    }
+
+    public function test_sort_puts_nulls_where_the_column_asks(): void
+    {
+        static::assertSame(
+            [3, 1, null],
+            (new PhpBackend())
+                ->sort(
+                    array_to_rows(
+                        [['k' => 1], ['k' => null], ['k' => 3]],
+                        schema(int_schema('k', nullable: true)),
+                        new PhpBackend(),
+                    ),
+                    [new SortColumn('k', SortOrder::DESC, NullsOrder::LAST)],
+                )
+                ->reduceToArray('k'),
         );
     }
 }

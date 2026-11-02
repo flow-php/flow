@@ -12,6 +12,9 @@ use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\Filters;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
 
+use function array_intersect;
+use function array_unique;
+use function array_values;
 use function min;
 
 final readonly class Criteria
@@ -35,6 +38,7 @@ final readonly class Criteria
      *                                        only rows matching every one, and $limit and $offset count those rows
      * @param null|FileSplit $split the piece of the source this read covers; only a SplittableExtractor, which cut it,
      *                              ever receives one, and a read with a split lists nothing
+     * @param null|list<string> $columns the columns the yielded rows carry; a source adds the columns its conjuncts read; null for every one
      *
      * @throws InvalidArgumentException when $limit is not greater than 0, when $offset is below 0, or with both an
      *                                  offset and a split
@@ -45,6 +49,7 @@ final readonly class Criteria
         public Filter $pathFilter = new OnlyFiles(),
         public array $conjuncts = [],
         public ?FileSplit $split = null,
+        public ?array $columns = null,
     ) {
         if ($limit !== null && $limit <= 0) {
             throw new InvalidArgumentException('Limit must be greater than 0');
@@ -82,6 +87,7 @@ final readonly class Criteria
             $this->pathFilter,
             [...$this->conjuncts, ...(new Conjuncts())->of($filter)],
             $this->split,
+            $this->columns,
         );
     }
 
@@ -98,6 +104,7 @@ final readonly class Criteria
             $this->pathFilter,
             $this->conjuncts,
             $this->split,
+            $this->columns,
         );
     }
 
@@ -113,7 +120,14 @@ final readonly class Criteria
             throw new InvalidArgumentException('Offset must be greater than or equal to 0, given: ' . $offset);
         }
 
-        return new self($this->limit, $this->offset + $offset, $this->pathFilter, $this->conjuncts, $this->split);
+        return new self(
+            $this->limit,
+            $this->offset + $offset,
+            $this->pathFilter,
+            $this->conjuncts,
+            $this->split,
+            $this->columns,
+        );
     }
 
     public function withPathFilter(Filter $filter): self
@@ -126,6 +140,19 @@ final readonly class Criteria
                 : new Filters($this->pathFilter, $filter),
             $this->conjuncts,
             $this->split,
+            $this->columns,
+        );
+    }
+
+    public function withColumns(string ...$columns): self
+    {
+        return new self(
+            $this->limit,
+            $this->offset,
+            $this->pathFilter,
+            $this->conjuncts,
+            $this->split,
+            array_values($this->columns === null ? array_unique($columns) : array_intersect($this->columns, $columns)),
         );
     }
 
@@ -134,6 +161,6 @@ final readonly class Criteria
      */
     public function withSplit(FileSplit $split): self
     {
-        return new self($this->limit, $this->offset, $this->pathFilter, $this->conjuncts, $split);
+        return new self($this->limit, $this->offset, $this->pathFilter, $this->conjuncts, $split, $this->columns);
     }
 }

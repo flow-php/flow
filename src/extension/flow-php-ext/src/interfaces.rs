@@ -1,4 +1,4 @@
-//! `Flow\ETL\Foundation\Describe\Describable`, `Flow\ETL\Values\Column\{Column, ColumnBuilder, Backend}`, `Flow\ETL\IO\Loader\File\FileWriter` and the CSV / JSON / Parquet
+//! `Flow\ETL\Foundation\Describe\Describable`, `Flow\ETL\Values\Column\{Column, ColumnBuilder, Backend, GroupedTotals, GroupedCounts}`, `Flow\ETL\Values\Grouping\GroupTable`, `Flow\ETL\IO\Loader\File\FileWriter` and the CSV / JSON / Parquet
 //! adapters' encoder and open source contracts: registered at MINIT with the package
 //! files' exact signatures, so the extension's classes implement them and the package files (autoloaded only without
 //! flow_php) stay unused.
@@ -19,6 +19,10 @@ const SELF: DataType = DataType::object("self");
 const ROWS: DataType = DataType::object("Flow\\ETL\\Values\\Rows");
 const SCHEMA: DataType = DataType::object("Flow\\ETL\\Values\\Schema");
 const SCHEMA_INFERENCE: DataType = DataType::object("Flow\\ETL\\IO\\Inference\\SchemaInference");
+const GROUPED_COUNTS: DataType = DataType::object("Flow\\ETL\\Values\\Column\\GroupedCounts");
+const GROUP_TABLE: DataType = DataType::object("Flow\\ETL\\Values\\Grouping\\GroupTable");
+const GROUP_IDS: DataType = DataType::object("Flow\\ETL\\Values\\Grouping\\GroupIds");
+const GROUPED_TOTALS: DataType = DataType::object("Flow\\ETL\\Values\\Column\\GroupedTotals");
 const BACKEND: DataType = DataType::object("Flow\\ETL\\Values\\Column\\Backend");
 const CODEC: DataType = DataType::object("Flow\\ETL\\Values\\Column\\Frame\\Codec");
 const ITERATOR: DataType = DataType::object("Iterator");
@@ -32,7 +36,10 @@ const REBUILD: DataType = DataType::object("Flow\\ETL\\Foundation\\Describe\\Reb
 static COLUMN_CE: AtomicPtr<ClassEntry> = AtomicPtr::new(std::ptr::null_mut());
 static COLUMN_BUILDER_CE: AtomicPtr<ClassEntry> = AtomicPtr::new(std::ptr::null_mut());
 static BACKEND_CE: AtomicPtr<ClassEntry> = AtomicPtr::new(std::ptr::null_mut());
+static GROUPED_TOTALS_CE: AtomicPtr<ClassEntry> = AtomicPtr::new(std::ptr::null_mut());
 static DESCRIBABLE_CE: AtomicPtr<ClassEntry> = AtomicPtr::new(std::ptr::null_mut());
+static GROUPED_COUNTS_CE: AtomicPtr<ClassEntry> = AtomicPtr::new(std::ptr::null_mut());
+static GROUP_TABLE_CE: AtomicPtr<ClassEntry> = AtomicPtr::new(std::ptr::null_mut());
 static FILE_WRITER_CE: AtomicPtr<ClassEntry> = AtomicPtr::new(std::ptr::null_mut());
 static CSV_ENCODER_CE: AtomicPtr<ClassEntry> = AtomicPtr::new(std::ptr::null_mut());
 static JSON_ENCODER_CE: AtomicPtr<ClassEntry> = AtomicPtr::new(std::ptr::null_mut());
@@ -48,6 +55,21 @@ fn store_column(ce: &'static mut ClassEntry, arg_info: ArgInfoTables) {
 fn store_column_builder(ce: &'static mut ClassEntry, arg_info: ArgInfoTables) {
     keep(arg_info);
     COLUMN_BUILDER_CE.store(ce, Ordering::Release);
+}
+
+fn store_grouped_totals(ce: &'static mut ClassEntry, arg_info: ArgInfoTables) {
+    keep(arg_info);
+    GROUPED_TOTALS_CE.store(ce, Ordering::Release);
+}
+
+fn store_grouped_counts(ce: &'static mut ClassEntry, arg_info: ArgInfoTables) {
+    keep(arg_info);
+    GROUPED_COUNTS_CE.store(ce, Ordering::Release);
+}
+
+fn store_group_table(ce: &'static mut ClassEntry, arg_info: ArgInfoTables) {
+    keep(arg_info);
+    GROUP_TABLE_CE.store(ce, Ordering::Release);
 }
 
 fn store_backend(ce: &'static mut ClassEntry, arg_info: ArgInfoTables) {
@@ -105,6 +127,18 @@ pub fn column_ce() -> &'static ClassEntry {
 
 pub fn column_builder_ce() -> &'static ClassEntry {
     load(&COLUMN_BUILDER_CE, "Flow\\ETL\\Values\\Column\\ColumnBuilder")
+}
+
+pub fn grouped_totals_ce() -> &'static ClassEntry {
+    load(&GROUPED_TOTALS_CE, "Flow\\ETL\\Values\\Column\\GroupedTotals")
+}
+
+pub fn grouped_counts_ce() -> &'static ClassEntry {
+    load(&GROUPED_COUNTS_CE, "Flow\\ETL\\Values\\Column\\GroupedCounts")
+}
+
+pub fn group_table_ce() -> &'static ClassEntry {
+    load(&GROUP_TABLE_CE, "Flow\\ETL\\Values\\Grouping\\GroupTable")
 }
 
 pub fn backend_ce() -> &'static ClassEntry {
@@ -237,6 +271,50 @@ pub fn register() -> Result<()> {
         ],
     )?;
     interface(
+        "Flow\\ETL\\Values\\Column\\GroupedTotals",
+        store_grouped_totals,
+        vec![
+            method(
+                "add",
+                vec![Arg::new("values", COLUMN), Arg::new("ids", COLUMN)],
+                DataType::Void,
+            ),
+            method("sums", vec![], COLUMN),
+            method("partials", vec![], DataType::Array),
+            method(
+                "absorbEarlier",
+                vec![Arg::new("earlier", SELF), Arg::new("into", DataType::Array)],
+                DataType::Void,
+            ),
+        ],
+    )?;
+    interface(
+        "Flow\\ETL\\Values\\Column\\GroupedCounts",
+        store_grouped_counts,
+        vec![
+            method(
+                "add",
+                vec![Arg::new("values", COLUMN), Arg::new("ids", COLUMN)],
+                DataType::Void,
+            ),
+            method("counts", vec![], COLUMN),
+            method("partials", vec![], DataType::Array),
+            method(
+                "absorbEarlier",
+                vec![Arg::new("earlier", SELF), Arg::new("into", DataType::Array)],
+                DataType::Void,
+            ),
+        ],
+    )?;
+    interface(
+        "Flow\\ETL\\Values\\Grouping\\GroupTable",
+        store_group_table,
+        vec![
+            method("assign", vec![Arg::new("rows", ROWS)], GROUP_IDS),
+            method("count", vec![], DataType::Long),
+        ],
+    )?;
+    interface(
         "Flow\\ETL\\Values\\Column\\Backend",
         store_backend,
         vec![
@@ -302,6 +380,18 @@ pub fn register() -> Result<()> {
                 "modulo",
                 vec![Arg::new("left", COLUMN), Arg::new("right", COLUMN)],
                 COLUMN,
+            ),
+            method(
+                "sort",
+                vec![Arg::new("rows", ROWS), Arg::new("columns", DataType::Array)],
+                ROWS,
+            ),
+            method("groupedTotals", vec![], GROUPED_TOTALS),
+            method("groupedCounts", vec![], GROUPED_COUNTS),
+            method(
+                "groupTable",
+                vec![Arg::new("columns", DataType::Array), Arg::new("declared", SCHEMA)],
+                GROUP_TABLE,
             ),
             method(
                 "adopt",

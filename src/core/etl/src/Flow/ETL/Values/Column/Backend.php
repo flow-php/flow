@@ -11,9 +11,11 @@ use Flow\ETL\Foundation\Exception\OffsetOverflow;
 use Flow\ETL\Values\Column\Frame\Codec;
 use Flow\ETL\Values\Column\Frame\FloeException;
 use Flow\ETL\Values\Column\Frame\FrameTooLarge;
+use Flow\ETL\Values\Grouping\GroupTable;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
 use Flow\ETL\Values\Schema\Definition;
+use Flow\ETL\Values\Sort\SortColumn;
 use Flow\Types\Type\Comparison\Operator;
 
 use function interface_exists;
@@ -99,6 +101,20 @@ interface Backend
      * @throws EvaluationException a null operand, or a zero or negative modulus
      */
     public function modulo(Column $left, Column $right): Column;
+
+    /**
+     * @param list<SortColumn> $columns
+     */
+    public function sort(Rows $rows, array $columns): Rows;
+
+    public function groupedTotals(): GroupedTotals;
+
+    public function groupedCounts(): GroupedCounts;
+
+    /**
+     * @param list<string> $columns
+     */
+    public function groupTable(array $columns, Schema $declared): GroupTable;
 
     /**
      * The same values in this backend's storage: $column itself when this backend owns it, otherwise one copy through

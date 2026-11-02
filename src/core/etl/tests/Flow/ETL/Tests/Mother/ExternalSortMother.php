@@ -8,12 +8,12 @@ use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
 use Flow\ETL\Kernels\Bucketing\Buckets;
 use Flow\ETL\Kernels\Sort\ExternalSort;
 use Flow\ETL\Kernels\Sort\ExternalSortConfig;
-use Flow\ETL\Kernels\Sort\SortColumn;
 use Flow\ETL\Storage\BucketingConfig;
 use Flow\ETL\Storage\MemoryRowsStorage;
 use Flow\ETL\Storage\RowsStorage;
 use Flow\ETL\Values\BatchSize;
 use Flow\ETL\Values\Memory\Unit;
+use Flow\ETL\Values\Sort\SortColumn;
 
 final class ExternalSortMother
 {

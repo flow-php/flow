@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Planning\Logical;
 
+use Flow\ETL\Operators\Processor\RequiredColumns;
+
 interface Node
 {
     /**
@@ -48,4 +50,6 @@ interface Node
      * never from a class list.
      */
     public function redefines(): Redefined;
+
+    public function requiredInputColumns(RequiredColumns $output): RequiredColumns;
 }

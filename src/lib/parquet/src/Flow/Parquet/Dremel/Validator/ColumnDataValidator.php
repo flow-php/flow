@@ -21,6 +21,7 @@ use Stringable;
 use function ctype_xdigit;
 use function get_debug_type;
 use function gettype;
+use function in_array;
 use function is_array;
 use function is_bool;
 use function is_float;
@@ -38,6 +39,16 @@ use const PHP_INT_MIN;
 
 final class ColumnDataValidator implements Validator
 {
+    private bool $stored = false;
+
+    public static function stored(): self
+    {
+        $validator = new self();
+        $validator->stored = true;
+
+        return $validator;
+    }
+
     public function validate(Column $column, mixed $data, int $row): void
     {
         $repetition = $column->repetition();
@@ -163,7 +174,12 @@ final class ColumnDataValidator implements Validator
             PhysicalType::BOOLEAN => is_bool($data)
                 ? null
                 : throw new ValidationException(sprintf('Column "%s" is not boolean', $column->flatPath())),
-            PhysicalType::INT64, PhysicalType::INT32 => match ($logicalTypeName) {
+            PhysicalType::INT64, PhysicalType::INT32 => match (
+                $this->stored
+                    && in_array($logicalTypeName, [LogicalType::DATE, LogicalType::TIMESTAMP, LogicalType::TIME], true)
+                        ? null
+                        : $logicalTypeName
+            ) {
                 LogicalType::DATE, LogicalType::TIMESTAMP => $data instanceof DateTimeInterface
                     ? null
                     : throw new ValidationException(sprintf(
@@ -231,7 +247,16 @@ final class ColumnDataValidator implements Validator
             }
         }
 
-        if ($logicalTypeName === LogicalType::UUID) {
+        if ($logicalTypeName === LogicalType::UUID && $this->stored) {
+            if (!is_string($data) || strlen($data) !== 16) {
+                throw new ValidationException(sprintf(
+                    'Column "%s" row %d: %s is not the 16 bytes of a UUID',
+                    $column->flatPath(),
+                    $row,
+                    is_string($data) ? strlen($data) . ' bytes' : get_debug_type($data),
+                ));
+            }
+        } elseif ($logicalTypeName === LogicalType::UUID) {
             $hex = match (true) {
                 is_string($data) => str_replace('-', '', $data),
                 is_object($data) && method_exists($data, 'toString') => is_string($data->toString())

@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Operators\Processor;
 
+use Flow\ETL\Functions\ReferencedColumns;
+use Flow\ETL\Functions\ScalarFunction;
+use Flow\ETL\Functions\ScalarFunction\UnpackResults;
+
 use function array_diff;
 use function array_intersect;
 use function array_unique;
@@ -56,6 +60,14 @@ final readonly class RequiredColumns
             $this->allBut => self::allBut(...array_diff($this->names, $other->names)),
             default => self::allBut(...array_diff($other->names, $this->names)),
         };
+    }
+
+    public function beforeWriting(string $name, ScalarFunction $function): self
+    {
+        $read = (new ReferencedColumns())->in($function)->names();
+
+        // an unpack writes "name.*", known only once bound: keep the demand, add what it reads
+        return $function instanceof UnpackResults ? $this->with(...$read) : $this->without($name)->with(...$read);
     }
 
     public function with(string ...$names): self

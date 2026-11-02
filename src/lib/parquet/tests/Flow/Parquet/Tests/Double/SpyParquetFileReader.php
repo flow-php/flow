@@ -9,9 +9,6 @@ use Flow\Parquet\ParquetFileReader;
 use Flow\Parquet\Reader\ReadPlan;
 use Generator;
 
-/**
- * Answers from a SpyFooter, records close(), every readColumns() call and the chunks read.
- */
 final class SpyParquetFileReader implements ParquetFileReader
 {
     public int $chunksRead = 0;
@@ -55,5 +52,10 @@ final class SpyParquetFileReader implements ParquetFileReader
 
             yield $chunk;
         }
+    }
+
+    public function readStoredColumns(array $columns, int $batchSize, ReadPlan $plan): Generator
+    {
+        return $this->readColumns($columns, $batchSize, $plan);
     }
 }

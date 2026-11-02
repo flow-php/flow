@@ -15,6 +15,7 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Reader\ReadPlan;
 use Flow\Parquet\Reader\RowSelection;
+use Flow\Parquet\Reader\RowSelector;
 use Flow\Parquet\Tests\Double\InMemoryIndexes;
 use Flow\Parquet\Tests\Mother\FlatColumnMother;
 use Flow\Parquet\Tests\Mother\ReadPlanMother;
@@ -129,7 +130,13 @@ final class ReadPlanConverterTest extends TestCase
     public function test_the_row_filter_crosses_as_a_tree_of_physical_leaves(Filter $filter, array $expected): void
     {
         static::assertSame(
-            ['selectors' => [[4, false]], 'filter' => $expected, 'limit' => null, 'offset' => 0],
+            [
+                'selectors' => [[4, false]],
+                'matched' => [[4, true]],
+                'filter' => $expected,
+                'limit' => null,
+                'offset' => 0,
+            ],
             ReadPlanConverter::toExtension(ReadPlanMother::rowFiltered(
                 4,
                 $filter,
@@ -161,6 +168,7 @@ final class ReadPlanConverterTest extends TestCase
         static::assertSame(
             [
                 'selectors' => [[4, false]],
+                'matched' => [[4, true]],
                 'filter' => ['leaf' => 'is_null', 'path' => ['id']],
                 'limit' => 2,
                 'offset' => 0,
@@ -179,6 +187,7 @@ final class ReadPlanConverterTest extends TestCase
         static::assertSame(
             [
                 'selectors' => [[4, false]],
+                'matched' => [[4, true]],
                 'filter' => ['leaf' => 'is_null', 'path' => ['id']],
                 'limit' => 2,
                 'offset' => 1,
@@ -215,8 +224,27 @@ final class ReadPlanConverterTest extends TestCase
     public function test_the_selection_crosses_as_file_absolute_count_and_skip_pairs(): void
     {
         static::assertSame(
-            ['selectors' => [[2, true], [3, false]], 'limit' => null, 'offset' => 0],
+            [
+                'selectors' => [[2, true], [3, false]],
+                'matched' => [[2, true], [3, false]],
+                'limit' => null,
+                'offset' => 0,
+            ],
             ReadPlanConverter::toExtension(ReadPlan::window(5, new InMemoryIndexes(), 2)),
+        );
+    }
+
+    public function test_the_matched_rows_cross_as_their_own_count_and_skip_pairs(): void
+    {
+        static::assertSame(
+            [[1, true], [2, false], [1, true]],
+            ReadPlanConverter::toExtension(
+                new ReadPlan(
+                    RowSelection::all(4),
+                    new RowSelection(new RowSelector(1, true), new RowSelector(2, false), new RowSelector(1, true)),
+                    new InMemoryIndexes(),
+                ),
+            )['matched'],
         );
     }
 }

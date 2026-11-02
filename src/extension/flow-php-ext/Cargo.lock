@@ -677,6 +677,7 @@ version = "0.1.0"
 name = "flow_php"
 version = "0.0.0"
 dependencies = [
+ "ahash",
  "arrow-array",
  "arrow-buffer",
  "arrow-data",

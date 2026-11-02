@@ -22,6 +22,7 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
+use function Flow\Parquet\DSL\parquet_column;
 use function range;
 
 #[RequiresPhpExtension('flow_php')]
@@ -55,6 +56,56 @@ final class RustParquetOpenSourceTest extends FlowTestCase
         }
 
         static::assertSame($ids, $read);
+    }
+
+    #[TestWith([0, null, 10])]
+    #[TestWith([3, 5, 5])]
+    public function test_an_empty_schema_yields_the_rows_of_the_window(int $offset, ?int $limit, int $count): void
+    {
+        $filesystem = memory_filesystem();
+        ParquetFilesContext::rowGroups($filesystem, 'memory://groups.parquet', 10, 4);
+
+        $counted = 0;
+
+        foreach (ParquetFilesContext::rows((new RustParquetOpenSource(new RustParquetFileReader($filesystem->readFrom(path(
+            'memory://groups.parquet',
+        )))))->batches(
+            schema(),
+            3,
+            ParquetFilesContext::plan($filesystem, 'memory://groups.parquet', $offset, $limit),
+            new AdaptiveBackend(),
+        )) as $rows) {
+            static::assertLessThanOrEqual(3, $rows->count());
+            static::assertEquals(schema(), $rows->schema());
+            $counted += $rows->count();
+        }
+
+        static::assertSame($count, $counted);
+    }
+
+    public function test_an_empty_schema_yields_the_rows_the_row_filter_keeps(): void
+    {
+        $filesystem = memory_filesystem();
+        ParquetFilesContext::rowGroups($filesystem, 'memory://groups.parquet', 10, 4);
+
+        $counted = 0;
+
+        foreach (ParquetFilesContext::rows((new RustParquetOpenSource(new RustParquetFileReader($filesystem->readFrom(path(
+            'memory://groups.parquet',
+        )))))->batches(
+            schema(),
+            100,
+            ParquetFilesContext::plan(
+                $filesystem,
+                'memory://groups.parquet',
+                filter: parquet_column('id')->greaterThanOrEqual(3),
+            ),
+            new AdaptiveBackend(),
+        )) as $rows) {
+            $counted += $rows->count();
+        }
+
+        static::assertSame(7, $counted);
     }
 
     public function test_columns_are_adopted_by_the_backend(): void

@@ -12,6 +12,7 @@ use Flow\ETL\Planning\Optimizer\Rule\PushFilterIntoSource;
 use Flow\ETL\Planning\Optimizer\Rule\PushLimitIntoSource;
 use Flow\ETL\Planning\Optimizer\Rule\PushOffsetIntoSource;
 use Flow\ETL\Planning\Optimizer\Rule\PushProjectionIntoExpand;
+use Flow\ETL\Planning\Optimizer\Rule\PushProjectionIntoSource;
 use Flow\ETL\Storage\FilesystemRowsStorage;
 use Flow\ETL\Storage\Floe\FloeSerializer;
 use Flow\ETL\Tests\FlowTestCase;
@@ -39,6 +40,7 @@ final class ConfigTest extends FlowTestCase
                     PushLimitIntoSource::class,
                     CountFromStatistics::class,
                     PushProjectionIntoExpand::class,
+                    PushProjectionIntoSource::class,
                 ],
                 'telemetry' => [
                     'trace_loading' => false,
