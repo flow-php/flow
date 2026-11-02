@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-11-02
+## [0.47.0] - 2026-11-02
 
 ### Added
 - [#2721](https://github.com/flow-php/flow/pull/2721) - **flow-php/etl - Native sort, group ids and grouped sum/avg/count kernels behind Backend** - [@norberttech](https://github.com/norberttech)
@@ -155,7 +155,7 @@
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/etl - explain() shows pushed filters and limits under Read** - [@norberttech](https://github.com/norberttech)
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/arrow-ext - built against arrow-rs 60** - [@norberttech](https://github.com/norberttech)
 - [#2687](https://github.com/flow-php/flow/pull/2687) - **flow-php/types - leaf types are no longer generic** - [@norberttech](https://github.com/norberttech)
-- [#2687](https://github.com/flow-php/flow/pull/2687) - **flow-php/types - ListType<T> and MapType<TKey, TValue> template their members** - [@norberttech](https://github.com/norberttech)
+- [#2687](https://github.com/flow-php/flow/pull/2687) - **flow-php/types - ListType and MapType template their members** - [@norberttech](https://github.com/norberttech)
 - [#2687](https://github.com/flow-php/flow/pull/2687) - **flow-php/mago-types-bridge - type_structure() members resolved through template-type** - [@norberttech](https://github.com/norberttech)
 - [#2687](https://github.com/flow-php/flow/pull/2687) - **flow-php/etl - allow brick/math ^1.0** - [@norberttech](https://github.com/norberttech)
 - [#2687](https://github.com/flow-php/flow/pull/2687) - **flow-php/flow - updated dev dependencies, mago 1.57 and GitHub Actions** - [@norberttech](https://github.com/norberttech)
