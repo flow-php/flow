@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Mother;
 
 use Flow\ETL\IO\Extractor;
-use Flow\ETL\Kernels\Sort\SortColumn;
 use Flow\ETL\Planning\Logical\LogicalPlan;
 use Flow\ETL\Planning\Logical\Node;
 use Flow\ETL\Planning\Logical\Node\Limit;
@@ -15,15 +14,20 @@ use Flow\ETL\Planning\Logical\Node\Sort;
 use Flow\ETL\Planning\Logical\Trigger;
 use Flow\ETL\Runtime\Config;
 use Flow\ETL\Runtime\FlowContext;
+use Flow\ETL\Tests\Double\RecordingFileExtractor;
 use Flow\ETL\Tests\Double\RepeatableExtractor;
 use Flow\ETL\Values\Join\JoinType;
+use Flow\ETL\Values\Sort\SortColumn;
 
 use function array_values;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class NodeMother
 {
@@ -60,6 +64,16 @@ final class NodeMother
     public static function plan(Node $root): LogicalPlan
     {
         return Trigger::rows->plan($root);
+    }
+
+    public static function ordersFileRead(): Read
+    {
+        return new Read(new RecordingFileExtractor(schema(
+            int_schema('id'),
+            str_schema('country'),
+            int_schema('amount'),
+            str_schema('note', nullable: true),
+        )));
     }
 
     public static function read(?Extractor $extractor = null): Read

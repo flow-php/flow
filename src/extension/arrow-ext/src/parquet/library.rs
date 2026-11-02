@@ -104,9 +104,39 @@ pub fn read_plan(meta: &ParquetMetaData, plan: &Zval, stream: &PhpStream) -> Php
 fn converted_plan(meta: &ParquetMetaData, converted: &Zval) -> Result<ReadPlan, Error> {
     let malformed = |what: &str| Error::Plan(format!("arrow received a malformed read plan: {what}"));
     let converted = converted.array().ok_or_else(|| malformed("not an array"))?;
-    let selectors = ht_get(converted, b"selectors")
+    let planned = selectors(converted, b"selectors")?;
+    let matched = selectors(converted, b"matched")?;
+
+    let limit = match ht_get(converted, b"limit") {
+        Some(limit) if limit.is_null() => None,
+        Some(limit) => Some(
+            limit
+                .long()
+                .and_then(|limit| usize::try_from(limit).ok())
+                .ok_or_else(|| malformed("'limit' is not an int of 0 or more"))?,
+        ),
+        None => return Err(malformed("no 'limit'")),
+    };
+    let offset = ht_get(converted, b"offset")
+        .and_then(Zval::long)
+        .and_then(|offset| usize::try_from(offset).ok())
+        .ok_or_else(|| malformed("'offset' is not an int of 0 or more"))?;
+    let filter = ht_get(converted, b"filter").map(raw).transpose()?;
+
+    let plan = ReadPlan::from_selection(meta, planned.clone(), filter, limit)?;
+
+    Ok(ReadPlan {
+        offset,
+        proven: plan.proven_by(meta, &planned, &matched),
+        ..plan
+    })
+}
+
+fn selectors(converted: &ZendHashTable, key: &[u8]) -> Result<Vec<(usize, bool)>, Error> {
+    let malformed = |what: &str| Error::Plan(format!("arrow received a malformed read plan: {what}"));
+    let selectors = ht_get(converted, key)
         .and_then(Zval::array)
-        .ok_or_else(|| malformed("no 'selectors' list"))?;
+        .ok_or_else(|| malformed(&format!("no '{}' list", String::from_utf8_lossy(key))))?;
     let mut planned = Vec::with_capacity(selectors.len());
 
     ht_for_each(selectors, |_, _, selector| {
@@ -128,26 +158,7 @@ fn converted_plan(meta: &ParquetMetaData, converted: &Zval) -> Result<ReadPlan, 
         Ok::<(), Error>(())
     })?;
 
-    let limit = match ht_get(converted, b"limit") {
-        Some(limit) if limit.is_null() => None,
-        Some(limit) => Some(
-            limit
-                .long()
-                .and_then(|limit| usize::try_from(limit).ok())
-                .ok_or_else(|| malformed("'limit' is not an int of 0 or more"))?,
-        ),
-        None => return Err(malformed("no 'limit'")),
-    };
-    let offset = ht_get(converted, b"offset")
-        .and_then(Zval::long)
-        .and_then(|offset| usize::try_from(offset).ok())
-        .ok_or_else(|| malformed("'offset' is not an int of 0 or more"))?;
-    let filter = ht_get(converted, b"filter").map(raw).transpose()?;
-
-    Ok(ReadPlan {
-        offset,
-        ..ReadPlan::from_selection(meta, planned, filter, limit)?
-    })
+    Ok(planned)
 }
 
 /// A converter array as data: a map keyed by its keys' bytes when a key is a string, else a list of its values.
@@ -361,7 +372,21 @@ impl RustParquetFileReader {
         self.open()?;
         self.refuse_int96(columns)?;
 
-        RustColumnsReader::__construct(self, columns, batchSize, plan)
+        RustColumnsReader::open(self, columns, batchSize, plan, false)
+    }
+
+    /// `readColumns()` with DATE, TIMESTAMP, TIME, UUID as stored: days, µs since epoch, µs since midnight, 16 bytes.
+    #[php(name = "readStoredColumns")]
+    pub fn read_stored_columns(
+        &self,
+        columns: &ZendHashTable,
+        batchSize: i64,
+        plan: &Zval,
+    ) -> PhpResult<RustColumnsReader> {
+        self.open()?;
+        self.refuse_int96(columns)?;
+
+        RustColumnsReader::open(self, columns, batchSize, plan, true)
     }
 }
 
@@ -597,6 +622,64 @@ pub struct RustColumnsReader {
 }
 
 impl RustColumnsReader {
+    fn open(
+        file: &RustParquetFileReader,
+        columns: &ZendHashTable,
+        batch_size: i64,
+        plan: &Zval,
+        stored: bool,
+    ) -> PhpResult<Self> {
+        let batch_size = self::batch_size(batch_size)?;
+        let (stream, meta) = file.read()?;
+        let stream = Arc::clone(stream);
+        let plan = read_plan(meta, plan, &stream)?;
+        let skip_pending = plan.offset > 0;
+        let refused = |error| parquet_exception(error, &stream, Side::Read);
+        let mut names = Vec::with_capacity(columns.len());
+
+        ht_for_each(columns, |_, _, name| {
+            names.push(
+                name.str()
+                    .ok_or_else(|| {
+                        exception(
+                            INVALID_ARGUMENT,
+                            "arrow Parquet column names must be strings".to_string(),
+                        )
+                    })?
+                    .to_string(),
+            );
+
+            Ok::<(), PhpException>(())
+        })?;
+
+        let reader = ParquetReader::open(Arc::clone(&stream), meta, &names, plan, batch_size).map_err(refused)?;
+        let cells = reader
+            .fields()
+            .iter()
+            .zip(reader.types())
+            .map(|(field, canonical)| ReadCell::new(canonical, field, stored).map_err(|e| e.in_column(field.name())))
+            .collect::<Result<Vec<_>, Error>>()
+            .map_err(refused)?;
+        let times = if cells.iter().any(ReadCell::needs_times) {
+            Some(Times::new()?)
+        } else {
+            None
+        };
+
+        Ok(Self {
+            reader: Some(reader),
+            stream,
+            columns: names.into_iter().map(String::into_bytes).zip(cells).collect(),
+            times,
+            current: None,
+            queued: None,
+            skip_pending,
+            key: 0,
+            started: false,
+            advanced: false,
+        })
+    }
+
     /// As a Generator, the reader starts on its first `rewind()`, `valid()`, `current()`, `key()` or `next()`.
     fn start(&mut self) -> PhpResult<()> {
         if self.started {
@@ -676,55 +759,7 @@ impl RustColumnsReader {
         batch_size: i64,
         plan: &Zval,
     ) -> PhpResult<Self> {
-        let batch_size = self::batch_size(batch_size)?;
-        let (stream, meta) = file.read()?;
-        let stream = Arc::clone(stream);
-        let plan = read_plan(meta, plan, &stream)?;
-        let skip_pending = plan.offset > 0;
-        let refused = |error| parquet_exception(error, &stream, Side::Read);
-        let mut names = Vec::with_capacity(columns.len());
-
-        ht_for_each(columns, |_, _, name| {
-            names.push(
-                name.str()
-                    .ok_or_else(|| {
-                        exception(
-                            INVALID_ARGUMENT,
-                            "arrow Parquet column names must be strings".to_string(),
-                        )
-                    })?
-                    .to_string(),
-            );
-
-            Ok::<(), PhpException>(())
-        })?;
-
-        let reader = ParquetReader::open(Arc::clone(&stream), meta, &names, plan, batch_size).map_err(refused)?;
-        let cells = reader
-            .fields()
-            .iter()
-            .zip(reader.types())
-            .map(|(field, canonical)| ReadCell::new(canonical, field).map_err(|e| e.in_column(field.name())))
-            .collect::<Result<Vec<_>, Error>>()
-            .map_err(refused)?;
-        let times = if cells.iter().any(ReadCell::needs_times) {
-            Some(Times::new()?)
-        } else {
-            None
-        };
-
-        Ok(Self {
-            reader: Some(reader),
-            stream,
-            columns: names.into_iter().map(String::into_bytes).zip(cells).collect(),
-            times,
-            current: None,
-            queued: None,
-            skip_pending,
-            key: 0,
-            started: false,
-            advanced: false,
-        })
+        Self::open(file, columns, batch_size, plan, false)
     }
 
     /// Reads the first chunk; the reader streams once, so it refuses to rewind after `next()`.
@@ -830,6 +865,64 @@ impl Drop for RustParquetFileWriter {
 }
 
 impl RustParquetFileWriter {
+    fn write_lists(&mut self, columns: &ZendHashTable, stored: bool) -> PhpResult<()> {
+        if self.writer.is_none() {
+            return Err(exception(RUNTIME, "Writer is not open".to_string()));
+        }
+
+        let mut lengths = Vec::with_capacity(columns.len());
+
+        for (key, values) in columns.iter() {
+            let values = values.array().ok_or_else(|| {
+                exception(
+                    INVALID_ARGUMENT,
+                    "arrow Parquet writer columns must be arrays".to_string(),
+                )
+            })?;
+
+            lengths.push((key.to_string(), values.len()));
+        }
+
+        let count = lengths.first().map_or(0, |(_, length)| *length);
+
+        if lengths.iter().any(|(_, length)| *length != count) {
+            let described = lengths
+                .iter()
+                .map(|(name, length)| format!("\"{name}\": {length}"))
+                .collect::<Vec<_>>();
+
+            return Err(exception(
+                INVALID_ARGUMENT,
+                format!("writeColumns() takes lists of one length, got {}", described.join(", ")),
+            ));
+        }
+
+        let lists = self
+            .columns
+            .iter()
+            .map(|column| {
+                ht_get(columns, column.name.as_bytes())
+                    .and_then(Zval::array)
+                    .map(|values| values.values().collect::<Vec<_>>())
+            })
+            .collect::<Vec<_>>();
+        let mut first = 0;
+
+        // in the row door's flush steps, so a refusal names the row index append() names
+        while first < count {
+            let rows = (count - first).min(self.batch_size - self.buffered);
+
+            if self.scalar {
+                self.append_columns::<Scalar>(&lists, first, rows, stored)?;
+            } else {
+                self.append_columns::<Validated>(&lists, first, rows, stored)?;
+            }
+            first += rows;
+        }
+
+        Ok(())
+    }
+
     fn refused(&self, error: Error) -> PhpException {
         parquet_exception(error, &self.stream, Side::Write)
     }
@@ -945,6 +1038,7 @@ impl RustParquetFileWriter {
         lists: &[Option<Vec<&'a Zval>>],
         first: usize,
         rows: usize,
+        stored: bool,
     ) -> PhpResult<()> {
         let mut limit = rows;
         let mut refused = None;
@@ -953,10 +1047,11 @@ impl RustParquetFileWriter {
         for (index, column) in self.columns.iter().enumerate() {
             let mut values = Vec::with_capacity(limit);
             let mut stop = None;
+            let cell = if stored { &column.stored } else { &column.cell };
 
             for row in 0..limit {
                 let value = match &lists[index] {
-                    Some(values) => V::check(&column.cell, values[first + row], column.nullable, &self.classes),
+                    Some(values) => V::check(cell, values[first + row], column.nullable, &self.classes),
                     None => V::missing(column.nullable),
                 };
 
@@ -1058,61 +1153,13 @@ impl RustParquetFileWriter {
     /// Every list of one length; a writer column `$columns` lacks is nulls, a key the writer lacks is ignored.
     #[php(name = "writeColumns")]
     pub fn write_columns(&mut self, columns: &ZendHashTable) -> PhpResult<()> {
-        if self.writer.is_none() {
-            return Err(exception(RUNTIME, "Writer is not open".to_string()));
-        }
+        self.write_lists(columns, false)
+    }
 
-        let mut lengths = Vec::with_capacity(columns.len());
-
-        for (key, values) in columns.iter() {
-            let values = values.array().ok_or_else(|| {
-                exception(
-                    INVALID_ARGUMENT,
-                    "arrow Parquet writer columns must be arrays".to_string(),
-                )
-            })?;
-
-            lengths.push((key.to_string(), values.len()));
-        }
-
-        let count = lengths.first().map_or(0, |(_, length)| *length);
-
-        if lengths.iter().any(|(_, length)| *length != count) {
-            let described = lengths
-                .iter()
-                .map(|(name, length)| format!("\"{name}\": {length}"))
-                .collect::<Vec<_>>();
-
-            return Err(exception(
-                INVALID_ARGUMENT,
-                format!("writeColumns() takes lists of one length, got {}", described.join(", ")),
-            ));
-        }
-
-        let lists = self
-            .columns
-            .iter()
-            .map(|column| {
-                ht_get(columns, column.name.as_bytes())
-                    .and_then(Zval::array)
-                    .map(|values| values.values().collect::<Vec<_>>())
-            })
-            .collect::<Vec<_>>();
-        let mut first = 0;
-
-        // in the row door's flush steps, so a refusal names the row index append() names
-        while first < count {
-            let rows = (count - first).min(self.batch_size - self.buffered);
-
-            if self.scalar {
-                self.append_columns::<Scalar>(&lists, first, rows)?;
-            } else {
-                self.append_columns::<Validated>(&lists, first, rows)?;
-            }
-            first += rows;
-        }
-
-        Ok(())
+    /// `writeColumns()` with DATE, TIMESTAMP, TIME, UUID as stored: days, µs since epoch, µs since midnight, 16 bytes.
+    #[php(name = "writeStoredColumns")]
+    pub fn write_stored_columns(&mut self, columns: &ZendHashTable) -> PhpResult<()> {
+        self.write_lists(columns, true)
     }
 
     /// An array as `writeRows()` (keys ignored), a `Traversable` row by row.

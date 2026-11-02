@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Storage\Floe;
 
-use Closure;
 use Flow\ETL\Foundation\Exception\RuntimeException;
 use Flow\ETL\Storage\Serializer\Exception\SerializationException;
 use Flow\ETL\Values\Column\Backend;
@@ -16,6 +15,8 @@ use Flow\ETL\Values\Schema\Metadata;
 use Flow\Filesystem\SourceStream;
 use Generator;
 
+use function max;
+use function min;
 use function ord;
 use function sprintf;
 use function strlen;
@@ -24,8 +25,6 @@ use function unpack;
 
 final class FloeStreamReader
 {
-    public const int COMPACT_THRESHOLD = 1_048_576;
-
     private ?Footer $footer = null;
 
     private ?Schema $schema = null;
@@ -40,27 +39,6 @@ final class FloeStreamReader
         private readonly Backend $backend,
     ) {
         Format::validateCodecId($this->codec->id());
-    }
-
-    /**
-     * @param Generator<int, string> $chunks
-     *
-     * @return Closure(int): bool
-     */
-    public static function chunkFiller(string &$buffer, int &$position, Generator $chunks): Closure
-    {
-        return static function (int $bytes) use (&$buffer, &$position, $chunks): bool {
-            while ((strlen($buffer) - $position) < $bytes) {
-                if (!$chunks->valid()) {
-                    return false;
-                }
-
-                $buffer .= $chunks->current();
-                $chunks->next();
-            }
-
-            return true;
-        };
     }
 
     public function close(): void
@@ -85,10 +63,9 @@ final class FloeStreamReader
     }
 
     /**
-     * Hot path: frames are walked in-buffer. offset skips whole leading sections
-     * using the footer, then the remaining rows inside the start section; limit
-     * stops the read after that many rows. Batches are frame-sized: batchSize is
-     * an upper bound, a batch never spans two BATCH frames.
+     * offset skips whole leading sections using the footer, then the remaining rows inside the start section; limit
+     * stops the read after that many rows. Batches are frame-sized: batchSize is an upper bound, a batch never spans
+     * two BATCH frames.
      *
      * @param int<1, max> $batchSize
      *
@@ -112,63 +89,65 @@ final class FloeStreamReader
             return;
         }
 
-        // footer() already validated the header, so the walk starts past its bytes
+        // footer() validated the header and refused an unsized stream, so the walk starts past the header
         $fileSchema = $this->footer()->schema();
 
-        /** @var int<1, max> $chunkSize */
-        $chunkSize = $this->chunkSize;
-
-        yield from $this->walk(
-            $this->source->iterate($chunkSize),
-            '',
-            Format::HEADER_LENGTH,
-            $fileSchema,
-            0,
-            $batchSize,
-            $limit,
-        );
+        yield from $this->walk(Format::HEADER_LENGTH, $this->source->size() ?? 0, $fileSchema, 0, $batchSize, $limit);
     }
 
     /**
-     * @param \Generator<int, string> $chunks
      * @param int<1, max> $batchSize
      *
      * @throws FloeException
      *
      * @return \Generator<int, Rows>
      */
-    private function walk(
-        Generator $chunks,
-        string $buffer,
-        int $position,
-        Schema $schema,
-        int $skip,
-        int $batchSize,
-        ?int $limit,
-    ): Generator {
-        $fill = self::chunkFiller($buffer, $position, $chunks);
+    private function walk(int $at, int $size, Schema $schema, int $skip, int $batchSize, ?int $limit): Generator
+    {
+        $window = '';
+        $windowAt = $at;
+        // one read per miss: a remote stream gets no more range requests than chunk-sized reads would send
+        $hold = function (int $from, int $bytes) use (&$window, &$windowAt, $size): bool {
+            if (($from + $bytes) <= ($windowAt + strlen($window))) {
+                return true;
+            }
+
+            if (($from + $bytes) > $size) {
+                return false;
+            }
+
+            if ($bytes >= $this->chunkSize) {
+                // a frame of a chunk or more is read whole, so decodeFrame() takes the read string without a copy
+                $window = $this->source->read(max(1, $bytes), $from);
+            } else {
+                $end = $windowAt + strlen($window);
+                /** @var int<1, max> $length */
+                $length = min($this->chunkSize, $size - $end);
+                $window = substr($window, $from - $windowAt) . $this->source->read($length, $end);
+            }
+
+            $windowAt = $from;
+
+            return strlen($window) >= $bytes;
+        };
 
         $yielded = 0;
 
         try {
-            while (true) {
-                if (!$fill(Format::FRAME_HEADER_LENGTH)) {
-                    if ((strlen($buffer) - $position) === 0) {
-                        break;
-                    }
-
+            while ($at < $size) {
+                if (!$hold($at, Format::FRAME_HEADER_LENGTH)) {
                     throw new FloeException('Floe stream is truncated, frame header is incomplete');
                 }
 
-                $frameType = ord($buffer[$position]);
-                $frameLength = unpack('V', $buffer, $position + 1)[1];
-                $position += Format::FRAME_HEADER_LENGTH;
+                $frameType = ord($window[$at - $windowAt]);
+                $frameLength = unpack('V', $window, $at - $windowAt + 1)[1];
+                $body = $at + Format::FRAME_HEADER_LENGTH;
 
-                if (!$fill($frameLength)) {
+                if (!$hold($body, $frameLength)) {
                     throw new FloeException('Floe stream is truncated, frame body is incomplete');
                 }
 
-                $frameEnd = $position + $frameLength;
+                $position = $body - $windowAt;
 
                 if ($frameType === Format::FRAME_BATCH) {
                     if ($frameLength < 4) {
@@ -176,13 +155,15 @@ final class FloeStreamReader
                     }
 
                     /** @var int $rowCount */
-                    $rowCount = unpack('V', $buffer, $position)[1];
+                    $rowCount = unpack('V', $window, $position)[1];
 
                     if ($skip >= $rowCount) {
                         $skip -= $rowCount;
                     } else {
                         $rows = $this->backend->decodeFrame(
-                            substr($buffer, $position, $frameLength),
+                            $position === 0 && strlen($window) === $frameLength
+                                ? $window
+                                : substr($window, $position, $frameLength),
                             $schema,
                             $this->codec,
                         );
@@ -210,18 +191,11 @@ final class FloeStreamReader
                             return;
                         }
                     }
-
-                    $position = $frameEnd;
-                } elseif ($frameType === Format::FRAME_FOOTER) {
-                    $position = $frameEnd;
-                } else {
+                } elseif ($frameType !== Format::FRAME_FOOTER) {
                     throw new FloeException(sprintf('Floe found unknown frame type 0x%02X', $frameType));
                 }
 
-                if ($position >= self::COMPACT_THRESHOLD) {
-                    $buffer = substr($buffer, $position);
-                    $position = 0;
-                }
+                $at = $body + $frameLength;
             }
         } catch (SerializationException|RuntimeException $e) {
             throw new FloeException($e->getMessage(), 0, $e);
@@ -242,24 +216,6 @@ final class FloeStreamReader
     public function schema(): Schema
     {
         return $this->schema ??= $this->footer()->schema();
-    }
-
-    /**
-     * @return \Generator<int, string>
-     */
-    private function chunksFrom(SourceStream $source, int $startByte, int $size): Generator
-    {
-        $chunkSize = $this->chunkSize;
-        $readAt = $startByte;
-
-        while ($readAt < $size) {
-            /** @var int<1, max> $length */
-            $length = $chunkSize < ($size - $readAt) ? $chunkSize : $size - $readAt;
-
-            yield $source->read($length, $readAt);
-
-            $readAt += $length;
-        }
     }
 
     /**
@@ -306,14 +262,6 @@ final class FloeStreamReader
             ));
         }
 
-        yield from $this->walk(
-            $this->chunksFrom($this->source, $startSection->offset, $size),
-            '',
-            0,
-            $fileSchema,
-            $offset - $cumulative,
-            $batchSize,
-            $limit,
-        );
+        yield from $this->walk($startSection->offset, $size, $fileSchema, $offset - $cumulative, $batchSize, $limit);
     }
 }

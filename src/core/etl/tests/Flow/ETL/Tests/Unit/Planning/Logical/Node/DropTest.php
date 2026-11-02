@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Planning\Logical\Node;
 
+use Flow\ETL\Operators\Processor\RequiredColumns;
 use Flow\ETL\Planning\Logical\Node\Drop;
 use Flow\ETL\Planning\Logical\Redefined;
 use Flow\ETL\Planning\Logical\RowCount;
@@ -43,5 +44,16 @@ final class DropTest extends FlowTestCase
         static::assertSame(RowCount::preserving, $node->rowCount());
         static::assertSame(Transparency::transparent, $node->transparency());
         static::assertEquals(Redefined::names('id'), $node->redefines());
+    }
+
+    public function test_a_drop_removes_its_columns_from_either_demand(): void
+    {
+        $drop = new Drop(NodeMother::read(), ['body']);
+
+        static::assertEquals(RequiredColumns::allBut('body'), $drop->requiredInputColumns(RequiredColumns::all()));
+        static::assertEquals(
+            RequiredColumns::only('id'),
+            $drop->requiredInputColumns(RequiredColumns::only('id', 'body')),
+        );
     }
 }

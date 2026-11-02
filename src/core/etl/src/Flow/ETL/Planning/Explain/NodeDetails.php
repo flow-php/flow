@@ -9,7 +9,6 @@ use Flow\ETL\Functions\Reference\Reference;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\File\FileExtractor;
 use Flow\ETL\IO\Filesystem\ScalarFunctionFilter;
-use Flow\ETL\Kernels\Sort\SortColumn;
 use Flow\ETL\Planning\Logical\Node;
 use Flow\ETL\Planning\Logical\Node\Aggregate;
 use Flow\ETL\Planning\Logical\Node\Batch;
@@ -35,6 +34,7 @@ use Flow\ETL\Planning\Logical\Node\WithColumn;
 use Flow\ETL\Planning\Logical\Node\Write;
 use Flow\ETL\Values\Join\JoinType;
 use Flow\ETL\Values\NullsOrder;
+use Flow\ETL\Values\Sort\SortColumn;
 use Flow\ETL\Values\SortOrder;
 use Flow\Filesystem\Path\Filter as PathFilter;
 use Flow\Filesystem\Path\Filter\Filters;
@@ -224,6 +224,10 @@ final readonly class NodeDetails
 
         if ($criteria->limit !== null) {
             $lines[] = 'Limit: ' . $criteria->limit;
+        }
+
+        if ($criteria->columns !== null) {
+            $lines[] = 'Columns: ' . implode(', ', $criteria->columns);
         }
 
         foreach ($this->files($criteria->pathFilter) as $filter) {

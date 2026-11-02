@@ -110,6 +110,7 @@ After the optimizer, `Sort` and `Limit` are one `TopN` node:
          └─ #1 Read
                Extractor: CSVExtractor
                Source: file:///data/orders.csv
+               Columns: country, total
 ```
 
 The physical plan has three pipelines. Each pipeline ends at a processor or at the loader:
@@ -126,6 +127,7 @@ Physical plan
       └─ Pipeline #0
             Extractor: CSVExtractor
                Statistics: rows exact 4 · size exact 49 B
+               Columns: country, total
             Transformer: ScalarFunctionFilterTransformer
             Transformer: PruneColumnsTransformer
             Processor: GroupByAggregationProcessor

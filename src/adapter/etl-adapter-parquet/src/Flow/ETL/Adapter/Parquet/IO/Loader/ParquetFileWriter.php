@@ -13,7 +13,6 @@ final readonly class ParquetFileWriter implements FileWriter
 {
     public function __construct(
         private ParquetLibFileWriter $file,
-        private ParquetEncoder $encoder,
         private ParquetSchemaConformance $conformance,
         private Backend $backend,
     ) {}
@@ -25,6 +24,13 @@ final readonly class ParquetFileWriter implements FileWriter
 
     public function write(Rows $rows): void
     {
-        $this->file->writeColumns($this->encoder->columns($this->conformance->conform($rows, $this->backend)));
+        $conformed = $this->conformance->conform($rows, $this->backend);
+        $columns = [];
+
+        foreach ($conformed->schema()->names() as $name) {
+            $columns[$name] = $conformed->column($name)->physicals();
+        }
+
+        $this->file->writeStoredColumns($columns);
     }
 }

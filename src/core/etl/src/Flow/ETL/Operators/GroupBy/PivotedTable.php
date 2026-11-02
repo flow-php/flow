@@ -8,40 +8,53 @@ use Flow\ETL\Functions\AggregatingFunction;
 use Flow\ETL\Operators\GroupBy;
 use Flow\ETL\Values\BatchSize;
 use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Grouping\GroupTable;
 use Flow\ETL\Values\Rows;
 use Generator;
 
-use function array_chunk;
 use function array_filter;
 use function array_keys;
+use function array_push;
 use function count;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_union;
+use function min;
 
 final class PivotedTable
 {
     /**
-     * @var array<string, array<array-key, AggregatingFunction>> group key => pivot value => accumulator
+     * @var array<int, array<array-key, AggregatingFunction>> group id => pivot value => accumulator
      */
     private array $accumulators = [];
 
     /**
-     * @var array<string, GroupKey>
+     * @var array<string, list<mixed>> by key column, by group id
      */
     private array $keys = [];
+
+    private ?GroupTable $table = null;
 
     public function __construct(
         private readonly GroupBy $groupBy,
         private readonly PivotShape $shape,
-    ) {}
+    ) {
+        foreach ($groupBy->refs()->all() as $ref) {
+            $this->keys[$ref->to()] = [];
+        }
+    }
 
     public function accumulate(Rows $batch, Backend $backend): void
     {
-        $grouped = $this->groupBy->grouped($batch, $this->shape->input);
-
-        if ($grouped === []) {
+        if ($batch->isEmpty()) {
             return;
+        }
+
+        $this->table ??= $this->groupBy->groupTable($this->shape->input, $backend);
+        $ids = $this->table->assign($batch);
+
+        foreach ($this->groupBy->keyValues($batch, $this->shape->input, $ids->firstRows) as $name => $values) {
+            array_push($this->keys[$name], ...$values);
         }
 
         $pivotValues = $batch->column($this->shape->pivot->column->base())->values();
@@ -55,22 +68,20 @@ final class PivotedTable
             ) === count($pivotValues);
         $pivotType = type_union(type_string(), type_integer());
 
-        /** @var array<string, array<array-key, list<int>>> $indices */
+        /** @var array<int, array<array-key, list<int>>> $indices */
         $indices = [];
 
-        foreach ($grouped as $index => $rows) {
-            $this->keys[$index] ??= $this->groupBy->key($batch, $this->shape->input, $rows[0], $index);
+        /** @var int $index */
+        foreach ($ids->ids->physicals() as $i => $index) {
             $this->accumulators[$index] ??= [];
 
-            foreach ($rows as $i) {
-                if ($pivotValues[$i] === null) {
-                    continue;
-                }
-
-                /** @var int|string $column */
-                $column = $scalars ? $pivotValues[$i] : $pivotType->assert($pivotValues[$i]);
-                $indices[$index][$column][] = $i;
+            if ($pivotValues[$i] === null) {
+                continue;
             }
+
+            /** @var int|string $column */
+            $column = $scalars ? $pivotValues[$i] : $pivotType->assert($pivotValues[$i]);
+            $indices[$index][$column][] = $i;
         }
 
         foreach ($indices as $index => $columns) {
@@ -87,17 +98,19 @@ final class PivotedTable
      */
     public function flush(BatchSize $batchSize, Backend $backend): Generator
     {
-        foreach (array_chunk($this->keys, $batchSize->size, preserve_keys: true) as $keys) {
+        $groups = $this->table?->count() ?? 0;
+
+        for ($first = 0; $first < $groups; $first += $batchSize->size) {
+            $last = min($groups, $first + $batchSize->size);
             $values = [];
 
             foreach ($this->shape->output->definitions() as $name => $_) {
                 $values[$name] = [];
             }
 
-            foreach ($keys as $index => $key) {
-                // @mago-ignore analysis:mixed-assignment
-                foreach ($key as $name => $value) {
-                    $values[$name][] = $value;
+            for ($index = $first; $index < $last; $index++) {
+                foreach ($this->keys as $name => $keyValues) {
+                    $values[$name][] = $keyValues[$index];
                 }
 
                 // a combination never seen is null, and a pivot value outside the declared list has no column
@@ -114,7 +127,7 @@ final class PivotedTable
                 $columns[$name] = $builder->finish();
             }
 
-            yield Rows::fromColumns($this->shape->output, $columns, count($keys));
+            yield Rows::fromColumns($this->shape->output, $columns, $last - $first);
         }
     }
 }

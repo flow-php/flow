@@ -6,12 +6,12 @@ namespace Flow\ETL\Operators\Constraint;
 
 use Flow\ETL\Functions\Reference\Reference;
 use Flow\ETL\Functions\Reference\UnresolvedReference;
-use Flow\ETL\Kernels\Sort\RowOrder;
-use Flow\ETL\Kernels\Sort\SortColumn;
 use Flow\ETL\Operators\Constraint;
 use Flow\ETL\Operators\Transformer\Stateful;
 use Flow\ETL\Values\NullsOrder;
 use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Sort\RowOrder;
+use Flow\ETL\Values\Sort\SortColumn;
 use Flow\Types\Type\TypedValueFormatter;
 
 use function array_map;

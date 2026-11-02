@@ -13,7 +13,6 @@ use Flow\ETL\Operators\BoundStep;
 use Flow\ETL\Operators\GroupBy;
 use Flow\ETL\Operators\GroupBy\PivotedTable;
 use Flow\ETL\Operators\GroupBy\PivotShape;
-use Flow\ETL\Operators\Processor;
 use Flow\ETL\Storage\BucketingConfig;
 use Flow\ETL\Values\BatchSize;
 use Flow\ETL\Values\Column\Backend;

@@ -10,6 +10,7 @@ use Flow\ETL\Functions\ScalarFunction;
 use Flow\ETL\IO\Extractor;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\File\FileExtractor;
+use Flow\ETL\Operators\Processor\RequiredColumns;
 use Flow\ETL\Planning\Logical\Node;
 use Flow\ETL\Planning\Logical\Redefined;
 use Flow\ETL\Planning\Logical\RowCount;
@@ -71,6 +72,14 @@ final readonly class Read implements Node
     /**
      * @throws InvalidArgumentException when the extractor is no FileExtractor, which has nowhere to apply it
      */
+    public function withColumns(string ...$columns): self
+    {
+        return new self($this->fileExtractor(), $this->criteria->withColumns(...$columns));
+    }
+
+    /**
+     * @throws InvalidArgumentException when the extractor is no FileExtractor, which has nowhere to apply it
+     */
     public function withPathFilter(Filter $filter): self
     {
         return new self($this->fileExtractor(), $this->criteria->withPathFilter($filter));
@@ -119,5 +128,10 @@ final readonly class Read implements Node
             : throw new InvalidArgumentException(
                 'Only a FileExtractor reads a pushed filter, ' . $this->extractor::class . ' does not',
             );
+    }
+
+    public function requiredInputColumns(RequiredColumns $output): RequiredColumns
+    {
+        return RequiredColumns::all();
     }
 }

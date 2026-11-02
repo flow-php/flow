@@ -33,7 +33,12 @@ final class Format
 
     public static function frame(int $type, string $body): string
     {
-        return chr($type) . pack('V', strlen($body)) . $body;
+        return self::frameHeader($type, strlen($body)) . $body;
+    }
+
+    public static function frameHeader(int $type, int $bodyLength): string
+    {
+        return chr($type) . pack('V', $bodyLength);
     }
 
     public static function header(int $flags): string

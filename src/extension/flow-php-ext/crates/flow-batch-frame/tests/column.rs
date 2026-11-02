@@ -260,6 +260,7 @@ fn decode_refuses_corrupt_buffers() {
     let string = kind_of("{\"type\":\"string\"}");
     let map = kind_of("{\"type\":\"map\",\"key\":{\"type\":\"string\"},\"value\":{\"type\":\"integer\"}}");
     let null = kind_of("{\"type\":\"null\"}");
+    let uuid = kind_of("{\"type\":\"uuid\"}");
 
     assert!(matches!(raw(&int, &[b""], 1, 0), Error::BuffersExhausted));
     assert!(matches!(
@@ -342,6 +343,29 @@ fn decode_refuses_corrupt_buffers() {
     assert!(matches!(
         raw(&int, &[b"\x01", &[0; 72]], 9, 0),
         Error::ValidityTooShort { bytes: 1, rows: 9 },
+    ));
+    assert!(matches!(
+        raw(&uuid, &[b"", &[0; 15]], 1, 0),
+        Error::ValuesLength {
+            values: Values::FixedBinary16,
+            bytes: 15,
+            expected: 16,
+            rows: 1
+        },
+    ));
+    assert!(matches!(
+        raw(
+            &string,
+            &[b"", b"\x00\x00\x00\x00\x64\x00\x00\x00\x03\x00\x00\x00", b"abc"],
+            2,
+            0
+        ),
+        Error::OffsetsNotMonotonic {
+            of: Of::Utf8,
+            index: 2,
+            previous: 100,
+            current: 3
+        },
     ));
     assert!(matches!(
         raw(&string, &[b"", b"\x00\x00", b""], 1, 0),

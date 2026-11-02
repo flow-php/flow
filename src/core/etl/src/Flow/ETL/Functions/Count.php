@@ -20,7 +20,7 @@ use function count;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_structure;
 
-final class Count implements AggregatingFunction, FrameAccumulating, WindowFunction
+final class Count implements AggregatesByGroup, FrameAccumulating, WindowFunction
 {
     private int $count;
 
@@ -122,6 +122,11 @@ final class Count implements AggregatingFunction, FrameAccumulating, WindowFunct
 
         /** @var list<Reference> $children */
         return new self($children[0], $this->window);
+    }
+
+    public function grouped(Backend $backend): GroupedAggregation
+    {
+        return new CountsByGroup($this->ref?->base(), $backend->groupedCounts());
     }
 
     public function aggregate(Rows $rows, array $indices, Backend $backend): void

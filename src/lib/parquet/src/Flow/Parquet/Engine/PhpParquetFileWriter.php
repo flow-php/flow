@@ -50,6 +50,10 @@ final class PhpParquetFileWriter implements ParquetFileWriter
 
     private readonly RowGroupBuilder $rowGroupBuilder;
 
+    private readonly DremelShredder $shredder;
+
+    private readonly DremelShredder $storedShredder;
+
     /**
      * @var list<list<?ColumnIndex>>
      */
@@ -84,15 +88,15 @@ final class PhpParquetFileWriter implements ParquetFileWriter
             ParquetFile::createdBy(),
             array_map(ColumnOrder::forWriting(...), array_values($schema->columnsFlat())),
         );
-        $this->rowGroupBuilder = new RowGroupBuilder(
-            $schema,
-            $compression,
-            $options,
-            new DremelShredder(
-                $options->getBool(Option::VALIDATE_DATA) ? new ColumnDataValidator() : new DisabledValidator(),
-                DataConverter::initialize($options),
-            ),
+        $this->shredder = new DremelShredder(
+            $options->getBool(Option::VALIDATE_DATA) ? new ColumnDataValidator() : new DisabledValidator(),
+            DataConverter::initialize($options),
         );
+        $this->storedShredder = new DremelShredder(
+            $options->getBool(Option::VALIDATE_DATA) ? ColumnDataValidator::stored() : new DisabledValidator(),
+            DataConverter::stored($options),
+        );
+        $this->rowGroupBuilder = new RowGroupBuilder($schema, $compression, $options, $this->shredder);
         $stream->append(ParquetFile::PARQUET_MAGIC_NUMBER);
         $this->stream = $stream;
         $this->fileOffset = strlen(ParquetFile::PARQUET_MAGIC_NUMBER);
@@ -160,6 +164,19 @@ final class PhpParquetFileWriter implements ParquetFileWriter
 
     public function writeColumns(array $columns): void
     {
+        $this->writeSlices($columns, $this->shredder);
+    }
+
+    public function writeStoredColumns(array $columns): void
+    {
+        $this->writeSlices($columns, $this->storedShredder);
+    }
+
+    /**
+     * @param array<string, list<mixed>> $columns
+     */
+    private function writeSlices(array $columns, DremelShredder $shredder): void
+    {
         $stream = $this->stream ?? throw new RuntimeException('Writer is not open');
         $count = (new ColumnLists())->length($columns);
 
@@ -171,7 +188,7 @@ final class PhpParquetFileWriter implements ParquetFileWriter
                 $slices[$name] = array_slice($values, $offset, $length);
             }
 
-            $this->rowGroupBuilder->addColumns($slices, $length);
+            $this->rowGroupBuilder->addColumns($shredder, $slices, $length);
 
             if ($this->rowGroupBuilder->isFull()) {
                 $this->flushRowGroup($stream);

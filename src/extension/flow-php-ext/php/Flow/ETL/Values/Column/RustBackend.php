@@ -8,9 +8,11 @@ use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Values\Column\Frame\Codec;
+use Flow\ETL\Values\Grouping\GroupTable;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
 use Flow\ETL\Values\Schema\Definition;
+use Flow\ETL\Values\Sort\SortColumn;
 use Flow\Types\Type\Comparison\Operator;
 use RuntimeException;
 use SensitiveParameter;
@@ -79,6 +81,32 @@ final class RustBackend implements Backend, Describable
     }
 
     public function modulo(Column $left, Column $right): Column
+    {
+        throw new RuntimeException('flow_php extension is not loaded');
+    }
+
+    /**
+     * @param list<SortColumn> $columns
+     */
+    public function sort(Rows $rows, array $columns): Rows
+    {
+        throw new RuntimeException('flow_php extension is not loaded');
+    }
+
+    public function groupedTotals(): GroupedTotals
+    {
+        throw new RuntimeException('flow_php extension is not loaded');
+    }
+
+    public function groupedCounts(): GroupedCounts
+    {
+        throw new RuntimeException('flow_php extension is not loaded');
+    }
+
+    /**
+     * @param list<string> $columns
+     */
+    public function groupTable(array $columns, Schema $declared): GroupTable
     {
         throw new RuntimeException('flow_php extension is not loaded');
     }

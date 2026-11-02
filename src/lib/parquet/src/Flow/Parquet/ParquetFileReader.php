@@ -36,4 +36,15 @@ interface ParquetFileReader
      *         with an offset yields one SkippedMatches before the first chunk, or alone
      */
     public function readColumns(array $columns, int $batchSize, ReadPlan $plan): Iterator;
+
+    /**
+     * readColumns() with every DATE, TIMESTAMP, TIME and UUID value, at any depth, as it is stored: days since 1970-01-01,
+     * microseconds since the epoch, microseconds since midnight, 16 bytes; other values as readColumns() reads them.
+     *
+     * @param list<string> $columns resolved names, never empty
+     * @param int $batchSize upper bound of rows per chunk, refused below 1
+     *
+     * @return Iterator<int, array<string, list<mixed>>|SkippedMatches> as readColumns()
+     */
+    public function readStoredColumns(array $columns, int $batchSize, ReadPlan $plan): Iterator;
 }

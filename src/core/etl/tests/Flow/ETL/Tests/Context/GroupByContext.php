@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Context;
 
 use Flow\ETL\Operators\GroupBy;
-use Flow\ETL\Operators\GroupBy\GroupKey;
 use Flow\ETL\Operators\Processor;
 use Flow\ETL\Operators\Processor\GroupByAggregationProcessor;
 use Flow\ETL\Operators\Transformer;
@@ -13,15 +12,14 @@ use Flow\ETL\Planning\Logical\Node\Aggregate;
 use Flow\ETL\Runtime\FlowContext;
 use Flow\ETL\Tests\Mother\NodeMother;
 use Flow\ETL\Tests\Mother\NodeTranslatorMother;
+use Flow\ETL\Values\Column\PhpBackend;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
 use Generator;
 
-use function array_values;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\Types\DSL\type_instance_of;
-use function ksort;
 
 final class GroupByContext
 {
@@ -87,25 +85,43 @@ final class GroupByContext
     }
 
     /**
-     * Each row's group key, in row order.
-     *
-     * @return list<GroupKey>
+     * @return list<array<string, mixed>> each row's group key, in row order
      */
     public static function keys(GroupBy $groupBy, Rows $rows, Schema $input): array
     {
+        $ids = $groupBy->groupTable($input, new PhpBackend())->assign($rows);
+        $values = $groupBy->keyValues($rows, $input, $ids->firstRows);
         $keys = [];
 
-        foreach ($groupBy->grouped($rows, $input) as $identity => $indices) {
-            $key = $groupBy->key($rows, $input, $indices[0], $identity);
+        /** @var int $id */
+        foreach ($ids->ids->physicals() as $id) {
+            $key = [];
 
-            foreach ($indices as $i) {
-                $keys[$i] = $key;
+            foreach ($values as $name => $byGroup) {
+                $key[$name] = $byGroup[$id];
             }
+
+            $keys[] = $key;
         }
 
-        ksort($keys);
+        return $keys;
+    }
 
-        return array_values($keys);
+    /**
+     * @return list<int> each row's group id from one group table across the batches, in row order
+     */
+    public static function groupIds(GroupBy $groupBy, Schema $input, Rows ...$batches): array
+    {
+        $table = $groupBy->groupTable($input, new PhpBackend());
+        $ids = [];
+
+        foreach ($batches as $batch) {
+            /** @var list<int> $batchIds */
+            $batchIds = $table->assign($batch)->ids->physicals();
+            $ids = [...$ids, ...$batchIds];
+        }
+
+        return $ids;
     }
 
     /**

@@ -66,7 +66,7 @@ final class FloeStreamReaderTest extends FlowIntegrationTestCase
         static::assertSame([[1, null], [2, null], [3, 'third@flow.php']], $read);
     }
 
-    public function test_file_larger_than_compaction_threshold_round_trips(): void
+    public function test_a_file_of_many_frames_round_trips(): void
     {
         $path = $this->cacheDir->suffix('large.floe');
 
@@ -86,10 +86,6 @@ final class FloeStreamReaderTest extends FlowIntegrationTestCase
         }
 
         $writer->close();
-
-        // The file must cross FrameReader's 1 MiB buffer-compaction threshold,
-        // otherwise this test silently stops covering it.
-        static::assertGreaterThan(1_048_576, $this->fs()->readFrom($path)->size());
 
         $read = 0;
 

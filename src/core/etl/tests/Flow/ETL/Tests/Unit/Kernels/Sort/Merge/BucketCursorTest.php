@@ -7,10 +7,10 @@ namespace Flow\ETL\Tests\Unit\Kernels\Sort\Merge;
 use DateTimeImmutable;
 use DateTimeZone;
 use Flow\ETL\Kernels\Sort\Merge\BucketCursor;
-use Flow\ETL\Kernels\Sort\RowOrder;
-use Flow\ETL\Kernels\Sort\SortKey;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Column\AdaptiveBackend;
+use Flow\ETL\Values\Sort\RowOrder;
+use Flow\ETL\Values\Sort\SortKey;
 use Generator;
 
 use function array_map;

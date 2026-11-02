@@ -83,6 +83,79 @@ final class FilterTest extends FlowTestCase
         );
     }
 
+    public function test_a_conjunction_is_evaluated_conjunct_by_conjunct_on_the_rows_the_ones_before_it_kept(): void
+    {
+        $rows = array_to_rows([['x' => 0], ['x' => 2], ['x' => 10]], schema(int_schema('x')));
+
+        static::assertSame(
+            [['x' => 2]],
+            Filter::bind(
+                $rows->schema(),
+                ref('x')->notEquals(lit(0))->and(lit(10)->divide(ref('x'))->greaterThan(lit(1))),
+            )
+                ->filter($rows, flow_context(config())->backend())
+                ->toArray(),
+        );
+    }
+
+    public function test_a_conjunct_drops_a_null_row_as_it_drops_a_false_one(): void
+    {
+        $rows = array_to_rows(
+            [['a' => 1, 'b' => 5], ['a' => null, 'b' => 5], ['a' => 3, 'b' => 0], ['a' => 3, 'b' => 5]],
+            schema(int_schema('a', nullable: true), int_schema('b')),
+        );
+
+        static::assertSame(
+            [['a' => 3, 'b' => 5]],
+            Filter::bind($rows->schema(), ref('a')->greaterThan(lit(1))->and(ref('b')->greaterThan(lit(1))))
+                ->filter($rows, flow_context(config())->backend())
+                ->toArray(),
+        );
+    }
+
+    public function test_a_row_a_conjunct_leaves_null_is_dropped_before_the_next_conjunct_evaluates_it(): void
+    {
+        $rows = array_to_rows(
+            [['a' => null, 'b' => 0], ['a' => 1, 'b' => 2]],
+            schema(int_schema('a', nullable: true), int_schema('b')),
+        );
+
+        static::assertSame(
+            [['a' => 1, 'b' => 2]],
+            Filter::bind(
+                $rows->schema(),
+                ref('a')->greaterThan(lit(0))->and(lit(10)->divide(ref('b'))->greaterThan(lit(1))),
+            )
+                ->filter($rows, flow_context(config())->backend())
+                ->toArray(),
+        );
+    }
+
+    public function test_a_conjunct_returning_no_boolean_inside_a_conjunction_keeps_its_truthy_rows(): void
+    {
+        $rows = array_to_rows([['a' => 0], ['a' => 2], ['a' => 3]], schema(int_schema('a')));
+
+        static::assertSame(
+            [['a' => 2], ['a' => 3]],
+            Filter::bind($rows->schema(), ref('a')->greaterThanEqual(lit(0))->and(ref('a')))
+                ->filter($rows, flow_context(config())->backend())
+                ->toArray(),
+        );
+    }
+
+    public function test_a_nested_conjunction_binds_as_its_flat_conjuncts(): void
+    {
+        $schema = schema(int_schema('a'));
+        $a = ref('a')->greaterThan(lit(0));
+        $b = ref('a')->lessThan(lit(9));
+        $c = ref('a')->notEquals(lit(5));
+
+        static::assertEquals(
+            Filter::bind($schema, $a, $b, $c)->describe(),
+            Filter::bind($schema, $a->and($b->and($c)))->describe(),
+        );
+    }
+
     public function test_a_reference_the_schema_lacks_is_refused(): void
     {
         $this->expectException(SchemaDefinitionNotFoundException::class);

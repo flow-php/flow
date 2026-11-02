@@ -124,6 +124,16 @@ final class ReadTest extends FlowTestCase
         (new Read(from_array([['id' => 1]])))->withPathFilter(new RejectingFilter());
     }
 
+    public function test_pushed_columns_are_refused_for_an_extractor_that_is_no_file_extractor(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'Only a FileExtractor reads a pushed filter, Flow\ETL\IO\Extractor\ArrayExtractor does not',
+        );
+
+        (new Read(from_array([['id' => 1]])))->withColumns('id');
+    }
+
     public function test_schema_delegates_to_the_extractor(): void
     {
         static::assertEquals(

@@ -32,8 +32,9 @@ final readonly class ReadPlanConverter implements FilterVisitor
      * Called by name from arrow-ext RustBatchReader::__construct() and RustColumnsReader::__construct(), pinned by
      * phpt 055.
      *
-     * @return array{selectors: list<array{0: int, 1: bool}>, filter?: array<string, mixed>, limit: ?int, offset: int}
-     *         file-absolute selectors (row count, skip), the row filter's tree and the limit and offset counted after it
+     * @return array{selectors: list<array{0: int, 1: bool}>, matched: list<array{0: int, 1: bool}>, filter?: array<string, mixed>, limit: ?int, offset: int}
+     *         file-absolute selectors (row count, skip) of the rows read and of the rows proven to match, the row filter's
+     *         tree and the limit and offset counted after it
      */
     public static function toExtension(ReadPlan $plan): array
     {
@@ -42,6 +43,10 @@ final readonly class ReadPlanConverter implements FilterVisitor
                 $selector->rowCount,
                 $selector->skip,
             ], $plan->selection->selectors()),
+            'matched' => array_map(static fn($selector): array => [
+                $selector->rowCount,
+                $selector->skip,
+            ], $plan->matched->selectors()),
         ];
 
         if ($plan->rowFilter !== null) {

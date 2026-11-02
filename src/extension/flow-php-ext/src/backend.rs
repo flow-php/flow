@@ -33,9 +33,13 @@ use crate::ctx::{
 };
 use crate::exception::ext_exception;
 use crate::frame::{string_of, FrameBody, PhpCodec};
+use crate::group_table::RustGroupTable;
+use crate::grouped_counts::RustGroupedCounts;
+use crate::grouped_totals::RustGroupedTotals;
 use crate::interfaces::{backend_ce, describable_ce};
 use crate::plan::{physical_for_definition, type_plan, TypePlan};
 use crate::render::{decode_exception, encode_exception, floe_exception, frame_exception, invalid_argument};
+use crate::sort::native_sort;
 
 const COLUMN_MISMATCH: &str = "Flow\\ETL\\Foundation\\Exception\\ColumnMismatchException";
 const DESCRIPTION: &str = "Flow\\ETL\\Foundation\\Describe\\Description";
@@ -217,6 +221,32 @@ impl RustBackend {
                 &mut [left.shallow_clone(), right.shallow_clone()],
             )?),
         }
+    }
+
+    pub fn sort(&self, rows: &Zval, columns: &Zval) -> PhpResult<RowsValue> {
+        match native_sort(rows, columns)? {
+            Some(sorted) => Ok(RowsValue(sorted)),
+            None => Ok(RowsValue(call_method(
+                &instance(PHP_BACKEND)?,
+                "sort",
+                &mut [rows.shallow_clone(), columns.shallow_clone()],
+            )?)),
+        }
+    }
+
+    #[php(name = "groupedTotals")]
+    pub fn grouped_totals(&self) -> RustGroupedTotals {
+        RustGroupedTotals::default()
+    }
+
+    #[php(name = "groupedCounts")]
+    pub fn grouped_counts(&self) -> RustGroupedCounts {
+        RustGroupedCounts::default()
+    }
+
+    #[php(name = "groupTable")]
+    pub fn group_table(&self, columns: &ZendHashTable, declared: &Zval) -> PhpResult<RustGroupTable> {
+        RustGroupTable::new(columns, declared)
     }
 
     #[php(name = "isNull")]
@@ -412,13 +442,13 @@ impl Adoption {
 }
 
 /// What `Rows::fromColumns()` left instead of rows: the exception it threw, or why it could not be called.
-enum NoRows {
+pub enum NoRows {
     Thrown(ZBox<ZendObject>),
     Unreachable(PhpException),
 }
 
 impl NoRows {
-    fn surfaced(self) -> PhpException {
+    pub fn surfaced(self) -> PhpException {
         match self {
             NoRows::Thrown(mut exception) => transparent_exception(&mut exception),
             NoRows::Unreachable(e) => e,
@@ -427,7 +457,7 @@ impl NoRows {
 }
 
 /// `Rows::fromColumns($schema, $columns, $count)`.
-fn rows_from_columns(schema: &Zval, columns: ZBox<ZendHashTable>, count: usize) -> Result<Zval, NoRows> {
+pub fn rows_from_columns(schema: &Zval, columns: ZBox<ZendHashTable>, count: usize) -> Result<Zval, NoRows> {
     let mut columns_zv = Zval::new();
     columns_zv.set_hashtable(columns);
     let from_columns = find_class(ROWS)

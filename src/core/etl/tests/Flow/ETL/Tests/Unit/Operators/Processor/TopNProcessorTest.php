@@ -309,10 +309,13 @@ final class TopNProcessorTest extends FlowTestCase
                 2,
                 new MemorySortConfig(),
                 new NativePHPRandomValueGenerator(),
-            ))->top(array_to_rows(
-                [['score' => 3, 'name' => 'c'], ['score' => 9, 'name' => 'a'], ['score' => 7, 'name' => 'b']],
-                schema(int_schema('score'), str_schema('name')),
-            ))->toArray(),
+            ))->top(
+                array_to_rows(
+                    [['score' => 3, 'name' => 'c'], ['score' => 9, 'name' => 'a'], ['score' => 7, 'name' => 'b']],
+                    schema(int_schema('score'), str_schema('name')),
+                ),
+                flow_context()->backend(),
+            )->toArray(),
         );
     }
 

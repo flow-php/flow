@@ -20,7 +20,7 @@ use SensitiveParameter;
 final class PartialAggregate implements AggregatingFunction
 {
     public function __construct(
-        private readonly AggregatingFunction $aggregate,
+        public readonly AggregatingFunction $aggregate,
     ) {}
 
     public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static

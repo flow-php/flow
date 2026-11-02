@@ -23,14 +23,19 @@ use Flow\ETL\Values\Column\Php\ColumnDecoder;
 use Flow\ETL\Values\Column\Php\ConstantColumn;
 use Flow\ETL\Values\Column\Php\ListColumn;
 use Flow\ETL\Values\Column\Php\MapColumn;
+use Flow\ETL\Values\Column\Php\PhpGroupedCounts;
+use Flow\ETL\Values\Column\Php\PhpGroupedTotals;
 use Flow\ETL\Values\Column\Php\ScalarColumn;
 use Flow\ETL\Values\Column\Php\StructColumn;
 use Flow\ETL\Values\Column\Physical\PhysicalFor;
+use Flow\ETL\Values\Grouping\GroupTable;
+use Flow\ETL\Values\Grouping\PhpGroupTable;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
 use Flow\ETL\Values\Schema\Definition;
 use Flow\ETL\Values\Schema\Definition\NullDefinition;
 use Flow\ETL\Values\Schema\Definitions;
+use Flow\ETL\Values\Sort\RowOrder;
 use Flow\Types\Type\Comparison\Operator;
 use Flow\Types\Type\Native\IntegerType;
 use SensitiveParameter;
@@ -368,48 +373,24 @@ final readonly class PhpBackend implements Backend, Describable
             }
         }
 
-        $builder = $this->builder(Definitions::of('value', type_boolean(), true));
-        $builder->appendPhysicals($results, count(array_keys($results, null, true)));
+        $definition = Definitions::of('value', type_boolean(), true);
 
-        return $builder->finish();
+        return new ScalarColumn(
+            $definition->type(),
+            (new PhysicalFor())->definition($definition),
+            $results,
+            count(array_keys($results, null, true)),
+        );
     }
 
     public function isNull(Column $column): Column
     {
-        if ($column->nullCount() === 0) {
-            return $this->constant(Definitions::of('value', type_boolean(), true), false, $column->count());
-        }
-
-        $results = [];
-
-        // @mago-ignore analysis:mixed-assignment
-        foreach ($column->physicals() as $physical) {
-            $results[] = $physical === null;
-        }
-
-        $builder = $this->builder(Definitions::of('value', type_boolean(), true));
-        $builder->appendPhysicals($results, 0);
-
-        return $builder->finish();
+        return $this->nullTest($column, true);
     }
 
     public function isNotNull(Column $column): Column
     {
-        if ($column->nullCount() === 0) {
-            return $this->constant(Definitions::of('value', type_boolean(), true), true, $column->count());
-        }
-
-        $results = [];
-
-        // @mago-ignore analysis:mixed-assignment
-        foreach ($column->physicals() as $physical) {
-            $results[] = $physical !== null;
-        }
-
-        $builder = $this->builder(Definitions::of('value', type_boolean(), true));
-        $builder->appendPhysicals($results, 0);
-
-        return $builder->finish();
+        return $this->nullTest($column, false);
     }
 
     public function add(Column $left, Column $right): Column
@@ -440,16 +421,7 @@ final readonly class PhpBackend implements Backend, Describable
             throw EvaluationException::at($i, $e);
         }
 
-        $builder = $this->builder(Definitions::of(
-            'value',
-            type_bare($left->type()) instanceof IntegerType && type_bare($right->type()) instanceof IntegerType
-                ? type_integer()
-                : type_float(),
-            true,
-        ));
-        $builder->appendPhysicals($results, 0);
-
-        return $builder->finish();
+        return $this->arithmeticResult($left, $right, $results);
     }
 
     public function subtract(Column $left, Column $right): Column
@@ -480,16 +452,7 @@ final readonly class PhpBackend implements Backend, Describable
             throw EvaluationException::at($i, $e);
         }
 
-        $builder = $this->builder(Definitions::of(
-            'value',
-            type_bare($left->type()) instanceof IntegerType && type_bare($right->type()) instanceof IntegerType
-                ? type_integer()
-                : type_float(),
-            true,
-        ));
-        $builder->appendPhysicals($results, 0);
-
-        return $builder->finish();
+        return $this->arithmeticResult($left, $right, $results);
     }
 
     public function multiply(Column $left, Column $right): Column
@@ -520,16 +483,7 @@ final readonly class PhpBackend implements Backend, Describable
             throw EvaluationException::at($i, $e);
         }
 
-        $builder = $this->builder(Definitions::of(
-            'value',
-            type_bare($left->type()) instanceof IntegerType && type_bare($right->type()) instanceof IntegerType
-                ? type_integer()
-                : type_float(),
-            true,
-        ));
-        $builder->appendPhysicals($results, 0);
-
-        return $builder->finish();
+        return $this->arithmeticResult($left, $right, $results);
     }
 
     public function modulo(Column $left, Column $right): Column
@@ -553,16 +507,45 @@ final readonly class PhpBackend implements Backend, Describable
                     throw new InvalidArgumentException('Mod function cannot perform modulo by zero');
                 }
 
-                $results[] = $calculator->modulus($leftValue, $rightValue);
+                if ($rightValue < 0) {
+                    $results[] = $calculator->modulus($leftValue, $rightValue);
+
+                    continue;
+                }
+
+                // Calculator::modulus's int path inlined: the method call costs as much as the arithmetic
+                $remainder = $leftValue % $rightValue;
+                $results[] = $remainder < 0 ? $remainder + $rightValue : $remainder;
             }
         } catch (Exception $e) {
             throw EvaluationException::at($i, $e);
         }
 
-        $builder = $this->builder(Definitions::of('value', type_integer(), true));
-        $builder->appendPhysicals($results, 0);
+        $definition = Definitions::of('value', type_integer(), true);
 
-        return $builder->finish();
+        return new ScalarColumn($definition->type(), (new PhysicalFor())->definition($definition), $results, 0);
+    }
+
+    public function sort(Rows $rows, array $columns): Rows
+    {
+        $order = new RowOrder($columns);
+
+        return $rows->gather($order->permutation($order->keys($rows), $rows->count()));
+    }
+
+    public function groupedTotals(): GroupedTotals
+    {
+        return new PhpGroupedTotals();
+    }
+
+    public function groupedCounts(): GroupedCounts
+    {
+        return new PhpGroupedCounts();
+    }
+
+    public function groupTable(array $columns, Schema $declared): GroupTable
+    {
+        return new PhpGroupTable($columns, $declared);
     }
 
     public function adopt(Definition $definition, Column $column): Column
@@ -593,5 +576,39 @@ final readonly class PhpBackend implements Backend, Describable
     public function allocatedBytes(): int
     {
         return 0;
+    }
+
+    /**
+     * @param list<mixed> $results
+     */
+    private function arithmeticResult(Column $left, Column $right, array $results): Column
+    {
+        $definition = Definitions::of(
+            'value',
+            type_bare($left->type()) instanceof IntegerType && type_bare($right->type()) instanceof IntegerType
+                ? type_integer()
+                : type_float(),
+            true,
+        );
+
+        return new ScalarColumn($definition->type(), (new PhysicalFor())->definition($definition), $results, 0);
+    }
+
+    private function nullTest(Column $column, bool $isNull): Column
+    {
+        if ($column->nullCount() === 0) {
+            return $this->constant(Definitions::of('value', type_boolean(), true), !$isNull, $column->count());
+        }
+
+        $results = [];
+
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($column->physicals() as $physical) {
+            $results[] = ($physical === null) === $isNull;
+        }
+
+        $definition = Definitions::of('value', type_boolean(), true);
+
+        return new ScalarColumn($definition->type(), (new PhysicalFor())->definition($definition), $results, 0);
     }
 }

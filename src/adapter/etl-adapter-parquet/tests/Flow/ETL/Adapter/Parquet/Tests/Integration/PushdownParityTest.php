@@ -414,6 +414,63 @@ final class PushdownParityTest extends FlowTestCase
     }
 
     /**
+     * @return Generator<string, array{?ParquetEngine, int<0, max>, ?int}>
+     */
+    public static function windows_beside_a_partition_only_filter(): Generator
+    {
+        foreach (self::engines() as $engine => [$parquetEngine]) {
+            yield "{$engine}, an offset" => [$parquetEngine, 3, null];
+            yield "{$engine}, an offset and a limit" => [$parquetEngine, 3, 2];
+            yield "{$engine}, an offset past the first file" => [$parquetEngine, 11, null];
+        }
+    }
+
+    /**
+     * @param int<0, max> $offset
+     */
+    #[DataProvider('windows_beside_a_partition_only_filter')]
+    public function test_a_window_beside_a_partition_only_filter_returns_what_the_unpushed_read_returns(
+        ?ParquetEngine $engine,
+        int $offset,
+        ?int $limit,
+    ): void {
+        $memory = memory_filesystem();
+        ParquetFilesContext::rowGroups($memory, 'memory://part/year=2023/a.parquet', 9, 3);
+        ParquetFilesContext::rowGroups($memory, 'memory://part/year=2024/b.parquet', 9, 3);
+        ParquetFilesContext::rowGroups($memory, 'memory://part/year=2025/c.parquet', 9, 3);
+        $read = static fn(): ParquetExtractor => from_parquet(
+            path('memory://part/**/*.parquet'),
+            engine: $engine,
+            filesystem: $memory,
+        );
+        $unpushed = df(config_builder()->optimizer(Optimizer::default()->without(PushFilterIntoSource::class)));
+        $filter = ref('year')->notEquals(lit('2024'));
+
+        static::assertSame(
+            $unpushed
+                ->read($read())
+                ->filter($filter)
+                ->offset($offset)
+                ->limit($limit)
+                ->select('id', 'year')
+                ->fetch()
+                ->toArray(),
+            df()
+                ->read($read())
+                ->filter($filter)
+                ->offset($offset)
+                ->limit($limit)
+                ->select('id', 'year')
+                ->fetch()
+                ->toArray(),
+        );
+        static::assertSame(
+            $unpushed->read($read())->filter($filter)->offset($offset)->count(),
+            df()->read($read())->filter($filter)->offset($offset)->count(),
+        );
+    }
+
+    /**
      * @return Generator<string, array{ScalarFunction, list<array{id: int, year: ?string}>}>
      */
     public static function partition_filters_on_a_mixed_depth_glob(): Generator

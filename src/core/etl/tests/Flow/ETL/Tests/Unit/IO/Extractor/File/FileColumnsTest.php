@@ -123,6 +123,16 @@ final class FileColumnsTest extends FlowTestCase
         );
     }
 
+    public function test_partitions_of_a_declared_schema_with_metadata_columns_add_the_file_uri_once(): void
+    {
+        $fileColumns = FileColumnsContext::discovering(metadataColumns: true);
+
+        static::assertSame(
+            ['year'],
+            $fileColumns->partitions($fileColumns->declare(schema(str_schema('name'))))->names(),
+        );
+    }
+
     public function test_declare_appends_the_metadata_column_then_the_partition_block(): void
     {
         static::assertSame(

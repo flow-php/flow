@@ -1,5 +1,6 @@
 //! Decodes only the row groups and byte ranges a read plan selects.
 
+use std::collections::VecDeque;
 use std::ops::Range;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
@@ -35,6 +36,8 @@ pub struct ReadPlan {
     pub limit: Option<usize>,
     /// The matches skipped before any row is returned.
     pub offset: usize,
+    /// Per entry of `selections`: every selected row of the group is proven to match, so the filter is not evaluated.
+    pub proven: Vec<bool>,
 }
 
 impl ReadPlan {
@@ -101,6 +104,7 @@ impl ReadPlan {
         }
 
         Ok(Self {
+            proven: vec![false; selections.len()],
             selections,
             filter,
             limit,
@@ -108,9 +112,68 @@ impl ReadPlan {
         })
     }
 
+    pub fn proven_by(
+        &self,
+        meta: &ParquetMetaData,
+        selected: &[(usize, bool)],
+        matched: &[(usize, bool)],
+    ) -> Vec<bool> {
+        let unmatched = groups_with_unmatched_rows(meta, selected, matched);
+
+        self.selections
+            .iter()
+            .map(|selection| !unmatched[selection.row_group_index()])
+            .collect()
+    }
+
     pub fn row_groups(&self) -> Vec<usize> {
         self.selections.iter().map(RowGroupSelection::row_group_index).collect()
     }
+}
+
+fn groups_with_unmatched_rows(
+    meta: &ParquetMetaData,
+    selected: &[(usize, bool)],
+    matched: &[(usize, bool)],
+) -> Vec<bool> {
+    let ends = meta
+        .row_groups()
+        .iter()
+        .scan(0usize, |end, group| {
+            *end += group.num_rows() as usize;
+            Some(*end)
+        })
+        .collect::<Vec<_>>();
+    let mut unmatched = vec![false; ends.len()];
+    let mut selected = selected.iter().copied().filter(|(count, _)| *count > 0);
+    let mut matched = matched.iter().copied().filter(|(count, _)| *count > 0);
+    let (mut current, mut proof) = (selected.next(), matched.next());
+    let mut start = 0;
+
+    while let Some((count, skip)) = current {
+        let (proof_count, proof_skip) = proof.unwrap_or((count, true));
+        let step = count.min(proof_count);
+
+        if !skip && proof_skip {
+            let first = ends.partition_point(|end| *end <= start);
+            let last = ends.partition_point(|end| *end < start + step);
+            unmatched[first..=last.min(ends.len() - 1)]
+                .iter_mut()
+                .for_each(|group| *group = true);
+        }
+
+        start += step;
+        current = (count > step)
+            .then_some((count - step, skip))
+            .or_else(|| selected.next());
+        proof = match proof {
+            Some((proof_count, proof_skip)) if proof_count > step => Some((proof_count - step, proof_skip)),
+            Some(_) => matched.next(),
+            None => None,
+        };
+    }
+
+    unmatched
 }
 
 /// A projected column: a root name, or a path through structs ("structure.int64") - the root first, then the child
@@ -153,9 +216,20 @@ impl Projected {
 }
 
 pub struct ParquetReader {
-    decoder: ParquetPushDecoder,
+    runs: VecDeque<(Vec<RowGroupSelection>, bool)>,
+    decoder: Option<ParquetPushDecoder>,
     group: Option<ParquetRecordBatchReader>,
+    meta: ArrowReaderMetadata,
+    mask: ProjectionMask,
+    batch_size: usize,
+    schema: SchemaRef,
+    filter: Option<Raw>,
     offset: usize,
+    unskipped: usize,
+    limit: Option<usize>,
+    returned: usize,
+    /// `matched` when the current filtered run started, so its skipped matches can be counted when it ends.
+    matched_before_run: Option<usize>,
     matched: Arc<AtomicUsize>,
     source: Arc<dyn ReadAt + Send + Sync>,
     /// Each column's field as the file stores it, named as it was asked for.
@@ -197,20 +271,13 @@ impl ParquetReader {
             .collect::<Result<Vec<_>, _>>()?;
 
         let descr = meta.file_metadata().schema_descr();
-        let matched = Arc::new(AtomicUsize::new(0));
-        let mut predicates = match &plan.filter {
-            Some(filter) => PlanPredicate::conjuncts(filter, &schema, descr)?,
+        let predicated = match &plan.filter {
+            Some(filter) => PlanPredicate::conjuncts(filter, &schema, descr)?
+                .iter()
+                .flat_map(|predicate| predicate.leaves().iter().copied())
+                .collect::<Vec<_>>(),
             None => Vec::new(),
         };
-
-        if let Some(last) = predicates.pop() {
-            predicates.push(last.counting(Arc::clone(&matched)));
-        }
-
-        let predicated = predicates
-            .iter()
-            .flat_map(|predicate| predicate.leaves().iter().copied())
-            .collect::<Vec<_>>();
 
         if let Some(codec) = unsupported_codec(meta, &plan.row_groups(), &projected, &predicated) {
             return Err(codec);
@@ -223,37 +290,23 @@ impl ParquetReader {
             .collect::<Vec<_>>();
         let meta = ArrowReaderMetadata::try_new(with_offset_index(source.as_ref(), meta, &plan, &fetched)?, options)?;
         let mask = ProjectionMask::leaves(meta.metadata().file_metadata().schema_descr(), leaves);
-        let mut builder = ParquetPushDecoderBuilder::new_with_metadata(meta)
-            .with_row_group_selections(plan.selections)
-            .with_projection(mask)
-            .with_batch_size(batch_size)
-            .with_max_predicate_cache_size(0);
-
-        if !predicates.is_empty() {
-            builder = builder.with_row_filter(RowFilter::new(
-                predicates
-                    .into_iter()
-                    .map(|predicate| Box::new(predicate) as Box<dyn ArrowPredicate>)
-                    .collect(),
-            ));
-        }
-
-        if let Some(limit) = plan.limit {
-            builder = builder.with_limit(limit);
-        }
-
-        if plan.offset > 0 {
-            builder = builder.with_offset(plan.offset);
-        }
-
-        let decoder = builder.build()?;
         let positions = positions(&schema, &projected)?;
 
         Ok(Self {
-            decoder,
+            runs: runs(plan.selections, plan.proven),
+            decoder: None,
             group: None,
+            meta,
+            mask,
+            batch_size,
+            schema,
+            filter: plan.filter,
             offset: plan.offset,
-            matched,
+            unskipped: plan.offset,
+            limit: plan.limit,
+            returned: 0,
+            matched_before_run: None,
+            matched: Arc::new(AtomicUsize::new(0)),
             source,
             fields,
             types,
@@ -283,23 +336,33 @@ impl ParquetReader {
                 None => {}
             }
 
-            match self.decoder.try_next_reader() {
+            let Some(decoder) = self.decoder.as_mut() else {
+                match self.start_run() {
+                    Ok(true) => continue,
+                    Ok(false) => return None,
+                    Err(error) => return Some(Err(error)),
+                }
+            };
+
+            match decoder.try_next_reader() {
                 Ok(DecodeResult::NeedsData(ranges)) => {
                     if let Err(error) = read_coalesced(self.source.as_ref(), ranges)
-                        .and_then(|(ranges, bytes)| Ok(self.decoder.push_ranges(ranges, bytes)?))
+                        .and_then(|(ranges, bytes)| Ok(decoder.push_ranges(ranges, bytes)?))
                     {
                         return Some(Err(error));
                     }
                 }
                 Ok(DecodeResult::Data(reader)) => {
                     // pushed reads are coalesced, which PushBuffers never releases on its own
-                    self.decoder.clear_all_ranges();
+                    decoder.clear_all_ranges();
                     self.group = Some(reader);
                 }
-                Ok(DecodeResult::Finished) => return None,
+                Ok(DecodeResult::Finished) => self.finish_run(),
                 Err(error) => return Some(Err(error.into())),
             }
         };
+
+        self.returned += batch.num_rows();
 
         Some(
             self.fields
@@ -310,6 +373,110 @@ impl ParquetReader {
                 .map(|columns| (batch.num_rows(), columns)),
         )
     }
+
+    fn start_run(&mut self) -> Result<bool, Error> {
+        let remaining_limit = self.limit.map(|limit| limit.saturating_sub(self.returned));
+
+        if remaining_limit == Some(0) {
+            return Ok(false);
+        }
+
+        let Some((selections, proven)) = self.runs.pop_front() else {
+            return Ok(false);
+        };
+
+        let mut builder = ParquetPushDecoderBuilder::new_with_metadata(self.meta.clone())
+            .with_row_group_selections(selections.clone())
+            .with_projection(self.mask.clone())
+            .with_batch_size(self.batch_size)
+            .with_max_predicate_cache_size(0);
+        let offset = if proven || self.filter.is_none() {
+            // every selected row of an unfiltered run matches, so it counts its matches and consumes the offset upfront
+            let rows = selected_rows(self.meta.metadata(), &selections);
+            self.matched.fetch_add(rows, Ordering::Relaxed);
+            let skipped = self.unskipped.min(rows);
+            self.unskipped -= skipped;
+
+            skipped
+        } else {
+            if let Some(filter) = &self.filter {
+                builder = builder.with_row_filter(row_filter(
+                    filter,
+                    &self.schema,
+                    self.meta.metadata().file_metadata().schema_descr(),
+                    &self.matched,
+                )?);
+            }
+
+            self.matched_before_run = Some(self.matched.load(Ordering::Relaxed));
+            self.unskipped
+        };
+
+        if offset > 0 {
+            builder = builder.with_offset(offset);
+        }
+
+        if let Some(limit) = remaining_limit {
+            builder = builder.with_limit(limit);
+        }
+
+        self.decoder = Some(builder.build()?);
+
+        Ok(true)
+    }
+
+    fn finish_run(&mut self) {
+        self.decoder = None;
+
+        if let Some(before) = self.matched_before_run.take() {
+            let matches = self.matched.load(Ordering::Relaxed) - before;
+            self.unskipped -= self.unskipped.min(matches);
+        }
+    }
+}
+
+fn runs(selections: Vec<RowGroupSelection>, proven: Vec<bool>) -> VecDeque<(Vec<RowGroupSelection>, bool)> {
+    let mut runs: VecDeque<(Vec<RowGroupSelection>, bool)> = VecDeque::new();
+
+    for (selection, proven) in selections.into_iter().zip(proven) {
+        match runs.back_mut() {
+            Some((run, run_proven)) if *run_proven == proven => run.push(selection),
+            _ => runs.push_back((vec![selection], proven)),
+        }
+    }
+
+    runs
+}
+
+fn selected_rows(meta: &ParquetMetaData, selections: &[RowGroupSelection]) -> usize {
+    selections
+        .iter()
+        .map(|selection| match selection.selection() {
+            Some(rows) => rows.row_count(),
+            None => meta.row_group(selection.row_group_index()).num_rows() as usize,
+        })
+        .sum()
+}
+
+/// The plan's conjuncts as one RowFilter, the last counting the matches into `matched`.
+fn row_filter(
+    filter: &Raw,
+    schema: &Schema,
+    descr: &SchemaDescriptor,
+    matched: &Arc<AtomicUsize>,
+) -> Result<RowFilter, Error> {
+    let mut predicates = PlanPredicate::conjuncts(filter, schema, descr)?;
+
+    if let Some(last) = predicates.pop() {
+        predicates.push(last.counting(Arc::clone(matched)));
+    }
+
+    Ok(RowFilter::new(
+        predicates
+            .into_iter()
+            .map(|predicate| Box::new(predicate) as Box<dyn ArrowPredicate>)
+            .collect(),
+    ))
 }
 
 fn read_coalesced(source: &dyn ReadAt, ranges: Vec<Range<u64>>) -> Result<(Vec<Range<u64>>, Vec<bytes::Bytes>), Error> {
@@ -324,16 +491,14 @@ fn read_coalesced(source: &dyn ReadAt, ranges: Vec<Range<u64>>) -> Result<(Vec<R
 
 /// The bytes of `ranges`, read adjacent runs at a time and handed back per range asked.
 fn read_ranges(source: &dyn ReadAt, ranges: Vec<Range<u64>>) -> Result<(Vec<Range<u64>>, Vec<bytes::Bytes>), Error> {
-    let reads = coalesced(ranges.clone())
-        .into_iter()
-        .map(|read| Ok((read.start, exact(source, read.start, (read.end - read.start) as usize)?)))
-        .collect::<Result<Vec<_>, Error>>()?;
+    let (reads, read) = read_coalesced(source, ranges.clone())?;
     let bytes = ranges
         .iter()
         .map(|range| {
-            let (start, bytes) = &reads[reads.partition_point(|(start, _)| *start <= range.start) - 1];
+            let index = reads.partition_point(|read| read.start <= range.start) - 1;
+            let start = reads[index].start;
 
-            bytes.slice((range.start - start) as usize..(range.end - start) as usize)
+            read[index].slice((range.start - start) as usize..(range.end - start) as usize)
         })
         .collect();
 
@@ -600,7 +765,10 @@ mod tests {
     use parquet::schema::parser::parse_message_type;
     use parquet::schema::types::SchemaDescriptor;
 
-    use super::{canonical_hint, coalesced, unsupported_codec, ParquetReader, Projected, ReadPlan};
+    use super::{
+        canonical_hint, coalesced, groups_with_unmatched_rows, runs, unsupported_codec, ParquetReader, Projected,
+        ReadPlan,
+    };
     use crate::parquet::error::Error;
     use crate::parquet::filter::Raw;
     use crate::parquet::footer::Footer;
@@ -628,6 +796,62 @@ mod tests {
         ParquetMetaDataReader::new()
             .parse_and_finish(&Bytes::from(file))
             .unwrap()
+    }
+
+    #[test]
+    fn a_group_is_unmatched_when_a_selected_row_of_it_is_not_matched() {
+        let all = vec![(300, false)];
+
+        assert_eq!(
+            groups_with_unmatched_rows(&three_groups(), &all, &[(100, true), (100, false), (100, true)]),
+            [true, false, true]
+        );
+        assert_eq!(
+            groups_with_unmatched_rows(&three_groups(), &all, &[(150, false), (150, true)]),
+            [false, true, true]
+        );
+        assert_eq!(
+            groups_with_unmatched_rows(&three_groups(), &all, &[(300, false)]),
+            [false, false, false]
+        );
+    }
+
+    #[test]
+    fn rows_the_selection_skips_do_not_need_a_match() {
+        let selected = vec![(100, false), (20, true), (80, false), (100, true)];
+
+        assert_eq!(
+            groups_with_unmatched_rows(
+                &three_groups(),
+                &selected,
+                &[(100, true), (20, true), (80, false), (100, true)]
+            ),
+            [true, false, false]
+        );
+    }
+
+    #[test]
+    fn selected_rows_past_the_matched_selectors_are_unmatched() {
+        assert_eq!(
+            groups_with_unmatched_rows(&three_groups(), &[(300, false)], &[(100, false)]),
+            [false, true, true]
+        );
+    }
+
+    #[test]
+    fn runs_split_where_the_proof_changes_and_keep_the_file_order() {
+        let selections = (0..4).map(|index| RowGroupSelection::new(index, None)).collect();
+        let runs = runs(selections, vec![true, true, false, true]);
+
+        assert_eq!(
+            runs.iter()
+                .map(|(run, proven)| (
+                    run.iter().map(RowGroupSelection::row_group_index).collect::<Vec<_>>(),
+                    *proven
+                ))
+                .collect::<Vec<_>>(),
+            [(vec![0, 1], true), (vec![2], false), (vec![3], true)]
+        );
     }
 
     #[test]

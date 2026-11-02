@@ -18,9 +18,6 @@ use Flow\Parquet\ParquetFileWriter;
 use Flow\Parquet\Reader\ReadPlan;
 use Iterator;
 
-/**
- * Reads through PhpParquetEngine and records, per readColumns() call, the row groups its ReadPlan selects rows from.
- */
 final class ReadPlanRecordingParquetEngine implements ParquetEngine
 {
     /**
@@ -67,20 +64,32 @@ final class ReadPlanRecordingParquetEngine implements ParquetEngine
 
             public function readColumns(array $columns, int $batchSize, ReadPlan $plan): Iterator
             {
-                $first = 0;
-                $selected = 0;
-
-                foreach ($this->reader->footer()->metadata()->rowGroups()->all() as $group) {
-                    $this->engine->rowGroups++;
-                    $selected += $plan->selection->slice($first, $group->rowsCount())->rowCount() > 0 ? 1 : 0;
-                    $first += $group->rowsCount();
-                }
-
-                $this->engine->selectedRowGroups[] = $selected;
+                $this->engine->record($this->reader->footer(), $plan);
 
                 return $this->reader->readColumns($columns, $batchSize, $plan);
             }
+
+            public function readStoredColumns(array $columns, int $batchSize, ReadPlan $plan): Iterator
+            {
+                $this->engine->record($this->reader->footer(), $plan);
+
+                return $this->reader->readStoredColumns($columns, $batchSize, $plan);
+            }
         };
+    }
+
+    public function record(Footer $footer, ReadPlan $plan): void
+    {
+        $first = 0;
+        $selected = 0;
+
+        foreach ($footer->metadata()->rowGroups()->all() as $group) {
+            $this->rowGroups++;
+            $selected += $plan->selection->slice($first, $group->rowsCount())->rowCount() > 0 ? 1 : 0;
+            $first += $group->rowsCount();
+        }
+
+        $this->selectedRowGroups[] = $selected;
     }
 
     public function openForWrite(

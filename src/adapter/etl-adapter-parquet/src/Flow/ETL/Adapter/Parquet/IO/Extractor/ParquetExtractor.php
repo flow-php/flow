@@ -9,6 +9,7 @@ use Flow\ETL\Adapter\Parquet\Values\Schema\SchemaConverter;
 use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Functions\ReferencedColumns;
 use Flow\ETL\Functions\ScalarFunction;
 use Flow\ETL\IO\Extractor;
 use Flow\ETL\IO\Extractor\BatchableExtractor;
@@ -40,6 +41,7 @@ use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
 use Generator;
 
+use function array_intersect;
 use function array_values;
 use function sprintf;
 
@@ -130,6 +132,23 @@ final class ParquetExtractor implements
     {
         // a pending schema pass runs first and keeps the first file open; this scan reads on from it, and only this one
         $target = $this->schema();
+
+        // a column left out of the pushed ones then fails as missing, not as silent nulls
+        if ($criteria->columns !== null) {
+            $referenced = new ReferencedColumns();
+            $conjunctColumns = [];
+
+            // a conjunct a file cannot answer exactly is evaluated on rows, so the read keeps its columns
+            foreach ($criteria->conjuncts as $conjunct) {
+                $conjunctColumns = [...$conjunctColumns, ...$referenced->in($conjunct)->names()];
+            }
+
+            $target = $target->keep(...array_intersect($target->names(), [
+                ...$criteria->columns,
+                ...$conjunctColumns,
+                ...$this->fileColumns->columns()->tail(),
+            ]));
+        }
         $reader = new FileSplitReader(
             new FileRead($this->files, $this->fileColumns->columns(), $target, $this->batchSize()),
             new ParquetFileBatches(

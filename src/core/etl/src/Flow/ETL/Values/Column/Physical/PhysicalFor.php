@@ -70,13 +70,14 @@ use Flow\Types\Type\Native\NullType;
 use Flow\Types\Type\Native\StringType;
 use UnitEnum;
 
+use function array_count_values;
 use function array_key_exists;
+use function array_keys;
+use function array_map;
 use function Flow\Types\DSL\type_bare;
+use function gettype;
 use function in_array;
 use function is_array;
-use function is_bool;
-use function is_float;
-use function is_int;
 use function is_string;
 use function sprintf;
 use function strlen;
@@ -335,9 +336,9 @@ final readonly class PhysicalFor
             $base instanceof DateTimeType,
             $base instanceof DateType,
             $base instanceof TimeType,
-                => 'int',
-            $base instanceof FloatType => 'float',
-            $base instanceof BooleanType => 'bool',
+                => 'integer',
+            $base instanceof FloatType => 'double',
+            $base instanceof BooleanType => 'boolean',
             $base instanceof ListType,
             $base instanceof MapType,
             $base instanceof StructureType,
@@ -346,20 +347,12 @@ final readonly class PhysicalFor
             default => 'string',
         };
 
-        // @mago-ignore analysis:mixed-assignment
-        foreach ($physicals as $physical) {
-            if (
-                $physical !== null
-                && !match ($kind) {
-                    'int' => is_int($physical),
-                    'float' => is_float($physical),
-                    'bool' => is_bool($physical),
-                    'array' => is_array($physical),
-                    default => is_string($physical),
-                }
-            ) {
-                return false;
-            }
+        // one C-level pass over the list: a PHP loop per value costs more than storing the values
+        $kinds = array_count_values(array_map(gettype(...), $physicals));
+        unset($kinds['NULL']);
+
+        if ($kinds !== [] && array_keys($kinds) !== [$kind]) {
+            return false;
         }
 
         if (

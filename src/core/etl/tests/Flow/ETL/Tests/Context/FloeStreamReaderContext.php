@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Context;
 
 use Flow\ETL\Storage\Floe\FloeFiles;
+use Flow\ETL\Storage\Floe\FloeStreamReader;
 use Flow\ETL\Storage\Floe\Footer;
 use Flow\ETL\Storage\Floe\FooterReader;
 use Flow\ETL\Storage\Floe\FooterStatistics;
@@ -21,6 +22,7 @@ use Flow\ETL\Values\Schema\Metadata;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
 
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
@@ -196,24 +198,32 @@ final class FloeStreamReaderContext
     }
 
     /**
-     * @param list<Rows> $batches
+     * A FOOTER-typed data frame whose length ends $bytesLeft bytes before the end of the file (negative: past it).
      */
-    public static function writeBatches(
-        Filesystem $filesystem,
-        Path $path,
-        Schema $schema,
-        array $batches,
-        Options $options = new Options(),
-    ): string {
-        $writer = (new FloeFiles($filesystem, new AdaptiveBackend(), $options))->create($path, $schema);
+    public static function truncatedAt(int $bytesLeft): FloeStreamReader
+    {
+        $filesystem = memory_filesystem();
+        $path = path('memory://truncated.floe');
+        self::writeFrames(
+            $filesystem,
+            $path,
+            schema(int_schema('id')),
+            Format::frameHeader(Format::FRAME_FOOTER, 0),
+            0,
+        );
+        self::writeFrames(
+            $filesystem,
+            $path,
+            schema(int_schema('id')),
+            Format::frameHeader(
+                Format::FRAME_FOOTER,
+                (int) $filesystem->readFrom($path)->size() - Format::HEADER_LENGTH - Format::FRAME_HEADER_LENGTH
+                - $bytesLeft,
+            ),
+            0,
+        );
 
-        foreach ($batches as $batch) {
-            $writer->write($batch);
-        }
-
-        $writer->close();
-
-        return $filesystem->readFrom($path)->content();
+        return new FloeStreamReader($filesystem->readFrom($path), new NoopCodec(), 65_536, new PhpBackend());
     }
 
     public static function writeWithoutFooter(Filesystem $filesystem, Path $path, Rows $rows): void

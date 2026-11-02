@@ -10,11 +10,10 @@ use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\RandomValueGenerator;
 use Flow\ETL\Kernels\Sort\ExternalSort;
 use Flow\ETL\Kernels\Sort\ExternalSortConfig;
-use Flow\ETL\Kernels\Sort\SortColumn;
 use Flow\ETL\Operators\BoundStep;
-use Flow\ETL\Operators\Processor;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Schema;
+use Flow\ETL\Values\Sort\SortColumn;
 use Generator;
 use SensitiveParameter;
 

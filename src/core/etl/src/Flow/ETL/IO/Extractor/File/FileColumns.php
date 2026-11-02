@@ -116,7 +116,10 @@ final readonly class FileColumns
             return new Schema();
         }
 
-        return $this->declare($declared)->keep(...array_keys($this->partitionNames));
+        // only the partition block: $declared may already carry the metadata column declare() adds
+        return (new self($this->partitionNames, $this->partitionTypes, false))
+            ->declare($declared)
+            ->keep(...array_keys($this->partitionNames));
     }
 
     // $declared is what declare() produced, so the values and their schema come from one declaration

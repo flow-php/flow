@@ -12,6 +12,7 @@ use PHPUnit\Framework\TestCase;
 use function chr;
 use function Flow\Filesystem\DSL\path;
 use function pack;
+use function str_repeat;
 use function strlen;
 
 final class FrameWriterTest extends TestCase
@@ -38,6 +39,22 @@ final class FrameWriterTest extends TestCase
 
         static::assertSame(chr(Format::FRAME_BATCH) . pack('V', 3) . 'abc', $sink->content());
         static::assertSame(Format::FRAME_HEADER_LENGTH + 3, $writer->position());
+    }
+
+    public function test_a_body_past_the_buffer_is_written_with_the_bytes_a_buffered_frame_has(): void
+    {
+        $sink = new StringDestinationStream(path('memory://frame.floe'));
+        $writer = new FrameWriter($sink, 0x00, bufferSize: 8);
+
+        $writer->frame(Format::FRAME_BATCH, 'ab');
+        $writer->frame(Format::FRAME_BATCH, str_repeat('x', 20));
+        $writer->flush();
+
+        static::assertSame(
+            Format::frame(Format::FRAME_BATCH, 'ab') . Format::frame(Format::FRAME_BATCH, str_repeat('x', 20)),
+            $sink->content(),
+        );
+        static::assertSame((2 * Format::FRAME_HEADER_LENGTH) + 22, $writer->position());
     }
 
     public function test_footer_appends_trailer_and_flushes(): void

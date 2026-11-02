@@ -8,10 +8,14 @@ use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Column\Column;
 use Flow\ETL\Values\Column\ColumnBuilder;
 use Flow\ETL\Values\Column\Frame\Codec;
+use Flow\ETL\Values\Column\GroupedCounts;
+use Flow\ETL\Values\Column\GroupedTotals;
 use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Values\Grouping\GroupTable;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
 use Flow\ETL\Values\Schema\Definition;
+use Flow\ETL\Values\Sort\SortColumn;
 use Flow\Types\Type\Comparison\Operator;
 
 final class SpyBackend implements Backend
@@ -22,11 +26,11 @@ final class SpyBackend implements Backend
 
     private int $constants = 0;
 
-    private int $decodes = 0;
-
     private int $decodeFrames = 0;
 
-    private int $encodeFrames = 0;
+    private int $groupedCounts = 0;
+
+    private int $groupedTotals = 0;
 
     private readonly PhpBackend $php;
 
@@ -65,11 +69,6 @@ final class SpyBackend implements Backend
         return $this->builders;
     }
 
-    public function decodes(): int
-    {
-        return $this->decodes;
-    }
-
     public function decodeFrame(string $body, Schema $schema, Codec $codec): Rows
     {
         $this->decodeFrames++;
@@ -84,14 +83,7 @@ final class SpyBackend implements Backend
 
     public function encodeFrame(Rows $rows, Codec $codec): string
     {
-        $this->encodeFrames++;
-
         return $this->php->encodeFrame($rows, $codec);
-    }
-
-    public function encodeFrames(): int
-    {
-        return $this->encodeFrames;
     }
 
     public function compare(
@@ -134,6 +126,46 @@ final class SpyBackend implements Backend
         return $this->php->modulo($left, $right);
     }
 
+    /**
+     * @param list<SortColumn> $columns
+     */
+    public function sort(Rows $rows, array $columns): Rows
+    {
+        return $this->php->sort($rows, $columns);
+    }
+
+    public function groupedTotals(): GroupedTotals
+    {
+        $this->groupedTotals++;
+
+        return $this->php->groupedTotals();
+    }
+
+    public function groupedTotalsCreated(): int
+    {
+        return $this->groupedTotals;
+    }
+
+    public function groupedCounts(): GroupedCounts
+    {
+        $this->groupedCounts++;
+
+        return $this->php->groupedCounts();
+    }
+
+    public function groupedCountsCreated(): int
+    {
+        return $this->groupedCounts;
+    }
+
+    /**
+     * @param list<string> $columns
+     */
+    public function groupTable(array $columns, Schema $declared): GroupTable
+    {
+        return $this->php->groupTable($columns, $declared);
+    }
+
     public function constant(Definition $definition, mixed $value, int $count): Column
     {
         $this->constants++;
@@ -148,8 +180,6 @@ final class SpyBackend implements Backend
 
     public function decode(Definition $definition, array $buffers, int $count, int $nullCount): Column
     {
-        $this->decodes++;
-
         return $this->php->decode($definition, $buffers, $count, $nullCount);
     }
 }

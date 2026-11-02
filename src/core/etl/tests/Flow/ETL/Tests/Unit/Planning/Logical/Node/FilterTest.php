@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Planning\Logical\Node;
 
+use Flow\ETL\Operators\Processor\RequiredColumns;
 use Flow\ETL\Planning\Logical\Node\Filter;
 use Flow\ETL\Planning\Logical\Redefined;
 use Flow\ETL\Planning\Logical\RowCount;
@@ -47,5 +48,16 @@ final class FilterTest extends FlowTestCase
         static::assertSame(RowCount::reducing, $node->rowCount());
         static::assertSame(Transparency::transparent, $node->transparency());
         static::assertEquals(Redefined::none(), $node->redefines());
+    }
+
+    public function test_a_filter_adds_the_source_columns_its_predicate_reads(): void
+    {
+        static::assertEquals(
+            RequiredColumns::only('x', 'id'),
+            (new Filter(
+                NodeMother::read(),
+                ref('id')->as('alias')->isNotNull(),
+            ))->requiredInputColumns(RequiredColumns::only('x')),
+        );
     }
 }

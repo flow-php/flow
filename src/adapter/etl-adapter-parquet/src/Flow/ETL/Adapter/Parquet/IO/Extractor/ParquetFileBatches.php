@@ -37,6 +37,7 @@ use SensitiveParameter;
 
 use function array_diff;
 use function array_flip;
+use function array_intersect;
 use function array_intersect_key;
 use function count;
 use function Flow\Types\DSL\type_array;
@@ -127,13 +128,6 @@ final class ParquetFileBatches implements OffsetSkippingFileBatches
             $fileRows = $footer->rowsNumber();
             $owned = $split?->length === null ? null : $split->owns($file->units());
 
-            // an offset beside conjuncts counts matching rows, which the footer does not know
-            if ($owned === null && $criteria->conjuncts === [] && $window->offset >= $fileRows) {
-                yield new SkippedRows($fileRows);
-
-                return;
-            }
-
             if ($owned?->count === 0) {
                 return;
             }
@@ -203,12 +197,33 @@ final class ParquetFileBatches implements OffsetSkippingFileBatches
                 }
             }
 
+            $evaluatesNothing = $residual === [] && $fileBoundConjuncts === [];
+
+            // an offset beside a conjunct left to evaluate counts matching rows, which the footer does not know
+            if ($owned === null && $evaluatesNothing && $window->offset >= $fileRows) {
+                yield new SkippedRows($fileRows);
+
+                return;
+            }
+
             if (count($residual) < count($criteria->conjuncts)) {
                 yield Filter::bind($read->schema, ...$residual);
             }
 
+            // as output a column decodes on every row; left to the engine, only where statistics leave its filter open
+            if ($criteria->columns !== null) {
+                $kept = $criteria->columns;
+
+                foreach ($residual as $conjunct) {
+                    $kept = [...$kept, ...$referenced->in($conjunct)->names()];
+                }
+
+                $fileBody = $fileBody->keep(...array_intersect($fileBody->names(), $kept));
+                $body = $body->keep(...array_intersect($body->names(), $kept));
+            }
+
             $takesWindow = $residual === [];
-            $rawOffset = $criteria->conjuncts === [] ? $window->offset : 0;
+            $rawOffset = $evaluatesNothing ? $window->offset : 0;
 
             if ($rawOffset > 0) {
                 yield new SkippedRows($rawOffset);

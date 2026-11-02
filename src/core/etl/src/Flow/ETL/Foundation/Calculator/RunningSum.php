@@ -60,6 +60,20 @@ final class RunningSum
         return ['int' => 0, 'float' => null, 'compensation' => 0.0];
     }
 
+    /**
+     * @param array{int: null|int, float: null|float, compensation: float} $partial the shape of partial()
+     */
+    public static function valueOf(array $partial): float|int
+    {
+        $float = $partial['float'];
+
+        if ($float === null) {
+            return $partial['int'] ?? 0;
+        }
+
+        return is_finite($float) ? $float + $partial['compensation'] : $float;
+    }
+
     public static function partialType(): StructureType
     {
         return type_structure([
@@ -170,6 +184,6 @@ final class RunningSum
 
     public function value(): float|int
     {
-        return is_float($this->sum) && is_finite($this->sum) ? $this->sum + $this->compensation : $this->sum;
+        return self::valueOf($this->partial());
     }
 }

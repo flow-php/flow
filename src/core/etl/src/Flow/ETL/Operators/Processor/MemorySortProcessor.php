@@ -6,13 +6,11 @@ namespace Flow\ETL\Operators\Processor;
 
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
-use Flow\ETL\Kernels\Sort\RowOrder;
-use Flow\ETL\Kernels\Sort\SortColumn;
 use Flow\ETL\Operators\BoundStep;
-use Flow\ETL\Operators\Processor;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
+use Flow\ETL\Values\Sort\SortColumn;
 use Generator;
 use SensitiveParameter;
 
@@ -75,9 +73,7 @@ final readonly class MemorySortProcessor implements Distributable
             return;
         }
 
-        $order = new RowOrder($this->columns);
-
-        yield from $all->gather($order->permutation($order->keys($all), $all->count()))->chunks($maxSize);
+        yield from $backend->sort($all, $this->columns)->chunks($maxSize);
     }
 
     public function distribution(): ?Distribution

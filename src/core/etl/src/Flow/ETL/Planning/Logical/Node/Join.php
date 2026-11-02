@@ -6,6 +6,7 @@ namespace Flow\ETL\Planning\Logical\Node;
 
 use Flow\ETL\Foundation\Exception\InvalidLogicException;
 use Flow\ETL\Functions\Join\Expression;
+use Flow\ETL\Operators\Processor\RequiredColumns;
 use Flow\ETL\Planning\Logical\Node;
 use Flow\ETL\Planning\Logical\Redefined;
 use Flow\ETL\Planning\Logical\RowCount;
@@ -67,5 +68,10 @@ final readonly class Join implements JoinsFrame
     public function redefines(): Redefined
     {
         return Redefined::unknown();
+    }
+
+    public function requiredInputColumns(RequiredColumns $output): RequiredColumns
+    {
+        return RequiredColumns::all();
     }
 }

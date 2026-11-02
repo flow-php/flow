@@ -6,9 +6,9 @@ namespace Flow\ETL\Tests\Context;
 
 use Flow\ETL\Functions\Reference\Reference;
 use Flow\ETL\Functions\Reference\References;
-use Flow\ETL\Kernels\Bucketing\KeyEncoder;
 use Flow\ETL\Kernels\Bucketing\KeyGrouping;
 use Flow\ETL\Values\Column\AdaptiveBackend;
+use Flow\ETL\Values\Grouping\KeyEncoder;
 use Flow\ETL\Values\Rows;
 use Generator;
 

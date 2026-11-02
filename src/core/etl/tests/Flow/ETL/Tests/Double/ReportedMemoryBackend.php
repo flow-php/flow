@@ -8,10 +8,14 @@ use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Column\Column;
 use Flow\ETL\Values\Column\ColumnBuilder;
 use Flow\ETL\Values\Column\Frame\Codec;
+use Flow\ETL\Values\Column\GroupedCounts;
+use Flow\ETL\Values\Column\GroupedTotals;
 use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Values\Grouping\GroupTable;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
 use Flow\ETL\Values\Schema\Definition;
+use Flow\ETL\Values\Sort\SortColumn;
 use Flow\Types\Type\Comparison\Operator;
 
 /**
@@ -78,6 +82,32 @@ final class ReportedMemoryBackend implements Backend
     public function modulo(Column $left, Column $right): Column
     {
         return $this->php->modulo($left, $right);
+    }
+
+    /**
+     * @param list<SortColumn> $columns
+     */
+    public function sort(Rows $rows, array $columns): Rows
+    {
+        return $this->php->sort($rows, $columns);
+    }
+
+    public function groupedTotals(): GroupedTotals
+    {
+        return $this->php->groupedTotals();
+    }
+
+    public function groupedCounts(): GroupedCounts
+    {
+        return $this->php->groupedCounts();
+    }
+
+    /**
+     * @param list<string> $columns
+     */
+    public function groupTable(array $columns, Schema $declared): GroupTable
+    {
+        return $this->php->groupTable($columns, $declared);
     }
 
     public function constant(Definition $definition, mixed $value, int $count): Column

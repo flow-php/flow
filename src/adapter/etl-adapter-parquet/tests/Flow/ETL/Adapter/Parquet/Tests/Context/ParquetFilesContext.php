@@ -5,11 +5,15 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Parquet\Tests\Context;
 
 use Flow\ETL\Adapter\Parquet\IO\Extractor\ParquetSourceFileOpener;
+use Flow\ETL\Adapter\Parquet\IO\Loader\ParquetFileWriter;
 use Flow\ETL\Adapter\Parquet\IO\Loader\ParquetSchemaConformance;
 use Flow\ETL\Adapter\Parquet\IO\Loader\RustParquetFileWriter;
 use Flow\ETL\Adapter\Parquet\Values\Schema\SchemaConverter;
+use Flow\ETL\Flow;
 use Flow\ETL\Functions\Evaluation\Filter;
 use Flow\ETL\IO\Extractor\File\SkippedRows;
+use Flow\ETL\Planning\Optimizer\Optimizer;
+use Flow\ETL\Planning\Optimizer\Rule\PushProjectionIntoSource;
 use Flow\ETL\Tests\Double\ClosingSpySourceStream;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Values\Column\PhpBackend;
@@ -20,6 +24,8 @@ use Flow\Parquet\Engine\Arrow\OptionsConverter;
 use Flow\Parquet\Engine\Arrow\SchemaConverter as ArrowSchemaConverter;
 use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Engine\RustParquetFileWriter as ArrowRustParquetFileWriter;
+use Flow\Parquet\Filter\Binding\BoundFilter;
+use Flow\Parquet\Filter\Filter as ParquetFilter;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
@@ -34,26 +40,45 @@ use Flow\Parquet\Reader;
 use Flow\Parquet\Reader\ReadPlan;
 use Flow\Parquet\Writer;
 use Flow\Parquet\Writer\StatisticsLevel;
+use Throwable;
 
 use function array_count_values;
 use function array_keys;
 use function array_map;
 use function array_sum;
 use function Flow\ETL\Adapter\Parquet\to_parquet;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\data_frame;
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\from_sequence_number;
+use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function iterator_to_array;
+use function json_encode;
 use function range;
+
+use const JSON_THROW_ON_ERROR;
 
 final class ParquetFilesContext
 {
-    public static function plan(Filesystem $filesystem, string $uri, int $offset = 0, ?int $limit = null): ReadPlan
-    {
+    public static function plan(
+        Filesystem $filesystem,
+        string $uri,
+        int $offset = 0,
+        ?int $limit = null,
+        ?ParquetFilter $filter = null,
+    ): ReadPlan {
         $file = (new Reader())->readStream($filesystem->readFrom(path($uri)));
 
-        return ReadPlan::forFilter($file->reader()->footer(), $file->indexes(), null, $offset, $limit);
+        return ReadPlan::forFilter(
+            $file->reader()->footer(),
+            $file->indexes(),
+            $filter === null ? null : BoundFilter::bind($filter, $file->schema(), $file->options()),
+            $offset,
+            $limit,
+        );
     }
 
     /**
@@ -210,6 +235,29 @@ final class ParquetFilesContext
     }
 
     /**
+     * @return list<array<array-key, mixed>> the rows written through the loader's ParquetFileWriter, read back by the PHP engine
+     */
+    public static function writtenThroughTheLoader(Rows $rows): array
+    {
+        $filesystem = memory_filesystem();
+        $parquetSchema = (new SchemaConverter())->toParquetSchema($rows->schema());
+        $writer = new ParquetFileWriter(
+            (new PhpParquetEngine())->openForWrite(
+                $filesystem->writeTo(path('memory://loader.parquet')),
+                $parquetSchema,
+                Compressions::SNAPPY,
+                Options::default(),
+            ),
+            new ParquetSchemaConformance($parquetSchema),
+            new PhpBackend(),
+        );
+        $writer->write($rows);
+        $writer->close();
+
+        return self::phpEngineValues($filesystem, 'memory://loader.parquet');
+    }
+
+    /**
      * @return list<array<array-key, mixed>>
      */
     public static function phpEngineValues(Filesystem $filesystem, string $uri): array
@@ -359,5 +407,34 @@ final class ParquetFilesContext
         );
         $writer->writeBatch(array_map(static fn(int|string $value): array => ['big' => $value], $values));
         $writer->close();
+    }
+
+    public static function orders(Filesystem $filesystem, string $uri): void
+    {
+        df()
+            ->read(from_array([
+                ['id' => 1, 'country' => 'PL', 'amount' => 10, 'note' => 'a'],
+                ['id' => 2, 'country' => 'DE', 'amount' => 20, 'note' => 'b'],
+                ['id' => 3, 'country' => 'PL', 'amount' => 30, 'note' => 'c'],
+            ]))
+            ->write(to_parquet(path($uri), filesystem: $filesystem))
+            ->run();
+    }
+
+    public static function withoutProjectionPushdown(): Flow
+    {
+        return df(config_builder()->optimizer(Optimizer::default()->without(PushProjectionIntoSource::class)));
+    }
+
+    /**
+     * @param callable(): array<array-key, mixed> $read
+     */
+    public static function outcome(callable $read): string
+    {
+        try {
+            return 'returned ' . json_encode($read(), JSON_THROW_ON_ERROR);
+        } catch (Throwable $e) {
+            return $e::class . ': ' . $e->getMessage();
+        }
     }
 }

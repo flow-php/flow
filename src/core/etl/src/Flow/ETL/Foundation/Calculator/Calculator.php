@@ -16,14 +16,30 @@ use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 
 use function abs;
 use function defined;
+use function floor;
+use function ini_get;
+use function is_finite;
 use function is_float;
 use function is_int;
 use function is_string;
 use function method_exists;
+use function min;
 use function sprintf;
+
+use const INF;
+use const PHP_FLOAT_EPSILON;
+use const PHP_FLOAT_MIN;
 
 final class Calculator
 {
+    private const int FLOAT_EXACT_INT = 9_007_199_254_740_992;
+
+    private const float FLOAT_QUOTIENT_MAX_INPUT_ERROR = 1.0e-6;
+
+    private const float FLOAT_QUOTIENT_MAX_MAGNITUDE = 4_503_599_627_370_496.0;
+
+    private const int FLOAT_QUOTIENT_MAX_SCALE = 15;
+
     /**
      * floor(sqrt(PHP_INT_MAX)): two ints no larger than this multiply natively without overflowing, so the product
      * is exact and needs no BigDecimal.
@@ -61,6 +77,12 @@ final class Calculator
         ?int $scale = null,
         ?Rounding $rounding = null,
     ): float {
+        $quotient = self::roundedFloatQuotient($a, $b, $scale, $rounding);
+
+        if ($quotient !== null) {
+            return $quotient;
+        }
+
         try {
             $aDecimal = BigDecimal::of((string) $a);
             $effectiveScale = $scale ?? $aDecimal->getScale();
@@ -178,6 +200,104 @@ final class Calculator
         }
 
         return $result->toInt();
+    }
+
+    /**
+     * @return null|float the decimal division's result, or null when the float quotient lies too close to a rounding edge to decide it
+     */
+    private static function roundedFloatQuotient(
+        int|float|string $a,
+        int|float|string $b,
+        ?int $scale,
+        ?Rounding $rounding,
+    ): ?float {
+        if (
+            $scale === null
+            || $scale < 0
+            || $scale > self::FLOAT_QUOTIENT_MAX_SCALE
+            || $rounding === null
+            || $rounding === Rounding::UNNECESSARY
+            || is_string($a)
+            || is_string($b)
+        ) {
+            return null;
+        }
+
+        $error = self::decimalFormError($a) + self::decimalFormError($b);
+        $dividend = (float) $a;
+        $divisor = (float) $b;
+
+        if (
+            $error > self::FLOAT_QUOTIENT_MAX_INPUT_ERROR
+            || !is_finite($dividend)
+            || !is_finite($divisor)
+            || $divisor === 0.0
+        ) {
+            return null;
+        }
+
+        if ($dividend === 0.0) {
+            return 0.0;
+        }
+
+        $quotient = $dividend / $divisor;
+        $power = (float) 10 ** $scale;
+        $magnitude = abs($quotient) * $power;
+
+        if (abs($quotient) < PHP_FLOAT_MIN || $magnitude >= self::FLOAT_QUOTIENT_MAX_MAGNITUDE) {
+            return null;
+        }
+
+        $window = $magnitude * ((2 * $error) + (8 * PHP_FLOAT_EPSILON));
+        $whole = floor($magnitude);
+        $fraction = $magnitude - $whole;
+        $negative = $quotient < 0;
+        $awayFromZero = match ($rounding) {
+            Rounding::UP => true,
+            Rounding::DOWN => false,
+            Rounding::CEILING => !$negative,
+            Rounding::FLOOR => $negative,
+            // every half mode rounds to the nearest once the window rules out a tie
+            default => null,
+        };
+
+        if ($awayFromZero === null) {
+            if (abs($fraction - 0.5) <= $window) {
+                return null;
+            }
+
+            $rounded = $fraction < 0.5 ? $whole : $whole + 1;
+        } else {
+            if ($fraction <= $window || (1 - $fraction) <= $window) {
+                return null;
+            }
+
+            $rounded = $awayFromZero ? $whole + 1 : $whole;
+        }
+
+        if ($rounded === 0.0) {
+            return 0.0;
+        }
+
+        return $negative ? -($rounded / $power) : $rounded / $power;
+    }
+
+    /**
+     * @return float the relative error of (string) $value, the form BigDecimal::of() reads, against $value
+     */
+    private static function decimalFormError(int|float $value): float
+    {
+        if (is_int($value)) {
+            return abs($value) <= self::FLOAT_EXACT_INT ? 0.0 : INF;
+        }
+
+        $precision = (int) ini_get('precision');
+
+        return match (true) {
+            $precision === -1 => PHP_FLOAT_EPSILON,
+            $precision >= 1 => 5 * (10 ** (-min($precision, 17))),
+            default => INF,
+        };
     }
 
     private static function eitherIsFloat(int|float|string $a, int|float|string $b): bool

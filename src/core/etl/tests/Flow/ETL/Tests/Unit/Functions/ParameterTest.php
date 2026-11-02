@@ -121,6 +121,58 @@ final class ParameterTest extends FlowTestCase
         );
     }
 
+    public function test_as_integer_column_reads_an_integer_column_as_is_and_nulls_as_integer_nulls(): void
+    {
+        $rows = array_to_rows([['i' => 1], ['i' => 2]], schema(int_schema('i')));
+        $integers = (new Parameter((new ReferenceResolver())->resolve(ref('i'), $rows->schema())))->asIntegerColumn(
+            $rows,
+            flow_context()->backend(),
+        );
+        $nulls = (new Parameter(lit(null)))->asIntegerColumn(RowsMother::sequentialIds(2), flow_context()->backend());
+
+        static::assertSame([[1, 2], 'integer'], [$integers->values(), $integers->type()->toString()]);
+        static::assertSame([[null, null], 'integer'], [$nulls->values(), $nulls->type()->toString()]);
+    }
+
+    public function test_as_integer_column_throws_on_a_non_integer_value(): void
+    {
+        $rows = array_to_rows([['s' => 'a']], schema(str_schema('s')));
+
+        $this->expectException(EvaluationException::class);
+
+        (new Parameter((new ReferenceResolver())->resolve(ref('s'), $rows->schema())))->asIntegerColumn(
+            $rows,
+            flow_context()->backend(),
+        );
+    }
+
+    public function test_as_number_column_takes_an_integer_or_a_float_column(): void
+    {
+        $rows = array_to_rows([['i' => 1, 'f' => 1.5]], schema(int_schema('i'), float_schema('f')));
+        $resolver = new ReferenceResolver();
+
+        static::assertSame([[1], [1.5]], [
+            (new Parameter($resolver->resolve(ref('i'), $rows->schema())))
+                ->asNumberColumn($rows, flow_context()->backend())
+                ->values(),
+            (new Parameter($resolver->resolve(ref('f'), $rows->schema())))
+                ->asNumberColumn($rows, flow_context()->backend())
+                ->values(),
+        ]);
+    }
+
+    public function test_as_number_column_refuses_another_column_type(): void
+    {
+        $rows = array_to_rows([['s' => 'a']], schema(str_schema('s')));
+
+        $this->expectExceptionObject(new InvalidArgumentException('Expected an integer or float column, got "string"'));
+
+        (new Parameter((new ReferenceResolver())->resolve(ref('s'), $rows->schema())))->asNumberColumn(
+            $rows,
+            flow_context()->backend(),
+        );
+    }
+
     public function test_as_array_throws_on_a_malformed_value(): void
     {
         $this->expectException(InvalidArgumentException::class);

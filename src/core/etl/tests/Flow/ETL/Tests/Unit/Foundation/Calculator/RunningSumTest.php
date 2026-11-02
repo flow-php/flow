@@ -222,4 +222,19 @@ final class RunningSumTest extends TestCase
 
         static::assertSame(0.3, $left->value());
     }
+
+    public function test_value_of_a_partial_equals_the_value_of_the_sum_it_came_from(): void
+    {
+        $float = new RunningSum();
+        $float->addAll([0.1, 0.2, 0.3, 1e16, -1e16, 0.1], false);
+        $int = new RunningSum();
+        $int->addAll([9_007_199_254_740_993, 2], false);
+        $infinite = new RunningSum();
+        $infinite->addAll([INF, 1.0], false);
+
+        static::assertSame($float->value(), RunningSum::valueOf($float->partial()));
+        static::assertSame(9_007_199_254_740_995, RunningSum::valueOf($int->partial()));
+        static::assertSame(INF, RunningSum::valueOf($infinite->partial()));
+        static::assertSame(0, RunningSum::valueOf(RunningSum::emptyPartial()));
+    }
 }

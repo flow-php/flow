@@ -43,7 +43,6 @@ for ($group = 0; $group < 4; $group++) {
 
 $writer->close();
 
-// batch boundaries differ between engines (row groups against batch size), so consecutive Rows are merged
 function yielded(iterable $batches): string
 {
     $yielded = [];

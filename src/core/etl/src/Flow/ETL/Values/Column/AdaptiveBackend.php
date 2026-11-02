@@ -9,9 +9,11 @@ use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\FlowPhpExtension;
 use Flow\ETL\Values\Column\Frame\Codec;
+use Flow\ETL\Values\Grouping\GroupTable;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
 use Flow\ETL\Values\Schema\Definition;
+use Flow\ETL\Values\Sort\SortColumn;
 use Flow\Types\Type\Comparison\Operator;
 use SensitiveParameter;
 
@@ -97,6 +99,32 @@ final readonly class AdaptiveBackend implements Backend, Describable
     public function modulo(Column $left, Column $right): Column
     {
         return $this->backend->modulo($left, $right);
+    }
+
+    /**
+     * @param list<SortColumn> $columns
+     */
+    public function sort(Rows $rows, array $columns): Rows
+    {
+        return $this->backend->sort($rows, $columns);
+    }
+
+    public function groupedTotals(): GroupedTotals
+    {
+        return $this->backend->groupedTotals();
+    }
+
+    public function groupedCounts(): GroupedCounts
+    {
+        return $this->backend->groupedCounts();
+    }
+
+    /**
+     * @param list<string> $columns
+     */
+    public function groupTable(array $columns, Schema $declared): GroupTable
+    {
+        return $this->backend->groupTable($columns, $declared);
     }
 
     public function adopt(Definition $definition, Column $column): Column

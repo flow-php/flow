@@ -13,19 +13,21 @@ use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Functions\AggregatingFunction;
 use Flow\ETL\Functions\Reference\Reference;
 use Flow\ETL\Functions\Reference\References;
-use Flow\ETL\Kernels\Bucketing\KeyEncoder;
-use Flow\ETL\Kernels\Bucketing\KeyGrouping;
 use Flow\ETL\Operators\GroupBy\Aggregators;
 use Flow\ETL\Operators\GroupBy\DeclaredPivotValues;
-use Flow\ETL\Operators\GroupBy\GroupKey;
 use Flow\ETL\Operators\GroupBy\Pivot;
+use Flow\ETL\Operators\Processor\RequiredColumns;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Grouping\GroupTable;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
 use Flow\ETL\Values\Schema\Definitions;
 use SensitiveParameter;
 
+use function array_fill;
 use function array_key_exists;
 use function array_values;
+use function count;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
@@ -86,6 +88,21 @@ final readonly class GroupBy implements Describable
     public function refs(): References
     {
         return $this->refs;
+    }
+
+    public function requiredInputColumns(): RequiredColumns
+    {
+        $aggregated = $this->aggregations->references();
+
+        if ($aggregated === null) {
+            return RequiredColumns::all();
+        }
+
+        return RequiredColumns::only(...array_map(static fn(Reference $ref): string => $ref->base(), [
+            ...$this->refs->all(),
+            ...$aggregated,
+            ...($this->pivot === null ? [] : [$this->pivot->column]),
+        ]));
     }
 
     public function aggregations(): Aggregators
@@ -182,33 +199,31 @@ final readonly class GroupBy implements Describable
         return new Schema(...$definitions);
     }
 
-    /**
-     * The rows of each group in $rows, by the group's identity, in row order.
-     *
-     * @return array<string, list<int>>
-     */
-    public function grouped(Rows $rows, Schema $input): array
+    public function groupTable(Schema $input, Backend $backend): GroupTable
     {
-        return KeyGrouping::indices((new KeyEncoder($this->refs->names(), declared: $input))->of($rows));
+        return $backend->groupTable($this->refs->names(), $input);
     }
 
     /**
-     * The key of the group $identity names, its values read from row $row.
+     * @param list<int> $rowsOfGroups
+     *
+     * @return array<string, list<mixed>> the key values of those rows, by key column
      */
-    public function key(Rows $rows, Schema $input, int $row, string $identity): GroupKey
+    public function keyValues(Rows $rows, Schema $input, array $rowsOfGroups): array
     {
         $values = [];
 
         foreach ($this->refs->all() as $ref) {
             // absent under a nullable declaration is a legitimate null; absent under NOT NULL is a row-shape
             // violation, and Rows::column() names it and lists the available columns.
-            $values[$ref->to()] = $rows->schema()->findDefinition($ref->base()) === null
-            && $input->get($ref->to())->isNullable()
-                ? null
-                : $rows->column($ref->base())->value($row);
+            $values[$ref->to()] =
+                $rowsOfGroups === []
+                || $rows->schema()->findDefinition($ref->base()) === null && $input->get($ref->to())->isNullable()
+                    ? array_fill(0, count($rowsOfGroups), null)
+                    : $rows->column($ref->base())->take($rowsOfGroups)->values();
         }
 
-        return new GroupKey($values, $identity);
+        return $values;
     }
 
     public function pivotedBy(): ?Pivot

@@ -10,7 +10,6 @@ use Flow\ETL\Foundation\Exception\RuntimeException;
 use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Operators\GroupBy;
 use Flow\ETL\Operators\GroupBy\Aggregators;
-use Flow\ETL\Operators\GroupBy\GroupKey;
 use Flow\ETL\Operators\GroupBy\Pivot;
 use Flow\ETL\Operators\GroupBy\PivotShape;
 use Flow\ETL\Operators\Processor\PivotProcessor;
@@ -23,8 +22,6 @@ use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid;
 use Generator;
 
-use function array_map;
-use function array_unique;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\count;
@@ -405,13 +402,10 @@ final class GroupByTest extends FlowTestCase
     {
         static::assertSame(
             [['country' => null], ['country' => null]],
-            array_map(
-                static fn(GroupKey $key): array => iterator_to_array($key),
-                GroupByContext::keys(
-                    new GroupBy(refs('country')),
-                    array_to_rows([['age' => 20], ['age' => 30]], schema(int_schema('age'))),
-                    schema(str_schema('country', nullable: true), int_schema('age')),
-                ),
+            GroupByContext::keys(
+                new GroupBy(refs('country')),
+                array_to_rows([['age' => 20], ['age' => 30]], schema(int_schema('age'))),
+                schema(str_schema('country', nullable: true), int_schema('age')),
             ),
         );
     }
@@ -420,16 +414,13 @@ final class GroupByTest extends FlowTestCase
     {
         static::assertSame(
             [['country' => 'PL', 'age' => 20], ['country' => 'DE', 'age' => 30]],
-            array_map(
-                static fn(GroupKey $key): array => iterator_to_array($key),
-                GroupByContext::keys(
-                    new GroupBy(refs('country', 'age')),
-                    array_to_rows(
-                        [['country' => 'PL', 'age' => 20], ['country' => 'DE', 'age' => 30]],
-                        schema(str_schema('country'), int_schema('age')),
-                    ),
+            GroupByContext::keys(
+                new GroupBy(refs('country', 'age')),
+                array_to_rows(
+                    [['country' => 'PL', 'age' => 20], ['country' => 'DE', 'age' => 30]],
                     schema(str_schema('country'), int_schema('age')),
                 ),
+                schema(str_schema('country'), int_schema('age')),
             ),
         );
     }
@@ -452,9 +443,7 @@ final class GroupByTest extends FlowTestCase
             ['at' => new DateTimeImmutable('2026-01-02 10:00:00 UTC')],
             ['at' => new DateTimeImmutable('2026-01-02 11:00:00 +01:00')],
         ], schema(datetime_schema('at')));
-        $keys = GroupByContext::keys(new GroupBy(refs('at')), $rows, $rows->schema());
-
-        static::assertSame((string) $keys[0], (string) $keys[1]);
+        static::assertSame([0, 0], GroupByContext::groupIds(new GroupBy(refs('at')), $rows->schema(), $rows));
     }
 
     public function test_a_date_and_an_equal_datetime_instant_share_a_key(): void
@@ -465,8 +454,8 @@ final class GroupByTest extends FlowTestCase
         ]], schema(datetime_schema('at')));
 
         static::assertSame(
-            (string) GroupByContext::keys(new GroupBy(refs('at')), $dates, $dates->schema())[0],
-            (string) GroupByContext::keys(new GroupBy(refs('at')), $datetimes, $datetimes->schema())[0],
+            [0, 0],
+            GroupByContext::groupIds(new GroupBy(refs('at')), $dates->schema(), $dates, $datetimes),
         );
     }
 
@@ -480,13 +469,10 @@ final class GroupByTest extends FlowTestCase
             ],
             schema(uuid_schema('id'), json_schema('doc')),
         );
-        $keys = GroupByContext::keys(new GroupBy(refs('id', 'doc')), $rows, $rows->schema());
-
-        static::assertSame((string) $keys[0], (string) $keys[1]);
-        static::assertNotSame((string) $keys[0], (string) $keys[2]);
+        static::assertSame([0, 0, 1], GroupByContext::groupIds(new GroupBy(refs('id', 'doc')), $rows->schema(), $rows));
         static::assertEquals(
             ['id' => new Uuid('f47ac10b-58cc-4372-a567-0e02b2c3d479'), 'doc' => new Json('{"a":1}')],
-            iterator_to_array($keys[0]),
+            GroupByContext::keys(new GroupBy(refs('id', 'doc')), $rows, $rows->schema())[0],
         );
     }
 
@@ -498,30 +484,29 @@ final class GroupByTest extends FlowTestCase
             array_to_rows([['a' => 'x']], schema(str_schema('a'))),
             $input,
         );
-        $present = GroupByContext::keys(
-            new GroupBy(refs('a', 'b')),
-            array_to_rows([['a' => 'x', 'b' => null]], $input),
-            $input,
+        static::assertSame(['a' => 'x', 'b' => null], $lacking[0]);
+        static::assertSame(
+            [0, 0],
+            GroupByContext::groupIds(
+                new GroupBy(refs('a', 'b')),
+                $input,
+                array_to_rows([['a' => 'x', 'b' => null]], $input),
+                array_to_rows([['a' => 'x']], schema(str_schema('a'))),
+            ),
         );
-
-        static::assertSame(['a' => 'x', 'b' => null], iterator_to_array($lacking[0]));
-        static::assertSame((string) $present[0], (string) $lacking[0]);
     }
 
     public function test_keys_of_swapped_absences_do_not_collide(): void
     {
         $input = schema(str_schema('a', nullable: true), str_schema('b', nullable: true));
-        static::assertNotSame(
-            (string) GroupByContext::keys(
+        static::assertSame(
+            [0, 1],
+            GroupByContext::groupIds(
                 new GroupBy(refs('a', 'b')),
+                $input,
                 array_to_rows([['a' => 'x']], schema(str_schema('a'))),
-                $input,
-            )[0],
-            (string) GroupByContext::keys(
-                new GroupBy(refs('a', 'b')),
                 array_to_rows([['b' => 'x']], schema(str_schema('b'))),
-                $input,
-            )[0],
+            ),
         );
     }
 
@@ -529,13 +514,7 @@ final class GroupByTest extends FlowTestCase
     {
         $rows = array_to_rows([['v' => 0.0], ['v' => -0.0], ['v' => 1.5], ['v' => 1.5]], schema(float_schema('v')));
 
-        static::assertCount(
-            2,
-            array_unique(array_map(
-                static fn(GroupKey $key): string => (string) $key,
-                GroupByContext::keys(new GroupBy(refs('v')), $rows, $rows->schema()),
-            )),
-        );
+        static::assertSame([0, 0, 1, 1], GroupByContext::groupIds(new GroupBy(refs('v')), $rows->schema(), $rows));
     }
 
     public function test_pivot_schema_keeps_the_group_by_column_declarations_of_the_input(): void

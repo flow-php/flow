@@ -125,7 +125,7 @@ final class RowGroupBuilder
      * @param array<string, list<mixed>> $columns by top-level column name
      * @param int $count rows in every list
      */
-    public function addColumns(array $columns, int $count): void
+    public function addColumns(DremelShredder $shredder, array $columns, int $count): void
     {
         /** @var int<1, max> $interval */
         $interval = $this->options->getInt(Option::PAGE_SIZE_CHECK_INTERVAL);
@@ -140,7 +140,7 @@ final class RowGroupBuilder
                 $slices[$name] = array_slice($values, $offset, $length);
             }
 
-            $flatColumnsData = $this->shredder->shredColumns(
+            $flatColumnsData = $shredder->shredColumns(
                 $this->schema,
                 $slices,
                 $length,

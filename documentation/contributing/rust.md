@@ -71,6 +71,12 @@ src/extension/flow-php-ext/
 │   ├── interfaces.rs       # the package interfaces the Rust classes implement, registered at MINIT
 │   ├── iterator.rs         # RustIterator, the iterator the Rust sources return
 │   ├── backend.rs          # RustBackend
+│   ├── arithmetic.rs       # RustBackend::add/subtract/multiply/modulo on native columns
+│   ├── compare.rs          # RustBackend::compare on native columns
+│   ├── sort.rs             # RustBackend::sort on native columns
+│   ├── group_table.rs      # RustGroupTable: group ids by key, held between batches
+│   ├── grouped_totals.rs   # RustGroupedTotals: running sums and counts per group id
+│   ├── grouped_counts.rs   # RustGroupedCounts: non-null counts per group id
 │   ├── column.rs           # RustColumn
 │   ├── builder.rs          # RustColumnBuilder: native cast lanes, PHP lane for the rest
 │   ├── physical.rs         # Arrow rows as physical and logical zvals
@@ -92,6 +98,7 @@ src/extension/flow-php-ext/
 │   └── exception.rs        # Exception mapping
 ├── crates/                 # The cargo workspace members: pure Rust, no PHP types, every #[test] lives here
 │   ├── flow-batch-frame/   # Column buffers, builders, BATCH frame bodies, kinds and value shapes, column keys
+│   ├── flow-column-kernels/ # Compare, arithmetic, sort, grouped totals and group keys, as the PHP backend answers
 │   ├── flow-column-text/   # Column values as the writers render them: floats, dates, JSON strings, uuids
 │   ├── flow-json-records/  # JSON lines / array framing and member-to-column mapping
 │   ├── flow-arrow-c/       # Batches across the Arrow C Data Interface, imported bytes counted

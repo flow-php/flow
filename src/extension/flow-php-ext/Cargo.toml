@@ -11,6 +11,7 @@ crate-type = ["cdylib"]
 arrow-validate = ["arrow-data/force_validate"]
 
 [dependencies]
+ahash = "0.8"
 arrow-array.workspace = true
 arrow-buffer.workspace = true
 arrow-data.workspace = true

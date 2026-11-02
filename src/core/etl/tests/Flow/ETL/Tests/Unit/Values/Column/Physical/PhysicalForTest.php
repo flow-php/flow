@@ -44,6 +44,7 @@ use PHPUnit\Framework\TestCase;
 use stdClass;
 use UnitEnum;
 
+use function array_fill;
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
@@ -355,6 +356,21 @@ final class PhysicalForTest extends TestCase
             false,
         ];
         yield 'anything in a null column' => [type_null(), [1, 'x'], true];
+
+        foreach ([
+            'integer' => [type_integer(), 1, '1'],
+            'datetime' => [type_datetime(), 1, 1.0],
+            'float' => [type_float(), 1.5, 1],
+            'boolean' => [type_boolean(), true, 1],
+            'string' => [type_string(), 'a', 1],
+            'list' => [type_list(type_integer()), [1], 1],
+        ] as $kind => [$type, $accepted, $refused]) {
+            $long = array_fill(0, 1000, $accepted);
+            $long[500] = $refused;
+            $long[10] = null;
+
+            yield "{$kind}: one refused physical in the middle of a long list" => [$type, $long, false];
+        }
     }
 
     /**

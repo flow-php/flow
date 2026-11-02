@@ -13,7 +13,9 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\NodeMother;
 
 use function Flow\ETL\DSL\array_expand;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure;
 
@@ -92,5 +94,29 @@ final class ExpandColumnTest extends FlowTestCase
 
         static::assertSame('item', $node->name());
         static::assertEquals(Redefined::names('item'), $node->redefines());
+    }
+
+    public function test_an_expand_column_replaces_its_own_name_with_what_it_reads(): void
+    {
+        static::assertEquals(
+            RequiredColumns::only('items'),
+            (new ExpandColumn(
+                NodeMother::read(),
+                'item',
+                ref('items')->expand(),
+            ))->requiredInputColumns(RequiredColumns::only('item')),
+        );
+    }
+
+    public function test_an_unpack_keeps_the_demand_and_adds_what_it_reads(): void
+    {
+        static::assertEquals(
+            RequiredColumns::only('s.a', 'items'),
+            (new ExpandColumn(
+                NodeMother::read(),
+                's',
+                structure(['a' => ref('items')->expand()])->unpack(schema(int_schema('a'))),
+            ))->requiredInputColumns(RequiredColumns::only('s.a')),
+        );
     }
 }

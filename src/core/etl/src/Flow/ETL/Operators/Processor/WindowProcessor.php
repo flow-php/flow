@@ -11,8 +11,6 @@ use Flow\ETL\Functions\Reference\Reference;
 use Flow\ETL\Functions\ReferenceResolver;
 use Flow\ETL\Functions\Window\BoundWindow;
 use Flow\ETL\Functions\WindowFunction;
-use Flow\ETL\Kernels\Sort\RowOrder;
-use Flow\ETL\Kernels\Sort\SortColumn;
 use Flow\ETL\Operators\BoundStep;
 use Flow\ETL\Operators\Processor;
 use Flow\ETL\Values\Column\Backend;
@@ -20,6 +18,7 @@ use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
 use Flow\ETL\Values\Schema\Definition;
 use Flow\ETL\Values\Schema\Definitions;
+use Flow\ETL\Values\Sort\SortColumn;
 use Generator;
 use SensitiveParameter;
 
@@ -143,12 +142,12 @@ final class WindowProcessor implements Processor
         $window = $resolved->window();
         $orderBy = $window->order();
         $matched = $partition->matchTo($bound->input, $backend);
-        $order = new RowOrder(
+        $partitionRows = $backend->sort(
+            $matched,
             $orderBy === []
                 ? array_map(static fn(Reference $ref): SortColumn => $ref->asc(), $window->partitions()->all())
                 : $orderBy,
         );
-        $partitionRows = $matched->gather($order->permutation($order->keys($matched), $matched->count()));
 
         $builder = $backend->builder($derived);
         $builder->appendMany($resolved->values($partitionRows, $backend));

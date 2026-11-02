@@ -13,32 +13,26 @@ use Flow\ETL\Foundation\Exception\RuntimeException;
 use Flow\ETL\Functions\Reference\Reference;
 use Flow\ETL\Functions\Window\FrameAccumulation;
 use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Column\Column;
+use Flow\ETL\Values\Column\GroupedTotals;
 use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Schema\Definitions;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\StructureType;
 use SensitiveParameter;
 
-use function count;
-use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_enum;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
-use function Flow\Types\DSL\type_structure;
-use function is_float;
-use function is_int;
-use function is_numeric;
-use function is_string;
 
-final class Average implements AggregatingFunction, FrameAccumulating, WindowFunction
+final class Average implements AggregatesNumericTotal, FrameAccumulating, WindowFunction
 {
-    private int $count = 0;
-
     private readonly string $outputName;
 
-    private ?RunningSum $runningSum = null;
+    private readonly NumericTotal $total;
 
     private readonly LastBatchColumn $column;
 
@@ -50,6 +44,7 @@ final class Average implements AggregatingFunction, FrameAccumulating, WindowFun
         private readonly ?Window $window = null,
     ) {
         $this->outputName = $ref->hasAlias() ? $ref->name() : $ref->to() . '_avg';
+        $this->total = new NumericTotal($exact);
         $this->column = new LastBatchColumn($ref->base());
     }
 
@@ -79,35 +74,17 @@ final class Average implements AggregatingFunction, FrameAccumulating, WindowFun
 
     public function merge(array $partial, Backend $backend): void
     {
-        $data = $this->partialType()->assert($partial);
-        $count = type_integer()->assert($data['count']);
-
-        if ($count === 0) {
-            return;
-        }
-
-        $this->runningSum ??= new RunningSum(new Calculator());
-        $this->runningSum->merge(
-            RunningSum::fromPartial(type_array()->assert($data['sum']), new Calculator()),
-            $this->exact,
-        );
-        $this->count += $count;
+        $this->total->merge($partial);
     }
 
     public function partial(): array
     {
-        return [
-            'count' => $this->count,
-            'sum' => $this->runningSum?->partial() ?? RunningSum::emptyPartial(),
-        ];
+        return $this->total->partial();
     }
 
     public function partialType(): StructureType
     {
-        return type_structure([
-            'count' => type_integer(),
-            'sum' => RunningSum::partialType(),
-        ]);
+        return NumericTotal::partialType();
     }
 
     /**
@@ -153,39 +130,14 @@ final class Average implements AggregatingFunction, FrameAccumulating, WindowFun
     {
         $column = $this->column->of($rows);
 
-        if ($column === null) {
-            return;
+        if ($column !== null) {
+            $this->total->aggregate($column, $indices);
         }
+    }
 
-        if (count($indices) === 1) {
-            // @mago-ignore analysis:mixed-assignment
-            $value = $column->value($indices[0]);
-
-            if (is_int($value) || is_float($value) || is_string($value) && is_numeric($value)) {
-                $this->runningSum ??= new RunningSum(new Calculator());
-                $this->runningSum->add($value, $this->exact);
-                $this->count++;
-            }
-
-            return;
-        }
-
-        $values = [];
-
-        // @mago-ignore analysis:mixed-assignment
-        foreach ($column->take($indices)->values() as $value) {
-            if (is_int($value) || is_float($value) || is_string($value) && is_numeric($value)) {
-                $values[] = $value;
-            }
-        }
-
-        if ($values === []) {
-            return;
-        }
-
-        $this->runningSum ??= new RunningSum(new Calculator());
-        $this->runningSum->addAll($values, $this->exact);
-        $this->count += count($values);
+    public function exact(): bool
+    {
+        return $this->exact;
     }
 
     public function accumulator(): self
@@ -224,13 +176,35 @@ final class Average implements AggregatingFunction, FrameAccumulating, WindowFun
         return type_optional(type_float());
     }
 
-    public function value(): ?float
+    public function groupValues(GroupedTotals $totals, Backend $backend): Column
     {
-        if (0 === $this->count || $this->runningSum === null) {
-            return null;
+        $calculator = new Calculator();
+        $values = [];
+
+        foreach ($totals->partials() as $partial) {
+            $values[] = $partial['count'] === 0
+                ? null
+                : $calculator->divide(
+                    RunningSum::valueOf($partial['sum']),
+                    $partial['count'],
+                    $this->scale,
+                    $this->rounding,
+                );
         }
 
-        return (new Calculator())->divide($this->runningSum->value(), $this->count, $this->scale, $this->rounding);
+        $averages = $backend->builder(Definitions::of($this->outputName, $this->returns(), true));
+        $averages->appendMany($values);
+
+        return $averages->finish();
+    }
+
+    public function value(): ?float
+    {
+        $sum = $this->total->sum();
+
+        return $sum === null
+            ? null
+            : (new Calculator())->divide($sum, $this->total->count(), $this->scale, $this->rounding);
     }
 
     public function toString(): string

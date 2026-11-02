@@ -14,6 +14,9 @@ mod date_check;
 mod exception;
 mod frame;
 mod globals;
+mod group_table;
+mod grouped_counts;
+mod grouped_totals;
 mod interfaces;
 mod iterator;
 mod json;
@@ -22,6 +25,7 @@ mod parquet;
 mod physical;
 mod plan;
 mod render;
+mod sort;
 mod source;
 mod text;
 mod uuid_check;
@@ -66,6 +70,9 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .request_shutdown_function(globals::request_shutdown)
         .class::<column::RustColumn>()
         .class::<builder::RustColumnBuilder>()
+        .class::<group_table::RustGroupTable>()
+        .class::<grouped_counts::RustGroupedCounts>()
+        .class::<grouped_totals::RustGroupedTotals>()
         .class::<backend::RustBackend>()
         .class::<iterator::RustIterator>()
         .class::<csv::source::RustCSVOpenSource>()

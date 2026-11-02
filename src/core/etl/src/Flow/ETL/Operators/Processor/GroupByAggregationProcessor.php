@@ -11,19 +11,16 @@ use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Foundation\RandomValueGenerator;
 use Flow\ETL\Kernels\Bucketing\Buckets;
 use Flow\ETL\Kernels\Bucketing\HashBucketing;
-use Flow\ETL\Kernels\Bucketing\KeyEncoder;
 use Flow\ETL\Operators\BoundStep;
 use Flow\ETL\Operators\GroupBy;
 use Flow\ETL\Operators\GroupBy\AggregatedGroups;
 use Flow\ETL\Operators\GroupBy\Aggregators;
-use Flow\ETL\Operators\GroupBy\Group;
 use Flow\ETL\Operators\GroupBy\GroupByShape;
-use Flow\ETL\Operators\GroupBy\GroupKey;
 use Flow\ETL\Operators\GroupBy\MergedAggregate;
 use Flow\ETL\Operators\GroupBy\PartialAggregate;
-use Flow\ETL\Operators\Processor;
 use Flow\ETL\Storage\BucketingConfig;
 use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Grouping\KeyEncoder;
 use Flow\ETL\Values\Memory\BoundedRead;
 use Flow\ETL\Values\Memory\MemoryBudget;
 use Flow\ETL\Values\Rows;
@@ -33,7 +30,7 @@ use SensitiveParameter;
 
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_instance_of;
-use function serialize;
+use function range;
 
 /**
  * Past the memory limit, the rest is bucketed by key hash and aggregated per bucket.
@@ -177,7 +174,7 @@ final readonly class GroupByAggregationProcessor implements Distributable
                 }
 
                 $shape ??= GroupByShape::of($this->groupBy, $batch->schema());
-                $groups ??= new AggregatedGroups($this->groupBy, $shape);
+                $groups ??= new AggregatedGroups($this->groupBy, $shape, $backend);
                 $groups->accumulate($batch, $backend);
 
                 if ($budget->exceeded()) {
@@ -201,10 +198,7 @@ final readonly class GroupByAggregationProcessor implements Distributable
 
             // SQL scalar aggregate: no input still yields one row
             if ($shape !== null && $this->groupBy->isGlobal()) {
-                yield (new AggregatedGroups($this->groupBy, $shape))->rows([new Group(
-                    new GroupKey([], serialize([])),
-                    $shape->aggregators->fresh(),
-                )], $backend);
+                yield (new AggregatedGroups($this->groupBy, $shape, $backend))->noInputRow($backend);
             }
         } finally {
             $buckets->clear();
@@ -234,36 +228,35 @@ final readonly class GroupByAggregationProcessor implements Distributable
             $buckets->add($bucket);
         }
 
-        /** @var array<int, array<string, Group>> $partials */
-        $partials = [];
+        /** @var array<int, list<int>> $earlierOf earlier group ids by bucket index */
+        $earlierOf = [];
+        $encoder = new KeyEncoder($this->groupBy->refs()->names(), declared: $shape->input);
 
-        foreach ($earlier->groups() as $key => $group) {
-            $partials[$bucketing->indexOf($key)][$key] = $group;
+        foreach ($encoder->of($earlier->keyRows(
+            $earlier->count() === 0 ? [] : range(0, $earlier->count() - 1),
+            $backend,
+        )) as $group => $key) {
+            $earlierOf[$bucketing->indexOf($key)][] = $group;
         }
 
         foreach ($buckets->all() as $bucket) {
-            $groups = new AggregatedGroups($this->groupBy, $shape);
+            $groups = new AggregatedGroups($this->groupBy, $shape, $backend);
 
             foreach ($buckets->rows($bucket->id) as $batch) {
                 $groups->accumulate($batch, $backend);
             }
 
-            foreach ($partials[$bucket->index] ?? [] as $key => $group) {
-                $groups->absorbEarlier($key, $group, $backend);
-            }
-
-            unset($partials[$bucket->index]);
+            $groups->absorbEarlier($earlier, $earlierOf[$bucket->index] ?? [], $backend);
+            unset($earlierOf[$bucket->index]);
 
             yield from $groups->flush($this->config->batchSize, $backend);
         }
 
         // groups whose bucket received no row after the limit
-        $remaining = new AggregatedGroups($this->groupBy, $shape);
+        $remaining = new AggregatedGroups($this->groupBy, $shape, $backend);
 
-        foreach ($partials as $groups) {
-            foreach ($groups as $key => $group) {
-                $remaining->absorbEarlier($key, $group, $backend);
-            }
+        foreach ($earlierOf as $groups) {
+            $remaining->absorbEarlier($earlier, $groups, $backend);
         }
 
         yield from $remaining->flush($this->config->batchSize, $backend);

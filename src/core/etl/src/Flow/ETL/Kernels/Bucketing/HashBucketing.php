@@ -7,6 +7,7 @@ namespace Flow\ETL\Kernels\Bucketing;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\RandomValueGenerator;
 use Flow\ETL\Storage\RowsStorage;
+use Flow\ETL\Values\Grouping\KeyEncoder;
 use Flow\ETL\Values\Rows;
 use Generator;
 

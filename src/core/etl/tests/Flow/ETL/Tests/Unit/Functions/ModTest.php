@@ -5,13 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Functions;
 
 use Flow\ETL\Foundation\Exception\EvaluationException;
+use Flow\ETL\Tests\Context\BackendsContext;
 use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\ETL\Values\Column\PhpBackend;
-use Flow\ETL\Values\Column\RustBackend;
+use Flow\ETL\Values\Column\Backend;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
@@ -32,32 +31,21 @@ final class ModTest extends FlowTestCase
     }
 
     /**
-     * @param array<string, ?int> $row
+     * @return Generator<string, list<mixed>>
      */
-    #[DataProvider('refusals')]
-    public function test_a_refusal_message_in_php_backend(array $row, string $message): void
+    public static function refusalsPerBackend(): Generator
     {
-        try {
-            (new FunctionContext(flow_context(config_builder()->backend(new PhpBackend())->build())))->eval(
-                ref('a')->mod(ref('b')),
-                $row,
-                schema(int_schema('a', nullable: true), int_schema('b', nullable: true)),
-            );
-            static::fail('the operands must be refused');
-        } catch (EvaluationException $e) {
-            static::assertSame($message, $e->getMessage());
-        }
+        return BackendsContext::perBackend(self::refusals());
     }
 
     /**
      * @param array<string, ?int> $row
      */
-    #[DataProvider('refusals')]
-    #[RequiresPhpExtension('flow_php')]
-    public function test_a_refusal_message_in_rust_backend(array $row, string $message): void
+    #[DataProvider('refusalsPerBackend')]
+    public function test_a_refusal_message(Backend $backend, array $row, string $message): void
     {
         try {
-            (new FunctionContext(flow_context(config_builder()->backend(new RustBackend())->build())))->eval(
+            (new FunctionContext(flow_context(config_builder()->backend($backend)->build())))->eval(
                 ref('a')->mod(ref('b')),
                 $row,
                 schema(int_schema('a', nullable: true), int_schema('b', nullable: true)),

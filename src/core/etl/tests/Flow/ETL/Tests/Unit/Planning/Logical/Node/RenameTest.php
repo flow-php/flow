@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Planning\Logical\Node;
 
+use Flow\ETL\Operators\Processor\RequiredColumns;
 use Flow\ETL\Planning\Logical\Node\Rename;
 use Flow\ETL\Planning\Logical\Redefined;
 use Flow\ETL\Planning\Logical\RowCount;
@@ -44,5 +45,13 @@ final class RenameTest extends FlowTestCase
         static::assertSame(RowCount::preserving, $node->rowCount());
         static::assertSame(Transparency::transparent, $node->transparency());
         static::assertEquals(Redefined::rename('id', 'user_id'), $node->redefines());
+    }
+
+    public function test_any_other_node_requires_every_column(): void
+    {
+        static::assertEquals(
+            RequiredColumns::all(),
+            (new Rename(NodeMother::read(), 'a', 'b'))->requiredInputColumns(RequiredColumns::only('b')),
+        );
     }
 }

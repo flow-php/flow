@@ -9,14 +9,14 @@ use Flow\ETL\Foundation\Exception\InvalidLogicException;
 use Flow\ETL\Foundation\Exception\SchemaMismatchException;
 use Flow\ETL\Functions\Evaluation\ResultColumn;
 use Flow\ETL\Functions\ReferenceResolver;
+use Flow\ETL\Tests\Context\BackendsContext;
 use Flow\ETL\Tests\Double\SpyBackend;
+use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Column\PhpBackend;
-use Flow\ETL\Values\Column\RustBackend;
 use Flow\ETL\Values\Column\ValueColumn;
 use Flow\Types\Type;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\ETL\DSL\call;
@@ -178,30 +178,32 @@ final class ResultColumnTest extends TestCase
     }
 
     /**
-     * @param Type<mixed> $type
-     * @param list<mixed> $values
+     * @return Generator<string, list<mixed>>
      */
-    #[DataProvider('valuesOfTheColumnType')]
-    public function test_values_of_the_column_type_stay_unchanged_in_php_backend(Type $type, array $values): void
+    public static function valuesOfTheColumnTypePerBackend(): Generator
     {
-        $column = (new ResultColumn(new PhpBackend()))->typed(type_optional($type), $values);
-
-        static::assertSame($values, $column->physicals());
-        static::assertSame(1, $column->nullCount());
+        return BackendsContext::perBackend(self::valuesOfTheColumnType());
     }
 
     /**
      * @param Type<mixed> $type
      * @param list<mixed> $values
      */
-    #[DataProvider('valuesOfTheColumnType')]
-    #[RequiresPhpExtension('flow_php')]
-    public function test_values_of_the_column_type_stay_unchanged_in_rust_backend(Type $type, array $values): void
+    #[DataProvider('valuesOfTheColumnTypePerBackend')]
+    public function test_values_of_the_column_type_stay_unchanged(Backend $backend, Type $type, array $values): void
     {
-        $column = (new ResultColumn(new RustBackend()))->typed(type_optional($type), $values);
+        $column = (new ResultColumn($backend))->typed(type_optional($type), $values);
 
         static::assertSame($values, $column->physicals());
         static::assertSame(1, $column->nullCount());
+    }
+
+    /**
+     * @return Generator<string, list<mixed>>
+     */
+    public static function mixedValuesPerBackend(): Generator
+    {
+        return BackendsContext::perBackend(self::mixedValues());
     }
 
     /**
@@ -209,35 +211,16 @@ final class ResultColumnTest extends TestCase
      * @param list<mixed> $values
      * @param list<mixed> $expected
      */
-    #[DataProvider('mixedValues')]
-    public function test_mixed_values_are_cast_into_the_column_type_in_php_backend(
+    #[DataProvider('mixedValuesPerBackend')]
+    public function test_mixed_values_are_cast_into_the_column_type(
+        Backend $backend,
         Type $type,
         array $values,
         array $expected,
     ): void {
         static::assertSame(
             $expected,
-            (new ResultColumn(new PhpBackend()))
-                ->typed(type_optional($type), $values)
-                ->physicals(),
-        );
-    }
-
-    /**
-     * @param Type<mixed> $type
-     * @param list<mixed> $values
-     * @param list<mixed> $expected
-     */
-    #[DataProvider('mixedValues')]
-    #[RequiresPhpExtension('flow_php')]
-    public function test_mixed_values_are_cast_into_the_column_type_in_rust_backend(
-        Type $type,
-        array $values,
-        array $expected,
-    ): void {
-        static::assertSame(
-            $expected,
-            (new ResultColumn(new RustBackend()))
+            (new ResultColumn($backend))
                 ->typed(type_optional($type), $values)
                 ->physicals(),
         );

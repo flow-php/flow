@@ -6,8 +6,8 @@ namespace Flow\ETL\Operators\GroupBy;
 
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Functions\Reference\Reference;
-use Flow\ETL\Kernels\Sort\RowOrder;
 use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Sort\RowOrder;
 
 use function array_values;
 use function count;

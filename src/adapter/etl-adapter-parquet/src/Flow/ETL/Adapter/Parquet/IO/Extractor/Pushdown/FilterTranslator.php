@@ -88,7 +88,6 @@ final readonly class FilterTranslator
         return $translated;
     }
 
-    // Flow orders NaN above every number, parquet's IEEE 754 comparisons never match it
     /**
      * @return list<string>
      */

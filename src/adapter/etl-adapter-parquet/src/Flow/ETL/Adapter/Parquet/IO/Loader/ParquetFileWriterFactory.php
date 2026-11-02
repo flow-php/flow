@@ -59,6 +59,6 @@ final class ParquetFileWriterFactory implements FileWriterFactory
 
         return $native && $file instanceof ArrowRustParquetFileWriter
             ? new RustParquetFileWriter($file, $conformance, $backend)
-            : new ParquetFileWriter($file, new ParquetEncoder($parquetSchema), $conformance, $backend);
+            : new ParquetFileWriter($file, $conformance, $backend);
     }
 }
