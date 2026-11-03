@@ -35,6 +35,7 @@ excludes = [
     "**/var/**",
     "**/extension/*/ext/build/**",
     "**/extension/*/ext/run-tests.php",
+    # TODO: remove once PHP 8.5 is the minimum version; these tests use the |> operator, which mago rejects at php-version 8.3
     "src/core/etl/tests/Flow/ETL/Tests/Pipe/**",
 ]
 
