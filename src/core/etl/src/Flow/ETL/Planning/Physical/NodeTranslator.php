@@ -116,9 +116,9 @@ final readonly class NodeTranslator
             $node instanceof Node\Cache => $node->batchSize
                 ? [
                     new BatchingProcessor(new BatchSize($node->batchSize)),
-                    new CachingProcessor($node->id ?: $this->id, $node->cache ?? $this->cache, (bool) $node->id),
+                    new CachingProcessor($node->id ?? $this->id, $node->cache ?? $this->cache, $node->id !== null),
                 ]
-                : [new CachingProcessor($node->id ?: $this->id, $node->cache ?? $this->cache, (bool) $node->id)],
+                : [new CachingProcessor($node->id ?? $this->id, $node->cache ?? $this->cache, $node->id !== null)],
             $node instanceof Node\Collect => [new CollectingProcessor()],
             $node instanceof Node\CollectRefs => [new CollectReferencesTransformer($node->references)],
             $node instanceof Node\Constrain => [new ConstrainedProcessor(array_map(
