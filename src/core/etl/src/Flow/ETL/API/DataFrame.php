@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\API;
 
+use Flow\ETL\API\Transformation\WithColumn;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\InvalidLogicException;
 use Flow\ETL\Foundation\Exception\SchemaNotDerivableException;
@@ -15,7 +16,6 @@ use Flow\ETL\Functions\Reference\References;
 use Flow\ETL\Functions\Reference\UnresolvedReference;
 use Flow\ETL\Functions\ScalarFunction;
 use Flow\ETL\Functions\WindowFunction;
-use Flow\ETL\Functions\WithColumn;
 use Flow\ETL\IO\Extractor\ExtractorFactory;
 use Flow\ETL\IO\Formatter;
 use Flow\ETL\IO\Formatter\AsciiTableFormatter;
@@ -29,6 +29,7 @@ use Flow\ETL\Operators\GroupBy;
 use Flow\ETL\Operators\GroupBy\Aggregators;
 use Flow\ETL\Operators\Transformer;
 use Flow\ETL\Operators\Transformer\Rename\RenameColumnStrategy;
+use Flow\ETL\Operators\Transformer\ScalarFunctionTransformer;
 use Flow\ETL\Planning\Logical\Node;
 use Flow\ETL\Planning\Logical\Node\BucketingAlgorithmBuilder;
 use Flow\ETL\Planning\Logical\Node\JoinAlgorithmBuilder;
@@ -299,14 +300,26 @@ final readonly class DataFrame
         return new self(new Node\Distinct($this->root, array_values($columns)), $this->writes, $this->context);
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     #[NoDiscard]
     public function duplicateRow(mixed $condition, WithColumn ...$columns): self
     {
-        return new self(
-            new Node\DuplicateRow($this->root, $condition, array_values($columns)),
-            $this->writes,
-            $this->context,
-        );
+        $transformers = [];
+
+        foreach ($columns as $column) {
+            if (!is_string($column->name) || !$column->function instanceof ScalarFunction) {
+                throw InvalidArgumentException::because(
+                    'duplicateRow() takes a column name and a scalar function. '
+                    . 'Add a typed or window column with withColumn() first, then duplicate rows.',
+                );
+            }
+
+            $transformers[] = new ScalarFunctionTransformer($column->name, $column->function);
+        }
+
+        return new self(new Node\DuplicateRow($this->root, $condition, $transformers), $this->writes, $this->context);
     }
 
     /**
@@ -727,17 +740,13 @@ final readonly class DataFrame
      * @lazy
      */
     #[NoDiscard]
-    public function with(Transformer|Transformation|WithColumn $transformer): self
+    public function with(Transformer|Transformation $transformer): self
     {
         if ($transformer instanceof Transformer) {
             return new self(new Node\Transform($this->root, $transformer), $this->writes, $this->context);
         }
 
-        if ($transformer instanceof WithColumn) {
-            return $this->withColumn($transformer->name, $transformer->function);
-        }
-
-        return $transformer->transform($this);
+        return $transformer($this);
     }
 
     /**

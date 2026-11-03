@@ -50,8 +50,9 @@ numbers of the nodes follow the order in which rows reach them, so the source is
 under it.
 
 The verbs build a plan with no consumer on top. The trigger adds the consumer that it needs. For this reason,
-`explain()` takes the trigger to print. The default is `Trigger::rows`. `Trigger::run` prints the plan that `run()`
-executes, and `Trigger::count` prints the plan that `count()` executes.
+`explain()` takes the trigger to print. The default is `Trigger::run`, the plan that `run()` executes. `Trigger::rows`
+prints the plan that `get()`, `fetch()` and `display()` execute, and `Trigger::count` prints the plan that `count()`
+executes.
 
 ```php
 $dataFrame = data_frame()
@@ -317,6 +318,7 @@ For more information about each DataFrame operation, see this component document
 ### Core Operations
 - [Building Blocks](/documentation/components/core/building-blocks.md): rows, columns and the schema that describes them
 - [Transformations](/documentation/components/core/transformations.md): reusable DataFrame transformations and the Transformation interface
+- [Pipe Operator](/documentation/components/core/pipe-operator.md): every DataFrame operation as a step for the PHP 8.5 `|>` operator
 - [Select/Drop](/documentation/components/core/select-drop.md): column selection and removal
 - [Rename](/documentation/components/core/rename.md): column renaming strategies
 - [Filter](/documentation/components/core/filter.md): row filtering and conditions

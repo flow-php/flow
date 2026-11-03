@@ -15,6 +15,8 @@ use Flow\Types\Type\Native\BooleanType;
 use function array_map;
 use function count;
 use function Flow\Types\DSL\type_bare;
+use function is_float;
+use function is_nan;
 
 final readonly class Selection
 {
@@ -66,6 +68,10 @@ final readonly class Selection
         }
 
         // @mago-expect analysis:mixed-operand
-        return array_map(static fn(mixed $value): ?bool => $value === null ? null : (bool) $value, $column->values());
+        return array_map(static fn(mixed $value): ?bool => match (true) {
+            $value === null => null,
+            is_float($value) && is_nan($value) => true,
+            default => (bool) $value,
+        }, $column->values());
     }
 }

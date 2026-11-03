@@ -82,6 +82,7 @@ use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\limit;
 use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\rank;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\schema;
@@ -91,6 +92,8 @@ use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\sum;
 use function Flow\ETL\DSL\to_memory;
 use function Flow\ETL\DSL\to_transformation;
+use function Flow\ETL\DSL\window;
+use function Flow\ETL\DSL\with_column;
 use function Flow\Types\DSL\type_json;
 use function iterator_to_array;
 use function ob_get_clean;
@@ -219,6 +222,34 @@ final class DataFrameTest extends FlowTestCase
         );
     }
 
+    public function test_duplicate_row_refuses_a_definition_name(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'duplicateRow() takes a column name and a scalar function. '
+            . 'Add a typed or window column with withColumn() first, then duplicate rows.',
+        );
+
+        df()
+            ->read(from_array([['a' => 1]]))
+            ->duplicateRow(lit(true), with_column(int_schema('a'), lit(2)))
+            ->fetch();
+    }
+
+    public function test_duplicate_row_refuses_a_window_function(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'duplicateRow() takes a column name and a scalar function. '
+            . 'Add a typed or window column with withColumn() first, then duplicate rows.',
+        );
+
+        df()
+            ->read(from_array([['a' => 1]]))
+            ->duplicateRow(lit(true), with_column('rank', rank()->over(window()->orderBy(ref('a')))))
+            ->fetch();
+    }
+
     public function test_drop_duplicates(): void
     {
         static::assertEquals(
@@ -271,7 +302,7 @@ final class DataFrameTest extends FlowTestCase
                     schema(int_schema('id'), str_schema('country'), int_schema('age'), str_schema('gender')),
                 ))
                 ->with(new class implements Transformation {
-                    public function transform(DataFrame $dataFrame): DataFrame
+                    public function __invoke(DataFrame $dataFrame): DataFrame
                     {
                         return $dataFrame->withColumn('country', ref('country')->lower())->withColumn('age', ref(
                             'age',
@@ -279,7 +310,7 @@ final class DataFrameTest extends FlowTestCase
                     }
                 })
                 ->with(new class implements Transformation {
-                    public function transform(DataFrame $dataFrame): DataFrame
+                    public function __invoke(DataFrame $dataFrame): DataFrame
                     {
                         return $dataFrame->drop('gender')->drop('id');
                     }

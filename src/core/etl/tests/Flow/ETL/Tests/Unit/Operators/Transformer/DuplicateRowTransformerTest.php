@@ -7,8 +7,8 @@ namespace Flow\ETL\Tests\Unit\Operators\Transformer;
 use DateTimeImmutable;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
-use Flow\ETL\Functions\WithColumn;
 use Flow\ETL\Operators\Transformer\DuplicateRowTransformer;
+use Flow\ETL\Operators\Transformer\ScalarFunctionTransformer;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\ListColumnsMother;
 use Flow\ETL\Values\Column\AdaptiveBackend;
@@ -26,17 +26,19 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\string_schema;
-use function Flow\ETL\DSL\with_column;
 use function Flow\Types\DSL\type_date;
 
 final class DuplicateRowTransformerTest extends FlowTestCase
 {
     public function test_bind_widens_a_column_an_entry_overwrites_with_another_type(): void
     {
-        static::assertEquals(schema(float_schema('amount')), (new DuplicateRowTransformer(lit(true), [with_column(
-            'amount',
-            lit(1.5),
-        )]))->bind(schema(int_schema('amount')))->output);
+        static::assertEquals(
+            schema(float_schema('amount')),
+            (new DuplicateRowTransformer(lit(true), [new ScalarFunctionTransformer(
+                'amount',
+                lit(1.5),
+            )]))->bind(schema(int_schema('amount')))->output,
+        );
     }
 
     public function test_bind_refuses_an_entry_without_a_common_type_with_the_column_it_overwrites(): void
@@ -46,7 +48,7 @@ final class DuplicateRowTransformerTest extends FlowTestCase
             'Cannot combine types "integer", "list<integer>" - an explicit cast is required.',
         );
 
-        (new DuplicateRowTransformer(lit(true), [with_column(
+        (new DuplicateRowTransformer(lit(true), [new ScalarFunctionTransformer(
             'amount',
             lit([1, 2]),
         )]))->bind(schema(int_schema('amount')));
@@ -61,7 +63,7 @@ final class DuplicateRowTransformerTest extends FlowTestCase
                 ['id' => 2, 'flag' => null],
                 ['id' => 2, 'flag' => true],
             ],
-            (new DuplicateRowTransformer(true, [with_column('flag', lit(true))]))
+            (new DuplicateRowTransformer(true, [new ScalarFunctionTransformer('flag', lit(true))]))
                 ->transform(array_to_rows([
                     ['id' => 1],
                     ['id' => 2],
@@ -72,10 +74,16 @@ final class DuplicateRowTransformerTest extends FlowTestCase
 
     public function test_a_transformation_that_adds_a_column_conforms_the_untouched_rows(): void
     {
-        $transformed = (new DuplicateRowTransformer(ref('status')->equals(lit('inactive')), [with_column(
-            'flag',
-            lit(true),
-        )]))->transform(array_to_rows([['id' => 1, 'status' => 'active'], ['id' => 2, 'status' => 'inactive']], schema(int_schema('id'), string_schema('status'))), flow_context(config())->backend());
+        $transformed = (new DuplicateRowTransformer(
+            ref('status')->equals(lit('inactive')),
+            [new ScalarFunctionTransformer('flag', lit(true))],
+        ))->transform(
+            array_to_rows(
+                [['id' => 1, 'status' => 'active'], ['id' => 2, 'status' => 'inactive']],
+                schema(int_schema('id'), string_schema('status')),
+            ),
+            flow_context(config())->backend(),
+        );
 
         static::assertSame(['id', 'status', 'flag'], $transformed->schema()->names());
         static::assertSame(
@@ -93,7 +101,7 @@ final class DuplicateRowTransformerTest extends FlowTestCase
         // Multiply::returns() strips nullability, so the duplicated batch declares a narrower column than
         // the source; the emitted batch must describe both.
         static::assertTrue(
-            (new DuplicateRowTransformer(ref('status')->equals(lit('inactive')), [with_column(
+            (new DuplicateRowTransformer(ref('status')->equals(lit('inactive')), [new ScalarFunctionTransformer(
                 'amount',
                 ref('amount')->multiply(lit(-1)),
             )]))
@@ -150,8 +158,8 @@ final class DuplicateRowTransformerTest extends FlowTestCase
         );
 
         $transformedRows = (new DuplicateRowTransformer(ref('status')->equals(lit('inactive')), [
-            with_column('amount', ref('amount')->multiply(lit(-1))),
-            with_column('date_updated', ref('date_deactivated')),
+            new ScalarFunctionTransformer('amount', ref('amount')->multiply(lit(-1))),
+            new ScalarFunctionTransformer('date_updated', ref('date_deactivated')),
         ]))->transform($rows, flow_context()->backend());
 
         static::assertCount(4, $transformedRows);
@@ -199,7 +207,7 @@ final class DuplicateRowTransformerTest extends FlowTestCase
     {
         static::assertEquals(
             schema(int_schema('id'), string_schema('status'), bool_schema('flag', nullable: true)),
-            (new DuplicateRowTransformer(ref('status')->equals(lit('inactive')), [with_column(
+            (new DuplicateRowTransformer(ref('status')->equals(lit('inactive')), [new ScalarFunctionTransformer(
                 'flag',
                 lit(true),
             )]))->bind(schema(int_schema('id'), string_schema('status')))->output,
@@ -210,7 +218,7 @@ final class DuplicateRowTransformerTest extends FlowTestCase
     {
         $this->expectException(SchemaDefinitionNotFoundException::class);
 
-        (new DuplicateRowTransformer(ref('missing')->equals(lit('x')), [with_column(
+        (new DuplicateRowTransformer(ref('missing')->equals(lit('x')), [new ScalarFunctionTransformer(
             'flag',
             lit(true),
         )]))->bind(schema(int_schema('id')));
@@ -218,14 +226,20 @@ final class DuplicateRowTransformerTest extends FlowTestCase
 
     public function test_doing_nothing_when_condition_is_not_satisfied(): void
     {
-        $transformedRows = (new DuplicateRowTransformer(ref('status')->equals(lit('inactive')), [new WithColumn(
-            'amount',
-            ref('amount')->multiply(lit(-1)),
-        )]))->transform(array_to_rows([
-            ['id' => 1, 'status' => 'active', 'amount' => 100],
-            ['id' => 2, 'status' => 'active', 'amount' => 100],
-            ['id' => 3, 'status' => 'active', 'amount' => 100],
-        ], schema(int_schema('id'), string_schema('status'), int_schema('amount'))), flow_context()->backend());
+        $transformedRows = (new DuplicateRowTransformer(
+            ref('status')->equals(lit('inactive')),
+            [new ScalarFunctionTransformer('amount', ref('amount')->multiply(lit(-1)))],
+        ))->transform(
+            array_to_rows(
+                [
+                    ['id' => 1, 'status' => 'active', 'amount' => 100],
+                    ['id' => 2, 'status' => 'active', 'amount' => 100],
+                    ['id' => 3, 'status' => 'active', 'amount' => 100],
+                ],
+                schema(int_schema('id'), string_schema('status'), int_schema('amount')),
+            ),
+            flow_context()->backend(),
+        );
 
         static::assertCount(3, $transformedRows);
 
@@ -241,14 +255,20 @@ final class DuplicateRowTransformerTest extends FlowTestCase
 
     public function test_duplicating_row(): void
     {
-        $transformedRows = (new DuplicateRowTransformer(ref('status')->equals(lit('inactive')), [new WithColumn(
-            'amount',
-            ref('amount')->multiply(lit(-1)),
-        )]))->transform(array_to_rows([
-            ['id' => 1, 'status' => 'active', 'amount' => 100],
-            ['id' => 2, 'status' => 'inactive', 'amount' => 100],
-            ['id' => 3, 'status' => 'active', 'amount' => 100],
-        ], schema(int_schema('id'), string_schema('status'), int_schema('amount'))), flow_context()->backend());
+        $transformedRows = (new DuplicateRowTransformer(
+            ref('status')->equals(lit('inactive')),
+            [new ScalarFunctionTransformer('amount', ref('amount')->multiply(lit(-1)))],
+        ))->transform(
+            array_to_rows(
+                [
+                    ['id' => 1, 'status' => 'active', 'amount' => 100],
+                    ['id' => 2, 'status' => 'inactive', 'amount' => 100],
+                    ['id' => 3, 'status' => 'active', 'amount' => 100],
+                ],
+                schema(int_schema('id'), string_schema('status'), int_schema('amount')),
+            ),
+            flow_context()->backend(),
+        );
 
         static::assertCount(4, $transformedRows);
 
@@ -280,7 +300,7 @@ final class DuplicateRowTransformerTest extends FlowTestCase
             'duplicateRow() cannot contain array_expand(), it turns one row into many rows. Expand with withColumn() first, then use the new column.',
         );
 
-        (new DuplicateRowTransformer(ref('flags')->expand()->equals(lit(true)), [with_column(
+        (new DuplicateRowTransformer(ref('flags')->expand()->equals(lit(true)), [new ScalarFunctionTransformer(
             'flag',
             lit(true),
         )]))->bind(ListColumnsMother::schema());
@@ -293,7 +313,7 @@ final class DuplicateRowTransformerTest extends FlowTestCase
             'duplicateRow() cannot contain array_expand(), it turns one row into many rows. Expand with withColumn() first, then use the new column.',
         );
 
-        (new DuplicateRowTransformer(lit(true), [with_column(
+        (new DuplicateRowTransformer(lit(true), [new ScalarFunctionTransformer(
             't',
             ref('tags')->expand(),
         )]))->bind(ListColumnsMother::schema());
@@ -306,7 +326,7 @@ final class DuplicateRowTransformerTest extends FlowTestCase
             'duplicateRow() cannot contain array_expand(), it turns one row into many rows. Expand with withColumn() first, then use the new column.',
         );
 
-        (new DuplicateRowTransformer(lit(true), [with_column(
+        (new DuplicateRowTransformer(lit(true), [new ScalarFunctionTransformer(
             't',
             ref('tags')->expand(),
         )]))->transform(ListColumnsMother::rows()->matchTo(ListColumnsMother::schema(), new AdaptiveBackend()), flow_context(config())->backend());

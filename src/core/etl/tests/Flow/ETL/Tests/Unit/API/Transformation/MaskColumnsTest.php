@@ -9,6 +9,7 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\mask_columns;
 
 final class MaskColumnsTest extends FlowTestCase
 {
@@ -33,6 +34,21 @@ final class MaskColumnsTest extends FlowTestCase
                 ['id' => 4, 'name' => 'Jane Smith', 'salary' => '******', 'currency' => 'USD'],
             ],
             $output,
+        );
+    }
+
+    public function test_invoking_mask_columns_gives_the_rows_of_with(): void
+    {
+        $dataFrame = df()->read(from_array([['id' => 1, 'salary' => 7000], ['id' => 2, 'salary' => 8000]]));
+        $expected = [['id' => 1, 'salary' => '***'], ['id' => 2, 'salary' => '***']];
+
+        static::assertSame($expected, mask_columns(['salary'], '***')($dataFrame)->fetch()->toArray());
+        static::assertSame(
+            $expected,
+            $dataFrame
+                ->with(mask_columns(['salary'], '***'))
+                ->fetch()
+                ->toArray(),
         );
     }
 }

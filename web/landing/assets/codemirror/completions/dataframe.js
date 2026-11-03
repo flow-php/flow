@@ -238,7 +238,7 @@ const dataframeMethods = [
                     <span class=\"fn-name\">dropDuplicates</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @param Reference|string ...$columns<br>@lazy<br>@return $this
+                    @param Reference|string ...$columns<br>@lazy
                 </div>
                             `
             return div
@@ -254,6 +254,9 @@ const dataframeMethods = [
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
                     <span class=\"fn-name\">duplicateRow</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$condition</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">WithColumn</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @throws InvalidArgumentException
                 </div>
                             `
             return div
@@ -559,7 +562,7 @@ const dataframeMethods = [
                     <span class=\"fn-name\">explain</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Trigger</span> <span class=\"fn-param\">$trigger</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Planning\\Logical\\Trigger::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Plan</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    The plan $trigger would run over this frame, frozen: later verbs on this frame do not reach it. The default<br>adds no consumer of its own - it draws the frame as built, its chain and its writes. toString() prints it as a<br>tree. Answers from the plan without reading a row.
+                    The plan $trigger would run over this frame. The default adds no consumer of its own - it draws the frame as<br>built, its chain and its writes. toString() prints it as a tree. Answers from the plan without reading a row.
                 </div>
                             `
             return div
@@ -733,7 +736,7 @@ const dataframeMethods = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">with</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Transformer|Transformation|WithColumn</span> <span class=\"fn-param\">$transformer</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
+                    <span class=\"fn-name\">with</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Transformer|Transformation</span> <span class=\"fn-param\">$transformer</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @lazy

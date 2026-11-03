@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Planning\Logical\Node;
 
-use Flow\ETL\Functions\WithColumn;
+use Flow\ETL\Operators\Transformer\ScalarFunctionTransformer;
 use Flow\ETL\Planning\Logical\Node\DuplicateRow;
 use Flow\ETL\Planning\Logical\Redefined;
 use Flow\ETL\Planning\Logical\RowCount;
@@ -19,7 +19,7 @@ final class DuplicateRowTest extends FlowTestCase
     public function test_with_children_returns_the_same_instance_when_children_are_identical(): void
     {
         $input = NodeMother::read();
-        $node = new DuplicateRow($input, lit(true), [new WithColumn('copy', lit(1))]);
+        $node = new DuplicateRow($input, lit(true), [new ScalarFunctionTransformer('copy', lit(1))]);
 
         static::assertSame($node, $node->withChildren([$input]));
     }
@@ -29,7 +29,7 @@ final class DuplicateRowTest extends FlowTestCase
         $input = NodeMother::read();
         $other = NodeMother::read();
         $condition = lit(true);
-        $columns = [new WithColumn('copy', lit(1))];
+        $columns = [new ScalarFunctionTransformer('copy', lit(1))];
         $node = new DuplicateRow($input, $condition, $columns);
 
         $rebuilt = $node->withChildren([$other]);
@@ -43,7 +43,7 @@ final class DuplicateRowTest extends FlowTestCase
 
     public function test_declarations(): void
     {
-        $node = new DuplicateRow(NodeMother::read(), lit(true), [new WithColumn('copy', lit(1))]);
+        $node = new DuplicateRow(NodeMother::read(), lit(true), [new ScalarFunctionTransformer('copy', lit(1))]);
 
         static::assertSame(RowCount::expanding, $node->rowCount());
         static::assertSame(Transparency::transparent, $node->transparency());

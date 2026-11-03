@@ -123,7 +123,7 @@ final readonly class ScalarFunctionTransformer implements Transformer, SpanAttri
         return (new ReferenceResolver())->bind($this->function, $input, 'transform');
     }
 
-    private function columnName(): string
+    public function columnName(): string
     {
         return $this->column instanceof Definition ? $this->column->name() : $this->column;
     }

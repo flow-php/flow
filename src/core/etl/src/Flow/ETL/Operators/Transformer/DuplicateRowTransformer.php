@@ -11,7 +11,6 @@ use Flow\ETL\Functions\ExpandingFunctions;
 use Flow\ETL\Functions\Parameter;
 use Flow\ETL\Functions\ReferenceResolver;
 use Flow\ETL\Functions\ScalarFunction;
-use Flow\ETL\Functions\WithColumn;
 use Flow\ETL\Operators\BoundStep;
 use Flow\ETL\Operators\Transformer;
 use Flow\ETL\Values\Column\Backend;
@@ -30,7 +29,7 @@ use function Flow\Types\DSL\type_instance_of;
 final readonly class DuplicateRowTransformer implements Transformer
 {
     /**
-     * @param list<WithColumn> $columns
+     * @param list<ScalarFunctionTransformer> $columns
      * @param mixed $resolved the condition resolved against the bound schema; null while unbound
      * @param null|Schema $output the schema this step declares; null while unbound, the unbound path derives it per batch
      * @param null|list<BoundStep> $steps the column steps, each bound over the previous one's output; null while unbound
@@ -121,7 +120,7 @@ final readonly class DuplicateRowTransformer implements Transformer
 
         foreach ($this->columns as $column) {
             (new ExpandingFunctions())->refuse($column->function, 'duplicateRow');
-            $step = (new ScalarFunctionTransformer($column->name, $column->function))->bind($schema);
+            $step = $column->bind($schema);
             $steps[] = $step;
             $schema = $step->output;
         }

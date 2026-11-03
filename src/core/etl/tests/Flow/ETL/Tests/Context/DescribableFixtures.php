@@ -25,7 +25,6 @@ use Flow\ETL\Functions\Window\FrameBoundType;
 use Flow\ETL\Functions\Window\PeerFrame;
 use Flow\ETL\Functions\Window\RowsFrame;
 use Flow\ETL\Functions\Window\WholePartitionFrame;
-use Flow\ETL\Functions\WithColumn;
 use Flow\ETL\IO\Extractor\File\DerivedSchema;
 use Flow\ETL\IO\Extractor\File\FileColumns;
 use Flow\ETL\IO\Extractor\File\FileRead;
@@ -269,7 +268,7 @@ final class DescribableFixtures
             DropColumnsTransformer::class => static fn(): Describable => new DropColumnsTransformer('id', ref('name')),
             DuplicateRowTransformer::class => static fn(): Describable => new DuplicateRowTransformer(
                 ref('id')->greaterThan(lit(1)),
-                [new WithColumn('copy', lit(true))],
+                [new ScalarFunctionTransformer('copy', lit(true))],
             ),
             Equal::class => static fn(): Describable => new Equal(ref('id'), 'customer_id'),
             EvolvingValidator::class => static fn(): Describable => new EvolvingValidator(),

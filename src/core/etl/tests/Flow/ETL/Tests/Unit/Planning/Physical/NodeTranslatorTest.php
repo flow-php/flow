@@ -124,7 +124,6 @@ use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\sum;
 use function Flow\ETL\DSL\to_memory;
 use function Flow\ETL\DSL\window;
-use function Flow\ETL\DSL\with_column;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Floe\DSL\to_floe;
 
@@ -308,7 +307,7 @@ final class NodeTranslatorTest extends FlowTestCase
             array_map(static fn($step) => $step::class, NodeTranslatorMother::of(config())->steps(new DuplicateRow(
                 NodeMother::read(),
                 lit(true),
-                [with_column('copy', lit(1))],
+                [new ScalarFunctionTransformer('copy', lit(1))],
             ))),
         );
     }

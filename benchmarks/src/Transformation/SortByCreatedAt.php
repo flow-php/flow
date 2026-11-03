@@ -11,7 +11,7 @@ use function Flow\ETL\DSL\ref;
 
 final readonly class SortByCreatedAt implements Transformation
 {
-    public function transform(DataFrame $dataFrame): DataFrame
+    public function __invoke(DataFrame $dataFrame): DataFrame
     {
         return $dataFrame->sortBy([ref('created_at')]);
     }

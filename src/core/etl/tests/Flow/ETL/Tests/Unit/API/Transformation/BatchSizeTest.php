@@ -28,4 +28,13 @@ final class BatchSizeTest extends FlowTestCase
             static::assertCount(2, $rows);
         }
     }
+
+    public function test_invoking_batch_size_gives_the_rows_of_with(): void
+    {
+        $dataFrame = df()->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]));
+        $expected = [['id' => 1], ['id' => 2], ['id' => 3]];
+
+        static::assertSame($expected, batch_size(2)($dataFrame)->fetch()->toArray());
+        static::assertSame($expected, $dataFrame->with(batch_size(2))->fetch()->toArray());
+    }
 }

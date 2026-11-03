@@ -22,7 +22,7 @@ data_frame()
          *  Create new column "name" by concatenating "first_name" and "last_name" columns.
          */
         new class implements Transformation {
-            public function transform(DataFrame $dataFrame) : DataFrame
+            public function __invoke(DataFrame $dataFrame) : DataFrame
             {
                 return $dataFrame->withColumn('name', concat_ws(lit(' '), ref('first_name'), ref('last_name')));
             }

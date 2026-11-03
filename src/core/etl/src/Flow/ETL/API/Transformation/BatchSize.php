@@ -7,6 +7,7 @@ namespace Flow\ETL\API\Transformation;
 use Flow\ETL\API\DataFrame;
 use Flow\ETL\API\Transformation;
 use Flow\ETL\Values\BatchSize as RowsBatchSize;
+use NoDiscard;
 
 final readonly class BatchSize implements Transformation
 {
@@ -14,7 +15,8 @@ final readonly class BatchSize implements Transformation
         private RowsBatchSize $size,
     ) {}
 
-    public function transform(DataFrame $dataFrame): DataFrame
+    #[NoDiscard]
+    public function __invoke(DataFrame $dataFrame): DataFrame
     {
         return $dataFrame->batchSize($this->size->size);
     }

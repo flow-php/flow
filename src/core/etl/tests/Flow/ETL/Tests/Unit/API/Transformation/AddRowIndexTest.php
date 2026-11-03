@@ -8,6 +8,7 @@ use Flow\ETL\API\Transformation\AddRowIndex;
 use Flow\ETL\Operators\Transformer\AddRowIndex\StartFrom;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\add_row_index;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 
@@ -59,5 +60,14 @@ final class AddRowIndexTest extends FlowTestCase
             ],
             $rows,
         );
+    }
+
+    public function test_invoking_add_row_index_gives_the_rows_of_with(): void
+    {
+        $dataFrame = df()->read(from_array([['id' => 1], ['id' => 2]]));
+        $expected = [['id' => 1, 'index' => 1], ['id' => 2, 'index' => 2]];
+
+        static::assertSame($expected, add_row_index(startFrom: StartFrom::ONE)($dataFrame)->fetch()->toArray());
+        static::assertSame($expected, $dataFrame->with(add_row_index(startFrom: StartFrom::ONE))->fetch()->toArray());
     }
 }

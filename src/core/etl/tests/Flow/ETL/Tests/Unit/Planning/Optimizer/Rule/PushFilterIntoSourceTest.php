@@ -8,7 +8,7 @@ use DateTimeImmutable;
 use Flow\ETL\Foundation\Exception\EvaluationException;
 use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Functions\All;
-use Flow\ETL\Functions\WithColumn;
+use Flow\ETL\Operators\Transformer\ScalarFunctionTransformer;
 use Flow\ETL\Planning\Logical\Node;
 use Flow\ETL\Planning\Logical\Node\Discard;
 use Flow\ETL\Planning\Logical\Node\Distinct;
@@ -281,7 +281,7 @@ final class PushFilterIntoSourceTest extends FlowTestCase
 
         $rows = df()
             ->read($extractor)
-            ->duplicateRow(lit(true), new WithColumn('year', lit(2023)))
+            ->duplicateRow(lit(true), with_column('year', lit(2023)))
             ->filter(ref('year')->equals(lit(2023)))
             ->fetch();
 
@@ -296,7 +296,7 @@ final class PushFilterIntoSourceTest extends FlowTestCase
 
         df()
             ->read($extractor)
-            ->duplicateRow(lit(true), new WithColumn('copy', lit(1)))
+            ->duplicateRow(lit(true), with_column('copy', lit(1)))
             ->filter(ref('year')->equals(lit(2023)))
             ->fetch();
 
@@ -1011,7 +1011,7 @@ final class PushFilterIntoSourceTest extends FlowTestCase
         static::assertNull((new PushFilterIntoSource())->predicateAtLeaf(new Filter(new DuplicateRow(
             $read,
             lit(true),
-            [with_column('year', lit(2023))],
+            [new ScalarFunctionTransformer('year', lit(2023))],
         ), lit(true)), $read, ref('year')->isNotNull()));
     }
 
@@ -1022,7 +1022,7 @@ final class PushFilterIntoSourceTest extends FlowTestCase
         static::assertNotNull((new PushFilterIntoSource())->predicateAtLeaf(new Filter(new DuplicateRow(
             $read,
             lit(true),
-            [with_column('copy', lit(1))],
+            [new ScalarFunctionTransformer('copy', lit(1))],
         ), lit(true)), $read, ref('year')->isNotNull()));
     }
 
