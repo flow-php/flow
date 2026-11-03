@@ -1,3 +1,20 @@
+## [Unreleased] - 2026-11-03
+
+### Added
+- [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - PHP 8.5 pipe operator support: a pipeable DSL step for every DataFrame, GroupedDataFrame and Flow method** - [@norberttech](https://github.com/norberttech)
+- [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - Pipe operator documentation page** - [@norberttech](https://github.com/norberttech)
+
+### Changed
+- [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - Transformation::transform() renamed to __invoke()** - [@norberttech](https://github.com/norberttech)
+- [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - WithColumn moved to API\Transformation and accepts Definition names and window functions** - [@norberttech](https://github.com/norberttech)
+- [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - DataFrame::with() accepts only Transformer or Transformation** - [@norberttech](https://github.com/norberttech)
+- [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - duplicate_row() refuses Definition names and window functions** - [@norberttech](https://github.com/norberttech)
+- [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - print_rows(Rows) renamed to format_rows()** - [@norberttech](https://github.com/norberttech)
+
+### Fixed
+- [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - PHP 8.5 NaN-to-bool warning when evaluating a float column as a condition** - [@norberttech](https://github.com/norberttech)
+- [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - explain() default trigger in the documentation** - [@norberttech](https://github.com/norberttech)
+
 ## [0.47.0] - 2026-11-02
 
 ### Added
