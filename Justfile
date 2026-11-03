@@ -56,8 +56,6 @@ lint: lint-mago lint-monorepo lint-actions
 lint-mago:
     tools/mago/vendor/bin/mago format --check
     tools/mago/vendor/bin/mago lint
-    tools/mago/vendor/bin/mago --config mago-php85.toml format --check
-    tools/mago/vendor/bin/mago --config mago-php85.toml lint
 
 # Validate the monorepo configuration.
 lint-monorepo:
@@ -94,15 +92,12 @@ lint-actions:
 analyze *args:
     tools/mago/vendor/bin/mago guard
     tools/mago/vendor/bin/mago analyze {{args}}
-    tools/mago/vendor/bin/mago --config mago-php85.toml analyze {{args}}
     tools/mago/vendor/bin/mago --workspace web/landing analyze {{args}}
 
 # Auto-fix code style (Mago format + lint --fix) and GitHub Actions findings (zizmor --fix).
 fix:
     tools/mago/vendor/bin/mago format
     tools/mago/vendor/bin/mago lint --fix --potentially-unsafe --format-after-fix
-    tools/mago/vendor/bin/mago --config mago-php85.toml format
-    tools/mago/vendor/bin/mago --config mago-php85.toml lint --fix --potentially-unsafe --format-after-fix
     zizmor --fix .github/workflows
 
 # Build the Flow PHAR archive and copy it into the landing site assets.
