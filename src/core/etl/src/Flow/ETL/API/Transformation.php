@@ -6,5 +6,5 @@ namespace Flow\ETL\API;
 
 interface Transformation
 {
-    public function transform(DataFrame $dataFrame): DataFrame;
+    public function __invoke(DataFrame $dataFrame): DataFrame;
 }

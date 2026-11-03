@@ -9,6 +9,7 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\limit;
 
 final class LimitTest extends FlowTestCase
 {
@@ -25,5 +26,14 @@ final class LimitTest extends FlowTestCase
             ->toArray();
 
         static::assertCount(2, $rows);
+    }
+
+    public function test_invoking_limit_gives_the_rows_of_with(): void
+    {
+        $dataFrame = data_frame()->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]));
+        $expected = [['id' => 1], ['id' => 2]];
+
+        static::assertSame($expected, limit(2)($dataFrame)->fetch()->toArray());
+        static::assertSame($expected, $dataFrame->with(limit(2))->fetch()->toArray());
     }
 }

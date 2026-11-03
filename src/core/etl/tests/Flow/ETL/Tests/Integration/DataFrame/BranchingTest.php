@@ -125,7 +125,7 @@ final class BranchingTest extends FlowIntegrationTestCase
             ]))
             ->batchSize(2)
             ->write(to_branch(ref('group')->equals(lit('A')), to_transformation(new class implements Transformation {
-                public function transform(DataFrame $dataFrame): DataFrame
+                public function __invoke(DataFrame $dataFrame): DataFrame
                 {
                     return $dataFrame->aggregate([sum(ref('id'))]);
                 }
@@ -159,7 +159,7 @@ final class BranchingTest extends FlowIntegrationTestCase
             ]))
             ->batchSize(2)
             ->write(to_branch(ref('group')->equals(lit('A')), to_transformation(new class implements Transformation {
-                public function transform(DataFrame $dataFrame): DataFrame
+                public function __invoke(DataFrame $dataFrame): DataFrame
                 {
                     return $dataFrame->sortBy([ref('id')]);
                 }
@@ -184,14 +184,14 @@ final class BranchingTest extends FlowIntegrationTestCase
                 ['id' => 6, 'group' => 'C'],
             ]))
             ->write(to_branch(ref('group')->equals(lit('A')), to_transformation(new class implements Transformation {
-                public function transform(DataFrame $dataFrame): DataFrame
+                public function __invoke(DataFrame $dataFrame): DataFrame
                 {
                     return $dataFrame->withColumn('group_name', lit('A'));
                 }
             }, to_memory($memoryA = new ArrayMemory()))))
             ->write(to_branch(ref('group')->isIn(lit(['B', 'C'])), to_transformation(new class implements
                 Transformation {
-                public function transform(DataFrame $dataFrame): DataFrame
+                public function __invoke(DataFrame $dataFrame): DataFrame
                 {
                     return $dataFrame->withColumn('group_name', lit('BC'));
                 }

@@ -44,6 +44,15 @@ final class BatchByTest extends FlowTestCase
         );
     }
 
+    public function test_invoking_batch_by_gives_the_rows_of_with(): void
+    {
+        $dataFrame = df()->read(from_array([['order_id' => 1], ['order_id' => 1], ['order_id' => 2]]));
+        $expected = [['order_id' => 1], ['order_id' => 1], ['order_id' => 2]];
+
+        static::assertSame($expected, batch_by('order_id')($dataFrame)->fetch()->toArray());
+        static::assertSame($expected, $dataFrame->with(batch_by('order_id'))->fetch()->toArray());
+    }
+
     public function test_a_minimum_size_below_one_is_refused(): void
     {
         $this->expectException(InvalidArgumentException::class);

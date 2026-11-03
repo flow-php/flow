@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\API;
 
+use NoDiscard;
+
 use function array_values;
 
 final readonly class Transformations implements Transformation
@@ -18,10 +20,11 @@ final readonly class Transformations implements Transformation
         $this->transformations = array_values($transformations);
     }
 
-    public function transform(DataFrame $dataFrame): DataFrame
+    #[NoDiscard]
+    public function __invoke(DataFrame $dataFrame): DataFrame
     {
         foreach ($this->transformations as $transformation) {
-            $dataFrame = $transformation->transform($dataFrame);
+            $dataFrame = $transformation($dataFrame);
         }
 
         return $dataFrame;

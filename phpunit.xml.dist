@@ -14,6 +14,7 @@
         <testsuite name="etl-unit">
             <directory>src/core/etl/tests/Flow/ETL/Tests/Unit</directory>
             <directory>src/core/etl/tests/Flow/Floe/Tests/Unit</directory>
+            <directory phpVersion="8.5.0" phpVersionOperator=">=">src/core/etl/tests/Flow/ETL/Tests/Pipe</directory>
         </testsuite>
         <testsuite name="etl-integration">
             <directory>src/core/etl/tests/Flow/ETL/Tests/Integration</directory>

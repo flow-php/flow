@@ -8,6 +8,7 @@ use Flow\ETL\API\DataFrame;
 use Flow\ETL\API\Transformation;
 use Flow\ETL\Operators\Transformer\AddRowIndex\StartFrom;
 use Flow\ETL\Operators\Transformer\AddRowIndexTransformer;
+use NoDiscard;
 
 final readonly class AddRowIndex implements Transformation
 {
@@ -16,7 +17,8 @@ final readonly class AddRowIndex implements Transformation
         private StartFrom $startFrom = StartFrom::ZERO,
     ) {}
 
-    public function transform(DataFrame $dataFrame): DataFrame
+    #[NoDiscard]
+    public function __invoke(DataFrame $dataFrame): DataFrame
     {
         return $dataFrame->with(new AddRowIndexTransformer($this->indexColumn, $this->startFrom));
     }

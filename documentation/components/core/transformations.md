@@ -14,9 +14,12 @@ Every Transformation implements the `Transformation` interface. The interface ha
 ```php
 interface Transformation
 {
-    public function transform(DataFrame $dataFrame): DataFrame;
+    public function __invoke(DataFrame $dataFrame): DataFrame;
 }
 ```
+
+`select('id')($dataFrame)` equals `$dataFrame->with(select('id'))`. On PHP 8.5, every Transformation is a step of the
+[pipe operator](/documentation/components/core/pipe-operator.md).
 
 ## Using Transformations
 
@@ -262,7 +265,7 @@ use Flow\ETL\API\{DataFrame, Transformation};
 use function Flow\ETL\DSL\{df, from_array, ref, to_output, to_transformation};
 
 $sortById = new class implements Transformation {
-    public function transform(DataFrame $dataFrame): DataFrame
+    public function __invoke(DataFrame $dataFrame): DataFrame
     {
         return $dataFrame->sortBy([ref('id')]);
     }
@@ -336,7 +339,7 @@ use function Flow\ETL\DSL\{df, from_array, ref, to_output};
 
 final class UppercaseNames implements Transformation
 {
-    public function transform(DataFrame $dataFrame): DataFrame
+    public function __invoke(DataFrame $dataFrame): DataFrame
     {
         return $dataFrame->withColumn(
             'name',

@@ -16,7 +16,7 @@ final readonly class CallbackTransformation implements Transformation
         private mixed $callback,
     ) {}
 
-    public function transform(DataFrame $dataFrame): DataFrame
+    public function __invoke(DataFrame $dataFrame): DataFrame
     {
         return ($this->callback)($dataFrame);
     }

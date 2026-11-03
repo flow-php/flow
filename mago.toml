@@ -35,6 +35,7 @@ excludes = [
     "**/var/**",
     "**/extension/*/ext/build/**",
     "**/extension/*/ext/run-tests.php",
+    "src/core/etl/tests/Flow/ETL/Tests/Pipe/**",
 ]
 
 [parser]
@@ -265,6 +266,16 @@ permit = [
     "Flow\\Telemetry\\**", "Psr\\Clock\\**",
 ]
 reason = "Layer 9 API: DataFrame, GroupedDataFrame, the config builders, sinks and transformations. They use every layer below, never the DSL or an adapter."
+
+[[guard.perimeter.rules]]
+namespace = "Flow\\ETL\\API\\Pipe\\"
+permit = [
+    "@self", "@native", "Flow\\ETL\\Flow", "Flow\\ETL\\API\\**", "Flow\\ETL\\Runtime\\**", "Flow\\ETL\\Planning\\**",
+    "Flow\\ETL\\Operators\\**", "Flow\\ETL\\IO\\**", "Flow\\ETL\\Functions\\**", "Flow\\ETL\\Kernels\\**",
+    "Flow\\ETL\\Storage\\**", "Flow\\ETL\\Values\\**", "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**",
+    "Flow\\Filesystem\\**", "Flow\\Telemetry\\**", "Psr\\Clock\\**",
+]
+reason = "API pipe steps: the |> steps of DataFrame, GroupedDataFrame and Flow. They sit above the API and the Flow entry point, below the DSL."
 
 [[guard.perimeter.rules]]
 namespace = "Flow\\ETL\\"

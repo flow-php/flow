@@ -1,4 +1,4 @@
-# Upgrade Guide 0.35.x - 0.40.x
+# Upgrade Guide 0.35.x - 0.41.x
 
 [TOC]
 
@@ -6,6 +6,176 @@ This document provides guidelines for upgrading between versions of Flow PHP. Pl
 specific version to ensure a smooth upgrade process.
 
 Upgrading from older versions: [0.16.x to 0.35.x](/documentation/upgrading-0.16-0.35.md)
+
+---
+
+## Upgrading from 0.40.x to 0.41.x
+
+### 1) Removal of Elasticsearch Adapter
+
+The Elasticsearch adapter has been removed from Flow PHP and replaced by the [SEAL](https://php-cmsig.github.io/search/)
+adapter (`flow-php/etl-adapter-seal`), a search engine abstraction layer that supports Elasticsearch, OpenSearch,
+Meilisearch, Solr, Typesense, Algolia, RediSearch and Loupe.
+
+To migrate, install the SEAL adapter together with the engine adapter for your backend:
+
+```
+composer require flow-php/etl-adapter-seal cmsig/seal-elasticsearch-adapter
+```
+
+Then build a `CmsIg\Seal\Engine` and pass it to `to_seal_upsert()` instead of the previous `to_es_bulk_index()` (or
+Meilisearch) DSL functions:
+
+```php
+use CmsIg\Seal\Engine;
+use CmsIg\Seal\Adapter\Elasticsearch\ElasticsearchAdapter;
+
+use function Flow\ETL\Adapter\Seal\to_seal_upsert;
+
+$engine = new Engine(
+    new ElasticsearchAdapter($client),
+    $schema,
+);
+
+data_frame()
+    ->read(/* ... */)
+    ->write(to_seal_upsert($engine, 'index_name'))
+    ->run();
+```
+
+### 2) `flow-php/symfony-telemetry-bundle` -
+
+`flow-php/symfony-http-foundation-telemetry-bridge` is now an optional dependency
+
+| Before                               | After                                                       |
+|--------------------------------------|-------------------------------------------------------------|
+| installed transitively by the bundle | install explicitly to enable HTTP trace context propagation |
+
+`instrumentation.http_kernel.context_propagation` is silently disabled when the bridge is absent. To keep extracting
+incoming and injecting outgoing W3C trace headers:
+
+```
+composer require flow-php/symfony-http-foundation-telemetry-bridge
+```
+
+### 3) `flow-php/telemetry` - trace id derived from the active span; root spans start a new trace
+
+| Before                                  | After                                                          |
+|-----------------------------------------|----------------------------------------------------------------|
+| `Context::create()`                     | `Context::root()`                                              |
+| `Context::withTraceId(TraceId)`         | removed                                                        |
+| `$context->traceId` (property)          | `$context->traceId(): ?TraceId` (derived from the active span) |
+| `Context::withActiveSpan(SpanId)`       | `Context::withActiveSpan(SpanContext)`                         |
+| `context(?TraceId, ?Baggage)` (DSL)     | `context(?Baggage)`                                            |
+| a root span reused the context trace id | each root span generates a new `TraceId`                       |
+
+`Context` no longer stores a standalone trace id; attach the active span as a `SpanContext` to keep subsequent spans in
+the same trace.
+
+### 4) `flow-php/symfony-telemetry-bundle` - each consumed Messenger message is its own trace
+
+| Before                                                     | After                                                            |
+|------------------------------------------------------------|------------------------------------------------------------------|
+| all messages in a `messenger:consume` run shared one trace | each handled message is a new trace root, linked to the producer |
+
+### 5) `flow-php/telemetry-otlp-bridge`, `flow-php/symfony-telemetry-bundle` - curl is synchronous; async moved to
+
+`async_curl`
+
+| Before                                                         | After                                                                                           |
+|----------------------------------------------------------------|-------------------------------------------------------------------------------------------------|
+| `CurlTransport` async (`curl_multi`, fire-and-forget `send()`) | `CurlTransport` synchronous; `send()` blocks and throws on failure                              |
+| async via `CurlTransport`                                      | async via `AsyncCurlTransport` / `otlp_async_curl_transport()` / `transport.type: 'async_curl'` |
+| `CurlTransportOptions::DEFAULT_TIMEOUT_MS` `250`               | `10000`                                                                                         |
+| bundle `curl` `timeout_ms` `250`                               | `10000`                                                                                         |
+| -                                                              | `async_curl` `connect_timeout_ms` `1500`, `pump_timeout_ms` `100`                               |
+
+### 6) `flow-php/symfony-postgresql-bundle` - migrations run against a single configured connection
+
+| Before                                         | After                                                                              |
+|------------------------------------------------|------------------------------------------------------------------------------------|
+| `flow:migrations:* --connection=<name>` (`-c`) | removed - every migration command uses the configured migrations connection        |
+| migrator stack registered for every connection | registered only for the migrations connection                                      |
+| -                                              | `flow_postgresql.migrations.connection: <name>` (defaults to the first connection) |
+
+To run migrations against a non-default connection, set `migrations.connection` instead of passing `-c`:
+
+```yaml
+flow_postgresql:
+  migrations:
+    enabled: true
+    connection: analytics
+```
+
+### 7) `flow-php/symfony-telemetry-bundle` - static resource cache file is keyed by kernel environment
+
+| Before                                             | After                                                           |
+|----------------------------------------------------|-----------------------------------------------------------------|
+| `sys_get_temp_dir()/flow_telemetry_resource.cache` | `sys_get_temp_dir()/flow_telemetry_resource_<kernel.env>.cache` |
+
+Delete the orphaned `flow_telemetry_resource.cache` from the temp dir; a per-env file is written on the next run.
+
+### 8) `flow-php/symfony-telemetry-bundle` - messenger worker receive cycle is traced; `link_to_worker` config removed
+
+| Before                                             | After                                                    |
+|----------------------------------------------------|----------------------------------------------------------|
+| `instrumentation.messenger.link_to_worker: true`   | removed (always on under `messenger:consume`)            |
+| `flow.messenger.worker` link → console worker span | → per-pass `messenger.receive` span                      |
+| transport poll query = one standalone trace each   | grouped under one `messenger.receive` root span per pass |
+
+Remove the `link_to_worker` key from config. Idle passes (no message received) are marked
+`messaging.symfony.worker.idle: true`.
+
+### 9) `flow-php/symfony-telemetry-bundle` - messenger instrumentation also emits messaging metrics
+
+| Before                                       | After                                                                                                           |
+|----------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
+| messenger instrumentation emitted spans only | also emits `messaging.client.consumed.messages`, `messaging.client.sent.messages`, `messaging.process.duration` |
+
+Disable with `instrumentation.messenger.metrics: false`; set the `messaging.process.duration` unit via
+`instrumentation.messenger.metrics_duration_unit` (`s` default, or `ms`).
+
+### 10) `flow-php/etl`, `flow-php/filesystem`, `flow-php/postgresql`, `flow-php/symfony-telemetry-bundle`,
+
+`flow-php/phpunit-telemetry-bridge` - emitted metric names standardized
+
+| Before                      | After                              |
+|-----------------------------|------------------------------------|
+| `rows_processed`            | `flow.etl.rows.processed`          |
+| `rows_throughput`           | `flow.etl.rows.throughput`         |
+| `cache_hits`                | `flow.cache.hits`                  |
+| `cache_misses`              | `flow.cache.misses`                |
+| `cache.hits`                | `flow.cache.hits`                  |
+| `cache.misses`              | `flow.cache.misses`                |
+| `write_size`                | `flow.filesystem.write.size`       |
+| `write_operations`          | `flow.filesystem.write.operations` |
+| `read_size`                 | `flow.filesystem.read.size`        |
+| `read_operations`           | `flow.filesystem.read.operations`  |
+| `operation_duration`        | `db.client.operation.duration`     |
+| `response_returned_rows`    | `db.client.response.returned_rows` |
+| `phpunit.test.duration`     | `flow.phpunit.test.duration`       |
+| `phpunit.test.count`        | `flow.phpunit.test.count`          |
+| `phpunit.test.memory.peak`  | `flow.phpunit.test.memory.peak`    |
+| `phpunit.test.memory.delta` | `flow.phpunit.test.memory.delta`   |
+| `phpunit.suite.duration`    | `flow.phpunit.suite.duration`      |
+| `phpunit.suite.test_count`  | `flow.phpunit.suite.test_count`    |
+
+Rename these series in dashboards and alerts.
+
+### 11) `flow-php/symfony-telemetry-bundle` - messenger `trace`/`link` config; `propagation_style` removed
+
+| Before                                        | After                                                                          |
+|-----------------------------------------------|--------------------------------------------------------------------------------|
+| `instrumentation.messenger.propagation_style` | removed (consumed messages always start their own trace)                       |
+| (no span selection)                           | `instrumentation.messenger.trace`: `worker`/`handlers`/`both` (default)/`none` |
+| (no link selection)                           | `instrumentation.messenger.link`: `dispatcher`/`worker`/`both` (default)       |
+
+Remove `propagation_style` from config - `continue` mode is gone (it made the consumer span absorb the queue wait time).
+`trace` selects which spans are emitted (`handlers` = the `process`/`send` message spans; `none` = metrics only);
+`link` selects the consumer span's links. `link: worker`/`both` requires `trace` to include the worker, otherwise the
+config is rejected. When `trace` excludes the worker, the transport's poll instrumentation (Doctrine DBAL, HTTP
+client, ...) is suppressed during the receive loop so it does not surface as orphan spans - no `messenger.receive` span,
+no orphans either way.
 
 ---
 

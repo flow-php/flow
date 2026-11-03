@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Planning\Logical\Node;
 
-use Flow\ETL\Functions\WithColumn;
 use Flow\ETL\Operators\Processor\RequiredColumns;
+use Flow\ETL\Operators\Transformer\ScalarFunctionTransformer;
 use Flow\ETL\Planning\Logical\Node;
 use Flow\ETL\Planning\Logical\Redefined;
 use Flow\ETL\Planning\Logical\RowCount;
@@ -16,7 +16,7 @@ use function array_map;
 final readonly class DuplicateRow implements Node
 {
     /**
-     * @param list<WithColumn> $columns
+     * @param list<ScalarFunctionTransformer> $columns
      */
     public function __construct(
         private Node $input,
@@ -49,7 +49,10 @@ final readonly class DuplicateRow implements Node
 
     public function redefines(): Redefined
     {
-        return Redefined::names(...array_map(static fn(WithColumn $column): string => $column->name, $this->columns));
+        return Redefined::names(...array_map(
+            static fn(ScalarFunctionTransformer $column): string => $column->columnName(),
+            $this->columns,
+        ));
     }
 
     public function requiredInputColumns(RequiredColumns $output): RequiredColumns

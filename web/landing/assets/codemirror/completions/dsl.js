@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Total functions: 814
+ * Total functions: 855
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
  * - Extractors (flow-extractors)
@@ -49,6 +49,42 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\PostgreSql\\DSL\\agg(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:args" + "}" + ", " + "$" + "{" + "3:distinct" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "aggregate",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dtransformers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">aggregate</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$aggregations</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">BucketingAlgorithmBuilder</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Aggregate</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @param list<AggregatingFunction> $aggregations<br>@param null|BucketingAlgorithmBuilder $algorithm null defers to configuration; a builder pins the<br>                                               algorithm for this operation and skips any automatic choice
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\aggregate(" + "$" + "{" + "1:aggregations" + "}" + ", " + "$" + "{" + "2:algorithm" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "aggregate_by",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dtransformers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">aggregate_by</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">GroupBy</span> <span class=\"fn-param\">$group_by</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">BucketingAlgorithmBuilder</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AggregateBy</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @param null|BucketingAlgorithmBuilder $algorithm null defers to configuration; a builder pins the<br>                                               algorithm for this operation and skips any automatic choice
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\aggregate_by(" + "$" + "{" + "1:group_by" + "}" + ", " + "$" + "{" + "2:algorithm" + "}" + ")"),
         boost: 10
     },                {
         label: "agg_avg",
@@ -1284,6 +1320,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\PostgreSql\\DSL\\bulk_insert(" + "$" + "{" + "1:table" + "}" + ", " + "$" + "{" + "2:columns" + "}" + ", " + "$" + "{" + "3:rowCount" + "}" + ")"),
         boost: 10
     },                {
+        label: "cache",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dtransformers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">cache</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$id</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$cache_batch_size</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">RowsStorage</span> <span class=\"fn-param\">$cache</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Cache</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @param null|RowsStorage $cache reads of this cache must pass the same instance to from_cache()
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\cache(" + "$" + "{" + "1:id" + "}" + ", " + "$" + "{" + "2:cache_batch_size" + "}" + ", " + "$" + "{" + "3:cache" + "}" + ")"),
+        boost: 10
+    },                {
         label: "caching_detector",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -1663,6 +1717,36 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\collect(" + "$" + "{" + "1:ref" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "collect_refs",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dtransformers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">collect_refs</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">References</span> <span class=\"fn-param\">$references</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CollectRefs</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\collect_refs(" + "$" + "{" + "1:references" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "collect_rows",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dtransformers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">collect_rows</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CollectRows</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\collect_rows()"),
         boost: 10
     },                {
         label: "collect_unique",
@@ -2658,6 +2742,21 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Telemetry\\DSL\\console_span_options_minimal()"),
         boost: 10
     },                {
+        label: "constrain",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dtransformers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">constrain</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Constraint</span> <span class=\"fn-param\">$constraint</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Constraint</span> <span class=\"fn-param\">$constraints</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Constrain</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\constrain(" + "$" + "{" + "1:constraint" + "}" + ", " + "$" + "{" + "2:constraints" + "}" + ")"),
+        boost: 10
+    },                {
         label: "constraint_sorted_by",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -2793,6 +2892,21 @@ const dslFunctions = [
         apply: snippet("\\Flow\\PostgreSql\\DSL\\count_all()"),
         boost: 10
     },                {
+        label: "count_rows",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">count_rows</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CountRows</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\count_rows()"),
+        boost: 10
+    },                {
         label: "create",
         type: "function",
         detail: "flow\u002Ddsl\u002Dschema",
@@ -2809,6 +2923,21 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\PostgreSql\\DSL\\create()"),
+        boost: 10
+    },                {
+        label: "cross_join",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dtransformers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">cross_join</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">DataFrame</span> <span class=\"fn-param\">$data_frame</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$prefix</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;&#039;</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CrossJoin</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\cross_join(" + "$" + "{" + "1:data_frame" + "}" + ", " + "$" + "{" + "2:prefix" + "}" + ")"),
         boost: 10
     },                {
         label: "csv_detect_separator",
@@ -3267,6 +3396,21 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\discover_pivot_values(" + "$" + "{" + "1:maxValues" + "}" + ")"),
         boost: 10
     },                {
+        label: "display",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">display</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$limit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">20</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int|bool</span> <span class=\"fn-param\">$truncate</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">20</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Formatter</span> <span class=\"fn-param\">$formatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\IO\\Formatter\\AsciiTableFormatter::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Display</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\display(" + "$" + "{" + "1:limit" + "}" + ", " + "$" + "{" + "2:truncate" + "}" + ", " + "$" + "{" + "3:formatter" + "}" + ")"),
+        boost: 10
+    },                {
         label: "distinct_from",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -3351,6 +3495,21 @@ const dslFunctions = [
         apply: snippet("\\Flow\\PostgreSql\\DSL\\drop()"),
         boost: 10
     },                {
+        label: "drop_duplicates",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dtransformers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">drop_duplicates</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DropDuplicates</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\drop_duplicates(" + "$" + "{" + "1:columns" + "}" + ")"),
+        boost: 10
+    },                {
         label: "drop_owned",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -3367,6 +3526,21 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\PostgreSql\\DSL\\drop_owned(" + "$" + "{" + "1:roles" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "duplicate_row",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dtransformers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">duplicate_row</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$condition</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">WithColumn</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DuplicateRow</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\duplicate_row(" + "$" + "{" + "1:condition" + "}" + ", " + "$" + "{" + "2:columns" + "}" + ")"),
         boost: 10
     },                {
         label: "empty_generator",
@@ -3695,6 +3869,21 @@ const dslFunctions = [
     },                {
         label: "explain",
         type: "function",
+        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">explain</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Trigger</span> <span class=\"fn-param\">$trigger</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Planning\\Logical\\Trigger::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Explain</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\explain(" + "$" + "{" + "1:trigger" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "explain",
+        type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
         info: () => {
             const div = document.createElement("div")
@@ -3724,6 +3913,21 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\external_sort()"),
+        boost: 10
+    },                {
+        label: "fetch",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">fetch</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$limit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Fetch</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\fetch(" + "$" + "{" + "1:limit" + "}" + ")"),
         boost: 10
     },                {
         label: "fetch",
@@ -3846,6 +4050,39 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Filesystem\\DSL\\file_move(" + "$" + "{" + "1:table" + "}" + ", " + "$" + "{" + "2:options" + "}" + ")"),
         boost: 10
     },                {
+        label: "filter",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dtransformers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">filter</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction</span> <span class=\"fn-param\">$function</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Filter</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\filter(" + "$" + "{" + "1:function" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "filters",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dtransformers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">filters</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$functions</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Filters</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @param array<ScalarFunction> $functions
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\filters(" + "$" + "{" + "1:functions" + "}" + ")"),
+        boost: 10
+    },                {
         label: "first",
         type: "function",
         detail: "flow\u002Ddsl\u002Daggregating\u002Dfunctions",
@@ -3952,6 +4189,39 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\PostgreSql\\DSL\\foreign_key_dependency_order()"),
+        boost: 10
+    },                {
+        label: "format_rows",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">format_rows</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Rows</span> <span class=\"fn-param\">$rows</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int|bool</span> <span class=\"fn-param\">$truncate</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Formatter</span> <span class=\"fn-param\">$formatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\format_rows(" + "$" + "{" + "1:rows" + "}" + ", " + "$" + "{" + "2:truncate" + "}" + ", " + "$" + "{" + "3:formatter" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "for_each",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">for_each</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">callable</span> <span class=\"fn-param\">$callback</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ForEachRows</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @param null|callable(Rows $rows, FlowContext $context) : void $callback
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\for_each(" + "$" + "{" + "1:callback" + "}" + ")"),
         boost: 10
     },                {
         label: "for_share",
@@ -4704,6 +4974,66 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\generate_random_string(" + "$" + "{" + "1:length" + "}" + ", " + "$" + "{" + "2:generator" + "}" + ")"),
         boost: 10
     },                {
+        label: "get",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">get</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Get</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\get()"),
+        boost: 10
+    },                {
+        label: "get_as_array",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">get_as_array</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">GetAsArray</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\get_as_array()"),
+        boost: 10
+    },                {
+        label: "get_each_as_array",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">get_each_as_array</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">GetEachAsArray</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\get_each_as_array()"),
+        boost: 10
+    },                {
+        label: "get_schema",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">get_schema</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">GetSchema</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\get_schema()"),
+        boost: 10
+    },                {
         label: "get_type",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -4807,6 +5137,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\PostgreSql\\DSL\\greatest(" + "$" + "{" + "1:expressions" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "group_by",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">group_by</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|array|string</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">BucketingAlgorithmBuilder</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">GroupBy</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @param list<Reference|string>|Reference|string $columns a single column is grouped by on its own<br>@param null|BucketingAlgorithmBuilder $algorithm null defers to configuration; a builder pins the<br>                                               algorithm for this operation and skips any automatic choice
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\group_by(" + "$" + "{" + "1:columns" + "}" + ", " + "$" + "{" + "2:algorithm" + "}" + ")"),
         boost: 10
     },                {
         label: "gt",
@@ -5583,6 +5931,39 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\Adapter\\Excel\\DSL\\is_valid_excel_sheet_name(" + "$" + "{" + "1:sheet_name" + "}" + ")"),
         boost: 10
     },                {
+        label: "join",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dtransformers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">join</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">DataFrame</span> <span class=\"fn-param\">$data_frame</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$on</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">JoinType|string</span> <span class=\"fn-param\">$type</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Values\\Join\\JoinType::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">JoinAlgorithmBuilder</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Join</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @param null|JoinAlgorithmBuilder $algorithm null defers to configuration; a builder pins the algorithm<br>                                            for this operation and skips any automatic choice
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\join(" + "$" + "{" + "1:data_frame" + "}" + ", " + "$" + "{" + "2:on" + "}" + ", " + "$" + "{" + "3:type" + "}" + ", " + "$" + "{" + "4:algorithm" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "join_each",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dtransformers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">join_each</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ExtractorFactory</span> <span class=\"fn-param\">$factory</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$on</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">JoinType|string</span> <span class=\"fn-param\">$type</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Values\\Join\\JoinType::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">JoinEach</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\join_each(" + "$" + "{" + "1:factory" + "}" + ", " + "$" + "{" + "2:on" + "}" + ", " + "$" + "{" + "3:type" + "}" + ")"),
+        boost: 10
+    },                {
         label: "join_on",
         type: "function",
         detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
@@ -6201,6 +6582,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\match_condition(" + "$" + "{" + "1:condition" + "}" + ", " + "$" + "{" + "2:then" + "}" + ")"),
         boost: 10
     },                {
+        label: "match_schema",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dtransformers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">match_schema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SchemaValidator</span> <span class=\"fn-param\">$validator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">MatchSchema</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @param null|SchemaValidator $validator - when null, StrictValidator gets initialized
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\match_schema(" + "$" + "{" + "1:schema" + "}" + ", " + "$" + "{" + "2:validator" + "}" + ")"),
+        boost: 10
+    },                {
         label: "materialized_view_dependency_order",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -6744,6 +7143,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\number_format(" + "$" + "{" + "1:value" + "}" + ", " + "$" + "{" + "2:decimals" + "}" + ", " + "$" + "{" + "3:decimal_separator" + "}" + ", " + "$" + "{" + "4:thousands_separator" + "}" + ")"),
         boost: 10
     },                {
+        label: "offset",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dtransformers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">offset</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$offset</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Offset</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @param ?int<0, max> $offset
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\offset(" + "$" + "{" + "1:offset" + "}" + ")"),
+        boost: 10
+    },                {
         label: "on_conflict_nothing",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -6778,6 +7195,21 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\PostgreSql\\DSL\\on_conflict_update(" + "$" + "{" + "1:target" + "}" + ", " + "$" + "{" + "2:updates" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "on_error",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dtransformers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">on_error</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ErrorHandler</span> <span class=\"fn-param\">$handler</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">OnError</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\on_error(" + "$" + "{" + "1:handler" + "}" + ")"),
         boost: 10
     },                {
         label: "operation_options",
@@ -7638,6 +8070,21 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Telemetry\\DSL\\pipeline_log_processor(" + "$" + "{" + "1:middleware" + "}" + ", " + "$" + "{" + "2:sink" + "}" + ")"),
         boost: 10
     },                {
+        label: "pivot",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pivot</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">PivotValues</span> <span class=\"fn-param\">$values</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Pivot</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\pivot(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:values" + "}" + ")"),
+        boost: 10
+    },                {
         label: "pivot_values",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -7804,12 +8251,42 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">print_rows</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Rows</span> <span class=\"fn-param\">$rows</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int|bool</span> <span class=\"fn-param\">$truncate</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Formatter</span> <span class=\"fn-param\">$formatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
+                    <span class=\"fn-name\">print_rows</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$limit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">20</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int|bool</span> <span class=\"fn-param\">$truncate</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">20</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Formatter</span> <span class=\"fn-param\">$formatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\IO\\Formatter\\AsciiTableFormatter::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PrintRows</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\print_rows(" + "$" + "{" + "1:rows" + "}" + ", " + "$" + "{" + "2:truncate" + "}" + ", " + "$" + "{" + "3:formatter" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\print_rows(" + "$" + "{" + "1:limit" + "}" + ", " + "$" + "{" + "2:truncate" + "}" + ", " + "$" + "{" + "3:formatter" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "print_schema",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">print_schema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SchemaFormatter</span> <span class=\"fn-param\">$formatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\IO\\Formatter\\Row\\ASCIISchemaFormatter::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PrintSchema</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\print_schema(" + "$" + "{" + "1:formatter" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "process",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">process</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Rows</span> <span class=\"fn-param\">$rows</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Process</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\process(" + "$" + "{" + "1:rows" + "}" + ")"),
         boost: 10
     },                {
         label: "process_detector",
@@ -7921,6 +8398,21 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\rank()"),
+        boost: 10
+    },                {
+        label: "read",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">read</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Extractor</span> <span class=\"fn-param\">$extractor</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Read</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\read(" + "$" + "{" + "1:extractor" + "}" + ")"),
         boost: 10
     },                {
         label: "reassign_owned",
@@ -8280,6 +8772,36 @@ const dslFunctions = [
         apply: snippet("\\Flow\\PostgreSql\\DSL\\release_savepoint(" + "$" + "{" + "1:name" + "}" + ")"),
         boost: 10
     },                {
+        label: "rename",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dtransformers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">rename</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$from</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$to</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Rename</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\rename(" + "$" + "{" + "1:from" + "}" + ", " + "$" + "{" + "2:to" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "rename_each",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dtransformers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">rename_each</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">RenameColumnStrategy</span> <span class=\"fn-param\">$strategies</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">RenameEach</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\rename_each(" + "$" + "{" + "1:strategies" + "}" + ")"),
+        boost: 10
+    },                {
         label: "rename_map",
         type: "function",
         detail: "flow\u002Ddsl\u002Dtransformers",
@@ -8329,6 +8851,21 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\rename_style(" + "$" + "{" + "1:style" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "repartition",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dtransformers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">repartition</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$column</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Repartition</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\repartition(" + "$" + "{" + "1:column" + "}" + ", " + "$" + "{" + "2:columns" + "}" + ")"),
         boost: 10
     },                {
         label: "reset_role",
@@ -8554,6 +9091,21 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\row_number()"),
+        boost: 10
+    },                {
+        label: "run",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">run</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Analyze|bool</span> <span class=\"fn-param\">$analyze</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Run</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\run(" + "$" + "{" + "1:analyze" + "}" + ")"),
         boost: 10
     },                {
         label: "sanitize",
@@ -9883,6 +10435,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\skip_rows_handler()"),
+        boost: 10
+    },                {
+        label: "sort_by",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dtransformers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sort_by</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|SortColumn|array|string</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SortAlgorithmBuilder</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SortBy</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @param list<Reference|SortColumn|string>|Reference|SortColumn|string $columns a single column is sorted by on its own; a reference sorts ascending<br>@param null|SortAlgorithmBuilder $algorithm null defers to configuration; a builder pins the algorithm
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\sort_by(" + "$" + "{" + "1:columns" + "}" + ", " + "$" + "{" + "2:algorithm" + "}" + ")"),
         boost: 10
     },                {
         label: "span_context",
@@ -12549,6 +13119,21 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Serializer\\DSL\\unserialize_from_string(" + "$" + "{" + "1:serializer" + "}" + ", " + "$" + "{" + "2:payload" + "}" + ")"),
         boost: 10
     },                {
+        label: "until",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dtransformers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">until</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction</span> <span class=\"fn-param\">$function</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Until</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\until(" + "$" + "{" + "1:function" + "}" + ")"),
+        boost: 10
+    },                {
         label: "update",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -13401,6 +13986,21 @@ const dslFunctions = [
         apply: snippet("\\Flow\\PostgreSql\\DSL\\view_dependency_order()"),
         boost: 10
     },                {
+        label: "void",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dtransformers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">void</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Discard</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\void()"),
+        boost: 10
+    },                {
         label: "void_exporter",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -13613,6 +14213,21 @@ const dslFunctions = [
     },                {
         label: "with",
         type: "function",
+        detail: "flow\u002Ddsl\u002Dtransformers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">with</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Transformer|Transformation</span> <span class=\"fn-param\">$transformer</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">With</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\with(" + "$" + "{" + "1:transformer" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "with",
+        type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
         info: () => {
             const div = document.createElement("div")
@@ -13636,12 +14251,48 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">with_column</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ScalarFunction</span> <span class=\"fn-param\">$function</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">WithColumn</span>
+                    <span class=\"fn-name\">with_column</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Definition|string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ScalarFunction|WindowFunction</span> <span class=\"fn-param\">$function</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">WithColumn</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @param Definition<mixed>|string $name
                 </div>
                             `
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\with_column(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:function" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "with_columns",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dtransformers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">with_columns</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$references</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">WithColumns</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @param array<int, WithColumn>|array<string, ScalarFunction|WindowFunction|WithColumn> $references
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\with_columns(" + "$" + "{" + "1:references" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "write",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dtransformers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">write</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Loader|Branch|Transactional</span> <span class=\"fn-param\">$write</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Write</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\write(" + "$" + "{" + "1:write" + "}" + ")"),
         boost: 10
     },                {
         label: "xml_element_schema",

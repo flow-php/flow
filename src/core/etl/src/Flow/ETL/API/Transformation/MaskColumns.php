@@ -7,6 +7,7 @@ namespace Flow\ETL\API\Transformation;
 use Flow\ETL\API\DataFrame;
 use Flow\ETL\API\Transformation;
 use Flow\ETL\Functions\Literal;
+use NoDiscard;
 
 /**
  * A missing column is added holding the mask.
@@ -21,7 +22,8 @@ final readonly class MaskColumns implements Transformation
         private string $mask = '******',
     ) {}
 
-    public function transform(DataFrame $dataFrame): DataFrame
+    #[NoDiscard]
+    public function __invoke(DataFrame $dataFrame): DataFrame
     {
         foreach ($this->columns as $column) {
             $dataFrame = $dataFrame->withColumn($column, new Literal($this->mask));

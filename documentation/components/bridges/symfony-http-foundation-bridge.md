@@ -130,7 +130,7 @@ use Flow\ETL\API\{DataFrame, Transformation};
 use function Flow\ETL\DSL\lit;
 
 new class implements Transformation {
-    public function transform(DataFrame $dataFrame): DataFrame
+    public function __invoke(DataFrame $dataFrame): DataFrame
     {
         return $dataFrame->withColumn('time', lit(\time()));
     }

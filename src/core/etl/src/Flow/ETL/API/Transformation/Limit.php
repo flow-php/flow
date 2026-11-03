@@ -6,6 +6,7 @@ namespace Flow\ETL\API\Transformation;
 
 use Flow\ETL\API\DataFrame;
 use Flow\ETL\API\Transformation;
+use NoDiscard;
 
 final readonly class Limit implements Transformation
 {
@@ -13,7 +14,8 @@ final readonly class Limit implements Transformation
         private ?int $limit,
     ) {}
 
-    public function transform(DataFrame $dataFrame): DataFrame
+    #[NoDiscard]
+    public function __invoke(DataFrame $dataFrame): DataFrame
     {
         return $dataFrame->limit($this->limit);
     }

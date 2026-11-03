@@ -18,16 +18,59 @@ use Flow\ETL\API\Config\ConfigBuilder;
 use Flow\ETL\API\Config\Join\HashJoinBuilder;
 use Flow\ETL\API\Config\Sort\ExternalSortBuilder;
 use Flow\ETL\API\Config\Sort\MemorySortBuilder;
+use Flow\ETL\API\DataFrame;
 use Flow\ETL\API\FilteredBranch;
+use Flow\ETL\API\Pipe\CountRows;
+use Flow\ETL\API\Pipe\Display;
+use Flow\ETL\API\Pipe\Explain;
+use Flow\ETL\API\Pipe\Fetch;
+use Flow\ETL\API\Pipe\ForEachRows;
+use Flow\ETL\API\Pipe\Get;
+use Flow\ETL\API\Pipe\GetAsArray;
+use Flow\ETL\API\Pipe\GetEachAsArray;
+use Flow\ETL\API\Pipe\GetSchema;
+use Flow\ETL\API\Pipe\GroupBy as GroupByStep;
+use Flow\ETL\API\Pipe\Pivot;
+use Flow\ETL\API\Pipe\PrintRows;
+use Flow\ETL\API\Pipe\PrintSchema;
+use Flow\ETL\API\Pipe\Process;
+use Flow\ETL\API\Pipe\Read;
+use Flow\ETL\API\Pipe\Run;
 use Flow\ETL\API\Transactional;
 use Flow\ETL\API\Transformation;
 use Flow\ETL\API\Transformation\AddRowIndex;
+use Flow\ETL\API\Transformation\Aggregate;
+use Flow\ETL\API\Transformation\AggregateBy;
 use Flow\ETL\API\Transformation\BatchBy;
 use Flow\ETL\API\Transformation\BatchSize;
+use Flow\ETL\API\Transformation\Cache;
+use Flow\ETL\API\Transformation\CollectRefs;
+use Flow\ETL\API\Transformation\CollectRows;
+use Flow\ETL\API\Transformation\Constrain;
+use Flow\ETL\API\Transformation\CrossJoin;
+use Flow\ETL\API\Transformation\Discard;
 use Flow\ETL\API\Transformation\Drop;
+use Flow\ETL\API\Transformation\DropDuplicates;
+use Flow\ETL\API\Transformation\DuplicateRow;
+use Flow\ETL\API\Transformation\Filter;
+use Flow\ETL\API\Transformation\Filters;
+use Flow\ETL\API\Transformation\Join;
+use Flow\ETL\API\Transformation\JoinEach;
 use Flow\ETL\API\Transformation\Limit;
 use Flow\ETL\API\Transformation\MaskColumns;
+use Flow\ETL\API\Transformation\MatchSchema;
+use Flow\ETL\API\Transformation\Offset;
+use Flow\ETL\API\Transformation\OnError;
+use Flow\ETL\API\Transformation\Rename;
+use Flow\ETL\API\Transformation\RenameEach;
+use Flow\ETL\API\Transformation\Repartition;
 use Flow\ETL\API\Transformation\Select;
+use Flow\ETL\API\Transformation\SortBy;
+use Flow\ETL\API\Transformation\Until;
+use Flow\ETL\API\Transformation\With;
+use Flow\ETL\API\Transformation\WithColumn;
+use Flow\ETL\API\Transformation\WithColumns;
+use Flow\ETL\API\Transformation\Write;
 use Flow\ETL\API\TransformedBranch;
 use Flow\ETL\Flow;
 use Flow\ETL\Foundation\Calculator\Rounding;
@@ -36,6 +79,7 @@ use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\RuntimeException;
 use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
 use Flow\ETL\Foundation\RandomValueGenerator;
+use Flow\ETL\Functions\AggregatingFunction;
 use Flow\ETL\Functions\All;
 use Flow\ETL\Functions\Any;
 use Flow\ETL\Functions\ArrayExpand as ArrayExpandFunction;
@@ -121,11 +165,12 @@ use Flow\ETL\Functions\When;
 use Flow\ETL\Functions\Window;
 use Flow\ETL\Functions\Window\FrameBound;
 use Flow\ETL\Functions\Window\FrameBoundType;
-use Flow\ETL\Functions\WithColumn;
+use Flow\ETL\Functions\WindowFunction;
 use Flow\ETL\IO\Extractor;
 use Flow\ETL\IO\Extractor\ArrayExtractor;
 use Flow\ETL\IO\Extractor\CacheExtractor;
 use Flow\ETL\IO\Extractor\ChainExtractor;
+use Flow\ETL\IO\Extractor\ExtractorFactory;
 use Flow\ETL\IO\Extractor\File\FileMetadataRow;
 use Flow\ETL\IO\Extractor\File\PartitionTypes;
 use Flow\ETL\IO\Extractor\File\PathPartitionsRow;
@@ -152,17 +197,26 @@ use Flow\ETL\IO\Loader\StreamLoader;
 use Flow\ETL\IO\Loader\StreamLoader\Output;
 use Flow\ETL\Kernels\Hash\Algorithm;
 use Flow\ETL\Kernels\Hash\NativePHPHash;
+use Flow\ETL\Operators\Constraint;
 use Flow\ETL\Operators\Constraint\SortedByConstraint;
 use Flow\ETL\Operators\Constraint\UniqueConstraint;
+use Flow\ETL\Operators\GroupBy;
 use Flow\ETL\Operators\GroupBy\DeclaredPivotValues;
 use Flow\ETL\Operators\GroupBy\DiscoveredPivotValues;
+use Flow\ETL\Operators\GroupBy\PivotValues;
 use Flow\ETL\Operators\Transformer;
 use Flow\ETL\Operators\Transformer\AddRowIndex\StartFrom;
 use Flow\ETL\Operators\Transformer\Rename\RenameCaseColumnStrategy;
+use Flow\ETL\Operators\Transformer\Rename\RenameColumnStrategy;
 use Flow\ETL\Operators\Transformer\Rename\RenameMapColumnStrategy;
 use Flow\ETL\Operators\Transformer\Rename\RenameReplaceColumnStrategy;
+use Flow\ETL\Planning\Logical\Node\BucketingAlgorithmBuilder;
+use Flow\ETL\Planning\Logical\Node\JoinAlgorithmBuilder;
+use Flow\ETL\Planning\Logical\Node\SortAlgorithmBuilder;
+use Flow\ETL\Planning\Logical\Trigger;
 use Flow\ETL\Runtime\Analyze;
 use Flow\ETL\Runtime\Config;
+use Flow\ETL\Runtime\ErrorHandler;
 use Flow\ETL\Runtime\ErrorHandler\IgnoreError;
 use Flow\ETL\Runtime\ErrorHandler\SkipRows;
 use Flow\ETL\Runtime\ErrorHandler\ThrowError;
@@ -174,6 +228,7 @@ use Flow\ETL\Storage\RowsStorage;
 use Flow\ETL\Values\BatchSize as RowsBatchSize;
 use Flow\ETL\Values\Column\AdaptiveBackend;
 use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Join\JoinType;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Rows\RowsBuilder;
 use Flow\ETL\Values\Schema;
@@ -607,6 +662,299 @@ function limit(?int $limit): Limit
 function mask_columns(array $columns = [], string $mask = '******'): MaskColumns
 {
     return new MaskColumns($columns, $mask);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function read(Extractor $extractor): Read
+{
+    return new Read($extractor);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function process(Rows ...$rows): Process
+{
+    return new Process(...$rows);
+}
+
+/**
+ * @param list<AggregatingFunction> $aggregations
+ * @param null|BucketingAlgorithmBuilder $algorithm null defers to configuration; a builder pins the
+ *                                                algorithm for this operation and skips any automatic choice
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function aggregate(array $aggregations, ?BucketingAlgorithmBuilder $algorithm = null): Aggregate
+{
+    return new Aggregate($aggregations, $algorithm);
+}
+
+/**
+ * @param null|BucketingAlgorithmBuilder $algorithm null defers to configuration; a builder pins the
+ *                                                algorithm for this operation and skips any automatic choice
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function aggregate_by(GroupBy $group_by, ?BucketingAlgorithmBuilder $algorithm = null): AggregateBy
+{
+    return new AggregateBy($group_by, $algorithm);
+}
+
+/**
+ * @param null|RowsStorage $cache reads of this cache must pass the same instance to from_cache()
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function cache(?string $id = null, ?int $cache_batch_size = null, ?RowsStorage $cache = null): Cache
+{
+    return new Cache($id, $cache_batch_size, $cache);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function collect_rows(): CollectRows
+{
+    return new CollectRows();
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function collect_refs(References $references): CollectRefs
+{
+    return new CollectRefs($references);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function constrain(Constraint $constraint, Constraint ...$constraints): Constrain
+{
+    return new Constrain($constraint, ...$constraints);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function cross_join(DataFrame $data_frame, string $prefix = ''): CrossJoin
+{
+    return new CrossJoin($data_frame, $prefix);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function drop_duplicates(string|Reference ...$columns): DropDuplicates
+{
+    return new DropDuplicates(...$columns);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function duplicate_row(mixed $condition, WithColumn ...$columns): DuplicateRow
+{
+    return new DuplicateRow($condition, ...$columns);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function filter(ScalarFunction $function): Filter
+{
+    return new Filter($function);
+}
+
+/**
+ * @param array<ScalarFunction> $functions
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function filters(array $functions): Filters
+{
+    return new Filters($functions);
+}
+
+/**
+ * @param null|JoinAlgorithmBuilder $algorithm null defers to configuration; a builder pins the algorithm
+ *                                             for this operation and skips any automatic choice
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function join(
+    DataFrame $data_frame,
+    Expression $on,
+    string|JoinType $type = JoinType::left,
+    ?JoinAlgorithmBuilder $algorithm = null,
+): Join {
+    return new Join($data_frame, $on, $type, $algorithm);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function join_each(ExtractorFactory $factory, Expression $on, string|JoinType $type = JoinType::left): JoinEach
+{
+    return new JoinEach($factory, $on, $type);
+}
+
+/**
+ * @param null|SchemaValidator $validator - when null, StrictValidator gets initialized
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function match_schema(Schema $schema, ?SchemaValidator $validator = null): MatchSchema
+{
+    return new MatchSchema($schema, $validator);
+}
+
+/**
+ * @param ?int<0, max> $offset
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function offset(?int $offset): Offset
+{
+    return new Offset($offset);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function on_error(ErrorHandler $handler): OnError
+{
+    return new OnError($handler);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function rename(string $from, string $to): Rename
+{
+    return new Rename($from, $to);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function rename_each(RenameColumnStrategy ...$strategies): RenameEach
+{
+    return new RenameEach(...$strategies);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function repartition(string|Reference $column, string|Reference ...$columns): Repartition
+{
+    return new Repartition($column, ...$columns);
+}
+
+/**
+ * @param list<Reference|SortColumn|string>|Reference|SortColumn|string $columns a single column is sorted by on its own; a reference sorts ascending
+ * @param null|SortAlgorithmBuilder $algorithm null defers to configuration; a builder pins the algorithm
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function sort_by(array|Reference|SortColumn|string $columns, ?SortAlgorithmBuilder $algorithm = null): SortBy
+{
+    return new SortBy($columns, $algorithm);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function until(ScalarFunction $function): Until
+{
+    return new Until($function);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function void(): Discard
+{
+    return new Discard();
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function with(Transformer|Transformation $transformer): With
+{
+    return new With($transformer);
+}
+
+/**
+ * @param array<int, WithColumn>|array<string, ScalarFunction|WindowFunction|WithColumn> $references
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function with_columns(array $references): WithColumns
+{
+    return new WithColumns($references);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function write(Loader|Branch|Transactional $write): Write
+{
+    return new Write($write);
+}
+
+/**
+ * @param list<Reference|string>|Reference|string $columns a single column is grouped by on its own
+ * @param null|BucketingAlgorithmBuilder $algorithm null defers to configuration; a builder pins the
+ *                                                algorithm for this operation and skips any automatic choice
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function group_by(array|Reference|string $columns, ?BucketingAlgorithmBuilder $algorithm = null): GroupByStep
+{
+    return new GroupByStep($columns, $algorithm);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function pivot(Reference $ref, PivotValues $values): Pivot
+{
+    return new Pivot($ref, $values);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function count_rows(): CountRows
+{
+    return new CountRows();
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function display(int $limit = 20, int|bool $truncate = 20, Formatter $formatter = new AsciiTableFormatter()): Display
+{
+    return new Display($limit, $truncate, $formatter);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function explain(Trigger $trigger = Trigger::run): Explain
+{
+    return new Explain($trigger);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function fetch(?int $limit = null): Fetch
+{
+    return new Fetch($limit);
+}
+
+/**
+ * @param null|callable(Rows $rows, FlowContext $context) : void $callback
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function for_each(?callable $callback = null): ForEachRows
+{
+    return new ForEachRows($callback);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function get(): Get
+{
+    return new Get();
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function get_as_array(): GetAsArray
+{
+    return new GetAsArray();
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function get_each_as_array(): GetEachAsArray
+{
+    return new GetEachAsArray();
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function get_schema(): GetSchema
+{
+    return new GetSchema();
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function print_rows(
+    ?int $limit = 20,
+    int|bool $truncate = 20,
+    Formatter $formatter = new AsciiTableFormatter(),
+): PrintRows {
+    return new PrintRows($limit, $truncate, $formatter);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function print_schema(SchemaFormatter $formatter = new ASCIISchemaFormatter()): PrintSchema
+{
+    return new PrintSchema($formatter);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function run(bool|Analyze $analyze = false): Run
+{
+    return new Run($analyze);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
@@ -1695,7 +2043,7 @@ function save_mode_append(): SaveMode
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function print_rows(Rows $rows, int|bool $truncate = false, ?Formatter $formatter = null): string
+function format_rows(Rows $rows, int|bool $truncate = false, ?Formatter $formatter = null): string
 {
     return ($formatter ?? new AsciiTableFormatter())->format($rows, $truncate);
 }
@@ -1886,8 +2234,11 @@ function date_interval_to_microseconds(DateInterval $interval): int
         : (int) (($absoluteSeconds * 1000000) + ($interval->f * 1000000));
 }
 
+/**
+ * @param Definition<mixed>|string $name
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
-function with_column(string $name, ScalarFunction $function): WithColumn
+function with_column(string|Definition $name, ScalarFunction|WindowFunction $function): WithColumn
 {
     return new WithColumn($name, $function);
 }

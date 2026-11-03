@@ -8,6 +8,7 @@ use Flow\ETL\API\DataFrame;
 use Flow\ETL\API\Transformation;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Functions\Reference\Reference;
+use NoDiscard;
 
 final readonly class BatchBy implements Transformation
 {
@@ -26,7 +27,8 @@ final readonly class BatchBy implements Transformation
         }
     }
 
-    public function transform(DataFrame $dataFrame): DataFrame
+    #[NoDiscard]
+    public function __invoke(DataFrame $dataFrame): DataFrame
     {
         return $dataFrame->batchBy($this->column, $this->minSize);
     }
