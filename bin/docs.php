@@ -273,7 +273,6 @@ $application->addCommand(new class($playgroundPhpVersionId, $playgroundPhpExtens
             try {
                 $reflectionFunction = $reflector->reflectFunction($name);
             } catch (IdentifierNotFound) {
-                // Not available in the playground PHP version.
                 continue;
             }
 

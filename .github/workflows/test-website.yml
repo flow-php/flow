@@ -120,9 +120,14 @@ jobs:
       - name: "Install PHPUnit"
         run: "composer install --working-dir=tools/phpunit"
 
-      - name: "Install Playwright browsers"
-        run: "vendor/bin/playwright-install --with-deps"
+      - name: "Install Playwright server"
+        run: "vendor/bin/playwright-install"
         working-directory: "web/landing"
+
+      # Playwright advises against caching browsers on CI: https://playwright.dev/docs/ci#caching-browsers
+      - name: "Install Playwright Chromium headless shell"
+        run: "npx playwright install --with-deps --only-shell chromium"
+        working-directory: "web/landing/vendor/playwright-php/playwright/bin"
 
       - name: "Test"
         run: "just test-website"
