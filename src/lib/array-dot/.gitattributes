@@ -5,10 +5,8 @@
 /docs export-ignore
 /tests export-ignore
 
-/.php_cs export-ignore
 /composer.lock export-ignore
 /infection.json export-ignore
-/phpstan.neon export-ignore
 /phpunit.xml export-ignore
 /README.md export-ignore
 

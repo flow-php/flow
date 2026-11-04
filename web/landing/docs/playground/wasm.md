@@ -25,19 +25,6 @@ Execute PHP code and return result.
 }
 ```
 
-### `format(code: string): Promise<Result>`
-Format PHP code using CS-Fixer.
-
-**Returns:**
-```javascript
-{
-  success: boolean,
-  code?: string,            // Formatted code
-  error?: string,
-  fixers?: string[]         // Applied fixer names
-}
-```
-
 ### `readFile(path: string): Promise<Result>`
 Read file from WASM filesystem.
 
@@ -143,8 +130,6 @@ Returns raw Emscripten module for advanced operations.
 /workspace/               # Main working directory (chdir on execution)
   code.php                # Current playground code (loaded as resource, synced on run/format/share)
   /uploads/               # User-uploaded datasets
-  /bin/
-    cs-fixer.php          # PHP CS Fixer PHAR
   /vendor/                # Flow PHP libraries
   /data/                  # Sample datasets (CSV, JSON, XML)
 ```

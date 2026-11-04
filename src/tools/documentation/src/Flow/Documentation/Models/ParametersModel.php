@@ -22,6 +22,20 @@ final readonly class ParametersModel
     ) {}
 
     /**
+     * @return list<TypeModel>
+     */
+    public function types(): array
+    {
+        $types = [];
+
+        foreach ($this->arguments as $argument) {
+            $types = [...$types, ...$argument->type->types];
+        }
+
+        return $types;
+    }
+
+    /**
      * @param array<array<string, mixed>> $data
      */
     public static function fromArray(array $data): self

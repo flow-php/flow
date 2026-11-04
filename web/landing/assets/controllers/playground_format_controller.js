@@ -1,10 +1,13 @@
 import { Controller } from "@hotwired/stimulus"
+import { mago } from "../services/mago.js"
 
 export default class extends Controller {
     static outlets = ["code-editor", "wasm", "playground-output"]
+    static values = { magoWasm: String, phpVersion: { type: String, default: "8.5" } }
 
     async format() {
         this.dispatch('action-started', { bubbles: true })
+        let success = false
 
         try {
             await Promise.all([
@@ -12,30 +15,18 @@ export default class extends Controller {
                 this.wasmOutlet.onLoad()
             ])
 
-            const code = this.codeEditorOutlet.getCode()
-
-            await this.wasmOutlet.writeFile('/workspace/code.php', code)
-
             this.playgroundOutputOutlet.show({ content: 'Formatting code...', type: 'info' })
 
-            const result = await this.wasmOutlet.format(code)
+            const formatted = (await mago(this.magoWasmValue)).format(this.codeEditorOutlet.getCode(), this.phpVersionValue)
 
-            if (result.success) {
-                this.codeEditorOutlet.setCode(result.code)
-                this.playgroundOutputOutlet.show({ content: 'Code formatted successfully!', type: 'success' })
-
-                if (result.fixers && result.fixers.length > 0) {
-                    this.playgroundOutputOutlet.append({
-                        content: `Applied fixers: ${result.fixers.join(', ')}`,
-                        type: 'info'
-                    })
-                }
-            } else {
-                this.playgroundOutputOutlet.show({ content: `Format error: ${result.error}`, type: 'error' })
-            }
-
-            this.dispatch('formatted', { detail: { success: result.success }, bubbles: true })
+            this.codeEditorOutlet.setCode(formatted)
+            await this.wasmOutlet.writeFile('/workspace/code.php', formatted)
+            this.playgroundOutputOutlet.show({ content: 'Code formatted successfully!', type: 'success' })
+            success = true
+        } catch (error) {
+            this.playgroundOutputOutlet.show({ content: `Format error: ${error}`, type: 'error' })
         } finally {
+            this.dispatch('formatted', { detail: { success }, bubbles: true })
             this.dispatch('action-finished', { bubbles: true })
         }
     }

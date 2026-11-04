@@ -1,16 +1,14 @@
 import { Controller } from "@hotwired/stimulus"
 import { EditorView, basicSetup } from "codemirror"
-import { EditorState, StateField, StateEffect, Compartment } from "@codemirror/state"
+import { EditorState, StateField, StateEffect, Compartment, Prec } from "@codemirror/state"
 import { Decoration } from "@codemirror/view"
 import { keymap } from "@codemirror/view"
 import { php } from "@codemirror/lang-php"
 import { autocompletion, snippetKeymap, acceptCompletion } from "@codemirror/autocomplete"
 import { indentWithTab } from "@codemirror/commands"
 import { flowThemeExtension, flowLightThemeExtension } from "../codemirror/themes/theme-flow.js"
-import { flowCompletions } from "../codemirror/completions/flow.js"
-import { dslCompletions } from "../codemirror/completions/dsl.js"
-import { dataframeCompletions } from "../codemirror/completions/dataframe.js"
-import { scalarFunctionChainCompletions } from "../codemirror/completions/scalarfunctionchain.js"
+import { flowCompletion } from "../codemirror/flow_completion.js"
+import { flowTooltips } from "../codemirror/flow_tooltips.js"
 import Violation from "../models/Violation.js"
 
 export default class extends Controller {
@@ -65,13 +63,15 @@ export default class extends Controller {
                 php(),
                 this.#themeCompartment.of(this.#currentThemeExtension()),
                 errorField,
+                Prec.highest(keymap.of([{ key: "Tab", run: acceptCompletion }])),
                 keymap.of(snippetKeymap),
                 keymap.of([indentWithTab]),
                 autocompletion({
-                    override: [flowCompletions, dataframeCompletions, scalarFunctionChainCompletions, dslCompletions],
+                    override: [flowCompletion],
                     activateOnTyping: true,
                     maxRenderedOptions: 20
                 }),
+                flowTooltips,
                 EditorView.updateListener.of((update) => {
                     if (update.docChanged) {
                         this.#textarea.value = update.state.doc.toString()

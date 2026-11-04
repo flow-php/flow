@@ -56,7 +56,7 @@ final class PlaygroundWorkspaceTest extends EndToEndTestCase
     {
         $browser = $this->openPlayground('/playground');
 
-        foreach (['bin', 'data', 'vendor', 'tools'] as $directory) {
+        foreach (['data', 'vendor', 'tools'] as $directory) {
             $browser->assertSeeIn('[data-playground-workspace-target="tree"]', $directory);
         }
     }

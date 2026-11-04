@@ -73,10 +73,6 @@
 
     {% block javascripts %}
         <script>
-            window.flow = {
-                dsl: {{ dsl() | raw }},
-            };
-
             (function () {
                 function resolvedTheme() {
                     return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Models;
 
-use InvalidArgumentException;
 use ReflectionParameter;
 
 use function addslashes;
@@ -71,13 +70,9 @@ final readonly class ParameterModel
         $hasDefaultValue = $reflectionParameter->isDefaultValueAvailable();
         $reflectionType = $reflectionParameter->getType();
 
-        if ($reflectionType === null) {
-            throw new InvalidArgumentException('ReflectionType must be instance of ReflectionNamedType');
-        }
-
         return new self(
             $reflectionParameter->getName(),
-            TypesModel::fromReflection($reflectionType),
+            $reflectionType !== null ? TypesModel::fromReflection($reflectionType) : new TypesModel([]),
             $hasDefaultValue,
             $reflectionParameter->allowsNull(),
             $reflectionParameter->isVariadic(),

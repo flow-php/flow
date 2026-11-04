@@ -4,75 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\Website\Twig;
 
-use Flow\Types\Value\Json;
 use Override;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
 
-use function array_filter;
-use function array_map;
-use function base64_decode;
-use function explode;
-use function Flow\Types\DSL\type_array;
-use function Flow\Types\DSL\type_null;
-use function Flow\Types\DSL\type_scalar;
-use function Flow\Types\DSL\type_string;
-use function Flow\Types\DSL\type_union;
-use function implode;
-use function is_array;
 use function is_string;
-use function json_decode;
-use function preg_replace;
 use function str_pad;
 use function stristr;
-use function trim;
 
 final class FlowExtension extends AbstractExtension
 {
-    /**
-     * Formats a base64-encoded doc comment into HTML.
-     * Strips /** and * / markers, removes leading asterisks, converts newlines to <br>.
-     */
-    public function formatDocComment(?string $docComment): string
-    {
-        if ($docComment === null || $docComment === '') {
-            return '';
-        }
-
-        $decoded = base64_decode($docComment, true);
-
-        if ($decoded === false) {
-            return '';
-        }
-
-        $stripped = preg_replace('/^\/\*\*|\*\/$/', '', $decoded);
-        $lines = explode("\n", (string) $stripped);
-        $lines = array_map(static fn(string $line): string => (string) preg_replace('/^\s*\*\s?/', '', $line), $lines);
-        $lines = array_filter($lines, static fn(string $line): bool => trim($line) !== '');
-
-        return implode('<br>', $lines);
-    }
-
-    /**
-     * Formats an array of type objects into a pipe-separated string.
-     *
-     * @param array<array{name: string}>|Json|string $types
-     */
-    public function formatType(array|Json|string $types): string
-    {
-        $types = $this->toArray($types);
-
-        return implode('|', array_map(static fn(array $t): string => type_string()->assert($t['name']), $types));
-    }
-
     #[Override]
     public function getFilters(): array
     {
         return [
             new TwigFilter('strpad', $this->strpad(...), ['is_safe' => ['html']]),
-            new TwigFilter('format_doc_comment', $this->formatDocComment(...), ['is_safe' => ['html']]),
-            new TwigFilter('format_type', $this->formatType(...), ['is_safe' => ['html']]),
-            new TwigFilter('to_array', $this->toArray(...)),
         ];
     }
 
@@ -95,27 +41,5 @@ final class FlowExtension extends AbstractExtension
         }
 
         return str_pad($input, $length, $padString, $padType);
-    }
-
-    /**
-     * Converts Json or string to array.
-     *
-     * @param array<mixed>|Json|string $value
-     *
-     * @return array<mixed>
-     */
-    public function toArray(array|Json|string $value): array
-    {
-        if ($value instanceof Json) {
-            return $value->toArray();
-        }
-
-        if (is_string($value)) {
-            $decoded = type_union(type_array(), type_scalar(), type_null())->assert(json_decode($value, true));
-
-            return is_array($decoded) ? $decoded : [];
-        }
-
-        return $value;
     }
 }

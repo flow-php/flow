@@ -1,44 +1,66 @@
-(function () {
+import Prism from "prismjs"
+import { documentationUrl, parseImports, symbolAtIndex, tokenize } from "../../../codemirror/php_analysis.js"
 
-    if (typeof Prism === 'undefined') {
-        return;
+function linkedRanges(code) {
+    const { tokens } = tokenize(code)
+    const imports = parseImports(tokens)
+    const links = []
+
+    tokens.forEach((token, index) => {
+        const referenced = tokens[index + 1]?.value === "(" || tokens[index + 1]?.value === "::" || tokens[index - 1]?.value === "::"
+
+        if (token.type !== "name" || !referenced) return
+
+        const url = documentationUrl(symbolAtIndex(tokens, index, imports))
+        if (url) links.push({ from: token.start, to: token.end, url })
+    })
+
+    return links
+}
+
+function link(url, className) {
+    const anchor = document.createElement("a")
+    anchor.href = url
+    anchor.target = "_blank"
+    if (className) anchor.className = className
+
+    return anchor
+}
+
+function wrap(root, links) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+    const nodes = []
+    let offset = 0
+
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        nodes.push({ node, start: offset })
+        offset += node.textContent.length
     }
 
-    const functions = window.flow.dsl.map(function (item) {
-        return {
-            name: item.name,
-            slug: item.slug,
-            module: item.attributes.find(attribute => attribute.name === 'DocumentationDSL')?.arguments.module.toLowerCase()
-        };
-    });
+    for (const { from, to, url } of links.reverse()) {
+        const entry = nodes.findLast(candidate => candidate.start <= from)
+        if (!entry || entry.start + entry.node.textContent.length < to) continue
 
-    // URL template
-    const urlTemplate = "/documentation/dsl/{module_name}/{function_name}/#dsl-function";
+        const { node, start } = entry
+        const parent = node.parentNode
 
-    Prism.hooks.add('after-highlight', function(env) {
-
-        if (env.language !== 'php') return;
-
-        if (env.element.getAttribute('data-prismjs-no-auto-linker') !== null) {
-            return;
+        if (parent !== root && parent.textContent === node.textContent && node.textContent.length === to - from) {
+            const anchor = link(url, parent.className)
+            parent.replaceWith(anchor)
+            anchor.append(node)
+            continue
         }
 
-        // Find all tokens of type 'function' and 'function-method'
-        const functionTokens = env.element.querySelectorAll('.token.function');
+        const text = node.splitText(from - start)
+        text.splitText(to - from)
+        const anchor = link(url, null)
+        text.replaceWith(anchor)
+        anchor.append(text)
+    }
+}
 
-        functionTokens.forEach(function(token) {
-            const functionName = token.textContent;
+Prism.hooks.add("after-highlight", env => {
+    if (env.language !== "php" || env.element.hasAttribute("data-prismjs-no-auto-linker")) return
 
-            let definition = functions.find(f => f.name === functionName);
-
-            if (definition) {
-                const link = document.createElement('a');
-                link.href = urlTemplate.replace('{module_name}', definition.module).replace('{function_name}', definition.slug).toLowerCase();
-                link.target = '_blank';
-                link.textContent = functionName;
-                link.className = token.className;
-                token.parentNode.replaceChild(link, token);
-            }
-        });
-    });
-}());
+    wrap(env.element, linkedRanges(env.code))
+})
