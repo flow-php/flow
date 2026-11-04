@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Models;
 
-use ReflectionFunction;
-use ReflectionMethod;
+use Roave\BetterReflection\Reflection\ReflectionFunction;
+use Roave\BetterReflection\Reflection\ReflectionMethod;
 
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;

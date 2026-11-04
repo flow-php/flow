@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Models;
 
-use ReflectionAttribute;
-use ReflectionClass;
+use PhpParser\ConstExprEvaluator;
+use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\ClassConstFetch;
+use PhpParser\Node\Identifier;
+use PhpParser\Node\Name;
+use Roave\BetterReflection\Reflection\ReflectionAttribute;
 
-use function Flow\Types\DSL\type_class_string;
+use function array_map;
+use function constant;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_mixed;
 use function Flow\Types\DSL\type_string;
@@ -40,12 +45,20 @@ final readonly class AttributeModel
 
     public static function fromReflection(ReflectionAttribute $reflectionAttribute): self
     {
-        $attributeReflectionClass = new ReflectionClass(type_class_string()->assert($reflectionAttribute->getName()));
+        $attributeClass = $reflectionAttribute->getClass();
 
         return new self(
-            $attributeReflectionClass->getShortName(),
-            $attributeReflectionClass->getNamespaceName(),
-            $reflectionAttribute->getArguments(),
+            $attributeClass->getShortName(),
+            (string) $attributeClass->getNamespaceName(),
+            array_map(
+                // Better Reflection cannot compile enum cases; the attribute enums are always loadable.
+                static fn(Expr $argument): mixed => $argument instanceof ClassConstFetch
+                    && $argument->class instanceof Name
+                    && $argument->name instanceof Identifier
+                        ? constant($argument->class->toString() . '::' . $argument->name->toString())
+                        : (new ConstExprEvaluator())->evaluateDirectly($argument),
+                $reflectionAttribute->getArgumentsExpressions(),
+            ),
         );
     }
 

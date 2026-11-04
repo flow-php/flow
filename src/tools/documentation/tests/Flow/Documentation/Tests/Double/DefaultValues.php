@@ -8,6 +8,8 @@ final class DefaultValues
 {
     public function refused(RefusedDefault $value = new RefusedDefault()): void {}
 
+    public function nullable(?int $value): void {}
+
     public function required(int $value): void {}
 
     public function scalar(int $value = 5): void {}

@@ -67,6 +67,7 @@
         "php-http/mock-client": "^1.5",
         "phpstan/phpstan": "^2.1",
         "ramsey/uuid": "^4.5",
+        "roave/better-reflection": "^6.69",
         "symfony/cache": "^6.4 || ^7.4 || ^8.0",
         "symfony/clock": "^6.4 || ^7.4 || ^8.0",
         "symfony/dotenv": "^6.4 || ^7.4 || ^8.0",

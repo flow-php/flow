@@ -7,6 +7,7 @@ namespace Flow\Documentation\Tests\Context;
 use Flow\Documentation\ClassesExtractor;
 use Flow\Documentation\Models\ClassModel;
 use Flow\Documentation\Models\MethodModel;
+use Roave\BetterReflection\BetterReflection;
 
 use function array_map;
 use function dirname;
@@ -23,7 +24,9 @@ final class ExtractedClassesContext
     {
         $classes = [];
 
-        foreach ((new ClassesExtractor(dirname(__DIR__) . '/'))->extract($roots) as $class) {
+        foreach ((new ClassesExtractor(dirname(__DIR__) . '/', (new BetterReflection())->reflector()))->extract(
+            $roots,
+        ) as $class) {
             $classes[$class->name] = $class;
         }
 

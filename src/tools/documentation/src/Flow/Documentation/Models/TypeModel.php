@@ -6,16 +6,17 @@ namespace Flow\Documentation\Models;
 
 use InvalidArgumentException;
 use ReflectionClass;
-use ReflectionNamedType;
-use ReflectionType;
+use Roave\BetterReflection\Reflection\ReflectionNamedType;
+use Roave\BetterReflection\Reflection\ReflectionType;
 
 use function class_exists;
-use function enum_exists;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
-use function interface_exists;
+use function in_array;
+use function strrpos;
+use function substr;
 
 final readonly class TypeModel
 {
@@ -49,11 +50,15 @@ final readonly class TypeModel
 
         $name = $reflectionType->getName();
 
-        $isClass = class_exists($name) || interface_exists($name) || enum_exists($name);
+        if ($reflectionType->isBuiltin() || in_array($name, ['self', 'parent'], true)) {
+            return new self($name, null, $reflectionType->allowsNull(), false);
+        }
+
+        $separator = strrpos($name, '\\');
 
         return new self(
-            $isClass ? (new ReflectionClass($name))->getShortName() : $name,
-            $isClass ? (new ReflectionClass($name))->getNamespaceName() : null,
+            $separator === false ? $name : substr($name, $separator + 1),
+            $separator === false ? '' : substr($name, 0, $separator),
             $reflectionType->allowsNull(),
             false,
         );

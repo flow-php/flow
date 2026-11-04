@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Models;
 
-use ReflectionAttribute;
-use ReflectionFunctionAbstract;
+use Roave\BetterReflection\Reflection\ReflectionFunction;
 
 use function count;
-use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_mixed;
@@ -33,14 +31,12 @@ final readonly class AttributesModel
         return new self(array_map(AttributeModel::fromArray(...), $data));
     }
 
-    public static function fromReflection(ReflectionFunctionAbstract $reflection): self
+    public static function fromReflection(ReflectionFunction $reflection): self
     {
         $attributes = [];
 
         foreach ($reflection->getAttributes() as $attribute) {
-            $attributes[] = AttributeModel::fromReflection(type_instance_of(ReflectionAttribute::class)->assert(
-                $attribute,
-            ));
+            $attributes[] = AttributeModel::fromReflection($attribute);
         }
 
         return new self($attributes);

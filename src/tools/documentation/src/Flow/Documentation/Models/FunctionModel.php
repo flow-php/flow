@@ -6,16 +6,14 @@ namespace Flow\Documentation\Models;
 
 use Flow\ETL\Functions\ScalarFunctionChain;
 use InvalidArgumentException;
-use ReflectionFunction;
-use ReflectionIntersectionType;
-use ReflectionNamedType;
-use ReflectionType;
-use ReflectionUnionType;
+use Roave\BetterReflection\Reflection\ReflectionFunction;
+use Roave\BetterReflection\Reflection\ReflectionIntersectionType;
+use Roave\BetterReflection\Reflection\ReflectionNamedType;
+use Roave\BetterReflection\Reflection\ReflectionType;
+use Roave\BetterReflection\Reflection\ReflectionUnionType;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 
 use function base64_encode;
-use function class_exists;
-use function class_uses;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_integer;
@@ -96,12 +94,12 @@ final readonly class FunctionModel
                 ->lower()
                 ->toString(),
             $reflectionFunction->getShortName(),
-            $reflectionFunction->getNamespaceName(),
+            (string) $reflectionFunction->getNamespaceName(),
             ParametersModel::fromFunctionReflection($reflectionFunction),
             TypesModel::fromReflection($returnTypeReflection),
             AttributesModel::fromReflection($reflectionFunction),
             self::isScalarFunctionChain($returnTypeReflection),
-            $docComment !== false ? base64_encode($docComment) : null,
+            $docComment !== null ? base64_encode($docComment) : null,
         );
     }
 
@@ -127,13 +125,11 @@ final readonly class FunctionModel
     private static function isScalarFunctionChain(ReflectionType $reflectionType): bool
     {
         if ($reflectionType instanceof ReflectionNamedType) {
-            $typeName = $reflectionType->getName();
-
-            if (!class_exists($typeName)) {
+            if ($reflectionType->isBuiltin()) {
                 return false;
             }
 
-            return in_array(ScalarFunctionChain::class, class_uses($typeName) ?: [], true);
+            return in_array(ScalarFunctionChain::class, $reflectionType->getClass()->getTraitNames(), true);
         }
 
         if ($reflectionType instanceof ReflectionUnionType || $reflectionType instanceof ReflectionIntersectionType) {

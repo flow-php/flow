@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Models;
 
-use ReflectionIntersectionType;
-use ReflectionNamedType;
-use ReflectionType;
-use ReflectionUnionType;
+use Roave\BetterReflection\Reflection\ReflectionIntersectionType;
+use Roave\BetterReflection\Reflection\ReflectionNamedType;
+use Roave\BetterReflection\Reflection\ReflectionType;
+use Roave\BetterReflection\Reflection\ReflectionUnionType;
 
+use function count;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_mixed;
@@ -36,6 +37,21 @@ final readonly class TypesModel
 
     public static function fromReflection(ReflectionType $reflectionType): self
     {
+        // Better Reflection reports ?Type as Type|null, PHP reports one nullable type.
+        if ($reflectionType instanceof ReflectionUnionType && count($reflectionType->getTypes()) === 2) {
+            foreach ($reflectionType->getTypes() as $type) {
+                if (
+                    $type instanceof ReflectionNamedType
+                    && $type->getName() !== 'null'
+                    && $reflectionType->allowsNull()
+                ) {
+                    $nullableType = TypeModel::fromReflection($type);
+
+                    return new self([new TypeModel($nullableType->name, $nullableType->namespace, true, false)]);
+                }
+            }
+        }
+
         $types = match ($reflectionType::class) {
             ReflectionIntersectionType::class => array_map(static fn(ReflectionType $type) => TypeModel::fromReflection(
                 $type,

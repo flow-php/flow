@@ -7,28 +7,29 @@ namespace Flow\Documentation;
 use Flow\Documentation\Models\ClassModel;
 use Flow\Documentation\Models\MethodModel;
 use Generator;
-use ReflectionClass;
 use ReflectionClassConstant;
 use ReflectionMethod;
+use Roave\BetterReflection\Reflection\ReflectionEnum;
+use Roave\BetterReflection\Reflector\Exception\IdentifierNotFound;
+use Roave\BetterReflection\Reflector\Reflector;
 
 use function array_filter;
 use function array_key_exists;
+use function array_keys;
 use function array_merge;
 use function array_pop;
 use function array_values;
-use function class_exists;
-use function enum_exists;
-use function interface_exists;
 use function ltrim;
+use function realpath;
 use function str_contains;
 use function str_replace;
 use function str_starts_with;
-use function trait_exists;
 
 final readonly class ClassesExtractor
 {
     public function __construct(
         private string $repositoryRootPath,
+        private Reflector $reflector,
     ) {}
 
     /**
@@ -49,11 +50,11 @@ final readonly class ClassesExtractor
             }
 
             $extracted[$className] = true;
-            $reflectionClass = new ReflectionClass($className);
-            $parent = $reflectionClass->getParentClass();
+            $reflectionClass = $this->reflector->reflectClass($className);
+            $parentClassName = $reflectionClass->getParentClassName();
             $supertypes = array_values(array_filter(
                 array_merge(
-                    $parent !== false ? [$parent->getName()] : [],
+                    $parentClassName !== null ? [$parentClassName] : [],
                     $reflectionClass->getInterfaceNames(),
                     $reflectionClass->getTraitNames(),
                 ),
@@ -88,11 +89,9 @@ final readonly class ClassesExtractor
                 }
             }
 
-            $constants = [];
+            $constants = $reflectionClass instanceof ReflectionEnum ? array_keys($reflectionClass->getCases()) : [];
 
-            foreach ($reflectionClass->getReflectionConstants(
-                ReflectionClassConstant::IS_PUBLIC,
-            ) as $reflectionConstant) {
+            foreach ($reflectionClass->getConstants(ReflectionClassConstant::IS_PUBLIC) as $reflectionConstant) {
                 if ($reflectionConstant->getDeclaringClass()->getName() === $className) {
                     $constants[] = $reflectionConstant->getName();
                 }
@@ -109,31 +108,23 @@ final readonly class ClassesExtractor
         }
     }
 
-    /**
-     * @assert-if-true class-string $className
-     */
     private function isRepositoryType(string $className): bool
     {
-        if (
-            !class_exists($className)
-            && !interface_exists($className)
-            && !trait_exists($className)
-            && !enum_exists($className)
-        ) {
+        try {
+            $fileName = $this->reflector->reflectClass($className)->getFileName();
+        } catch (IdentifierNotFound) {
             return false;
         }
 
-        $fileName = (new ReflectionClass($className))->getFileName();
-
         return (
-            $fileName !== false
-            && str_starts_with($fileName, $this->repositoryRootPath)
+            $fileName !== null
+            && str_starts_with((string) realpath($fileName), $this->repositoryRootPath)
             && !str_contains($this->relativePath($fileName), 'vendor/')
         );
     }
 
     private function relativePath(string $fileName): string
     {
-        return ltrim(str_replace($this->repositoryRootPath, '', $fileName), '/');
+        return ltrim(str_replace($this->repositoryRootPath, '', (string) realpath($fileName)), '/');
     }
 }

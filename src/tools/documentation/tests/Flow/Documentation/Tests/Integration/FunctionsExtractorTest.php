@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Tests\Integration;
 
-use DateTimeInterface;
-use Flow\Documentation\FunctionCollector;
+use Flow\Documentation\Attribute\Module;
 use Flow\Documentation\FunctionsExtractor;
 use PHPUnit\Framework\TestCase;
+use Roave\BetterReflection\BetterReflection;
 
 use function iterator_to_array;
 
@@ -15,7 +15,12 @@ final class FunctionsExtractorTest extends TestCase
 {
     public function test_extract_functions_from_a_file(): void
     {
-        $functionsExtractor = new FunctionsExtractor(__DIR__, new FunctionCollector());
+        $betterReflection = new BetterReflection();
+        $functionsExtractor = new FunctionsExtractor(
+            __DIR__,
+            $betterReflection->reflector(),
+            $betterReflection->astLocator(),
+        );
 
         $functions = iterator_to_array($functionsExtractor->extract([__DIR__ . '/functions.php']));
 
@@ -28,18 +33,6 @@ final class FunctionsExtractorTest extends TestCase
                     [
                         'name' => 'argument',
                         'type' => [
-                            [
-                                'name' => DateTimeInterface::class,
-                                'is_nullable' => false,
-                                'is_variadic' => false,
-                                'namespace' => null,
-                            ],
-                            [
-                                'name' => 'ParameterClass',
-                                'is_nullable' => false,
-                                'is_variadic' => false,
-                                'namespace' => 'Flow\Documentation\Tests\Integration\Double',
-                            ],
                             [
                                 'name' => 'string',
                                 'is_nullable' => false,
@@ -57,6 +50,18 @@ final class FunctionsExtractorTest extends TestCase
                                 'is_nullable' => false,
                                 'is_variadic' => false,
                                 'namespace' => null,
+                            ],
+                            [
+                                'name' => 'DateTimeInterface',
+                                'is_nullable' => false,
+                                'is_variadic' => false,
+                                'namespace' => '',
+                            ],
+                            [
+                                'name' => 'ParameterClass',
+                                'is_nullable' => false,
+                                'is_variadic' => false,
+                                'namespace' => 'Flow\Documentation\Tests\Integration\Double',
                             ],
                         ],
                         'has_default_value' => false,
@@ -80,6 +85,7 @@ final class FunctionsExtractorTest extends TestCase
                         'arguments' => [
                             'name' => 'test',
                             'active' => true,
+                            'module' => Module::CORE,
                         ],
                     ],
                 ],

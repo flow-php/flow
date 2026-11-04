@@ -3,11 +3,19 @@
 
 declare(strict_types=1);
 
+use Composer\Autoload\ClassLoader;
 use Flow\Documentation\Attribute\Module;
 use Flow\Documentation\ClassesExtractor;
-use Flow\Documentation\FunctionCollector;
 use Flow\Documentation\FunctionsExtractor;
 use Flow\ETL\Flow;
+use Roave\BetterReflection\BetterReflection;
+use Roave\BetterReflection\Reflector\DefaultReflector;
+use Roave\BetterReflection\Reflector\Reflector;
+use Roave\BetterReflection\SourceLocator\Ast\Locator;
+use Roave\BetterReflection\SourceLocator\Type\AggregateSourceLocator;
+use Roave\BetterReflection\SourceLocator\Type\ComposerSourceLocator;
+use Roave\BetterReflection\SourceLocator\Type\MemoizingSourceLocator;
+use Roave\BetterReflection\SourceLocator\Type\PhpInternalSourceLocator;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -18,13 +26,6 @@ require __DIR__ . '/../vendor/autoload.php';
 
 if (version_compare(PHP_VERSION, '8.4', '>=')) {
     print PHP_EOL . 'Building docs can be run only on the lowest supported version of PHP: 8.3' . PHP_EOL;
-
-    exit(1);
-}
-
-if (extension_loaded('arrow') || extension_loaded('flow_php')) {
-    print PHP_EOL . 'Building docs requires PHP without the arrow and flow_php extensions.' . PHP_EOL;
-    print 'Run: nix-shell --arg with-arrow-ext false --arg with-flow-php-ext false --run "just docs"' . PHP_EOL;
 
     exit(1);
 }
@@ -77,14 +78,25 @@ $dslPaths = [
     __DIR__ . '/../src/bridge/telemetry/otlp/src/Flow/Bridge/Telemetry/OTLP/DSL/functions.php',
 ];
 
+$betterReflection = new BetterReflection();
+$reflector = new DefaultReflector(new MemoizingSourceLocator(new AggregateSourceLocator([
+    new ComposerSourceLocator(
+        ClassLoader::getRegisteredLoaders()[dirname(__DIR__) . '/vendor'],
+        $betterReflection->astLocator(),
+    ),
+    new PhpInternalSourceLocator($betterReflection->astLocator(), $betterReflection->sourceStubber()),
+])));
+
 $application = new Application('Flow-PHP - Documentation');
 
-$application->addCommand(new class($dslPaths) extends Command {
+$application->addCommand(new class($dslPaths, $reflector, $betterReflection->astLocator()) extends Command {
     /**
-     * @param list<string> $dslPaths
+     * @param list<non-empty-string> $dslPaths
      */
     public function __construct(
         private readonly array $dslPaths,
+        private readonly Reflector $reflector,
+        private readonly Locator $astLocator,
     ) {
         parent::__construct();
     }
@@ -108,7 +120,8 @@ $application->addCommand(new class($dslPaths) extends Command {
     {
         $extractor = new FunctionsExtractor(
             (string) $input->getOption('repository-root-path'),
-            new FunctionCollector(),
+            $this->reflector,
+            $this->astLocator,
         );
 
         $normalizedFunctions = [];
@@ -132,12 +145,14 @@ $application->addCommand(new class($dslPaths) extends Command {
     }
 });
 
-$application->addCommand(new class($dslPaths) extends Command {
+$application->addCommand(new class($dslPaths, $reflector, $betterReflection->astLocator()) extends Command {
     /**
-     * @param list<string> $dslPaths
+     * @param list<non-empty-string> $dslPaths
      */
     public function __construct(
         private readonly array $dslPaths,
+        private readonly Reflector $reflector,
+        private readonly Locator $astLocator,
     ) {
         parent::__construct();
     }
@@ -157,7 +172,8 @@ $application->addCommand(new class($dslPaths) extends Command {
 
         foreach ((new FunctionsExtractor(
             $repositoryRootPath,
-            new FunctionCollector(),
+            $this->reflector,
+            $this->astLocator,
         ))->extract($this->dslPaths) as $function) {
             foreach ([...$function->returnType->types, ...$function->parameters->types()] as $type) {
                 if ($type->namespace !== null) {
@@ -168,7 +184,7 @@ $application->addCommand(new class($dslPaths) extends Command {
 
         $normalizedClasses = [];
 
-        foreach ((new ClassesExtractor($repositoryRootPath))->extract($roots) as $class) {
+        foreach ((new ClassesExtractor($repositoryRootPath, $this->reflector))->extract($roots) as $class) {
             $normalizedClasses[] = $class->normalize();
         }
 

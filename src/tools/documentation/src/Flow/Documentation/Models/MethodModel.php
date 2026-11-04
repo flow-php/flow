@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Models;
 
-use ReflectionMethod;
+use Roave\BetterReflection\Reflection\ReflectionMethod;
 
 use function base64_encode;
 use function Flow\Types\DSL\type_array;
@@ -55,7 +55,7 @@ final readonly class MethodModel
             $reflectionMethod->getShortName(),
             ParametersModel::fromMethodReflection($reflectionMethod),
             $returnTypeReflection !== null ? TypesModel::fromReflection($returnTypeReflection) : new TypesModel([]),
-            $docComment !== false ? base64_encode($docComment) : null,
+            $docComment !== null ? base64_encode($docComment) : null,
         );
     }
 

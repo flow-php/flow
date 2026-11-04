@@ -4,21 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Models;
 
-use ReflectionParameter;
+use PhpParser\Node\Expr;
+use PhpParser\PrettyPrinter\Standard;
+use Roave\BetterReflection\Reflection\ReflectionParameter;
 
-use function addslashes;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
-use function is_array;
-use function is_bool;
-use function is_float;
-use function is_int;
-use function is_object;
-use function is_string;
-use function str_replace;
 
 final readonly class ParameterModel
 {
@@ -76,7 +71,11 @@ final readonly class ParameterModel
             $hasDefaultValue,
             $reflectionParameter->allowsNull(),
             $reflectionParameter->isVariadic(),
-            $hasDefaultValue ? self::exportDefaultValue($reflectionParameter->getDefaultValue()) : null,
+            $hasDefaultValue
+                ? (new Standard())->prettyPrintExpr(
+                    type_instance_of(Expr::class)->assert($reflectionParameter->getDefaultValueExpression()),
+                )
+                : null,
         );
     }
 
@@ -93,41 +92,5 @@ final readonly class ParameterModel
             'is_variadic' => $this->isVariadic,
             'default_value' => $this->defaultValue,
         ];
-    }
-
-    private static function exportDefaultValue(mixed $value): string
-    {
-        if ($value === null) {
-            return 'null';
-        }
-
-        if (is_bool($value)) {
-            return $value ? 'true' : 'false';
-        }
-
-        if (is_string($value)) {
-            $escaped = addslashes($value);
-            $escaped = str_replace(["\n", "\r", "\t"], ['\\n', '\\r', '\\t'], $escaped);
-
-            return "'" . $escaped . "'";
-        }
-
-        if (is_int($value) || is_float($value)) {
-            return (string) $value;
-        }
-
-        if (is_array($value)) {
-            if (empty($value)) {
-                return '[]';
-            }
-
-            return '[...]';
-        }
-
-        if (is_object($value)) {
-            return $value::class . '::...';
-        }
-
-        return '...';
     }
 }
