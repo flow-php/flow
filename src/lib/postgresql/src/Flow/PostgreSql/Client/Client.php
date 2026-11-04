@@ -348,7 +348,7 @@ interface Client
     /**
      * Unsubscribe the current connection from a PostgreSQL notification
      * channel. Calling unlisten() for a channel that was not being listened on
-     * is a no-op. Pass a specific channel name — the `UNLISTEN *` wildcard is
+     * is a no-op. Pass a specific channel name - the `UNLISTEN *` wildcard is
      * not expressible through this API.
      *
      * @throws QueryException

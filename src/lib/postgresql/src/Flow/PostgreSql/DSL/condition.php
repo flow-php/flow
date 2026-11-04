@@ -256,7 +256,7 @@ function all_(string|Expression $left, ComparisonOperator $operator, Expression|
 /**
  * Wrap an expression as a boolean condition for use in WHERE/HAVING/JOIN ON.
  *
- * Example: is_true(col('is_active')) — uses a boolean column in WHERE clause.
+ * Example: is_true(col('is_active')) - uses a boolean column in WHERE clause.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function is_true(string|Expression $expr): BooleanCondition
@@ -329,7 +329,7 @@ function or_(Condition ...$conditions): OrCondition
 /**
  * Negate a condition or expression with NOT.
  *
- * Accepts both Condition and Expression — NOT always produces a boolean result.
+ * Accepts both Condition and Expression - NOT always produces a boolean result.
  * Can be used in WHERE clauses and SELECT lists (via ->as('alias')).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]

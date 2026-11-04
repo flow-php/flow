@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Documentation\Models;
 
 use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\PrettyPrinter\Standard;
 use Roave\BetterReflection\Reflection\ReflectionParameter;
 
@@ -72,7 +73,7 @@ final readonly class ParameterModel
             $reflectionParameter->allowsNull(),
             $reflectionParameter->isVariadic(),
             $hasDefaultValue
-                ? (new Standard())->prettyPrintExpr(
+                ? self::exportDefaultValue(
                     type_instance_of(Expr::class)->assert($reflectionParameter->getDefaultValueExpression()),
                 )
                 : null,
@@ -92,5 +93,13 @@ final readonly class ParameterModel
             'is_variadic' => $this->isVariadic,
             'default_value' => $this->defaultValue,
         ];
+    }
+
+    private static function exportDefaultValue(Expr $defaultValue): string
+    {
+        // PHP stubs write constants fully qualified (\null, \PHP_INT_MAX), source code does not.
+        return $defaultValue instanceof ConstFetch
+            ? $defaultValue->name->toString()
+            : (new Standard())->prettyPrintExpr($defaultValue);
     }
 }

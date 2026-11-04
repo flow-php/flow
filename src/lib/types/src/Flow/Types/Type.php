@@ -14,7 +14,7 @@ interface Type
 {
     /**
      * Checks that the value is of the type of this object, throwing when it is not.
-     * Unlike cast(), this method never performs any conversion — the value must already match the type.
+     * Unlike cast(), this method never performs any conversion - the value must already match the type.
      * Unlike isValid(), this method returns the value (narrowed to T) instead of a boolean, and always narrows the static type.
      *
      * @throws InvalidTypeException

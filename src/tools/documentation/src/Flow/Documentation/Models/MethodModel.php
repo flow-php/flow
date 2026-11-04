@@ -48,7 +48,7 @@ final readonly class MethodModel
 
     public static function fromReflection(ReflectionMethod $reflectionMethod): self
     {
-        $returnTypeReflection = $reflectionMethod->getReturnType();
+        $returnTypeReflection = $reflectionMethod->getReturnType() ?? $reflectionMethod->getTentativeReturnType();
         $docComment = $reflectionMethod->getDocComment();
 
         return new self(

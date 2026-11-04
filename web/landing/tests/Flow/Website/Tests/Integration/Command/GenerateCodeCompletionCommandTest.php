@@ -98,4 +98,41 @@ final class GenerateCodeCompletionCommandTest extends CompleterCommandTestCase
         );
         static::assertStringNotContainsString('/**', type_string()->assert($batchSize[0]['doc']));
     }
+
+    public function test_php_functions_are_global_and_link_to_the_php_manual(): void
+    {
+        $this->executeCommand('app:generate:code-completion');
+
+        $arrayMap = array_values(array_filter(
+            $this->exportedFunctions(),
+            static fn(array $function): bool => $function['name'] === 'array_map',
+        ));
+
+        static::assertCount(1, $arrayMap);
+        static::assertSame('', $arrayMap[0]['namespace']);
+        static::assertSame('https://www.php.net/manual/en/function.array-map.php', $arrayMap[0]['documentation']);
+    }
+
+    public function test_php_classes_link_to_the_php_manual(): void
+    {
+        $this->executeCommand('app:generate:code-completion');
+
+        static::assertSame(
+            'https://www.php.net/manual/en/class.datetimeimmutable.php',
+            $this->exportedClasses()['DateTimeImmutable']['documentation'] ?? null,
+        );
+    }
+
+    public function test_php_methods_fall_back_to_the_docblock_return_type(): void
+    {
+        $this->executeCommand('app:generate:code-completion');
+
+        $modify = array_values(array_filter(
+            $this->exportedClasses()['DateTimeImmutable']['methods'],
+            static fn(array $method): bool => $method['name'] === 'modify',
+        ));
+
+        static::assertSame(['static', 'false'], $modify[0]['returns']);
+        static::assertSame('https://www.php.net/manual/en/datetimeimmutable.modify.php', $modify[0]['documentation']);
+    }
 }

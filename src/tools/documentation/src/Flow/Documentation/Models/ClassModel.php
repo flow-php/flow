@@ -21,6 +21,7 @@ final readonly class ClassModel
         public array $methods,
         public array $staticMethods,
         public array $constants,
+        public ?string $docComment = null,
     ) {}
 
     /**
@@ -38,6 +39,7 @@ final readonly class ClassModel
                 $this->staticMethods,
             ),
             'constants' => $this->constants,
+            'doc_comment' => $this->docComment,
         ];
     }
 }

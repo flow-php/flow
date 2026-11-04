@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\Documentation\Models;
 
 use Flow\ETL\Functions\ScalarFunctionChain;
-use InvalidArgumentException;
 use Roave\BetterReflection\Reflection\ReflectionFunction;
 use Roave\BetterReflection\Reflection\ReflectionIntersectionType;
 use Roave\BetterReflection\Reflection\ReflectionNamedType;
@@ -78,12 +77,7 @@ final readonly class FunctionModel
 
     public static function fromReflection(string $relativePath, ReflectionFunction $reflectionFunction): self
     {
-        $returnTypeReflection = $reflectionFunction->getReturnType();
-
-        if ($returnTypeReflection === null) {
-            throw new InvalidArgumentException('ReflectionType must be instance of ReflectionNamedType');
-        }
-
+        $returnTypeReflection = $reflectionFunction->getReturnType() ?? $reflectionFunction->getTentativeReturnType();
         $docComment = $reflectionFunction->getDocComment();
 
         return new self(
@@ -96,9 +90,9 @@ final readonly class FunctionModel
             $reflectionFunction->getShortName(),
             (string) $reflectionFunction->getNamespaceName(),
             ParametersModel::fromFunctionReflection($reflectionFunction),
-            TypesModel::fromReflection($returnTypeReflection),
+            $returnTypeReflection !== null ? TypesModel::fromReflection($returnTypeReflection) : new TypesModel([]),
             AttributesModel::fromReflection($reflectionFunction),
-            self::isScalarFunctionChain($returnTypeReflection),
+            $returnTypeReflection !== null && self::isScalarFunctionChain($returnTypeReflection),
             $docComment !== null ? base64_encode($docComment) : null,
         );
     }

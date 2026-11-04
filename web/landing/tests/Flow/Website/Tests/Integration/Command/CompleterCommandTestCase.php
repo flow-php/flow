@@ -57,12 +57,14 @@ abstract class CompleterCommandTestCase extends KernelTestCase
     }
 
     /**
-     * @return array<string, array{api?: string, supertypes: list<string>, methods: list<array<string, mixed>>, staticMethods: list<array<string, mixed>>, constants: list<string>}>
+     * @return array<string, array{api?: string, documentation?: string, doc?: string, supertypes: list<string>, methods: list<array<string, mixed>>, staticMethods: list<array<string, mixed>>, constants: list<string>}>
      */
     protected function exportedClasses(): array
     {
         return type_map(type_string(), type_structure([
             'api' => structure_element('api', type_string(), optional: true),
+            'documentation' => structure_element('documentation', type_string(), optional: true),
+            'doc' => structure_element('doc', type_string(), optional: true),
             'supertypes' => type_list(type_string()),
             'methods' => type_list(type_map(type_string(), type_mixed())),
             'staticMethods' => type_list(type_map(type_string(), type_mixed())),

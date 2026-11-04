@@ -24,7 +24,8 @@ final class FunctionsExtractorTest extends TestCase
 
         $functions = iterator_to_array($functionsExtractor->extract([__DIR__ . '/functions.php']));
 
-        static::assertCount(1, $functions);
+        static::assertCount(2, $functions);
+        static::assertSame([], $functions[1]->returnType->types);
         static::assertEquals(
             [
                 'name' => 'doSomething',
@@ -86,6 +87,7 @@ final class FunctionsExtractorTest extends TestCase
                             'name' => 'test',
                             'active' => true,
                             'module' => Module::CORE,
+                            'limit' => 'PHP_INT_MAX',
                         ],
                     ],
                 ],

@@ -19,8 +19,12 @@ const classesByFqn = new Map()
 const classesByShortName = new Map()
 const membersCache = new Map()
 
+export function functionFqn(fn) {
+    return fn.namespace ? `${fn.namespace}\\${fn.name}` : fn.name
+}
+
 for (const fn of functions) {
-    functionsByFqn.set(`${fn.namespace}\\${fn.name}`.toLowerCase(), fn)
+    functionsByFqn.set(functionFqn(fn).toLowerCase(), fn)
     const named = functionsByName.get(fn.name.toLowerCase()) ?? []
     named.push(fn)
     functionsByName.set(fn.name.toLowerCase(), named)
@@ -213,7 +217,9 @@ export function resolveFunction(name, imports) {
     if (imported) return functionsByFqn.get(imported.toLowerCase()) ?? null
 
     const candidates = functionsByName.get(name.toLowerCase()) ?? []
-    return candidates.find(fn => fn.namespace === "Flow\\ETL\\DSL") ?? (candidates.length === 1 ? candidates[0] : null)
+    return candidates.find(fn => fn.namespace === "")
+        ?? candidates.find(fn => fn.namespace === "Flow\\ETL\\DSL")
+        ?? (candidates.length === 1 ? candidates[0] : null)
 }
 
 export function resolveClass(name, imports) {
@@ -511,11 +517,14 @@ export function documentationUrl(symbol) {
         case "function":
             return symbol.entry.documentation ?? null
         case "method":
-            return classes[symbol.owner]?.api ? `${classes[symbol.owner].api}#method_${symbol.entry.name}` : null
+            return symbol.entry.documentation
+                ?? (classes[symbol.owner]?.api ? `${classes[symbol.owner].api}#method_${symbol.entry.name}` : null)
         case "constant":
-            return classes[symbol.owner]?.api ? `${classes[symbol.owner].api}#constant_${symbol.name}` : null
+            return classes[symbol.owner]?.api
+                ? `${classes[symbol.owner].api}#constant_${symbol.name}`
+                : classes[symbol.owner]?.documentation ?? null
         case "class":
-            return classes[symbol.fqn]?.api ?? null
+            return classes[symbol.fqn]?.api ?? classes[symbol.fqn]?.documentation ?? null
     }
 
     return null

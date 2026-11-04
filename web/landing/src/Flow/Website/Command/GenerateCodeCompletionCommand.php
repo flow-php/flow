@@ -29,15 +29,19 @@ use function Flow\Types\DSL\type_mixed;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function html_entity_decode;
 use function implode;
 use function json_decode;
 use function json_encode;
 use function ksort;
+use function ltrim;
+use function preg_match;
 use function preg_replace;
 use function rtrim;
 use function sprintf;
 use function str_replace;
 use function str_starts_with;
+use function strip_tags;
 use function strlen;
 use function strnatcasecmp;
 use function strpos;
@@ -50,10 +54,11 @@ use function usort;
  * @type TypeShape = array{name: string, namespace: ?string, is_nullable: bool, is_variadic: bool}
  * @type ParameterShape = array{name: string, type: string, default?: string, variadic?: true}
  * @type CallableShape = array{name: string, parameters: list<ParameterShape>, returns: list<string>, doc?: string}
+ * @type PhpCallableShape = array{name: string, parameters: list<ParameterShape>, returns: list<string>, doc?: string, documentation?: string}
  */
 #[AsCommand(
     name: 'app:generate:code-completion',
-    description: 'Generate the playground code completion data from the dumped DSL functions and API classes',
+    description: 'Generate the playground code completion data from the dumped DSL functions, API classes and PHP built-ins',
 )]
 final class GenerateCodeCompletionCommand extends Command
 {
@@ -65,6 +70,7 @@ final class GenerateCodeCompletionCommand extends Command
         private readonly string $projectDir,
         private readonly string $dslPath,
         private readonly string $apiPath,
+        private readonly string $phpPath,
         private readonly FlowConfigFactory $configFactory,
         private readonly UrlGeneratorInterface $urlGenerator,
         private readonly string $phpdocPath,
@@ -92,10 +98,43 @@ final class GenerateCodeCompletionCommand extends Command
             ...$this->callable($function),
             ...$this->documentation(new DSLDefinition($function)),
         ], $this->readJson($this->dslPath));
+        $php = type_structure([
+            'functions' => type_list(type_map(type_string(), type_mixed())),
+            'classes' => type_list(type_map(type_string(), type_mixed())),
+        ])->assert(json_decode(
+            type_string()->assert($this->configFactory->filesystem()->readFrom(path($this->phpPath))->content()),
+            true,
+            512,
+            JSON_THROW_ON_ERROR,
+        ));
+
+        foreach ($php['functions'] as $function) {
+            $functions[] = ['namespace' => '', ...$this->phpCallable($function)];
+        }
+
         usort($functions, static fn(array $a, array $b): int => strnatcasecmp($a['name'], $b['name']));
 
         $classes = [];
         $apiPackages = $this->apiPackages();
+
+        foreach ($php['classes'] as $class) {
+            $name = type_string()->assert($class['name']);
+            $classes[$name] = [
+                'documentation' =>
+                    'https://www.php.net/manual/en/class.' . strtolower(str_replace('\\', '-', $name)) . '.php',
+                ...$this->phpDocumentation(type_optional(type_string())->assert($class['doc_comment'])),
+                'supertypes' => type_list(type_string())->assert($class['supertypes']),
+                'methods' => array_map(
+                    $this->phpCallable(...),
+                    type_list(type_map(type_string(), type_mixed()))->assert($class['methods']),
+                ),
+                'staticMethods' => array_map(
+                    $this->phpCallable(...),
+                    type_list(type_map(type_string(), type_mixed()))->assert($class['static_methods']),
+                ),
+                'constants' => type_list(type_string())->assert($class['constants']),
+            ];
+        }
 
         foreach ($this->readJson($this->apiPath) as $class) {
             $name = type_string()->assert($class['name']);
@@ -174,6 +213,97 @@ final class GenerateCodeCompletionCommand extends Command
                     : $type['name'], $this->types($callable['return_type'])),
             ...($doc !== '' ? ['doc' => $doc] : []),
         ];
+    }
+
+    /**
+     * @param array<string, mixed> $callable
+     *
+     * @return PhpCallableShape
+     */
+    private function phpCallable(array $callable): array
+    {
+        $docComment = type_optional(type_string())->assert($callable['doc_comment']);
+        $phpCallable = $this->callable([...$callable, 'doc_comment' => null]);
+
+        return [
+            ...$phpCallable,
+            // Stubs drop tentative return types that differ per PHP version; their docblock still names them.
+            ...($phpCallable['returns'] === [] ? ['returns' => $this->phpDocReturns($docComment)] : []),
+            ...$this->phpDocumentation($docComment),
+        ];
+    }
+
+    /**
+     * @return array{doc?: string, documentation?: string}
+     */
+    private function phpDocumentation(?string $docComment): array
+    {
+        $description = [];
+        $documentation = null;
+        $inDescription = true;
+
+        foreach ($this->phpDocLines($docComment) as $line) {
+            $matches = [];
+
+            if (preg_match('/^@link\s+https?:\/\/(?:[a-z]+\.)?php\.net(\S*)/', $line, $matches) === 1) {
+                $documentation ??= 'https://www.php.net' . $matches[1];
+            }
+
+            $inDescription = $inDescription && !str_starts_with($line, '@');
+
+            if ($inDescription && preg_match('/^\(PHP [^)]*\)$/', $line) !== 1) {
+                $description[] = $line;
+            }
+        }
+
+        $doc = implode("\n", $description);
+
+        return [
+            ...($doc !== '' ? ['doc' => $doc] : []),
+            ...($documentation !== null ? ['documentation' => $documentation] : []),
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function phpDocReturns(?string $docComment): array
+    {
+        $matches = [];
+
+        foreach ($this->phpDocLines($docComment) as $line) {
+            if (preg_match('/^@return\s+(\S+)/', $line, $matches) === 1) {
+                return array_map(static fn(string $type): string => ltrim($type, '\\'), explode('|', $matches[1]));
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function phpDocLines(?string $docComment): array
+    {
+        return array_values(array_filter(
+            array_map(
+                // The PHP manual uses typographic characters the website keeps out of its files.
+                static fn(string $line): string => trim((string) preg_replace(
+                    [
+                        '/[\x{2010}-\x{2015}]/u',
+                        '/[\x{2018}-\x{201B}]/u',
+                        '/[\x{201C}-\x{201F}]/u',
+                        '/\x{2026}/u',
+                        '/\x{00A0}/u',
+                        '/[\x{200B}-\x{200D}\x{FEFF}]/u',
+                    ],
+                    ['-', "'", '"', '...', ' ', ''],
+                    html_entity_decode(strip_tags((string) preg_replace('/\{@link\s+\S+\s+([^}]*)\}/', '$1', $line))),
+                )),
+                explode("\n", $this->doc($docComment)),
+            ),
+            static fn(string $line): bool => $line !== '',
+        ));
     }
 
     /**

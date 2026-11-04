@@ -14,5 +14,6 @@ final class TestAttribute
         public string $name,
         public bool $active,
         public Module $module,
+        public int $limit,
     ) {}
 }

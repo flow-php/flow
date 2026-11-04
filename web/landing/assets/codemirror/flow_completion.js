@@ -5,6 +5,7 @@ import {
     documentImports,
     documentationUrl,
     enclosingCall,
+    functionFqn,
     insideUseStatement,
     membersOf,
     parseImports,
@@ -46,6 +47,11 @@ function importPlan(doc, kind, fqn) {
     const keyword = kind === "function" ? "use function" : "use"
     const { tokens } = tokenize(doc)
     const imports = parseImports(tokens)
+
+    // PHP built-ins: functions fall back to the global namespace, and `use` of a global class warns outside a namespace.
+    if (namespace === "" && (kind === "function" || !imports.anchors.some(anchor => anchor.kind === "namespace"))) {
+        return { name, change: null }
+    }
     const imported = (kind === "function" ? imports.functions : imports.classes).get(name.toLowerCase())
 
     if (imported) {
@@ -122,9 +128,9 @@ function namespaceBoost(namespace) {
 const functionOptions = functions.map(fn => ({
     label: fn.name,
     type: "function",
-    detail: fn.namespace,
+    detail: fn.namespace || "PHP",
     info: () => infoElement(fn),
-    apply: applyImported("function", `${fn.namespace}\\${fn.name}`, fn),
+    apply: applyImported("function", functionFqn(fn), fn),
     boost: namespaceBoost(fn.namespace)
 }))
 
@@ -134,7 +140,7 @@ const classOptions = Object.keys(classes).map(fqn => {
     return {
         label: shortClassName(fqn),
         type: "class",
-        detail: namespace,
+        detail: namespace || "PHP",
         info: fqn,
         apply: applyImported("class", fqn, null),
         boost: namespaceBoost(namespace)

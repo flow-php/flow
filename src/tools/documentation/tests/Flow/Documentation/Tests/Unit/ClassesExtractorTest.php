@@ -4,7 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Tests\Unit;
 
+use ArrayIterator;
+use DateInterval;
+use DateTime;
 use DateTimeImmutable;
+use DateTimeInterface;
+use DateTimeZone;
+use Flow\Documentation\Models\MethodModel;
 use Flow\Documentation\Tests\Context\ExtractedClassesContext;
 use Flow\Documentation\Tests\Double\Api\BaseStep;
 use Flow\Documentation\Tests\Double\Api\Chain;
@@ -15,7 +21,9 @@ use Flow\Documentation\Tests\Double\Api\Pipeline;
 use Flow\Documentation\Tests\Double\Api\Step;
 use PHPUnit\Framework\TestCase;
 
+use function array_filter;
 use function array_keys;
+use function array_values;
 
 final class ClassesExtractorTest extends TestCase
 {
@@ -92,6 +100,33 @@ final class ClassesExtractorTest extends TestCase
         $classes = $this->context->extract([Pipeline::class]);
 
         static::assertSame([], $classes[Pipeline::class]->methods[2]->parameters->arguments[0]->type->types);
+    }
+
+    public function test_php_built_in_types_of_listed_extensions_are_extracted(): void
+    {
+        $classes = $this->context->extract([DateTimeImmutable::class, ArrayIterator::class], ['date']);
+
+        static::assertSame(
+            [
+                DateInterval::class,
+                DateTime::class,
+                DateTimeImmutable::class,
+                DateTimeInterface::class,
+                DateTimeZone::class,
+            ],
+            array_keys($classes),
+        );
+        static::assertSame('', $classes[DateTimeImmutable::class]->repositoryPath);
+    }
+
+    public function test_php_built_in_methods_carry_their_tentative_return_type(): void
+    {
+        $format = array_values(array_filter(
+            $this->context->extract([DateTimeInterface::class], ['date'])[DateTimeInterface::class]->methods,
+            static fn(MethodModel $method): bool => $method->name === 'format',
+        ));
+
+        static::assertSame('string', $format[0]->returnType->toString());
     }
 
     public function test_types_outside_the_repository_are_skipped(): void

@@ -9,14 +9,18 @@ use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
+use PhpParser\PrettyPrinter\Standard;
 use Roave\BetterReflection\Reflection\ReflectionAttribute;
 
 use function array_map;
 use function constant;
+use function enum_exists;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_mixed;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function strrpos;
+use function substr;
 
 final readonly class AttributeModel
 {
@@ -45,20 +49,19 @@ final readonly class AttributeModel
 
     public static function fromReflection(ReflectionAttribute $reflectionAttribute): self
     {
-        $attributeClass = $reflectionAttribute->getClass();
+        $separator = (int) strrpos($reflectionAttribute->getName(), '\\');
+        // Better Reflection cannot compile enum cases or constants of classes it cannot load, e.g. PHP stub attributes.
+        $evaluator = new ConstExprEvaluator(static fn(Expr $argument): mixed => $argument instanceof ClassConstFetch
+            && $argument->class instanceof Name
+            && $argument->name instanceof Identifier
+            && enum_exists($argument->class->toString())
+                ? constant($argument->class->toString() . '::' . $argument->name->toString())
+                : (new Standard())->prettyPrintExpr($argument));
 
         return new self(
-            $attributeClass->getShortName(),
-            (string) $attributeClass->getNamespaceName(),
-            array_map(
-                // Better Reflection cannot compile enum cases; the attribute enums are always loadable.
-                static fn(Expr $argument): mixed => $argument instanceof ClassConstFetch
-                    && $argument->class instanceof Name
-                    && $argument->name instanceof Identifier
-                        ? constant($argument->class->toString() . '::' . $argument->name->toString())
-                        : (new ConstExprEvaluator())->evaluateDirectly($argument),
-                $reflectionAttribute->getArgumentsExpressions(),
-            ),
+            substr($reflectionAttribute->getName(), $separator === 0 ? 0 : $separator + 1),
+            substr($reflectionAttribute->getName(), 0, $separator),
+            array_map($evaluator->evaluateDirectly(...), $reflectionAttribute->getArgumentsExpressions()),
         );
     }
 

@@ -87,6 +87,7 @@ services:
             $projectDir: '%kernel.project_dir%'
             $dslPath: '%dsl_definitions_path%'
             $apiPath: '%flow_root_dir%/web/landing/resources/api.json'
+            $phpPath: '%flow_root_dir%/web/landing/resources/php.json'
             $phpdocPath: '%flow_root_dir%/phpdoc'
 
     Flow\Website\Service\Manifest\Manifest:

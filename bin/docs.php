@@ -7,11 +7,15 @@ use Composer\Autoload\ClassLoader;
 use Flow\Documentation\Attribute\Module;
 use Flow\Documentation\ClassesExtractor;
 use Flow\Documentation\FunctionsExtractor;
+use Flow\Documentation\Models\FunctionModel;
 use Flow\ETL\Flow;
+use JetBrains\PHPStormStub\PhpStormStubsMap;
 use Roave\BetterReflection\BetterReflection;
 use Roave\BetterReflection\Reflector\DefaultReflector;
+use Roave\BetterReflection\Reflector\Exception\IdentifierNotFound;
 use Roave\BetterReflection\Reflector\Reflector;
 use Roave\BetterReflection\SourceLocator\Ast\Locator;
+use Roave\BetterReflection\SourceLocator\SourceStubber\PhpStormStubsSourceStubber;
 use Roave\BetterReflection\SourceLocator\Type\AggregateSourceLocator;
 use Roave\BetterReflection\SourceLocator\Type\ComposerSourceLocator;
 use Roave\BetterReflection\SourceLocator\Type\MemoizingSourceLocator;
@@ -21,6 +25,9 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_string;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -76,6 +83,36 @@ $dslPaths = [
     __DIR__ . '/../src/bridge/psr7/telemetry/src/Flow/Bridge/Psr7/Telemetry/DSL/functions.php',
     __DIR__ . '/../src/bridge/psr18/telemetry/src/Flow/Bridge/Psr18/Telemetry/DSL/functions.php',
     __DIR__ . '/../src/bridge/telemetry/otlp/src/Flow/Bridge/Telemetry/OTLP/DSL/functions.php',
+];
+
+// The PHP the playground runs: keep in sync with PHP_VERSION and the enabled extensions in wasm/build.sh.
+$playgroundPhpVersionId = 80512;
+$playgroundPhpExtensions = [
+    'Core',
+    'date',
+    'pcre',
+    'zlib',
+    'bcmath',
+    'uri',
+    'standard',
+    'filter',
+    'hash',
+    'iconv',
+    'json',
+    'mbstring',
+    'Zend OPcache',
+    'libxml',
+    'SPL',
+    'Phar',
+    'random',
+    'Reflection',
+    'snappy',
+    'tokenizer',
+    'dom',
+    'xml',
+    'xmlreader',
+    'xmlwriter',
+    'zip',
 ];
 
 $betterReflection = new BetterReflection();
@@ -194,6 +231,75 @@ $application->addCommand(new class($dslPaths, $reflector, $betterReflection->ast
         );
 
         return Command::SUCCESS;
+    }
+});
+
+$application->addCommand(new class($playgroundPhpVersionId, $playgroundPhpExtensions) extends Command {
+    /**
+     * @param list<string> $phpExtensions
+     */
+    public function __construct(
+        private readonly int $phpVersionId,
+        private readonly array $phpExtensions,
+    ) {
+        parent::__construct();
+    }
+
+    public function configure(): void
+    {
+        $this
+            ->setName('php:dump')
+            ->setDescription('Dump PHP functions and classes available in the playground into json file.')
+            ->addArgument('output', InputArgument::REQUIRED, 'Where to dump functions and classes.');
+    }
+
+    public function execute(InputInterface $input, OutputInterface $output): int
+    {
+        $betterReflection = new BetterReflection();
+        $reflector = new DefaultReflector(
+            new PhpInternalSourceLocator(
+                $betterReflection->astLocator(),
+                new PhpStormStubsSourceStubber($betterReflection->phpParser(), $this->phpVersionId),
+            ),
+        );
+        $functions = [];
+
+        foreach (type_map(type_string(), type_string())->assert(PhpStormStubsMap::FUNCTIONS) as $name => $stubPath) {
+            // PS_UNRESERVE_PREFIX_ functions stand in for language constructs such as isset() or list().
+            if (!$this->isPlaygroundStub($stubPath) || str_starts_with($name, 'PS_UNRESERVE_PREFIX_')) {
+                continue;
+            }
+
+            try {
+                $reflectionFunction = $reflector->reflectFunction($name);
+            } catch (IdentifierNotFound) {
+                // Not available in the playground PHP version.
+                continue;
+            }
+
+            $functions[] = FunctionModel::fromReflection('', $reflectionFunction)->normalize();
+        }
+
+        $classes = [];
+
+        foreach ((new ClassesExtractor('', $reflector, $this->phpExtensions))->extract(array_keys(array_filter(
+            type_map(type_string(), type_string())->assert(PhpStormStubsMap::CLASSES),
+            $this->isPlaygroundStub(...),
+        ))) as $class) {
+            $classes[] = $class->normalize();
+        }
+
+        file_put_contents(__DIR__ . '/../' . ltrim((string) $input->getArgument('output'), '/'), json_encode([
+            'functions' => $functions,
+            'classes' => $classes,
+        ]));
+
+        return Command::SUCCESS;
+    }
+
+    private function isPlaygroundStub(string $stubPath): bool
+    {
+        return in_array(explode('/', $stubPath)[0], $this->phpExtensions, true);
     }
 });
 

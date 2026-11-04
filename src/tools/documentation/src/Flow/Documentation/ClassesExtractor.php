@@ -19,6 +19,8 @@ use function array_keys;
 use function array_merge;
 use function array_pop;
 use function array_values;
+use function base64_encode;
+use function in_array;
 use function ltrim;
 use function realpath;
 use function str_contains;
@@ -27,9 +29,13 @@ use function str_starts_with;
 
 final readonly class ClassesExtractor
 {
+    /**
+     * @param list<string> $phpExtensions PHP extensions whose built-in types are extracted next to the repository ones
+     */
     public function __construct(
         private string $repositoryRootPath,
         private Reflector $reflector,
+        private array $phpExtensions = [],
     ) {}
 
     /**
@@ -45,7 +51,7 @@ final readonly class ClassesExtractor
         while ($queue !== []) {
             $className = array_pop($queue);
 
-            if (array_key_exists($className, $extracted) || !$this->isRepositoryType($className)) {
+            if (array_key_exists($className, $extracted) || !$this->isExtractedType($className)) {
                 continue;
             }
 
@@ -58,7 +64,7 @@ final readonly class ClassesExtractor
                     $reflectionClass->getInterfaceNames(),
                     $reflectionClass->getTraitNames(),
                 ),
-                $this->isRepositoryType(...),
+                $this->isExtractedType(...),
             ));
             $queue = array_merge($queue, $supertypes);
             $methods = [];
@@ -78,7 +84,7 @@ final readonly class ClassesExtractor
 
                 foreach ($method->referencedTypes() as $type) {
                     if ($type->namespace !== null) {
-                        $queue[] = $type->namespace . '\\' . $type->name;
+                        $queue[] = ltrim($type->namespace . '\\' . $type->name, '\\');
                     }
                 }
 
@@ -97,24 +103,34 @@ final readonly class ClassesExtractor
                 }
             }
 
+            $fileName = $reflectionClass->getFileName();
+            $docComment = $reflectionClass->getDocComment();
+
             yield new ClassModel(
                 $className,
-                $this->relativePath((string) $reflectionClass->getFileName()),
+                $fileName !== null ? $this->relativePath($fileName) : '',
                 $supertypes,
                 $methods,
                 $staticMethods,
                 $constants,
+                $docComment !== null ? base64_encode($docComment) : null,
             );
         }
     }
 
-    private function isRepositoryType(string $className): bool
+    private function isExtractedType(string $className): bool
     {
         try {
-            $fileName = $this->reflector->reflectClass($className)->getFileName();
+            $reflectionClass = $this->reflector->reflectClass($className);
         } catch (IdentifierNotFound) {
             return false;
         }
+
+        if ($reflectionClass->isInternal()) {
+            return in_array($reflectionClass->getExtensionName(), $this->phpExtensions, true);
+        }
+
+        $fileName = $reflectionClass->getFileName();
 
         return (
             $fileName !== null

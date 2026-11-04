@@ -36,6 +36,17 @@ final class ParameterModelTest extends TestCase
         static::assertSame('5', $parameter->defaultValue);
     }
 
+    public function test_a_constant_default_value_is_exported_unqualified(): void
+    {
+        $parameter = ParameterModel::fromReflection(ReflectionParameter::createFromClassNameAndMethod(
+            DefaultValues::class,
+            'constant',
+            'value',
+        ));
+
+        static::assertSame('PHP_INT_MAX', $parameter->defaultValue);
+    }
+
     public function test_a_nullable_type_is_exported_as_one_nullable_type(): void
     {
         $parameter = ParameterModel::fromReflection(ReflectionParameter::createFromClassNameAndMethod(

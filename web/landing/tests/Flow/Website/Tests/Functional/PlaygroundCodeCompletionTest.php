@@ -375,4 +375,64 @@ final class PlaygroundCodeCompletionTest extends EndToEndTestCase
             $page,
         ))->documentationOpenedByModifierClickOn('to_output', 1));
     }
+
+    public function test_accepting_a_php_function_adds_no_import(): void
+    {
+        $page = $this->pageOf($this->openPlayground('/playground'));
+        $this->setPlaygroundCode($page, "<?php\n\n");
+        $completion = new CodeCompletionContext($page);
+
+        static::assertContains('array_map', $completion->suggestionsAfterTyping('array_ma'));
+
+        $completion->accept();
+
+        static::assertSame("<?php\n\narray_map()", $this->getPlaygroundCode($page));
+    }
+
+    public function test_accepting_a_php_class_in_the_global_namespace_adds_no_import(): void
+    {
+        $page = $this->pageOf($this->openPlayground('/playground'));
+        $this->setPlaygroundCode($page, "<?php\n\nnew ");
+        $completion = new CodeCompletionContext($page);
+
+        static::assertSame(['DateTimeImmutable'], $completion->suggestionsAfterTyping('DateTimeImmu'));
+
+        $completion->accept();
+
+        static::assertSame("<?php\n\nnew DateTimeImmutable", $this->getPlaygroundCode($page));
+    }
+
+    public function test_accepting_a_php_class_in_a_namespace_imports_it(): void
+    {
+        $page = $this->pageOf($this->openPlayground('/playground'));
+        $this->setPlaygroundCode($page, "<?php\n\nnamespace App;\n\nnew ");
+        $completion = new CodeCompletionContext($page);
+
+        $completion->suggestionsAfterTyping('DateTimeImmu');
+        $completion->accept();
+
+        static::assertSame(
+            "<?php\n\nnamespace App;\n\nuse DateTimeImmutable;\n\nnew DateTimeImmutable",
+            $this->getPlaygroundCode($page),
+        );
+    }
+
+    public function test_suggests_php_class_methods_after_a_chained_call(): void
+    {
+        $page = $this->pageOf($this->openPlayground('/playground'));
+        $this->setPlaygroundCode($page, "<?php\n\n(new DateTimeImmutable())->modify('+1 day')");
+
+        static::assertContains('format', (new CodeCompletionContext($page))->suggestionsAfterTyping('->form'));
+    }
+
+    public function test_modifier_click_on_a_php_function_opens_the_php_manual(): void
+    {
+        $page = $this->pageOf($this->openPlayground('/playground'));
+        $this->setPlaygroundCode($page, "<?php\n\narray_map(null, [1]);");
+
+        static::assertSame(
+            'https://www.php.net/manual/en/function.array-map.php',
+            (new CodeCompletionContext($page))->documentationOpenedByModifierClickOn('array_map'),
+        );
+    }
 }
