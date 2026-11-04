@@ -188,6 +188,17 @@ final class NodeTranslatorTest extends FlowTestCase
         static::assertFalse($steps[0]->idGiven);
     }
 
+    public function test_cache_under_the_id_zero_keeps_the_given_id(): void
+    {
+        $steps = NodeTranslatorMother::of(config_builder()->id('my-pipeline-id')->build())->steps(
+            new Cache(NodeMother::read(), '0', null, null),
+        );
+
+        static::assertInstanceOf(CachingProcessor::class, $steps[0]);
+        static::assertSame('0', $steps[0]->id);
+        static::assertTrue($steps[0]->idGiven);
+    }
+
     public function test_cache_a_batch_size_prepends_a_batching_processor(): void
     {
         static::assertSame(

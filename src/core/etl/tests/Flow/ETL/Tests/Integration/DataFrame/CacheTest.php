@@ -82,6 +82,16 @@ final class CacheTest extends FlowIntegrationTestCase
         );
     }
 
+    public function test_cache_under_the_id_zero_round_trips(): void
+    {
+        df()
+            ->read(from_array([['a' => 1]]))
+            ->cache('0')
+            ->run();
+
+        static::assertSame([['a' => 1]], df()->read(from_cache('0'))->fetch()->toArray());
+    }
+
     public function test_cache(): void
     {
         $spyExtractor = new class(20) implements Extractor {

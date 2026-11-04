@@ -1534,6 +1534,17 @@ final class DataFrameTest extends FlowTestCase
             ->fetch();
     }
 
+    public function test_cache_refuses_an_empty_id(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cache id must not be an empty string, pass null to use the run id');
+
+        df()
+            ->read(from_array([['id' => 1]]))
+            ->cache('')
+            ->fetch();
+    }
+
     public function test_join_takes_the_join_type_as_a_string(): void
     {
         static::assertSame(

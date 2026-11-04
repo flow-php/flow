@@ -181,6 +181,10 @@ final readonly class DataFrame
             throw new InvalidArgumentException('Cache batch size must be greater than 0');
         }
 
+        if ($id === '') {
+            throw new InvalidArgumentException('Cache id must not be an empty string, pass null to use the run id');
+        }
+
         return new self(new Node\Cache($this->root, $id, $cacheBatchSize, $cache), $this->writes, $this->context);
     }
 
