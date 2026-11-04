@@ -4,22 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Models;
 
-use InvalidArgumentException;
-use ReflectionParameter;
+use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\ConstFetch;
+use PhpParser\PrettyPrinter\Standard;
+use Roave\BetterReflection\Reflection\ReflectionParameter;
 
-use function addslashes;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
-use function is_array;
-use function is_bool;
-use function is_float;
-use function is_int;
-use function is_object;
-use function is_string;
-use function str_replace;
 
 final readonly class ParameterModel
 {
@@ -71,17 +66,17 @@ final readonly class ParameterModel
         $hasDefaultValue = $reflectionParameter->isDefaultValueAvailable();
         $reflectionType = $reflectionParameter->getType();
 
-        if ($reflectionType === null) {
-            throw new InvalidArgumentException('ReflectionType must be instance of ReflectionNamedType');
-        }
-
         return new self(
             $reflectionParameter->getName(),
-            TypesModel::fromReflection($reflectionType),
+            $reflectionType !== null ? TypesModel::fromReflection($reflectionType) : new TypesModel([]),
             $hasDefaultValue,
             $reflectionParameter->allowsNull(),
             $reflectionParameter->isVariadic(),
-            $hasDefaultValue ? self::exportDefaultValue($reflectionParameter->getDefaultValue()) : null,
+            $hasDefaultValue
+                ? self::exportDefaultValue(
+                    type_instance_of(Expr::class)->assert($reflectionParameter->getDefaultValueExpression()),
+                )
+                : null,
         );
     }
 
@@ -100,39 +95,11 @@ final readonly class ParameterModel
         ];
     }
 
-    private static function exportDefaultValue(mixed $value): string
+    private static function exportDefaultValue(Expr $defaultValue): string
     {
-        if ($value === null) {
-            return 'null';
-        }
-
-        if (is_bool($value)) {
-            return $value ? 'true' : 'false';
-        }
-
-        if (is_string($value)) {
-            $escaped = addslashes($value);
-            $escaped = str_replace(["\n", "\r", "\t"], ['\\n', '\\r', '\\t'], $escaped);
-
-            return "'" . $escaped . "'";
-        }
-
-        if (is_int($value) || is_float($value)) {
-            return (string) $value;
-        }
-
-        if (is_array($value)) {
-            if (empty($value)) {
-                return '[]';
-            }
-
-            return '[...]';
-        }
-
-        if (is_object($value)) {
-            return $value::class . '::...';
-        }
-
-        return '...';
+        // PHP stubs write constants fully qualified (\null, \PHP_INT_MAX), source code does not.
+        return $defaultValue instanceof ConstFetch
+            ? $defaultValue->name->toString()
+            : (new Standard())->prettyPrintExpr($defaultValue);
     }
 }

@@ -48,7 +48,7 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
         run: |
           if [ "$EVENT_NAME" = "pull_request" ]; then
-            just test-mutation --git-diff-filter=AM --git-diff-base="origin/$BASE_REF" --logger-github=false --log-verbosity=none
+            just test-mutation --git-diff-filter=AM --git-diff-base="origin/$BASE_REF" --ignore-msi-with-no-mutations --logger-github=false --log-verbosity=none
           else
             just test-mutation --logger-github=false --log-verbosity=none
           fi

@@ -28,67 +28,6 @@ export default class extends Controller {
         this.#resourcesLoaded = false
     }
 
-    #formatCode(code, callback) {
-        if (!this.#phpModuleLoaded) {
-            callback(null, 'PHP module not loaded yet', null)
-            return
-        }
-
-        this.#combinedOutput = ''
-
-        try {
-            this.#phpModule.FS.chdir('/workspace')
-
-            const codeFile = '/workspace/code.php'
-
-            this.#phpModule.FS.writeFile(codeFile, code)
-
-            const formatScript = `<?php
-\$argc = 2;
-\$argv = ['cs-fixer.php', '${codeFile}'];
-require '/workspace/bin/cs-fixer.php';
-?>`
-
-            this.#phpModule.ccall(
-                'pib_eval',
-                'number',
-                ['string'],
-                [formatScript]
-            )
-
-            const output = this.#combinedOutput.trim()
-
-            if (output.includes('ERROR:')) {
-                const errorMsg = output.replace('ERROR:', '').trim()
-                callback(null, errorMsg, null)
-            } else if (output.includes('SUCCESS')) {
-                try {
-                    const formattedCode = this.#phpModule.FS.readFile(codeFile, { encoding: 'utf8' })
-
-                    const appliedFixers = this.#parseAppliedFixers(output)
-
-                    callback(formattedCode, null, appliedFixers)
-                } catch (readError) {
-                    callback(null, 'Failed to read formatted code: ' + readError.message, null)
-                }
-            } else {
-                callback(null, 'Unexpected output from formatter: ' + output, null)
-            }
-
-        } catch (error) {
-            this.#logError('Format error:', error)
-            callback(null, 'Format failed: ' + error.message, null)
-        }
-    }
-
-    #parseAppliedFixers(output) {
-        const match = output.match(/APPLIED_FIXERS:(.+)/);
-        if (match && match[1]) {
-            return match[1].split(',').filter(f => f.trim());
-        }
-        return [];
-    }
-
     isReady() {
         return this.#phpModuleLoaded
     }
@@ -172,20 +111,6 @@ require '/workspace/bin/cs-fixer.php';
                 memoryUsed: 0
             }
         }
-    }
-
-    async format(code) {
-        await this.#recycleIfNeeded()
-
-        return new Promise((resolve) => {
-            this.#formatCode(code, (formattedCode, error, appliedFixers) => {
-                if (error) {
-                    resolve({ success: false, error })
-                } else {
-                    resolve({ success: true, code: formattedCode, fixers: appliedFixers })
-                }
-            })
-        })
     }
 
     async readFile(path, binary = false) {

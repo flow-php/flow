@@ -38,7 +38,7 @@ The playground is built using Stimulus controllers that communicate via custom e
 - Manage virtual filesystem (`/workspace/`, `/workspace/uploads/`)
 - Execute PHP code and capture output/errors
 - Load playground resources (PHAR files, datasets)
-- Format PHP code using CS-Fixer
+- Format PHP code using the Mago formatter
 
 **See:** [playground/wasm.md](playground/wasm.md)
 
@@ -91,12 +91,11 @@ The playground is built using Stimulus controllers that communicate via custom e
 
 ### playground-format (playground_format_controller.js)
 
-**Purpose:** Format PHP code using CS-Fixer via WASM
+**Purpose:** Format PHP code with the Mago WASM formatter
 
 **Responsibilities:**
 
 - Format code on demand
-- Display applied fixers
 - Handle formatting errors
 
 **See:** [playground/playground-format.md](playground/playground-format.md)

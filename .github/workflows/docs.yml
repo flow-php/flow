@@ -37,6 +37,9 @@ jobs:
           coverage: "none"
           extensions: ':psr, bcmath, curl, dom, hash, json, mbstring, pdo_sqlite, xml, xmlwriter, xmlreader, zip, zlib'
           cache-key-suffix: "-locked"
+          extra-working-directory: "web/landing"
+          extra-cache-key-suffix: "-website"
+          extra-composer-file: "web/landing/composer.lock"
 
       - name: "Build Docs"
         run: "just docs"

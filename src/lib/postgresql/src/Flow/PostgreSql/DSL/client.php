@@ -118,7 +118,7 @@ function pgsql_connection_params(
  *
  * @param Client\ConnectionParameters $params Connection parameters
  * @param null|ValueConverters $valueConverters Custom type converters (optional)
- * @param null|Context $context Base mapper Context — the Client enriches it with sql/parameters/self per query before handing it to RowMapper::map()
+ * @param null|Context $context Base mapper Context - the Client enriches it with sql/parameters/self per query before handing it to RowMapper::map()
  *
  * @throws ConnectionException If connection fails
  */

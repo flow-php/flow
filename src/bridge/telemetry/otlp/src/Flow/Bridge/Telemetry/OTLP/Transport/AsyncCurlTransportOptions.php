@@ -291,7 +291,7 @@ final class AsyncCurlTransportOptions
      * fast/local backend the pending request completes within the budget (sub-millisecond) and the
      * tick returns early; against a slow/remote backend the tick returns once the budget elapses and
      * the request stays pending for the next pump. `0` degrades to a single non-blocking
-     * `curl_multi_exec` round (legacy behaviour) — usually too little to complete a request in one
+     * `curl_multi_exec` round (legacy behaviour) - usually too little to complete a request in one
      * tick.
      *
      * @param int $milliseconds Bounded pump budget; must be non-negative

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Models;
 
-use ReflectionFunction;
-use ReflectionMethod;
+use Roave\BetterReflection\Reflection\ReflectionFunction;
+use Roave\BetterReflection\Reflection\ReflectionMethod;
 
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
@@ -20,6 +20,20 @@ final readonly class ParametersModel
     public function __construct(
         public array $arguments,
     ) {}
+
+    /**
+     * @return list<TypeModel>
+     */
+    public function types(): array
+    {
+        $types = [];
+
+        foreach ($this->arguments as $argument) {
+            $types = [...$types, ...$argument->type->types];
+        }
+
+        return $types;
+    }
 
     /**
      * @param array<array<string, mixed>> $data

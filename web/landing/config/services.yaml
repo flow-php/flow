@@ -82,25 +82,13 @@ services:
         resource: '../src/Flow/Website/Twig/**/*Extension.php'
         tags: [twig.extension]
 
-    Flow\Website\Twig\DSLExtension:
+    Flow\Website\Command\GenerateCodeCompletionCommand:
         arguments:
+            $projectDir: '%kernel.project_dir%'
             $dslPath: '%dsl_definitions_path%'
-
-    Flow\Website\Command\GenerateDSLCompleterCommand:
-        arguments:
-            $projectDir: '%kernel.project_dir%'
-
-    Flow\Website\Command\GenerateDataFrameCompleterCommand:
-        arguments:
-            $projectDir: '%kernel.project_dir%'
-
-    Flow\Website\Command\GenerateFlowCompleterCommand:
-        arguments:
-            $projectDir: '%kernel.project_dir%'
-
-    Flow\Website\Command\GenerateScalarFunctionChainCompleterCommand:
-        arguments:
-            $projectDir: '%kernel.project_dir%'
+            $apiPath: '%flow_root_dir%/web/landing/resources/api.json'
+            $phpPath: '%flow_root_dir%/web/landing/resources/php.json'
+            $phpdocPath: '%flow_root_dir%/phpdoc'
 
     Flow\Website\Service\Manifest\Manifest:
         arguments:

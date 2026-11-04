@@ -125,10 +125,12 @@ optimize-images:
 docker:
     docker buildx build -t flow-php/flow:latest . --progress=plain --load
 
-# Dump DSL and API JSON used by the landing site.
+# Dump DSL, API and PHP JSON used by the landing site, and the playground completion built from them.
 docs:
     bin/docs.php dsl:dump web/landing/resources/dsl.json
     bin/docs.php api:dump web/landing/resources/api.json
+    bin/docs.php php:dump web/landing/resources/php.json
+    web/landing/bin/console app:generate:code-completion
 
 # Generate phpDocumentor API docs for every package config under phpdoc/.
 docs-api:

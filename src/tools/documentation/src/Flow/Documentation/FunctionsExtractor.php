@@ -6,14 +6,15 @@ namespace Flow\Documentation;
 
 use Flow\Documentation\Models\FunctionModel;
 use Generator;
-use PhpParser\NodeTraverser;
-use PhpParser\ParserFactory;
-use PhpParser\PhpVersion;
-use ReflectionFunction;
+use Roave\BetterReflection\Identifier\IdentifierType;
+use Roave\BetterReflection\Reflection\ReflectionFunction;
+use Roave\BetterReflection\Reflector\Reflector;
+use Roave\BetterReflection\SourceLocator\Ast\Locator;
+use Roave\BetterReflection\SourceLocator\Type\SingleFileSourceLocator;
 use RuntimeException;
 
 use function file_exists;
-use function in_array;
+use function Flow\Types\DSL\type_instance_of;
 use function ltrim;
 use function realpath;
 use function sprintf;
@@ -23,50 +24,33 @@ final readonly class FunctionsExtractor
 {
     public function __construct(
         private string $repositoryRootPath,
-        private FunctionCollector $functionCollector,
+        private Reflector $reflector,
+        private Locator $astLocator,
     ) {}
 
     /**
-     * @param array<string> $paths
+     * @param array<non-empty-string> $paths
      *
      * @return \Generator<FunctionModel>
      */
     public function extract(array $paths): Generator
     {
-        $parser = (new ParserFactory())->createForVersion(PhpVersion::fromComponents(8, 2));
-
-        $includedFiles = get_included_files();
-
         foreach ($paths as $path) {
             if (false === file_exists($path)) {
                 throw new RuntimeException(sprintf('Path "%s" doesn\'t exists.', $path));
             }
 
-            $realpath = realpath($path);
+            $repositoryPath = ltrim(str_replace($this->repositoryRootPath, '', (string) realpath($path)), '/');
 
-            if ($realpath !== false && !in_array($realpath, $includedFiles, true)) {
-                require_once $realpath;
+            foreach ((new SingleFileSourceLocator($path, $this->astLocator))->locateIdentifiersByType(
+                $this->reflector,
+                new IdentifierType(IdentifierType::IDENTIFIER_FUNCTION),
+            ) as $reflectionFunction) {
+                yield FunctionModel::fromReflection(
+                    $repositoryPath,
+                    type_instance_of(ReflectionFunction::class)->assert($reflectionFunction),
+                );
             }
-
-            $ast = $parser->parse((string) file_get_contents($path));
-
-            if ($ast === null) {
-                continue;
-            }
-
-            $traverser = new NodeTraverser();
-            $traverser->addVisitor($this->functionCollector);
-            $traverser->traverse($ast);
-        }
-
-        foreach ($this->functionCollector->functions as $functionName) {
-            $reflectionFunction = new ReflectionFunction($functionName);
-            $repositoryPath = ltrim(
-                str_replace($this->repositoryRootPath, '', (string) $reflectionFunction->getFileName()),
-                '/',
-            );
-
-            yield FunctionModel::fromReflection($repositoryPath, $reflectionFunction);
         }
     }
 }

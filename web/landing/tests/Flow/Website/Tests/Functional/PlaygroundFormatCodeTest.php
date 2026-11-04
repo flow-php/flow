@@ -19,4 +19,17 @@ final class PlaygroundFormatCodeTest extends EndToEndTestCase
         static::assertStringContainsString("'id' => 1", $this->getPlaygroundCode($page));
         static::assertStringNotContainsString("'id'=>1", $this->getPlaygroundCode($page));
     }
+
+    public function test_format_reports_code_that_cannot_be_parsed(): void
+    {
+        $browser = $this->openPlayground('/playground');
+        $page = $this->pageOf($browser);
+
+        $this->setPlaygroundCode($page, "<?php\ndf()->read(;");
+
+        $page->evaluate('() => document.getElementById("action-format").click()');
+        $browser->waitUntilSeeIn('[data-playground-output-target="container"]', 'Format error');
+
+        static::assertSame("<?php\ndf()->read(;", $this->getPlaygroundCode($page));
+    }
 }

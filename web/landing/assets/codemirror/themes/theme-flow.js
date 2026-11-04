@@ -102,7 +102,7 @@ export const flowTheme = EditorView.theme({
     ".cm-completionIcon-constant": { color: "#79c0ff" },
     ".cm-completionIcon-type": { color: "#79c0ff" },
     ".cm-completionIcon-namespace": { color: "#d2a8ff" },
-    ".cm-tooltip.cm-completionInfo": {
+    ".cm-tooltip.cm-completionInfo, .cm-tooltip.cm-tooltip-hover, .cm-tooltip.cm-flow-signature": {
         backgroundColor: "#21212b",
         border: "2px solid #79c0ff",
         borderRadius: "8px",
@@ -113,13 +113,15 @@ export const flowTheme = EditorView.theme({
         maxWidth: "600px",
         padding: "16px"
     },
-    ".cm-completionInfo code": {
+    ".cm-completionInfo code, .cm-tooltip-hover code, .cm-flow-signature code": {
         backgroundColor: "#1b1925",
         padding: "2px 6px",
         borderRadius: "4px",
         fontFamily: "'Fira Code', 'JetBrains Mono', 'Consolas', monospace",
         fontSize: "13px"
-    }
+    },
+    ".cm-flow-active-parameter": { color: "#79c0ff", fontWeight: "bold" },
+    ".cm-flow-documentation-link": { color: "#79c0ff" }
 }, { dark: true })
 
 export const flowHighlightStyle = HighlightStyle.define([
@@ -246,7 +248,7 @@ export const flowLightTheme = EditorView.theme({
     ".cm-completionIcon-constant": { color: "#905" },
     ".cm-completionIcon-type": { color: "#07a" },
     ".cm-completionIcon-namespace": { color: "#dd4a68" },
-    ".cm-tooltip.cm-completionInfo": {
+    ".cm-tooltip.cm-completionInfo, .cm-tooltip.cm-tooltip-hover, .cm-tooltip.cm-flow-signature": {
         backgroundColor: "#ffffff",
         border: "1px solid #cbd5e1",
         borderRadius: "8px",
@@ -257,13 +259,15 @@ export const flowLightTheme = EditorView.theme({
         maxWidth: "600px",
         padding: "16px"
     },
-    ".cm-completionInfo code": {
+    ".cm-completionInfo code, .cm-tooltip-hover code, .cm-flow-signature code": {
         backgroundColor: "#f1f5f9",
         padding: "2px 6px",
         borderRadius: "4px",
         fontFamily: "'Fira Code', 'JetBrains Mono', 'Consolas', monospace",
         fontSize: "13px"
-    }
+    },
+    ".cm-flow-active-parameter": { color: "#07a", fontWeight: "bold" },
+    ".cm-flow-documentation-link": { color: "#07a" }
 }, { dark: false })
 
 export const flowLightHighlightStyle = HighlightStyle.define([

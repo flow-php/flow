@@ -1,0 +1,423 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\Website\Command;
+
+use DOMDocument;
+use Flow\Website\Model\Documentation\DSLDefinition;
+use Flow\Website\Service\FlowConfigFactory;
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+
+use function array_filter;
+use function array_map;
+use function array_values;
+use function base64_decode;
+use function count;
+use function explode;
+use function Flow\Filesystem\DSL\path;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_mixed;
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
+use function html_entity_decode;
+use function implode;
+use function json_decode;
+use function json_encode;
+use function ksort;
+use function ltrim;
+use function preg_match;
+use function preg_replace;
+use function rtrim;
+use function sprintf;
+use function str_replace;
+use function str_starts_with;
+use function strip_tags;
+use function strlen;
+use function strnatcasecmp;
+use function strpos;
+use function strtolower;
+use function substr;
+use function trim;
+use function usort;
+
+/**
+ * @type TypeShape = array{name: string, namespace: ?string, is_nullable: bool, is_variadic: bool}
+ * @type ParameterShape = array{name: string, type: string, default?: string, variadic?: true}
+ * @type CallableShape = array{name: string, parameters: list<ParameterShape>, returns: list<string>, doc?: string}
+ * @type PhpCallableShape = array{name: string, parameters: list<ParameterShape>, returns: list<string>, doc?: string, documentation?: string}
+ */
+#[AsCommand(
+    name: 'app:generate:code-completion',
+    description: 'Generate the playground code completion data from the dumped DSL functions, API classes and PHP built-ins',
+)]
+final class GenerateCodeCompletionCommand extends Command
+{
+    private const string API_OUTPUT_PREFIX = 'documentation/api/';
+
+    private const string PHPDOC_NAMESPACE = 'https://www.phpdoc.org';
+
+    public function __construct(
+        private readonly string $projectDir,
+        private readonly string $dslPath,
+        private readonly string $apiPath,
+        private readonly string $phpPath,
+        private readonly FlowConfigFactory $configFactory,
+        private readonly UrlGeneratorInterface $urlGenerator,
+        private readonly string $phpdocPath,
+    ) {
+        parent::__construct();
+    }
+
+    protected function configure(): void
+    {
+        $this->addOption(
+            'output-dir',
+            null,
+            InputOption::VALUE_REQUIRED,
+            'Directory the completion data is written to',
+            $this->projectDir . '/assets/codemirror/completions',
+        );
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        $io = new SymfonyStyle($input, $output);
+
+        $functions = array_map(fn(array $function): array => [
+            'namespace' => type_string()->assert($function['namespace']),
+            ...$this->callable($function),
+            ...$this->documentation(new DSLDefinition($function)),
+        ], $this->readJson($this->dslPath));
+        $php = type_structure([
+            'functions' => type_list(type_map(type_string(), type_mixed())),
+            'classes' => type_list(type_map(type_string(), type_mixed())),
+        ])->assert(json_decode(
+            type_string()->assert($this->configFactory->filesystem()->readFrom(path($this->phpPath))->content()),
+            true,
+            512,
+            JSON_THROW_ON_ERROR,
+        ));
+
+        foreach ($php['functions'] as $function) {
+            $functions[] = ['namespace' => '', ...$this->phpCallable($function)];
+        }
+
+        usort($functions, static fn(array $a, array $b): int => strnatcasecmp($a['name'], $b['name']));
+
+        $classes = [];
+        $apiPackages = $this->apiPackages();
+
+        foreach ($php['classes'] as $class) {
+            $name = type_string()->assert($class['name']);
+            $classes[$name] = [
+                'documentation' =>
+                    'https://www.php.net/manual/en/class.' . strtolower(str_replace('\\', '-', $name)) . '.php',
+                ...$this->phpDocumentation(type_optional(type_string())->assert($class['doc_comment'])),
+                'supertypes' => type_list(type_string())->assert($class['supertypes']),
+                'methods' => array_map(
+                    $this->phpCallable(...),
+                    type_list(type_map(type_string(), type_mixed()))->assert($class['methods']),
+                ),
+                'staticMethods' => array_map(
+                    $this->phpCallable(...),
+                    type_list(type_map(type_string(), type_mixed()))->assert($class['static_methods']),
+                ),
+                'constants' => type_list(type_string())->assert($class['constants']),
+            ];
+        }
+
+        foreach ($this->readJson($this->apiPath) as $class) {
+            $name = type_string()->assert($class['name']);
+            $classes[$name] = [
+                ...$this->apiDocumentation($name, type_string()->assert($class['repository_path']), $apiPackages),
+                'supertypes' => type_list(type_string())->assert($class['supertypes']),
+                'methods' => array_map(
+                    $this->callable(...),
+                    type_list(type_map(type_string(), type_mixed()))->assert($class['methods']),
+                ),
+                'staticMethods' => array_map(
+                    $this->callable(...),
+                    type_list(type_map(type_string(), type_mixed()))->assert($class['static_methods']),
+                ),
+                'constants' => type_list(type_string())->assert($class['constants']),
+            ];
+        }
+
+        ksort($classes);
+
+        $outputFile = type_string()->assert($input->getOption('output-dir')) . '/flow-api.js';
+
+        $this->configFactory
+            ->filesystem()
+            ->writeTo(path($outputFile))
+            ->append(sprintf(
+                "// Generated by bin/console app:generate:code-completion, do not edit.\nexport const functions = %s\n\nexport const classes = %s\n",
+                json_encode($functions, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+                json_encode($classes, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+            ))
+            ->close();
+
+        $io->success(sprintf(
+            'Generated code completion with %d functions and %d classes: %s',
+            count($functions),
+            count($classes),
+            $outputFile,
+        ));
+
+        return Command::SUCCESS;
+    }
+
+    /**
+     * @param array<string, mixed> $callable
+     *
+     * @return CallableShape
+     */
+    private function callable(array $callable): array
+    {
+        $parameters = [];
+
+        foreach (type_list(type_map(type_string(), type_mixed()))->assert($callable['parameters']) as $parameter) {
+            $parameters[] = [
+                'name' => type_string()->assert($parameter['name']),
+                'type' => implode('|', array_map(
+                    static fn(array $type): string => $type['name'],
+                    $this->types($parameter['type']),
+                )),
+                ...(
+                    type_boolean()->assert($parameter['has_default_value'])
+                        ? ['default' => type_string()->assert($parameter['default_value'])]
+                        : []
+                ),
+                ...(type_boolean()->assert($parameter['is_variadic']) ? ['variadic' => true] : []),
+            ];
+        }
+
+        $doc = $this->doc(type_optional(type_string())->assert($callable['doc_comment']));
+
+        return [
+            'name' => type_string()->assert($callable['name']),
+            'parameters' => $parameters,
+            'returns' => array_map(static fn(array $type): string => $type['namespace'] !== null
+                && $type['namespace'] !== ''
+                    ? $type['namespace'] . '\\' . $type['name']
+                    : $type['name'], $this->types($callable['return_type'])),
+            ...($doc !== '' ? ['doc' => $doc] : []),
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $callable
+     *
+     * @return PhpCallableShape
+     */
+    private function phpCallable(array $callable): array
+    {
+        $docComment = type_optional(type_string())->assert($callable['doc_comment']);
+        $phpCallable = $this->callable([...$callable, 'doc_comment' => null]);
+
+        return [
+            ...$phpCallable,
+            // Stubs drop tentative return types that differ per PHP version; their docblock still names them.
+            ...($phpCallable['returns'] === [] ? ['returns' => $this->phpDocReturns($docComment)] : []),
+            ...$this->phpDocumentation($docComment),
+        ];
+    }
+
+    /**
+     * @return array{doc?: string, documentation?: string}
+     */
+    private function phpDocumentation(?string $docComment): array
+    {
+        $description = [];
+        $documentation = null;
+        $inDescription = true;
+
+        foreach ($this->phpDocLines($docComment) as $line) {
+            $matches = [];
+
+            if (preg_match('/^@link\s+https?:\/\/(?:[a-z]+\.)?php\.net(\S*)/', $line, $matches) === 1) {
+                $documentation ??= 'https://www.php.net' . $matches[1];
+            }
+
+            $inDescription = $inDescription && !str_starts_with($line, '@');
+
+            if ($inDescription && preg_match('/^\(PHP [^)]*\)$/', $line) !== 1) {
+                $description[] = $line;
+            }
+        }
+
+        $doc = implode("\n", $description);
+
+        return [
+            ...($doc !== '' ? ['doc' => $doc] : []),
+            ...($documentation !== null ? ['documentation' => $documentation] : []),
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function phpDocReturns(?string $docComment): array
+    {
+        $matches = [];
+
+        foreach ($this->phpDocLines($docComment) as $line) {
+            if (preg_match('/^@return\s+(\S+)/', $line, $matches) === 1) {
+                return array_map(static fn(string $type): string => ltrim($type, '\\'), explode('|', $matches[1]));
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function phpDocLines(?string $docComment): array
+    {
+        return array_values(array_filter(
+            array_map(
+                // The PHP manual uses typographic characters the website keeps out of its files.
+                static fn(string $line): string => trim((string) preg_replace(
+                    [
+                        '/[\x{2010}-\x{2015}]/u',
+                        '/[\x{2018}-\x{201B}]/u',
+                        '/[\x{201C}-\x{201F}]/u',
+                        '/\x{2026}/u',
+                        '/\x{00A0}/u',
+                        '/[\x{200B}-\x{200D}\x{FEFF}]/u',
+                    ],
+                    ['-', "'", '"', '...', ' ', ''],
+                    html_entity_decode(strip_tags((string) preg_replace('/\{@link\s+\S+\s+([^}]*)\}/', '$1', $line))),
+                )),
+                explode("\n", $this->doc($docComment)),
+            ),
+            static fn(string $line): bool => $line !== '',
+        ));
+    }
+
+    /**
+     * @return array<string, string> source path => API documentation package
+     */
+    private function apiPackages(): array
+    {
+        $packages = [];
+
+        foreach ($this->configFactory->filesystem()->list(path($this->phpdocPath . '/*.xml')) as $config) {
+            $document = new DOMDocument();
+            $document->loadXML(
+                type_string()->assert($this->configFactory->filesystem()->readFrom($config->path)->content()),
+            );
+            $output = $document->getElementsByTagNameNS(self::PHPDOC_NAMESPACE, 'output')->item(0)->textContent ?? '';
+            $package = substr(
+                $output,
+                (int) strpos($output, self::API_OUTPUT_PREFIX) + strlen(self::API_OUTPUT_PREFIX),
+            );
+
+            foreach ($document->getElementsByTagNameNS(self::PHPDOC_NAMESPACE, 'path') as $source) {
+                $packages[rtrim(trim($source->textContent), '/') . '/'] = $package;
+            }
+        }
+
+        return $packages;
+    }
+
+    /**
+     * @param array<string, string> $apiPackages
+     *
+     * @return array{api?: string}
+     */
+    private function apiDocumentation(string $class, string $repositoryPath, array $apiPackages): array
+    {
+        foreach ($apiPackages as $sourcePath => $package) {
+            if (str_starts_with($repositoryPath, $sourcePath)) {
+                return ['api' => $this->urlGenerator->generate('documentation_api', [
+                    'page' => $package . '/classes/' . str_replace('\\', '-', $class) . '.html',
+                ])];
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * @return array{documentation?: string}
+     */
+    private function documentation(DSLDefinition $definition): array
+    {
+        $module = $definition->module();
+
+        if ($module === null) {
+            return [];
+        }
+
+        return ['documentation' => $this->urlGenerator->generate('documentation_dsl_function', [
+            'module' => strtolower($module->name),
+            'function' => $definition->slug(),
+            '_fragment' => 'dsl-function',
+        ])];
+    }
+
+    /**
+     * @return list<TypeShape>
+     */
+    private function types(mixed $types): array
+    {
+        return type_list(type_structure([
+            'name' => type_string(),
+            'namespace' => type_optional(type_string()),
+            'is_nullable' => type_boolean(),
+            'is_variadic' => type_boolean(),
+        ]))
+            ->assert($types);
+    }
+
+    private function doc(?string $docComment): string
+    {
+        if ($docComment === null) {
+            return '';
+        }
+
+        return trim(implode(
+            "\n",
+            array_values(array_filter(
+                array_map(
+                    static fn(string $line): string => (string) preg_replace('/^\s*\*\s?/', '', $line),
+                    explode(
+                        "\n",
+                        (string) preg_replace(
+                            '/^\/\*\*|\*\/$/',
+                            '',
+                            type_string()->assert(base64_decode($docComment, true)),
+                        ),
+                    ),
+                ),
+                static fn(string $line): bool => trim($line) !== '',
+            )),
+        ));
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function readJson(string $path): array
+    {
+        return type_list(type_map(type_string(), type_mixed()))
+            ->assert(json_decode(
+                type_string()->assert($this->configFactory->filesystem()->readFrom(path($path))->content()),
+                true,
+                512,
+                JSON_THROW_ON_ERROR,
+            ));
+    }
+}

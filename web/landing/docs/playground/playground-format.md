@@ -1,6 +1,6 @@
 # playground_format_controller.js
 
-Format PHP code using CS-Fixer via WASM.
+Format PHP code with the Mago formatter, the official Mago WASM build committed in `assets/wasm/mago/` (`mago_wasm_bg.js` and `mago_wasm_bg.wasm` from the `mago-<version>-wasm.tar.gz` release asset).
 
 ## Outlets
 - `code-editor` - Code editor
@@ -10,19 +10,20 @@ Format PHP code using CS-Fixer via WASM.
 ## Public Methods
 
 ### `format(): Promise<void>`
-Formats code from editor using PHP CS Fixer.
+Formats code from editor using Mago, the same formatter `just fix` runs on the repository.
 
 **Process:**
 1. Waits for editor and WASM to load
-2. Gets code from editor
-3. Writes code to `/workspace/code.php` in WASM filesystem
-4. Shows "Formatting..." message
-5. Disables format button
-6. Calls WASM format method (formats `/workspace/code.php` in place)
-7. Updates editor with formatted code on success
-8. Shows applied fixers if any
-9. Re-enables format button
-10. Dispatches formatted event
+2. Shows "Formatting..." message
+3. Loads the Mago WASM module on first use (`assets/services/mago.js`)
+4. Formats the editor code for PHP 8.5 and puts the result back into the editor
+5. Writes the formatted code to `/workspace/code.php` in the WASM filesystem
+6. Shows the parse error when the code cannot be formatted
+7. Dispatches formatted event
+
+## Values
+- `magoWasm` - URL to `mago_wasm_bg.wasm`
+- `phpVersion` - PHP version the code targets, `8.5` by default
 
 ## Events Dispatched
 

@@ -13,10 +13,7 @@ Parameters:
 {% set wasm_resources = {
     'code.php': asset('wasm/code.php.wasm'),
     'tools/flow.phar': asset('wasm/tools/flow.phar'),
-    'tools/php-cs-fixer.phar': asset('wasm/tools/php-cs-fixer.phar'),
     'vendor/autoload.php': asset('wasm/vendor/autoload.php.wasm'),
-    '.php-cs-fixer.php': asset('wasm/phpcsfixer.php.wasm'),
-    'bin/cs-fixer.php': asset('wasm/bin/cs-fixer.php.wasm'),
     'data/orders.xml': asset('wasm/data/orders.xml'),
     'data/orders.json': asset('wasm/data/orders.json'),
     'data/orders.csv': asset('wasm/data/orders.csv'),
@@ -48,6 +45,7 @@ Parameters:
      {% endif %}
      data-wasm-php-js-value="{{ asset('wasm/php.js') }}"
      data-wasm-php-wasm-value="{{ asset('wasm/php.wasm') }}"
+     data-playground-format-mago-wasm-value="{{ asset('wasm/mago/mago_wasm_bg.wasm') }}"
      data-wasm-resources-value="{{ wasm_resources|json_encode }}"
      data-playground-package-icon-value="{{ asset('images/icons/package.svg') }}"
      data-playground-link-icon-value="{{ asset('images/icons/link.svg') }}"
@@ -155,7 +153,7 @@ Parameters:
                 <h3>Action Buttons</h3>
                 <ul>
                     <li><strong>Run</strong> - Executes your PHP code in the playground and displays the output below the editor.</li>
-                    <li><strong>Format</strong> - Automatically formats your PHP code using PHP-CS-Fixer rules for consistent code style.</li>
+                    <li><strong>Format</strong> - Automatically formats your PHP code with the Mago formatter, the same style the Flow PHP repository uses.</li>
                     <li><strong>Share</strong> - Generates a shareable link by securely uploading your code to our server. Your code and any uploaded datasets are stored for 90 days and accessible via a short URL. You can include up to 3 datasets (CSV, JSON, or XML files, max 2MB each) in your share. <br/><em>Important: Never include sensitive information like passwords, API keys, or personal data in your code when sharing. Shared snippets are publicly accessible to anyone with the link.</em></li>
                     <li><strong>Upload</strong> - Upload local files (CSV, JSON, XML, PHP, PHAR) to the virtual WASM filesystem. You can upload up to 3 files (max 2MB each). When you share your code, uploaded datasets will be included automatically. <br/><em>Note: Uploaded files are stored only in your browser's memory and will disappear when you refresh the page, unless you share your code.</em></li>
                     <li><strong>Reset</strong> - Clears your code and resets the playground to its default state.</li>

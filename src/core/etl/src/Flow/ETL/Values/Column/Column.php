@@ -29,7 +29,7 @@ interface Column
     public function nullCount(): int;
 
     /**
-     * PHYSICAL cell: int|float|bool|string|array|null - never a DateTimeImmutable, Uuid, Json …
+     * PHYSICAL cell: int|float|bool|string|array|null - never a DateTimeImmutable, Uuid, Json ...
      */
     public function at(int $i): mixed;
 
