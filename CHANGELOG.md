@@ -1,10 +1,19 @@
 ## [Unreleased] - 2026-11-04
 
 ### Added
+- [#2724](https://github.com/flow-php/flow/pull/2724) - **flow-php/web - Type-aware playground autocompletion for Flow API methods, DSL functions, classes and static members** - [@norberttech](https://github.com/norberttech)
+- [#2724](https://github.com/flow-php/flow/pull/2724) - **flow-php/web - Automatic use imports for completed DSL functions and classes** - [@norberttech](https://github.com/norberttech)
+- [#2724](https://github.com/flow-php/flow/pull/2724) - **flow-php/web - Playground hover docs, parameter hints, named argument and variable completion** - [@norberttech](https://github.com/norberttech)
+- [#2724](https://github.com/flow-php/flow/pull/2724) - **flow-php/web - Cmd/Ctrl+click in playground opens DSL, API or PHP manual documentation** - [@norberttech](https://github.com/norberttech)
+- [#2724](https://github.com/flow-php/flow/pull/2724) - **flow-php/web - Playground autocompletion for PHP functions and classes available in the playground** - [@norberttech](https://github.com/norberttech)
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - PHP 8.5 pipe operator support: a pipeable DSL step for every DataFrame, GroupedDataFrame and Flow method** - [@norberttech](https://github.com/norberttech)
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - Pipe operator documentation page** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2724](https://github.com/flow-php/flow/pull/2724) - **flow-php/web - Playground formats code with Mago instead of PHP-CS-Fixer** - [@norberttech](https://github.com/norberttech)
+- [#2724](https://github.com/flow-php/flow/pull/2724) - **flow-php/web - API dump covers every class reachable from DSL functions** - [@norberttech](https://github.com/norberttech)
+- [#2724](https://github.com/flow-php/flow/pull/2724) - **flow-php/web - Tab accepts the selected playground suggestion** - [@norberttech](https://github.com/norberttech)
+- [#2724](https://github.com/flow-php/flow/pull/2724) - **flow-php/flow - Docs are built from source with Better Reflection, independent of loaded extensions** - [@norberttech](https://github.com/norberttech)
 - [#2723](https://github.com/flow-php/flow/pull/2723) - **flow-php/etl - DataFrame::cache() throws on an empty string id** - [@norberttech](https://github.com/norberttech)
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - Transformation::transform() renamed to __invoke()** - [@norberttech](https://github.com/norberttech)
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - WithColumn moved to API\Transformation and accepts Definition names and window functions** - [@norberttech](https://github.com/norberttech)
@@ -13,9 +22,14 @@
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - print_rows(Rows) renamed to format_rows()** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2724](https://github.com/flow-php/flow/pull/2724) - **flow-php/web - Code samples link methods to their API documentation instead of same-named DSL functions** - [@norberttech](https://github.com/norberttech)
 - [#2723](https://github.com/flow-php/flow/pull/2723) - **flow-php/etl - cache("0") stores rows under the key "0" instead of the run id** - [@norberttech](https://github.com/norberttech)
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - PHP 8.5 NaN-to-bool warning when evaluating a float column as a condition** - [@norberttech](https://github.com/norberttech)
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - explain() default trigger in the documentation** - [@norberttech](https://github.com/norberttech)
+
+### Removed
+- [#2724](https://github.com/flow-php/flow/pull/2724) - **flow-php/web - DSL definitions inlined into every page** - [@norberttech](https://github.com/norberttech)
+- [#2724](https://github.com/flow-php/flow/pull/2724) - **flow-php/flow - Stale psalm, phpstan and php-cs-fixer references** - [@norberttech](https://github.com/norberttech)
 
 ## [0.47.0] - 2026-11-02
 
