@@ -38,6 +38,9 @@ jobs:
           extensions: ':psr, bcmath, curl, dom, hash, json, mbstring, pdo_sqlite, xml, xmlwriter, xmlreader, zip, zlib'
           cache-key-suffix: "-locked"
 
+      - name: "Build pg-query-ext from source"
+        uses: "./.github/actions/pg-query-ext"
+
       - name: "Build Docs"
         run: "just docs"
 

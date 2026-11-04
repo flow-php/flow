@@ -22,6 +22,13 @@ if (version_compare(PHP_VERSION, '8.4', '>=')) {
     exit(1);
 }
 
+if (extension_loaded('arrow') || extension_loaded('flow_php')) {
+    print PHP_EOL . 'Building docs requires PHP without the arrow and flow_php extensions.' . PHP_EOL;
+    print 'Run: nix-shell --arg with-arrow-ext false --arg with-flow-php-ext false --run "just docs"' . PHP_EOL;
+
+    exit(1);
+}
+
 if (false === in_array(PHP_SAPI, ['cli', 'phpdbg', 'embed'], true)) {
     print PHP_EOL . 'This app may only be invoked from a command line, got "' . PHP_SAPI . '"' . PHP_EOL;
 
