@@ -10,6 +10,7 @@
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - Pipe operator documentation page** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2725](https://github.com/flow-php/flow/pull/2725) - **flow-php/flow - Website tests install only the Chromium headless shell** - [@norberttech](https://github.com/norberttech)
 - [#2724](https://github.com/flow-php/flow/pull/2724) - **flow-php/web - Playground formats code with Mago instead of PHP-CS-Fixer** - [@norberttech](https://github.com/norberttech)
 - [#2724](https://github.com/flow-php/flow/pull/2724) - **flow-php/web - API dump covers every class reachable from DSL functions** - [@norberttech](https://github.com/norberttech)
 - [#2724](https://github.com/flow-php/flow/pull/2724) - **flow-php/web - Tab accepts the selected playground suggestion** - [@norberttech](https://github.com/norberttech)
