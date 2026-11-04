@@ -30,7 +30,7 @@ use function str_starts_with;
 final readonly class ClassesExtractor
 {
     /**
-     * @param list<string> $phpExtensions PHP extensions whose built-in types are extracted next to the repository ones
+     * @param list<string> $phpExtensions
      */
     public function __construct(
         private string $repositoryRootPath,
