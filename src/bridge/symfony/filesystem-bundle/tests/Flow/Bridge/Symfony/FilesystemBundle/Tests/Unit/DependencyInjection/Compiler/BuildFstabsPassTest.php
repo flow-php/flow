@@ -6,7 +6,8 @@ namespace Flow\Bridge\Symfony\FilesystemBundle\Tests\Unit\DependencyInjection\Co
 
 use Flow\Bridge\Symfony\FilesystemBundle\DependencyInjection\Compiler\BuildFstabsPass;
 use Flow\Bridge\Symfony\FilesystemBundle\Exception\LogicException;
-use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\FstabBuilder;
+use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\Factory\AsyncAwsS3FilesystemFactory;
+use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\Factory\AzureBlobFilesystemFactory;
 use Flow\Bridge\Symfony\FilesystemBundle\Tests\Context\BuildFstabsPassContext;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\FilesystemTable;
@@ -68,7 +69,35 @@ final class BuildFstabsPassTest extends TestCase
         static::assertFalse($container->hasDefinition('.flow.filesystem.fstab.default'));
     }
 
-    public function test_passes_entries_as_third_argument(): void
+    public function test_fstab_service_is_built_from_its_mount_services(): void
+    {
+        $container = $this->context->containerWithConfig([
+            'default_fstab' => 'default',
+            'fstabs' => [
+                'default' => [
+                    'filesystems' => [
+                        'memory' => ['type' => 'memory'],
+                        'file' => ['type' => 'file'],
+                    ],
+                ],
+            ],
+        ]);
+
+        (new BuildFstabsPass())->process($container);
+
+        $definition = $container->getDefinition('.flow.filesystem.fstab.default');
+
+        static::assertNull($definition->getFactory());
+        static::assertEquals(
+            [
+                new Reference('flow.filesystem.mount.default.memory'),
+                new Reference('flow.filesystem.mount.default.file'),
+            ],
+            $definition->getArguments(),
+        );
+    }
+
+    public function test_registers_private_mount_service_for_each_mount(): void
     {
         $container = $this->context->containerWithConfig([
             'default_fstab' => 'default',
@@ -83,29 +112,12 @@ final class BuildFstabsPassTest extends TestCase
 
         (new BuildFstabsPass())->process($container);
 
-        $arguments = $container->getDefinition('.flow.filesystem.fstab.default')->getArguments();
-        static::assertSame(['memory' => ['type' => 'memory', 'foo' => 'bar']], $arguments[2]);
-    }
+        $definition = $container->getDefinition('flow.filesystem.mount.default.memory');
 
-    public function test_passes_registry_reference_and_fstab_name_as_first_arguments(): void
-    {
-        $container = $this->context->containerWithConfig([
-            'default_fstab' => 'default',
-            'fstabs' => [
-                'default' => [
-                    'filesystems' => [
-                        'memory' => ['type' => 'memory'],
-                    ],
-                ],
-            ],
-        ]);
-
-        (new BuildFstabsPass())->process($container);
-
-        $arguments = $container->getDefinition('.flow.filesystem.fstab.default')->getArguments();
-        static::assertInstanceOf(Reference::class, $arguments[0]);
-        static::assertSame('.flow.filesystem.factory_registry', (string) $arguments[0]);
-        static::assertSame('default', $arguments[1]);
+        static::assertSame(Filesystem::class, $definition->getClass());
+        static::assertEquals([new Reference('.flow.filesystem.factory_registry'), 'create'], $definition->getFactory());
+        static::assertSame(['default', 'memory', ['type' => 'memory', 'foo' => 'bar']], $definition->getArguments());
+        static::assertFalse($definition->isPublic());
     }
 
     public function test_registers_fqcn_alias_pointing_to_default_fstab(): void
@@ -179,7 +191,6 @@ final class BuildFstabsPassTest extends TestCase
         $defaultDef = $container->getDefinition('.flow.filesystem.fstab.default');
         static::assertSame(FilesystemTable::class, $defaultDef->getClass());
         static::assertFalse($defaultDef->isPublic());
-        static::assertSame([FstabBuilder::class, 'build'], $defaultDef->getFactory());
 
         static::assertTrue($container->hasDefinition('.flow.filesystem.fstab.secondary'));
         static::assertFalse($container->getDefinition('.flow.filesystem.fstab.secondary')->isPublic());
@@ -315,5 +326,131 @@ final class BuildFstabsPassTest extends TestCase
         static::assertTrue($container->hasDefinition('.flow.filesystem.fs.default.aws-s3'));
         static::assertTrue($container->hasAlias(Filesystem::class . ' $awsS3'));
         static::assertTrue($container->hasAlias(Filesystem::class . ' $defaultAwsS3'));
+    }
+
+    public function test_resolves_aws_s3_client_service_ids_to_references(): void
+    {
+        $container = $this->context->containerWithConfig([
+            'default_fstab' => 'default',
+            'fstabs' => [
+                'default' => [
+                    'filesystems' => [
+                        's3' => [
+                            'type' => 'aws_s3',
+                            'bucket' => 'reports',
+                            'client' => [
+                                'region' => 'eu-west-1',
+                                'http_client_service_id' => 'app.http_client',
+                                'logger_service_id' => 'app.logger',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+        $container->register(
+            '.flow.filesystem.factory.aws_s3',
+            AsyncAwsS3FilesystemFactory::class,
+        )->addTag('flow.filesystem.factory', ['type' => 'aws_s3']);
+
+        (new BuildFstabsPass())->process($container);
+
+        static::assertEquals(
+            [
+                'default',
+                's3',
+                [
+                    'type' => 'aws_s3',
+                    'bucket' => 'reports',
+                    'client' => [
+                        'region' => 'eu-west-1',
+                        'http_client' => new Reference('app.http_client'),
+                        'logger' => new Reference('app.logger'),
+                    ],
+                ],
+            ],
+            $container->getDefinition('flow.filesystem.mount.default.s3')->getArguments(),
+        );
+    }
+
+    public function test_resolves_azure_blob_client_service_ids_to_references(): void
+    {
+        $container = $this->context->containerWithConfig([
+            'default_fstab' => 'default',
+            'fstabs' => [
+                'default' => [
+                    'filesystems' => [
+                        'azure' => [
+                            'type' => 'azure_blob',
+                            'container' => 'reports',
+                            'client' => [
+                                'account_name' => 'flow',
+                                'http_client_service' => 'app.http_client',
+                                'request_factory_service' => 'app.request_factory',
+                                'stream_factory_service' => 'app.stream_factory',
+                                'logger_service_id' => 'app.logger',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+        $container->register(
+            '.flow.filesystem.factory.azure_blob',
+            AzureBlobFilesystemFactory::class,
+        )->addTag('flow.filesystem.factory', ['type' => 'azure_blob']);
+
+        (new BuildFstabsPass())->process($container);
+
+        static::assertEquals(
+            [
+                'default',
+                'azure',
+                [
+                    'type' => 'azure_blob',
+                    'container' => 'reports',
+                    'client' => [
+                        'account_name' => 'flow',
+                        'http_client' => new Reference('app.http_client'),
+                        'request_factory' => new Reference('app.request_factory'),
+                        'stream_factory' => new Reference('app.stream_factory'),
+                        'logger' => new Reference('app.logger'),
+                    ],
+                ],
+            ],
+            $container->getDefinition('flow.filesystem.mount.default.azure')->getArguments(),
+        );
+    }
+
+    public function test_skips_a_config_parameter_that_is_not_an_array(): void
+    {
+        $container = new ContainerBuilder();
+        $container->setParameter(BuildFstabsPass::CONFIG_PARAMETER, 'not an array');
+
+        (new BuildFstabsPass())->process($container);
+
+        static::assertFalse($container->hasAlias(FilesystemTable::class));
+    }
+
+    public function test_skips_fstabs_and_mounts_that_are_not_arrays(): void
+    {
+        $container = $this->context->containerWithConfig([
+            'default_fstab' => 'default',
+            'fstabs' => [
+                'default' => [
+                    'filesystems' => [
+                        'memory' => ['type' => 'memory'],
+                        'broken' => 'not an array',
+                    ],
+                ],
+                'invalid' => 'not an array',
+            ],
+        ]);
+
+        (new BuildFstabsPass())->process($container);
+
+        static::assertTrue($container->hasDefinition('flow.filesystem.mount.default.memory'));
+        static::assertFalse($container->hasDefinition('flow.filesystem.mount.default.broken'));
+        static::assertFalse($container->hasDefinition('.flow.filesystem.fstab.invalid'));
     }
 }

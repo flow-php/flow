@@ -15,7 +15,7 @@ use Flow\Filesystem\Exception\RuntimeException as FilesystemRuntimeException;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Partition;
 use Flow\Filesystem\Path;
-use Flow\Filesystem\Tests\Double\FailingMvFilesystem;
+use Flow\Filesystem\Testing\FilesystemOperation;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -24,6 +24,7 @@ use function Flow\ETL\DSL\append;
 use function Flow\ETL\DSL\exception_if_exists;
 use function Flow\ETL\DSL\ignore;
 use function Flow\ETL\DSL\overwrite;
+use function Flow\Filesystem\DSL\intercepted_filesystem;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path;
@@ -511,7 +512,14 @@ final class FileCommitTest extends FlowTestCase
                 ->close();
         }
 
-        $failing = new FailingMvFilesystem($filesystem, healthyMoves: 1);
+        $moves = 0;
+        $failing = intercepted_filesystem($filesystem)->onCall(static function (FilesystemOperation $operation) use (
+            &$moves,
+        ): void {
+            if ($operation === FilesystemOperation::Mv && ++$moves === 2) {
+                throw new FilesystemRuntimeException('Moving failed');
+            }
+        });
         $job = new FileCommit($failing, $destination, overwrite(), 'r1', 2);
 
         foreach (range(0, 1) as $index) {

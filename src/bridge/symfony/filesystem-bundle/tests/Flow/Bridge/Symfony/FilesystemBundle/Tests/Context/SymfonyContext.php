@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\FilesystemBundle\Tests\Context;
 
+use Flow\Bridge\Symfony\FilesystemBundle\Tests\Double\TelemetryStubFactory;
 use Flow\Bridge\Symfony\FilesystemBundle\Tests\Fixtures\TestKernel;
+use Flow\Telemetry\Provider\Clock\SystemClock;
+use Flow\Telemetry\Telemetry;
 use LogicException;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\Filesystem\Filesystem;
 
 use function Flow\Types\DSL\type_instance_of;
@@ -34,6 +39,42 @@ final class SymfonyContext
         $this->kernel->boot();
 
         return $this->kernel;
+    }
+
+    /**
+     * @param callable(ContainerBuilder): void $configurator
+     */
+    public function bootTracedMemoryFstab(callable $configurator): TestKernel
+    {
+        return $this->bootKernel([
+            'config' => static function (TestKernel $kernel) use ($configurator): void {
+                $kernel->addTestExtensionConfig('flow_filesystem', [
+                    'default_fstab' => 'default',
+                    'fstabs' => [
+                        'default' => [
+                            'filesystems' => [
+                                'memory' => ['type' => 'memory'],
+                            ],
+                            'telemetry' => [
+                                'enabled' => true,
+                                'telemetry_service_id' => 'app.telemetry',
+                                'clock_service_id' => 'app.clock',
+                            ],
+                        ],
+                    ],
+                ]);
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) use (
+                    $configurator,
+                ): void {
+                    $container->setDefinition(
+                        'app.telemetry',
+                        (new Definition(Telemetry::class))->setFactory([TelemetryStubFactory::class, 'create']),
+                    );
+                    $container->setDefinition('app.clock', new Definition(SystemClock::class));
+                    $configurator($container);
+                });
+            },
+        ]);
     }
 
     public function getContainer(): ContainerInterface
