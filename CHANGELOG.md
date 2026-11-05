@@ -12,6 +12,7 @@
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - Pipe operator documentation page** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2727](https://github.com/flow-php/flow/pull/2727) - **flow-php/postgresql - unsupported condition node errors name the node kind** - [@norberttech](https://github.com/norberttech)
 - [#2726](https://github.com/flow-php/flow/pull/2726) - **flow-php/symfony-filesystem-bundle - the fstab table is built from the mount services** - [@norberttech](https://github.com/norberttech)
 - [#2725](https://github.com/flow-php/flow/pull/2725) - **flow-php/flow - Website tests install only the Chromium headless shell** - [@norberttech](https://github.com/norberttech)
 - [#2724](https://github.com/flow-php/flow/pull/2724) - **flow-php/web - Playground formats code with Mago instead of PHP-CS-Fixer** - [@norberttech](https://github.com/norberttech)
@@ -26,6 +27,10 @@
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - print_rows(Rows) renamed to format_rows()** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2727](https://github.com/flow-php/flow/pull/2727) - **flow-php/postgresql - AND, OR and NOT conditions parse IS NULL, IN, bare booleans, operators, function calls and scalar subqueries** - [@norberttech](https://github.com/norberttech)
+- [#2727](https://github.com/flow-php/flow/pull/2727) - **flow-php/postgresql - BETWEEN SYMMETRIC conditions parse from the AST** - [@norberttech](https://github.com/norberttech)
+- [#2727](https://github.com/flow-php/flow/pull/2727) - **flow-php/postgresql - rebuilt BETWEEN keeps NOT and SYMMETRIC** - [@norberttech](https://github.com/norberttech)
+- [#2727](https://github.com/flow-php/flow/pull/2727) - **flow-php/postgresql - between(not: true) produces NOT BETWEEN** - [@norberttech](https://github.com/norberttech)
 - [#2726](https://github.com/flow-php/flow/pull/2726) - **flow-php/flow - mago PHP 8.3 availability check hidden by phpstorm-stubs** - [@norberttech](https://github.com/norberttech)
 - [#2724](https://github.com/flow-php/flow/pull/2724) - **flow-php/web - Code samples link methods to their API documentation instead of same-named DSL functions** - [@norberttech](https://github.com/norberttech)
 - [#2723](https://github.com/flow-php/flow/pull/2723) - **flow-php/etl - cache("0") stores rows under the key "0" instead of the run id** - [@norberttech](https://github.com/norberttech)
