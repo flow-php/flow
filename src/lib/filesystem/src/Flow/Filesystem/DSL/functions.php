@@ -24,6 +24,7 @@ use Flow\Filesystem\Path\Options;
 use Flow\Filesystem\Telemetry\FilesystemTelemetryConfig;
 use Flow\Filesystem\Telemetry\FilesystemTelemetryOptions;
 use Flow\Filesystem\Telemetry\TraceableFilesystem;
+use Flow\Filesystem\Testing\InterceptedFilesystem;
 use Flow\Telemetry\Telemetry;
 use Psr\Clock\ClockInterface;
 
@@ -127,6 +128,15 @@ function fstab(Filesystem ...$filesystems): FilesystemTable
 function traceable_filesystem(Filesystem $filesystem, FilesystemTelemetryConfig $telemetryConfig): TraceableFilesystem
 {
     return new TraceableFilesystem($filesystem, $telemetryConfig);
+}
+
+/**
+ * Wrap a filesystem so that a test hook runs before every I/O operation, for example to make one throw.
+ */
+#[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
+function intercepted_filesystem(Filesystem $filesystem): InterceptedFilesystem
+{
+    return new InterceptedFilesystem($filesystem);
 }
 
 /**

@@ -129,6 +129,67 @@ autoconfigured (the default for everything under your `App\` namespace). Both re
 `FilesystemTable::for()` of the fstab, so telemetry decoration stays in place. If a protocol or fstab is
 unknown, the container compile fails and lists the available options.
 
+## Decorating a Mount
+
+Each mount is the service `flow.filesystem.mount.<fstab>.<mount>`. Decorate it with Symfony's `decorates:` to make
+a mount fail in tests:
+
+```yaml
+# config/services.yaml
+when@test:
+    services:
+        Flow\Filesystem\Testing\InterceptedFilesystem:
+            decorates: flow.filesystem.mount.default.aws-s3   # <fstab>.<the filesystems: key as written>
+            arguments: ['@.inner']
+            public: true                                      # lets the test fetch it with static::getContainer()->get()
+```
+
+```php
+use Flow\Filesystem\Testing\InterceptedFilesystem;
+use Flow\Filesystem\Testing\FilesystemOperation;
+
+static::getContainer()->get(InterceptedFilesystem::class)->onCall(static function (FilesystemOperation $operation): void {
+    if ($operation === FilesystemOperation::Rm) {
+        throw new RuntimeException('S3 down');
+    }
+});
+```
+
+The decorator sits inside the telemetry wrapper and reaches every injection path: `FilesystemTable::for()`,
+`Filesystem $s3`, `#[AsFilesystem]` and cache pools.
+With several decorators, `decoration_priority` sets the order; a higher priority sits closer to the mount.
+A decorator of an unknown mount id fails the container compile.
+
+Outside tests, `#[AsDecorator]` does the same:
+
+```php
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Path;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\AsDecorator;
+use Symfony\Component\DependencyInjection\Attribute\AutowireDecorated;
+
+#[AsDecorator('flow.filesystem.mount.default.s3')]
+final class LoggingFilesystem implements Filesystem
+{
+    public function __construct(
+        #[AutowireDecorated]
+        private readonly Filesystem $inner,
+        private readonly LoggerInterface $logger,
+    ) {
+    }
+
+    public function rm(Path $path, bool $recursive = true): bool
+    {
+        $this->logger->info('Removing {path}', ['path' => $path->uri()]);
+
+        return $this->inner->rm($path, $recursive);
+    }
+
+    // ...delegate the other Filesystem methods to $this->inner
+}
+```
+
 ## Configuration Reference
 
 ### Fstabs

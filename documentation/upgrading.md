@@ -22,6 +22,12 @@ Upgrading from older versions: [0.41.x to 0.43.x](/documentation/upgrading-0.41-
 | `DataFrame::with(Transformer\|Transformation\|WithColumn $transformer)`                     | `with(Transformer\|Transformation $transformer)`; a `WithColumn` passes as a `Transformation`                                                                          |
 | `duplicateRow()`, `duplicate_row()` accept every `WithColumn`                               | a Definition name or a window function throws `InvalidArgumentException`: add that column with `withColumn()` first                                                    |
 
+### 2) `flow-php/symfony-filesystem-bundle` - each mount is a service; `FstabBuilder` is removed
+
+| Before                                                                                   | After                                                                                                                  |
+|------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| `Flow\Bridge\Symfony\FilesystemBundle\Filesystem\FstabBuilder::build()` built each fstab | removed; each mount is the service `flow.filesystem.mount.<fstab>.<mount>`, and the fstab is built from those services |
+
 ---
 
 ## Upgrading from 0.46.x to 0.47.x

@@ -6,10 +6,12 @@ namespace Flow\Bridge\Symfony\FilesystemBundle\Filesystem;
 
 use Flow\Bridge\Symfony\FilesystemBundle\Exception\InvalidArgumentException;
 use Flow\Bridge\Symfony\FilesystemBundle\Exception\LogicException;
+use Flow\Filesystem\Filesystem;
 
 use function array_key_exists;
 use function array_keys;
 use function implode;
+use function is_string;
 use function sprintf;
 
 final class FilesystemFactoryRegistry
@@ -30,6 +32,25 @@ final class FilesystemFactoryRegistry
             }
 
             $this->factories[$type] = $factory;
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $entry
+     */
+    public function create(string $fstabName, string $protocol, array $entry): Filesystem
+    {
+        $type = is_string($entry['type'] ?? null) ? $entry['type'] : '';
+        unset($entry['type']);
+
+        try {
+            return $this->get($type)->create($protocol, $entry);
+        } catch (InvalidArgumentException $e) {
+            throw new LogicException(
+                sprintf('Fstab "%s" mount "%s": %s', $fstabName, $protocol, $e->getMessage()),
+                0,
+                $e,
+            );
         }
     }
 

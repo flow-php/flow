@@ -270,6 +270,40 @@ SizeUnits::humanReadable(1536, decimalSeparator: ',');        // "1,50 KiB"
 SizeUnits::humanReadable(null, null: 'n/a');                  // "n/a"
 ```
 
+## Testing failures
+
+`intercepted_filesystem()` wraps any filesystem. Its `onCall()` hook runs before every I/O operation, with the operation
+and the path. A hook that throws makes that call fail:
+
+```php
+<?php
+
+use Flow\Filesystem\Testing\FilesystemOperation;
+
+use function Flow\Filesystem\DSL\{intercepted_filesystem, path};
+
+$moves = 0;
+
+$s3 = intercepted_filesystem($s3)->onCall(static function (FilesystemOperation $operation) use (&$moves): void {
+    if ($operation === FilesystemOperation::Rm) {
+        throw new RuntimeException('S3 down');
+    }
+
+    if ($operation === FilesystemOperation::Mv && ++$moves === 2) {
+        throw new RuntimeException('Move failed');
+    }
+});
+
+$s3->rm(path('aws-s3://reports/2026'));  // throws "S3 down"
+$s3->mv($from, $to);                     // passes through
+$s3->mv($from, $to);                     // throws "Move failed"
+```
+
+The hooked operations are `AppendTo`, `Create`, `List`, `Mv` (with the source path), `ReadFrom`, `Rm`, `Status` and
+`WriteTo`. The hook runs when the method is called on this wrapper, never inside a returned stream. A lazy wrapper
+around it delays the `List` hook to the first iteration: in the Symfony bundle, `TraceableFilesystem::list()` uses
+`yield from`. A later `onCall()` replaces the earlier hook.
+
 ## Telemetry
 
 Flow Filesystem supports OpenTelemetry-compatible tracing and metrics for all filesystem operations.

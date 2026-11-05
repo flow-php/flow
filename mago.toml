@@ -32,6 +32,8 @@ includes = [
 ]
 excludes = [
     "src/**/vendor/**",
+    # phpstorm-stubs (via roave/better-reflection) shadow mago's version-aware built-ins; PhpStormStubsMap.php stays for bin/docs.php
+    "vendor/jetbrains/phpstorm-stubs/*/**",
     "**/var/**",
     "**/extension/*/ext/build/**",
     "**/extension/*/ext/run-tests.php",

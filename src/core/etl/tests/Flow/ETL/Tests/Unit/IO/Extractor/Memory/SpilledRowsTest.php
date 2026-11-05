@@ -9,15 +9,16 @@ use Flow\ETL\Foundation\Exception\InvalidLogicException;
 use Flow\ETL\IO\Extractor\Memory\SpilledRows;
 use Flow\ETL\IO\Extractor\Memory\SpillState;
 use Flow\ETL\Tests\Double\RecordingFilesystem;
-use Flow\ETL\Tests\Double\ThrowingRmFilesystem;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Exception\RuntimeException;
+use Flow\Filesystem\Testing\FilesystemOperation;
 use Generator;
 
 use function array_filter;
 use function count;
+use function Flow\Filesystem\DSL\intercepted_filesystem;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function iterator_to_array;
@@ -127,7 +128,15 @@ final class SpilledRowsTest extends FlowTestCase
     {
         $this->expectNotToPerformAssertions();
 
-        $spill = new SpilledRows([['id' => 1]], new ThrowingRmFilesystem(memory_filesystem()), path('memory://tmp'));
+        $spill = new SpilledRows(
+            [['id' => 1]],
+            intercepted_filesystem(memory_filesystem())->onCall(static function (FilesystemOperation $operation): void {
+                if ($operation === FilesystemOperation::Rm) {
+                    throw new RuntimeException('Cannot remove');
+                }
+            }),
+            path('memory://tmp'),
+        );
 
         $spill->sniff(0, null);
 

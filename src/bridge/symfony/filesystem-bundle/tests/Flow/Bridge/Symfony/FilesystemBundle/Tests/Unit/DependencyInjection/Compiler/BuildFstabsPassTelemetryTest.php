@@ -56,12 +56,13 @@ final class BuildFstabsPassTelemetryTest extends TestCase
         static::assertSame(FilesystemTelemetryOptions::class, $configArgs[2]->getClass());
         static::assertSame([false, true], $configArgs[2]->getArguments());
 
-        $fstabArgs = $container->getDefinition('.flow.filesystem.fstab.default')->getArguments();
-        static::assertInstanceOf(Reference::class, $fstabArgs[3]);
-        static::assertSame('.flow.filesystem.telemetry_config.default', (string) $fstabArgs[3]);
+        static::assertEquals(
+            [['withTelemetry', [new Reference('.flow.filesystem.telemetry_config.default')]]],
+            $container->getDefinition('.flow.filesystem.fstab.default')->getMethodCalls(),
+        );
     }
 
-    public function test_passes_null_telemetry_when_disabled(): void
+    public function test_adds_no_with_telemetry_call_when_disabled(): void
     {
         $container = $this->context->containerWithConfig([
             'default_fstab' => 'default',
@@ -77,8 +78,7 @@ final class BuildFstabsPassTelemetryTest extends TestCase
 
         (new BuildFstabsPass())->process($container);
 
-        $arguments = $container->getDefinition('.flow.filesystem.fstab.default')->getArguments();
-        static::assertNull($arguments[3]);
+        static::assertSame([], $container->getDefinition('.flow.filesystem.fstab.default')->getMethodCalls());
     }
 
     public function test_throws_when_telemetry_enabled_without_clock_service_id(): void

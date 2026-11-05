@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\FilesystemBundle\DependencyInjection\Compiler;
 
 use Flow\Bridge\Symfony\FilesystemBundle\Exception\LogicException;
-use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\FstabBuilder;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\FilesystemTable;
 use Flow\Filesystem\Telemetry\FilesystemTelemetryConfig;
@@ -33,6 +32,8 @@ final class BuildFstabsPass implements CompilerPassInterface
     public const string FSTAB_SERVICE_PREFIX = '.flow.filesystem.fstab.';
 
     public const string FS_SERVICE_PREFIX = '.flow.filesystem.fs.';
+
+    public const string MOUNT_SERVICE_PREFIX = 'flow.filesystem.mount.';
 
     public const string TELEMETRY_CONFIG_SERVICE_PREFIX = '.flow.filesystem.telemetry_config.';
 
@@ -100,14 +101,26 @@ final class BuildFstabsPass implements CompilerPassInterface
 
             $telemetryReference = $this->buildTelemetryConfigReference($container, $fstabNameStr, $telemetryArray);
 
-            $definition = new Definition(FilesystemTable::class);
-            $definition->setFactory([FstabBuilder::class, 'build']);
-            $definition->setArguments([
-                new Reference(RegisterFilesystemFactoriesPass::REGISTRY_SERVICE_ID),
-                $fstabNameStr,
-                $resolvedFilesystems,
-                $telemetryReference,
-            ]);
+            $mountReferences = [];
+
+            foreach ($resolvedFilesystems as $mountName => $resolvedEntry) {
+                $mountServiceId = self::MOUNT_SERVICE_PREFIX . $fstabNameStr . '.' . $mountName;
+                $container->setDefinition(
+                    $mountServiceId,
+                    (new Definition(Filesystem::class))
+                        ->setFactory([new Reference(RegisterFilesystemFactoriesPass::REGISTRY_SERVICE_ID), 'create'])
+                        ->setArguments([$fstabNameStr, $mountName, $resolvedEntry])
+                        ->setPublic(false),
+                );
+                $mountReferences[] = new Reference($mountServiceId);
+            }
+
+            $definition = new Definition(FilesystemTable::class, $mountReferences);
+
+            if ($telemetryReference !== null) {
+                $definition->addMethodCall('withTelemetry', [$telemetryReference]);
+            }
+
             $definition->setPublic(false);
 
             $serviceId = self::FSTAB_SERVICE_PREFIX . $fstabNameStr;
