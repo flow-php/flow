@@ -68,6 +68,7 @@ use function Flow\PostgreSql\DSL\param;
 use function Flow\PostgreSql\DSL\row_expr;
 use function Flow\PostgreSql\DSL\select;
 use function Flow\PostgreSql\DSL\similar_to;
+use function Flow\PostgreSql\DSL\sql_parse;
 use function Flow\PostgreSql\DSL\star;
 use function Flow\PostgreSql\DSL\sub_select;
 use function Flow\PostgreSql\DSL\table;
@@ -76,6 +77,7 @@ use function Flow\PostgreSql\DSL\when;
 use function Flow\PostgreSql\DSL\window_def;
 use function Flow\PostgreSql\DSL\window_func;
 use function Flow\PostgreSql\DSL\with;
+use function Flow\Types\DSL\type_instance_of;
 
 final class SelectBuilderTest extends TestCase
 {
@@ -1481,6 +1483,20 @@ final class SelectBuilderTest extends TestCase
                 ->select(col('id'), col('name'), current_timestamp()->as('created_at'))
                 ->from(table('users'))
                 ->toSql(),
+        );
+    }
+
+    public function test_from_ast_round_trips_nested_null_test_and_scalar_subquery(): void
+    {
+        $sql = 'SELECT 1 FROM t WHERE a IS NULL AND NOT (SELECT flag FROM flags LIMIT 1)';
+
+        static::assertSame(
+            $sql,
+            SelectBuilder::fromAst(
+                type_instance_of(SelectStmt::class)->assert(
+                    sql_parse($sql)->raw()->getStmts()[0]->getStmt()?->getSelectStmt(),
+                ),
+            )->toSql(),
         );
     }
 }

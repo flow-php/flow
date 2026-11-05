@@ -126,7 +126,12 @@ final readonly class Between implements Condition
         $listNode = new Node(['list' => $list]);
 
         $nameString = new PBString();
-        $nameString->setSval('BETWEEN');
+        $nameString->setSval(match (true) {
+            $this->symmetric && $this->negated => 'NOT BETWEEN SYMMETRIC',
+            $this->symmetric => 'BETWEEN SYMMETRIC',
+            $this->negated => 'NOT BETWEEN',
+            default => 'BETWEEN',
+        });
         $nameNode = new Node(['string' => $nameString]);
 
         $aExpr = new A_Expr([

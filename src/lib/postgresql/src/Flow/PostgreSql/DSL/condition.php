@@ -123,7 +123,7 @@ function between(string|Expression $expr, string|Expression $low, string|Express
         $expr instanceof Expression ? $expr : col($expr),
         $low instanceof Expression ? $low : col($low),
         $high instanceof Expression ? $high : col($high),
-        $not,
+        negated: $not,
     );
 }
 

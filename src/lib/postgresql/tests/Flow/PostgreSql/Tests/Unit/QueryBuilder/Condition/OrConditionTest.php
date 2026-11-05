@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Condition;
 
+use Flow\PostgreSql\Parser\ExpressionParser;
 use Flow\PostgreSql\Protobuf\AST\BoolExpr;
 use Flow\PostgreSql\Protobuf\AST\BoolExprType;
 use Flow\PostgreSql\Protobuf\AST\Node;
@@ -11,12 +12,16 @@ use Flow\PostgreSql\QueryBuilder\Condition\AndCondition;
 use Flow\PostgreSql\QueryBuilder\Condition\NotCondition;
 use Flow\PostgreSql\QueryBuilder\Condition\OrCondition;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 use function extension_loaded;
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\eq;
 use function Flow\PostgreSql\DSL\literal;
+use function Flow\PostgreSql\DSL\select;
+use function Flow\PostgreSql\DSL\table;
 
 final class OrConditionTest extends TestCase
 {
@@ -27,6 +32,45 @@ final class OrConditionTest extends TestCase
                 'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
             );
         }
+    }
+
+    public static function child_nodes(): Generator
+    {
+        yield 'null test' => ['x IS NULL'];
+        yield 'not null test' => ['x IS NOT NULL'];
+        yield 'in' => ['x IN (1, 2)'];
+        yield 'bare boolean column' => ['active'];
+        yield 'boolean literal' => ['true'];
+        yield 'between symmetric' => ['x BETWEEN SYMMETRIC 1 AND 2'];
+        yield 'non comparison operator' => ['tags @> ARRAY[\'x\']'];
+        yield 'function call' => ['is_valid(x)'];
+        yield 'scalar subquery' => ['(SELECT flag FROM flags LIMIT 1)'];
+        yield 'row comparison with subquery' => ['(a, b) = (SELECT x, y FROM u)'];
+    }
+
+    #[DataProvider('child_nodes')]
+    public function test_from_ast_round_trips_child_node(string $child): void
+    {
+        static::assertSame(
+            "SELECT 1 FROM t WHERE a = 1 OR {$child}",
+            select(literal(1))
+                ->from(table('t'))
+                ->where(OrCondition::fromAst((new ExpressionParser())->parse("a = 1 OR {$child}")))
+                ->toSql(),
+        );
+    }
+
+    public function test_from_ast_round_trips_two_null_tests(): void
+    {
+        static::assertSame(
+            'SELECT 1 FROM t WHERE failed_at IS NULL OR finished_at IS NULL',
+            select(literal(1))
+                ->from(table('t'))
+                ->where(OrCondition::fromAst((new ExpressionParser())->parse(
+                    'failed_at IS NULL OR finished_at IS NULL',
+                )))
+                ->toSql(),
+        );
     }
 
     public function test_and_returns_and_condition(): void
