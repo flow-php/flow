@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Condition;
 
+use Flow\PostgreSql\Parser\ExpressionParser;
 use Flow\PostgreSql\Protobuf\AST\A_Expr;
 use Flow\PostgreSql\Protobuf\AST\A_Expr_Kind;
 use Flow\PostgreSql\Protobuf\AST\Node;
@@ -14,9 +15,16 @@ use Flow\PostgreSql\QueryBuilder\Condition\OrCondition;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 use Flow\PostgreSql\QueryBuilder\Expression\Column;
 use Flow\PostgreSql\QueryBuilder\Expression\Literal;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 use function extension_loaded;
+use function Flow\PostgreSql\DSL\between;
+use function Flow\PostgreSql\DSL\col;
+use function Flow\PostgreSql\DSL\literal;
+use function Flow\PostgreSql\DSL\select;
+use function Flow\PostgreSql\DSL\table;
 
 final class BetweenTest extends TestCase
 {
@@ -174,6 +182,48 @@ final class BetweenTest extends TestCase
         $not = $between->not();
 
         static::assertInstanceOf(NotCondition::class, $not);
+    }
+
+    public function test_dsl_between_not_renders_not_between(): void
+    {
+        static::assertSame(
+            'SELECT 1 FROM t WHERE b NOT BETWEEN 1 AND 2',
+            select(literal(1))
+                ->from(table('t'))
+                ->where(between(col('b'), literal(1), literal(2), not: true))
+                ->toSql(),
+        );
+    }
+
+    public function test_dsl_between_renders_between(): void
+    {
+        static::assertSame(
+            'SELECT 1 FROM t WHERE b BETWEEN 1 AND 2',
+            select(literal(1))
+                ->from(table('t'))
+                ->where(between(col('b'), literal(1), literal(2)))
+                ->toSql(),
+        );
+    }
+
+    public static function between_variants(): Generator
+    {
+        yield 'between' => ['b BETWEEN 1 AND 2'];
+        yield 'not between' => ['b NOT BETWEEN 1 AND 2'];
+        yield 'between symmetric' => ['b BETWEEN SYMMETRIC 1 AND 2'];
+        yield 'not between symmetric' => ['b NOT BETWEEN SYMMETRIC 1 AND 2'];
+    }
+
+    #[DataProvider('between_variants')]
+    public function test_round_trip_renders_between_variant(string $sql): void
+    {
+        static::assertSame(
+            "SELECT 1 FROM t WHERE {$sql}",
+            select(literal(1))
+                ->from(table('t'))
+                ->where(Between::fromAst((new ExpressionParser())->parse($sql)))
+                ->toSql(),
+        );
     }
 
     public function test_or_returns_or_condition(): void

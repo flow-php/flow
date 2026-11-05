@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Condition;
 
+use Flow\PostgreSql\Parser\ExpressionParser;
 use Flow\PostgreSql\Protobuf\AST\BoolExpr;
 use Flow\PostgreSql\Protobuf\AST\BoolExprType;
 use Flow\PostgreSql\Protobuf\AST\Node;
@@ -11,12 +12,16 @@ use Flow\PostgreSql\QueryBuilder\Condition\AndCondition;
 use Flow\PostgreSql\QueryBuilder\Condition\NotCondition;
 use Flow\PostgreSql\QueryBuilder\Condition\OrCondition;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 use function extension_loaded;
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\eq;
 use function Flow\PostgreSql\DSL\literal;
+use function Flow\PostgreSql\DSL\select;
+use function Flow\PostgreSql\DSL\table;
 
 final class NotConditionTest extends TestCase
 {
@@ -27,6 +32,35 @@ final class NotConditionTest extends TestCase
                 'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
             );
         }
+    }
+
+    public static function child_nodes(): Generator
+    {
+        yield 'null test' => ['NOT (x IS NULL)', 'NOT x IS NULL'];
+        yield 'not null test' => ['NOT (x IS NOT NULL)', 'NOT x IS NOT NULL'];
+        yield 'in' => ['NOT (x IN (1, 2))', 'NOT x IN (1, 2)'];
+        yield 'bare boolean column' => ['NOT (active)', 'NOT active'];
+        yield 'boolean literal' => ['NOT (true)', 'NOT true'];
+        yield 'between symmetric' => ['NOT (x BETWEEN SYMMETRIC 1 AND 2)', 'NOT x BETWEEN SYMMETRIC 1 AND 2'];
+        yield 'non comparison operator' => ['NOT (tags @> ARRAY[\'x\'])', 'NOT tags @> ARRAY[\'x\']'];
+        yield 'function call' => ['NOT (is_valid(x))', 'NOT is_valid(x)'];
+        yield 'scalar subquery' => ['NOT ((SELECT flag FROM flags LIMIT 1))', 'NOT (SELECT flag FROM flags LIMIT 1)'];
+        yield 'row comparison with subquery' => [
+            'NOT ((a, b) = (SELECT x, y FROM u))',
+            'NOT (a, b) = (SELECT x, y FROM u)',
+        ];
+    }
+
+    #[DataProvider('child_nodes')]
+    public function test_from_ast_round_trips_child_node(string $sql, string $expected): void
+    {
+        static::assertSame(
+            "SELECT 1 FROM t WHERE {$expected}",
+            select(literal(1))
+                ->from(table('t'))
+                ->where(NotCondition::fromAst((new ExpressionParser())->parse($sql)))
+                ->toSql(),
+        );
     }
 
     public function test_and_returns_and_condition(): void

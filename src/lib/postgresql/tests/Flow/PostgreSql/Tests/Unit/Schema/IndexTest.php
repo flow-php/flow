@@ -168,4 +168,18 @@ final class IndexTest extends TestCase
 
         static::assertTrue($index->unique);
     }
+
+    public function test_to_sql_renders_partial_index_with_nested_null_tests(): void
+    {
+        static::assertSame(
+            'CREATE INDEX idx_lease ON public.t (lease_expires_at) WHERE started_at IS NOT NULL AND failed_at IS NULL AND finished_at IS NULL',
+            schema_index(
+                'idx_lease',
+                ['lease_expires_at'],
+                predicate: 'started_at IS NOT NULL AND failed_at IS NULL AND finished_at IS NULL',
+            )
+                ->toSql('t', 'public')
+                ->toSql(),
+        );
+    }
 }

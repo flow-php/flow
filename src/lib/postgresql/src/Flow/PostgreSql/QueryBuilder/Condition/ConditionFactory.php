@@ -34,12 +34,15 @@ final class ConditionFactory
                 A_Expr_Kind::AEXPR_SIMILAR => SimilarTo::fromAst($node),
                 A_Expr_Kind::AEXPR_BETWEEN => Between::fromAst($node),
                 A_Expr_Kind::AEXPR_NOT_BETWEEN => Between::fromAst($node),
+                A_Expr_Kind::AEXPR_BETWEEN_SYM => Between::fromAst($node),
+                A_Expr_Kind::AEXPR_NOT_BETWEEN_SYM => Between::fromAst($node),
                 A_Expr_Kind::AEXPR_IN => In::fromAst($node),
                 A_Expr_Kind::AEXPR_OP_ANY => Any::fromAst($node),
                 A_Expr_Kind::AEXPR_OP_ALL => All::fromAst($node),
                 A_Expr_Kind::AEXPR_DISTINCT => IsDistinctFrom::fromAst($node),
                 A_Expr_Kind::AEXPR_NOT_DISTINCT => IsDistinctFrom::fromAst($node),
-                default => throw UnsupportedNodeException::forNodeType("A_Expr kind: {$kind}"),
+                default => throw UnsupportedNodeException::forNodeType('A_Expr kind: '
+                . (string) A_Expr_Kind::name($kind)),
             };
         }
 
@@ -52,7 +55,8 @@ final class ConditionFactory
                 BoolExprType::AND_EXPR => AndCondition::fromAst($node),
                 BoolExprType::OR_EXPR => OrCondition::fromAst($node),
                 BoolExprType::NOT_EXPR => NotCondition::fromAst($node),
-                default => throw UnsupportedNodeException::forNodeType("BoolExpr type: {$boolOp}"),
+                default => throw UnsupportedNodeException::forNodeType('BoolExpr type: '
+                . (string) BoolExprType::name($boolOp)),
             };
         }
 
@@ -69,15 +73,13 @@ final class ConditionFactory
                 SubLinkType::EXISTS_SUBLINK => Exists::fromAst($node),
                 SubLinkType::ANY_SUBLINK => Any::fromAst($node),
                 SubLinkType::ALL_SUBLINK => All::fromAst($node),
-                default => throw UnsupportedNodeException::forNodeType("SubLink type: {$subLinkType}"),
+                SubLinkType::EXPR_SUBLINK => BooleanCondition::fromAst($node),
+                default => throw UnsupportedNodeException::forNodeType('SubLink type: '
+                . (string) SubLinkType::name($subLinkType)),
             };
         }
 
-        if ($node->getAConst() !== null || $node->getColumnRef() !== null) {
-            return BooleanCondition::fromAst($node);
-        }
-
-        throw UnsupportedNodeException::forNodeType('Unknown condition node type');
+        return BooleanCondition::fromAst($node);
     }
 
     /**

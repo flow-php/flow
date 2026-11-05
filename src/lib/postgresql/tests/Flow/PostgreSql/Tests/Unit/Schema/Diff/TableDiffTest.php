@@ -283,6 +283,22 @@ final class TableDiffTest extends TestCase
         );
     }
 
+    public function test_added_partial_index_emits_nested_null_test_predicate(): void
+    {
+        $table = schema_table('t', [schema_column_text('lease_expires_at')]);
+
+        $diff = new TableDiff($table, $table, addedIndexes: [schema_index(
+            'idx_lease',
+            ['lease_expires_at'],
+            predicate: 'started_at IS NOT NULL AND failed_at IS NULL AND finished_at IS NULL',
+        )]);
+
+        static::assertSame(
+            'CREATE INDEX idx_lease ON public.t (lease_expires_at) WHERE started_at IS NOT NULL AND failed_at IS NULL AND finished_at IS NULL',
+            $diff->generate()[0]->toSql(),
+        );
+    }
+
     public function test_added_trigger_emits_when_condition(): void
     {
         $table = schema_table('t', [schema_column_integer('i')]);
