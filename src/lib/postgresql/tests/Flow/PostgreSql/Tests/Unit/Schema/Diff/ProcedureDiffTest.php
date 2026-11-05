@@ -22,7 +22,7 @@ final class ProcedureDiffTest extends TestCase
 
         static::assertCount(1, $sqls);
         static::assertSame(
-            'CREATE OR REPLACE PROCEDURE cleanup(IN int) LANGUAGE plpgsql AS $$BEGIN DELETE FROM logs WHERE id = $1; END$$',
+            'CREATE OR REPLACE PROCEDURE public.cleanup(IN int) LANGUAGE plpgsql AS $$BEGIN DELETE FROM logs WHERE id = $1; END$$',
             $sqls[0]->toSql(),
         );
     }
@@ -48,7 +48,7 @@ final class ProcedureDiffTest extends TestCase
 
         static::assertCount(1, $sqls);
         static::assertSame(
-            'CREATE OR REPLACE PROCEDURE cleanup(IN int) LANGUAGE sql AS $$DELETE FROM logs WHERE id = $1$$',
+            'CREATE OR REPLACE PROCEDURE public.cleanup(IN int) LANGUAGE sql AS $$DELETE FROM logs WHERE id = $1$$',
             $sqls[0]->toSql(),
         );
     }

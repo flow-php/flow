@@ -12,7 +12,7 @@ use function Flow\PostgreSql\DSL\column_type_from_string;
 use function Flow\PostgreSql\DSL\create;
 
 /**
- * @type FuncShape = array{name: string, return_type: string, argument_types: list<string>, language: string, definition: ?string, is_strict: bool, volatility: ?string}
+ * @type FuncShape = array{name: string, return_type: string, argument_types: list<string>, language: string, definition: ?string, is_strict: bool, volatility: ?string, schema?: ?string}
  */
 final readonly class Func
 {
@@ -27,6 +27,7 @@ final readonly class Func
         public ?string $definition = null,
         public bool $isStrict = false,
         public ?FunctionVolatility $volatility = null,
+        public ?string $schema = null,
     ) {}
 
     /**
@@ -44,6 +45,7 @@ final readonly class Func
             volatility: array_key_exists('volatility', $data) && $data['volatility'] !== null
                 ? FunctionVolatility::from($data['volatility'])
                 : null,
+            schema: $data['schema'] ?? null,
         );
     }
 
@@ -60,7 +62,18 @@ final readonly class Func
             'definition' => $this->definition,
             'is_strict' => $this->isStrict,
             'volatility' => $this->volatility?->value,
+            'schema' => $this->schema,
         ];
+    }
+
+    public function qualifiedName(): string
+    {
+        return $this->schemaName() . '.' . $this->name;
+    }
+
+    public function schemaName(): string
+    {
+        return $this->schema ?? 'public';
     }
 
     public function toSql(): ?Sql
@@ -69,7 +82,7 @@ final readonly class Func
             return null;
         }
 
-        $builder = create()->function($this->name)->orReplace();
+        $builder = create()->function($this->qualifiedName())->orReplace();
 
         if ($this->argumentTypes !== []) {
             $args = array_map(static fn(string $type): FunctionArgument => FunctionArgument::of(column_type_from_string(
@@ -93,5 +106,19 @@ final readonly class Func
         }
 
         return $builder->as($this->definition);
+    }
+
+    public function withSchema(string $schema): self
+    {
+        return new self(
+            $this->name,
+            $this->returnType,
+            $this->argumentTypes,
+            $this->language,
+            $this->definition,
+            $this->isStrict,
+            $this->volatility,
+            $schema,
+        );
     }
 }

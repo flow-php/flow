@@ -34,7 +34,7 @@ use function Flow\PostgreSql\DSL\create;
  * @import-type CheckConstraintShape from CheckConstraint
  * @import-type ExcludeConstraintShape from ExcludeConstraint
  *
- * @type TableShape = array{schema?: string, name: string, columns: non-empty-list<ColumnShape>, primary_key?: ?PrimaryKeyShape, indexes?: list<IndexShape>, foreign_keys?: list<ForeignKeyShape>, unique_constraints?: list<UniqueConstraintShape>, check_constraints?: list<CheckConstraintShape>, exclude_constraints?: list<ExcludeConstraintShape>, triggers?: list<TriggerShape>, unlogged?: bool, partition_strategy?: ?string, partition_columns?: list<string>, inherits?: list<string>, tablespace?: ?string}
+ * @type TableShape = array{schema?: ?string, name: string, columns: non-empty-list<ColumnShape>, primary_key?: ?PrimaryKeyShape, indexes?: list<IndexShape>, foreign_keys?: list<ForeignKeyShape>, unique_constraints?: list<UniqueConstraintShape>, check_constraints?: list<CheckConstraintShape>, exclude_constraints?: list<ExcludeConstraintShape>, triggers?: list<TriggerShape>, unlogged?: bool, partition_strategy?: ?string, partition_columns?: list<string>, inherits?: list<string>, tablespace?: ?string}
  */
 final readonly class Table
 {
@@ -50,7 +50,7 @@ final readonly class Table
      * @param list<string> $inherits
      */
     public function __construct(
-        public string $schema,
+        public ?string $schema,
         public string $name,
         public array $columns,
         public ?PrimaryKey $primaryKey = null,
@@ -73,7 +73,7 @@ final readonly class Table
     public static function fromArray(array $data): self
     {
         return new self(
-            schema: $data['schema'] ?? 'public',
+            schema: $data['schema'] ?? null,
             name: $data['name'],
             columns: array_map(static fn(array $col): Column => Column::fromArray($col), $data['columns']),
             primaryKey: array_key_exists('primary_key', $data) && $data['primary_key'] !== null
@@ -259,6 +259,27 @@ final readonly class Table
         );
     }
 
+    public function withSchema(string $schema): self
+    {
+        return new self(
+            schema: $schema,
+            name: $this->name,
+            columns: $this->columns,
+            primaryKey: $this->primaryKey,
+            indexes: $this->indexes,
+            foreignKeys: $this->foreignKeys,
+            uniqueConstraints: $this->uniqueConstraints,
+            checkConstraints: $this->checkConstraints,
+            excludeConstraints: $this->excludeConstraints,
+            triggers: $this->triggers,
+            unlogged: $this->unlogged,
+            partitionStrategy: $this->partitionStrategy,
+            partitionColumns: $this->partitionColumns,
+            inherits: $this->inherits,
+            tablespace: $this->tablespace,
+        );
+    }
+
     public function withTablespace(?string $tablespace): self
     {
         return new self(
@@ -357,7 +378,12 @@ final readonly class Table
 
     public function qualifiedName(): string
     {
-        return $this->schema . '.' . $this->name;
+        return $this->schemaName() . '.' . $this->name;
+    }
+
+    public function schemaName(): string
+    {
+        return $this->schema ?? 'public';
     }
 
     /**
@@ -367,7 +393,7 @@ final readonly class Table
     {
         $sqls = [];
 
-        $tableBuilder = create()->table($this->name, $this->schema);
+        $tableBuilder = create()->table($this->name, $this->schemaName());
 
         foreach ($this->columns as $col) {
             $colDef = column($col->name, $col->type);
@@ -467,11 +493,11 @@ final readonly class Table
         $sqls[] = $tableBuilder;
 
         foreach ($this->indexes as $idx) {
-            $sqls[] = $idx->toSql($this->name, $this->schema);
+            $sqls[] = $idx->toSql($this->name, $this->schemaName());
         }
 
         foreach ($this->triggers as $trigger) {
-            $sqls[] = $trigger->withFunctionSchema($this->schema)->toSql($this->name, $this->schema);
+            $sqls[] = $trigger->withFunctionSchema($this->schemaName())->toSql($this->name, $this->schemaName());
         }
 
         return $sqls;

@@ -140,7 +140,8 @@ final class CatalogTest extends TestCase
             ],
         ]);
 
-        static::assertSame('public', $table->schema);
+        static::assertNull($table->schema);
+        static::assertSame('public', $table->schemaName());
         static::assertSame('users', $table->name);
         static::assertCount(1, $table->columns);
         static::assertNull($table->primaryKey);

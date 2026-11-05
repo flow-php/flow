@@ -44,7 +44,8 @@ final readonly class SchemaComparator
 
     public function compare(Schema $source, Schema $target, ?bool $dropIfExists = null): SchemaDiff
     {
-        $tables = $this->diffTables($source->tables, $target->tables);
+        $effectiveDropIfExists = $dropIfExists ?? $this->dropIfExists;
+        $tables = $this->diffTables($source->tables, $target->tables, $effectiveDropIfExists);
         $materializedViews = $this->diffMaterializedViews($source->materializedViews, $target->materializedViews);
         $domains = $this->diffDomains($source->domains, $target->domains);
 
@@ -53,9 +54,9 @@ final readonly class SchemaComparator
             $target->sequences,
             static fn(Sequence $s): string => $s->name,
             static fn(Sequence $a, Sequence $b): ?SequenceDiff => $a->dataType === $b->dataType
-                && $a->startValue === $b->startValue
-                && $a->minValue === $b->minValue
-                && $a->maxValue === $b->maxValue
+                && $a->effectiveStartValue() === $b->effectiveStartValue()
+                && $a->effectiveMinValue() === $b->effectiveMinValue()
+                && $a->effectiveMaxValue() === $b->effectiveMaxValue()
                 && $a->incrementBy === $b->incrementBy
                 && $a->cycle === $b->cycle
                 && $a->cacheValue === $b->cacheValue
@@ -140,7 +141,7 @@ final readonly class SchemaComparator
             $this->tableOrderStrategy,
             $this->viewOrderStrategy,
             $this->materializedViewOrderStrategy,
-            $dropIfExists ?? $this->dropIfExists,
+            $effectiveDropIfExists,
         );
     }
 
@@ -205,7 +206,13 @@ final readonly class SchemaComparator
                     return null;
                 }
 
-                return new MaterializedViewDiff($a, $b, $indexChanges->added, $indexChanges->removed);
+                return new MaterializedViewDiff(
+                    $a,
+                    $b,
+                    $indexChanges->added,
+                    $indexChanges->removed,
+                    $indexChanges->renamed ?? [],
+                );
             },
         );
     }
@@ -216,15 +223,19 @@ final readonly class SchemaComparator
      *
      * @return ChangeSet<Table, TableDiff>
      */
-    private function diffTables(array $sourceTables, array $targetTables): ChangeSet
+    private function diffTables(array $sourceTables, array $targetTables, bool $dropIfExists): ChangeSet
     {
         $initial = ChangeSet::fromNamedObjects(
             $sourceTables,
             $targetTables,
             static fn(Table $t): string => $t->name,
-            fn(Table $a, Table $b): ?TableDiff => ($diff = $this->tableComparator->compare($a, $b))->isEmpty()
-                ? null
-                : $diff,
+            fn(Table $a, Table $b): ?TableDiff => ($diff = $this->tableComparator->compare(
+                $a,
+                $b,
+                $dropIfExists,
+            ))->isEmpty()
+                    ? null
+                    : $diff,
         );
 
         $renameResult = $this->tableStructureComparator->detectTableRenames($initial->added, $initial->removed);

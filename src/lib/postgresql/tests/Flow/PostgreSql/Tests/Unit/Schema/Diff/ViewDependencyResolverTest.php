@@ -108,7 +108,7 @@ final class ViewDependencyResolverTest extends TestCase
 
         static::assertCount(1, $result->toDrop);
         static::assertSame('public.enriched_full_data', $result->toDrop[0]->qualifiedName());
-        static::assertInstanceOf(View::class, $result->toDrop[0]->view);
+        static::assertInstanceOf(View::class, $result->toDrop[0]);
 
         static::assertCount(1, $result->toCreate);
         static::assertSame('public.enriched_full_data', $result->toCreate[0]->qualifiedName());
@@ -129,7 +129,7 @@ final class ViewDependencyResolverTest extends TestCase
 
         static::assertCount(1, $result->toDrop);
         static::assertSame('public.mv_order_stats', $result->toDrop[0]->qualifiedName());
-        static::assertInstanceOf(MaterializedView::class, $result->toDrop[0]->view);
+        static::assertInstanceOf(MaterializedView::class, $result->toDrop[0]);
 
         static::assertCount(1, $result->toCreate);
         static::assertSame('public.mv_order_stats', $result->toCreate[0]->qualifiedName());
@@ -150,7 +150,7 @@ final class ViewDependencyResolverTest extends TestCase
 
         static::assertCount(1, $result->toDrop);
         static::assertSame('public.active_users', $result->toDrop[0]->qualifiedName());
-        static::assertInstanceOf(View::class, $result->toDrop[0]->view);
+        static::assertInstanceOf(View::class, $result->toDrop[0]);
 
         static::assertCount(1, $result->toCreate);
         static::assertSame('public.active_users', $result->toCreate[0]->qualifiedName());

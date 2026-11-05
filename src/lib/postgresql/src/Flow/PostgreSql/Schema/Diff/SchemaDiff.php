@@ -179,12 +179,12 @@ final readonly class SchemaDiff implements Diff
         $sqls = [];
 
         foreach ($materializedViews as $mv) {
-            $builder = drop()->materializedView($mv->name);
+            $builder = drop()->materializedView($mv->qualifiedName());
             $sqls[] = $this->dropIfExists ? $builder->ifExists() : $builder;
         }
 
         foreach ($views as $view) {
-            $builder = drop()->view($view->name);
+            $builder = drop()->view($view->qualifiedName());
             $sqls[] = $this->dropIfExists ? $builder->ifExists() : $builder;
         }
 
@@ -194,22 +194,22 @@ final readonly class SchemaDiff implements Diff
         }
 
         foreach ($procedures as $proc) {
-            $builder = drop()->procedure($proc->name);
+            $builder = drop()->procedure($proc->qualifiedName());
             $sqls[] = $this->dropIfExists ? $builder->ifExists() : $builder;
         }
 
         foreach ($functions as $func) {
-            $builder = drop()->function($func->name);
+            $builder = drop()->function($func->qualifiedName());
             $sqls[] = $this->dropIfExists ? $builder->ifExists() : $builder;
         }
 
         foreach ($sequences as $seq) {
-            $builder = drop()->sequence($seq->name);
+            $builder = drop()->sequence($seq->qualifiedName());
             $sqls[] = $this->dropIfExists ? $builder->ifExists() : $builder;
         }
 
         foreach ($domains as $domain) {
-            $builder = drop()->domain($domain->name)->cascade();
+            $builder = drop()->domain($domain->qualifiedName())->cascade();
             $sqls[] = $this->dropIfExists ? $builder->ifExists() : $builder;
         }
 

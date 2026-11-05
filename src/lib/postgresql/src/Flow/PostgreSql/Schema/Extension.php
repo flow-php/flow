@@ -37,9 +37,9 @@ final readonly class Extension
         ];
     }
 
-    public function toSql(): Sql
+    public function toSql(string $schema): Sql
     {
-        $builder = create()->extension($this->name);
+        $builder = create()->extension($this->name)->schema($schema);
 
         if ($this->version !== null) {
             $builder = $builder->version($this->version);

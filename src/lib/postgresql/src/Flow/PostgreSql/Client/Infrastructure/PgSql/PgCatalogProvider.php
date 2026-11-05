@@ -55,8 +55,10 @@ use function Flow\PostgreSql\DSL\asc;
 use function Flow\PostgreSql\DSL\case_when;
 use function Flow\PostgreSql\DSL\cast;
 use function Flow\PostgreSql\DSL\col;
+use function Flow\PostgreSql\DSL\column_type_custom;
 use function Flow\PostgreSql\DSL\concat;
 use function Flow\PostgreSql\DSL\eq;
+use function Flow\PostgreSql\DSL\exists;
 use function Flow\PostgreSql\DSL\func;
 use function Flow\PostgreSql\DSL\gt;
 use function Flow\PostgreSql\DSL\in_;
@@ -66,6 +68,7 @@ use function Flow\PostgreSql\DSL\literal;
 use function Flow\PostgreSql\DSL\ne;
 use function Flow\PostgreSql\DSL\not_;
 use function Flow\PostgreSql\DSL\not_like;
+use function Flow\PostgreSql\DSL\or_;
 use function Flow\PostgreSql\DSL\param;
 use function Flow\PostgreSql\DSL\select;
 use function Flow\PostgreSql\DSL\sub_select;
@@ -380,6 +383,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 type_boolean()->assert($row['nullable']),
                 $defaultValue === null ? null : ColumnDefault::fromExpression($defaultValue, $baseType),
                 $this->readDomainCheckConstraints($name, $schemaName),
+                $schemaName,
             );
         }
 
@@ -598,6 +602,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 type_string()->assert($row['definition']),
                 type_boolean()->assert($row['is_strict']),
                 $volatility !== null ? FunctionVolatility::from($volatility) : null,
+                $schemaName,
             );
         }
 
@@ -724,9 +729,12 @@ final readonly class PgCatalogProvider implements CatalogProvider
 
         foreach ($rows as $row) {
             $row = type_array()->assert($row);
+            $name = type_string()->assert($row['name']);
             $views[] = new MaterializedView(
-                type_string()->assert($row['name']),
+                $name,
                 type_string()->assert($row['definition']),
+                $this->readIndexes($name, $schemaName),
+                $schemaName,
             );
         }
 
@@ -857,6 +865,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 $this->parseArgumentTypes(type_string()->assert($row['arguments'])),
                 type_string()->assert($row['language']),
                 $definition,
+                $schemaName,
             );
         }
 
@@ -989,33 +998,54 @@ final readonly class PgCatalogProvider implements CatalogProvider
                         eq(col('attnum', 'dep_a'), col('refobjsubid', 'd')),
                     ),
                 )
-                ->where(eq(col('nspname', 'n'), param(1)))
+                ->where(and_(
+                    eq(col('nspname', 'n'), param(1)),
+                    or_(
+                        is_null(col('deptype', 'd')),
+                        and_(
+                            eq(col('deptype', 'd'), literal('a')),
+                            not_(exists(
+                                select(literal(1))
+                                    ->from(table('pg_depend', 'pg_catalog')->as('def_dep'))
+                                    ->join(
+                                        table('pg_attrdef', 'pg_catalog')->as('def'),
+                                        eq(col('oid', 'def'), col('objid', 'def_dep')),
+                                    )
+                                    ->where(and_(
+                                        eq(
+                                            col('classid', 'def_dep'),
+                                            cast(literal('pg_attrdef'), column_type_custom('regclass')),
+                                        ),
+                                        eq(col('refobjid', 'def_dep'), col('oid', 'c')),
+                                        eq(col('adrelid', 'def'), col('refobjid', 'd')),
+                                        eq(col('adnum', 'def'), col('refobjsubid', 'd')),
+                                    )),
+                            )),
+                        ),
+                    ),
+                ))
                 ->orderBy(asc(col('relname', 'c'))),
             [$schemaName],
         );
 
         $sequences = [];
+        $nullableString = type_union(type_string(), type_null());
 
         foreach ($rows as $row) {
             $row = type_array()->assert($row);
-
-            if (($row['owned_by_table'] ?? null) !== null) {
-                continue;
-            }
-
-            $maxValue = type_union(type_integer(), type_string(), type_null())->assert($row['max_value'] ?? null);
 
             $sequences[] = new Sequence(
                 type_string()->assert($row['name']),
                 type_string()->assert($row['data_type']),
                 $intOrString->assert($row['start_value']),
                 $intOrString->assert($row['min_value']),
-                $maxValue,
+                type_union(type_integer(), type_string(), type_null())->assert($row['max_value'] ?? null),
                 $intOrString->assert($row['increment_by']),
                 type_boolean()->assert($row['cycle']),
                 $intOrString->assert($row['cache_value']),
-                null,
-                null,
+                $nullableString->assert($row['owned_by_table'] ?? null),
+                $nullableString->assert($row['owned_by_column'] ?? null),
+                $schemaName,
             );
         }
 
@@ -1266,7 +1296,11 @@ final readonly class PgCatalogProvider implements CatalogProvider
 
         foreach ($rows as $row) {
             $row = type_array()->assert($row);
-            $views[] = new View(type_string()->assert($row['name']), type_string()->assert($row['definition']));
+            $views[] = new View(
+                type_string()->assert($row['name']),
+                type_string()->assert($row['definition']),
+                schema: $schemaName,
+            );
         }
 
         return $views;

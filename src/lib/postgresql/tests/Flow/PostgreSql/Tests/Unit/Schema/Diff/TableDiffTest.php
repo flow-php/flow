@@ -554,7 +554,22 @@ final class TableDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('DROP INDEX idx_users_name', $sqls[0]->toSql());
+        static::assertSame('DROP INDEX public.idx_users_name', $sqls[0]->toSql());
+    }
+
+    public function test_drops_index_if_exists(): void
+    {
+        $table = schema_table('users', [schema_column_integer('id', false)], schema: 'pivotly');
+
+        static::assertSame(
+            'DROP INDEX IF EXISTS pivotly.idx_users_name',
+            (new TableDiff(
+                $table,
+                $table,
+                removedIndexes: [schema_index('idx_users_name', ['name'])],
+                dropIfExists: true,
+            ))->generate()[0]->toSql(),
+        );
     }
 
     public function test_drops_primary_key(): void
@@ -807,7 +822,7 @@ final class TableDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('DROP INDEX idx_name', $sqls[0]->toSql());
+        static::assertSame('DROP INDEX public.idx_name', $sqls[0]->toSql());
     }
 
     public function test_reversed_add_primary_key(): void

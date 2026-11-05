@@ -37,7 +37,7 @@ final class SchemaDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('CREATE DOMAIN email AS pg_catalog.text NOT NULL', $sqls[0]->toSql());
+        static::assertSame('CREATE DOMAIN public.email AS pg_catalog.text NOT NULL', $sqls[0]->toSql());
     }
 
     public function test_creates_added_extension(): void
@@ -49,7 +49,7 @@ final class SchemaDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('CREATE EXTENSION "uuid-ossp"', $sqls[0]->toSql());
+        static::assertSame('CREATE EXTENSION "uuid-ossp" SCHEMA public', $sqls[0]->toSql());
     }
 
     public function test_creates_added_function(): void
@@ -68,7 +68,7 @@ final class SchemaDiffTest extends TestCase
 
         static::assertCount(1, $sqls);
         static::assertSame(
-            'CREATE OR REPLACE FUNCTION my_func(IN int) RETURNS text LANGUAGE sql AS $$SELECT name FROM users WHERE id = $1$$',
+            'CREATE OR REPLACE FUNCTION public.my_func(IN int) RETURNS text LANGUAGE sql AS $$SELECT name FROM users WHERE id = $1$$',
             $sqls[0]->toSql(),
         );
     }
@@ -83,7 +83,7 @@ final class SchemaDiffTest extends TestCase
 
         static::assertCount(1, $sqls);
         static::assertSame(
-            'CREATE SEQUENCE users_id_seq AS bigint START 1 INCREMENT 1 MINVALUE 1 CACHE 1 NO MAXVALUE',
+            'CREATE SEQUENCE public.users_id_seq AS bigint INCREMENT 1 NO MINVALUE CACHE 1 NO MAXVALUE',
             $sqls[0]->toSql(),
         );
     }
@@ -115,7 +115,10 @@ final class SchemaDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('CREATE VIEW active_users AS SELECT * FROM users WHERE active = true', $sqls[0]->toSql());
+        static::assertSame(
+            'CREATE VIEW public.active_users AS SELECT * FROM users WHERE active = true',
+            $sqls[0]->toSql(),
+        );
     }
 
     public function test_delegates_to_table_diff(): void
@@ -149,9 +152,9 @@ final class SchemaDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(3, $sqls);
-        static::assertSame('CREATE EXTENSION "uuid-ossp"', $sqls[0]->toSql());
+        static::assertSame('CREATE EXTENSION "uuid-ossp" SCHEMA public', $sqls[0]->toSql());
         static::assertSame('CREATE TABLE public.users (id int NOT NULL)', $sqls[1]->toSql());
-        static::assertSame('DROP VIEW active_users', $sqls[2]->toSql());
+        static::assertSame('DROP VIEW public.active_users', $sqls[2]->toSql());
     }
 
     public function test_drops_all_removed_object_types(): void
@@ -173,13 +176,13 @@ final class SchemaDiffTest extends TestCase
 
         $sqls = $diff->generate();
 
-        static::assertSame('DROP MATERIALIZED VIEW mv_stats', $sqls[0]->toSql());
-        static::assertSame('DROP VIEW active_users', $sqls[1]->toSql());
+        static::assertSame('DROP MATERIALIZED VIEW public.mv_stats', $sqls[0]->toSql());
+        static::assertSame('DROP VIEW public.active_users', $sqls[1]->toSql());
         static::assertSame('DROP TABLE public.users CASCADE', $sqls[2]->toSql());
-        static::assertSame('DROP PROCEDURE cleanup', $sqls[3]->toSql());
-        static::assertSame('DROP FUNCTION my_func', $sqls[4]->toSql());
-        static::assertSame('DROP SEQUENCE users_id_seq', $sqls[5]->toSql());
-        static::assertSame('DROP DOMAIN email CASCADE', $sqls[6]->toSql());
+        static::assertSame('DROP PROCEDURE public.cleanup', $sqls[3]->toSql());
+        static::assertSame('DROP FUNCTION public.my_func', $sqls[4]->toSql());
+        static::assertSame('DROP SEQUENCE public.users_id_seq', $sqls[5]->toSql());
+        static::assertSame('DROP DOMAIN public.email CASCADE', $sqls[6]->toSql());
         static::assertSame('DROP EXTENSION pgcrypto', $sqls[7]->toSql());
         static::assertCount(8, $sqls);
     }
@@ -204,13 +207,13 @@ final class SchemaDiffTest extends TestCase
 
         $sqls = $diff->generate();
 
-        static::assertSame('DROP MATERIALIZED VIEW IF EXISTS mv_stats', $sqls[0]->toSql());
-        static::assertSame('DROP VIEW IF EXISTS active_users', $sqls[1]->toSql());
+        static::assertSame('DROP MATERIALIZED VIEW IF EXISTS public.mv_stats', $sqls[0]->toSql());
+        static::assertSame('DROP VIEW IF EXISTS public.active_users', $sqls[1]->toSql());
         static::assertSame('DROP TABLE IF EXISTS public.users CASCADE', $sqls[2]->toSql());
-        static::assertSame('DROP PROCEDURE IF EXISTS cleanup', $sqls[3]->toSql());
-        static::assertSame('DROP FUNCTION IF EXISTS my_func', $sqls[4]->toSql());
-        static::assertSame('DROP SEQUENCE IF EXISTS users_id_seq', $sqls[5]->toSql());
-        static::assertSame('DROP DOMAIN IF EXISTS email CASCADE', $sqls[6]->toSql());
+        static::assertSame('DROP PROCEDURE IF EXISTS public.cleanup', $sqls[3]->toSql());
+        static::assertSame('DROP FUNCTION IF EXISTS public.my_func', $sqls[4]->toSql());
+        static::assertSame('DROP SEQUENCE IF EXISTS public.users_id_seq', $sqls[5]->toSql());
+        static::assertSame('DROP DOMAIN IF EXISTS public.email CASCADE', $sqls[6]->toSql());
         static::assertSame('DROP EXTENSION IF EXISTS pgcrypto', $sqls[7]->toSql());
         static::assertCount(8, $sqls);
     }
@@ -224,7 +227,7 @@ final class SchemaDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('DROP DOMAIN email CASCADE', $sqls[0]->toSql());
+        static::assertSame('DROP DOMAIN public.email CASCADE', $sqls[0]->toSql());
     }
 
     public function test_drops_removed_extension(): void
@@ -248,7 +251,7 @@ final class SchemaDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('DROP FUNCTION my_func', $sqls[0]->toSql());
+        static::assertSame('DROP FUNCTION public.my_func', $sqls[0]->toSql());
     }
 
     public function test_drops_removed_materialized_view(): void
@@ -263,7 +266,7 @@ final class SchemaDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('DROP MATERIALIZED VIEW mv_stats', $sqls[0]->toSql());
+        static::assertSame('DROP MATERIALIZED VIEW public.mv_stats', $sqls[0]->toSql());
     }
 
     public function test_drops_removed_procedure(): void
@@ -275,7 +278,7 @@ final class SchemaDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('DROP PROCEDURE cleanup', $sqls[0]->toSql());
+        static::assertSame('DROP PROCEDURE public.cleanup', $sqls[0]->toSql());
     }
 
     public function test_drops_removed_sequence(): void
@@ -287,7 +290,7 @@ final class SchemaDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('DROP SEQUENCE users_id_seq', $sqls[0]->toSql());
+        static::assertSame('DROP SEQUENCE public.users_id_seq', $sqls[0]->toSql());
     }
 
     public function test_drops_removed_table(): void
@@ -314,7 +317,7 @@ final class SchemaDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('DROP VIEW active_users', $sqls[0]->toSql());
+        static::assertSame('DROP VIEW public.active_users', $sqls[0]->toSql());
     }
 
     public function test_is_empty_when_all_arrays_empty(): void

@@ -9,7 +9,6 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\Exception\SchemaException;
 use Flow\PostgreSql\Schema\Exception\TableNotFoundException;
 
-use function array_key_exists;
 use function array_map;
 use function array_values;
 use function sprintf;
@@ -29,6 +28,41 @@ use function sprintf;
 final readonly class Schema
 {
     /**
+     * @var list<Domain>
+     */
+    public array $domains;
+
+    /**
+     * @var list<Func>
+     */
+    public array $functions;
+
+    /**
+     * @var list<MaterializedView>
+     */
+    public array $materializedViews;
+
+    /**
+     * @var list<Procedure>
+     */
+    public array $procedures;
+
+    /**
+     * @var list<Sequence>
+     */
+    public array $sequences;
+
+    /**
+     * @var list<Table>
+     */
+    public array $tables;
+
+    /**
+     * @var list<View>
+     */
+    public array $views;
+
+    /**
      * @param list<Table> $tables
      * @param list<Sequence> $sequences
      * @param list<View> $views
@@ -40,28 +74,46 @@ final readonly class Schema
      */
     public function __construct(
         public string $name,
-        public array $tables = [],
-        public array $sequences = [],
-        public array $views = [],
-        public array $materializedViews = [],
-        public array $functions = [],
-        public array $procedures = [],
-        public array $domains = [],
+        array $tables = [],
+        array $sequences = [],
+        array $views = [],
+        array $materializedViews = [],
+        array $functions = [],
+        array $procedures = [],
+        array $domains = [],
         public array $extensions = [],
-    ) {}
+    ) {
+        $this->tables = self::bind($tables, $name);
+        $this->sequences = self::bind($sequences, $name);
+        $this->views = self::bind($views, $name);
+        $this->materializedViews = self::bind($materializedViews, $name);
+        $this->functions = self::bind($functions, $name);
+        $this->procedures = self::bind($procedures, $name);
+        $this->domains = self::bind($domains, $name);
+    }
 
     /**
      * @param SchemaShape $data
      */
     public static function fromArray(array $data): self
     {
-        return new self(name: $data['name'], tables: array_map(static function (array $t) use ($data): Table {
-            if (!array_key_exists('schema', $t)) {
-                $t['schema'] = $data['name'];
-            }
-
-            return Table::fromArray($t);
-        }, $data['tables'] ?? []), sequences: array_map(static fn(array $s): Sequence => Sequence::fromArray($s), $data['sequences'] ?? []), views: array_map(static fn(array $v): View => View::fromArray($v), $data['views'] ?? []), materializedViews: array_map(static fn(array $mv): MaterializedView => MaterializedView::fromArray($mv), $data['materialized_views'] ?? []), functions: array_map(static fn(array $f): Func => Func::fromArray($f), $data['functions'] ?? []), procedures: array_map(static fn(array $p): Procedure => Procedure::fromArray($p), $data['procedures'] ?? []), domains: array_map(static fn(array $d): Domain => Domain::fromArray($d), $data['domains'] ?? []), extensions: array_map(static fn(array $e): Extension => Extension::fromArray($e), $data['extensions'] ?? []));
+        return new self(
+            name: $data['name'],
+            tables: array_map(static fn(array $t): Table => Table::fromArray($t), $data['tables'] ?? []),
+            sequences: array_map(static fn(array $s): Sequence => Sequence::fromArray($s), $data['sequences'] ?? []),
+            views: array_map(static fn(array $v): View => View::fromArray($v), $data['views'] ?? []),
+            materializedViews: array_map(static fn(array $mv): MaterializedView => MaterializedView::fromArray(
+                $mv,
+            ), $data['materialized_views'] ?? []),
+            functions: array_map(static fn(array $f): Func => Func::fromArray($f), $data['functions'] ?? []),
+            procedures: array_map(static fn(array $p): Procedure => Procedure::fromArray(
+                $p,
+            ), $data['procedures'] ?? []),
+            domains: array_map(static fn(array $d): Domain => Domain::fromArray($d), $data['domains'] ?? []),
+            extensions: array_map(static fn(array $e): Extension => Extension::fromArray(
+                $e,
+            ), $data['extensions'] ?? []),
+        );
     }
 
     public function hasSequence(string $name): bool
@@ -183,7 +235,7 @@ final readonly class Schema
         $sqls = [];
 
         foreach ($this->extensions as $ext) {
-            $sqls[] = $ext->toSql();
+            $sqls[] = $ext->toSql($this->name);
         }
 
         foreach ($this->domains as $domain) {
@@ -223,6 +275,54 @@ final readonly class Schema
         }
 
         return $sqls;
+    }
+
+    /**
+     * @template T of Table|View|MaterializedView|Sequence|Func|Procedure|Domain
+     *
+     * @param list<T> $objects
+     *
+     * @return list<T>
+     */
+    private static function bind(array $objects, string $schemaName): array
+    {
+        $bound = [];
+
+        foreach ($objects as $object) {
+            if ($object->schema === null) {
+                /** @var T $withSchema */
+                $withSchema = $object->withSchema($schemaName);
+                $bound[] = $withSchema;
+
+                continue;
+            }
+
+            if ($object->schema !== $schemaName) {
+                [$label, $dslFunction] = match (true) {
+                    $object instanceof Table => ['Table', 'schema_table'],
+                    $object instanceof View => ['View', 'schema_view'],
+                    $object instanceof MaterializedView => ['Materialized view', 'schema_materialized_view'],
+                    $object instanceof Sequence => ['Sequence', 'schema_sequence'],
+                    $object instanceof Func => ['Function', 'schema_function'],
+                    $object instanceof Procedure => ['Procedure', 'schema_procedure'],
+                    default => ['Domain', 'schema_domain'],
+                };
+
+                throw new SchemaException(sprintf(
+                    '%s "%s" declares schema "%s" but is placed in schema "%s"; pass schema: "%s" to %s() or move it.',
+                    $label,
+                    $object->name,
+                    $object->schema,
+                    $schemaName,
+                    $schemaName,
+                    $dslFunction,
+                ));
+            }
+
+            $bound[] = $object;
+        }
+
+        return $bound;
     }
 
     /**

@@ -26,7 +26,7 @@ final class DomainDiffTest extends TestCase
 
         static::assertCount(1, $sqls);
         static::assertSame(
-            'ALTER DOMAIN positive_int ADD CONSTRAINT positive_check CHECK (value > 0)',
+            'ALTER DOMAIN public.positive_int ADD CONSTRAINT positive_check CHECK (value > 0)',
             $sqls[0]->toSql(),
         );
     }
@@ -41,7 +41,7 @@ final class DomainDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame("ALTER DOMAIN email SET DEFAULT 'unknown'", $sqls[0]->toSql());
+        static::assertSame("ALTER DOMAIN public.email SET DEFAULT 'unknown'", $sqls[0]->toSql());
     }
 
     public function test_changes_nullable(): void
@@ -54,7 +54,7 @@ final class DomainDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('ALTER DOMAIN email SET NOT NULL', $sqls[0]->toSql());
+        static::assertSame('ALTER DOMAIN public.email SET NOT NULL', $sqls[0]->toSql());
     }
 
     public function test_drops_check_constraint(): void
@@ -68,7 +68,7 @@ final class DomainDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('ALTER DOMAIN positive_int DROP CONSTRAINT positive_check', $sqls[0]->toSql());
+        static::assertSame('ALTER DOMAIN public.positive_int DROP CONSTRAINT positive_check', $sqls[0]->toSql());
     }
 
     public function test_drops_default(): void
@@ -81,7 +81,7 @@ final class DomainDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('ALTER DOMAIN email DROP DEFAULT', $sqls[0]->toSql());
+        static::assertSame('ALTER DOMAIN public.email DROP DEFAULT', $sqls[0]->toSql());
     }
 
     public function test_has_base_type_changed_returns_false_when_same(): void
@@ -151,8 +151,8 @@ final class DomainDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(2, $sqls);
-        static::assertSame('DROP DOMAIN positive_int CASCADE', $sqls[0]->toSql());
-        static::assertSame('CREATE DOMAIN positive_int AS bigint', $sqls[1]->toSql());
+        static::assertSame('DROP DOMAIN public.positive_int CASCADE', $sqls[0]->toSql());
+        static::assertSame('CREATE DOMAIN public.positive_int AS bigint', $sqls[1]->toSql());
     }
 
     public function test_recreates_with_all_properties_when_base_type_changed(): void
@@ -177,9 +177,9 @@ final class DomainDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(2, $sqls);
-        static::assertSame('DROP DOMAIN positive_int CASCADE', $sqls[0]->toSql());
+        static::assertSame('DROP DOMAIN public.positive_int CASCADE', $sqls[0]->toSql());
         static::assertSame(
-            'CREATE DOMAIN positive_int AS bigint NOT NULL DEFAULT 0 CONSTRAINT non_negative CHECK (value >= 0)',
+            'CREATE DOMAIN public.positive_int AS bigint NOT NULL DEFAULT 0 CONSTRAINT non_negative CHECK (value >= 0)',
             $sqls[1]->toSql(),
         );
     }
@@ -201,7 +201,7 @@ final class DomainDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('ALTER DOMAIN email DROP NOT NULL', $sqls[0]->toSql());
+        static::assertSame('ALTER DOMAIN public.email DROP NOT NULL', $sqls[0]->toSql());
     }
 
     public function test_throws_when_adding_unnamed_constraint(): void

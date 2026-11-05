@@ -31,6 +31,39 @@ use function Flow\PostgreSql\DSL\schema_unique;
 
 final class TableTest extends TestCase
 {
+    public function test_table_outside_schema_renders_in_public(): void
+    {
+        static::assertSame(
+            'CREATE TABLE public.t (id int)',
+            schema_table('t', [schema_column('id', column_type_integer())])->toSql()[0]->toSql(),
+        );
+    }
+
+    public function test_with_schema_keeps_every_other_field(): void
+    {
+        $table = schema_table(
+            't',
+            [schema_column('id', column_type_integer(), nullable: false)],
+            schema_primary_key(['id']),
+            [schema_index('idx_t_id', ['id'])],
+            unlogged: true,
+            tablespace: 'fast',
+        );
+
+        static::assertEquals(
+            schema_table(
+                't',
+                [schema_column('id', column_type_integer(), nullable: false)],
+                schema_primary_key(['id']),
+                [schema_index('idx_t_id', ['id'])],
+                schema: 'pivotly',
+                unlogged: true,
+                tablespace: 'fast',
+            ),
+            $table->withSchema('pivotly'),
+        );
+    }
+
     public function test_column_lookup(): void
     {
         $table = schema_table('users', [
@@ -87,7 +120,8 @@ final class TableTest extends TestCase
             schema_column('name', column_type_varchar(255)),
         ]);
 
-        static::assertSame('public', $table->schema);
+        static::assertNull($table->schema);
+        static::assertSame('public', $table->schemaName());
         static::assertSame('users', $table->name);
         static::assertCount(2, $table->columns);
     }

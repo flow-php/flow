@@ -133,6 +133,11 @@ final class PostgreSqlContext
         $this->client->execute(drop()->materializedView($view)->ifExists()->cascade()->toSql());
     }
 
+    public function dropProcedureIfExists(string $procedure): void
+    {
+        $this->client->execute(drop()->procedure($procedure)->ifExists()->cascade()->toSql());
+    }
+
     public function dropSchemaIfExists(string $schema): void
     {
         $this->client->execute(drop()->schema($schema)->ifExists()->cascade()->toSql());

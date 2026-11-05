@@ -8,6 +8,7 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\Index;
 use Flow\PostgreSql\Schema\MaterializedView;
 
+use function Flow\PostgreSql\DSL\alter;
 use function Flow\PostgreSql\DSL\drop;
 
 final readonly class MaterializedViewDiff implements Diff
@@ -15,12 +16,14 @@ final readonly class MaterializedViewDiff implements Diff
     /**
      * @param list<Index> $addedIndexes
      * @param list<Index> $removedIndexes
+     * @param array<string, Index> $renamedIndexes
      */
     public function __construct(
         public MaterializedView $source,
         public MaterializedView $target,
         public array $addedIndexes = [],
         public array $removedIndexes = [],
+        public array $renamedIndexes = [],
     ) {}
 
     /**
@@ -32,19 +35,23 @@ final readonly class MaterializedViewDiff implements Diff
 
         if ($this->hasDefinitionChanged()) {
             foreach ($this->source->indexes as $idx) {
-                $sqls[] = drop()->index($idx->name);
+                $sqls[] = drop()->index($this->source->schemaName() . '.' . $idx->name);
             }
 
-            $sqls[] = drop()->materializedView($this->source->name);
+            $sqls[] = drop()->materializedView($this->source->qualifiedName());
             return [...$sqls, ...$this->target->toSql()];
         }
 
         foreach ($this->removedIndexes as $idx) {
-            $sqls[] = drop()->index($idx->name);
+            $sqls[] = drop()->index($this->source->schemaName() . '.' . $idx->name);
         }
 
         foreach ($this->addedIndexes as $idx) {
-            $sqls[] = $idx->toSql($this->target->name);
+            $sqls[] = $idx->toSql($this->target->name, $this->target->schemaName());
+        }
+
+        foreach ($this->renamedIndexes as $oldName => $newIndex) {
+            $sqls[] = alter()->index($oldName, $this->source->schemaName())->renameTo($newIndex->name);
         }
 
         return $sqls;

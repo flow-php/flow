@@ -22,6 +22,9 @@ final readonly class ViewDiff implements Diff
      */
     public function generate(): array
     {
-        return [create()->view($this->target->name)->orReplace()->as(parsed_select($this->target->definition))];
+        return [create()
+            ->view($this->target->name, $this->target->schemaName())
+            ->orReplace()
+            ->as(parsed_select($this->target->definition))];
     }
 }

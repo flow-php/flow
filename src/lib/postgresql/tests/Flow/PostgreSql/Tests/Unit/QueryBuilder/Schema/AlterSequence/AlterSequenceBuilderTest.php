@@ -19,6 +19,9 @@ use PHPUnit\Framework\TestCase;
 use function extension_loaded;
 use function Flow\Types\DSL\type_instance_of;
 
+use const PHP_INT_MAX;
+use const PHP_INT_MIN;
+
 final class AlterSequenceBuilderTest extends TestCase
 {
     protected function setUp(): void
@@ -519,5 +522,31 @@ final class AlterSequenceBuilderTest extends TestCase
 
         static::assertEmpty($original->toAst()->getOptions());
         static::assertNotEmpty($modified->toAst()->getOptions());
+    }
+
+    public function test_alter_sequence_renders_bigint_bounds_exactly(): void
+    {
+        static::assertSame(
+            'ALTER SEQUENCE s MAXVALUE 9223372036854775807 MINVALUE -9223372036854775808 RESTART 9223372036854775807',
+            AlterSequenceBuilder::create()
+                ->sequence('s')
+                ->maxValue(PHP_INT_MAX)
+                ->minValue(PHP_INT_MIN)
+                ->restartWith(PHP_INT_MAX)
+                ->toSql(),
+        );
+    }
+
+    public function test_alter_sequence_renders_values_beyond_int32_exactly(): void
+    {
+        static::assertSame(
+            'ALTER SEQUENCE s START 3000000000 INCREMENT 3000000000 CACHE 3000000000',
+            AlterSequenceBuilder::create()
+                ->sequence('s')
+                ->startWith(3_000_000_000)
+                ->incrementBy(3_000_000_000)
+                ->cache(3_000_000_000)
+                ->toSql(),
+        );
     }
 }

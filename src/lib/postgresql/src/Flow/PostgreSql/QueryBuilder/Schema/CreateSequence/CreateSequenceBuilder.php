@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\CreateSequence;
 
+use Flow\PostgreSql\Protobuf\AST\A_Const;
 use Flow\PostgreSql\Protobuf\AST\Boolean;
 use Flow\PostgreSql\Protobuf\AST\CreateSeqStmt;
 use Flow\PostgreSql\Protobuf\AST\DefElem;
-use Flow\PostgreSql\Protobuf\AST\Integer;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\PBList;
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\Protobuf\AST\TypeName;
 use Flow\PostgreSql\QueryBuilder\AstDeparser;
+use Flow\PostgreSql\QueryBuilder\Expression\Literal;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
+use function Flow\Types\DSL\type_instance_of;
 use function strtolower;
 
 final readonly class CreateSequenceBuilder implements CreateSequenceNameStep, CreateSequenceOptionsStep
@@ -267,12 +269,14 @@ final readonly class CreateSequenceBuilder implements CreateSequenceNameStep, Cr
 
     private function withIntegerOption(string $name, int $value): self
     {
-        $integer = new Integer();
-        $integer->setIval($value);
+        $constant = type_instance_of(A_Const::class)->assert(Literal::int($value)->toAst()->getAConst());
 
-        $argNode = new Node(['integer' => $integer]);
-
-        return $this->withOption($name, $argNode);
+        return $this->withOption(
+            $name,
+            $constant->hasIval()
+                ? new Node(['integer' => $constant->getIval()])
+                : new Node(['float' => $constant->getFval()]),
+        );
     }
 
     private function withOption(string $name, ?Node $arg): self

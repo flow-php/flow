@@ -7,6 +7,8 @@ namespace Flow\PostgreSql\Schema\Diff;
 use Flow\PostgreSql\Extractors\Tables;
 use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Schema\Catalog;
+use Flow\PostgreSql\Schema\MaterializedView;
+use Flow\PostgreSql\Schema\View;
 
 use function array_flip;
 use function array_key_exists;
@@ -28,21 +30,21 @@ final readonly class AstViewDependencyResolver implements ViewDependencyResolver
             return DependentViews::empty();
         }
 
-        /** @var array<string, DependentView> $allViews */
+        /** @var array<string, MaterializedView|View> $allViews */
         $allViews = [];
         /** @var array<string, list<string>> $viewDependsOn */
         $viewDependsOn = [];
 
         foreach ($catalog->all() as $schema) {
             foreach ($schema->views as $view) {
-                $qualifiedName = $schema->name . '.' . $view->name;
-                $allViews[$qualifiedName] = new DependentView($schema->name, $view);
+                $qualifiedName = $view->qualifiedName();
+                $allViews[$qualifiedName] = $view;
                 $viewDependsOn[$qualifiedName] = $this->extractDependencies($view->definition, $schema->name);
             }
 
             foreach ($schema->materializedViews as $materializedView) {
-                $qualifiedName = $schema->name . '.' . $materializedView->name;
-                $allViews[$qualifiedName] = new DependentView($schema->name, $materializedView);
+                $qualifiedName = $materializedView->qualifiedName();
+                $allViews[$qualifiedName] = $materializedView;
                 $viewDependsOn[$qualifiedName] = $this->extractDependencies(
                     $materializedView->definition,
                     $schema->name,
@@ -65,15 +67,15 @@ final readonly class AstViewDependencyResolver implements ViewDependencyResolver
         usort($createOrder, static fn(string $a, string $b): int => $depths[$a] <=> $depths[$b]);
 
         return new DependentViews(
-            array_map(static fn(string $name): DependentView => $allViews[$name], $dropOrder),
-            array_map(static fn(string $name): DependentView => $allViews[$name], $createOrder),
+            array_map(static fn(string $name): MaterializedView|View => $allViews[$name], $dropOrder),
+            array_map(static fn(string $name): MaterializedView|View => $allViews[$name], $createOrder),
         );
     }
 
     /**
      * @param list<string> $affected
      * @param array<string, list<string>> $viewDependsOn
-     * @param array<string, DependentView> $allViews
+     * @param array<string, MaterializedView|View> $allViews
      *
      * @return array<string, int>
      */

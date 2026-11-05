@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Schema;
 
+use Closure;
 use Flow\PostgreSql\QueryBuilder\Schema\ReferentialAction;
 use Flow\PostgreSql\Schema\Exception\SchemaException;
 use Flow\PostgreSql\Schema\Exception\TableNotFoundException;
 use Flow\PostgreSql\Schema\FunctionVolatility;
 use Flow\PostgreSql\Schema\IndexMethod;
+use Flow\PostgreSql\Schema\Schema;
 use Flow\PostgreSql\Schema\TriggerEvent;
 use Flow\PostgreSql\Schema\TriggerTiming;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\PostgreSql\DSL\agg_count;
@@ -69,6 +73,101 @@ use function Flow\PostgreSql\DSL\table;
 
 final class SchemaTest extends TestCase
 {
+    /**
+     * @return Generator<string, array{Closure(): mixed, string}>
+     */
+    public static function conflicting_schema_objects(): Generator
+    {
+        yield 'view' => [
+            static fn(): mixed => schema('pivotly', views: [schema_view('v', 'SELECT 1', schema: 'other')]),
+            'View "v" declares schema "other" but is placed in schema "pivotly"; pass schema: "pivotly" to schema_view() or move it.',
+        ];
+        yield 'materialized view' => [
+            static fn(): mixed => schema('pivotly', materializedViews: [schema_materialized_view(
+                'mv',
+                'SELECT 1',
+                schema: 'other',
+            )]),
+            'Materialized view "mv" declares schema "other" but is placed in schema "pivotly"; pass schema: "pivotly" to schema_materialized_view() or move it.',
+        ];
+        yield 'sequence' => [
+            static fn(): mixed => schema('pivotly', sequences: [schema_sequence('s', schema: 'other')]),
+            'Sequence "s" declares schema "other" but is placed in schema "pivotly"; pass schema: "pivotly" to schema_sequence() or move it.',
+        ];
+        yield 'function' => [
+            static fn(): mixed => schema('pivotly', functions: [schema_function('f', 'integer', schema: 'other')]),
+            'Function "f" declares schema "other" but is placed in schema "pivotly"; pass schema: "pivotly" to schema_function() or move it.',
+        ];
+        yield 'procedure' => [
+            static fn(): mixed => schema('pivotly', procedures: [schema_procedure('p', schema: 'other')]),
+            'Procedure "p" declares schema "other" but is placed in schema "pivotly"; pass schema: "pivotly" to schema_procedure() or move it.',
+        ];
+        yield 'domain' => [
+            static fn(): mixed => schema('pivotly', domains: [schema_domain(
+                'd',
+                column_type_integer(),
+                schema: 'other',
+            )]),
+            'Domain "d" declares schema "other" but is placed in schema "pivotly"; pass schema: "pivotly" to schema_domain() or move it.',
+        ];
+    }
+
+    /**
+     * @param Closure(): mixed $build
+     */
+    #[DataProvider('conflicting_schema_objects')]
+    public function test_schema_object_with_conflicting_schema_is_rejected(Closure $build, string $message): void
+    {
+        $this->expectException(SchemaException::class);
+        $this->expectExceptionMessage($message);
+
+        $build();
+    }
+
+    public function test_schema_objects_without_schema_take_the_schema_they_are_placed_in(): void
+    {
+        $schema = schema(
+            'pivotly',
+            sequences: [schema_sequence('s')],
+            views: [schema_view('v', 'SELECT 1')],
+            materializedViews: [schema_materialized_view('mv', 'SELECT 1')],
+            functions: [schema_function('f', 'integer')],
+            procedures: [schema_procedure('p')],
+            domains: [schema_domain('d', column_type_integer())],
+        );
+
+        static::assertSame('pivotly', $schema->sequences[0]->schema);
+        static::assertSame('pivotly', $schema->views[0]->schema);
+        static::assertSame('pivotly', $schema->materializedViews[0]->schema);
+        static::assertSame('pivotly', $schema->functions[0]->schema);
+        static::assertSame('pivotly', $schema->procedures[0]->schema);
+        static::assertSame('pivotly', $schema->domains[0]->schema);
+    }
+
+    public function test_schema_objects_with_matching_schema_are_kept(): void
+    {
+        $view = schema_view('v', 'SELECT 1', schema: 'pivotly');
+
+        static::assertSame($view, schema('pivotly', views: [$view])->views[0]);
+    }
+
+    public function test_from_array_table_without_schema_key_takes_schema_name(): void
+    {
+        $schema = Schema::fromArray([
+            'name' => 'pivotly',
+            'tables' => [[
+                'name' => 't',
+                'columns' => [[
+                    'name' => 'id',
+                    'type' => ['name' => 'int4', 'schema' => 'pg_catalog'],
+                    'nullable' => true,
+                ]],
+            ]],
+        ]);
+
+        static::assertSame('pivotly', $schema->tables[0]->schema);
+    }
+
     public function test_comprehensive_schema_with_all_object_types(): void
     {
         $schema = schema(
@@ -604,23 +703,26 @@ final class SchemaTest extends TestCase
             ],
         )->toSql();
 
-        static::assertSame('CREATE EXTENSION pgcrypto', $sqls[0]->toSql());
-        static::assertSame('CREATE DOMAIN positive_int AS int NOT NULL', $sqls[1]->toSql());
+        static::assertSame('CREATE EXTENSION pgcrypto SCHEMA public', $sqls[0]->toSql());
+        static::assertSame('CREATE DOMAIN public.positive_int AS int NOT NULL', $sqls[1]->toSql());
         static::assertSame(
-            'CREATE SEQUENCE users_id_seq AS bigint START 1 INCREMENT 1 MINVALUE 1 CACHE 1 NO MAXVALUE',
+            'CREATE SEQUENCE public.users_id_seq AS bigint INCREMENT 1 NO MINVALUE CACHE 1 NO MAXVALUE',
             $sqls[2]->toSql(),
         );
         static::assertSame(
-            'CREATE OR REPLACE FUNCTION get_one() RETURNS int LANGUAGE sql AS $$SELECT 1$$',
+            'CREATE OR REPLACE FUNCTION public.get_one() RETURNS int LANGUAGE sql AS $$SELECT 1$$',
             $sqls[3]->toSql(),
         );
         static::assertSame(
-            'CREATE OR REPLACE PROCEDURE do_cleanup() LANGUAGE plpgsql AS $$BEGIN END;$$',
+            'CREATE OR REPLACE PROCEDURE public.do_cleanup() LANGUAGE plpgsql AS $$BEGIN END;$$',
             $sqls[4]->toSql(),
         );
         static::assertSame('CREATE TABLE public.users (id int NOT NULL)', $sqls[5]->toSql());
-        static::assertSame('CREATE VIEW active_users AS SELECT * FROM users', $sqls[6]->toSql());
-        static::assertSame('CREATE MATERIALIZED VIEW user_counts AS SELECT count(*) FROM users', $sqls[7]->toSql());
+        static::assertSame('CREATE VIEW public.active_users AS SELECT * FROM users', $sqls[6]->toSql());
+        static::assertSame(
+            'CREATE MATERIALIZED VIEW public.user_counts AS SELECT count(*) FROM users',
+            $sqls[7]->toSql(),
+        );
         static::assertCount(8, $sqls);
     }
 
@@ -635,10 +737,10 @@ final class SchemaTest extends TestCase
         ])->toSql();
 
         static::assertSame(
-            'CREATE MATERIALIZED VIEW user_counts AS SELECT id, count(*) FROM users GROUP BY id',
+            'CREATE MATERIALIZED VIEW public.user_counts AS SELECT id, count(*) FROM users GROUP BY id',
             $sqls[0]->toSql(),
         );
-        static::assertSame('CREATE UNIQUE INDEX idx_uc_id ON user_counts (id)', $sqls[1]->toSql());
+        static::assertSame('CREATE UNIQUE INDEX idx_uc_id ON public.user_counts (id)', $sqls[1]->toSql());
         static::assertCount(2, $sqls);
     }
 
@@ -652,7 +754,7 @@ final class SchemaTest extends TestCase
 
         static::assertCount(1, $sqls);
         static::assertSame(
-            'CREATE OR REPLACE FUNCTION my_fn() RETURNS int LANGUAGE sql AS $$SELECT 42$$',
+            'CREATE OR REPLACE FUNCTION public.my_fn() RETURNS int LANGUAGE sql AS $$SELECT 42$$',
             $sqls[0]->toSql(),
         );
     }
@@ -673,5 +775,23 @@ final class SchemaTest extends TestCase
         ])->toSql();
 
         static::assertSame([], $sqls);
+    }
+
+    public function test_table_without_schema_takes_the_schema_it_is_placed_in(): void
+    {
+        static::assertSame(
+            'CREATE TABLE pivotly.t (id int)',
+            schema('pivotly', tables: [schema_table('t', [schema_column_integer('id')])])->toSql()[0]->toSql(),
+        );
+    }
+
+    public function test_table_with_conflicting_schema_is_rejected(): void
+    {
+        $this->expectException(SchemaException::class);
+        $this->expectExceptionMessage(
+            'Table "t" declares schema "other" but is placed in schema "pivotly"; pass schema: "pivotly" to schema_table() or move it.',
+        );
+
+        schema('pivotly', tables: [schema_table('t', [schema_column_integer('id')], schema: 'other')]);
     }
 }

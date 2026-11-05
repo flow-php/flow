@@ -6,11 +6,19 @@ namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Expression;
 
 use Flow\PostgreSql\Protobuf\AST\Boolean;
 use Flow\PostgreSql\Protobuf\AST\Integer;
+use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\QueryBuilder\Expression\AliasedExpression;
 use Flow\PostgreSql\QueryBuilder\Expression\Literal;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\PostgreSql\DSL\select;
+use function Flow\PostgreSql\DSL\sql_parse;
 use function Flow\Types\DSL\type_instance_of;
+
+use const PHP_INT_MAX;
+use const PHP_INT_MIN;
 
 final class LiteralTest extends TestCase
 {
@@ -188,5 +196,58 @@ final class LiteralTest extends TestCase
         $reconstructed = Literal::fromAst($node);
 
         static::assertEquals($original->value(), $reconstructed->value());
+    }
+
+    /**
+     * @return Generator<string, array{int, string}>
+     */
+    public static function int64_values(): Generator
+    {
+        yield 'max int64' => [PHP_INT_MAX, '9223372036854775807'];
+        yield 'min int64' => [PHP_INT_MIN, '-9223372036854775808'];
+        yield 'beyond int32' => [3_000_000_000, '3000000000'];
+    }
+
+    #[DataProvider('int64_values')]
+    public function test_int_literal_beyond_int32_renders_exactly(int $value, string $sql): void
+    {
+        static::assertSame('SELECT ' . $sql, select(Literal::int($value))->toSql());
+    }
+
+    #[DataProvider('int64_values')]
+    public function test_parsed_integer_beyond_int32_round_trips_as_int(int $value, string $sql): void
+    {
+        $literal = Literal::fromAst(
+            type_instance_of(Node::class)->assert(
+                sql_parse('SELECT 1 WHERE id = ' . $sql)->raw()->getStmts()[0]
+                    ?->getStmt()
+                    ?->getSelectStmt()
+                    ?->getWhereClause()
+                    ?->getAExpr()
+                    ?->getRexpr(),
+            ),
+        );
+
+        static::assertTrue($literal->isInt());
+        static::assertSame($value, $literal->value());
+        static::assertSame('SELECT ' . $sql, select($literal)->toSql());
+    }
+
+    public function test_parsed_fractional_float_stays_float(): void
+    {
+        $literal = Literal::fromAst(
+            type_instance_of(Node::class)->assert(
+                sql_parse('SELECT 1 WHERE price = 1.5')->raw()->getStmts()[0]
+                    ?->getStmt()
+                    ?->getSelectStmt()
+                    ?->getWhereClause()
+                    ?->getAExpr()
+                    ?->getRexpr(),
+            ),
+        );
+
+        static::assertTrue($literal->isFloat());
+        static::assertSame(1.5, $literal->value());
+        static::assertSame('SELECT 1.5', select($literal)->toSql());
     }
 }

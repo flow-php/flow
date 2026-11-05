@@ -28,14 +28,17 @@ final class ExtensionTest extends TestCase
 
     public function test_to_sql_generates_create_extension(): void
     {
-        static::assertSame('CREATE EXTENSION "uuid-ossp"', schema_extension('uuid-ossp')->toSql()->toSql());
+        static::assertSame(
+            'CREATE EXTENSION "uuid-ossp" SCHEMA public',
+            schema_extension('uuid-ossp')->toSql('public')->toSql(),
+        );
     }
 
     public function test_to_sql_generates_create_extension_with_version(): void
     {
         static::assertSame(
-            'CREATE EXTENSION postgis VERSION "3.4.0"',
-            schema_extension('postgis', '3.4.0')->toSql()->toSql(),
+            'CREATE EXTENSION postgis SCHEMA public VERSION "3.4.0"',
+            schema_extension('postgis', '3.4.0')->toSql('public')->toSql(),
         );
     }
 }

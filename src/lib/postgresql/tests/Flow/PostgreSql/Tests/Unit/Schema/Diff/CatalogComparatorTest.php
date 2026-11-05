@@ -17,8 +17,10 @@ use PHPUnit\Framework\TestCase;
 
 use function array_map;
 use function Flow\PostgreSql\DSL\and_;
+use function Flow\PostgreSql\DSL\catalog;
 use function Flow\PostgreSql\DSL\catalog_comparator;
 use function Flow\PostgreSql\DSL\col;
+use function Flow\PostgreSql\DSL\column_type_text;
 use function Flow\PostgreSql\DSL\eq;
 use function Flow\PostgreSql\DSL\literal;
 use function Flow\PostgreSql\DSL\schema;
@@ -2627,8 +2629,8 @@ final class CatalogComparatorTest extends TestCase
             catalog_comparator()->compare($source, $target)->generate(),
         );
 
-        static::assertContains('DROP VIEW active_users', $sqls);
-        static::assertNotContains('DROP VIEW IF EXISTS active_users', $sqls);
+        static::assertContains('DROP VIEW public.active_users', $sqls);
+        static::assertNotContains('DROP VIEW IF EXISTS public.active_users', $sqls);
     }
 
     public function test_removed_view_drop_gains_if_exists_when_flag_enabled(): void
@@ -2645,8 +2647,8 @@ final class CatalogComparatorTest extends TestCase
             catalog_comparator(dropIfExists: true)->compare($source, $target)->generate(),
         );
 
-        static::assertContains('DROP VIEW IF EXISTS active_users', $sqls);
-        static::assertNotContains('DROP VIEW active_users', $sqls);
+        static::assertContains('DROP VIEW IF EXISTS public.active_users', $sqls);
+        static::assertNotContains('DROP VIEW public.active_users', $sqls);
     }
 
     public function test_compare_override_forces_if_exists_on_default_off_comparator(): void
@@ -2663,8 +2665,8 @@ final class CatalogComparatorTest extends TestCase
             catalog_comparator()->compare($source, $target, true)->generate(),
         );
 
-        static::assertContains('DROP VIEW IF EXISTS active_users', $sqls);
-        static::assertNotContains('DROP VIEW active_users', $sqls);
+        static::assertContains('DROP VIEW IF EXISTS public.active_users', $sqls);
+        static::assertNotContains('DROP VIEW public.active_users', $sqls);
     }
 
     public function test_compare_override_suppresses_if_exists_on_default_on_comparator(): void
@@ -2681,7 +2683,208 @@ final class CatalogComparatorTest extends TestCase
             catalog_comparator(dropIfExists: true)->compare($source, $target, false)->generate(),
         );
 
-        static::assertContains('DROP VIEW active_users', $sqls);
-        static::assertNotContains('DROP VIEW IF EXISTS active_users', $sqls);
+        static::assertContains('DROP VIEW public.active_users', $sqls);
+        static::assertNotContains('DROP VIEW IF EXISTS public.active_users', $sqls);
+    }
+
+    public function test_objects_added_in_non_public_schema_are_created_in_that_schema(): void
+    {
+        $columns = [schema_column_integer('id'), schema_column_text('lease')];
+        $tableOnly = catalog([schema('pivotly', tables: [schema_table('ds_sync', $columns, schema: 'pivotly')])]);
+        $full = catalog([schema(
+            'pivotly',
+            tables: [schema_table(
+                'ds_sync',
+                $columns,
+                indexes: [schema_index('idx_lease', ['lease'])],
+                schema: 'pivotly',
+            )],
+            sequences: [schema_sequence('seq_a', ownedByTable: 'ds_sync', ownedByColumn: 'id')],
+            views: [schema_view('v_a', 'SELECT id FROM pivotly.ds_sync')],
+            materializedViews: [
+                schema_materialized_view('mv_a', 'SELECT id FROM pivotly.ds_sync', [schema_index('idx_mv_a', ['id'])]),
+            ],
+            functions: [schema_function('fn_a', 'integer', definition: 'SELECT 1')],
+            procedures: [schema_procedure('proc_a', definition: 'SELECT 1')],
+            domains: [schema_domain('dom_a', column_type_text())],
+            extensions: [schema_extension('pgcrypto')],
+        )]);
+
+        static::assertSame(
+            [
+                'CREATE EXTENSION pgcrypto SCHEMA pivotly',
+                'CREATE DOMAIN pivotly.dom_a AS pg_catalog.text',
+                'CREATE SEQUENCE pivotly.seq_a AS bigint INCREMENT 1 NO MINVALUE CACHE 1 NO MAXVALUE OWNED BY pivotly.ds_sync.id',
+                'CREATE OR REPLACE FUNCTION pivotly.fn_a() RETURNS int LANGUAGE sql AS $$SELECT 1$$',
+                'CREATE OR REPLACE PROCEDURE pivotly.proc_a() LANGUAGE sql AS $$SELECT 1$$',
+                'CREATE VIEW pivotly.v_a AS SELECT id FROM pivotly.ds_sync',
+                'CREATE MATERIALIZED VIEW pivotly.mv_a AS SELECT id FROM pivotly.ds_sync',
+                'CREATE INDEX idx_mv_a ON pivotly.mv_a (id)',
+                'CREATE INDEX idx_lease ON pivotly.ds_sync (lease)',
+            ],
+            array_map(
+                static fn(Sql $query): string => $query->toSql(),
+                catalog_comparator()->compare($tableOnly, $full)->generate(),
+            ),
+        );
+    }
+
+    public function test_objects_removed_from_non_public_schema_are_dropped_from_that_schema(): void
+    {
+        $columns = [schema_column_integer('id'), schema_column_text('lease')];
+        $tableOnly = catalog([schema('pivotly', tables: [schema_table('ds_sync', $columns, schema: 'pivotly')])]);
+        $full = catalog([schema(
+            'pivotly',
+            tables: [schema_table(
+                'ds_sync',
+                $columns,
+                indexes: [schema_index('idx_lease', ['lease'])],
+                schema: 'pivotly',
+            )],
+            sequences: [schema_sequence('seq_a', ownedByTable: 'ds_sync', ownedByColumn: 'id')],
+            views: [schema_view('v_a', 'SELECT id FROM pivotly.ds_sync')],
+            materializedViews: [
+                schema_materialized_view('mv_a', 'SELECT id FROM pivotly.ds_sync', [schema_index('idx_mv_a', ['id'])]),
+            ],
+            functions: [schema_function('fn_a', 'integer', definition: 'SELECT 1')],
+            procedures: [schema_procedure('proc_a', definition: 'SELECT 1')],
+            domains: [schema_domain('dom_a', column_type_text())],
+            extensions: [schema_extension('pgcrypto')],
+        )]);
+
+        static::assertSame(
+            [
+                'DROP INDEX pivotly.idx_lease',
+                'DROP MATERIALIZED VIEW pivotly.mv_a',
+                'DROP VIEW pivotly.v_a',
+                'DROP PROCEDURE pivotly.proc_a',
+                'DROP FUNCTION pivotly.fn_a',
+                'DROP SEQUENCE pivotly.seq_a',
+                'DROP DOMAIN pivotly.dom_a CASCADE',
+                'DROP EXTENSION pgcrypto',
+            ],
+            array_map(
+                static fn(Sql $query): string => $query->toSql(),
+                catalog_comparator()->compare($full, $tableOnly)->generate(),
+            ),
+        );
+    }
+
+    public function test_objects_removed_from_non_public_schema_are_dropped_if_exists_from_that_schema(): void
+    {
+        $columns = [schema_column_integer('id'), schema_column_text('lease')];
+        $tableOnly = catalog([schema('pivotly', tables: [schema_table('ds_sync', $columns, schema: 'pivotly')])]);
+        $full = catalog([schema(
+            'pivotly',
+            tables: [schema_table(
+                'ds_sync',
+                $columns,
+                indexes: [schema_index('idx_lease', ['lease'])],
+                schema: 'pivotly',
+            )],
+            sequences: [schema_sequence('seq_a', ownedByTable: 'ds_sync', ownedByColumn: 'id')],
+            views: [schema_view('v_a', 'SELECT id FROM pivotly.ds_sync')],
+            materializedViews: [
+                schema_materialized_view('mv_a', 'SELECT id FROM pivotly.ds_sync', [schema_index('idx_mv_a', ['id'])]),
+            ],
+            functions: [schema_function('fn_a', 'integer', definition: 'SELECT 1')],
+            procedures: [schema_procedure('proc_a', definition: 'SELECT 1')],
+            domains: [schema_domain('dom_a', column_type_text())],
+            extensions: [schema_extension('pgcrypto')],
+        )]);
+
+        static::assertSame(
+            [
+                'DROP INDEX IF EXISTS pivotly.idx_lease',
+                'DROP MATERIALIZED VIEW IF EXISTS pivotly.mv_a',
+                'DROP VIEW IF EXISTS pivotly.v_a',
+                'DROP PROCEDURE IF EXISTS pivotly.proc_a',
+                'DROP FUNCTION IF EXISTS pivotly.fn_a',
+                'DROP SEQUENCE IF EXISTS pivotly.seq_a',
+                'DROP DOMAIN IF EXISTS pivotly.dom_a CASCADE',
+                'DROP EXTENSION IF EXISTS pgcrypto',
+            ],
+            array_map(
+                static fn(Sql $query): string => $query->toSql(),
+                catalog_comparator(dropIfExists: true)->compare($full, $tableOnly)->generate(),
+            ),
+        );
+    }
+
+    public function test_objects_modified_in_non_public_schema_are_altered_in_that_schema(): void
+    {
+        $columns = [schema_column_integer('id'), schema_column_text('lease')];
+        $full = catalog([schema(
+            'pivotly',
+            tables: [schema_table(
+                'ds_sync',
+                $columns,
+                indexes: [schema_index('idx_lease', ['lease'])],
+                schema: 'pivotly',
+            )],
+            sequences: [schema_sequence('seq_a', ownedByTable: 'ds_sync', ownedByColumn: 'id')],
+            views: [schema_view('v_a', 'SELECT id FROM pivotly.ds_sync')],
+            materializedViews: [
+                schema_materialized_view('mv_a', 'SELECT id FROM pivotly.ds_sync', [schema_index('idx_mv_a', ['id'])]),
+            ],
+            functions: [schema_function('fn_a', 'integer', definition: 'SELECT 1')],
+            procedures: [schema_procedure('proc_a', definition: 'SELECT 1')],
+            domains: [schema_domain('dom_a', column_type_text())],
+            extensions: [schema_extension('pgcrypto')],
+        )]);
+        $modified = catalog([schema(
+            'pivotly',
+            tables: [schema_table('ds_sync', $columns, schema: 'pivotly')],
+            sequences: [schema_sequence('seq_a', incrementBy: 2, ownedByTable: 'ds_sync', ownedByColumn: 'id')],
+            views: [schema_view('v_a', 'SELECT id, lease FROM pivotly.ds_sync')],
+            materializedViews: [
+                schema_materialized_view('mv_a', 'SELECT id, lease FROM pivotly.ds_sync', [schema_index('idx_mv_a', [
+                    'id',
+                ])]),
+            ],
+            functions: [schema_function('fn_a', 'integer', definition: 'SELECT 2')],
+            procedures: [schema_procedure('proc_a', definition: 'SELECT 2')],
+            domains: [schema_domain('dom_a', column_type_text(), nullable: false)],
+            extensions: [schema_extension('pgcrypto')],
+        )]);
+
+        static::assertSame(
+            [
+                'ALTER DOMAIN pivotly.dom_a SET NOT NULL',
+                'ALTER SEQUENCE pivotly.seq_a INCREMENT 2',
+                'CREATE OR REPLACE FUNCTION pivotly.fn_a() RETURNS int LANGUAGE sql AS $$SELECT 2$$',
+                'CREATE OR REPLACE PROCEDURE pivotly.proc_a() LANGUAGE sql AS $$SELECT 2$$',
+                'DROP INDEX pivotly.idx_lease',
+                'CREATE OR REPLACE VIEW pivotly.v_a AS SELECT id, lease FROM pivotly.ds_sync',
+                'DROP INDEX pivotly.idx_mv_a',
+                'DROP MATERIALIZED VIEW pivotly.mv_a',
+                'CREATE MATERIALIZED VIEW pivotly.mv_a AS SELECT id, lease FROM pivotly.ds_sync',
+                'CREATE INDEX idx_mv_a ON pivotly.mv_a (id)',
+            ],
+            array_map(
+                static fn(Sql $query): string => $query->toSql(),
+                catalog_comparator()->compare($full, $modified)->generate(),
+            ),
+        );
+    }
+
+    public function test_renamed_materialized_view_index_in_non_public_schema_is_renamed_in_that_schema(): void
+    {
+        static::assertSame(
+            ['ALTER INDEX pivotly.idx_mv_a_id RENAME TO idx_mv_a_ids'],
+            array_map(
+                static fn(Sql $query): string => $query->toSql(),
+                catalog_comparator()
+                    ->compare(
+                        catalog([schema('pivotly', materializedViews: [
+                            schema_materialized_view('mv_a', 'SELECT 1 AS id', [schema_index('idx_mv_a_id', ['id'])]),
+                        ])]),
+                        catalog([schema('pivotly', materializedViews: [
+                            schema_materialized_view('mv_a', 'SELECT 1 AS id', [schema_index('idx_mv_a_ids', ['id'])]),
+                        ])]),
+                    )
+                    ->generate(),
+            ),
+        );
     }
 }

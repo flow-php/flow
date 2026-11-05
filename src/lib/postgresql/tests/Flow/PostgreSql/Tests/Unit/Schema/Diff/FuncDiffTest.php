@@ -42,7 +42,7 @@ final class FuncDiffTest extends TestCase
 
         static::assertCount(1, $sqls);
         static::assertSame(
-            'CREATE OR REPLACE FUNCTION get_user(IN int) RETURNS text LANGUAGE plpgsql AS $$BEGIN RETURN (SELECT name FROM users WHERE id = $1); END$$',
+            'CREATE OR REPLACE FUNCTION public.get_user(IN int) RETURNS text LANGUAGE plpgsql AS $$BEGIN RETURN (SELECT name FROM users WHERE id = $1); END$$',
             $sqls[0]->toSql(),
         );
     }
@@ -74,7 +74,7 @@ final class FuncDiffTest extends TestCase
 
         static::assertCount(1, $sqls);
         static::assertSame(
-            'CREATE OR REPLACE FUNCTION get_user(IN int) RETURNS text LANGUAGE sql AS $$SELECT name FROM users WHERE id = $1$$',
+            'CREATE OR REPLACE FUNCTION public.get_user(IN int) RETURNS text LANGUAGE sql AS $$SELECT name FROM users WHERE id = $1$$',
             $sqls[0]->toSql(),
         );
     }

@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema\Diff;
 
+use Flow\PostgreSql\Schema\MaterializedView;
+use Flow\PostgreSql\Schema\View;
+
 final readonly class DependentViews
 {
     /**
-     * @param list<DependentView> $toDrop views to drop before table modifications, ordered most-dependent first
-     * @param list<DependentView> $toCreate views to recreate after table modifications, ordered least-dependent first
+     * @param list<MaterializedView|View> $toDrop views to drop before table modifications, ordered most-dependent first
+     * @param list<MaterializedView|View> $toCreate views to recreate after table modifications, ordered least-dependent first
      */
     public function __construct(
         public array $toDrop,

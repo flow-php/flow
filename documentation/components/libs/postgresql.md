@@ -765,6 +765,32 @@ foreach (catalog_comparator()->compare($current, $target)->generate() as $sql) {
 }
 ```
 
+### Schema of nested objects
+
+An object without its own schema takes the schema it is placed in. An object with a different schema is rejected:
+
+```php
+<?php
+
+use function Flow\PostgreSql\DSL\{schema, schema_column_integer, schema_table, schema_view};
+
+$analytics = schema(
+    'analytics',
+    tables: [schema_table('events', [schema_column_integer('id')])],
+    views: [schema_view('recent_events', 'SELECT id FROM analytics.events')],
+);
+
+foreach ($analytics->toSql() as $sql) {
+    echo $sql->toSql() . "\n";
+}
+// CREATE TABLE analytics.events (id int)
+// CREATE VIEW analytics.recent_events AS SELECT id FROM analytics.events
+
+schema('analytics', views: [schema_view('recent_events', 'SELECT 1', schema: 'public')]);
+// SchemaException: View "recent_events" declares schema "public" but is placed in schema "analytics";
+// pass schema: "analytics" to schema_view() or move it.
+```
+
 ### `dropIfExists`
 
 By default, generated `DROP` statements have no `IF EXISTS`, so a missing object fails with an error (drift

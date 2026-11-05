@@ -13,7 +13,7 @@ use function Flow\PostgreSql\DSL\parsed_select;
 /**
  * @import-type IndexShape from Index
  *
- * @type MaterializedViewShape = array{name: string, definition: string, indexes: list<IndexShape>}
+ * @type MaterializedViewShape = array{name: string, definition: string, indexes: list<IndexShape>, schema?: ?string}
  */
 final readonly class MaterializedView
 {
@@ -24,6 +24,7 @@ final readonly class MaterializedView
         public string $name,
         public string $definition,
         public array $indexes = [],
+        public ?string $schema = null,
     ) {}
 
     /**
@@ -31,10 +32,12 @@ final readonly class MaterializedView
      */
     public static function fromArray(array $data): self
     {
-        return new self(name: $data['name'], definition: $data['definition'], indexes: array_map(
-            static fn(array $index): Index => Index::fromArray($index),
-            $data['indexes'],
-        ));
+        return new self(
+            name: $data['name'],
+            definition: $data['definition'],
+            indexes: array_map(static fn(array $index): Index => Index::fromArray($index), $data['indexes']),
+            schema: $data['schema'] ?? null,
+        );
     }
 
     /**
@@ -46,7 +49,18 @@ final readonly class MaterializedView
             'name' => $this->name,
             'definition' => $this->definition,
             'indexes' => array_map(static fn(Index $index): array => $index->normalize(), $this->indexes),
+            'schema' => $this->schema,
         ];
+    }
+
+    public function qualifiedName(): string
+    {
+        return $this->schemaName() . '.' . $this->name;
+    }
+
+    public function schemaName(): string
+    {
+        return $this->schema ?? 'public';
     }
 
     /**
@@ -56,12 +70,17 @@ final readonly class MaterializedView
     {
         $sqls = [];
 
-        $sqls[] = create()->materializedView($this->name)->as(parsed_select($this->definition));
+        $sqls[] = create()->materializedView($this->name, $this->schemaName())->as(parsed_select($this->definition));
 
         foreach ($this->indexes as $idx) {
-            $sqls[] = $idx->toSql($this->name);
+            $sqls[] = $idx->toSql($this->name, $this->schemaName());
         }
 
         return $sqls;
+    }
+
+    public function withSchema(string $schema): self
+    {
+        return new self($this->name, $this->definition, $this->indexes, $schema);
     }
 }
