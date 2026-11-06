@@ -35,10 +35,12 @@ use Flow\PostgreSql\Schema\View;
 use PHPUnit\Framework\TestCase;
 
 use function count;
+use function Flow\PostgreSql\DSL\catalog;
 use function Flow\PostgreSql\DSL\schema;
 use function Flow\PostgreSql\DSL\schema_column_integer;
 use function Flow\PostgreSql\DSL\schema_column_text;
 use function Flow\PostgreSql\DSL\schema_column_varchar;
+use function Flow\PostgreSql\DSL\schema_extension;
 use function Flow\PostgreSql\DSL\schema_table;
 use function sprintf;
 
@@ -56,6 +58,15 @@ final class CatalogTest extends TestCase
         static::assertSame('audit', $catalog->all()[1]->name);
     }
 
+    public function test_catalog_with_extensions(): void
+    {
+        $catalog = catalog([schema('public')], extensions: [schema_extension('uuid-ossp', '1.1')]);
+
+        static::assertCount(1, $catalog->extensions());
+        static::assertSame('uuid-ossp', $catalog->extensions()[0]->name);
+        static::assertSame('1.1', $catalog->extensions()[0]->version);
+    }
+
     public function test_empty_catalog(): void
     {
         $catalog = new Catalog([]);
@@ -71,8 +82,18 @@ final class CatalogTest extends TestCase
 
         $normalized = $catalog->normalize();
 
-        static::assertSame(['schemas' => []], $normalized);
+        static::assertSame(['schemas' => [], 'extensions' => []], $normalized);
         static::assertSame([], Catalog::fromArray($normalized)->all());
+    }
+
+    public function test_extension_in_undeclared_schema_is_rejected(): void
+    {
+        $this->expectException(SchemaException::class);
+        $this->expectExceptionMessage(
+            'Extension "pgcrypto" is placed in schema "public", which the catalog does not declare; add schema("public") to catalog().',
+        );
+
+        catalog([schema('pivotly')], extensions: [schema_extension('pgcrypto')]);
     }
 
     public function test_from_array_catalog_with_empty_schema(): void
@@ -140,7 +161,8 @@ final class CatalogTest extends TestCase
             ],
         ]);
 
-        static::assertSame('public', $table->schema);
+        static::assertNull($table->schema);
+        static::assertSame('public', $table->schemaName());
         static::assertSame('users', $table->name);
         static::assertCount(1, $table->columns);
         static::assertNull($table->primaryKey);
@@ -284,6 +306,16 @@ final class CatalogTest extends TestCase
         static::assertTrue($result->get('public')->hasTable('users'));
     }
 
+    public function test_merge_extensions_by_name_other_wins(): void
+    {
+        static::assertEquals(
+            [schema_extension('pgcrypto', schema: 'extp'), schema_extension('citext')],
+            catalog([schema('public'), schema('extp')], [schema_extension('pgcrypto'), schema_extension('citext')])
+                ->merge(catalog([schema('extp')], [schema_extension('pgcrypto', schema: 'extp')]))
+                ->extensions(),
+        );
+    }
+
     public function test_merge_two_empty_catalogs(): void
     {
         $result = (new Catalog([]))->merge(new Catalog([]));
@@ -300,6 +332,14 @@ final class CatalogTest extends TestCase
         ]);
 
         static::assertSame(['public', 'audit', 'staging'], $catalog->names());
+    }
+
+    public function test_normalize_and_from_array_round_trip_extensions(): void
+    {
+        $catalog = catalog([schema('public'), schema('extp')], [schema_extension('pgcrypto', '1.3', 'extp')]);
+
+        static::assertEquals($catalog->extensions(), Catalog::fromArray($catalog->normalize())->extensions());
+        static::assertSame([], Catalog::fromArray(['schemas' => []])->extensions());
     }
 
     public function test_normalize_and_from_array_with_all_column_types(): void
@@ -562,11 +602,8 @@ final class CatalogTest extends TestCase
                         checkConstraints: [new CheckConstraint("VALUE ~ '^.+@.+$'", 'email_format_check')],
                     ),
                 ],
-                extensions: [
-                    new Extension('uuid-ossp', '1.1'),
-                ],
             ),
-        ]);
+        ], [new Extension('uuid-ossp', '1.1')]);
 
         $normalized = $catalog->normalize();
         $restored = Catalog::fromArray($normalized);
@@ -582,7 +619,7 @@ final class CatalogTest extends TestCase
         static::assertCount(1, $restoredSchema->functions);
         static::assertCount(1, $restoredSchema->procedures);
         static::assertCount(1, $restoredSchema->domains);
-        static::assertCount(1, $restoredSchema->extensions);
+        static::assertCount(1, $restored->extensions());
 
         $restoredTable = $restoredSchema->table('users');
         static::assertCount(3, $restoredTable->columns);
@@ -597,8 +634,8 @@ final class CatalogTest extends TestCase
         static::assertSame('get_user', $restoredSchema->functions[0]->name);
         static::assertSame('cleanup', $restoredSchema->procedures[0]->name);
         static::assertSame('email_address', $restoredSchema->domains[0]->name);
-        static::assertSame('uuid-ossp', $restoredSchema->extensions[0]->name);
-        static::assertSame('1.1', $restoredSchema->extensions[0]->version);
+        static::assertSame('uuid-ossp', $restored->extensions()[0]->name);
+        static::assertSame('1.1', $restored->extensions()[0]->version);
     }
 
     public function test_normalize_and_from_array_with_table_all_constraints(): void

@@ -29,7 +29,7 @@ final class SequenceDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('ALTER SEQUENCE users_id_seq CACHE 20', $sqls[0]->toSql());
+        static::assertSame('ALTER SEQUENCE public.users_id_seq CACHE 20', $sqls[0]->toSql());
     }
 
     public function test_generates_alter_cycle_to_no_cycle(): void
@@ -42,7 +42,7 @@ final class SequenceDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('ALTER SEQUENCE users_id_seq NO CYCLE', $sqls[0]->toSql());
+        static::assertSame('ALTER SEQUENCE public.users_id_seq NO CYCLE', $sqls[0]->toSql());
     }
 
     public function test_generates_alter_data_type(): void
@@ -55,7 +55,7 @@ final class SequenceDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('ALTER SEQUENCE users_id_seq AS int', $sqls[0]->toSql());
+        static::assertSame('ALTER SEQUENCE public.users_id_seq AS int NO MAXVALUE', $sqls[0]->toSql());
     }
 
     public function test_generates_alter_increment_by(): void
@@ -65,7 +65,14 @@ final class SequenceDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('ALTER SEQUENCE users_id_seq INCREMENT 10', $sqls[0]->toSql());
+        static::assertSame('ALTER SEQUENCE public.users_id_seq INCREMENT 10', $sqls[0]->toSql());
+    }
+
+    public function test_generates_alter_no_min_value(): void
+    {
+        $diff = new SequenceDiff(schema_sequence('users_id_seq', minValue: 50), schema_sequence('users_id_seq'));
+
+        static::assertSame('ALTER SEQUENCE public.users_id_seq START 1 NO MINVALUE', $diff->generate()[0]->toSql());
     }
 
     public function test_generates_alter_min_value(): void
@@ -78,7 +85,7 @@ final class SequenceDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('ALTER SEQUENCE users_id_seq MINVALUE 50', $sqls[0]->toSql());
+        static::assertSame('ALTER SEQUENCE public.users_id_seq START 50 MINVALUE 50', $sqls[0]->toSql());
     }
 
     public function test_generates_alter_multiple_properties(): void
@@ -91,7 +98,7 @@ final class SequenceDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('ALTER SEQUENCE users_id_seq INCREMENT 10 MAXVALUE 1000 CYCLE', $sqls[0]->toSql());
+        static::assertSame('ALTER SEQUENCE public.users_id_seq INCREMENT 10 MAXVALUE 1000 CYCLE', $sqls[0]->toSql());
     }
 
     public function test_generates_alter_no_max_value(): void
@@ -104,7 +111,7 @@ final class SequenceDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('ALTER SEQUENCE users_id_seq NO MAXVALUE', $sqls[0]->toSql());
+        static::assertSame('ALTER SEQUENCE public.users_id_seq NO MAXVALUE', $sqls[0]->toSql());
     }
 
     public function test_generates_alter_owned_by(): void
@@ -117,7 +124,7 @@ final class SequenceDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('ALTER SEQUENCE users_id_seq OWNED BY users.id', $sqls[0]->toSql());
+        static::assertSame('ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id', $sqls[0]->toSql());
     }
 
     public function test_generates_alter_owned_by_none(): void
@@ -130,7 +137,7 @@ final class SequenceDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('ALTER SEQUENCE users_id_seq OWNED BY "none"', $sqls[0]->toSql());
+        static::assertSame('ALTER SEQUENCE public.users_id_seq OWNED BY "none"', $sqls[0]->toSql());
     }
 
     public function test_generates_alter_start_value(): void
@@ -143,7 +150,7 @@ final class SequenceDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('ALTER SEQUENCE users_id_seq START 100', $sqls[0]->toSql());
+        static::assertSame('ALTER SEQUENCE public.users_id_seq START 100', $sqls[0]->toSql());
     }
 
     public function test_returns_empty_when_no_changes(): void
@@ -163,6 +170,6 @@ final class SequenceDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('ALTER SEQUENCE users_id_seq INCREMENT 1', $sqls[0]->toSql());
+        static::assertSame('ALTER SEQUENCE public.users_id_seq INCREMENT 1', $sqls[0]->toSql());
     }
 }

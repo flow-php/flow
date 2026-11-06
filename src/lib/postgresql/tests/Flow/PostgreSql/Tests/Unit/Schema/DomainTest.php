@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Schema;
 
+use Flow\PostgreSql\Schema\Domain;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\PostgreSql\DSL\column_type_integer;
@@ -13,6 +14,26 @@ use function Flow\PostgreSql\DSL\schema_domain;
 
 final class DomainTest extends TestCase
 {
+    public function test_schema_round_trips_through_normalize(): void
+    {
+        $domain = schema_domain('d', column_type_integer(), false, 0, schema: 'pivotly');
+
+        static::assertSame($domain->normalize(), Domain::fromArray($domain->normalize())->normalize());
+        static::assertSame('pivotly', Domain::fromArray($domain->normalize())->schema);
+    }
+
+    public function test_with_schema_qualifies_name_and_keeps_every_other_field(): void
+    {
+        $domain = schema_domain('d', column_type_integer(), false, 0);
+
+        static::assertSame('public.d', $domain->qualifiedName());
+        static::assertEquals(
+            schema_domain('d', column_type_integer(), false, 0, schema: 'pivotly'),
+            $domain->withSchema('pivotly'),
+        );
+        static::assertSame('pivotly.d', $domain->withSchema('pivotly')->qualifiedName());
+    }
+
     public function test_domain_construction(): void
     {
         $domain = schema_domain('email_address', column_type_varchar(255));
@@ -43,7 +64,7 @@ final class DomainTest extends TestCase
     public function test_to_sql_generates_create_domain(): void
     {
         static::assertSame(
-            'CREATE DOMAIN email_address AS varchar(255)',
+            'CREATE DOMAIN public.email_address AS varchar(255)',
             schema_domain('email_address', column_type_varchar(255))->toSql()->toSql(),
         );
     }
@@ -51,7 +72,7 @@ final class DomainTest extends TestCase
     public function test_to_sql_generates_create_domain_with_constraints(): void
     {
         static::assertSame(
-            'CREATE DOMAIN positive_int AS int NOT NULL DEFAULT 0 CONSTRAINT chk_positive CHECK (value > 0)',
+            'CREATE DOMAIN public.positive_int AS int NOT NULL DEFAULT 0 CONSTRAINT chk_positive CHECK (value > 0)',
             schema_domain(
                 'positive_int',
                 column_type_integer(),

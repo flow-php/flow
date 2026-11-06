@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Schema;
 
+use Flow\PostgreSql\Schema\Func;
 use Flow\PostgreSql\Schema\FunctionVolatility;
 use PHPUnit\Framework\TestCase;
 
@@ -11,6 +12,34 @@ use function Flow\PostgreSql\DSL\schema_function;
 
 final class FunctionTest extends TestCase
 {
+    public function test_schema_round_trips_through_normalize(): void
+    {
+        $function = schema_function(
+            'f',
+            'integer',
+            ['text'],
+            'sql',
+            'SELECT 1',
+            true,
+            FunctionVolatility::STABLE,
+            'pivotly',
+        );
+
+        static::assertEquals($function, Func::fromArray($function->normalize()));
+    }
+
+    public function test_with_schema_qualifies_name_and_keeps_every_other_field(): void
+    {
+        $function = schema_function('f', 'integer', ['text'], 'sql', 'SELECT 1', true, FunctionVolatility::STABLE);
+
+        static::assertSame('public.f', $function->qualifiedName());
+        static::assertEquals(
+            schema_function('f', 'integer', ['text'], 'sql', 'SELECT 1', true, FunctionVolatility::STABLE, 'pivotly'),
+            $function->withSchema('pivotly'),
+        );
+        static::assertSame('pivotly.f', $function->withSchema('pivotly')->qualifiedName());
+    }
+
     public function test_function_construction(): void
     {
         $func = schema_function('now', 'timestamp with time zone');
@@ -55,7 +84,7 @@ final class FunctionTest extends TestCase
         )->toSql();
         static::assertNotNull($sql);
         static::assertSame(
-            'CREATE OR REPLACE FUNCTION add_numbers(IN int, IN int) RETURNS int LANGUAGE plpgsql RETURNS NULL ON NULL INPUT IMMUTABLE AS $$BEGIN RETURN $1 + $2; END;$$',
+            'CREATE OR REPLACE FUNCTION public.add_numbers(IN int, IN int) RETURNS int LANGUAGE plpgsql RETURNS NULL ON NULL INPUT IMMUTABLE AS $$BEGIN RETURN $1 + $2; END;$$',
             $sql->toSql(),
         );
     }
@@ -65,7 +94,7 @@ final class FunctionTest extends TestCase
         $sql = schema_function('current_user_id', 'integer', language: 'sql', definition: 'SELECT 1')->toSql();
         static::assertNotNull($sql);
         static::assertSame(
-            'CREATE OR REPLACE FUNCTION current_user_id() RETURNS int LANGUAGE sql AS $$SELECT 1$$',
+            'CREATE OR REPLACE FUNCTION public.current_user_id() RETURNS int LANGUAGE sql AS $$SELECT 1$$',
             $sql->toSql(),
         );
     }
@@ -81,7 +110,7 @@ final class FunctionTest extends TestCase
         )->toSql();
         static::assertNotNull($sql);
         static::assertSame(
-            'CREATE OR REPLACE FUNCTION pi_val() RETURNS double precision LANGUAGE sql IMMUTABLE AS $$SELECT 3.14159$$',
+            'CREATE OR REPLACE FUNCTION public.pi_val() RETURNS double precision LANGUAGE sql IMMUTABLE AS $$SELECT 3.14159$$',
             $sql->toSql(),
         );
     }
@@ -98,7 +127,7 @@ final class FunctionTest extends TestCase
         )->toSql();
         static::assertNotNull($sql);
         static::assertSame(
-            'CREATE OR REPLACE FUNCTION get_name(IN int) RETURNS text LANGUAGE sql STABLE AS $$SELECT name FROM users WHERE id = $1$$',
+            'CREATE OR REPLACE FUNCTION public.get_name(IN int) RETURNS text LANGUAGE sql STABLE AS $$SELECT name FROM users WHERE id = $1$$',
             $sql->toSql(),
         );
     }
@@ -115,7 +144,7 @@ final class FunctionTest extends TestCase
         )->toSql();
         static::assertNotNull($sql);
         static::assertSame(
-            'CREATE OR REPLACE FUNCTION double_it(IN int) RETURNS int LANGUAGE sql RETURNS NULL ON NULL INPUT AS $$SELECT $1 * 2$$',
+            'CREATE OR REPLACE FUNCTION public.double_it(IN int) RETURNS int LANGUAGE sql RETURNS NULL ON NULL INPUT AS $$SELECT $1 * 2$$',
             $sql->toSql(),
         );
     }
@@ -131,7 +160,7 @@ final class FunctionTest extends TestCase
         )->toSql();
         static::assertNotNull($sql);
         static::assertSame(
-            'CREATE OR REPLACE FUNCTION update_ts() RETURNS trigger LANGUAGE plpgsql VOLATILE AS $$BEGIN NEW.updated_at = now(); RETURN NEW; END;$$',
+            'CREATE OR REPLACE FUNCTION public.update_ts() RETURNS trigger LANGUAGE plpgsql VOLATILE AS $$BEGIN NEW.updated_at = now(); RETURN NEW; END;$$',
             $sql->toSql(),
         );
     }

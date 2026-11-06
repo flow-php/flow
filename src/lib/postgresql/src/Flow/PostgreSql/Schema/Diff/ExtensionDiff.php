@@ -8,6 +8,7 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\Extension;
 
 use function Flow\PostgreSql\DSL\alter;
+use function Flow\Types\DSL\type_string;
 
 final readonly class ExtensionDiff implements Diff
 {
@@ -21,19 +22,26 @@ final readonly class ExtensionDiff implements Diff
      */
     public function generate(): array
     {
-        if (!$this->hasVersionChanged()) {
-            return [];
+        $sqls = [];
+
+        if ($this->hasSchemaChanged()) {
+            $sqls[] = alter()->extension($this->target->name)->setSchema($this->target->schema);
         }
 
-        if ($this->target->version === null) {
-            return [alter()->extension($this->target->name)->update()];
+        if ($this->hasVersionChanged()) {
+            $sqls[] = alter()->extension($this->target->name)->updateTo(type_string()->assert($this->target->version));
         }
 
-        return [alter()->extension($this->target->name)->updateTo($this->target->version)];
+        return $sqls;
+    }
+
+    public function hasSchemaChanged(): bool
+    {
+        return $this->source->schema !== $this->target->schema;
     }
 
     public function hasVersionChanged(): bool
     {
-        return $this->source->version !== $this->target->version;
+        return $this->target->version !== null && $this->source->version !== $this->target->version;
     }
 }

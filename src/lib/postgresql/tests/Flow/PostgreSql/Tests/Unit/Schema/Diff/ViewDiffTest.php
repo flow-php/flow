@@ -41,7 +41,7 @@ final class ViewDiffTest extends TestCase
 
         static::assertCount(1, $sqls);
         static::assertSame(
-            'CREATE OR REPLACE VIEW active_users AS SELECT * FROM users WHERE active = true AND verified = true',
+            'CREATE OR REPLACE VIEW public.active_users AS SELECT * FROM users WHERE active = true AND verified = true',
             $sqls[0]->toSql(),
         );
     }
@@ -69,7 +69,7 @@ final class ViewDiffTest extends TestCase
 
         static::assertCount(1, $sqls);
         static::assertSame(
-            'CREATE OR REPLACE VIEW active_users AS SELECT * FROM users WHERE active = true',
+            'CREATE OR REPLACE VIEW public.active_users AS SELECT * FROM users WHERE active = true',
             $sqls[0]->toSql(),
         );
     }

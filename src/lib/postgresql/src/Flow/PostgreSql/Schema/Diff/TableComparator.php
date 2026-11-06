@@ -22,7 +22,7 @@ final readonly class TableComparator
         private RenameStrategy $renameStrategy,
     ) {}
 
-    public function compare(Table $source, Table $target): TableDiff
+    public function compare(Table $source, Table $target, bool $dropIfExists = false): TableDiff
     {
         $sourceColumnMap = [];
 
@@ -79,8 +79,12 @@ final readonly class TableComparator
             $target->excludeConstraints,
         );
         $triggers = $this->diffTriggers(
-            array_map(static fn(Trigger $t): Trigger => $t->withFunctionSchema($source->schema), $source->triggers),
-            array_map(static fn(Trigger $t): Trigger => $t->withFunctionSchema($target->schema), $target->triggers),
+            array_map(static fn(Trigger $t): Trigger => $t->withFunctionSchema(
+                $source->schemaName(),
+            ), $source->triggers),
+            array_map(static fn(Trigger $t): Trigger => $t->withFunctionSchema(
+                $target->schemaName(),
+            ), $target->triggers),
         );
 
         $partitionChanged =
@@ -122,6 +126,7 @@ final readonly class TableComparator
             $addedInherits,
             $removedInherits,
             $tablespaceChanged,
+            $dropIfExists,
         );
     }
 

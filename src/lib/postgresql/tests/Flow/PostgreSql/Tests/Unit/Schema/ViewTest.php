@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Schema;
 
+use Flow\PostgreSql\Schema\View;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\PostgreSql\DSL\col;
@@ -16,10 +17,26 @@ use function Flow\PostgreSql\DSL\table;
 
 final class ViewTest extends TestCase
 {
+    public function test_schema_round_trips_through_normalize(): void
+    {
+        $view = schema_view('v', 'SELECT 1', true, 'pivotly');
+
+        static::assertEquals($view, View::fromArray($view->normalize()));
+    }
+
+    public function test_with_schema_qualifies_name_and_keeps_every_other_field(): void
+    {
+        $view = schema_view('v', 'SELECT 1', true);
+
+        static::assertSame('public.v', $view->qualifiedName());
+        static::assertEquals(schema_view('v', 'SELECT 1', true, 'pivotly'), $view->withSchema('pivotly'));
+        static::assertSame('pivotly.v', $view->withSchema('pivotly')->qualifiedName());
+    }
+
     public function test_to_sql_generates_create_view(): void
     {
         static::assertSame(
-            'CREATE VIEW active_users AS SELECT * FROM users',
+            'CREATE VIEW public.active_users AS SELECT * FROM users',
             schema_view('active_users', select(star())->from(table('users'))->toSql())->toSql()->toSql(),
         );
     }

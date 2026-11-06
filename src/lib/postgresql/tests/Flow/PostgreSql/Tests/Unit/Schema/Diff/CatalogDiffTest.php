@@ -7,6 +7,7 @@ namespace Flow\PostgreSql\Tests\Unit\Schema\Diff;
 use Flow\PostgreSql\Schema\Catalog;
 use Flow\PostgreSql\Schema\Diff\CatalogDiff;
 use Flow\PostgreSql\Schema\Diff\ColumnDiff;
+use Flow\PostgreSql\Schema\Diff\ExtensionDiff;
 use Flow\PostgreSql\Schema\Diff\SchemaDiff;
 use Flow\PostgreSql\Schema\Diff\TableDiff;
 use PHPUnit\Framework\TestCase;
@@ -18,6 +19,7 @@ use function Flow\PostgreSql\DSL\schema;
 use function Flow\PostgreSql\DSL\schema_column_bigint;
 use function Flow\PostgreSql\DSL\schema_column_integer;
 use function Flow\PostgreSql\DSL\schema_column_text;
+use function Flow\PostgreSql\DSL\schema_extension;
 use function Flow\PostgreSql\DSL\schema_index;
 use function Flow\PostgreSql\DSL\schema_materialized_view;
 use function Flow\PostgreSql\DSL\schema_sequence;
@@ -26,6 +28,16 @@ use function str_contains;
 
 final class CatalogDiffTest extends TestCase
 {
+    public function test_creates_added_extension(): void
+    {
+        $catalog = new Catalog([schema('public')]);
+
+        $sqls = (new CatalogDiff($catalog, $catalog, addedExtensions: [schema_extension('uuid-ossp')]))->generate();
+
+        static::assertCount(1, $sqls);
+        static::assertSame('CREATE EXTENSION "uuid-ossp" SCHEMA public', $sqls[0]->toSql());
+    }
+
     public function test_creates_added_schema(): void
     {
         $source = new Catalog([schema('public')]);
@@ -122,6 +134,16 @@ final class CatalogDiffTest extends TestCase
         static::assertStringContainsString('users', $sqls[0]->toSql());
     }
 
+    public function test_drops_removed_extension(): void
+    {
+        $catalog = new Catalog([schema('public')]);
+
+        $sqls = (new CatalogDiff($catalog, $catalog, removedExtensions: [schema_extension('uuid-ossp')]))->generate();
+
+        static::assertCount(1, $sqls);
+        static::assertSame('DROP EXTENSION "uuid-ossp"', $sqls[0]->toSql());
+    }
+
     public function test_drops_removed_schema(): void
     {
         $source = new Catalog([schema('public'), schema('audit')]);
@@ -174,6 +196,34 @@ final class CatalogDiffTest extends TestCase
         static::assertCount(2, $sqls);
         static::assertSame('CREATE SCHEMA IF NOT EXISTS new_schema', $sqls[0]->toSql());
         static::assertSame('DROP SCHEMA old_schema CASCADE', $sqls[1]->toSql());
+    }
+
+    public function test_is_not_empty_when_added_extensions(): void
+    {
+        $catalog = new Catalog([schema('public')]);
+
+        static::assertFalse((new CatalogDiff($catalog, $catalog, addedExtensions: [schema_extension(
+            'uuid-ossp',
+        )]))->isEmpty());
+    }
+
+    public function test_is_not_empty_when_modified_extensions(): void
+    {
+        $catalog = new Catalog([schema('public'), schema('extp')]);
+
+        static::assertFalse((new CatalogDiff($catalog, $catalog, modifiedExtensions: [new ExtensionDiff(
+            schema_extension('pgcrypto'),
+            schema_extension('pgcrypto', schema: 'extp'),
+        )]))->isEmpty());
+    }
+
+    public function test_is_not_empty_when_removed_extensions(): void
+    {
+        $catalog = new Catalog([schema('public')]);
+
+        static::assertFalse((new CatalogDiff($catalog, $catalog, removedExtensions: [schema_extension(
+            'uuid-ossp',
+        )]))->isEmpty());
     }
 
     public function test_not_empty_when_schema_added(): void

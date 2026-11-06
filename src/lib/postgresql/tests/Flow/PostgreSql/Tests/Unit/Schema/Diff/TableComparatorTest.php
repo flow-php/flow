@@ -65,6 +65,19 @@ final class TableComparatorTest extends TestCase
         static::assertSame('email', $diff->addedColumns[0]->name);
     }
 
+    public function test_passes_drop_if_exists_to_table_diff(): void
+    {
+        $comparator = new TableComparator(
+            new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new ConstraintComparator(),
+            new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+        );
+        $table = schema_table('users', [schema_column_integer('id', false)]);
+
+        static::assertTrue($comparator->compare($table, $table, true)->dropIfExists);
+        static::assertFalse($comparator->compare($table, $table)->dropIfExists);
+    }
+
     public function test_column_default_changed(): void
     {
         $comparator = new TableComparator(

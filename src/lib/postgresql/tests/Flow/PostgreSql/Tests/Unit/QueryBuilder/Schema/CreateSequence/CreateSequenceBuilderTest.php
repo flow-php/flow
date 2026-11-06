@@ -16,6 +16,9 @@ use PHPUnit\Framework\TestCase;
 use function extension_loaded;
 use function Flow\Types\DSL\type_instance_of;
 
+use const PHP_INT_MAX;
+use const PHP_INT_MIN;
+
 final class CreateSequenceBuilderTest extends TestCase
 {
     protected function setUp(): void
@@ -459,5 +462,26 @@ final class CreateSequenceBuilderTest extends TestCase
         static::assertInstanceOf(RangeVar::class, $sequence);
         static::assertSame('user_id_seq', $sequence->getRelname());
         static::assertSame('p', $sequence->getRelpersistence());
+    }
+
+    public function test_create_sequence_renders_bigint_bounds_exactly(): void
+    {
+        static::assertSame(
+            'CREATE SEQUENCE s MAXVALUE 9223372036854775807 MINVALUE -9223372036854775808',
+            CreateSequenceBuilder::create()->sequence('s')->maxValue(PHP_INT_MAX)->minValue(PHP_INT_MIN)->toSql(),
+        );
+    }
+
+    public function test_create_sequence_renders_values_beyond_int32_exactly(): void
+    {
+        static::assertSame(
+            'CREATE SEQUENCE s START 9223372036854775807 INCREMENT 3000000000 CACHE 3000000000',
+            CreateSequenceBuilder::create()
+                ->sequence('s')
+                ->startWith(PHP_INT_MAX)
+                ->incrementBy(3_000_000_000)
+                ->cache(3_000_000_000)
+                ->toSql(),
+        );
     }
 }

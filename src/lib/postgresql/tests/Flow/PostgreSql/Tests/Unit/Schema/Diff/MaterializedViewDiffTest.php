@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Schema\Diff;
 
+use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\Diff\MaterializedViewDiff;
 use Flow\PostgreSql\Schema\IndexMethod;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\eq;
 use function Flow\PostgreSql\DSL\literal;
@@ -30,7 +32,7 @@ final class MaterializedViewDiffTest extends TestCase
         );
 
         static::assertSame(
-            'CREATE UNIQUE INDEX mv_t_email_live ON mv_t (email) WHERE deleted_at IS NULL',
+            'CREATE UNIQUE INDEX mv_t_email_live ON public.mv_t (email) WHERE deleted_at IS NULL',
             $diff->generate()[0]->toSql(),
         );
     }
@@ -49,8 +51,8 @@ final class MaterializedViewDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(2, $sqls);
-        static::assertSame('DROP INDEX idx_name', $sqls[0]->toSql());
-        static::assertSame('CREATE INDEX idx_email ON mv_users (email)', $sqls[1]->toSql());
+        static::assertSame('DROP INDEX public.idx_name', $sqls[0]->toSql());
+        static::assertSame('CREATE INDEX idx_email ON public.mv_users (email)', $sqls[1]->toSql());
     }
 
     public function test_adds_gin_index_without_definition_change(): void
@@ -67,7 +69,7 @@ final class MaterializedViewDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('CREATE INDEX idx_data ON mv_users USING gin (data)', $sqls[0]->toSql());
+        static::assertSame('CREATE INDEX idx_data ON public.mv_users USING gin (data)', $sqls[0]->toSql());
     }
 
     public function test_adds_index(): void
@@ -83,7 +85,7 @@ final class MaterializedViewDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('CREATE INDEX idx_email ON mv_users (email)', $sqls[0]->toSql());
+        static::assertSame('CREATE INDEX idx_email ON public.mv_users (email)', $sqls[0]->toSql());
     }
 
     public function test_adds_unique_index_without_definition_change(): void
@@ -100,7 +102,7 @@ final class MaterializedViewDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('CREATE UNIQUE INDEX idx_unique_email ON mv_users (email)', $sqls[0]->toSql());
+        static::assertSame('CREATE UNIQUE INDEX idx_unique_email ON public.mv_users (email)', $sqls[0]->toSql());
     }
 
     public function test_drops_index(): void
@@ -116,7 +118,23 @@ final class MaterializedViewDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(1, $sqls);
-        static::assertSame('DROP INDEX idx_email', $sqls[0]->toSql());
+        static::assertSame('DROP INDEX public.idx_email', $sqls[0]->toSql());
+    }
+
+    public function test_renames_index(): void
+    {
+        $definition = select(star())->from(table('users'))->toSql();
+
+        $diff = new MaterializedViewDiff(
+            schema_materialized_view('mv_users', $definition, schema: 'pivotly'),
+            schema_materialized_view('mv_users', $definition, schema: 'pivotly'),
+            renamedIndexes: ['idx_email' => schema_index('idx_user_email', ['email'])],
+        );
+
+        static::assertSame(
+            ['ALTER INDEX pivotly.idx_email RENAME TO idx_user_email'],
+            array_map(static fn(Sql $sql): string => $sql->toSql(), $diff->generate()),
+        );
     }
 
     public function test_drops_source_indexes_before_recreating_when_definition_changed(): void
@@ -135,13 +153,13 @@ final class MaterializedViewDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(4, $sqls);
-        static::assertSame('DROP INDEX idx_name', $sqls[0]->toSql());
-        static::assertSame('DROP MATERIALIZED VIEW mv_users', $sqls[1]->toSql());
+        static::assertSame('DROP INDEX public.idx_name', $sqls[0]->toSql());
+        static::assertSame('DROP MATERIALIZED VIEW public.mv_users', $sqls[1]->toSql());
         static::assertSame(
-            'CREATE MATERIALIZED VIEW mv_users AS SELECT * FROM users WHERE active = true',
+            'CREATE MATERIALIZED VIEW public.mv_users AS SELECT * FROM users WHERE active = true',
             $sqls[2]->toSql(),
         );
-        static::assertSame('CREATE INDEX idx_email ON mv_users (email)', $sqls[3]->toSql());
+        static::assertSame('CREATE INDEX idx_email ON public.mv_users (email)', $sqls[3]->toSql());
     }
 
     public function test_has_definition_changed_returns_false_when_same(): void
@@ -186,9 +204,9 @@ final class MaterializedViewDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(2, $sqls);
-        static::assertSame('DROP MATERIALIZED VIEW mv_users', $sqls[0]->toSql());
+        static::assertSame('DROP MATERIALIZED VIEW public.mv_users', $sqls[0]->toSql());
         static::assertSame(
-            'CREATE MATERIALIZED VIEW mv_users AS SELECT * FROM users WHERE active = true',
+            'CREATE MATERIALIZED VIEW public.mv_users AS SELECT * FROM users WHERE active = true',
             $sqls[1]->toSql(),
         );
     }
@@ -209,8 +227,8 @@ final class MaterializedViewDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(2, $sqls);
-        static::assertSame('DROP MATERIALIZED VIEW mv_users', $sqls[0]->toSql());
-        static::assertSame('CREATE MATERIALIZED VIEW mv_users AS SELECT * FROM users', $sqls[1]->toSql());
+        static::assertSame('DROP MATERIALIZED VIEW public.mv_users', $sqls[0]->toSql());
+        static::assertSame('CREATE MATERIALIZED VIEW public.mv_users AS SELECT * FROM users', $sqls[1]->toSql());
     }
 
     public function test_reversed_index_only_changes(): void
@@ -227,7 +245,7 @@ final class MaterializedViewDiffTest extends TestCase
         $sqls = $diff->generate();
 
         static::assertCount(2, $sqls);
-        static::assertSame('DROP INDEX idx_email', $sqls[0]->toSql());
-        static::assertSame('CREATE INDEX idx_name ON mv_users (name)', $sqls[1]->toSql());
+        static::assertSame('DROP INDEX public.idx_email', $sqls[0]->toSql());
+        static::assertSame('CREATE INDEX idx_name ON public.mv_users (name)', $sqls[1]->toSql());
     }
 }

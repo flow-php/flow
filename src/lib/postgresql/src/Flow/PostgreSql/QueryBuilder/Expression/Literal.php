@@ -25,6 +25,10 @@ use function is_string;
  */
 final readonly class Literal implements Expression
 {
+    private const INT32_MAX = 2_147_483_647;
+
+    private const INT32_MIN = -2_147_483_648;
+
     private function __construct(
         private string|int|float|bool|null $value,
     ) {}
@@ -56,9 +60,9 @@ final readonly class Literal implements Expression
         }
 
         if ($aConst->hasFval()) {
-            $fval = type_instance_of(PBFloat::class)->assert($aConst->getFval());
+            $fval = type_instance_of(PBFloat::class)->assert($aConst->getFval())->getFval();
 
-            return new self(floatval($fval->getFval()));
+            return (string) (int) $fval === $fval ? new self((int) $fval) : new self(floatval($fval));
         }
 
         if ($aConst->hasSval()) {
@@ -125,10 +129,15 @@ final readonly class Literal implements Expression
         if ($this->value === null) {
             $aConst = new A_Const();
             $aConst->setIsnull(true);
-        } elseif (is_int($this->value)) {
+        } elseif (is_int($this->value) && $this->value >= self::INT32_MIN && $this->value <= self::INT32_MAX) {
             $integer = new Integer();
             $integer->setIval($this->value);
             $aConst = new A_Const(['ival' => $integer]);
+        } elseif (is_int($this->value)) {
+            $aConst = new A_Const();
+            $float = new PBFloat();
+            $float->setFval((string) $this->value);
+            $aConst->setFval($float);
         } elseif (is_float($this->value)) {
             $aConst = new A_Const();
             $float = new PBFloat();

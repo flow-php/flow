@@ -206,4 +206,14 @@ final class FunctionBuilderTest extends TestCase
 
         static::assertSame('DROP PROCEDURE IF EXISTS my_proc(int) CASCADE', $builder->toSql());
     }
+
+    public function test_drop_function_with_schema_qualified_name(): void
+    {
+        static::assertSame('DROP FUNCTION pivotly.fn_a', drop()->function('pivotly.fn_a')->toSql());
+    }
+
+    public function test_drop_procedure_with_schema_qualified_name(): void
+    {
+        static::assertSame('DROP PROCEDURE pivotly.proc_a', drop()->procedure('pivotly.proc_a')->toSql());
+    }
 }

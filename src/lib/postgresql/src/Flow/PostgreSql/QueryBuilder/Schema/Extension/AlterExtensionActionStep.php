@@ -14,6 +14,8 @@ interface AlterExtensionActionStep
 
     public function dropTable(string $table): AlterExtensionFinalStep;
 
+    public function setSchema(string $schema): AlterExtensionSchemaFinalStep;
+
     public function update(): AlterExtensionFinalStep;
 
     public function updateTo(string $version): AlterExtensionFinalStep;

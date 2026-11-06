@@ -105,6 +105,22 @@ final class ExtensionBuilderTest extends TestCase
         );
     }
 
+    public function test_alter_extension_set_schema(): void
+    {
+        static::assertSame(
+            'ALTER EXTENSION pgcrypto SET SCHEMA extp',
+            alter()->extension('pgcrypto')->setSchema('extp')->toSql(),
+        );
+    }
+
+    public function test_alter_extension_set_schema_quotes_names(): void
+    {
+        static::assertSame(
+            'ALTER EXTENSION "uuid-ossp" SET SCHEMA "my-schema"',
+            alter()->extension('uuid-ossp')->setSchema('my-schema')->toSql(),
+        );
+    }
+
     public function test_alter_extension_update_ast_type(): void
     {
         $builder = AlterExtensionBuilder::create('postgis')->update();

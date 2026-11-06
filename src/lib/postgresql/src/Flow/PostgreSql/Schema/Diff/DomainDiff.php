@@ -36,22 +36,22 @@ final readonly class DomainDiff implements Diff
     public function generate(): array
     {
         if ($this->hasBaseTypeChanged()) {
-            return [drop()->domain($this->target->name)->cascade(), $this->target->toSql()];
+            return [drop()->domain($this->target->qualifiedName())->cascade(), $this->target->toSql()];
         }
 
         $sqls = [];
 
         if ($this->target->nullable !== $this->source->nullable) {
             $sqls[] = $this->target->nullable
-                ? alter()->domain($this->target->name)->dropNotNull()
-                : alter()->domain($this->target->name)->setNotNull();
+                ? alter()->domain($this->target->qualifiedName())->dropNotNull()
+                : alter()->domain($this->target->qualifiedName())->setNotNull();
         }
 
         if (!ColumnDefault::nullableEquals($this->target->default, $this->source->default)) {
             $sqls[] = $this->target->default === null
-                ? alter()->domain($this->target->name)->dropDefault()
+                ? alter()->domain($this->target->qualifiedName())->dropDefault()
                 : alter()
-                    ->domain($this->target->name)
+                    ->domain($this->target->qualifiedName())
                     ->setDefault(ExpressionFactory::fromAst(
                         (new ExpressionParser())->parse($this->target->default->applicableSql()),
                     ));
@@ -65,7 +65,7 @@ final readonly class DomainDiff implements Diff
                 ));
             }
 
-            $sqls[] = alter()->domain($this->target->name)->dropConstraint($cc->name);
+            $sqls[] = alter()->domain($this->target->qualifiedName())->dropConstraint($cc->name);
         }
 
         foreach ($this->addedCheckConstraints as $cc) {
@@ -77,7 +77,7 @@ final readonly class DomainDiff implements Diff
             }
 
             $sqls[] = alter()
-                ->domain($this->target->name)
+                ->domain($this->target->qualifiedName())
                 ->addConstraint($cc->name, ConditionFactory::fromAst((new ExpressionParser())->parse($cc->expression)));
         }
 

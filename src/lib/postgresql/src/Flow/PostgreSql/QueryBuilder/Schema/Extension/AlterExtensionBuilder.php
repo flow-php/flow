@@ -51,6 +51,11 @@ final readonly class AlterExtensionBuilder implements AlterExtensionActionStep, 
         return new self($this->name, false, null, -1, ObjectType::OBJECT_TABLE, $table);
     }
 
+    public function setSchema(string $schema): AlterExtensionSchemaFinalStep
+    {
+        return AlterExtensionSchemaBuilder::create($this->name, $schema);
+    }
+
     public function toSql(): string
     {
         return (new AstDeparser())->deparse($this->toAst());

@@ -28,6 +28,23 @@ Upgrading from older versions: [0.41.x to 0.43.x](/documentation/upgrading-0.41-
 |------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
 | `Flow\Bridge\Symfony\FilesystemBundle\Filesystem\FstabBuilder::build()` built each fstab | removed; each mount is the service `flow.filesystem.mount.<fstab>.<mount>`, and the fstab is built from those services |
 
+### 3) `flow-php/postgresql` - schema objects store and inherit their schema, extensions belong to the catalog
+
+| Before                                                                                                                           | After                                                                                                            |
+|----------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
+| `schema_table(..., string $schema = 'public')`                                                                                   | `?string $schema = null`. In `schema('x', ...)` the table takes `x`. A different schema throws `SchemaException` |
+| `schema_view()`, `schema_materialized_view()`, `schema_sequence()`, `schema_function()`, `schema_procedure()`, `schema_domain()` | trailing `?string $schema = null`, bound the same way as tables                                                  |
+| `Table::$schema` is `string`                                                                                                     | `?string`. `schemaName()` returns the rendered schema                                                            |
+| `schema_sequence(..., $startValue = 1, $minValue = 1)` renders `START 1 ... MINVALUE 1`                                          | defaults are `null`. `toSql()` omits `START` and renders `NO MINVALUE`                                           |
+| `toSql()` renders `CREATE VIEW v`, `DROP INDEX idx`, `CREATE EXTENSION x`                                                        | `CREATE VIEW public.v`, `DROP INDEX public.idx`, `CREATE EXTENSION x SCHEMA public`                              |
+| `schema('x', extensions: [schema_extension('e')])`                                                                               | `catalog([schema('x')], extensions: [schema_extension('e', schema: 'x')])`. The default schema is `public`       |
+| `Schema::$extensions`, `SchemaDiff::$addedExtensions`, `$removedExtensions`, `$modifiedExtensions`                               | `Catalog::extensions()`, `CatalogDiff::$addedExtensions`, `$removedExtensions`, `$modifiedExtensions`            |
+| `new Catalog($schemas)` rebuilt from another catalog                                                                             | pass `$catalog->extensions()` as the second argument, or the extensions leave the comparison                     |
+| `schema_extension('e')` diffs to `ALTER EXTENSION e UPDATE`                                                                      | a `null` version is not pinned. No version diff                                                                  |
+| extension member functions, views and domains are read as schema objects                                                         | not read                                                                                                         |
+| `Flow\PostgreSql\Schema\Diff\DependentView`                                                                                      | removed. `DependentViews::$toDrop` and `$toCreate` hold `View\|MaterializedView`                                 |
+| `TableDiff::__construct(...)`, `TableComparator::compare($source, $target)`                                                      | trailing `bool $dropIfExists = false`                                                                            |
+
 ---
 
 ## Upgrading from 0.46.x to 0.47.x

@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Schema;
 
+use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\IndexMethod;
+use Flow\PostgreSql\Schema\MaterializedView;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
 use function Flow\PostgreSql\DSL\agg_count;
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\schema_index;
@@ -16,6 +19,36 @@ use function Flow\PostgreSql\DSL\table;
 
 final class MaterializedViewTest extends TestCase
 {
+    public function test_schema_round_trips_through_normalize(): void
+    {
+        $view = schema_materialized_view('mv', 'SELECT 1', [schema_index('idx', ['id'])], 'pivotly');
+
+        static::assertEquals($view, MaterializedView::fromArray($view->normalize()));
+    }
+
+    public function test_to_sql_qualifies_view_and_indexes_with_its_schema(): void
+    {
+        static::assertSame(
+            ['CREATE MATERIALIZED VIEW pivotly.mv AS SELECT 1', 'CREATE INDEX idx ON pivotly.mv (id)'],
+            array_map(
+                static fn(Sql $sql): string => $sql->toSql(),
+                schema_materialized_view('mv', 'SELECT 1', [schema_index('idx', ['id'])], 'pivotly')->toSql(),
+            ),
+        );
+    }
+
+    public function test_with_schema_qualifies_name_and_keeps_every_other_field(): void
+    {
+        $view = schema_materialized_view('mv', 'SELECT 1', [schema_index('idx', ['id'])]);
+
+        static::assertSame('public.mv', $view->qualifiedName());
+        static::assertEquals(
+            schema_materialized_view('mv', 'SELECT 1', [schema_index('idx', ['id'])], 'pivotly'),
+            $view->withSchema('pivotly'),
+        );
+        static::assertSame('pivotly.mv', $view->withSchema('pivotly')->qualifiedName());
+    }
+
     public function test_materialized_view_construction(): void
     {
         $definition = select(agg_count())->from(table('users'))->toSql();
@@ -48,7 +81,7 @@ final class MaterializedViewTest extends TestCase
 
         static::assertCount(2, $sqls);
         static::assertSame(
-            'CREATE UNIQUE INDEX mv_t_email_live ON mv_t (email) WHERE deleted_at IS NULL',
+            'CREATE UNIQUE INDEX mv_t_email_live ON public.mv_t (email) WHERE deleted_at IS NULL',
             $sqls[1]->toSql(),
         );
     }
@@ -62,7 +95,7 @@ final class MaterializedViewTest extends TestCase
 
         static::assertCount(1, $sqls);
         static::assertSame(
-            'CREATE MATERIALIZED VIEW user_stats AS SELECT id, count(*) FROM users GROUP BY id',
+            'CREATE MATERIALIZED VIEW public.user_stats AS SELECT id, count(*) FROM users GROUP BY id',
             $sqls[0]->toSql(),
         );
     }
@@ -77,10 +110,10 @@ final class MaterializedViewTest extends TestCase
 
         static::assertCount(2, $sqls);
         static::assertSame(
-            'CREATE MATERIALIZED VIEW user_stats AS SELECT id, count(*) FROM users GROUP BY id',
+            'CREATE MATERIALIZED VIEW public.user_stats AS SELECT id, count(*) FROM users GROUP BY id',
             $sqls[0]->toSql(),
         );
-        static::assertSame('CREATE UNIQUE INDEX idx_user_stats_id ON user_stats (id)', $sqls[1]->toSql());
+        static::assertSame('CREATE UNIQUE INDEX idx_user_stats_id ON public.user_stats (id)', $sqls[1]->toSql());
     }
 
     public function test_to_sql_generates_materialized_view_with_multiple_indexes(): void
@@ -96,11 +129,11 @@ final class MaterializedViewTest extends TestCase
 
         static::assertCount(3, $sqls);
         static::assertSame(
-            'CREATE MATERIALIZED VIEW user_stats AS SELECT id, count(*) FROM users GROUP BY id',
+            'CREATE MATERIALIZED VIEW public.user_stats AS SELECT id, count(*) FROM users GROUP BY id',
             $sqls[0]->toSql(),
         );
-        static::assertSame('CREATE UNIQUE INDEX idx_upc_id ON user_stats (id)', $sqls[1]->toSql());
-        static::assertSame('CREATE INDEX idx_upc_gin ON user_stats USING gin (metadata)', $sqls[2]->toSql());
+        static::assertSame('CREATE UNIQUE INDEX idx_upc_id ON public.user_stats (id)', $sqls[1]->toSql());
+        static::assertSame('CREATE INDEX idx_upc_gin ON public.user_stats USING gin (metadata)', $sqls[2]->toSql());
     }
 
     public function test_to_sql_generates_materialized_view_with_non_btree_index(): void
@@ -113,10 +146,13 @@ final class MaterializedViewTest extends TestCase
 
         static::assertCount(2, $sqls);
         static::assertSame(
-            'CREATE MATERIALIZED VIEW user_stats AS SELECT id, count(*) FROM users GROUP BY id',
+            'CREATE MATERIALIZED VIEW public.user_stats AS SELECT id, count(*) FROM users GROUP BY id',
             $sqls[0]->toSql(),
         );
-        static::assertSame('CREATE INDEX idx_user_stats_gin ON user_stats USING gin (metadata)', $sqls[1]->toSql());
+        static::assertSame(
+            'CREATE INDEX idx_user_stats_gin ON public.user_stats USING gin (metadata)',
+            $sqls[1]->toSql(),
+        );
     }
 
     public function test_to_sql_generates_materialized_view_with_unique_non_btree_index(): void
@@ -129,9 +165,12 @@ final class MaterializedViewTest extends TestCase
 
         static::assertCount(2, $sqls);
         static::assertSame(
-            'CREATE MATERIALIZED VIEW user_stats AS SELECT id, count(*) FROM users GROUP BY id',
+            'CREATE MATERIALIZED VIEW public.user_stats AS SELECT id, count(*) FROM users GROUP BY id',
             $sqls[0]->toSql(),
         );
-        static::assertSame('CREATE UNIQUE INDEX idx_user_stats_hash ON user_stats USING hash (id)', $sqls[1]->toSql());
+        static::assertSame(
+            'CREATE UNIQUE INDEX idx_user_stats_hash ON public.user_stats USING hash (id)',
+            $sqls[1]->toSql(),
+        );
     }
 }

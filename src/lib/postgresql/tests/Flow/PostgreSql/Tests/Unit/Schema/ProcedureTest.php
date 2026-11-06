@@ -4,12 +4,32 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Schema;
 
+use Flow\PostgreSql\Schema\Procedure;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\PostgreSql\DSL\schema_procedure;
 
 final class ProcedureTest extends TestCase
 {
+    public function test_schema_round_trips_through_normalize(): void
+    {
+        $procedure = schema_procedure('p', ['integer'], 'sql', 'SELECT 1', 'pivotly');
+
+        static::assertEquals($procedure, Procedure::fromArray($procedure->normalize()));
+    }
+
+    public function test_with_schema_qualifies_name_and_keeps_every_other_field(): void
+    {
+        $procedure = schema_procedure('p', ['integer'], 'sql', 'SELECT 1');
+
+        static::assertSame('public.p', $procedure->qualifiedName());
+        static::assertEquals(
+            schema_procedure('p', ['integer'], 'sql', 'SELECT 1', 'pivotly'),
+            $procedure->withSchema('pivotly'),
+        );
+        static::assertSame('pivotly.p', $procedure->withSchema('pivotly')->qualifiedName());
+    }
+
     public function test_procedure_construction(): void
     {
         $proc = schema_procedure('cleanup_old_records');
@@ -45,7 +65,7 @@ final class ProcedureTest extends TestCase
 
         static::assertNotNull($sql);
         static::assertSame(
-            'CREATE OR REPLACE PROCEDURE archive_user(IN int, IN text) LANGUAGE plpgsql AS $$BEGIN DELETE FROM users WHERE id = $1; END;$$',
+            'CREATE OR REPLACE PROCEDURE public.archive_user(IN int, IN text) LANGUAGE plpgsql AS $$BEGIN DELETE FROM users WHERE id = $1; END;$$',
             $sql->toSql(),
         );
     }

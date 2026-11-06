@@ -21,7 +21,7 @@ final readonly class SequenceDiff implements Diff
      */
     public function generate(): array
     {
-        $builder = alter()->sequence($this->target->name);
+        $builder = alter()->sequence($this->target->name, $this->target->schemaName());
         $hasChanges = false;
 
         if ($this->target->dataType !== $this->source->dataType) {
@@ -34,17 +34,19 @@ final readonly class SequenceDiff implements Diff
             $hasChanges = true;
         }
 
-        if ($this->target->startValue !== $this->source->startValue) {
-            $builder = $builder->startWith((int) $this->target->startValue);
+        if ($this->target->effectiveStartValue() !== $this->source->effectiveStartValue()) {
+            $builder = $builder->startWith((int) $this->target->effectiveStartValue());
             $hasChanges = true;
         }
 
-        if ($this->target->minValue !== $this->source->minValue) {
-            $builder = $builder->minValue((int) $this->target->minValue);
+        if ($this->target->effectiveMinValue() !== $this->source->effectiveMinValue()) {
+            $builder = $this->target->minValue === null
+                ? $builder->noMinValue()
+                : $builder->minValue((int) $this->target->minValue);
             $hasChanges = true;
         }
 
-        if ($this->target->maxValue !== $this->source->maxValue) {
+        if ($this->target->effectiveMaxValue() !== $this->source->effectiveMaxValue()) {
             if ($this->target->maxValue === null) {
                 $builder = $builder->noMaxValue();
             } else {
@@ -68,7 +70,10 @@ final readonly class SequenceDiff implements Diff
             || $this->target->ownedByColumn !== $this->source->ownedByColumn
         ) {
             if ($this->target->ownedByTable !== null && $this->target->ownedByColumn !== null) {
-                $builder = $builder->ownedBy($this->target->ownedByTable, $this->target->ownedByColumn);
+                $builder = $builder->ownedBy(
+                    $this->target->schemaName() . '.' . $this->target->ownedByTable,
+                    $this->target->ownedByColumn,
+                );
             } else {
                 $builder = $builder->ownedByNone();
             }

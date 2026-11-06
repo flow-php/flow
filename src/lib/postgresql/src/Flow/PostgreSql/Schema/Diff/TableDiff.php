@@ -79,6 +79,7 @@ final readonly class TableDiff implements Diff
         public array $addedInherits = [],
         public array $removedInherits = [],
         public bool $tablespaceChanged = false,
+        public bool $dropIfExists = false,
     ) {}
 
     /**
@@ -117,7 +118,8 @@ final readonly class TableDiff implements Diff
         }
 
         foreach ($this->removedIndexes as $idx) {
-            $sqls[] = drop()->index($idx->name);
+            $builder = drop()->index($this->target->schemaName() . '.' . $idx->name);
+            $sqls[] = $this->dropIfExists ? $builder->ifExists() : $builder;
         }
 
         foreach ($this->removedUniqueConstraints as $uc) {
@@ -161,7 +163,7 @@ final readonly class TableDiff implements Diff
         }
 
         foreach ($this->removedTriggers as $trigger) {
-            $sqls[] = drop()->trigger($trigger->name)->on($this->target->name, $this->target->schema);
+            $sqls[] = drop()->trigger($trigger->name)->on($this->target->name, $this->target->schemaName());
         }
 
         foreach ($this->removedColumns as $col) {
@@ -206,11 +208,11 @@ final readonly class TableDiff implements Diff
         }
 
         foreach ($this->addedIndexes as $idx) {
-            $sqls[] = $idx->toSql($this->target->name, $this->target->schema);
+            $sqls[] = $idx->toSql($this->target->name, $this->target->schemaName());
         }
 
         foreach ($this->renamedIndexes as $oldName => $newIndex) {
-            $sqls[] = alter()->index($oldName, $this->target->schema)->renameTo($newIndex->name);
+            $sqls[] = alter()->index($oldName, $this->target->schemaName())->renameTo($newIndex->name);
         }
 
         foreach ($this->addedUniqueConstraints as $uc) {
@@ -289,7 +291,7 @@ final readonly class TableDiff implements Diff
         }
 
         foreach ($this->addedTriggers as $trigger) {
-            $sqls[] = $trigger->toSql($this->target->name, $this->target->schema);
+            $sqls[] = $trigger->toSql($this->target->name, $this->target->schemaName());
         }
 
         foreach ($this->addedInherits as $parent) {

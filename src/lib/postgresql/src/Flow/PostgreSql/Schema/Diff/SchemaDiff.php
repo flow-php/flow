@@ -8,7 +8,6 @@ use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\Domain;
 use Flow\PostgreSql\Schema\ExecutionOrderStrategy;
-use Flow\PostgreSql\Schema\Extension;
 use Flow\PostgreSql\Schema\ForeignKeyDependencyOrder;
 use Flow\PostgreSql\Schema\Func;
 use Flow\PostgreSql\Schema\MaterializedView;
@@ -48,9 +47,6 @@ final readonly class SchemaDiff implements Diff
      * @param list<Domain> $addedDomains
      * @param list<Domain> $removedDomains
      * @param list<DomainDiff> $modifiedDomains
-     * @param list<Extension> $addedExtensions
-     * @param list<Extension> $removedExtensions
-     * @param list<ExtensionDiff> $modifiedExtensions
      * @param ExecutionOrderStrategy<Table> $tableOrderStrategy
      * @param ExecutionOrderStrategy<View> $viewOrderStrategy
      * @param ExecutionOrderStrategy<MaterializedView> $materializedViewOrderStrategy
@@ -80,9 +76,6 @@ final readonly class SchemaDiff implements Diff
         public array $addedDomains = [],
         public array $removedDomains = [],
         public array $modifiedDomains = [],
-        public array $addedExtensions = [],
-        public array $removedExtensions = [],
-        public array $modifiedExtensions = [],
         private ExecutionOrderStrategy $tableOrderStrategy = new ForeignKeyDependencyOrder(),
         private ExecutionOrderStrategy $viewOrderStrategy = new ViewDependencyOrder(new Parser()),
         private ExecutionOrderStrategy $materializedViewOrderStrategy = new MaterializedViewDependencyOrder(
@@ -106,7 +99,6 @@ final readonly class SchemaDiff implements Diff
                 $this->addedFunctions,
                 $this->addedProcedures,
                 $this->addedDomains,
-                $this->addedExtensions,
             ))->toSql($this->tableOrderStrategy, $this->viewOrderStrategy, $this->materializedViewOrderStrategy),
             ...$this->modifiedSqls(),
             ...$this->renamedTableSqls(),
@@ -118,7 +110,6 @@ final readonly class SchemaDiff implements Diff
                 $this->removedFunctions,
                 $this->removedSequences,
                 $this->removedDomains,
-                $this->removedExtensions,
             ),
         ];
     }
@@ -148,9 +139,6 @@ final readonly class SchemaDiff implements Diff
             && $this->addedDomains === []
             && $this->removedDomains === []
             && $this->modifiedDomains === []
-            && $this->addedExtensions === []
-            && $this->removedExtensions === []
-            && $this->modifiedExtensions === []
         );
     }
 
@@ -162,7 +150,6 @@ final readonly class SchemaDiff implements Diff
      * @param list<Func> $functions
      * @param list<Sequence> $sequences
      * @param list<Domain> $domains
-     * @param list<Extension> $extensions
      *
      * @return list<Sql>
      */
@@ -174,17 +161,16 @@ final readonly class SchemaDiff implements Diff
         array $functions,
         array $sequences,
         array $domains,
-        array $extensions,
     ): array {
         $sqls = [];
 
         foreach ($materializedViews as $mv) {
-            $builder = drop()->materializedView($mv->name);
+            $builder = drop()->materializedView($mv->qualifiedName());
             $sqls[] = $this->dropIfExists ? $builder->ifExists() : $builder;
         }
 
         foreach ($views as $view) {
-            $builder = drop()->view($view->name);
+            $builder = drop()->view($view->qualifiedName());
             $sqls[] = $this->dropIfExists ? $builder->ifExists() : $builder;
         }
 
@@ -194,27 +180,22 @@ final readonly class SchemaDiff implements Diff
         }
 
         foreach ($procedures as $proc) {
-            $builder = drop()->procedure($proc->name);
+            $builder = drop()->procedure($proc->qualifiedName());
             $sqls[] = $this->dropIfExists ? $builder->ifExists() : $builder;
         }
 
         foreach ($functions as $func) {
-            $builder = drop()->function($func->name);
+            $builder = drop()->function($func->qualifiedName());
             $sqls[] = $this->dropIfExists ? $builder->ifExists() : $builder;
         }
 
         foreach ($sequences as $seq) {
-            $builder = drop()->sequence($seq->name);
+            $builder = drop()->sequence($seq->qualifiedName());
             $sqls[] = $this->dropIfExists ? $builder->ifExists() : $builder;
         }
 
         foreach ($domains as $domain) {
-            $builder = drop()->domain($domain->name)->cascade();
-            $sqls[] = $this->dropIfExists ? $builder->ifExists() : $builder;
-        }
-
-        foreach ($extensions as $ext) {
-            $builder = drop()->extension($ext->name);
+            $builder = drop()->domain($domain->qualifiedName())->cascade();
             $sqls[] = $this->dropIfExists ? $builder->ifExists() : $builder;
         }
 
@@ -229,7 +210,6 @@ final readonly class SchemaDiff implements Diff
         $sqls = [];
 
         $diffs = [
-            $this->modifiedExtensions,
             $this->modifiedDomains,
             $this->modifiedSequences,
             $this->modifiedFunctions,

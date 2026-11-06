@@ -138,11 +138,12 @@ function column(string $name, ColumnType $type): ColumnDefinition
 
 /**
  * @param list<Schema> $schemas
+ * @param list<SchemaExtension> $extensions
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function catalog(array $schemas): Catalog
+function catalog(array $schemas, array $extensions = []): Catalog
 {
-    return new Catalog($schemas);
+    return new Catalog($schemas, $extensions);
 }
 
 /**
@@ -1378,7 +1379,6 @@ function value_type_jsonb_array(): ValueType
  * @param list<SchemaFunction> $functions
  * @param list<SchemaProcedure> $procedures
  * @param list<SchemaDomain> $domains
- * @param list<SchemaExtension> $extensions
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function schema(
@@ -1390,7 +1390,6 @@ function schema(
     array $functions = [],
     array $procedures = [],
     array $domains = [],
-    array $extensions = [],
 ): DatabaseSchema {
     return new DatabaseSchema(
         $name,
@@ -1401,7 +1400,6 @@ function schema(
         $functions,
         $procedures,
         $domains,
-        $extensions,
     );
 }
 
@@ -1427,7 +1425,7 @@ function schema_table(
     array $checkConstraints = [],
     array $excludeConstraints = [],
     array $triggers = [],
-    string $schema = 'public',
+    ?string $schema = null,
     bool $unlogged = false,
     ?PartitionStrategy $partitionStrategy = null,
     array $partitionColumns = [],
@@ -1812,14 +1810,15 @@ function schema_index(
 function schema_sequence(
     string $name,
     string $dataType = 'bigint',
-    int|string $startValue = 1,
-    int|string $minValue = 1,
+    int|string|null $startValue = null,
+    int|string|null $minValue = null,
     int|string|null $maxValue = null,
     int|string $incrementBy = 1,
     bool $cycle = false,
     int|string $cacheValue = 1,
     ?string $ownedByTable = null,
     ?string $ownedByColumn = null,
+    ?string $schema = null,
 ): SchemaSequence {
     return new SchemaSequence(
         $name,
@@ -1832,22 +1831,27 @@ function schema_sequence(
         $cacheValue,
         $ownedByTable,
         $ownedByColumn,
+        $schema,
     );
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_view(string $name, string $definition, bool $isUpdatable = false): SchemaView
+function schema_view(string $name, string $definition, bool $isUpdatable = false, ?string $schema = null): SchemaView
 {
-    return new SchemaView($name, $definition, $isUpdatable);
+    return new SchemaView($name, $definition, $isUpdatable, $schema);
 }
 
 /**
  * @param list<SchemaIndex> $indexes
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_materialized_view(string $name, string $definition, array $indexes = []): SchemaMaterializedView
-{
-    return new SchemaMaterializedView($name, $definition, $indexes);
+function schema_materialized_view(
+    string $name,
+    string $definition,
+    array $indexes = [],
+    ?string $schema = null,
+): SchemaMaterializedView {
+    return new SchemaMaterializedView($name, $definition, $indexes, $schema);
 }
 
 /**
@@ -1862,8 +1866,18 @@ function schema_function(
     ?string $definition = null,
     bool $isStrict = false,
     ?SchemaFunctionVolatility $volatility = null,
+    ?string $schema = null,
 ): SchemaFunction {
-    return new SchemaFunction($name, $returnType, $argumentTypes, $language, $definition, $isStrict, $volatility);
+    return new SchemaFunction(
+        $name,
+        $returnType,
+        $argumentTypes,
+        $language,
+        $definition,
+        $isStrict,
+        $volatility,
+        $schema,
+    );
 }
 
 /**
@@ -1875,8 +1889,9 @@ function schema_procedure(
     array $argumentTypes = [],
     string $language = 'sql',
     ?string $definition = null,
+    ?string $schema = null,
 ): SchemaProcedure {
-    return new SchemaProcedure($name, $argumentTypes, $language, $definition);
+    return new SchemaProcedure($name, $argumentTypes, $language, $definition, $schema);
 }
 
 /**
@@ -1905,14 +1920,15 @@ function schema_domain(
     bool $nullable = true,
     bool|float|int|string|Expression|null $default = null,
     array $checkConstraints = [],
+    ?string $schema = null,
 ): SchemaDomain {
-    return SchemaDomain::create($name, $baseType, $nullable, $default, $checkConstraints);
+    return SchemaDomain::create($name, $baseType, $nullable, $default, $checkConstraints, $schema);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_extension(string $name, ?string $version = null): SchemaExtension
+function schema_extension(string $name, ?string $version = null, string $schema = 'public'): SchemaExtension
 {
-    return new SchemaExtension($name, $version);
+    return new SchemaExtension($name, $version, $schema);
 }
 
 /**

@@ -8,13 +8,19 @@ use Flow\PostgreSql\QueryBuilder\Condition\OperatorCondition;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\QueryBuilder\Schema\ReferentialAction;
 use Flow\PostgreSql\QueryBuilder\Schema\Trigger\TriggerEvent as BuilderTriggerEvent;
+use Flow\PostgreSql\QueryBuilder\Sql;
+use Flow\PostgreSql\Schema\IdentityGeneration;
 use Flow\PostgreSql\Schema\PartitionStrategy;
 use Flow\PostgreSql\Schema\TriggerEvent;
 use Flow\PostgreSql\Schema\TriggerTiming;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 use function array_map;
 use function Flow\PostgreSql\DSL\agg_count;
+use function Flow\PostgreSql\DSL\catalog;
+use function Flow\PostgreSql\DSL\catalog_comparator;
 use function Flow\PostgreSql\DSL\check_constraint;
 use function Flow\PostgreSql\DSL\client_catalog_provider;
 use function Flow\PostgreSql\DSL\col;
@@ -39,13 +45,21 @@ use function Flow\PostgreSql\DSL\gt;
 use function Flow\PostgreSql\DSL\index_col;
 use function Flow\PostgreSql\DSL\literal;
 use function Flow\PostgreSql\DSL\primary_key;
+use function Flow\PostgreSql\DSL\schema;
+use function Flow\PostgreSql\DSL\schema_column_integer;
+use function Flow\PostgreSql\DSL\schema_sequence;
+use function Flow\PostgreSql\DSL\schema_table;
 use function Flow\PostgreSql\DSL\select;
 use function Flow\PostgreSql\DSL\table;
 use function Flow\PostgreSql\DSL\type_attr;
 use function Flow\PostgreSql\DSL\unique_constraint;
 
+use const PHP_INT_MIN;
+
 final class PgCatalogSchemaProviderTest extends PostgreSqlTestCase
 {
+    private const MISSING_SCHEMA = 'flow_provider_test_missing';
+
     private const SCHEMA = 'flow_provider_test';
 
     protected function setUp(): void
@@ -53,14 +67,57 @@ final class PgCatalogSchemaProviderTest extends PostgreSqlTestCase
         parent::setUp();
 
         $this->pgsqlContext()->dropSchemaIfExists(self::SCHEMA);
+        $this->pgsqlContext()->dropSchemaIfExists(self::MISSING_SCHEMA);
         $this->pgsqlContext()->client()->execute(create()->schema(self::SCHEMA)->toSql());
     }
 
     protected function tearDown(): void
     {
         $this->pgsqlContext()->dropSchemaIfExists(self::SCHEMA);
+        $this->pgsqlContext()->dropSchemaIfExists(self::MISSING_SCHEMA);
 
         parent::tearDown();
+    }
+
+    public function test_empty_explicit_schema_list_reads_nothing(): void
+    {
+        $catalog = client_catalog_provider($this->pgsqlContext()->client(), [])->get();
+
+        static::assertSame([], $catalog->names());
+        static::assertSame([], $catalog->extensions());
+    }
+
+    public function test_explicit_schema_names_skip_schemas_missing_in_the_database(): void
+    {
+        static::assertSame(
+            [self::SCHEMA],
+            client_catalog_provider($this->pgsqlContext()->client(), [
+                self::SCHEMA,
+                self::MISSING_SCHEMA,
+            ])->get()->names(),
+        );
+    }
+
+    public function test_materialized_view_indexes_are_read(): void
+    {
+        $s = self::SCHEMA;
+        $client = $this->pgsqlContext()->client();
+
+        $client->execute(create()->table('events', $s)->column(column('id', column_type_integer()))->toSql());
+        $client->execute(
+            create()
+                ->materializedView('event_ids', $s)
+                ->as(select(col('id'))->from(table('events', $s)))
+                ->toSql(),
+        );
+        $client->execute(create()->index('idx_event_ids_id')->on('event_ids', $s)->columns('id')->toSql());
+
+        $materializedView = client_catalog_provider($client, [$s])->get()->get($s)->materializedViews[0];
+
+        static::assertSame('event_ids', $materializedView->name);
+        static::assertCount(1, $materializedView->indexes);
+        static::assertSame('idx_event_ids_id', $materializedView->indexes[0]->name);
+        static::assertSame(['id'], $materializedView->indexes[0]->columns);
     }
 
     public function test_read_complex_schema(): void
@@ -522,5 +579,200 @@ final class PgCatalogSchemaProviderTest extends PostgreSqlTestCase
 
         static::assertSame([self::SCHEMA], $catalog->names());
         static::assertCount(1, $catalog->all());
+    }
+
+    public function test_schema_missing_in_the_database_is_created_with_its_table(): void
+    {
+        $client = $this->pgsqlContext()->client();
+        $provider = client_catalog_provider($client, [self::SCHEMA, self::MISSING_SCHEMA]);
+        $target = catalog([
+            schema(self::SCHEMA),
+            schema(self::MISSING_SCHEMA, tables: [schema_table('t', [
+                schema_column_integer('id'),
+            ])]),
+        ]);
+
+        $migration = catalog_comparator()->compare($provider->get(), $target)->generate();
+
+        static::assertSame(
+            [
+                'CREATE SCHEMA IF NOT EXISTS flow_provider_test_missing',
+                'CREATE TABLE flow_provider_test_missing.t (id int)',
+            ],
+            array_map(static fn(Sql $sql): string => $sql->toSql(), $migration),
+        );
+
+        foreach ($migration as $sql) {
+            $client->execute($sql->toSql());
+        }
+
+        static::assertSame([], catalog_comparator()->compare($provider->get(), $target)->generate());
+    }
+
+    public function test_sequence_with_explicit_owner_is_read_with_its_owner(): void
+    {
+        $s = self::SCHEMA;
+        $client = $this->pgsqlContext()->client();
+
+        $client->execute(create()->table('orders', $s)->column(column('id', column_type_integer()))->toSql());
+        $client->execute(
+            create()
+                ->sequence('order_numbers', $s)
+                ->ownedBy($s . '.orders', 'id')
+                ->toSql(),
+        );
+
+        $sequences = client_catalog_provider($client, [$s])->get()->get($s)->sequences;
+
+        static::assertCount(1, $sequences);
+        static::assertSame('order_numbers', $sequences[0]->name);
+        static::assertSame('orders', $sequences[0]->ownedByTable);
+        static::assertSame('id', $sequences[0]->ownedByColumn);
+    }
+
+    public function test_serial_column_sequence_stays_hidden(): void
+    {
+        $s = self::SCHEMA;
+        $client = $this->pgsqlContext()->client();
+
+        $client->execute(create()->table('invoices', $s)->column(column('id', column_type_serial()))->toSql());
+
+        static::assertSame([], client_catalog_provider($client, [$s])->get()->get($s)->sequences);
+    }
+
+    public function test_identity_column_sequence_stays_hidden(): void
+    {
+        $s = self::SCHEMA;
+        $client = $this->pgsqlContext()->client();
+
+        $client->execute(
+            create()
+                ->table('payments', $s)
+                ->column(column('id', column_type_integer())->notNull()->identity(IdentityGeneration::ALWAYS))
+                ->toSql(),
+        );
+
+        static::assertSame([], client_catalog_provider($client, [$s])->get()->get($s)->sequences);
+    }
+
+    /**
+     * @return Generator<string, array{string, int, int, int}>
+     */
+    public static function default_sequences(): Generator
+    {
+        yield 'bigint' => ['bigint', 1, 1, 1];
+        yield 'integer' => ['integer', 1, 1, 1];
+        yield 'smallint' => ['smallint', 1, 1, 1];
+        yield 'descending bigint' => ['bigint', -1, PHP_INT_MIN, -1];
+    }
+
+    #[DataProvider('default_sequences')]
+    public function test_sequence_with_default_max_value_round_trips_to_empty_diff(
+        string $dataType,
+        int $startValue,
+        int $minValue,
+        int $incrementBy,
+    ): void {
+        $s = self::SCHEMA;
+        $client = $this->pgsqlContext()->client();
+        $declared = catalog([schema($s, sequences: [schema_sequence(
+            'counter',
+            $dataType,
+            $startValue,
+            $minValue,
+            incrementBy: $incrementBy,
+        )])]);
+
+        foreach (catalog_comparator()
+            ->compare(client_catalog_provider($client, [$s])->get(), $declared)
+            ->generate() as $sql) {
+            $client->execute($sql->toSql());
+        }
+
+        static::assertSame(
+            [],
+            array_map(
+                static fn(Sql $query): string => $query->toSql(),
+                catalog_comparator()->compare(client_catalog_provider($client, [$s])->get(), $declared)->generate(),
+            ),
+        );
+    }
+
+    public function test_descending_default_sequence_is_created_and_round_trips_to_empty_diff(): void
+    {
+        $s = self::SCHEMA;
+        $client = $this->pgsqlContext()->client();
+        $declared = catalog([schema($s, sequences: [schema_sequence('countdown', incrementBy: -1)])]);
+
+        foreach (catalog_comparator()
+            ->compare(client_catalog_provider($client, [$s])->get(), $declared)
+            ->generate() as $sql) {
+            $client->execute($sql->toSql());
+        }
+
+        static::assertSame(
+            [],
+            array_map(
+                static fn(Sql $query): string => $query->toSql(),
+                catalog_comparator()->compare(client_catalog_provider($client, [$s])->get(), $declared)->generate(),
+            ),
+        );
+    }
+
+    public function test_live_default_sequence_diffs_empty_against_implicit_and_explicit_defaults(): void
+    {
+        $s = self::SCHEMA;
+        $client = $this->pgsqlContext()->client();
+
+        $client->execute(create()->sequence('counter', $s)->toSql());
+        $live = client_catalog_provider($client, [$s])->get();
+
+        static::assertTrue(
+            catalog_comparator()
+                ->compare($live, catalog([schema($s, sequences: [schema_sequence('counter')])]))
+                ->isEmpty(),
+        );
+        static::assertTrue(
+            catalog_comparator()
+                ->compare($live, catalog([schema($s, sequences: [schema_sequence(
+                    'counter',
+                    startValue: 1,
+                    minValue: 1,
+                )])]))
+                ->isEmpty(),
+        );
+    }
+
+    public function test_unchanged_catalog_with_owned_sequence_gives_empty_diff(): void
+    {
+        $s = self::SCHEMA;
+        $client = $this->pgsqlContext()->client();
+
+        $client->execute(create()->table('orders', $s)->column(column('id', column_type_integer()))->toSql());
+        $client->execute(
+            create()
+                ->sequence('order_numbers', $s)
+                ->ownedBy($s . '.orders', 'id')
+                ->toSql(),
+        );
+
+        $declared = catalog([schema(
+            $s,
+            tables: [schema_table('orders', [schema_column_integer('id')], schema: $s)],
+            sequences: [schema_sequence(
+                'order_numbers',
+                maxValue: 9_223_372_036_854_775_807,
+                ownedByTable: 'orders',
+                ownedByColumn: 'id',
+            )],
+        )]);
+
+        static::assertSame(
+            [],
+            array_map(
+                static fn(Sql $query): string => $query->toSql(),
+                catalog_comparator()->compare(client_catalog_provider($client, [$s])->get(), $declared)->generate(),
+            ),
+        );
     }
 }

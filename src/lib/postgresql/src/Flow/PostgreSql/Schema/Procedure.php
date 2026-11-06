@@ -12,7 +12,7 @@ use function Flow\PostgreSql\DSL\column_type_from_string;
 use function Flow\PostgreSql\DSL\create;
 
 /**
- * @type ProcedureShape = array{name: string, argument_types: list<string>, language: string, definition: ?string}
+ * @type ProcedureShape = array{name: string, argument_types: list<string>, language: string, definition: ?string, schema?: ?string}
  */
 final readonly class Procedure
 {
@@ -24,6 +24,7 @@ final readonly class Procedure
         public array $argumentTypes = [],
         public string $language = 'sql',
         public ?string $definition = null,
+        public ?string $schema = null,
     ) {}
 
     /**
@@ -36,6 +37,7 @@ final readonly class Procedure
             argumentTypes: $data['argument_types'],
             language: $data['language'],
             definition: $data['definition'] ?? null,
+            schema: $data['schema'] ?? null,
         );
     }
 
@@ -49,7 +51,18 @@ final readonly class Procedure
             'argument_types' => $this->argumentTypes,
             'language' => $this->language,
             'definition' => $this->definition,
+            'schema' => $this->schema,
         ];
+    }
+
+    public function qualifiedName(): string
+    {
+        return $this->schemaName() . '.' . $this->name;
+    }
+
+    public function schemaName(): string
+    {
+        return $this->schema ?? 'public';
     }
 
     public function toSql(): ?Sql
@@ -58,7 +71,7 @@ final readonly class Procedure
             return null;
         }
 
-        $builder = create()->procedure($this->name)->orReplace();
+        $builder = create()->procedure($this->qualifiedName())->orReplace();
 
         if ($this->argumentTypes !== []) {
             $args = array_map(static fn(string $type): FunctionArgument => FunctionArgument::of(column_type_from_string(
@@ -68,5 +81,10 @@ final readonly class Procedure
         }
 
         return $builder->language($this->language)->as($this->definition);
+    }
+
+    public function withSchema(string $schema): self
+    {
+        return new self($this->name, $this->argumentTypes, $this->language, $this->definition, $schema);
     }
 }
