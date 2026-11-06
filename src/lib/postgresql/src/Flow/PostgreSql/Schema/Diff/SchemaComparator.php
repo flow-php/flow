@@ -8,7 +8,6 @@ use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Schema\ColumnDefault;
 use Flow\PostgreSql\Schema\Domain;
 use Flow\PostgreSql\Schema\ExecutionOrderStrategy;
-use Flow\PostgreSql\Schema\Extension;
 use Flow\PostgreSql\Schema\ForeignKeyDependencyOrder;
 use Flow\PostgreSql\Schema\Func;
 use Flow\PostgreSql\Schema\MaterializedView;
@@ -101,15 +100,6 @@ final readonly class SchemaComparator
                     : new ProcedureDiff($a, $b),
         );
 
-        $extensions = ChangeSet::fromNamedObjects(
-            $source->extensions,
-            $target->extensions,
-            static fn(Extension $e): string => $e->name,
-            static fn(Extension $a, Extension $b): ?ExtensionDiff => $a->version === $b->version
-                ? null
-                : new ExtensionDiff($a, $b),
-        );
-
         return new SchemaDiff(
             $source,
             $target,
@@ -135,9 +125,6 @@ final readonly class SchemaComparator
             $domains->added,
             $domains->removed,
             $domains->modified ?? [],
-            $extensions->added,
-            $extensions->removed,
-            $extensions->modified ?? [],
             $this->tableOrderStrategy,
             $this->viewOrderStrategy,
             $this->materializedViewOrderStrategy,

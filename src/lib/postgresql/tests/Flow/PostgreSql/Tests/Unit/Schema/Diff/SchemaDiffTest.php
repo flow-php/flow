@@ -17,7 +17,6 @@ use function Flow\PostgreSql\DSL\schema;
 use function Flow\PostgreSql\DSL\schema_column_integer;
 use function Flow\PostgreSql\DSL\schema_column_text;
 use function Flow\PostgreSql\DSL\schema_domain;
-use function Flow\PostgreSql\DSL\schema_extension;
 use function Flow\PostgreSql\DSL\schema_function;
 use function Flow\PostgreSql\DSL\schema_materialized_view;
 use function Flow\PostgreSql\DSL\schema_procedure;
@@ -38,18 +37,6 @@ final class SchemaDiffTest extends TestCase
 
         static::assertCount(1, $sqls);
         static::assertSame('CREATE DOMAIN public.email AS pg_catalog.text NOT NULL', $sqls[0]->toSql());
-    }
-
-    public function test_creates_added_extension(): void
-    {
-        $s = schema('public');
-
-        $diff = new SchemaDiff($s, $s, addedExtensions: [schema_extension('uuid-ossp')]);
-
-        $sqls = $diff->generate();
-
-        static::assertCount(1, $sqls);
-        static::assertSame('CREATE EXTENSION "uuid-ossp" SCHEMA public', $sqls[0]->toSql());
     }
 
     public function test_creates_added_function(): void
@@ -146,15 +133,13 @@ final class SchemaDiffTest extends TestCase
             $s,
             addedTables: [schema_table('users', [schema_column_integer('id', false)])],
             removedViews: [schema_view('active_users', 'SELECT * FROM users WHERE active = true')],
-            addedExtensions: [schema_extension('uuid-ossp')],
         );
 
         $sqls = $diff->generate();
 
-        static::assertCount(3, $sqls);
-        static::assertSame('CREATE EXTENSION "uuid-ossp" SCHEMA public', $sqls[0]->toSql());
-        static::assertSame('CREATE TABLE public.users (id int NOT NULL)', $sqls[1]->toSql());
-        static::assertSame('DROP VIEW public.active_users', $sqls[2]->toSql());
+        static::assertCount(2, $sqls);
+        static::assertSame('CREATE TABLE public.users (id int NOT NULL)', $sqls[0]->toSql());
+        static::assertSame('DROP VIEW public.active_users', $sqls[1]->toSql());
     }
 
     public function test_drops_all_removed_object_types(): void
@@ -171,7 +156,6 @@ final class SchemaDiffTest extends TestCase
             removedFunctions: [schema_function('my_func', 'text')],
             removedProcedures: [schema_procedure('cleanup')],
             removedDomains: [schema_domain('email', ColumnType::text())],
-            removedExtensions: [schema_extension('pgcrypto')],
         );
 
         $sqls = $diff->generate();
@@ -183,8 +167,7 @@ final class SchemaDiffTest extends TestCase
         static::assertSame('DROP FUNCTION public.my_func', $sqls[4]->toSql());
         static::assertSame('DROP SEQUENCE public.users_id_seq', $sqls[5]->toSql());
         static::assertSame('DROP DOMAIN public.email CASCADE', $sqls[6]->toSql());
-        static::assertSame('DROP EXTENSION pgcrypto', $sqls[7]->toSql());
-        static::assertCount(8, $sqls);
+        static::assertCount(7, $sqls);
     }
 
     public function test_drops_all_removed_object_types_with_if_exists(): void
@@ -201,7 +184,6 @@ final class SchemaDiffTest extends TestCase
             removedFunctions: [schema_function('my_func', 'text')],
             removedProcedures: [schema_procedure('cleanup')],
             removedDomains: [schema_domain('email', ColumnType::text())],
-            removedExtensions: [schema_extension('pgcrypto')],
             dropIfExists: true,
         );
 
@@ -214,8 +196,7 @@ final class SchemaDiffTest extends TestCase
         static::assertSame('DROP FUNCTION IF EXISTS public.my_func', $sqls[4]->toSql());
         static::assertSame('DROP SEQUENCE IF EXISTS public.users_id_seq', $sqls[5]->toSql());
         static::assertSame('DROP DOMAIN IF EXISTS public.email CASCADE', $sqls[6]->toSql());
-        static::assertSame('DROP EXTENSION IF EXISTS pgcrypto', $sqls[7]->toSql());
-        static::assertCount(8, $sqls);
+        static::assertCount(7, $sqls);
     }
 
     public function test_drops_removed_domain(): void
@@ -228,18 +209,6 @@ final class SchemaDiffTest extends TestCase
 
         static::assertCount(1, $sqls);
         static::assertSame('DROP DOMAIN public.email CASCADE', $sqls[0]->toSql());
-    }
-
-    public function test_drops_removed_extension(): void
-    {
-        $s = schema('public');
-
-        $diff = new SchemaDiff($s, $s, removedExtensions: [schema_extension('uuid-ossp')]);
-
-        $sqls = $diff->generate();
-
-        static::assertCount(1, $sqls);
-        static::assertSame('DROP EXTENSION "uuid-ossp"', $sqls[0]->toSql());
     }
 
     public function test_drops_removed_function(): void
@@ -338,15 +307,6 @@ final class SchemaDiffTest extends TestCase
         static::assertFalse($diff->isEmpty());
     }
 
-    public function test_is_not_empty_when_added_extensions(): void
-    {
-        $s = schema('public');
-
-        $diff = new SchemaDiff($s, $s, addedExtensions: [schema_extension('uuid-ossp')]);
-
-        static::assertFalse($diff->isEmpty());
-    }
-
     public function test_is_not_empty_when_added_functions(): void
     {
         $s = schema('public');
@@ -392,15 +352,6 @@ final class SchemaDiffTest extends TestCase
             schema_sequence('s1'),
             schema_sequence('s1', incrementBy: 5),
         )]);
-
-        static::assertFalse($diff->isEmpty());
-    }
-
-    public function test_is_not_empty_when_removed_extensions(): void
-    {
-        $s = schema('public');
-
-        $diff = new SchemaDiff($s, $s, removedExtensions: [schema_extension('uuid-ossp')]);
 
         static::assertFalse($diff->isEmpty());
     }

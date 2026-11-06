@@ -21,9 +21,8 @@ use function sprintf;
  * @import-type FuncShape from Func
  * @import-type ProcedureShape from Procedure
  * @import-type DomainShape from Domain
- * @import-type ExtensionShape from Extension
  *
- * @type SchemaShape = array{name: string, tables?: list<TableShape>, sequences?: list<SequenceShape>, views?: list<ViewShape>, materialized_views?: list<MaterializedViewShape>, functions?: list<FuncShape>, procedures?: list<ProcedureShape>, domains?: list<DomainShape>, extensions?: list<ExtensionShape>}
+ * @type SchemaShape = array{name: string, tables?: list<TableShape>, sequences?: list<SequenceShape>, views?: list<ViewShape>, materialized_views?: list<MaterializedViewShape>, functions?: list<FuncShape>, procedures?: list<ProcedureShape>, domains?: list<DomainShape>}
  */
 final readonly class Schema
 {
@@ -70,7 +69,6 @@ final readonly class Schema
      * @param list<Func> $functions
      * @param list<Procedure> $procedures
      * @param list<Domain> $domains
-     * @param list<Extension> $extensions
      */
     public function __construct(
         public string $name,
@@ -81,7 +79,6 @@ final readonly class Schema
         array $functions = [],
         array $procedures = [],
         array $domains = [],
-        public array $extensions = [],
     ) {
         $this->tables = self::bind($tables, $name);
         $this->sequences = self::bind($sequences, $name);
@@ -110,9 +107,6 @@ final readonly class Schema
                 $p,
             ), $data['procedures'] ?? []),
             domains: array_map(static fn(array $d): Domain => Domain::fromArray($d), $data['domains'] ?? []),
-            extensions: array_map(static fn(array $e): Extension => Extension::fromArray(
-                $e,
-            ), $data['extensions'] ?? []),
         );
     }
 
@@ -161,11 +155,6 @@ final readonly class Schema
                 static fn(Procedure $p): string => $p->name,
             ),
             domains: self::mergeByName($this->domains, $other->domains, static fn(Domain $d): string => $d->name),
-            extensions: self::mergeByName(
-                $this->extensions,
-                $other->extensions,
-                static fn(Extension $e): string => $e->name,
-            ),
         );
     }
 
@@ -186,7 +175,6 @@ final readonly class Schema
             'functions' => array_map(static fn(Func $f): array => $f->normalize(), $this->functions),
             'procedures' => array_map(static fn(Procedure $p): array => $p->normalize(), $this->procedures),
             'domains' => array_map(static fn(Domain $d): array => $d->normalize(), $this->domains),
-            'extensions' => array_map(static fn(Extension $e): array => $e->normalize(), $this->extensions),
         ];
     }
 
@@ -233,10 +221,6 @@ final readonly class Schema
         ExecutionOrderStrategy $materializedViewOrderStrategy = new MaterializedViewDependencyOrder(new Parser()),
     ): array {
         $sqls = [];
-
-        foreach ($this->extensions as $ext) {
-            $sqls[] = $ext->toSql($this->name);
-        }
 
         foreach ($this->domains as $domain) {
             $sqls[] = $domain->toSql();

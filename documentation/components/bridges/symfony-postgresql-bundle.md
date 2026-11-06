@@ -368,6 +368,9 @@ flow_postgresql:
                   - name: "created_at"
                     type: { name: "timestamptz", schema: "pg_catalog" }
                     nullable: false
+        extensions:
+          - name: "pgcrypto"
+            schema: "public"
 ```
 
 You can combine multiple catalog providers. `ChainCatalogProvider` merges them into one catalog.

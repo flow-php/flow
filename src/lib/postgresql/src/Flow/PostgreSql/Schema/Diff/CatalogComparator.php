@@ -7,6 +7,7 @@ namespace Flow\PostgreSql\Schema\Diff;
 use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Schema\Catalog;
 use Flow\PostgreSql\Schema\ExecutionOrderStrategy;
+use Flow\PostgreSql\Schema\Extension;
 use Flow\PostgreSql\Schema\ForeignKeyDependencyOrder;
 use Flow\PostgreSql\Schema\MaterializedView;
 use Flow\PostgreSql\Schema\MaterializedViewDependencyOrder;
@@ -114,12 +115,26 @@ final readonly class CatalogComparator
             }
         }
 
+        $extensions = ChangeSet::fromNamedObjects(
+            $source->extensions(),
+            $target->extensions(),
+            static fn(Extension $e): string => $e->name,
+            static function (Extension $a, Extension $b): ?ExtensionDiff {
+                $diff = new ExtensionDiff($a, $b);
+
+                return $diff->hasSchemaChanged() || $diff->hasVersionChanged() ? $diff : null;
+            },
+        );
+
         return new CatalogDiff(
             $source,
             $target,
             $addedSchemas,
             $removedSchemas,
             $modifiedSchemas,
+            $extensions->added,
+            $extensions->removed,
+            $extensions->modified ?? [],
             $this->viewDependencyResolver,
             $this->tableOrderStrategy,
             $this->viewOrderStrategy,

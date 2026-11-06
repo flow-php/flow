@@ -133,6 +133,20 @@ echo $query->toSql();
 // ALTER EXTENSION postgis UPDATE TO "3.0"
 ```
 
+### Move to Another Schema
+
+```php
+<?php
+
+use function Flow\PostgreSql\DSL\alter;
+
+$query = alter()->extension('pgcrypto')
+    ->setSchema('extensions');
+
+echo $query->toSql();
+// ALTER EXTENSION pgcrypto SET SCHEMA extensions
+```
+
 ### Add Objects to Extension
 
 Add a function to an extension:

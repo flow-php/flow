@@ -815,25 +815,17 @@ final class CatalogComparatorTest extends TestCase
     public function test_extension_added(): void
     {
         $source = new Catalog([schema('public')]);
-        $target = new Catalog([
-            schema('public', extensions: [
-                schema_extension('uuid-ossp', '1.0'),
-            ]),
-        ]);
+        $target = new Catalog([schema('public')], [schema_extension('uuid-ossp', '1.0')]);
 
         $diff = catalog_comparator()->compare($source, $target);
 
-        static::assertCount(1, $diff->modifiedSchemas[0]->addedExtensions);
-        static::assertSame('uuid-ossp', $diff->modifiedSchemas[0]->addedExtensions[0]->name);
+        static::assertCount(1, $diff->addedExtensions);
+        static::assertSame('uuid-ossp', $diff->addedExtensions[0]->name);
     }
 
     public function test_extension_no_change_when_identical(): void
     {
-        $source = new Catalog([
-            schema('public', extensions: [
-                schema_extension('uuid-ossp', '1.0'),
-            ]),
-        ]);
+        $source = new Catalog([schema('public')], [schema_extension('uuid-ossp', '1.0')]);
 
         $diff = catalog_comparator()->compare($source, $source);
 
@@ -842,35 +834,23 @@ final class CatalogComparatorTest extends TestCase
 
     public function test_extension_removed(): void
     {
-        $source = new Catalog([
-            schema('public', extensions: [
-                schema_extension('uuid-ossp', '1.0'),
-            ]),
-        ]);
+        $source = new Catalog([schema('public')], [schema_extension('uuid-ossp', '1.0')]);
         $target = new Catalog([schema('public')]);
 
         $diff = catalog_comparator()->compare($source, $target);
 
-        static::assertCount(1, $diff->modifiedSchemas[0]->removedExtensions);
+        static::assertCount(1, $diff->removedExtensions);
     }
 
     public function test_extension_version_change_detected(): void
     {
-        $source = new Catalog([
-            schema('public', extensions: [
-                schema_extension('uuid-ossp', '1.0'),
-            ]),
-        ]);
-        $target = new Catalog([
-            schema('public', extensions: [
-                schema_extension('uuid-ossp', '1.1'),
-            ]),
-        ]);
+        $source = new Catalog([schema('public')], [schema_extension('uuid-ossp', '1.0')]);
+        $target = new Catalog([schema('public')], [schema_extension('uuid-ossp', '1.1')]);
 
         $diff = catalog_comparator()->compare($source, $target);
 
-        static::assertCount(1, $diff->modifiedSchemas[0]->modifiedExtensions);
-        static::assertTrue($diff->modifiedSchemas[0]->modifiedExtensions[0]->hasVersionChanged());
+        static::assertCount(1, $diff->modifiedExtensions);
+        static::assertTrue($diff->modifiedExtensions[0]->hasVersionChanged());
     }
 
     public function test_foreign_key_added(): void
@@ -2707,8 +2687,7 @@ final class CatalogComparatorTest extends TestCase
             functions: [schema_function('fn_a', 'integer', definition: 'SELECT 1')],
             procedures: [schema_procedure('proc_a', definition: 'SELECT 1')],
             domains: [schema_domain('dom_a', column_type_text())],
-            extensions: [schema_extension('pgcrypto')],
-        )]);
+        )], extensions: [schema_extension('pgcrypto', schema: 'pivotly')]);
 
         static::assertSame(
             [
@@ -2749,8 +2728,7 @@ final class CatalogComparatorTest extends TestCase
             functions: [schema_function('fn_a', 'integer', definition: 'SELECT 1')],
             procedures: [schema_procedure('proc_a', definition: 'SELECT 1')],
             domains: [schema_domain('dom_a', column_type_text())],
-            extensions: [schema_extension('pgcrypto')],
-        )]);
+        )], extensions: [schema_extension('pgcrypto', schema: 'pivotly')]);
 
         static::assertSame(
             [
@@ -2790,8 +2768,7 @@ final class CatalogComparatorTest extends TestCase
             functions: [schema_function('fn_a', 'integer', definition: 'SELECT 1')],
             procedures: [schema_procedure('proc_a', definition: 'SELECT 1')],
             domains: [schema_domain('dom_a', column_type_text())],
-            extensions: [schema_extension('pgcrypto')],
-        )]);
+        )], extensions: [schema_extension('pgcrypto', schema: 'pivotly')]);
 
         static::assertSame(
             [
@@ -2830,8 +2807,7 @@ final class CatalogComparatorTest extends TestCase
             functions: [schema_function('fn_a', 'integer', definition: 'SELECT 1')],
             procedures: [schema_procedure('proc_a', definition: 'SELECT 1')],
             domains: [schema_domain('dom_a', column_type_text())],
-            extensions: [schema_extension('pgcrypto')],
-        )]);
+        )], extensions: [schema_extension('pgcrypto', schema: 'pivotly')]);
         $modified = catalog([schema(
             'pivotly',
             tables: [schema_table('ds_sync', $columns, schema: 'pivotly')],
@@ -2845,8 +2821,7 @@ final class CatalogComparatorTest extends TestCase
             functions: [schema_function('fn_a', 'integer', definition: 'SELECT 2')],
             procedures: [schema_procedure('proc_a', definition: 'SELECT 2')],
             domains: [schema_domain('dom_a', column_type_text(), nullable: false)],
-            extensions: [schema_extension('pgcrypto')],
-        )]);
+        )], extensions: [schema_extension('pgcrypto', schema: 'pivotly')]);
 
         static::assertSame(
             [
@@ -2882,6 +2857,164 @@ final class CatalogComparatorTest extends TestCase
                         catalog([schema('pivotly', materializedViews: [
                             schema_materialized_view('mv_a', 'SELECT 1 AS id', [schema_index('idx_mv_a_ids', ['id'])]),
                         ])]),
+                    )
+                    ->generate(),
+            ),
+        );
+    }
+
+    public function test_extension_moved_to_another_schema_is_set_schema(): void
+    {
+        static::assertSame(
+            ['ALTER EXTENSION pgcrypto SET SCHEMA pivotly'],
+            array_map(
+                static fn(Sql $query): string => $query->toSql(),
+                catalog_comparator()
+                    ->compare(
+                        catalog([schema('public'), schema('pivotly')], [schema_extension('pgcrypto')]),
+                        catalog([schema('public'), schema('pivotly')], [schema_extension(
+                            'pgcrypto',
+                            schema: 'pivotly',
+                        )]),
+                    )
+                    ->generate(),
+            ),
+        );
+    }
+
+    public function test_extension_in_new_schema_is_created_after_the_schema(): void
+    {
+        static::assertSame(
+            ['CREATE SCHEMA IF NOT EXISTS pivotly', 'CREATE EXTENSION pgcrypto SCHEMA pivotly'],
+            array_map(
+                static fn(Sql $query): string => $query->toSql(),
+                catalog_comparator()
+                    ->compare(
+                        catalog([schema('public')]),
+                        catalog([schema('public'), schema('pivotly')], [schema_extension(
+                            'pgcrypto',
+                            schema: 'pivotly',
+                        )]),
+                    )
+                    ->generate(),
+            ),
+        );
+    }
+
+    public function test_extension_is_created_before_objects_of_new_schema(): void
+    {
+        static::assertSame(
+            [
+                'CREATE SCHEMA IF NOT EXISTS pivotly',
+                'CREATE EXTENSION pgcrypto SCHEMA pivotly',
+                'CREATE TABLE pivotly.t (id int)',
+            ],
+            array_map(
+                static fn(Sql $query): string => $query->toSql(),
+                catalog_comparator()
+                    ->compare(
+                        catalog([schema('public')]),
+                        catalog([
+                            schema('public'),
+                            schema('pivotly', tables: [schema_table('t', [schema_column_integer('id')])]),
+                        ], [schema_extension('pgcrypto', schema: 'pivotly')]),
+                    )
+                    ->generate(),
+            ),
+        );
+    }
+
+    public function test_extension_moved_out_of_removed_schema_is_set_schema_before_drop(): void
+    {
+        static::assertSame(
+            ['ALTER EXTENSION pgcrypto SET SCHEMA public', 'DROP SCHEMA extp CASCADE'],
+            array_map(
+                static fn(Sql $query): string => $query->toSql(),
+                catalog_comparator()
+                    ->compare(
+                        catalog([schema('public'), schema('extp')], [schema_extension('pgcrypto', schema: 'extp')]),
+                        catalog([schema('public')], [schema_extension('pgcrypto')]),
+                    )
+                    ->generate(),
+            ),
+        );
+    }
+
+    public function test_extension_in_removed_schema_is_dropped_by_the_schema_cascade(): void
+    {
+        static::assertSame(
+            ['DROP SCHEMA extp CASCADE'],
+            array_map(
+                static fn(Sql $query): string => $query->toSql(),
+                catalog_comparator()
+                    ->compare(
+                        catalog([schema('public'), schema('extp')], [schema_extension('pgcrypto', schema: 'extp')]),
+                        catalog([schema('public')]),
+                    )
+                    ->generate(),
+            ),
+        );
+    }
+
+    public function test_removed_extension_is_dropped_after_removed_schemas(): void
+    {
+        static::assertSame(
+            ['DROP SCHEMA extq CASCADE', 'DROP EXTENSION citext'],
+            array_map(
+                static fn(Sql $query): string => $query->toSql(),
+                catalog_comparator()
+                    ->compare(
+                        catalog([schema('public'), schema('extq')], [schema_extension('citext')]),
+                        catalog([schema('public')]),
+                    )
+                    ->generate(),
+            ),
+        );
+    }
+
+    public function test_removed_extension_is_dropped_if_exists(): void
+    {
+        static::assertSame(
+            ['DROP EXTENSION IF EXISTS citext'],
+            array_map(
+                static fn(Sql $query): string => $query->toSql(),
+                catalog_comparator(dropIfExists: true)
+                    ->compare(catalog([schema('public')], [schema_extension('citext')]), catalog([schema('public')]))
+                    ->generate(),
+            ),
+        );
+    }
+
+    public function test_unpinned_extension_version_has_no_diff(): void
+    {
+        static::assertSame(
+            [],
+            array_map(
+                static fn(Sql $query): string => $query->toSql(),
+                catalog_comparator()
+                    ->compare(
+                        catalog([schema('public')], [schema_extension('pgcrypto', '1.4')]),
+                        catalog([schema('public')], [schema_extension('pgcrypto')]),
+                    )
+                    ->generate(),
+            ),
+        );
+    }
+
+    public function test_pinned_extension_version_change_is_updated_after_set_schema(): void
+    {
+        static::assertSame(
+            ['ALTER EXTENSION pgcrypto SET SCHEMA pivotly', 'ALTER EXTENSION pgcrypto UPDATE TO "1.4"'],
+            array_map(
+                static fn(Sql $query): string => $query->toSql(),
+                catalog_comparator()
+                    ->compare(
+                        catalog([schema('public'), schema('pivotly')], [schema_extension('pgcrypto', '1.3')]),
+                        catalog([schema('public'), schema('pivotly')], [schema_extension(
+                            'pgcrypto',
+                            '1.4',
+                            'pivotly',
+                        )]),
                     )
                     ->generate(),
             ),

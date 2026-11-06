@@ -791,6 +791,29 @@ schema('analytics', views: [schema_view('recent_events', 'SELECT 1', schema: 'pu
 // pass schema: "analytics" to schema_view() or move it.
 ```
 
+### Extensions
+
+An extension is installed once per database, so the catalog declares it next to its schemas. Its schema says where
+its objects live. The default is `public`:
+
+```php
+<?php
+
+use function Flow\PostgreSql\DSL\{catalog, schema, schema_extension};
+
+$target = catalog(
+    [schema('public'), schema('extensions')],
+    extensions: [schema_extension('pgcrypto', schema: 'extensions')],
+);
+// live pgcrypto in public -> ALTER EXTENSION pgcrypto SET SCHEMA extensions
+
+catalog([schema('app')], extensions: [schema_extension('pgcrypto')]);
+// SchemaException: Extension "pgcrypto" is placed in schema "public", which the catalog does not declare;
+// add schema("public") to catalog().
+```
+
+An extension without a version is not pinned, and the diff never updates it.
+
 ### `dropIfExists`
 
 By default, generated `DROP` statements have no `IF EXISTS`, so a missing object fails with an error (drift

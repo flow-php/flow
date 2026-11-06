@@ -13,24 +13,43 @@ use function sprintf;
 
 /**
  * @import-type SchemaShape from Schema
+ * @import-type ExtensionShape from Extension
  *
- * @type CatalogShape = array{schemas: list<SchemaShape>}
+ * @type CatalogShape = array{schemas: list<SchemaShape>, extensions?: list<ExtensionShape>}
  */
 final readonly class Catalog
 {
     /**
      * @param list<Schema> $schemas
+     * @param list<Extension> $extensions
      */
     public function __construct(
         private array $schemas,
-    ) {}
+        private array $extensions = [],
+    ) {
+        foreach ($extensions as $extension) {
+            if (!$this->has($extension->schema)) {
+                throw new SchemaException(sprintf(
+                    'Extension "%s" is placed in schema "%s", which the catalog does not declare; add schema("%s") to catalog().',
+                    $extension->name,
+                    $extension->schema,
+                    $extension->schema,
+                ));
+            }
+        }
+    }
 
     /**
      * @param CatalogShape $data
      */
     public static function fromArray(array $data): self
     {
-        return new self(schemas: array_map(static fn(array $s): Schema => Schema::fromArray($s), $data['schemas']));
+        return new self(
+            schemas: array_map(static fn(array $s): Schema => Schema::fromArray($s), $data['schemas']),
+            extensions: array_map(static fn(array $e): Extension => Extension::fromArray(
+                $e,
+            ), $data['extensions'] ?? []),
+        );
     }
 
     /**
@@ -39,6 +58,14 @@ final readonly class Catalog
     public function all(): array
     {
         return $this->schemas;
+    }
+
+    /**
+     * @return list<Extension>
+     */
+    public function extensions(): array
+    {
+        return $this->extensions;
     }
 
     public function get(string $name): Schema
@@ -77,7 +104,17 @@ final readonly class Catalog
                 : $schema;
         }
 
-        return new self(array_values($schemas));
+        $extensions = [];
+
+        foreach ($this->extensions as $extension) {
+            $extensions[$extension->name] = $extension;
+        }
+
+        foreach ($other->extensions as $extension) {
+            $extensions[$extension->name] = $extension;
+        }
+
+        return new self(array_values($schemas), array_values($extensions));
     }
 
     /**
@@ -95,6 +132,7 @@ final readonly class Catalog
     {
         return [
             'schemas' => array_map(static fn(Schema $s): array => $s->normalize(), $this->schemas),
+            'extensions' => array_map(static fn(Extension $e): array => $e->normalize(), $this->extensions),
         ];
     }
 }

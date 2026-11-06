@@ -21,7 +21,6 @@ use PHPUnit\Framework\TestCase;
 use function Flow\PostgreSql\DSL\schema_column_integer;
 use function Flow\PostgreSql\DSL\schema_column_text;
 use function Flow\PostgreSql\DSL\schema_domain;
-use function Flow\PostgreSql\DSL\schema_extension;
 use function Flow\PostgreSql\DSL\schema_function;
 use function Flow\PostgreSql\DSL\schema_index;
 use function Flow\PostgreSql\DSL\schema_materialized_view;
@@ -161,69 +160,6 @@ final class SchemaComparatorTest extends TestCase
         $diff = $comparator->compare($source, $target);
 
         static::assertCount(1, $diff->removedDomains);
-    }
-
-    public function test_extension_added(): void
-    {
-        $constraintComparator = new ConstraintComparator();
-        $comparator = new SchemaComparator(
-            new TableComparator(
-                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
-                $constraintComparator,
-                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
-            ),
-            new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
-            $constraintComparator,
-            new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
-        );
-        $source = new Schema('public');
-        $target = new Schema('public', extensions: [schema_extension('uuid-ossp')]);
-
-        $diff = $comparator->compare($source, $target);
-
-        static::assertCount(1, $diff->addedExtensions);
-    }
-
-    public function test_extension_modified_version(): void
-    {
-        $constraintComparator = new ConstraintComparator();
-        $comparator = new SchemaComparator(
-            new TableComparator(
-                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
-                $constraintComparator,
-                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
-            ),
-            new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
-            $constraintComparator,
-            new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
-        );
-        $source = new Schema('public', extensions: [schema_extension('uuid-ossp', version: '1.0')]);
-        $target = new Schema('public', extensions: [schema_extension('uuid-ossp', version: '2.0')]);
-
-        $diff = $comparator->compare($source, $target);
-
-        static::assertCount(1, $diff->modifiedExtensions);
-    }
-
-    public function test_extension_removed(): void
-    {
-        $constraintComparator = new ConstraintComparator();
-        $comparator = new SchemaComparator(
-            new TableComparator(
-                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
-                $constraintComparator,
-                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
-            ),
-            new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
-            $constraintComparator,
-            new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
-        );
-        $source = new Schema('public', extensions: [schema_extension('uuid-ossp')]);
-        $target = new Schema('public');
-
-        $diff = $comparator->compare($source, $target);
-
-        static::assertCount(1, $diff->removedExtensions);
     }
 
     public function test_function_added(): void

@@ -58,6 +58,8 @@ use const PHP_INT_MIN;
 
 final class PgCatalogSchemaProviderTest extends PostgreSqlTestCase
 {
+    private const MISSING_SCHEMA = 'flow_provider_test_missing';
+
     private const SCHEMA = 'flow_provider_test';
 
     protected function setUp(): void
@@ -65,14 +67,35 @@ final class PgCatalogSchemaProviderTest extends PostgreSqlTestCase
         parent::setUp();
 
         $this->pgsqlContext()->dropSchemaIfExists(self::SCHEMA);
+        $this->pgsqlContext()->dropSchemaIfExists(self::MISSING_SCHEMA);
         $this->pgsqlContext()->client()->execute(create()->schema(self::SCHEMA)->toSql());
     }
 
     protected function tearDown(): void
     {
         $this->pgsqlContext()->dropSchemaIfExists(self::SCHEMA);
+        $this->pgsqlContext()->dropSchemaIfExists(self::MISSING_SCHEMA);
 
         parent::tearDown();
+    }
+
+    public function test_empty_explicit_schema_list_reads_nothing(): void
+    {
+        $catalog = client_catalog_provider($this->pgsqlContext()->client(), [])->get();
+
+        static::assertSame([], $catalog->names());
+        static::assertSame([], $catalog->extensions());
+    }
+
+    public function test_explicit_schema_names_skip_schemas_missing_in_the_database(): void
+    {
+        static::assertSame(
+            [self::SCHEMA],
+            client_catalog_provider($this->pgsqlContext()->client(), [
+                self::SCHEMA,
+                self::MISSING_SCHEMA,
+            ])->get()->names(),
+        );
     }
 
     public function test_materialized_view_indexes_are_read(): void
@@ -556,6 +579,34 @@ final class PgCatalogSchemaProviderTest extends PostgreSqlTestCase
 
         static::assertSame([self::SCHEMA], $catalog->names());
         static::assertCount(1, $catalog->all());
+    }
+
+    public function test_schema_missing_in_the_database_is_created_with_its_table(): void
+    {
+        $client = $this->pgsqlContext()->client();
+        $provider = client_catalog_provider($client, [self::SCHEMA, self::MISSING_SCHEMA]);
+        $target = catalog([
+            schema(self::SCHEMA),
+            schema(self::MISSING_SCHEMA, tables: [schema_table('t', [
+                schema_column_integer('id'),
+            ])]),
+        ]);
+
+        $migration = catalog_comparator()->compare($provider->get(), $target)->generate();
+
+        static::assertSame(
+            [
+                'CREATE SCHEMA IF NOT EXISTS flow_provider_test_missing',
+                'CREATE TABLE flow_provider_test_missing.t (id int)',
+            ],
+            array_map(static fn(Sql $sql): string => $sql->toSql(), $migration),
+        );
+
+        foreach ($migration as $sql) {
+            $client->execute($sql->toSql());
+        }
+
+        static::assertSame([], catalog_comparator()->compare($provider->get(), $target)->generate());
     }
 
     public function test_sequence_with_explicit_owner_is_read_with_its_owner(): void

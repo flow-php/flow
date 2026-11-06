@@ -118,6 +118,11 @@ final class PostgreSqlContext
         $this->client->execute(drop()->domain($domain)->ifExists()->cascade()->toSql());
     }
 
+    public function dropExtensionIfExists(string $extension): void
+    {
+        $this->client->execute(drop()->extension($extension)->ifExists()->cascade()->toSql());
+    }
+
     public function dropFunctionIfExists(string $function): void
     {
         $this->client->execute(drop()->function($function)->ifExists()->cascade()->toSql());

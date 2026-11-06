@@ -138,11 +138,12 @@ function column(string $name, ColumnType $type): ColumnDefinition
 
 /**
  * @param list<Schema> $schemas
+ * @param list<SchemaExtension> $extensions
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function catalog(array $schemas): Catalog
+function catalog(array $schemas, array $extensions = []): Catalog
 {
-    return new Catalog($schemas);
+    return new Catalog($schemas, $extensions);
 }
 
 /**
@@ -1378,7 +1379,6 @@ function value_type_jsonb_array(): ValueType
  * @param list<SchemaFunction> $functions
  * @param list<SchemaProcedure> $procedures
  * @param list<SchemaDomain> $domains
- * @param list<SchemaExtension> $extensions
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function schema(
@@ -1390,7 +1390,6 @@ function schema(
     array $functions = [],
     array $procedures = [],
     array $domains = [],
-    array $extensions = [],
 ): DatabaseSchema {
     return new DatabaseSchema(
         $name,
@@ -1401,7 +1400,6 @@ function schema(
         $functions,
         $procedures,
         $domains,
-        $extensions,
     );
 }
 
@@ -1928,9 +1926,9 @@ function schema_domain(
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_extension(string $name, ?string $version = null): SchemaExtension
+function schema_extension(string $name, ?string $version = null, string $schema = 'public'): SchemaExtension
 {
-    return new SchemaExtension($name, $version);
+    return new SchemaExtension($name, $version, $schema);
 }
 
 /**

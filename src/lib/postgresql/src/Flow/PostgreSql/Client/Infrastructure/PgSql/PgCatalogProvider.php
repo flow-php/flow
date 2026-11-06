@@ -10,6 +10,8 @@ use Flow\PostgreSql\Parser\ColumnTypeParser;
 use Flow\PostgreSql\Parser\ExpressionParser;
 use Flow\PostgreSql\Parser\TriggerDefinitionParser;
 use Flow\PostgreSql\QueryBuilder\Condition\ComparisonOperator;
+use Flow\PostgreSql\QueryBuilder\Condition\NotCondition;
+use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 use Flow\PostgreSql\QueryBuilder\Expression\Literal;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\QueryBuilder\Schema\ReferentialAction;
@@ -44,6 +46,7 @@ use Flow\PostgreSql\Schema\TriggerTiming;
 use Flow\PostgreSql\Schema\View;
 use RuntimeException;
 
+use function array_filter;
 use function array_map;
 use function array_values;
 use function end;
@@ -84,6 +87,7 @@ use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_union;
+use function in_array;
 use function preg_match;
 use function sprintf;
 use function strtolower;
@@ -115,13 +119,67 @@ final readonly class PgCatalogProvider implements CatalogProvider
 
     public function get(): Catalog
     {
+        $schemaNames = $this->resolveSchemaNames();
         $schemas = [];
 
-        foreach ($this->resolveSchemaNames() as $schemaName) {
+        foreach ($schemaNames as $schemaName) {
             $schemas[] = $this->readSchema($schemaName);
         }
 
-        return new Catalog($schemas);
+        return new Catalog(
+            $schemas,
+            array_values(array_filter(
+                $this->readExtensions($schemaNames),
+                fn(Extension $e): bool => !$this->excluded(SchemaObjectType::EXTENSION, $e->schema, $e->name),
+            )),
+        );
+    }
+
+    /**
+     * @param list<string> $schemaNames
+     *
+     * @return list<string>
+     */
+    private function existingSchemaNames(array $schemaNames): array
+    {
+        if ($schemaNames === []) {
+            return [];
+        }
+
+        $existing = array_map(
+            static fn(array $row): string => type_string()->assert($row['nspname']),
+            $this->client->fetchAllInto(
+                type_mapper(type_structure(['nspname' => type_string()])),
+                select(col('nspname'))
+                    ->from(table('pg_namespace', 'pg_catalog'))
+                    ->where(in_(
+                        col('nspname'),
+                        array_map(static fn(string $schemaName): Literal => literal($schemaName), $schemaNames),
+                    )),
+            ),
+        );
+
+        return array_values(array_filter($schemaNames, static fn(string $schemaName): bool => in_array(
+            $schemaName,
+            $existing,
+            true,
+        )));
+    }
+
+    private function isNotExtensionMember(string $catalog, Expression $oid): NotCondition
+    {
+        return not_(exists(
+            select(literal(1))
+                ->from(table('pg_depend', 'pg_catalog')->as('ext_dep'))
+                ->where(and_(
+                    eq(
+                        col('classid', 'ext_dep'),
+                        cast(literal('pg_catalog.' . $catalog), column_type_custom('regclass')),
+                    ),
+                    eq(col('objid', 'ext_dep'), $oid),
+                    eq(col('deptype', 'ext_dep'), literal('e')),
+                )),
+        ));
     }
 
     private function mapIndexMethod(string $amname): IndexMethod
@@ -364,7 +422,11 @@ final readonly class PgCatalogProvider implements CatalogProvider
             )
                 ->from(table('pg_type', 'pg_catalog')->as('t'))
                 ->join(table('pg_namespace', 'pg_catalog')->as('n'), eq(col('oid', 'n'), col('typnamespace', 't')))
-                ->where(and_(eq(col('nspname', 'n'), param(1)), eq(col('typtype', 't'), literal('d'))))
+                ->where(and_(
+                    eq(col('nspname', 'n'), param(1)),
+                    eq(col('typtype', 't'), literal('d')),
+                    $this->isNotExtensionMember('pg_type', col('oid', 't')),
+                ))
                 ->orderBy(asc(col('typname', 't'))),
             [$schemaName],
         );
@@ -431,21 +493,34 @@ final readonly class PgCatalogProvider implements CatalogProvider
     }
 
     /**
+     * @param list<string> $schemaNames
+     *
      * @return list<Extension>
      */
-    private function readExtensions(string $schemaName): array
+    private function readExtensions(array $schemaNames): array
     {
+        if ($schemaNames === []) {
+            return [];
+        }
+
         $rows = $this->client->fetchAllInto(
             type_mapper(type_structure([
                 'name' => type_string(),
                 'version' => structure_element('version', type_union(type_string(), type_null()), optional: true),
+                'schema' => type_string(),
             ])),
-            select(col('extname', 'e')->as('name'), col('extversion', 'e')->as('version'))
+            select(
+                col('extname', 'e')->as('name'),
+                col('extversion', 'e')->as('version'),
+                col('nspname', 'n')->as('schema'),
+            )
                 ->from(table('pg_extension', 'pg_catalog')->as('e'))
                 ->join(table('pg_namespace', 'pg_catalog')->as('n'), eq(col('oid', 'n'), col('extnamespace', 'e')))
-                ->where(eq(col('nspname', 'n'), param(1)))
+                ->where(in_(
+                    col('nspname', 'n'),
+                    array_map(static fn(string $schemaName): Literal => literal($schemaName), $schemaNames),
+                ))
                 ->orderBy(asc(col('extname', 'e'))),
-            [$schemaName],
         );
 
         $extensions = [];
@@ -454,7 +529,11 @@ final readonly class PgCatalogProvider implements CatalogProvider
             $row = type_array()->assert($row);
             $version = type_union(type_string(), type_null())->assert($row['version'] ?? null);
 
-            $extensions[] = new Extension(type_string()->assert($row['name']), $version);
+            $extensions[] = new Extension(
+                type_string()->assert($row['name']),
+                $version,
+                type_string()->assert($row['schema']),
+            );
         }
 
         return $extensions;
@@ -583,7 +662,11 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 ->from(table('pg_proc', 'pg_catalog')->as('p'))
                 ->join(table('pg_namespace', 'pg_catalog')->as('n'), eq(col('oid', 'n'), col('pronamespace', 'p')))
                 ->join(table('pg_language', 'pg_catalog')->as('l'), eq(col('oid', 'l'), col('prolang', 'p')))
-                ->where(and_(eq(col('nspname', 'n'), param(1)), eq(col('prokind', 'p'), literal('f'))))
+                ->where(and_(
+                    eq(col('nspname', 'n'), param(1)),
+                    eq(col('prokind', 'p'), literal('f')),
+                    $this->isNotExtensionMember('pg_proc', col('oid', 'p')),
+                ))
                 ->orderBy(asc(col('proname', 'p'))),
             [$schemaName],
         );
@@ -720,7 +803,17 @@ final readonly class PgCatalogProvider implements CatalogProvider
             ])),
             select(col('matviewname')->as('name'), col('definition'))
                 ->from(table('pg_matviews', 'pg_catalog'))
-                ->where(eq(col('schemaname'), param(1)))
+                ->where(and_(
+                    eq(col('schemaname'), param(1)),
+                    $this->isNotExtensionMember('pg_class', cast(
+                        concat(
+                            func('pg_catalog.quote_ident', [col('schemaname')]),
+                            literal('.'),
+                            func('pg_catalog.quote_ident', [col('matviewname')]),
+                        ),
+                        column_type_custom('regclass'),
+                    )),
+                ))
                 ->orderBy(asc(col('matviewname'))),
             [$schemaName],
         );
@@ -849,7 +942,11 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 ->from(table('pg_proc', 'pg_catalog')->as('p'))
                 ->join(table('pg_namespace', 'pg_catalog')->as('n'), eq(col('oid', 'n'), col('pronamespace', 'p')))
                 ->join(table('pg_language', 'pg_catalog')->as('l'), eq(col('oid', 'l'), col('prolang', 'p')))
-                ->where(and_(eq(col('nspname', 'n'), param(1)), eq(col('prokind', 'p'), literal('p'))))
+                ->where(and_(
+                    eq(col('nspname', 'n'), param(1)),
+                    eq(col('prokind', 'p'), literal('p')),
+                    $this->isNotExtensionMember('pg_proc', col('oid', 'p')),
+                ))
                 ->orderBy(asc(col('proname', 'p'))),
             [$schemaName],
         );
@@ -920,10 +1017,6 @@ final readonly class PgCatalogProvider implements CatalogProvider
             array_values(array_filter(
                 $this->readDomains($schemaName),
                 fn(Domain $d): bool => !$this->excluded(SchemaObjectType::DOMAIN, $schemaName, $d->name),
-            )),
-            array_values(array_filter(
-                $this->readExtensions($schemaName),
-                fn(Extension $e): bool => !$this->excluded(SchemaObjectType::EXTENSION, $schemaName, $e->name),
             )),
         );
     }
@@ -1000,6 +1093,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 )
                 ->where(and_(
                     eq(col('nspname', 'n'), param(1)),
+                    $this->isNotExtensionMember('pg_class', col('oid', 'c')),
                     or_(
                         is_null(col('deptype', 'd')),
                         and_(
@@ -1092,7 +1186,10 @@ final readonly class PgCatalogProvider implements CatalogProvider
      */
     private function readTableNames(string $schemaName): array
     {
-        $conditions = and_(eq(col('nspname', 'n'), param(1)), in_(col('relkind', 'c'), [literal('r'), literal('p')]));
+        $conditions = and_(eq(col('nspname', 'n'), param(1)), in_(col('relkind', 'c'), [
+            literal('r'),
+            literal('p'),
+        ]), $this->isNotExtensionMember('pg_class', col('oid', 'c')));
 
         $rows = $this->client->fetchAllInto(
             type_mapper(type_structure([
@@ -1287,7 +1384,17 @@ final readonly class PgCatalogProvider implements CatalogProvider
             ])),
             select(col('viewname')->as('name'), col('definition'))
                 ->from(table('pg_views', 'pg_catalog'))
-                ->where(eq(col('schemaname'), param(1)))
+                ->where(and_(
+                    eq(col('schemaname'), param(1)),
+                    $this->isNotExtensionMember('pg_class', cast(
+                        concat(
+                            func('pg_catalog.quote_ident', [col('schemaname')]),
+                            literal('.'),
+                            func('pg_catalog.quote_ident', [col('viewname')]),
+                        ),
+                        column_type_custom('regclass'),
+                    )),
+                ))
                 ->orderBy(asc(col('viewname'))),
             [$schemaName],
         );
@@ -1311,19 +1418,21 @@ final readonly class PgCatalogProvider implements CatalogProvider
      */
     private function resolveSchemaNames(): array
     {
-        $schemaNames = $this->schemaNames ?? array_values(array_map(
-            static fn(array $row): string => type_string()->assert($row['nspname']),
-            $this->client->fetchAllInto(
-                type_mapper(type_structure(['nspname' => type_string()])),
-                select(col('nspname'))
-                    ->from(table('pg_namespace', 'pg_catalog'))
-                    ->where(and_(
-                        not_like(col('nspname'), literal('pg_%')),
-                        ne(col('nspname'), literal('information_schema')),
-                    ))
-                    ->orderBy(asc(col('nspname'))),
-            ),
-        ));
+        $schemaNames = $this->schemaNames === null
+            ? array_values(array_map(
+                static fn(array $row): string => type_string()->assert($row['nspname']),
+                $this->client->fetchAllInto(
+                    type_mapper(type_structure(['nspname' => type_string()])),
+                    select(col('nspname'))
+                        ->from(table('pg_namespace', 'pg_catalog'))
+                        ->where(and_(
+                            not_like(col('nspname'), literal('pg_%')),
+                            ne(col('nspname'), literal('information_schema')),
+                        ))
+                        ->orderBy(asc(col('nspname'))),
+                ),
+            ))
+            : $this->existingSchemaNames($this->schemaNames);
 
         if ($this->exclusionPolicy === null) {
             return $schemaNames;

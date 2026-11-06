@@ -55,7 +55,6 @@ use function Flow\PostgreSql\DSL\schema_column_uuid;
 use function Flow\PostgreSql\DSL\schema_column_varchar;
 use function Flow\PostgreSql\DSL\schema_domain;
 use function Flow\PostgreSql\DSL\schema_exclude;
-use function Flow\PostgreSql\DSL\schema_extension;
 use function Flow\PostgreSql\DSL\schema_foreign_key;
 use function Flow\PostgreSql\DSL\schema_function;
 use function Flow\PostgreSql\DSL\schema_index;
@@ -286,9 +285,6 @@ final class SchemaTest extends TestCase
                     'chk_positive',
                 )]),
             ],
-            extensions: [
-                schema_extension('pgcrypto', '1.3'),
-            ],
         );
 
         static::assertSame('app', $schema->name);
@@ -299,7 +295,6 @@ final class SchemaTest extends TestCase
         static::assertCount(1, $schema->functions);
         static::assertCount(1, $schema->procedures);
         static::assertCount(1, $schema->domains);
-        static::assertCount(1, $schema->extensions);
 
         $usersTable = $schema->table('users');
         static::assertCount(7, $usersTable->columns);
@@ -340,7 +335,6 @@ final class SchemaTest extends TestCase
         static::assertSame([], $result->functions);
         static::assertSame([], $result->procedures);
         static::assertSame([], $result->domains);
-        static::assertSame([], $result->extensions);
     }
 
     public function test_merge_schemas_preserves_all_entity_types(): void
@@ -349,7 +343,6 @@ final class SchemaTest extends TestCase
             'public',
             tables: [schema_table('users', [schema_column_integer('id', nullable: false)])],
             sequences: [schema_sequence('seq_a')],
-            extensions: [schema_extension('pgcrypto')],
         );
         $second = schema(
             'public',
@@ -362,7 +355,6 @@ final class SchemaTest extends TestCase
         static::assertCount(1, $result->tables);
         static::assertCount(2, $result->sequences);
         static::assertCount(1, $result->views);
-        static::assertCount(1, $result->extensions);
     }
 
     public function test_merge_schemas_same_sequence_later_overrides(): void
@@ -475,7 +467,6 @@ final class SchemaTest extends TestCase
         static::assertSame([], $s->functions);
         static::assertSame([], $s->procedures);
         static::assertSame([], $s->domains);
-        static::assertSame([], $s->extensions);
     }
 
     public function test_schema_with_domains(): void
@@ -488,17 +479,6 @@ final class SchemaTest extends TestCase
 
         static::assertCount(1, $s->domains);
         static::assertCount(1, $s->domains[0]->checkConstraints);
-    }
-
-    public function test_schema_with_extensions(): void
-    {
-        $s = schema('public', extensions: [
-            schema_extension('uuid-ossp', '1.1'),
-        ]);
-
-        static::assertCount(1, $s->extensions);
-        static::assertSame('uuid-ossp', $s->extensions[0]->name);
-        static::assertSame('1.1', $s->extensions[0]->version);
     }
 
     public function test_schema_with_functions(): void
@@ -698,32 +678,28 @@ final class SchemaTest extends TestCase
             domains: [
                 schema_domain('positive_int', column_type_integer(), nullable: false),
             ],
-            extensions: [
-                schema_extension('pgcrypto'),
-            ],
         )->toSql();
 
-        static::assertSame('CREATE EXTENSION pgcrypto SCHEMA public', $sqls[0]->toSql());
-        static::assertSame('CREATE DOMAIN public.positive_int AS int NOT NULL', $sqls[1]->toSql());
+        static::assertSame('CREATE DOMAIN public.positive_int AS int NOT NULL', $sqls[0]->toSql());
         static::assertSame(
             'CREATE SEQUENCE public.users_id_seq AS bigint INCREMENT 1 NO MINVALUE CACHE 1 NO MAXVALUE',
-            $sqls[2]->toSql(),
+            $sqls[1]->toSql(),
         );
         static::assertSame(
             'CREATE OR REPLACE FUNCTION public.get_one() RETURNS int LANGUAGE sql AS $$SELECT 1$$',
-            $sqls[3]->toSql(),
+            $sqls[2]->toSql(),
         );
         static::assertSame(
             'CREATE OR REPLACE PROCEDURE public.do_cleanup() LANGUAGE plpgsql AS $$BEGIN END;$$',
-            $sqls[4]->toSql(),
+            $sqls[3]->toSql(),
         );
-        static::assertSame('CREATE TABLE public.users (id int NOT NULL)', $sqls[5]->toSql());
-        static::assertSame('CREATE VIEW public.active_users AS SELECT * FROM users', $sqls[6]->toSql());
+        static::assertSame('CREATE TABLE public.users (id int NOT NULL)', $sqls[4]->toSql());
+        static::assertSame('CREATE VIEW public.active_users AS SELECT * FROM users', $sqls[5]->toSql());
         static::assertSame(
             'CREATE MATERIALIZED VIEW public.user_counts AS SELECT count(*) FROM users',
-            $sqls[7]->toSql(),
+            $sqls[6]->toSql(),
         );
-        static::assertCount(8, $sqls);
+        static::assertCount(7, $sqls);
     }
 
     public function test_to_sql_includes_materialized_view_with_indexes(): void

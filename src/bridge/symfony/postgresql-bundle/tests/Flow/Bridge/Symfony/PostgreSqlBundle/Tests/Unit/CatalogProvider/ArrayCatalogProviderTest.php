@@ -79,9 +79,8 @@ final class ArrayCatalogProviderTest extends TestCase
                     volatility: FunctionVolatility::STABLE,
                 )],
                 procedures: [new Procedure('cleanup', [], 'sql', 'DELETE FROM logs')],
-                extensions: [new Extension('uuid-ossp', '1.1')],
             ),
-        ]);
+        ], [new Extension('uuid-ossp', '1.1')]);
 
         $provider = new ArrayCatalogProvider($catalog->normalize());
 
@@ -94,7 +93,7 @@ final class ArrayCatalogProviderTest extends TestCase
         static::assertCount(1, $schema->materializedViews);
         static::assertCount(1, $schema->functions);
         static::assertCount(1, $schema->procedures);
-        static::assertCount(1, $schema->extensions);
+        static::assertCount(1, $restored->extensions());
     }
 
     public function test_creates_empty_catalog(): void
@@ -102,5 +101,15 @@ final class ArrayCatalogProviderTest extends TestCase
         $provider = new ArrayCatalogProvider(['schemas' => []]);
 
         static::assertSame([], $provider->get()->all());
+    }
+
+    public function test_restores_catalog_extensions(): void
+    {
+        $catalog = new Catalog([new Schema('public')], [new Extension('uuid-ossp', '1.1')]);
+
+        static::assertEquals(
+            $catalog->extensions(),
+            (new ArrayCatalogProvider($catalog->normalize()))->get()->extensions(),
+        );
     }
 }
