@@ -18,6 +18,7 @@ use Flow\ETL\Values\Rows;
 
 use function array_column;
 use function array_map;
+use function chr;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\float_schema;
@@ -33,7 +34,9 @@ use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function iterator_to_array;
+use function memory_get_usage;
 use function range;
+use function str_repeat;
 
 final class FilesystemRowsStorageTest extends FlowIntegrationTestCase
 {
@@ -179,6 +182,63 @@ final class FilesystemRowsStorageTest extends FlowIntegrationTestCase
                 iterator_to_array($storage->get('bucket'), false),
             ),
         );
+
+        $this->fs()->rm($cacheDir);
+    }
+
+    public function test_a_full_batch_is_yielded_before_the_next_frame_is_decoded(): void
+    {
+        $cacheDir = path(__DIR__ . '/var/buckets_no_read_ahead');
+        $this->fs()->rm($cacheDir);
+        $backend = new SpyBackend();
+        $storage = new FilesystemRowsStorage($this->fs(), cacheDir: $cacheDir, backend: $backend, batchSize: 2);
+
+        foreach ([[1, 2], [3, 4], [5, 6]] as $ids) {
+            $storage->append('bucket', array_to_rows(array_map(static fn(int $id): array => [
+                'id' => $id,
+            ], $ids), schema(int_schema('id'))));
+        }
+
+        $batches = $storage->get('bucket');
+
+        static::assertSame([1, 2], $batches->current()->reduceToArray('id'));
+        static::assertSame(1, $backend->decodeFrames());
+
+        $this->fs()->rm($cacheDir);
+    }
+
+    public function test_an_open_bucket_holds_the_current_batch_and_its_frame_only(): void
+    {
+        $cacheDir = path(__DIR__ . '/var/buckets_open_cost');
+        $this->fs()->rm($cacheDir);
+        $storage = new FilesystemRowsStorage(
+            $this->fs(),
+            cacheDir: $cacheDir,
+            backend: new PhpBackend(),
+            batchSize: 500,
+        );
+
+        foreach (range(0, 2) as $frame) {
+            $storage->append('bucket', array_to_rows(
+                array_map(
+                    static fn(int $id): array => ['id' => $id, 'payload' => str_repeat(chr(65 + $frame), 1_000) . $id],
+                    range($frame * 500, ($frame * 500) + 499),
+                ),
+                schema(int_schema('id'), str_schema('payload')),
+            ));
+        }
+
+        $storage->close('bucket');
+        $before = memory_get_usage();
+        $batches = $storage->get('bucket');
+        $first = $batches->current();
+        $open = memory_get_usage() - $before;
+        unset($batches);
+        $batch = memory_get_usage() - $before;
+
+        static::assertSame(500, $first->count());
+        // the minimum is the yielded batch plus the encoded frame it was read from, about twice the batch
+        static::assertLessThan($batch * 2.5, $open);
 
         $this->fs()->rm($cacheDir);
     }

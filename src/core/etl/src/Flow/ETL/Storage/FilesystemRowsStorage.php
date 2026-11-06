@@ -127,6 +127,13 @@ final class FilesystemRowsStorage implements RowsStorage, Describable
 
                 $pending[] = $batch;
                 $pendingRows += $batch->count();
+
+                // a full batch leaves before the next frame is decoded, so an open bucket holds one batch, not two
+                if ($pendingRows === $this->batchSize) {
+                    yield Rows::concat($pending[0]->schema(), $this->backend, ...$pending);
+                    $pending = [];
+                    $pendingRows = 0;
+                }
             }
 
             if ($pending !== []) {
