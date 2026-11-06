@@ -36,6 +36,11 @@ final class MemoryBudget
         return ($this->releasedAt + ($multiple * $grown)) > $this->limit->inBytes();
     }
 
+    public function remaining(): int
+    {
+        return $this->limit->inBytes() - $this->consumption->capture()->inBytes();
+    }
+
     /**
      * After a spill freed its buffer: hands the memory PHP keeps cached back to the OS.
      */

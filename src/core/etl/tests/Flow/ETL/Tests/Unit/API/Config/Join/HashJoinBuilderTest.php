@@ -21,7 +21,7 @@ final class HashJoinBuilderTest extends FlowTestCase
     public function test_broadcast_limit_defaults_to_10_mb(): void
     {
         static::assertSame(
-            10 * 1000 * 1000,
+            10 * 1024 * 1024,
             hash_join()->build(path('memory://spill'), new PhpBackend())->broadcastLimit->inBytes(),
         );
         static::assertSame(

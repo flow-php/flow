@@ -22,6 +22,8 @@ use function array_chunk;
 use function array_map;
 use function array_splice;
 use function count;
+use function intdiv;
+use function max;
 use function min;
 use function sprintf;
 
@@ -129,12 +131,13 @@ final readonly class ExternalSort
 
             $merger = new KWayMerge($this->columns, $backend, $this->batchSize);
             $mergedIndex = 0;
+            $fanIn = $this->fanIn($runs[0], $budget);
 
             // each pass merges neighbouring runs in place, so equal keys keep the order they arrived in
-            while (count($runs) > $this->mergeFanIn) {
+            while (count($runs) > $fanIn) {
                 $runs = array_map(
                     fn(array $group): BucketRun => $this->reduce($group, $merger, $mergedIndex++, $limit),
-                    array_chunk($runs, $this->mergeFanIn),
+                    array_chunk($runs, $fanIn),
                 );
             }
 
@@ -176,6 +179,21 @@ final readonly class ExternalSort
                 return;
             }
         }
+    }
+
+    /**
+     * @return int<2, max>
+     */
+    public function fanIn(BucketRun $run, MemoryBudget $budget): int
+    {
+        $remaining = $budget->remaining();
+        // held in a variable, so the decoded batch is still alive when the second measurement runs
+        $stream = $run->rows();
+        $stream->current();
+        $perRun = $remaining - $budget->remaining();
+
+        // never below 2: an exhausted budget takes more merge passes instead of failing
+        return max(2, $perRun < 1 ? $this->mergeFanIn : min($this->mergeFanIn, intdiv($remaining, $perRun)));
     }
 
     /**

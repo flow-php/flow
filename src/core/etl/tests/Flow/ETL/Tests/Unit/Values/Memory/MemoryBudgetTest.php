@@ -66,4 +66,17 @@ final class MemoryBudgetTest extends FlowTestCase
 
         static::assertFalse($budget->exceededWith(2));
     }
+
+    public function test_remaining_is_the_limit_minus_the_memory_the_process_holds_now(): void
+    {
+        $backend = new ReportedMemoryBackend(0);
+        $budget = new MemoryBudget($backend, Unit::fromBytes(memory_get_usage(false) + 1_000_000_000));
+        $backend->reported = 400_000_000;
+
+        static::assertEqualsWithDelta(600_000_000, $budget->remaining(), 1_000_000);
+
+        $backend->reported = 1_500_000_000;
+
+        static::assertLessThan(0, $budget->remaining());
+    }
 }

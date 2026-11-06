@@ -45,6 +45,18 @@ Upgrading from older versions: [0.41.x to 0.43.x](/documentation/upgrading-0.41-
 | `Flow\PostgreSql\Schema\Diff\DependentView`                                                                                      | removed. `DependentViews::$toDrop` and `$toCreate` hold `View\|MaterializedView`                                 |
 | `TableDiff::__construct(...)`, `TableComparator::compare($source, $target)`                                                      | trailing `bool $dropIfExists = false`                                                                            |
 
+### 4) `flow-php/etl` - memory units are binary (1024)
+
+| Before                                                                       | After                                                                          |
+|------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
+| `Unit::fromKb()`, `fromMb()`, `fromGb()` multiply by 1000                    | multiply by 1024. `Unit::fromMb(64)` is 67 108 864 bytes                       |
+| `Unit::inKb()`, `inMb()`, `inGb()` divide by 1000                            | divide by 1024                                                                 |
+| `Unit::fromString('128M')` is 128 000 000 bytes                              | 134 217 728 bytes                                                              |
+| `Unit::fromString('1GB')` is 1 000 bytes, `'500B'` is 500 000 bytes          | 1 073 741 824 bytes and 500 bytes. `K/KB`, `M/MB`, `G/GB` are read in any case |
+| `Unit::fromString('10TB')`, `'1.5G'` or `'M'` return a value                 | throw `InvalidArgumentException`                                               |
+| `hash_join()` broadcast limit defaults to 10 000 000 bytes                   | 10 485 760 bytes                                                               |
+| `MemoryLimit::default()` is 1 000 000 000 bytes for a `memory_limit` of `-1` | 1 073 741 824 bytes                                                            |
+
 ---
 
 ## Upgrading from 0.46.x to 0.47.x

@@ -98,10 +98,10 @@ final class ExternalSortTest extends FlowTestCase
                 config()->backend(),
             )),
         );
-        static::assertCount(4, array_filter($storage->readBucketIds(), static fn(string $id): bool => str_starts_with(
-            $id,
-            'sort-',
-        )));
+        static::assertCount(4, array_filter(
+            $storage->readBucketIds(),
+            static fn(string $id): bool => str_starts_with($id, 'sort-') && !str_starts_with($id, 'sort-merge-'),
+        ));
         static::assertSame([], $storage->liveBucketIds());
     }
 
