@@ -1,6 +1,8 @@
-## [Unreleased] - 2026-11-05
+## [Unreleased] - 2026-11-06
 
 ### Added
+- [#2728](https://github.com/flow-php/flow/pull/2728) - **flow-php/postgresql - ALTER EXTENSION ... SET SCHEMA in the query builder** - [@norberttech](https://github.com/norberttech)
+- [#2728](https://github.com/flow-php/flow/pull/2728) - **flow-php/postgresql - schema diff moves extensions between schemas** - [@norberttech](https://github.com/norberttech)
 - [#2726](https://github.com/flow-php/flow/pull/2726) - **flow-php/filesystem - InterceptedFilesystem with an onCall() hook and intercepted_filesystem() DSL for testing filesystem failures** - [@norberttech](https://github.com/norberttech)
 - [#2726](https://github.com/flow-php/flow/pull/2726) - **flow-php/symfony-filesystem-bundle - each mount is the decoratable service flow.filesystem.mount..** - [@norberttech](https://github.com/norberttech)
 - [#2724](https://github.com/flow-php/flow/pull/2724) - **flow-php/web - Type-aware playground autocompletion for Flow API methods, DSL functions, classes and static members** - [@norberttech](https://github.com/norberttech)
@@ -12,6 +14,8 @@
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - Pipe operator documentation page** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2728](https://github.com/flow-php/flow/pull/2728) - **flow-php/postgresql - schema objects store their schema and inherit it from the containing Schema** - [@norberttech](https://github.com/norberttech)
+- [#2728](https://github.com/flow-php/flow/pull/2728) - **flow-php/postgresql - extensions are declared on the Catalog, with a schema per extension** - [@norberttech](https://github.com/norberttech)
 - [#2727](https://github.com/flow-php/flow/pull/2727) - **flow-php/postgresql - unsupported condition node errors name the node kind** - [@norberttech](https://github.com/norberttech)
 - [#2726](https://github.com/flow-php/flow/pull/2726) - **flow-php/symfony-filesystem-bundle - the fstab table is built from the mount services** - [@norberttech](https://github.com/norberttech)
 - [#2725](https://github.com/flow-php/flow/pull/2725) - **flow-php/flow - Website tests install only the Chromium headless shell** - [@norberttech](https://github.com/norberttech)
@@ -27,6 +31,14 @@
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - print_rows(Rows) renamed to format_rows()** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2728](https://github.com/flow-php/flow/pull/2728) - **flow-php/postgresql - schema diff qualifies every object with its schema** - [@norberttech](https://github.com/norberttech)
+- [#2728](https://github.com/flow-php/flow/pull/2728) - **flow-php/postgresql - DROP INDEX honours dropIfExists** - [@norberttech](https://github.com/norberttech)
+- [#2728](https://github.com/flow-php/flow/pull/2728) - **flow-php/postgresql - catalog provider reads materialized view indexes and owned sequences** - [@norberttech](https://github.com/norberttech)
+- [#2728](https://github.com/flow-php/flow/pull/2728) - **flow-php/postgresql - catalog provider skips extension member objects** - [@norberttech](https://github.com/norberttech)
+- [#2728](https://github.com/flow-php/flow/pull/2728) - **flow-php/postgresql - sequence defaults converge with the live catalog** - [@norberttech](https://github.com/norberttech)
+- [#2728](https://github.com/flow-php/flow/pull/2728) - **flow-php/postgresql - integers beyond int32 render exactly in literals and sequence options** - [@norberttech](https://github.com/norberttech)
+- [#2728](https://github.com/flow-php/flow/pull/2728) - **flow-php/postgresql - unpinned extension versions no longer produce a diff** - [@norberttech](https://github.com/norberttech)
+- [#2728](https://github.com/flow-php/flow/pull/2728) - **flow-php/postgresql - explicitly listed schemas that do not exist get created by the diff** - [@norberttech](https://github.com/norberttech)
 - [#2727](https://github.com/flow-php/flow/pull/2727) - **flow-php/postgresql - AND, OR and NOT conditions parse IS NULL, IN, bare booleans, operators, function calls and scalar subqueries** - [@norberttech](https://github.com/norberttech)
 - [#2727](https://github.com/flow-php/flow/pull/2727) - **flow-php/postgresql - BETWEEN SYMMETRIC conditions parse from the AST** - [@norberttech](https://github.com/norberttech)
 - [#2727](https://github.com/flow-php/flow/pull/2727) - **flow-php/postgresql - rebuilt BETWEEN keeps NOT and SYMMETRIC** - [@norberttech](https://github.com/norberttech)
@@ -38,6 +50,7 @@
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - explain() default trigger in the documentation** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2728](https://github.com/flow-php/flow/pull/2728) - **flow-php/postgresql - DependentView** - [@norberttech](https://github.com/norberttech)
 - [#2726](https://github.com/flow-php/flow/pull/2726) - **flow-php/symfony-filesystem-bundle - FstabBuilder** - [@norberttech](https://github.com/norberttech)
 - [#2724](https://github.com/flow-php/flow/pull/2724) - **flow-php/web - DSL definitions inlined into every page** - [@norberttech](https://github.com/norberttech)
 - [#2724](https://github.com/flow-php/flow/pull/2724) - **flow-php/flow - Stale psalm, phpstan and php-cs-fixer references** - [@norberttech](https://github.com/norberttech)
