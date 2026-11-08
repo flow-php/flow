@@ -15,9 +15,9 @@ use Flow\CLI\Options\JSONInputOptions;
 use Flow\CLI\Options\ParquetInputOptions;
 use Flow\CLI\Options\SchemaInferenceOptions;
 use Flow\CLI\Options\XMLInputOptions;
+use Flow\ETL\API\Config\ConfigBuilder;
 use Flow\ETL\IO\Formatter\Row\ASCIISchemaFormatter;
 use Flow\ETL\IO\Formatter\Schema\PHPSchemaFormatter;
-use Flow\ETL\Runtime\Config;
 use Flow\Filesystem\Path;
 use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -42,7 +42,7 @@ final class FileSchemaCommand extends Command
 {
     private ?FileFormat $fileFormat = null;
 
-    private ?Config $flowConfig = null;
+    private ?ConfigBuilder $flowConfig = null;
 
     private ?Path $sourcePath = null;
 

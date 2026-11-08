@@ -27,10 +27,10 @@ final class PipelineReportFormatterTest extends FlowTestCase
         ])), new SymfonyStyle($input, $output), $input))->format();
 
         $display = $output->fetch();
-        static::assertMatchesRegularExpression('/Heap Peak\s+[\d.]+ MB/', $display);
-        static::assertMatchesRegularExpression('/Process Peak\s+25 MB/', $display);
-        static::assertMatchesRegularExpression('/Worker Peak\s+41 MB/', $display);
-        static::assertMatchesRegularExpression('/Peak Sum\s+106 MB/', $display);
+        static::assertMatchesRegularExpression('/Heap Peak\s+[\d.]+ (B|KiB|MiB|GiB)\s/', $display);
+        static::assertMatchesRegularExpression('/Process Peak\s+25\.0 MiB\s/', $display);
+        static::assertMatchesRegularExpression('/Worker Peak\s+41\.0 MiB\s/', $display);
+        static::assertMatchesRegularExpression('/Peak Sum\s+106\.0 MiB\s/', $display);
     }
 
     public function test_a_serial_run_prints_no_worker_rows(): void
@@ -45,7 +45,7 @@ final class PipelineReportFormatterTest extends FlowTestCase
         ))->format();
 
         $display = $output->fetch();
-        static::assertMatchesRegularExpression('/Process Peak\s+25 MB/', $display);
+        static::assertMatchesRegularExpression('/Process Peak\s+25\.0 MiB\s/', $display);
         static::assertStringNotContainsString('Worker Peak', $display);
         static::assertStringNotContainsString('Peak Sum', $display);
     }

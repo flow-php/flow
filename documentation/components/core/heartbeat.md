@@ -56,26 +56,21 @@ are due together are called in the order they were registered.
 ```php
 <?php
 
-use Flow\ETL\Runtime\Heartbeat\{Heartbeat, HeartbeatFailure, Pulse};
+use Flow\ETL\Runtime\Heartbeat\HeartbeatFailure;
+use function Flow\Bridge\Symfony\Console\DSL\console_heartbeat;
 use function Flow\ETL\Adapter\CSV\{from_csv, to_csv};
 use function Flow\ETL\DSL\{config_builder, df, ref};
 
-final readonly class ConsoleProgress implements Heartbeat
-{
-    public function beat(Pulse $pulse): void
-    {
-        printf("#%d %ds %s: %d rows, %d read\n", $pulse->beat, $pulse->elapsedSeconds, $pulse->stage, $pulse->stageRows, $pulse->rowsRead);
-    }
-}
-
 df(config_builder()
     ->heartbeat(new ExtendLease($lease), everySeconds: 120)
-    ->heartbeat(new ConsoleProgress(), everySeconds: 1, onFailure: HeartbeatFailure::log))
+    ->heartbeat(console_heartbeat($output), everySeconds: 1, onFailure: HeartbeatFailure::log))
     ->read(from_csv($path))
     ->sortBy(ref('id'))
     ->write(to_csv($out))
     ->run();
 ```
+
+`console_heartbeat()` comes from the [Symfony Console Bridge](/documentation/components/bridges/symfony-console-bridge.md).
 
 ## Pulse
 

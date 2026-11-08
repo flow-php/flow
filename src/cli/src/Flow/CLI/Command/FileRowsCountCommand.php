@@ -14,7 +14,8 @@ use Flow\CLI\Options\FileFormatOption;
 use Flow\CLI\Options\JSONInputOptions;
 use Flow\CLI\Options\ParquetInputOptions;
 use Flow\CLI\Options\XMLInputOptions;
-use Flow\ETL\Runtime\Config;
+use Flow\ETL\API\Config\ConfigBuilder;
+use Flow\ETL\Runtime\Heartbeat\HeartbeatFailure;
 use Flow\Filesystem\Path;
 use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -22,9 +23,11 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function Flow\Bridge\Symfony\Console\DSL\console_heartbeat;
 use function Flow\CLI\option_int_nullable;
 use function Flow\ETL\DSL\df;
 
@@ -33,7 +36,7 @@ final class FileRowsCountCommand extends Command
 {
     private ?FileFormat $fileFormat = null;
 
-    private ?Config $flowConfig = null;
+    private ?ConfigBuilder $flowConfig = null;
 
     private ?Path $sourcePath = null;
 
@@ -83,6 +86,12 @@ final class FileRowsCountCommand extends Command
 
         $style = new SymfonyStyle($input, $output);
 
+        $progress = $output instanceof ConsoleOutputInterface ? console_heartbeat($output) : null;
+
+        if ($progress !== null) {
+            $this->flowConfig->heartbeat($progress, everySeconds: 1, onFailure: HeartbeatFailure::log);
+        }
+
         $df = df($this->flowConfig)->read((new ExtractorFactory($this->sourcePath, $this->fileFormat))->get($input));
 
         $limit = option_int_nullable('input-file-limit', $input);
@@ -97,7 +106,13 @@ final class FileRowsCountCommand extends Command
             $df = $df->offset($offset);
         }
 
-        $style->write((string) $df->count());
+        try {
+            $count = $df->count();
+        } finally {
+            $progress?->finish();
+        }
+
+        $style->write((string) $count);
 
         return Command::SUCCESS;
     }

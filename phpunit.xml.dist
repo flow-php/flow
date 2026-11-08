@@ -140,6 +140,12 @@
         <testsuite name="bridge-psr18-telemetry-integration">
             <directory>src/bridge/psr18/telemetry/tests/Flow/Bridge/Psr18/Telemetry/Tests/Integration</directory>
         </testsuite>
+        <testsuite name="bridge-symfony-console-unit">
+            <directory>src/bridge/symfony/console/tests/Flow/Bridge/Symfony/Console/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="bridge-symfony-console-integration">
+            <directory>src/bridge/symfony/console/tests/Flow/Bridge/Symfony/Console/Tests/Integration</directory>
+        </testsuite>
         <testsuite name="bridge-symfony-http-foundation-unit">
             <directory>src/bridge/symfony/http-foundation/tests/Flow/Bridge/Symfony/HttpFoundation/Tests/Unit
             </directory>
@@ -332,6 +338,7 @@
             <file>src/bridge/filesystem/sftp/src/Flow/Filesystem/Bridge/SFTP/DSL/functions.php</file>
             <file>src/bridge/openapi/specification/src/Flow/Bridge/OpenAPI/Specification/DSL/functions.php</file>
             <file>src/bridge/monolog/http/src/Flow/Bridge/Monolog/Http/DSL/functions.php</file>
+            <file>src/bridge/symfony/console/src/Flow/Bridge/Symfony/Console/DSL/functions.php</file>
             <file>src/bridge/symfony/http-foundation/src/Flow/Bridge/Symfony/HttpFoundation/functions.php</file>
             <file>src/adapter/etl-adapter-avro/src/Flow/ETL/Adapter/Avro/functions.php</file>
             <file>src/adapter/etl-adapter-json/src/Flow/ETL/Adapter/JSON/functions.php</file>

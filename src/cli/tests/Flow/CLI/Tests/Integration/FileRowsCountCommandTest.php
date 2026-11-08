@@ -7,16 +7,61 @@ namespace Flow\CLI\Tests\Integration;
 use Flow\CLI\Command\FileRowsCountCommand;
 use Flow\CLI\Command\FileSchemaCommand;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Tester\CommandTester;
 
 final class FileRowsCountCommandTest extends TestCase
 {
+    public function test_a_failing_run_clears_the_status_line(): void
+    {
+        $tester = new CommandTester(new FileRowsCountCommand('count'));
+
+        try {
+            $tester->execute([
+                'input-file' => __DIR__ . '/Fixtures/orders.csv',
+                '--config' => __DIR__ . '/Fixtures/failing-heartbeat-config.php',
+            ], ['capture_stderr_separately' => true, 'decorated' => true]);
+            static::fail('The run must fail.');
+        } catch (RuntimeException $e) {
+            static::assertSame('lease lost', $e->getMessage());
+        }
+
+        static::assertStringEndsWith("\x1B[1G\x1B[2K", $tester->getErrorOutput());
+    }
+
+    public function test_a_plain_output_gets_only_the_count(): void
+    {
+        $output = new BufferedOutput();
+
+        (new FileRowsCountCommand('count'))->run(new ArrayInput([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            '--config' => __DIR__ . '/Fixtures/stepping-clock-config.php',
+        ]), $output);
+
+        static::assertSame('43', $output->fetch());
+    }
+
+    public function test_progress_goes_to_stderr(): void
+    {
+        $tester = new CommandTester(new FileRowsCountCommand('count'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            '--config' => __DIR__ . '/Fixtures/stepping-clock-config.php',
+        ], ['capture_stderr_separately' => true]);
+
+        static::assertSame('43', $tester->getDisplay());
+        static::assertMatchesRegularExpression('/^ read: 43 rows · 43 read · /m', $tester->getErrorOutput());
+    }
+
     public function test_count_rows_csv(): void
     {
         $tester = new CommandTester(new FileRowsCountCommand('count'));
 
-        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.csv']);
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.csv'], ['capture_stderr_separately' => true]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -27,7 +72,7 @@ final class FileRowsCountCommandTest extends TestCase
     {
         $tester = new CommandTester(new FileRowsCountCommand('count'));
 
-        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.xlsx']);
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.xlsx'], ['capture_stderr_separately' => true]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -38,7 +83,7 @@ final class FileRowsCountCommandTest extends TestCase
     {
         $tester = new CommandTester(new FileRowsCountCommand('count'));
 
-        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.json']);
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.json'], ['capture_stderr_separately' => true]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -49,7 +94,7 @@ final class FileRowsCountCommandTest extends TestCase
     {
         $tester = new CommandTester(new FileRowsCountCommand('count'));
 
-        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.parquet']);
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.parquet'], ['capture_stderr_separately' => true]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -60,7 +105,7 @@ final class FileRowsCountCommandTest extends TestCase
     {
         $tester = new CommandTester(new FileRowsCountCommand('count'));
 
-        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.txt']);
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.txt'], ['capture_stderr_separately' => true]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -74,7 +119,7 @@ final class FileRowsCountCommandTest extends TestCase
         $tester->execute([
             'input-file' => __DIR__ . '/Fixtures/orders.csv',
             '--input-file-offset' => 1000,
-        ]);
+        ], ['capture_stderr_separately' => true]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -90,7 +135,7 @@ final class FileRowsCountCommandTest extends TestCase
             'input-file' => __DIR__ . '/Fixtures/orders.csv',
             '--input-file-offset' => 2,
             '--input-file-limit' => 5,
-        ]);
+        ], ['capture_stderr_separately' => true]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -105,7 +150,7 @@ final class FileRowsCountCommandTest extends TestCase
         $tester->execute([
             'input-file' => __DIR__ . '/Fixtures/orders.csv',
             '--input-file-offset' => 5,
-        ]);
+        ], ['capture_stderr_separately' => true]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -120,7 +165,7 @@ final class FileRowsCountCommandTest extends TestCase
         $tester->execute([
             'input-file' => __DIR__ . '/Fixtures/orders.csv',
             '--input-file-offset' => 0,
-        ]);
+        ], ['capture_stderr_separately' => true]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -132,7 +177,9 @@ final class FileRowsCountCommandTest extends TestCase
     {
         $tester = new CommandTester(new FileRowsCountCommand('count'));
 
-        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.xml', '--input-xml-node-path' => 'root/row']);
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.xml', '--input-xml-node-path' => 'root/row'], [
+            'capture_stderr_separately' => true,
+        ]);
 
         $tester->assertCommandIsSuccessful();
 

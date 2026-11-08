@@ -9,10 +9,22 @@ use Flow\ETL\Tests\Context\CommandOutputNormalizer;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
+use Symfony\Component\Console\Exception\InvalidOptionException;
 use Symfony\Component\Console\Tester\CommandTester;
 
 final class PipelineRunCommandTest extends TestCase
 {
+    public function test_config_option_is_not_accepted(): void
+    {
+        $this->expectException(InvalidOptionException::class);
+        $this->expectExceptionMessage('The "--config" option does not exist.');
+
+        (new CommandTester(new PipelineRunCommand('run')))->execute([
+            'pipeline-file' => __DIR__ . '/Fixtures/pipeline.php',
+            '--config' => 'x.php',
+        ]);
+    }
+
     public function test_run_and_analyze_command(): void
     {
         $tester = new CommandTester(new PipelineRunCommand('run'));

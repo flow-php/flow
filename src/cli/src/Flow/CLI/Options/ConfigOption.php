@@ -13,9 +13,10 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 
 use function Flow\CLI\option_string_nullable;
-use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_instance_of;
+use function sprintf;
 
 final readonly class ConfigOption
 {
@@ -29,16 +30,16 @@ final readonly class ConfigOption
             $this->optionName,
             null,
             InputOption::VALUE_REQUIRED,
-            'Path to a local php file that MUST return instance of: ' . Config::class,
+            'Path to a local php file that MUST return instance of: ' . ConfigBuilder::class,
         );
     }
 
-    public function get(InputInterface $input): Config
+    public function get(InputInterface $input): ConfigBuilder
     {
         $configPath = option_string_nullable($this->optionName, $input);
 
         if ($configPath === null) {
-            return config();
+            return config_builder();
         }
 
         $path = path_real($configPath);
@@ -52,10 +53,13 @@ final readonly class ConfigOption
         // @mago-expect analysis:mixed-assignment
         $result = require $path->path();
 
-        if ($result instanceof ConfigBuilder) {
-            return $result->build();
+        if ($result instanceof Config) {
+            throw new InvalidArgumentException(sprintf(
+                "File '%s' returns a built Config. Return the builder instead: return config_builder()->...; without ->build().",
+                $path->path(),
+            ));
         }
 
-        return type_instance_of(Config::class)->assert($result);
+        return type_instance_of(ConfigBuilder::class)->assert($result);
     }
 }

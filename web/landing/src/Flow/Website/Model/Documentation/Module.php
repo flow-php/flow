@@ -36,6 +36,7 @@ enum Module: string
     case S3_FILESYSTEM = 'S3 Filesystem';
     case SEAL = 'Seal';
     case SFTP_FILESYSTEM = 'SFTP Filesystem';
+    case SYMFONY_CONSOLE_BRIDGE = 'Symfony Console Bridge';
     case SYMFONY_HTTP_FOUNDATION_TELEMETRY_BRIDGE = 'Symfony HttpFoundation Telemetry Bridge';
     case SYMFONY_TELEMETRY_BUNDLE = 'Symfony Telemetry Bundle';
     case TELEMETRY = 'Telemetry';
@@ -85,6 +86,7 @@ enum Module: string
             self::PSR3_TELEMETRY_BRIDGE => 29,
             self::SEAL => 30,
             self::SFTP_FILESYSTEM => 31,
+            self::SYMFONY_CONSOLE_BRIDGE => 32,
             default => 99,
         };
     }

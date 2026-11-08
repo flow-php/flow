@@ -15,8 +15,8 @@ use Flow\CLI\Options\JSONInputOptions;
 use Flow\CLI\Options\ParquetInputOptions;
 use Flow\CLI\Options\SchemaInferenceOptions;
 use Flow\CLI\Options\XMLInputOptions;
+use Flow\ETL\API\Config\ConfigBuilder;
 use Flow\ETL\IO\Formatter\AsciiTableFormatter;
-use Flow\ETL\Runtime\Config;
 use Flow\ETL\Values\Rows;
 use Flow\Filesystem\Path;
 use RuntimeException;
@@ -41,7 +41,7 @@ final class FileReadCommand extends Command
 
     private ?FileFormat $fileFormat = null;
 
-    private ?Config $flowConfig = null;
+    private ?ConfigBuilder $flowConfig = null;
 
     private ?Path $sourcePath = null;
 

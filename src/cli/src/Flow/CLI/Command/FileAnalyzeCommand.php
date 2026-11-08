@@ -7,7 +7,6 @@ namespace Flow\CLI\Command;
 use Flow\CLI\Arguments\FilePathArgument;
 use Flow\CLI\Factory\ExtractorFactory;
 use Flow\CLI\Formatter\PipelineReportFormatter;
-use Flow\CLI\Loader\ProgressBarLoader;
 use Flow\CLI\Options\ConfigOption;
 use Flow\CLI\Options\CSVInputOptions;
 use Flow\CLI\Options\ExcelInputOptions;
@@ -19,7 +18,8 @@ use Flow\CLI\Options\SchemaInferenceOptions;
 use Flow\CLI\Options\StatisticsOptions;
 use Flow\CLI\Options\XMLInputOptions;
 use Flow\CLI\Style\FlowStyle;
-use Flow\ETL\Runtime\Config;
+use Flow\ETL\API\Config\ConfigBuilder;
+use Flow\ETL\Runtime\Heartbeat\HeartbeatFailure;
 use Flow\Filesystem\Path;
 use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -27,8 +27,10 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+use function Flow\Bridge\Symfony\Console\DSL\console_heartbeat;
 use function Flow\CLI\option_bool;
 use function Flow\CLI\option_int;
 use function Flow\CLI\option_int_nullable;
@@ -42,7 +44,7 @@ final class FileAnalyzeCommand extends Command
 
     private ?FileFormat $fileFormat = null;
 
-    private ?Config $flowConfig = null;
+    private ?ConfigBuilder $flowConfig = null;
 
     private ?Path $sourcePath = null;
 
@@ -110,6 +112,12 @@ final class FileAnalyzeCommand extends Command
             return Command::FAILURE;
         }
 
+        $progress = $output instanceof ConsoleOutputInterface ? console_heartbeat($output) : null;
+
+        if ($progress !== null) {
+            $this->flowConfig->heartbeat($progress, everySeconds: 1, onFailure: HeartbeatFailure::log);
+        }
+
         $df = df($this->flowConfig)->read($extractor);
 
         $batchSize = option_int('input-file-batch-size', $input, self::DEFAULT_BATCH_SIZE);
@@ -134,9 +142,6 @@ final class FileAnalyzeCommand extends Command
             $df = $df->offset($offset);
         }
 
-        $progress = $style->createProgressBar();
-        $progress->setFormat('Analyzed Rows: %current% %bar%');
-
         $analyze = analyze();
 
         if (option_bool('stats-schema', $input)) {
@@ -151,13 +156,11 @@ final class FileAnalyzeCommand extends Command
             $analyze->withSourceStatistics();
         }
 
-        $report = $df->write(new ProgressBarLoader($progress))->run(analyze: $analyze);
-
-        $progress->finish();
-
-        $style->newLine(2);
-
-        $style->clear();
+        try {
+            $report = $df->run(analyze: $analyze);
+        } finally {
+            $progress?->finish();
+        }
 
         (new PipelineReportFormatter($report, $style, $input))->format();
 

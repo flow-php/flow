@@ -103,6 +103,10 @@ component_management:
       name: symfony-http-foundation
       paths:
         - src/bridge/symfony/http-foundation/**
+    - component_id: bridge-symfony-console
+      name: bridge-symfony-console
+      paths:
+        - src/bridge/symfony/console/**
     - component_id: bridge-psr18-telemetry
       name: bridge-psr18-telemetry
       paths:

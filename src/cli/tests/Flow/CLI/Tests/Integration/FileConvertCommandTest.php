@@ -9,16 +9,59 @@ use Flow\CLI\Command\FileReadCommand;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Tester\CommandTester;
 
+use function bin2hex;
 use function file_exists;
 use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\DSL\data_frame;
+use function random_bytes;
 use function unlink;
 
 final class FileConvertCommandTest extends TestCase
 {
+    public function test_a_failing_run_clears_the_status_line(): void
+    {
+        $output = __DIR__ . '/var/' . bin2hex(random_bytes(16)) . '.csv';
+        $tester = new CommandTester(new FileConvertCommand('convert'));
+
+        try {
+            $tester->execute([
+                'input-file' => __DIR__ . '/Fixtures/orders.csv',
+                'output-file' => $output,
+                '--config' => __DIR__ . '/Fixtures/failing-heartbeat-config.php',
+            ], ['capture_stderr_separately' => true, 'decorated' => true]);
+            static::fail('The run must fail.');
+        } catch (RuntimeException $e) {
+            static::assertSame('lease lost', $e->getMessage());
+        }
+
+        static::assertStringEndsWith("\x1B[1G\x1B[2K", $tester->getErrorOutput());
+
+        if (file_exists($output)) {
+            unlink($output);
+        }
+    }
+
+    public function test_a_plain_output_gets_no_progress(): void
+    {
+        $output = __DIR__ . '/var/' . bin2hex(random_bytes(16)) . '.csv';
+        $buffered = new BufferedOutput();
+
+        (new FileConvertCommand('convert'))->run(new ArrayInput([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            'output-file' => $output,
+            '--config' => __DIR__ . '/Fixtures/stepping-clock-config.php',
+        ]), $buffered);
+
+        static::assertStringNotContainsString(' read: ', $buffered->fetch());
+        unlink($output);
+    }
+
     /**
      * @param array<string> $options
      */
@@ -53,11 +96,14 @@ final class FileConvertCommandTest extends TestCase
 
         $tester = new CommandTester(new FileConvertCommand('convert'));
 
-        $tester->execute(array_merge([
-            'input-file' => __DIR__ . '/Fixtures/orders.' . $inputFormat,
-            'output-file' => $output,
-            '--input-file-limit' => 5,
-        ], $options));
+        $tester->execute(
+            array_merge([
+                'input-file' => __DIR__ . '/Fixtures/orders.' . $inputFormat,
+                'output-file' => $output,
+                '--input-file-limit' => 5,
+            ], $options),
+            ['capture_stderr_separately' => true],
+        );
 
         $tester->assertCommandIsSuccessful();
 
@@ -75,7 +121,7 @@ final class FileConvertCommandTest extends TestCase
             'input-file' => __DIR__ . '/Fixtures/inference/widening.csv',
             'output-file' => $output,
             '--schema-sample-size' => 1,
-        ]);
+        ], ['capture_stderr_separately' => true]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -95,7 +141,7 @@ final class FileConvertCommandTest extends TestCase
         $tester->execute([
             'input-file' => 'aws-s3://bucket/orders.csv',
             'output-file' => __DIR__ . '/var/' . bin2hex(random_bytes(16)) . '.json',
-        ]);
+        ], ['capture_stderr_separately' => true]);
     }
 
     public function test_cli_rejects_a_remote_output_path(): void
@@ -108,7 +154,7 @@ final class FileConvertCommandTest extends TestCase
         $tester->execute([
             'input-file' => __DIR__ . '/Fixtures/orders.csv',
             'output-file' => 'aws-s3://bucket/orders.parquet',
-        ]);
+        ], ['capture_stderr_separately' => true]);
     }
 
     public function test_convert_with_offset(): void
@@ -127,7 +173,7 @@ final class FileConvertCommandTest extends TestCase
             '--input-file-limit' => 3,
             '--input-file-offset' => 2,
             '--output-overwrite' => true,
-        ]);
+        ], ['capture_stderr_separately' => true]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -161,7 +207,7 @@ final class FileConvertCommandTest extends TestCase
             '--input-file-limit' => 3,
             '--input-file-offset' => 1,
             '--output-overwrite' => true,
-        ]);
+        ], ['capture_stderr_separately' => true]);
 
         $tester->assertCommandIsSuccessful();
 

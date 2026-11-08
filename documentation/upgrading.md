@@ -79,6 +79,25 @@ and returns one value per pair.
 
 A custom window function calls `$progress->advanced($rows)` at least once per partition, or ignores it.
 
+### 7) `flow-php/cli` - `--config` returns a `ConfigBuilder`
+
+| Before                                                              | After                                                                                  |
+|---------------------------------------------------------------------|----------------------------------------------------------------------------------------|
+| `return config_builder()->id('x')->build();`                        | `return config_builder()->id('x');`                                                    |
+| `ConfigOption::get(): Config`                                       | `ConfigOption::get(): ConfigBuilder`                                                   |
+| `Flow\CLI\Loader\ProgressBarLoader`                                 | removed, the commands use `console_heartbeat()` from `flow-php/symfony-console-bridge` |
+| `Flow\CLI\Style\FlowStyle::clear()`                                 | removed                                                                                |
+| `file:analyze` progress bar on stdout                               | progress line on stderr, also for `file:convert` and `file:rows:count`                 |
+| `Heap Peak 40.9 MB` in the `file:analyze` and `pipeline:run` report | `Heap Peak 40.9 MiB`, the same for every memory row                                    |
+| `flow pipeline:run --config .flow.php pipeline.php`                 | `flow pipeline:run pipeline.php`, the pipeline file configures its own frame           |
+| `--config` on `db:table:list`, `db:table:schema`, `schema:format`   | removed, these commands never used it                                                  |
+
+### 8) `flow-php/cli`, `flow-php/symfony-console-bridge`, `flow-php/symfony-telemetry-bundle`, `flow-php/symfony-postgresql-bundle`, `flow-php/parquet-viewer` - `symfony/console` lower bound raised
+
+| Before                                          | After                                                  |
+|-------------------------------------------------|--------------------------------------------------------|
+| `"symfony/console": "^6.4 \|\| ^7.4 \|\| ^8.0"` | `"symfony/console": "^6.4.34 \|\| ^7.4.6 \|\| ^8.0.6"` |
+
 ---
 
 ## Upgrading from 0.46.x to 0.47.x

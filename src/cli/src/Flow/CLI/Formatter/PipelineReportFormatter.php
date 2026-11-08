@@ -6,6 +6,7 @@ namespace Flow\CLI\Formatter;
 
 use Flow\ETL\Planning\Explain\StatisticsLine;
 use Flow\ETL\Runtime\Metrics\Report;
+use Symfony\Component\Console\Helper\Helper;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -129,13 +130,13 @@ final readonly class PipelineReportFormatter
             new TableSeparator(),
             ['Analyzed Rows' => number_format($statistics->totalRows())],
             ['Execution Time' => $statistics->executionTime->highResolutionTime->toString()],
-            ['Heap Peak' => $statistics->heap->max()->inMb() . ' MB'],
-            ['Process Peak' => $statistics->processes->parent->inMb() . ' MB'],
+            ['Heap Peak' => Helper::formatMemory($statistics->heap->max()->inBytes())],
+            ['Process Peak' => Helper::formatMemory($statistics->processes->parent->inBytes())],
             ...$workerPeak === null
                 ? []
                 : [
-                    ['Worker Peak' => $workerPeak->inMb() . ' MB'],
-                    ['Peak Sum' => $statistics->processes->peakSum()->inMb() . ' MB'],
+                    ['Worker Peak' => Helper::formatMemory($workerPeak->inBytes())],
+                    ['Peak Sum' => Helper::formatMemory($statistics->processes->peakSum()->inBytes())],
                 ],
         );
     }

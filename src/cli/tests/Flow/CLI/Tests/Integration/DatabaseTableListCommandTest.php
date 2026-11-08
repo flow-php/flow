@@ -16,6 +16,7 @@ use Flow\CLI\Tests\Context\DatabaseContext;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Tests\Context\OperatingSystem;
 use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Exception\InvalidOptionException;
 use Symfony\Component\Console\Tester\CommandTester;
 
 final class DatabaseTableListCommandTest extends FlowTestCase
@@ -32,6 +33,17 @@ final class DatabaseTableListCommandTest extends FlowTestCase
 
         $this->dbContext = new DatabaseContext();
         $this->dbContext->dropAllTables();
+    }
+
+    public function test_config_option_is_not_accepted(): void
+    {
+        $this->expectException(InvalidOptionException::class);
+        $this->expectExceptionMessage('The "--config" option does not exist.');
+
+        (new CommandTester(new DatabaseTableListCommand('db:table:list')))->execute([
+            '--db-connection-file' => __DIR__ . '/Fixtures/connection.php',
+            '--config' => 'x.php',
+        ]);
     }
 
     public function test_run_db_table_list(): void
