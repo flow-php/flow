@@ -17,7 +17,9 @@ use Generator;
 use Psr\Clock\ClockInterface;
 use Throwable;
 
+use function array_filter;
 use function array_map;
+use function array_values;
 use function max;
 use function min;
 
@@ -76,13 +78,13 @@ final class HeartbeatThrottle implements ProgressStages
     public function othersReported(
         int $addedRows,
         string $stage,
-        int $addedStageRows,
+        int $stageRows,
         int $addedMemoryBytes,
         int $peakMemoryBytes,
     ): void {
         $this->othersRows += $addedRows;
         $this->othersStage = $stage;
-        $this->othersStageRows += $addedStageRows;
+        $this->othersStageRows = $stageRows;
         $this->othersMemory += $addedMemoryBytes;
         $this->othersPeak = max($this->othersPeak, $peakMemoryBytes);
         $this->othersNewer = true;
@@ -151,6 +153,30 @@ final class HeartbeatThrottle implements ProgressStages
             return;
         }
 
+        $this->beat(
+            $now,
+            array_values(array_filter(
+                $this->heartbeats,
+                static fn(ScheduledHeartbeat $heartbeat): bool => $heartbeat->nextBeatAt() <= $now,
+            )),
+        );
+    }
+
+    /**
+     * @throws Throwable what a heartbeat failing with HeartbeatFailure::stop threw
+     */
+    public function beatNow(): void
+    {
+        $this->beat($this->clock->now()->getTimestamp(), $this->heartbeats);
+    }
+
+    /**
+     * @param list<ScheduledHeartbeat> $heartbeats
+     *
+     * @throws Throwable what a heartbeat failing with HeartbeatFailure::stop threw
+     */
+    private function beat(int $now, array $heartbeats): void
+    {
         $elapsedSeconds = $now - $this->startedAt;
         $rowsRead = $this->rowsRead + $this->othersRows;
         $stage = $this->othersNewer ? $this->othersStage : $this->stage;
@@ -161,22 +187,20 @@ final class HeartbeatThrottle implements ProgressStages
         $this->nextBeatAt = PHP_INT_MAX;
 
         try {
-            foreach ($this->heartbeats as $heartbeat) {
-                if ($heartbeat->nextBeatAt() <= $now) {
-                    $heartbeat->beat(
-                        new Pulse(
-                            $heartbeat->nextBeat(),
-                            $elapsedSeconds,
-                            $rowsRead,
-                            $stage,
-                            $stageRows,
-                            $memoryBytes,
-                            $peakMemoryBytes,
-                        ),
-                        $this->clock,
-                        $this->logger,
-                    );
-                }
+            foreach ($heartbeats as $heartbeat) {
+                $heartbeat->beat(
+                    new Pulse(
+                        $heartbeat->nextBeat(),
+                        $elapsedSeconds,
+                        $rowsRead,
+                        $stage,
+                        $stageRows,
+                        $memoryBytes,
+                        $peakMemoryBytes,
+                    ),
+                    $this->clock,
+                    $this->logger,
+                );
             }
         } finally {
             $this->nextBeatAt = min(array_map(

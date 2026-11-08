@@ -174,12 +174,45 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $waveTwo->reported(0, 'sort', 40, 2000, 8_000_000_000);
 
         $pulse = $recording->pulses()[0];
-        static::assertSame([500, 'sort', 540, 9_000_000_000], [
+        static::assertSame([500, 'sort', 40, 9_000_000_000], [
             $pulse->rowsRead,
             $pulse->stage,
             $pulse->stageRows,
             $pulse->peakMemoryBytes,
         ]);
+    }
+
+    public function test_stage_rows_from_other_processes_are_those_of_the_latest_report(): void
+    {
+        $context = new HeartbeatContext();
+        $recording = new RecordingHeartbeat();
+        $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
+        $partials = $throttle->stage('parallel');
+        $reduce = $throttle->stage('parallel');
+
+        $partials->reported(500, 'group_by', 500, 0, 0);
+        $context->seconds(120);
+        $reduce->reported(0, 'group_by', 30, 0, 0);
+
+        static::assertSame(['group_by', 30], [$recording->pulses()[0]->stage, $recording->pulses()[0]->stageRows]);
+    }
+
+    public function test_beat_now_beats_every_heartbeat_before_its_interval_and_restarts_it(): void
+    {
+        $context = new HeartbeatContext();
+        $recording = new RecordingHeartbeat();
+        $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
+
+        iterator_to_array($throttle->reading(HeartbeatContext::batches(2)), false);
+        $context->seconds(30);
+        $throttle->beatNow();
+        $context->seconds(100);
+        $throttle->beatWhenDue();
+        $context->seconds(20);
+        $throttle->beatWhenDue();
+
+        static::assertSame([[1, 30], [2, 150]], HeartbeatContext::beats($recording));
+        static::assertSame(20, $recording->pulses()[0]->rowsRead);
     }
 
     public function test_memory_of_a_launch_drops_out_once_it_reports_zero(): void
