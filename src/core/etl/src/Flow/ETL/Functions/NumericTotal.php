@@ -40,6 +40,46 @@ final class NumericTotal
     }
 
     /**
+     * Per frame, the total aggregate() builds from that frame's rows.
+     *
+     * @param list<mixed> $values
+     * @param list<array{0: int, 1: int}> $bounds inclusive indexes into $values; [1, 0] is an empty frame
+     *
+     * @return array{sums: list<null|float|int>, counts: list<int>} one sum and one count per bound
+     */
+    public static function frames(array $values, array $bounds, bool $exact): array
+    {
+        $calculator = new Calculator();
+        $runningSum = new RunningSum($calculator);
+        $sums = [];
+        $counts = [];
+        $previous = null;
+        $sum = null;
+        $count = 0;
+
+        foreach ($bounds as $bound) {
+            if ($bound !== $previous) {
+                [$start, $end] = $bound;
+
+                if ($previous !== null && $start === $previous[0] && $end > $previous[1]) {
+                    $count += $runningSum->addNumeric($values, $previous[1] + 1, $end, $exact);
+                } else {
+                    $runningSum = new RunningSum($calculator);
+                    $count = $runningSum->addNumeric($values, $start, $end, $exact);
+                }
+
+                $sum = $count === 0 ? null : $runningSum->value();
+                $previous = $bound;
+            }
+
+            $sums[] = $sum;
+            $counts[] = $count;
+        }
+
+        return ['sums' => $sums, 'counts' => $counts];
+    }
+
+    /**
      * @param list<int> $indices
      */
     public function aggregate(Column $column, array $indices): void

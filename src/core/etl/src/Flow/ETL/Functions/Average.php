@@ -21,6 +21,8 @@ use Flow\Types\Type;
 use Flow\Types\Type\Logical\StructureType;
 use SensitiveParameter;
 
+use function array_fill;
+use function count;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_enum;
 use function Flow\Types\DSL\type_float;
@@ -140,9 +142,25 @@ final class Average implements AggregatesNumericTotal, FrameAccumulating, Window
         return $this->exact;
     }
 
-    public function accumulator(): self
+    public function frameValues(Rows $partition, array $bounds, Backend $backend): array
     {
-        return new self($this->ref, $this->scale, $this->rounding, $this->exact);
+        $column = $this->column->of($partition);
+
+        if ($column === null) {
+            return array_fill(0, count($bounds), null);
+        }
+
+        $calculator = new Calculator();
+        $frames = NumericTotal::frames($column->values(), $bounds, $this->exact);
+        $values = [];
+
+        foreach ($frames['sums'] as $i => $sum) {
+            $values[] = $sum === null
+                ? null
+                : $calculator->divide($sum, $frames['counts'][$i], $this->scale, $this->rounding);
+        }
+
+        return $values;
     }
 
     public function values(Rows $partition, Backend $backend): array

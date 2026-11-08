@@ -57,6 +57,16 @@ Upgrading from older versions: [0.41.x to 0.43.x](/documentation/upgrading-0.41-
 | `hash_join()` broadcast limit defaults to 10 000 000 bytes                   | 10 485 760 bytes                                                               |
 | `MemoryLimit::default()` is 1 000 000 000 bytes for a `memory_limit` of `-1` | 1 073 741 824 bytes                                                            |
 
+### 5) `flow-php/etl` - `FrameAccumulating` computes every frame of a partition in one call
+
+| Before                                                                 | After                                                                                     |
+|------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|
+| `FrameAccumulating::accumulator(): AggregatingFunction`                | `FrameAccumulating::frameValues(Rows $partition, array $bounds, Backend $backend): array` |
+| `Sum::accumulator()`, `Average::accumulator()`, `Count::accumulator()` | removed                                                                                   |
+
+A custom `FrameAccumulating` gets one `[start, end]` pair per row of the sorted partition, `[1, 0]` for an empty frame,
+and returns one value per pair.
+
 ---
 
 ## Upgrading from 0.46.x to 0.47.x

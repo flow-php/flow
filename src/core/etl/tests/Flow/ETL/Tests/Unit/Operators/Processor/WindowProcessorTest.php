@@ -18,6 +18,7 @@ use Flow\ETL\Values\Rows;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function array_fill;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\average;
 use function Flow\ETL\DSL\count;
@@ -92,15 +93,10 @@ final class WindowProcessorTest extends FlowTestCase
                 ),
             ),
         );
-        static::assertSame(1, $function->accumulatorCalls);
-        static::assertSame(4, $function->fedRows);
+        static::assertSame([array_fill(0, 4, [0, 3])], $function->bounds);
     }
 
-    /**
-     * A peer frame grows by one row per row, so the accumulator carries forward and the whole partition
-     * feeds n rows instead of n(n+1)/2.
-     */
-    public function test_growing_frame_accumulates_each_row_once(): void
+    public function test_growing_frame_hands_each_row_its_grown_bounds(): void
     {
         $function = new CountingFrameAccumulating(ref('value'));
 
@@ -117,14 +113,10 @@ final class WindowProcessorTest extends FlowTestCase
                 ], schema(int_schema('value'))),
             ),
         );
-        static::assertSame(1, $function->accumulatorCalls);
-        static::assertSame(4, $function->fedRows);
+        static::assertSame([[[0, 0], [0, 1], [0, 2], [0, 3]]], $function->bounds);
     }
 
-    /**
-     * Rows tied on the ordering column share frame bounds, so they share one computed value.
-     */
-    public function test_peer_group_reuses_the_value_within_a_group(): void
+    public function test_peer_group_shares_its_bounds_and_value(): void
     {
         $function = new CountingFrameAccumulating(ref('value'));
 
@@ -141,14 +133,10 @@ final class WindowProcessorTest extends FlowTestCase
                 ], schema(int_schema('value'))),
             ),
         );
-        static::assertSame(1, $function->accumulatorCalls);
-        static::assertSame(4, $function->fedRows);
+        static::assertSame([[[0, 1], [0, 1], [0, 2], [0, 3]]], $function->bounds);
     }
 
-    /**
-     * A sliding frame moves its start, so the accumulator cannot be carried and must be rebuilt.
-     */
-    public function test_sliding_frame_recomputes_per_row(): void
+    public function test_sliding_frame_moves_its_start_per_row(): void
     {
         $function = new CountingFrameAccumulating(ref('value'));
 
@@ -165,8 +153,7 @@ final class WindowProcessorTest extends FlowTestCase
                 ], schema(int_schema('value'))),
             ),
         );
-        static::assertSame(3, $function->accumulatorCalls);
-        static::assertSame(6, $function->fedRows);
+        static::assertSame([[[0, 0], [0, 1], [1, 2], [2, 3]]], $function->bounds);
     }
 
     /**

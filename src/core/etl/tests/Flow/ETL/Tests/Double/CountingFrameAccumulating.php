@@ -11,6 +11,7 @@ use Flow\ETL\Foundation\Exception\RuntimeException;
 use Flow\ETL\Functions\FrameAccumulating;
 use Flow\ETL\Functions\FunctionTree;
 use Flow\ETL\Functions\Reference\Reference;
+use Flow\ETL\Functions\Sum;
 use Flow\ETL\Functions\Window;
 use Flow\ETL\Functions\Window\FrameAccumulation;
 use Flow\ETL\Functions\WindowFunction;
@@ -24,9 +25,10 @@ use function Flow\Types\DSL\type_optional;
 
 final class CountingFrameAccumulating implements FrameAccumulating, WindowFunction
 {
-    public int $accumulatorCalls = 0;
-
-    public int $fedRows = 0;
+    /**
+     * @var list<list<array{0: int, 1: int}>> the bounds of every frameValues() call, one list per partition
+     */
+    public array $bounds = [];
 
     public function __construct(
         private readonly Reference $ref,
@@ -34,11 +36,11 @@ final class CountingFrameAccumulating implements FrameAccumulating, WindowFuncti
         private readonly ?self $countersOwner = null,
     ) {}
 
-    public function accumulator(): CountingAggregate
+    public function frameValues(Rows $partition, array $bounds, Backend $backend): array
     {
-        $this->counters()->accumulatorCalls++;
+        $this->counters()->bounds[] = $bounds;
 
-        return new CountingAggregate($this->ref, $this->counters());
+        return (new Sum($this->ref))->frameValues($partition, $bounds, $backend);
     }
 
     public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static

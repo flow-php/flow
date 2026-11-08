@@ -152,9 +152,31 @@ final class Count implements AggregatesByGroup, FrameAccumulating, WindowFunctio
         $this->count += count($indices) - $column->take($indices)->nullCount();
     }
 
-    public function accumulator(): self
+    public function frameValues(Rows $partition, array $bounds, Backend $backend): array
     {
-        return new self($this->ref);
+        $column = $this->column?->of($partition);
+        // non-null values before each row, so a frame counts in two reads whatever its size
+        $before = [0];
+
+        if ($column !== null) {
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($column->values() as $i => $value) {
+                $before[] = $before[$i] + ($value === null ? 0 : 1);
+            }
+        }
+
+        $counts = [];
+
+        foreach ($bounds as [$start, $end]) {
+            $counts[] = match (true) {
+                $start > $end => 0,
+                $this->column === null => $end - $start + 1,
+                $column === null => 0,
+                default => $before[$end + 1] - $before[$start],
+            };
+        }
+
+        return $counts;
     }
 
     public function values(Rows $partition, Backend $backend): array
