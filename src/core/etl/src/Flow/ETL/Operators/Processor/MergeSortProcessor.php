@@ -35,7 +35,7 @@ final readonly class MergeSortProcessor implements Distributable
         /** @var list<SortColumn> */
         public array $columns,
         private RandomValueGenerator $random,
-        private Progress $progress = new VoidProgress(),
+        Progress $progress = new VoidProgress(),
     ) {
         $this->sort = ExternalSort::of($columns, $config, $random, $progress);
     }

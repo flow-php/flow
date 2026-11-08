@@ -74,17 +74,17 @@ final class HeartbeatThrottle implements ProgressStages
      * @throws Throwable what a heartbeat failing with HeartbeatFailure::stop threw
      */
     public function othersReported(
-        int $rows,
+        int $addedRows,
         string $stage,
-        int $stageRows,
-        int $memoryBytes,
+        int $addedStageRows,
+        int $addedMemoryBytes,
         int $peakMemoryBytes,
     ): void {
-        $this->othersRows = $rows;
+        $this->othersRows += $addedRows;
         $this->othersStage = $stage;
-        $this->othersStageRows = $stageRows;
-        $this->othersMemory = $memoryBytes;
-        $this->othersPeak = $peakMemoryBytes;
+        $this->othersStageRows += $addedStageRows;
+        $this->othersMemory += $addedMemoryBytes;
+        $this->othersPeak = max($this->othersPeak, $peakMemoryBytes);
         $this->othersNewer = true;
         $this->beatWhenDue();
     }

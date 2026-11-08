@@ -42,4 +42,19 @@ final class HeartbeatStageTest extends FlowTestCase
             $pulse->peakMemoryBytes,
         ]);
     }
+
+    public function test_a_report_replaces_its_own_previous_report(): void
+    {
+        $context = new HeartbeatContext();
+        $recording = new RecordingHeartbeat();
+        $stage = new HeartbeatStage('parallel', $context->throttle(new ScheduledHeartbeat($recording, 1)));
+
+        $stage->reported(500, 'join', 120, 1_000_000_000_000, 0);
+        $context->seconds(1);
+        $stage->reported(700, 'join', 150, 7, 0);
+
+        $pulse = $recording->pulses()[0];
+        static::assertSame([700, 150], [$pulse->rowsRead, $pulse->stageRows]);
+        static::assertLessThan(1_000_000_000_000, $pulse->memoryBytes);
+    }
 }

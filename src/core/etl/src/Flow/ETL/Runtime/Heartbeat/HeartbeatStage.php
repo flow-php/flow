@@ -8,6 +8,12 @@ use Flow\ETL\Foundation\Progress;
 
 final class HeartbeatStage implements Progress
 {
+    private int $reportedMemoryBytes = 0;
+
+    private int $reportedRows = 0;
+
+    private int $reportedStageRows = 0;
+
     private int $rows = 0;
 
     public function __construct(
@@ -23,6 +29,13 @@ final class HeartbeatStage implements Progress
 
     public function reported(int $rows, string $stage, int $stageRows, int $memoryBytes, int $peakMemoryBytes): void
     {
-        $this->throttle->othersReported($rows, $stage, $stageRows, $memoryBytes, $peakMemoryBytes);
+        $addedRows = $rows - $this->reportedRows;
+        $addedStageRows = $stageRows - $this->reportedStageRows;
+        $addedMemoryBytes = $memoryBytes - $this->reportedMemoryBytes;
+        $this->reportedRows = $rows;
+        $this->reportedStageRows = $stageRows;
+        $this->reportedMemoryBytes = $memoryBytes;
+
+        $this->throttle->othersReported($addedRows, $stage, $addedStageRows, $addedMemoryBytes, $peakMemoryBytes);
     }
 }
