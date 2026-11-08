@@ -328,19 +328,31 @@ final class PivotProcessorTest extends FlowTestCase
     {
         $spy = new ProgressSpy();
 
-        DescribeRoundTrip::rebuilt(
-            new PivotProcessor(
-                new GroupBy(
-                    refs(ref('date')),
-                    new Aggregators(sum(ref('contributions'))),
-                    new Pivot(ref('user'), pivot_values('norbert')),
+        iterator_to_array(
+            DescribeRoundTrip::rebuilt(
+                new PivotProcessor(
+                    new GroupBy(
+                        refs(ref('date')),
+                        new Aggregators(sum(ref('contributions'))),
+                        new Pivot(ref('user'), pivot_values('norbert')),
+                    ),
+                    config()->grouping,
                 ),
-                config()->grouping,
+                new Rebuild($spy),
+            )->process(
+                (static function (): Generator {
+                    yield array_to_rows(
+                        [['date' => '2024-01-01', 'user' => 'norbert', 'contributions' => 1]],
+                        schema(str_schema('date'), str_schema('user'), int_schema('contributions')),
+                    );
+                })(),
+                flow_context()->backend(),
             ),
-            new Rebuild($spy),
+            false,
         );
 
         static::assertSame(['pivot'], $spy->stages());
+        static::assertGreaterThan(0, $spy->rowsOf('pivot'));
     }
 
     public function test_counts_every_row_in_and_every_pivoted_row_out(): void

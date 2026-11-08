@@ -552,11 +552,43 @@ final class WindowProcessorTest extends FlowTestCase
     {
         $spy = new ProgressSpy();
 
-        DescribeRoundTrip::rebuilt(
-            new WindowProcessor('rank', rank()->over(window()->orderBy(ref('n')))),
-            new Rebuild($spy),
+        iterator_to_array(
+            DescribeRoundTrip::rebuilt(
+                new WindowProcessor('rank', rank()->over(window()->orderBy(ref('n')))),
+                new Rebuild($spy),
+            )->process(
+                (static function (): Generator {
+                    yield array_to_rows([['n' => 2], ['n' => 1]], schema(int_schema('n')));
+                })(),
+                flow_context()->backend(),
+            ),
+            false,
         );
 
         static::assertSame(['window'], $spy->stages());
+        static::assertGreaterThan(0, $spy->rowsOf('window'));
+    }
+
+    public function test_a_bound_window_counts_with_its_progress(): void
+    {
+        $progress = new ProgressSpy();
+
+        iterator_to_array(
+            (new WindowProcessor(
+                'rank',
+                rank()->over(window()->orderBy(ref('n'))),
+                progress: $progress->stage('window'),
+            ))
+                ->bind(schema(int_schema('n')))
+                ->step->process(
+                    (static function (): Generator {
+                        yield array_to_rows([['n' => 2], ['n' => 1]], schema(int_schema('n')));
+                    })(),
+                    flow_context()->backend(),
+                ),
+            false,
+        );
+
+        static::assertGreaterThan(0, $progress->rowsOf('window'));
     }
 }

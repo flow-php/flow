@@ -11,7 +11,14 @@ interface Progress
     public function advanced(int $rows): void;
 
     /**
-     * Totals of the work done in other processes; each call replaces this object's previous totals.
+     * Rows read and memory replace this object's previous values.
+     * Stage and stage rows are the latest report's; the peak only rises.
      */
-    public function reported(int $rows, string $stage, int $stageRows, int $memoryBytes, int $peakMemoryBytes): void;
+    public function reported(
+        int $rowsRead,
+        string $stage,
+        int $stageRows,
+        int $memoryBytes,
+        int $peakMemoryBytes,
+    ): void;
 }

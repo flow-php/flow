@@ -206,7 +206,7 @@ Physical plan
          │     On: id = id
          │     Prefix: joined_
          │     Storage: FilesystemRowsStorage
-         │     Memory: 1000 MB
+         │     Memory: 1024 MB
          │     Buckets: 64
          │     Batch: 1000
          └─ Right side: Pipeline #0
@@ -214,7 +214,7 @@ Physical plan
                   Statistics: rows exact 1 · size unknown
 ```
 
-`Memory: 1000 MB` is the default limit under `memory_limit = -1`. If `memory_limit` has a value, the limit is 70% of
+`Memory: 1024 MB` is the default limit under `memory_limit = -1`. If `memory_limit` has a value, the limit is 70% of
 it, or `FLOW_MAX_MEMORY`.
 
 The planner plans a joined frame separately, so its pipelines have their own numbers. `Right side:` tells which

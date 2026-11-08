@@ -35,7 +35,13 @@ final readonly class ProgressSpy implements Progress, ProgressStages
         return array_values($this->advancedLog->getArrayCopy());
     }
 
-    public function reported(int $rows, string $stage, int $stageRows, int $memoryBytes, int $peakMemoryBytes): void {}
+    public function reported(
+        int $rowsRead,
+        string $stage,
+        int $stageRows,
+        int $memoryBytes,
+        int $peakMemoryBytes,
+    ): void {}
 
     public function rowsOf(string $stage): int
     {

@@ -133,7 +133,7 @@ Physical plan
             Processor: GroupByAggregationProcessor
                Group by: country
                Aggregations: Sum
-               Memory: 1000 MB
+               Memory: 1024 MB
                Storage: FilesystemRowsStorage
                Batch: 1000
 ```

@@ -110,15 +110,24 @@ final class MergeSortProcessorTest extends FlowTestCase
     {
         $spy = new ProgressSpy();
 
-        DescribeRoundTrip::rebuilt(
-            new MergeSortProcessor(
-                new ExternalSortConfig(config()->grouping),
-                [ref('id')->asc()],
-                new NativePHPRandomValueGenerator(),
+        iterator_to_array(
+            DescribeRoundTrip::rebuilt(
+                new MergeSortProcessor(
+                    new ExternalSortConfig(config()->grouping),
+                    [ref('id')->asc()],
+                    new NativePHPRandomValueGenerator(),
+                ),
+                new Rebuild($spy),
+            )->process(
+                (static function (): Generator {
+                    yield array_to_rows([['id' => 2], ['id' => 1]], schema(int_schema('id')));
+                })(),
+                flow_context(config())->backend(),
             ),
-            new Rebuild($spy),
+            false,
         );
 
         static::assertSame(['sort'], $spy->stages());
+        static::assertGreaterThan(0, $spy->rowsOf('sort'));
     }
 }

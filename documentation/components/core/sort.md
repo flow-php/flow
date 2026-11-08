@@ -75,7 +75,7 @@ data_frame(
         ->sort(
             external_sort()
                 ->memoryLimit(Unit::fromMb(256))  // process memory past which sorted runs are spilled
-                ->bucketsCount(100)               // how many runs are merged at once (merge fan-in)
+                ->bucketsCount(100)               // the most runs merged at once (at least 2); under a tight memory limit the merge opens fewer
                 ->batchSize(1000)                 // rows per output batch
         )
 )

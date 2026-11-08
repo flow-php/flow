@@ -346,17 +346,51 @@ final class TopNProcessorTest extends FlowTestCase
     {
         $spy = new ProgressSpy();
 
-        DescribeRoundTrip::rebuilt(
-            new TopNProcessor(
-                [ref('id')->asc()],
-                2,
-                new ExternalSortConfig(config()->grouping),
-                new NativePHPRandomValueGenerator(),
+        iterator_to_array(
+            DescribeRoundTrip::rebuilt(
+                new TopNProcessor(
+                    [ref('id')->asc()],
+                    2,
+                    new ExternalSortConfig(config()->grouping),
+                    new NativePHPRandomValueGenerator(),
+                ),
+                new Rebuild($spy),
+            )->process(
+                (static function (): Generator {
+                    yield array_to_rows([['id' => 3], ['id' => 1], ['id' => 2]], schema(int_schema('id')));
+                })(),
+                flow_context()->backend(),
             ),
-            new Rebuild($spy),
+            false,
         );
 
         static::assertSame(['sort'], $spy->stages());
+        static::assertGreaterThan(0, $spy->rowsOf('sort'));
+    }
+
+    public function test_a_bound_top_n_counts_with_its_progress(): void
+    {
+        $progress = new ProgressSpy();
+
+        iterator_to_array(
+            (new TopNProcessor(
+                [ref('id')->asc()],
+                2,
+                new MemorySortConfig(),
+                new NativePHPRandomValueGenerator(),
+                progress: $progress->stage('sort'),
+            ))
+                ->bind(schema(int_schema('id')))
+                ->step->process(
+                    (static function (): Generator {
+                        yield array_to_rows([['id' => 3], ['id' => 1], ['id' => 2]], schema(int_schema('id')));
+                    })(),
+                    flow_context()->backend(),
+                ),
+            false,
+        );
+
+        static::assertSame(3 + 2, $progress->rowsOf('sort'));
     }
 
     public function test_counts_every_row_in_and_every_kept_row_out(): void

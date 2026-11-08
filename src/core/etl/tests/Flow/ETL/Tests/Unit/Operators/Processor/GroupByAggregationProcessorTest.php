@@ -602,16 +602,25 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
     {
         $spy = new ProgressSpy();
 
-        DescribeRoundTrip::rebuilt(
-            new GroupByAggregationProcessor(
-                new GroupBy(refs('id')),
-                config()->grouping,
-                new NativePHPRandomValueGenerator(),
+        iterator_to_array(
+            DescribeRoundTrip::rebuilt(
+                new GroupByAggregationProcessor(
+                    new GroupBy(refs('id')),
+                    config()->grouping,
+                    new NativePHPRandomValueGenerator(),
+                ),
+                new Rebuild($spy),
+            )->process(
+                (static function (): Generator {
+                    yield array_to_rows([['id' => 1], ['id' => 1], ['id' => 2]], schema(int_schema('id')));
+                })(),
+                flow_context()->backend(),
             ),
-            new Rebuild($spy),
+            false,
         );
 
         static::assertSame(['group_by'], $spy->stages());
+        static::assertGreaterThan(0, $spy->rowsOf('group_by'));
     }
 
     public function test_past_the_limit_counts_every_accumulated_row_and_every_flushed_group(): void

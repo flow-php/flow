@@ -9,14 +9,16 @@ use Psr\Clock\ClockInterface;
 
 final class SteppingClock implements ClockInterface
 {
-    public function __construct(
-        private readonly int $seconds = 1,
-        private DateTimeImmutable $now = new DateTimeImmutable('2026-01-01 00:00:00'),
-    ) {}
+    private DateTimeImmutable $now;
+
+    public function __construct()
+    {
+        $this->now = new DateTimeImmutable('2026-01-01 00:00:00');
+    }
 
     public function now(): DateTimeImmutable
     {
-        $this->now = $this->now->modify("+{$this->seconds} seconds");
+        $this->now = $this->now->modify('+1 seconds');
 
         return $this->now;
     }

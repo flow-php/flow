@@ -197,6 +197,40 @@ final class HeartbeatThrottleTest extends FlowTestCase
         static::assertSame(['group_by', 30], [$recording->pulses()[0]->stage, $recording->pulses()[0]->stageRows]);
     }
 
+    public function test_an_unchanged_report_keeps_the_stage_that_advanced_after_the_last_change(): void
+    {
+        $context = new HeartbeatContext();
+        $recording = new RecordingHeartbeat();
+        $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
+        $parallel = $throttle->stage('parallel');
+
+        $parallel->reported(500, 'join', 120, 1000, 2000);
+        $throttle->stage('sort')->advanced(10);
+        $context->seconds(120);
+        $parallel->reported(500, 'join', 120, 1000, 2000);
+
+        static::assertSame([500, 'sort', 10], [
+            $recording->pulses()[0]->rowsRead,
+            $recording->pulses()[0]->stage,
+            $recording->pulses()[0]->stageRows,
+        ]);
+    }
+
+    public function test_a_report_that_changes_only_the_stage_takes_the_reported_stage(): void
+    {
+        $context = new HeartbeatContext();
+        $recording = new RecordingHeartbeat();
+        $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
+        $parallel = $throttle->stage('parallel');
+
+        $parallel->reported(500, 'join', 120, 1000, 2000);
+        $throttle->stage('sort')->advanced(10);
+        $context->seconds(120);
+        $parallel->reported(500, 'group_by', 120, 1000, 2000);
+
+        static::assertSame(['group_by', 120], [$recording->pulses()[0]->stage, $recording->pulses()[0]->stageRows]);
+    }
+
     public function test_beat_now_beats_every_heartbeat_before_its_interval_and_restarts_it(): void
     {
         $context = new HeartbeatContext();

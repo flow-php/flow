@@ -903,11 +903,23 @@ final class HashJoinTest extends FlowTestCase
     {
         $spy = new ProgressSpy();
 
-        DescribeRoundTrip::rebuilt(
-            HashJoinMother::resident(Expression::on(['id' => 'user_id']), JoinType::left),
-            new Rebuild($spy),
+        iterator_to_array(
+            DescribeRoundTrip::rebuilt(
+                HashJoinMother::resident(Expression::on(['id' => 'user_id']), JoinType::left),
+                new Rebuild($spy),
+            )->join(
+                (static function () {
+                    yield array_to_rows([['id' => 1]], schema(int_schema('id')));
+                })(),
+                (static function () {
+                    yield array_to_rows([['user_id' => 1]], schema(int_schema('user_id')));
+                })(),
+                flow_context()->backend(),
+            ),
+            false,
         );
 
         static::assertSame(['join'], $spy->stages());
+        static::assertGreaterThan(0, $spy->rowsOf('join'));
     }
 }

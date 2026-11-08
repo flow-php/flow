@@ -110,7 +110,7 @@ df(config_builder()
 | `join`        | `join()`                                            |
 | `window`      | `withColumn()` with a window function               |
 | `repartition` | `repartition()`                                     |
-| `parallel`    | the parent process while it waits for its workers   |
+| `parallel`    | the parent process until the first worker report    |
 
 ## Failures
 
@@ -155,4 +155,4 @@ A beat can be late by the interval plus the longest call that cannot report prog
 | 5M   | 5.7 s       | 1.5 s        |
 
 In a parallel run the callback runs in the parent process. The pulse adds the rows and memory that the workers
-report, at most once per second.
+report, at most once per second. The stage and stage rows of the workers' latest report come through too.

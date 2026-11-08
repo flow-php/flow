@@ -70,6 +70,13 @@ final class HeartbeatTest extends FlowIntegrationTestCase
             ),
             'window',
         ];
+        yield 'window without a partition' => [
+            static fn(DataFrame $df): DataFrame => $df->withColumn(
+                'rn',
+                row_number()->over(window()->orderBy(ref('id'))),
+            ),
+            'window',
+        ];
     }
 
     /**

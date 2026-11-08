@@ -227,12 +227,21 @@ final class RepartitionProcessorTest extends FlowTestCase
     {
         $spy = new ProgressSpy();
 
-        DescribeRoundTrip::rebuilt(
-            new RepartitionProcessor(refs('id'), config()->repartition, new NativePHPRandomValueGenerator()),
-            new Rebuild($spy),
+        iterator_to_array(
+            DescribeRoundTrip::rebuilt(
+                new RepartitionProcessor(refs('id'), config()->repartition, new NativePHPRandomValueGenerator()),
+                new Rebuild($spy),
+            )->process(
+                (static function (): Generator {
+                    yield array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
+                })(),
+                flow_context()->backend(),
+            ),
+            false,
         );
 
         static::assertSame(['repartition'], $spy->stages());
+        static::assertGreaterThan(0, $spy->rowsOf('repartition'));
     }
 
     public function test_a_window_repartition_rebuilds_with_the_window_stage(): void

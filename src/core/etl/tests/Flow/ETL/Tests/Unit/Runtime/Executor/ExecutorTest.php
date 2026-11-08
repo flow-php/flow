@@ -563,6 +563,7 @@ final class ExecutorTest extends FlowTestCase
             ->fetch();
 
         static::assertSame(4, $rows->count());
+        static::assertNotSame([], $recording->pulses());
         static::assertSame(
             [],
             array_filter($recording->pulses(), static fn(Pulse $pulse): bool => $pulse->rowsRead > 0),

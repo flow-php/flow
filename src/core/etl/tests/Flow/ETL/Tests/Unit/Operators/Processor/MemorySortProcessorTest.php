@@ -136,9 +136,37 @@ final class MemorySortProcessorTest extends FlowTestCase
     {
         $spy = new ProgressSpy();
 
-        DescribeRoundTrip::rebuilt(new MemorySortProcessor([ref('id')->asc()]), new Rebuild($spy));
+        iterator_to_array(
+            DescribeRoundTrip::rebuilt(new MemorySortProcessor([ref('id')->asc()]), new Rebuild($spy))->process(
+                (static function () {
+                    yield array_to_rows([['id' => 2], ['id' => 1]], schema(int_schema('id')));
+                })(),
+                flow_context()->backend(),
+            ),
+            false,
+        );
 
         static::assertSame(['sort'], $spy->stages());
+        static::assertGreaterThan(0, $spy->rowsOf('sort'));
+    }
+
+    public function test_a_bound_sort_counts_with_its_progress(): void
+    {
+        $progress = new ProgressSpy();
+
+        iterator_to_array(
+            (new MemorySortProcessor([ref('id')->asc()], progress: $progress->stage('sort')))
+                ->bind(schema(int_schema('id')))
+                ->step->process(
+                    (static function () {
+                        yield array_to_rows([['id' => 2], ['id' => 1]], schema(int_schema('id')));
+                    })(),
+                    flow_context()->backend(),
+                ),
+            false,
+        );
+
+        static::assertSame(2 + 2, $progress->rowsOf('sort'));
     }
 
     public function test_counts_every_row_in_and_out(): void
