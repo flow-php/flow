@@ -8,6 +8,7 @@ use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidLogicException;
 use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\Functions\Reference\Reference;
 use Flow\ETL\Functions\Window\FrameAccumulation;
 use Flow\ETL\Values\Column\Backend;
@@ -152,7 +153,7 @@ final class Count implements AggregatesByGroup, FrameAccumulating, WindowFunctio
         $this->count += count($indices) - $column->take($indices)->nullCount();
     }
 
-    public function frameValues(Rows $partition, array $bounds, Backend $backend): array
+    public function frameValues(Rows $partition, array $bounds, Backend $backend, Progress $progress): array
     {
         $column = $this->column?->of($partition);
         // non-null values before each row, so a frame counts in two reads whatever its size
@@ -166,6 +167,7 @@ final class Count implements AggregatesByGroup, FrameAccumulating, WindowFunctio
         }
 
         $counts = [];
+        $unreported = 0;
 
         foreach ($bounds as [$start, $end]) {
             $counts[] = match (true) {
@@ -174,14 +176,21 @@ final class Count implements AggregatesByGroup, FrameAccumulating, WindowFunctio
                 $column === null => 0,
                 default => $before[$end + 1] - $before[$start],
             };
+
+            if (++$unreported === Progress::ROWS_PER_CALL) {
+                $progress->advanced($unreported);
+                $unreported = 0;
+            }
         }
+
+        $progress->advanced($unreported);
 
         return $counts;
     }
 
-    public function values(Rows $partition, Backend $backend): array
+    public function values(Rows $partition, Backend $backend, Progress $progress): array
     {
-        return (new FrameAccumulation($this->window()->frame()))->values($this, $partition, $backend);
+        return (new FrameAccumulation($this->window()->frame()))->values($this, $partition, $backend, $progress);
     }
 
     public function over(Window $window): static

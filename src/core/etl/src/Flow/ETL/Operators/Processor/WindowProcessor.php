@@ -7,6 +7,9 @@ namespace Flow\ETL\Operators\Processor;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
+use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Foundation\ProgressStages;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Functions\Reference\Reference;
 use Flow\ETL\Functions\ReferenceResolver;
 use Flow\ETL\Functions\Window\BoundWindow;
@@ -39,6 +42,7 @@ final class WindowProcessor implements Processor
         public readonly string|Definition $column,
         public readonly WindowFunction $function,
         public readonly ?BoundWindow $bound = null,
+        private readonly Progress $progress = new VoidProgress(),
     ) {}
 
     /**
@@ -51,6 +55,7 @@ final class WindowProcessor implements Processor
         $unbound = new self(
             is_array($column) ? Definitions::fromArray($column) : type_string()->assert($column),
             $rebuild->of($data['function'] ?? null, WindowFunction::class),
+            progress: $rebuild->progress(ProgressStages::WINDOW),
         );
 
         return ($data['input'] ?? null) === null
@@ -59,6 +64,7 @@ final class WindowProcessor implements Processor
                 $unbound->column,
                 $unbound->function,
                 $unbound->boundTo(Schema::fromArray(type_array()->assert($data['input']))),
+                $unbound->progress,
             );
     }
 
@@ -75,7 +81,7 @@ final class WindowProcessor implements Processor
     {
         $bound = $this->boundTo($input);
 
-        return new BoundStep(new self($this->column, $this->function, $bound), $bound->output);
+        return new BoundStep(new self($this->column, $this->function, $bound, $this->progress), $bound->output);
     }
 
     public function breaks(): bool
@@ -150,7 +156,7 @@ final class WindowProcessor implements Processor
         );
 
         $builder = $backend->builder($derived);
-        $builder->appendMany($resolved->values($partitionRows, $backend));
+        $builder->appendMany($resolved->values($partitionRows, $backend, $this->progress));
 
         return $partitionRows->withColumns($bound->output, [$derived->name() => $builder->finish()]);
     }

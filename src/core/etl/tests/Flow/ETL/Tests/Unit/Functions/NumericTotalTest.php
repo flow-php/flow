@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Functions;
 
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Functions\NumericTotal;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -35,7 +36,12 @@ final class NumericTotalTest extends FlowTestCase
     {
         static::assertSame(
             ['sums' => [3.5, 7.5, null, null], 'counts' => [2, 3, 0, 0]],
-            NumericTotal::frames(['1', 'x', null, '2.5', 4], [[0, 3], [0, 4], [1, 2], [1, 0]], false),
+            NumericTotal::frames(
+                ['1', 'x', null, '2.5', 4],
+                [[0, 3], [0, 4], [1, 2], [1, 0]],
+                false,
+                new VoidProgress(),
+            ),
         );
     }
 
@@ -43,7 +49,7 @@ final class NumericTotalTest extends FlowTestCase
     {
         static::assertSame(
             ['sums' => [9, 9, 5], 'counts' => [2, 2, 1]],
-            NumericTotal::frames([4, 5], [[0, 1], [0, 1], [1, 1]], false),
+            NumericTotal::frames([4, 5], [[0, 1], [0, 1], [1, 1]], false, new VoidProgress()),
         );
     }
 
@@ -51,7 +57,7 @@ final class NumericTotalTest extends FlowTestCase
     {
         static::assertSame(
             ['sums' => [0.1, 0.3], 'counts' => [1, 2]],
-            NumericTotal::frames([0.1, 0.2], [[0, 0], [0, 1]], true),
+            NumericTotal::frames([0.1, 0.2], [[0, 0], [0, 1]], true, new VoidProgress()),
         );
     }
 

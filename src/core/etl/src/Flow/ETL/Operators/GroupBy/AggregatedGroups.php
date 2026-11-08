@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Operators\GroupBy;
 
+use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Functions\AggregatesByGroup;
 use Flow\ETL\Functions\AggregatesNumericTotal;
 use Flow\ETL\Functions\GroupedAggregation;
@@ -51,6 +53,7 @@ final class AggregatedGroups
         private readonly GroupBy $groupBy,
         private readonly GroupByShape $shape,
         Backend $backend,
+        private readonly Progress $progress = new VoidProgress(),
     ) {
         $this->table = $groupBy->groupTable($shape->input, $backend);
         $outputs = [];
@@ -104,6 +107,8 @@ final class AggregatedGroups
         foreach ($this->accumulating as $aggregation) {
             $aggregation->aggregateGroups($batch, $ids, $backend);
         }
+
+        $this->progress->advanced($batch->count());
     }
 
     public function count(): int
@@ -163,7 +168,11 @@ final class AggregatedGroups
     public function flush(int $batchSize, Backend $backend): Generator
     {
         if ($this->count() > 0) {
-            yield from $this->rows($this->count(), $backend)->chunks($batchSize);
+            foreach ($this->rows($this->count(), $backend)->chunks($batchSize) as $chunk) {
+                $this->progress->advanced($chunk->count());
+
+                yield $chunk;
+            }
         }
     }
 

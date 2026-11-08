@@ -26,8 +26,14 @@ use Flow\ETL\Planning\Optimizer\Optimizer;
 use Flow\ETL\Planning\Physical\PhysicalPlan;
 use Flow\ETL\Planning\Physical\Pipeline;
 use Flow\ETL\Planning\Physical\PipelineSteps;
+use Flow\ETL\Runtime\ErrorHandler;
+use Flow\ETL\Runtime\ErrorHandler\IgnoreError;
+use Flow\ETL\Runtime\ErrorHandler\SkipRows;
+use Flow\ETL\Runtime\ErrorHandler\ThrowError;
 use Flow\ETL\Runtime\Executor\Executor;
 use Flow\ETL\Runtime\Executor\RunCounts;
+use Flow\ETL\Runtime\Heartbeat\HeartbeatFailure;
+use Flow\ETL\Runtime\Heartbeat\Pulse;
 use Flow\ETL\Tests\Context\ExecutedPlan;
 use Flow\ETL\Tests\Context\GroupByContext;
 use Flow\ETL\Tests\Context\MemoryTelemetryContext;
@@ -35,6 +41,7 @@ use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\Double\PlanDrainingTransformer;
 use Flow\ETL\Tests\Double\RecordingExtractor;
 use Flow\ETL\Tests\Double\RecordingFileExtractor;
+use Flow\ETL\Tests\Double\RecordingHeartbeat;
 use Flow\ETL\Tests\Double\RecordingLauncher;
 use Flow\ETL\Tests\Double\RecordingRule;
 use Flow\ETL\Tests\Double\RecordingSplittableExtractor;
@@ -42,6 +49,7 @@ use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\Double\SpyColumn;
 use Flow\ETL\Tests\Double\SpyLoader;
 use Flow\ETL\Tests\Double\SpyTransformer;
+use Flow\ETL\Tests\Double\SteppingClock;
 use Flow\ETL\Tests\Double\StubLauncher;
 use Flow\ETL\Tests\Double\ThrowingTransformer;
 use Flow\ETL\Tests\FlowTestCase;
@@ -62,6 +70,7 @@ use RuntimeException;
 use function array_filter;
 use function array_keys;
 use function array_map;
+use function array_slice;
 use function array_sum;
 use function array_values;
 use function Flow\ETL\DSL\array_to_rows;
@@ -78,6 +87,8 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\to_array;
+use function Flow\ETL\DSL\to_branch;
 use function iterator_to_array;
 
 final class ExecutorTest extends FlowTestCase
@@ -496,6 +507,107 @@ final class ExecutorTest extends FlowTestCase
         static::assertTrue($telemetry->spans->endedSpans()[0]->status()?->isError());
         static::assertCount(1, $telemetry->logs->entriesContaining('Data frame processing started'));
         static::assertCount(1, $telemetry->logs->entriesContaining('Data frame processing failed'));
+    }
+
+    public function test_counts_rows_read_into_the_heartbeat(): void
+    {
+        $recording = new RecordingHeartbeat();
+
+        df(config_builder()->clock(new SteppingClock())->heartbeat($recording, everySeconds: 1))
+            ->read(from_array(RowsMother::sequentialIds(30)->toArray())->withBatchSize(10))
+            ->fetch();
+
+        static::assertSame(
+            [[30, 'read']],
+            array_map(
+                static fn(Pulse $pulse): array => [$pulse->rowsRead, $pulse->stage],
+                array_slice($recording->pulses(), -1),
+            ),
+        );
+    }
+
+    public function test_a_branch_write_does_not_count_its_rows_as_read_again(): void
+    {
+        $recording = new RecordingHeartbeat();
+        $first = [];
+        $second = [];
+
+        df(config_builder()->clock(new SteppingClock())->heartbeat($recording, everySeconds: 1))
+            ->read(from_array(RowsMother::sequentialIds(30)->toArray())->withBatchSize(10))
+            ->sortBy(ref('id'))
+            ->write(to_branch(ref('id')->greaterThanEqual(lit(1)), to_array($first)))
+            ->write(to_branch(ref('id')->greaterThanEqual(lit(1)), to_array($second)))
+            ->run();
+
+        static::assertCount(30, $second);
+        static::assertSame(
+            [[30, 'sort']],
+            array_map(
+                static fn(Pulse $pulse): array => [$pulse->rowsRead, $pulse->stage],
+                array_slice($recording->pulses(), -1),
+            ),
+        );
+    }
+
+    public function test_a_launched_read_is_counted_where_it_runs(): void
+    {
+        $recording = new RecordingHeartbeat();
+
+        $rows = df(
+            config_builder()
+                ->clock(new SteppingClock())
+                ->launcher(new StubLauncher())
+                ->heartbeat($recording, everySeconds: 1),
+        )
+            ->read(new RecordingSplittableExtractor(schema(int_schema('id')), [RowsMother::sequentialIds(4)]))
+            ->fetch();
+
+        static::assertSame(4, $rows->count());
+        static::assertSame(
+            [],
+            array_filter($recording->pulses(), static fn(Pulse $pulse): bool => $pulse->rowsRead > 0),
+        );
+    }
+
+    /**
+     * @return Generator<string, array{ErrorHandler}>
+     */
+    public static function error_handlers(): Generator
+    {
+        yield 'throw' => [new ThrowError()];
+        yield 'ignore' => [new IgnoreError()];
+        yield 'skip rows' => [new SkipRows()];
+    }
+
+    #[DataProvider('error_handlers')]
+    public function test_a_heartbeat_failure_stops_the_run_whatever_the_error_handler(ErrorHandler $handler): void
+    {
+        $telemetry = new MemoryTelemetryContext();
+        $failure = new RuntimeException('lease lost');
+        $written = [];
+
+        try {
+            df(
+                config_builder()
+                    ->clock(new SteppingClock())
+                    ->withTelemetry($telemetry->telemetry)
+                    ->heartbeat(
+                        new RecordingHeartbeat(throws: $failure),
+                        everySeconds: 1,
+                        onFailure: HeartbeatFailure::stop,
+                    ),
+            )
+                ->read(from_array([['id' => 1], ['id' => 2]])->withBatchSize(1))
+                ->onError($handler)
+                ->write(to_array($written))
+                ->run();
+            static::fail('The heartbeat failure did not stop the run');
+        } catch (RuntimeException $e) {
+            static::assertSame($failure, $e);
+        }
+
+        $telemetry->telemetry->flush();
+        static::assertSame([], $telemetry->logs->entriesContaining('Error during extraction.'));
     }
 
     public function test_a_plan_with_two_breakers_returns_the_rows_of_one_pass(): void

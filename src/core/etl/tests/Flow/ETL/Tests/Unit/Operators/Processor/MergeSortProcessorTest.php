@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Operators\Processor;
 
+use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
 use Flow\ETL\Kernels\Sort\ExternalSortConfig;
 use Flow\ETL\Operators\Processor\MergeSortProcessor;
 use Flow\ETL\Storage\MemoryRowsStorage;
+use Flow\ETL\Tests\Context\DescribeRoundTrip;
 use Flow\ETL\Tests\Double\FixedRandomValueGenerator;
+use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\Double\RecordingRowsStorage;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\ExternalSortMother;
@@ -101,5 +104,21 @@ final class MergeSortProcessorTest extends FlowTestCase
             )),
         );
         static::assertNotSame([], $storage->appended);
+    }
+
+    public function test_rebuilds_with_the_rebuild_progress(): void
+    {
+        $spy = new ProgressSpy();
+
+        DescribeRoundTrip::rebuilt(
+            new MergeSortProcessor(
+                new ExternalSortConfig(config()->grouping),
+                [ref('id')->asc()],
+                new NativePHPRandomValueGenerator(),
+            ),
+            new Rebuild($spy),
+        );
+
+        static::assertSame(['sort'], $spy->stages());
     }
 }

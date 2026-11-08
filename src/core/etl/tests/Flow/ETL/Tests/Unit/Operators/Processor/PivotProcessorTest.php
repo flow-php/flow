@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Operators\Processor;
 
+use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Functions\AggregatingFunction;
 use Flow\ETL\Operators\GroupBy;
@@ -13,6 +14,8 @@ use Flow\ETL\Operators\GroupBy\PivotShape;
 use Flow\ETL\Operators\Processor\PivotProcessor;
 use Flow\ETL\Storage\BucketingConfig;
 use Flow\ETL\Storage\MemoryRowsStorage;
+use Flow\ETL\Tests\Context\DescribeRoundTrip;
+use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Memory\Unit;
 use Flow\ETL\Values\Rows;
@@ -41,6 +44,7 @@ use function Flow\ETL\DSL\string_agg;
 use function Flow\ETL\DSL\sum;
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_string;
+use function iterator_to_array;
 
 final class PivotProcessorTest extends FlowTestCase
 {
@@ -318,5 +322,54 @@ final class PivotProcessorTest extends FlowTestCase
                 flow_context(config())->backend(),
             )),
         );
+    }
+
+    public function test_rebuilds_with_the_rebuild_progress(): void
+    {
+        $spy = new ProgressSpy();
+
+        DescribeRoundTrip::rebuilt(
+            new PivotProcessor(
+                new GroupBy(
+                    refs(ref('date')),
+                    new Aggregators(sum(ref('contributions'))),
+                    new Pivot(ref('user'), pivot_values('norbert')),
+                ),
+                config()->grouping,
+            ),
+            new Rebuild($spy),
+        );
+
+        static::assertSame(['pivot'], $spy->stages());
+    }
+
+    public function test_counts_every_row_in_and_every_pivoted_row_out(): void
+    {
+        $progress = new ProgressSpy();
+        $input = schema(str_schema('date'), str_schema('user'), int_schema('contributions'));
+
+        iterator_to_array(
+            (new PivotProcessor(
+                new GroupBy(
+                    refs(ref('date')),
+                    new Aggregators(sum(ref('contributions'))),
+                    new Pivot(ref('user'), pivot_values('norbert', 'stloyd')),
+                ),
+                config()->grouping,
+                progress: $progress->stage('pivot'),
+            ))->process(
+                (static function () use ($input): Generator {
+                    yield array_to_rows([
+                        ['date' => '2024-01-01', 'user' => 'norbert', 'contributions' => 1],
+                        ['date' => '2024-01-01', 'user' => 'stloyd', 'contributions' => 2],
+                    ], $input);
+                    yield array_to_rows([['date' => '2024-01-02', 'user' => 'norbert', 'contributions' => 3]], $input);
+                })(),
+                flow_context()->backend(),
+            ),
+            false,
+        );
+
+        static::assertSame(3 + 2, $progress->rowsOf('pivot'));
     }
 }

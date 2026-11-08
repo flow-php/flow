@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Functions;
 
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
 
@@ -17,5 +18,5 @@ interface FrameAccumulating
      *
      * @return list<mixed> one value per bound
      */
-    public function frameValues(Rows $partition, array $bounds, Backend $backend): array;
+    public function frameValues(Rows $partition, array $bounds, Backend $backend, Progress $progress): array;
 }

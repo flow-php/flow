@@ -351,6 +351,7 @@ For more information about each DataFrame operation, see this component document
 
 ### Observability
 - [Telemetry](/documentation/components/core/telemetry.md): integration of distributed tracing, metrics and logging
+- [Heartbeat](/documentation/components/core/heartbeat.md): a callback every N seconds while a run is busy
 
 ### Output & Display
 - [Display](/documentation/components/core/display.md): data visualization and output

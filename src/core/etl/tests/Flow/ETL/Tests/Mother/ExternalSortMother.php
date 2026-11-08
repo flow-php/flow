@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Mother;
 
 use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
+use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Kernels\Bucketing\Buckets;
 use Flow\ETL\Kernels\Sort\ExternalSort;
 use Flow\ETL\Kernels\Sort\ExternalSortConfig;
@@ -27,8 +29,9 @@ final class ExternalSortMother
         array $columns,
         RowsStorage $storage = new MemoryRowsStorage(),
         int $batchSize = 1000,
+        Progress $progress = new VoidProgress(),
     ): ExternalSort {
-        return self::with($columns, $storage, Unit::fromGb(1), batchSize: $batchSize);
+        return self::with($columns, $storage, Unit::fromGb(1), batchSize: $batchSize, progress: $progress);
     }
 
     /**
@@ -43,8 +46,9 @@ final class ExternalSortMother
         RowsStorage $storage = new MemoryRowsStorage(),
         int $mergeFanIn = 10,
         int $batchSize = 1000,
+        Progress $progress = new VoidProgress(),
     ): ExternalSort {
-        return self::with($columns, $storage, Unit::fromBytes(1), $mergeFanIn, $batchSize);
+        return self::with($columns, $storage, Unit::fromBytes(1), $mergeFanIn, $batchSize, progress: $progress);
     }
 
     /**
@@ -59,6 +63,7 @@ final class ExternalSortMother
         int $mergeFanIn = 10,
         int $batchSize = 1000,
         ?RowsStorage $mergeStorage = null,
+        Progress $progress = new VoidProgress(),
     ): ExternalSort {
         return new ExternalSort(
             $columns,
@@ -68,6 +73,7 @@ final class ExternalSortMother
             $memoryLimit,
             $mergeFanIn,
             new BatchSize($batchSize),
+            $progress,
         );
     }
 

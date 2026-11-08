@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Functions\Window;
 
 use ArrayObject;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Functions\FrameAccumulating;
 use Flow\ETL\Functions\Window\FrameAccumulation;
 use Flow\ETL\Functions\Window\PeerFrame;
@@ -13,6 +14,7 @@ use Flow\ETL\Functions\Window\WholePartitionFrame;
 use Flow\ETL\Functions\Window\WindowFrame;
 use Flow\ETL\Tests\Double\CountingFrameAccumulating;
 use Flow\ETL\Tests\Double\CountingWindowFrame;
+use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\Double\SpyColumn;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\RowsMother;
@@ -22,6 +24,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 use function array_fill;
 use function array_map;
+use function array_slice;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\average;
 use function Flow\ETL\DSL\count;
@@ -222,6 +225,7 @@ final class FrameAccumulationTest extends FlowTestCase
                 schema(int_schema('d'), float_schema('v', nullable: true)),
             ),
             flow_context()->backend(),
+            new VoidProgress(),
         ));
     }
 
@@ -244,6 +248,7 @@ final class FrameAccumulationTest extends FlowTestCase
                 ['v' => -3],
             ], schema(int_schema('v'))),
             flow_context()->backend(),
+            new VoidProgress(),
         ));
     }
 
@@ -255,6 +260,7 @@ final class FrameAccumulationTest extends FlowTestCase
                 sum(ref('id')),
                 RowsMother::empty(),
                 flow_context()->backend(),
+                new VoidProgress(),
             ),
         );
     }
@@ -269,6 +275,7 @@ final class FrameAccumulationTest extends FlowTestCase
                 sum(ref('id')),
                 $one,
                 flow_context()->backend(),
+                new VoidProgress(),
             ),
         );
         static::assertSame(
@@ -277,6 +284,7 @@ final class FrameAccumulationTest extends FlowTestCase
                 count(),
                 $one,
                 flow_context()->backend(),
+                new VoidProgress(),
             ),
         );
     }
@@ -291,6 +299,7 @@ final class FrameAccumulationTest extends FlowTestCase
                 $function,
                 RowsMother::sequentialIds(5),
                 flow_context()->backend(),
+                new VoidProgress(),
             ),
         );
         static::assertSame([array_fill(0, 5, [0, 4])], $function->bounds);
@@ -306,6 +315,7 @@ final class FrameAccumulationTest extends FlowTestCase
                 $function,
                 RowsMother::sequentialIds(5),
                 flow_context()->backend(),
+                new VoidProgress(),
             ),
         );
         static::assertSame([[[0, 0], [0, 1], [1, 2], [2, 3], [3, 4]]], $function->bounds);
@@ -319,6 +329,7 @@ final class FrameAccumulationTest extends FlowTestCase
                 new CountingFrameAccumulating(ref('id')),
                 RowsMother::sequentialIds(5),
                 flow_context()->backend(),
+                new VoidProgress(),
             ),
         );
     }
@@ -342,6 +353,7 @@ final class FrameAccumulationTest extends FlowTestCase
                     schema(int_schema('id'), int_schema('d')),
                 ),
                 flow_context()->backend(),
+                new VoidProgress(),
             ),
         );
         static::assertSame([[[0, 1], [0, 1], [0, 3], [0, 3], [0, 4]]], $function->bounds);
@@ -355,6 +367,7 @@ final class FrameAccumulationTest extends FlowTestCase
                 sum(ref('id'))->over(window()),
                 RowsMother::sequentialIds(3),
                 flow_context()->backend(),
+                new VoidProgress(),
             ),
         );
     }
@@ -390,6 +403,7 @@ final class FrameAccumulationTest extends FlowTestCase
                 5,
             ),
             flow_context()->backend(),
+            new VoidProgress(),
         ));
         static::assertSame(['values'], $calls->getArrayCopy());
     }
@@ -404,8 +418,28 @@ final class FrameAccumulationTest extends FlowTestCase
                 new CountingFrameAccumulating(ref('id')),
                 RowsMother::sequentialIds(5),
                 flow_context()->backend(),
+                new VoidProgress(),
             ),
         );
         static::assertSame(5, $frame->calls);
+    }
+
+    public function test_reports_the_bounds_of_a_long_partition_in_chunks(): void
+    {
+        $progress = new ProgressSpy();
+        $function = new CountingFrameAccumulating(ref('id'));
+
+        (new FrameAccumulation(new RowsFrame(preceding(1), current_row())))->values(
+            $function,
+            RowsMother::sequentialIds(2500),
+            flow_context()->backend(),
+            $progress->stage('window'),
+        );
+
+        static::assertSame(
+            [['window', 1000], ['window', 1000], ['window', 500]],
+            array_slice($progress->advancedCalls(), 0, 3),
+        );
+        static::assertCount(2500, $function->bounds[0]);
     }
 }

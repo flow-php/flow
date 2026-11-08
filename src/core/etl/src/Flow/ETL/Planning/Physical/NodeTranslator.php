@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Planning\Physical;
 
 use Flow\ETL\Foundation\Exception\InvalidLogicException;
+use Flow\ETL\Foundation\ProgressStages;
 use Flow\ETL\Foundation\RandomValueGenerator;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Loader;
 use Flow\ETL\IO\Loader\File\FileLoader;
 use Flow\ETL\IO\Loader\File\Part;
@@ -72,6 +74,7 @@ final readonly class NodeTranslator
         private BucketingConfig $grouping,
         private HashJoinConfig $join,
         private BucketingConfig $repartition,
+        private ProgressStages $progress = new VoidProgress(),
     ) {}
 
     /**
@@ -99,6 +102,7 @@ final readonly class NodeTranslator
             $node instanceof Node\Aggregate && $node->groupBy->isPivot() => [new PivotProcessor(
                 $node->groupBy,
                 $node->algorithm?->build($this->cacheDir, $this->backend) ?? $this->grouping,
+                progress: $this->progress->stage(ProgressStages::PIVOT),
             )],
             $node instanceof Node\Aggregate => [
                 ...array_map(
@@ -109,6 +113,7 @@ final readonly class NodeTranslator
                     $node->groupBy,
                     $node->algorithm?->build($this->cacheDir, $this->backend) ?? $this->grouping,
                     $this->randomValueGenerator,
+                    progress: $this->progress->stage(ProgressStages::GROUP_BY),
                 ),
             ],
             $node instanceof Node\BatchBy => [new BatchingByProcessor($node->column, $node->minSize)],
@@ -148,6 +153,7 @@ final readonly class NodeTranslator
                 $node->type,
                 $node->algorithm?->build($this->cacheDir, $this->backend) ?? $this->join,
                 $this->randomValueGenerator,
+                progress: $this->progress->stage(ProgressStages::JOIN),
             )],
             $node instanceof Node\Limit => [new LimitTransformer($node->limit)],
             $node instanceof Node\Offset => [new OffsetProcessor($node->offset)],
@@ -157,12 +163,18 @@ final readonly class NodeTranslator
                 $node->by,
                 $this->repartition,
                 $this->randomValueGenerator,
+                $this->progress->stage(ProgressStages::REPARTITION),
             )],
             $node instanceof Node\Select => [new SelectColumnsTransformer(...$node->columns)],
             $node instanceof Node\Sort => array_map(
                 fn(MemorySortConfig|ExternalSortConfig $sort): Processor => $sort instanceof ExternalSortConfig
-                    ? new MergeSortProcessor($sort, $node->columns, $this->randomValueGenerator)
-                    : new MemorySortProcessor($node->columns),
+                    ? new MergeSortProcessor(
+                        $sort,
+                        $node->columns,
+                        $this->randomValueGenerator,
+                        $this->progress->stage(ProgressStages::SORT),
+                    )
+                    : new MemorySortProcessor($node->columns, progress: $this->progress->stage(ProgressStages::SORT)),
                 [$node->algorithm?->build($this->cacheDir, $this->backend) ?? $this->sort],
             ),
             $node instanceof Node\TopN => [new TopNProcessor(
@@ -170,25 +182,40 @@ final readonly class NodeTranslator
                 $node->limit,
                 $node->algorithm?->build($this->cacheDir, $this->backend) ?? $this->sort,
                 $this->randomValueGenerator,
+                progress: $this->progress->stage(ProgressStages::SORT),
             )],
             $node instanceof Node\Transform => [
                 $node->transformer instanceof Stateful ? $node->transformer->fresh() : $node->transformer,
             ],
             $node instanceof Node\Until => [new UntilTransformer($node->function)],
             $node instanceof Node\Validate => [new SchemaValidationLoader($node->schema, $node->validator)],
-            $node instanceof Node\WindowColumn => $node->function->window()->partitions()->count()
+            $node instanceof Node\WindowColumn => $this->window($node),
+            $node instanceof Node\WithColumn => [new ScalarFunctionTransformer($node->column, $node->function)],
+            $node instanceof Node\Write => [$node->loader],
+            default => throw InvalidLogicException::nodeNotTranslatable($node::class),
+        };
+    }
+
+    /**
+     * @return list<Processor> one window progress for both steps, so the window counts its repartition too
+     */
+    private function window(Node\WindowColumn $node): array
+    {
+        $progress = $this->progress->stage(ProgressStages::WINDOW);
+
+        return (
+            $node->function->window()->partitions()->count()
                 ? [
                     new RepartitionProcessor(
                         $node->function->window()->partitions(),
                         $this->repartition,
                         $this->randomValueGenerator,
+                        $progress,
+                        ProgressStages::WINDOW,
                     ),
-                    new WindowProcessor($node->column, $node->function),
+                    new WindowProcessor($node->column, $node->function, progress: $progress),
                 ]
-                : [new CollectingProcessor(), new WindowProcessor($node->column, $node->function)],
-            $node instanceof Node\WithColumn => [new ScalarFunctionTransformer($node->column, $node->function)],
-            $node instanceof Node\Write => [$node->loader],
-            default => throw InvalidLogicException::nodeNotTranslatable($node::class),
-        };
+                : [new CollectingProcessor(), new WindowProcessor($node->column, $node->function, progress: $progress)]
+        );
     }
 }

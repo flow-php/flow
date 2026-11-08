@@ -9,6 +9,9 @@ use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\RuntimeException;
 use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
+use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Foundation\ProgressStages;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Operators\BoundStep;
 use Flow\ETL\Operators\GroupBy;
 use Flow\ETL\Operators\GroupBy\PivotedTable;
@@ -32,6 +35,7 @@ final readonly class PivotProcessor implements Distributable
         public GroupBy $groupBy,
         public BucketingConfig $config,
         private ?PivotShape $shape = null,
+        private Progress $progress = new VoidProgress(),
     ) {}
 
     /**
@@ -48,6 +52,7 @@ final readonly class PivotProcessor implements Distributable
             ($data['input'] ?? null) === null
                 ? null
                 : PivotShape::of($groupBy, Schema::fromArray(type_array()->assert($data['input']))),
+            $rebuild->progress(ProgressStages::PIVOT),
         );
     }
 
@@ -88,7 +93,7 @@ final readonly class PivotProcessor implements Distributable
     {
         $shape = PivotShape::of($this->groupBy, $input);
 
-        return new BoundStep(new self($this->groupBy, $this->config, $shape), $shape->output);
+        return new BoundStep(new self($this->groupBy, $this->config, $shape, $this->progress), $shape->output);
     }
 
     public function breaks(): bool
@@ -112,10 +117,15 @@ final readonly class PivotProcessor implements Distributable
         foreach ($rows as $batch) {
             $table ??= new PivotedTable($this->groupBy, PivotShape::of($this->groupBy, $batch->schema()));
             $table->accumulate($batch, $backend);
+            $this->progress->advanced($batch->count());
         }
 
         if ($table !== null) {
-            yield from $table->flush(new BatchSize($this->config->batchSize), $backend);
+            foreach ($table->flush(new BatchSize($this->config->batchSize), $backend) as $batch) {
+                $this->progress->advanced($batch->count());
+
+                yield $batch;
+            }
         }
     }
 }

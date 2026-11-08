@@ -22,9 +22,9 @@ final class DescribeRoundTrip
      *
      * @return T
      */
-    public static function rebuilt(Describable $describable): Describable
+    public static function rebuilt(Describable $describable, Rebuild $rebuild = new Rebuild()): Describable
     {
-        return type_instance_of($describable::class)->assert((new Rebuild())->of(
+        return type_instance_of($describable::class)->assert($rebuild->of(
             Json::decode(
                 Json::encode(
                     ($describable->describe() ?? throw new RuntimeException($describable::class

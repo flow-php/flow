@@ -8,6 +8,7 @@ use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\Functions\FunctionTree;
 use Flow\ETL\Functions\ScalarFunction;
 use Flow\ETL\Functions\Window;
@@ -32,7 +33,7 @@ final class WindowFunctionOverOperand implements WindowFunction
     /**
      * @return list<mixed>
      */
-    public function values(Rows $partition, Backend $backend): array
+    public function values(Rows $partition, Backend $backend, Progress $progress): array
     {
         return $this->operand->eval($partition, $backend)->values();
     }

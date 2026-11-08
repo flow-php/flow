@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Operators\Processor;
 
 use DateTimeImmutable;
+use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
 use Flow\ETL\Operators\GroupBy;
@@ -15,9 +16,11 @@ use Flow\ETL\Operators\GroupBy\PartialAggregate;
 use Flow\ETL\Operators\GroupBy\Pivot;
 use Flow\ETL\Operators\Processor\GroupByAggregationProcessor;
 use Flow\ETL\Storage\MemoryRowsStorage;
+use Flow\ETL\Tests\Context\DescribeRoundTrip;
 use Flow\ETL\Tests\Context\GroupByContext;
 use Flow\ETL\Tests\Context\GroupedRows;
 use Flow\ETL\Tests\Double\FixedRandomValueGenerator;
+use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\Double\ReportedMemoryBackend;
 use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\Double\SpyRowsStorage;
@@ -593,5 +596,39 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
                 ->column('amount_sum')
                 ->value(0),
         );
+    }
+
+    public function test_rebuilds_with_the_rebuild_progress(): void
+    {
+        $spy = new ProgressSpy();
+
+        DescribeRoundTrip::rebuilt(
+            new GroupByAggregationProcessor(
+                new GroupBy(refs('id')),
+                config()->grouping,
+                new NativePHPRandomValueGenerator(),
+            ),
+            new Rebuild($spy),
+        );
+
+        static::assertSame(['group_by'], $spy->stages());
+    }
+
+    public function test_past_the_limit_counts_every_accumulated_row_and_every_flushed_group(): void
+    {
+        $progress = new ProgressSpy();
+
+        iterator_to_array(
+            GroupByAggregationProcessorMother::with(
+                new GroupBy(refs(ref('category')), new Aggregators(sum(ref('amount')))),
+                new MemoryRowsStorage(),
+                Unit::fromBytes(1),
+                batchSize: 1,
+                progress: $progress->stage('group_by'),
+            )->process(GroupedRows::categories(), flow_context()->backend()),
+            false,
+        );
+
+        static::assertSame(3 + 2, $progress->rowsOf('group_by'));
     }
 }

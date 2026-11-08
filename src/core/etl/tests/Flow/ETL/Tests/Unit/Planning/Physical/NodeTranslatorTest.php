@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Planning\Physical;
 
+use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\InvalidLogicException;
 use Flow\ETL\IO\Loader\SchemaValidationLoader;
@@ -46,6 +47,7 @@ use Flow\ETL\Operators\Transformer\ScalarFunctionFilterTransformer;
 use Flow\ETL\Operators\Transformer\ScalarFunctionTransformer;
 use Flow\ETL\Operators\Transformer\SelectColumnsTransformer;
 use Flow\ETL\Operators\Transformer\UntilTransformer;
+use Flow\ETL\Planning\Logical\Node;
 use Flow\ETL\Planning\Logical\Node\Aggregate;
 use Flow\ETL\Planning\Logical\Node\Batch;
 use Flow\ETL\Planning\Logical\Node\BatchBy;
@@ -81,10 +83,12 @@ use Flow\ETL\Planning\Logical\Node\Write;
 use Flow\ETL\Runtime\Config;
 use Flow\ETL\Storage\Memory\ArrayMemory;
 use Flow\ETL\Storage\MemoryRowsStorage;
+use Flow\ETL\Tests\Context\DescribeRoundTrip;
 use Flow\ETL\Tests\Context\GroupByContext;
 use Flow\ETL\Tests\Double\ChildlessNode;
 use Flow\ETL\Tests\Double\FixedRandomValueGenerator;
 use Flow\ETL\Tests\Double\IdRecordingRowsStorage;
+use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\Double\RecordingTransaction;
 use Flow\ETL\Tests\Double\SpyRowsStorage;
 use Flow\ETL\Tests\Double\StaticExtractorFactory;
@@ -96,6 +100,8 @@ use Flow\ETL\Values\BatchSize;
 use Flow\ETL\Values\Join\JoinType;
 use Flow\ETL\Values\Memory\Unit;
 use Flow\ETL\Values\Schema\Validator\StrictValidator;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestWith;
 
 use function array_keys;
@@ -129,6 +135,79 @@ use function Flow\Floe\DSL\to_floe;
 
 final class NodeTranslatorTest extends FlowTestCase
 {
+    /**
+     * @return Generator<string, array{Node, string}>
+     */
+    public static function blocking_nodes(): Generator
+    {
+        yield 'external sort' => [new Sort(NodeMother::read(), [ref('id')->asc()]), 'sort'];
+        yield 'memory sort' => [new Sort(NodeMother::read(), [ref('id')->asc()], memory_sort()), 'sort'];
+        yield 'top n' => [new TopN(NodeMother::read(), [ref('id')->asc()], 3), 'sort'];
+        yield 'group by' => [new Aggregate(NodeMother::read(), new GroupBy(refs('id')), hash_group_by()), 'group_by'];
+        yield 'pivot' => [
+            new Aggregate(
+                NodeMother::read(),
+                new GroupBy(
+                    refs(ref('date')),
+                    new Aggregators(sum(ref('contributions'))),
+                    new Pivot(ref('user'), pivot_values('norbert')),
+                ),
+            ),
+            'pivot',
+        ];
+        yield 'join' => [
+            new Join(
+                NodeMother::read(),
+                NodeMother::joinRight(NodeMother::plan(NodeMother::read())),
+                join_on(['id' => 'id']),
+                JoinType::inner,
+                hash_join(),
+            ),
+            'join',
+        ];
+        yield 'repartition' => [new Repartition(NodeMother::read(), refs('id')), 'repartition'];
+        yield 'partitioned window' => [
+            new WindowColumn(
+                NodeMother::read(),
+                'rank',
+                rank()->over(window()->partitionBy(ref('group'))->orderBy(ref('id'))),
+            ),
+            'window',
+        ];
+        yield 'window' => [
+            new WindowColumn(NodeMother::read(), 'rank', rank()->over(window()->orderBy(ref('id')))),
+            'window',
+        ];
+    }
+
+    #[DataProvider('blocking_nodes')]
+    public function test_binds_one_progress_per_node_to_its_stage(Node $node, string $stage): void
+    {
+        $spy = new ProgressSpy();
+
+        NodeTranslatorMother::of(config(), $spy)->steps($node);
+
+        static::assertSame([$stage], $spy->stages());
+    }
+
+    public function test_a_window_repartition_rebuilt_in_a_worker_keeps_the_window_stage(): void
+    {
+        $spy = new ProgressSpy();
+        $repartition = NodeTranslatorMother::of(config())->steps(
+            new WindowColumn(
+                NodeMother::read(),
+                'rank',
+                rank()->over(window()->partitionBy(ref('group'))->orderBy(ref('id'))),
+            ),
+        )[0];
+
+        static::assertInstanceOf(RepartitionProcessor::class, $repartition);
+
+        DescribeRoundTrip::rebuilt($repartition, new Rebuild($spy));
+
+        static::assertSame(['window'], $spy->stages());
+    }
+
     public function test_aggregate_steps_are_the_exact_list_in_order(): void
     {
         static::assertSame(

@@ -56,6 +56,7 @@ final readonly class Executor
 
         $this->advancing[$context] = true;
         $context->telemetry()->dataFrameStarted($context->config->telemetryAttributes());
+        $context->config->heartbeat()?->started();
         $plan = null;
 
         try {
@@ -75,6 +76,7 @@ final readonly class Executor
 
             throw $e;
         } finally {
+            $context->config->heartbeat()?->finished();
             $this->advancing->offsetUnset($context);
             // drained, abandoned, or destroyed because the consumer's body threw - PHP runs this finally in
             // every case, and it is a no-op once dataFrameFailed() closed the span
@@ -198,6 +200,11 @@ final readonly class Executor
         // the launcher counts its own source
         if ($counted !== null && $launch === null) {
             $generator = $counted->count($source, $generator, $criteria->narrows());
+        }
+
+        // a launch reports its totals through Progress::reported(), a fed branch was counted at its source
+        if ($launch === null && $read instanceof Read) {
+            $generator = $context->config->heartbeat()?->reading($generator) ?? $generator;
         }
 
         foreach ($chain as $position => $stage) {

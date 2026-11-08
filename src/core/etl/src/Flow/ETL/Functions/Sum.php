@@ -8,6 +8,7 @@ use Flow\ETL\Foundation\Calculator\RunningSum;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\Functions\Reference\Reference;
 use Flow\ETL\Functions\Window\FrameAccumulation;
 use Flow\ETL\Values\Column\Backend;
@@ -128,7 +129,7 @@ final class Sum implements AggregatesNumericTotal, FrameAccumulating, WindowFunc
         return $this->exact;
     }
 
-    public function frameValues(Rows $partition, array $bounds, Backend $backend): array
+    public function frameValues(Rows $partition, array $bounds, Backend $backend, Progress $progress): array
     {
         $column = $this->column->of($partition);
 
@@ -138,16 +139,16 @@ final class Sum implements AggregatesNumericTotal, FrameAccumulating, WindowFunc
 
         $values = [];
 
-        foreach (NumericTotal::frames($column->values(), $bounds, $this->exact)['sums'] as $sum) {
+        foreach (NumericTotal::frames($column->values(), $bounds, $this->exact, $progress)['sums'] as $sum) {
             $values[] = $sum === null ? null : (float) $sum;
         }
 
         return $values;
     }
 
-    public function values(Rows $partition, Backend $backend): array
+    public function values(Rows $partition, Backend $backend, Progress $progress): array
     {
-        return (new FrameAccumulation($this->window()->frame()))->values($this, $partition, $backend);
+        return (new FrameAccumulation($this->window()->frame()))->values($this, $partition, $backend, $progress);
     }
 
     public function over(Window $window): static

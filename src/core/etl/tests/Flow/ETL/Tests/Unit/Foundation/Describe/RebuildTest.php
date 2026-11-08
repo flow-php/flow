@@ -9,7 +9,9 @@ use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Tests\Double\Described;
+use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Exception\InvalidTypeException;
 
@@ -85,5 +87,19 @@ final class RebuildTest extends FlowTestCase
         $this->expectException(InvalidTypeException::class);
 
         (new Rebuild())->of('not a description', Described::class);
+    }
+
+    public function test_progress_is_void_by_default(): void
+    {
+        static::assertInstanceOf(VoidProgress::class, (new Rebuild())->progress('sort'));
+    }
+
+    public function test_progress_is_bound_by_the_given_stages(): void
+    {
+        $spy = new ProgressSpy();
+
+        (new Rebuild($spy))->progress('join');
+
+        static::assertSame(['join'], $spy->stages());
     }
 }

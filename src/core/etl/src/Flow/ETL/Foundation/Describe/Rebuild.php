@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Foundation\Describe;
 
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Foundation\ProgressStages;
+use Flow\ETL\Foundation\VoidProgress;
 use ReflectionClass;
 
 use function class_exists;
@@ -14,6 +17,10 @@ use function is_a;
 
 final readonly class Rebuild
 {
+    public function __construct(
+        private ProgressStages $progress = new VoidProgress(),
+    ) {}
+
     /**
      * Every entry of $normalized rebuilt with of(), keys kept.
      *
@@ -89,5 +96,10 @@ final readonly class Rebuild
         }
 
         return $built;
+    }
+
+    public function progress(string $stage): Progress
+    {
+        return $this->progress->stage($stage);
     }
 }

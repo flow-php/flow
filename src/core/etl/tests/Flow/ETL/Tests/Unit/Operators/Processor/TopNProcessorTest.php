@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Operators\Processor;
 
+use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
 use Flow\ETL\Kernels\Sort\ExternalSortConfig;
@@ -11,9 +12,11 @@ use Flow\ETL\Kernels\Sort\MemorySortConfig;
 use Flow\ETL\Operators\Processor\MemorySortProcessor;
 use Flow\ETL\Operators\Processor\TopNProcessor;
 use Flow\ETL\Storage\MemoryRowsStorage;
+use Flow\ETL\Tests\Context\DescribeRoundTrip;
 use Flow\ETL\Tests\Context\ScoredRows;
 use Flow\ETL\Tests\Context\SortedRows;
 use Flow\ETL\Tests\Double\FixedRandomValueGenerator;
+use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\Double\RecordingRowsStorage;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\ExternalSortMother;
@@ -337,5 +340,46 @@ final class TopNProcessorTest extends FlowTestCase
 
         static::assertEquals($declared, $out[0]->schema());
         static::assertSame([['score' => 1, 'name' => 'a'], ['score' => 2, 'name' => 'b']], $out[0]->toArray());
+    }
+
+    public function test_rebuilds_with_the_rebuild_progress(): void
+    {
+        $spy = new ProgressSpy();
+
+        DescribeRoundTrip::rebuilt(
+            new TopNProcessor(
+                [ref('id')->asc()],
+                2,
+                new ExternalSortConfig(config()->grouping),
+                new NativePHPRandomValueGenerator(),
+            ),
+            new Rebuild($spy),
+        );
+
+        static::assertSame(['sort'], $spy->stages());
+    }
+
+    public function test_counts_every_row_in_and_every_kept_row_out(): void
+    {
+        $progress = new ProgressSpy();
+
+        iterator_to_array(
+            (new TopNProcessor(
+                [ref('id')->asc()],
+                2,
+                new MemorySortConfig(),
+                new NativePHPRandomValueGenerator(),
+                progress: $progress->stage('sort'),
+            ))->process(
+                (static function (): Generator {
+                    yield array_to_rows([['id' => 4], ['id' => 3]], schema(int_schema('id')));
+                    yield array_to_rows([['id' => 2], ['id' => 1]], schema(int_schema('id')));
+                })(),
+                flow_context()->backend(),
+            ),
+            false,
+        );
+
+        static::assertSame(4 + 2, $progress->rowsOf('sort'));
     }
 }

@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Operators\Processor;
 
+use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Functions\AggregatingFunction;
 use Flow\ETL\Functions\WindowFunction;
 use Flow\ETL\Operators\Processor\WindowProcessor;
+use Flow\ETL\Tests\Context\DescribeRoundTrip;
 use Flow\ETL\Tests\Context\WindowProcessorContext;
 use Flow\ETL\Tests\Double\CountingFrameAccumulating;
+use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\Double\WindowFunctionOverOperand;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\ListColumnsMother;
@@ -543,5 +546,17 @@ final class WindowProcessorTest extends FlowTestCase
                 'n',
             ))),
         ))->bind(ListColumnsMother::numberAndFlagsSchema());
+    }
+
+    public function test_rebuilds_with_the_rebuild_progress(): void
+    {
+        $spy = new ProgressSpy();
+
+        DescribeRoundTrip::rebuilt(
+            new WindowProcessor('rank', rank()->over(window()->orderBy(ref('n')))),
+            new Rebuild($spy),
+        );
+
+        static::assertSame(['window'], $spy->stages());
     }
 }

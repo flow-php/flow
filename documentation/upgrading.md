@@ -59,13 +59,25 @@ Upgrading from older versions: [0.41.x to 0.43.x](/documentation/upgrading-0.41-
 
 ### 5) `flow-php/etl` - `FrameAccumulating` computes every frame of a partition in one call
 
-| Before                                                                 | After                                                                                     |
-|------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|
-| `FrameAccumulating::accumulator(): AggregatingFunction`                | `FrameAccumulating::frameValues(Rows $partition, array $bounds, Backend $backend): array` |
-| `Sum::accumulator()`, `Average::accumulator()`, `Count::accumulator()` | removed                                                                                   |
+| Before                                                                 | After                                                                                                         |
+|------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
+| `FrameAccumulating::accumulator(): AggregatingFunction`                | `FrameAccumulating::frameValues(Rows $partition, array $bounds, Backend $backend, Progress $progress): array` |
+| `Sum::accumulator()`, `Average::accumulator()`, `Count::accumulator()` | removed                                                                                                       |
 
 A custom `FrameAccumulating` gets one `[start, end]` pair per row of the sorted partition, `[1, 0]` for an empty frame,
 and returns one value per pair.
+
+### 6) `flow-php/etl` - window functions and `Rebuild` take a `Progress`
+
+| Before                                                                                             | After                                                                                                                  |
+|----------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| `WindowFunction::values(Rows $partition, Backend $backend): array`                                 | `WindowFunction::values(Rows $partition, Backend $backend, Progress $progress): array`                                 |
+| `FrameAccumulation::values(FrameAccumulating $function, Rows $partition, Backend $backend): array` | `FrameAccumulation::values(FrameAccumulating $function, Rows $partition, Backend $backend, Progress $progress): array` |
+| -                                                                                                  | `NumericTotal::frames(array $values, array $bounds, bool $exact, Progress $progress): array`                           |
+| `new Rebuild()`                                                                                    | `new Rebuild(ProgressStages $progress = new VoidProgress())`                                                           |
+| -                                                                                                  | `Rebuild::progress(string $stage): Progress`                                                                           |
+
+A custom window function calls `$progress->advanced($rows)` at least once per partition, or ignores it.
 
 ---
 

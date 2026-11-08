@@ -8,7 +8,10 @@ use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
+use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Foundation\ProgressStages;
 use Flow\ETL\Foundation\RandomValueGenerator;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Kernels\Bucketing\Buckets;
 use Flow\ETL\Kernels\Bucketing\HashBucketing;
 use Flow\ETL\Operators\BoundStep;
@@ -45,6 +48,7 @@ final readonly class GroupByAggregationProcessor implements Distributable
         public BucketingConfig $config,
         private RandomValueGenerator $random,
         private ?GroupByShape $shape = null,
+        private Progress $progress = new VoidProgress(),
     ) {}
 
     /**
@@ -64,6 +68,7 @@ final readonly class GroupByAggregationProcessor implements Distributable
             ($data['input'] ?? null) === null
                 ? null
                 : GroupByShape::of($groupBy, Schema::fromArray(type_array()->assert($data['input']))),
+            $rebuild->progress(ProgressStages::GROUP_BY),
         );
     }
 
@@ -113,11 +118,17 @@ final readonly class GroupByAggregationProcessor implements Distributable
             $this->shape->input,
             $partial->aggregations()->resolved($this->shape->input),
         );
-        $partialStep = (new self($partial, $this->config, $this->random))->bind($this->shape->input)->step;
+        $partialStep = (new self(
+            $partial,
+            $this->config,
+            $this->random,
+            progress: $this->progress,
+        ))->bind($this->shape->input)->step;
         $finalStep = (new self(
             new GroupBy($this->groupBy->refs(), new Aggregators(...$merged)),
             $this->config,
             $this->random,
+            progress: $this->progress,
         ))->bind($partialSchema)->step;
 
         $keys = $this->groupBy->refs()->names();
@@ -142,7 +153,10 @@ final readonly class GroupByAggregationProcessor implements Distributable
     {
         $shape = GroupByShape::of($this->groupBy, $input);
 
-        return new BoundStep(new self($this->groupBy, $this->config, $this->random, $shape), $shape->output);
+        return new BoundStep(
+            new self($this->groupBy, $this->config, $this->random, $shape, $this->progress),
+            $shape->output,
+        );
     }
 
     public function breaks(): bool
@@ -174,7 +188,7 @@ final readonly class GroupByAggregationProcessor implements Distributable
                 }
 
                 $shape ??= GroupByShape::of($this->groupBy, $batch->schema());
-                $groups ??= new AggregatedGroups($this->groupBy, $shape, $backend);
+                $groups ??= new AggregatedGroups($this->groupBy, $shape, $backend, $this->progress);
                 $groups->accumulate($batch, $backend);
 
                 if ($budget->exceeded()) {
@@ -198,7 +212,7 @@ final readonly class GroupByAggregationProcessor implements Distributable
 
             // SQL scalar aggregate: no input still yields one row
             if ($shape !== null && $this->groupBy->isGlobal()) {
-                yield (new AggregatedGroups($this->groupBy, $shape, $backend))->noInputRow($backend);
+                yield (new AggregatedGroups($this->groupBy, $shape, $backend, $this->progress))->noInputRow($backend);
             }
         } finally {
             $buckets->clear();
@@ -240,7 +254,7 @@ final readonly class GroupByAggregationProcessor implements Distributable
         }
 
         foreach ($buckets->all() as $bucket) {
-            $groups = new AggregatedGroups($this->groupBy, $shape, $backend);
+            $groups = new AggregatedGroups($this->groupBy, $shape, $backend, $this->progress);
 
             foreach ($buckets->rows($bucket->id) as $batch) {
                 $groups->accumulate($batch, $backend);
@@ -253,7 +267,7 @@ final readonly class GroupByAggregationProcessor implements Distributable
         }
 
         // groups whose bucket received no row after the limit
-        $remaining = new AggregatedGroups($this->groupBy, $shape, $backend);
+        $remaining = new AggregatedGroups($this->groupBy, $shape, $backend, $this->progress);
 
         foreach ($earlierOf as $groups) {
             $remaining->absorbEarlier($earlier, $groups, $backend);

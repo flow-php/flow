@@ -8,7 +8,10 @@ use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Foundation\ProgressStages;
 use Flow\ETL\Foundation\RandomValueGenerator;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Kernels\Sort\ExternalSort;
 use Flow\ETL\Kernels\Sort\ExternalSortConfig;
 use Flow\ETL\Kernels\Sort\MemorySortConfig;
@@ -48,8 +51,11 @@ final readonly class TopNProcessor implements Distributable
         public MemorySortConfig|ExternalSortConfig $config,
         private RandomValueGenerator $random,
         private ?Schema $declared = null,
+        private Progress $progress = new VoidProgress(),
     ) {
-        $this->fallback = $config instanceof ExternalSortConfig ? ExternalSort::of($columns, $config, $random) : null;
+        $this->fallback = $config instanceof ExternalSortConfig
+            ? ExternalSort::of($columns, $config, $random, $progress)
+            : null;
 
         if ($this->limit < 1) {
             throw new InvalidArgumentException('TopN limit must be greater than 0, given: ' . $this->limit);
@@ -74,6 +80,7 @@ final readonly class TopNProcessor implements Distributable
                 Describable::class,
             )),
             ($data['declared'] ?? null) === null ? null : Schema::fromArray(type_array()->assert($data['declared'])),
+            $rebuild->progress(ProgressStages::SORT),
         );
     }
 
@@ -105,7 +112,10 @@ final readonly class TopNProcessor implements Distributable
 
     public function bind(Schema $input): BoundStep
     {
-        return new BoundStep(new self($this->columns, $this->limit, $this->config, $this->random, $input), $input);
+        return new BoundStep(
+            new self($this->columns, $this->limit, $this->config, $this->random, $input, $this->progress),
+            $input,
+        );
     }
 
     public function breaks(): bool
@@ -130,6 +140,7 @@ final readonly class TopNProcessor implements Distributable
             }
 
             $maxSize = max($batch->count(), $maxSize);
+            $this->progress->advanced($batch->count());
             $conformed = $batch->matchTo($this->declared ?? $schema, $backend);
             $kept = $kept === null ? $conformed : Rows::concat($kept->schema(), $backend, $kept, $conformed);
 
@@ -153,7 +164,11 @@ final readonly class TopNProcessor implements Distributable
             return;
         }
 
-        yield from $this->top($kept, $backend)->chunks($maxSize);
+        foreach ($this->top($kept, $backend)->chunks($maxSize) as $chunk) {
+            $this->progress->advanced($chunk->count());
+
+            yield $chunk;
+        }
     }
 
     public function top(Rows $rows, Backend $backend): Rows

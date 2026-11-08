@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Kernels\Sort;
 
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\Foundation\RandomValueGenerator;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Kernels\Bucketing\Bucket;
 use Flow\ETL\Kernels\Bucketing\BucketRun;
 use Flow\ETL\Kernels\Bucketing\Buckets;
@@ -44,6 +46,7 @@ final readonly class ExternalSort
         public Unit $memoryLimit,
         public int $mergeFanIn = 10,
         public BatchSize $batchSize = new BatchSize(1000),
+        private Progress $progress = new VoidProgress(),
     ) {
         // @mago-ignore analysis:invalid-operand
         // @mago-ignore analysis:impossible-condition,redundant-comparison
@@ -55,8 +58,12 @@ final readonly class ExternalSort
     /**
      * @param list<SortColumn> $columns
      */
-    public static function of(array $columns, ExternalSortConfig $config, RandomValueGenerator $random): self
-    {
+    public static function of(
+        array $columns,
+        ExternalSortConfig $config,
+        RandomValueGenerator $random,
+        Progress $progress = new VoidProgress(),
+    ): self {
         return new self(
             $columns,
             new Buckets($config->bucketing->storage),
@@ -66,6 +73,7 @@ final readonly class ExternalSort
             $config->bucketing->memoryLimit,
             $config->bucketing->bucketsCount,
             new BatchSize($config->bucketing->batchSize),
+            $progress,
         );
     }
 
@@ -96,6 +104,7 @@ final readonly class ExternalSort
 
                 $schema ??= $batch->schema();
                 $buffer[] = $batch->matchTo($schema, $backend);
+                $this->progress->advanced($batch->count());
 
                 // the spill concats the buffer, so it needs room for a second copy of it
                 if ($budget->exceededWith(2)) {
@@ -111,11 +120,11 @@ final readonly class ExternalSort
 
             if ($runs === []) {
                 if ($schema !== null) {
-                    yield from $this->sorted(
+                    yield from $this->counted($this->sorted(
                         Rows::concat($schema, $backend, ...array_splice($buffer, 0)),
                         $limit,
                         $backend,
-                    )->chunks($this->batchSize->size);
+                    )->chunks($this->batchSize->size));
                 }
 
                 return;
@@ -141,10 +150,10 @@ final readonly class ExternalSort
                 );
             }
 
-            yield from $this->firstRows(
+            yield from $this->counted($this->firstRows(
                 $merger->merge(array_map(static fn(BucketRun $run): Generator => $run->rows(), $runs)),
                 $limit,
-            );
+            ));
         } finally {
             // nested, so a throwing spill clear still leaves the merge storage cleared - and chains as previous
             try {
@@ -152,6 +161,20 @@ final readonly class ExternalSort
             } finally {
                 $this->merge->clear();
             }
+        }
+    }
+
+    /**
+     * @param Generator<Rows> $batches
+     *
+     * @return Generator<int, Rows>
+     */
+    public function counted(Generator $batches): Generator
+    {
+        foreach ($batches as $batch) {
+            $this->progress->advanced($batch->count());
+
+            yield $batch;
         }
     }
 
@@ -216,6 +239,7 @@ final readonly class ExternalSort
         ) as $batch) {
             $this->merge->storage()->append($bucketId, $batch);
             $totalRows += $batch->count();
+            $this->progress->advanced($batch->count());
         }
 
         foreach ($group as $run) {
@@ -243,6 +267,7 @@ final readonly class ExternalSort
         // one frame per batch, so a merge cursor decodes one batch of the run at a time
         foreach ($run->chunks($this->batchSize->size) as $chunk) {
             $this->spill->storage()->append($bucketId, $chunk);
+            $this->progress->advanced($chunk->count());
         }
 
         $this->spill->storage()->close($bucketId);

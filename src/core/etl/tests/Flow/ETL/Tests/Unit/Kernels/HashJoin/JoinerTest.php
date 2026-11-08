@@ -12,6 +12,7 @@ use Flow\ETL\Functions\Join\Condition\Equal;
 use Flow\ETL\Functions\Join\Condition\Identical;
 use Flow\ETL\Functions\Join\Expression;
 use Flow\ETL\Kernels\HashJoin\JoinSide;
+use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\JoinerMother;
 use Flow\ETL\Values\BatchSize;
@@ -20,12 +21,14 @@ use Flow\ETL\Values\Join\JoinType;
 use Flow\ETL\Values\Rows;
 use Generator;
 
+use function array_map;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function iterator_to_array;
+use function range;
 
 final class JoinerTest extends FlowTestCase
 {
@@ -128,6 +131,33 @@ final class JoinerTest extends FlowTestCase
                 ],
             ],
             $joined,
+        );
+    }
+
+    public function test_counts_the_build_the_hash_table_in_chunks_and_every_probe_batch(): void
+    {
+        $batches = static function (Rows $rows): Generator {
+            yield $rows;
+        };
+        $progress = new ProgressSpy();
+
+        iterator_to_array(
+            JoinerMother::of(join_on(['id' => 'user_id']), JoinType::inner, progress: $progress->stage('join'))->join(
+                JoinSide::of($batches(array_to_rows(
+                    array_map(static fn(int $id): array => ['id' => $id], range(1, 10)),
+                    schema(int_schema('id')),
+                ))),
+                JoinSide::of($batches(array_to_rows(
+                    array_map(static fn(int $id): array => ['user_id' => $id], range(1, 2500)),
+                    schema(int_schema('user_id')),
+                ))),
+            ),
+            false,
+        );
+
+        static::assertSame(
+            [['join', 2500], ['join', 1000], ['join', 1000], ['join', 500], ['join', 10]],
+            $progress->advancedCalls(),
         );
     }
 
@@ -849,5 +879,28 @@ final class JoinerTest extends FlowTestCase
                 })(),
             ),
         ));
+    }
+
+    public function test_counts_the_unmatched_build_rows_it_emits(): void
+    {
+        $batches = static function (Rows $rows): Generator {
+            yield $rows;
+        };
+        $progress = new ProgressSpy();
+
+        iterator_to_array(
+            JoinerMother::of(join_on(['id' => 'user_id']), JoinType::left, progress: $progress->stage('join'))->join(
+                JoinSide::of($batches(array_to_rows([
+                    ['id' => 1],
+                    ['id' => 2],
+                    ['id' => 3],
+                ], schema(int_schema('id'))))),
+                JoinSide::of($batches(array_to_rows([['user_id' => 1]], schema(int_schema('user_id'))))),
+                buildLeft: true,
+            ),
+            false,
+        );
+
+        static::assertSame([['join', 3], ['join', 3], ['join', 1], ['join', 2]], $progress->advancedCalls());
     }
 }

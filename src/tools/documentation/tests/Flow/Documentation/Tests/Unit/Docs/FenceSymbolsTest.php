@@ -71,4 +71,40 @@ final class FenceSymbolsTest extends TestCase
     {
         static::assertSame([], $this->fences->unresolvedFunctions('data_frame()->read(from_csv("a.csv"))'));
     }
+
+    public function test_it_reports_a_function_imported_from_a_namespace_that_does_not_define_it(): void
+    {
+        static::assertSame(
+            ['Flow\ETL\DSL\from_csv', 'Flow\ETL\DSL\to_csv'],
+            $this->fences->unresolvedFunctions(
+                'use function Flow\ETL\DSL\{config_builder, from_csv, to_csv}; from_csv("a.csv"); to_csv("b.csv");',
+            ),
+        );
+    }
+
+    public function test_it_reports_a_single_import_from_the_wrong_namespace(): void
+    {
+        static::assertSame(
+            ['Flow\ETL\DSL\from_csv'],
+            $this->fences->unresolvedFunctions('use function Flow\ETL\DSL\from_csv; from_csv("a.csv");'),
+        );
+    }
+
+    public function test_it_accepts_functions_imported_from_the_namespace_that_defines_them(): void
+    {
+        static::assertSame([], $this->fences->unresolvedFunctions(
+            'use function Flow\ETL\Adapter\CSV\{from_csv, to_csv as csv}; use function Flow\ETL\DSL\ref; '
+            . 'from_csv("a.csv"); csv("b.csv"); ref("id");',
+        ));
+    }
+
+    public function test_a_closure_use_and_a_class_import_are_not_function_imports(): void
+    {
+        static::assertSame(
+            [],
+            $this->fences->unresolvedFunctions(
+                'use Flow\ETL\Nope\Missing; $f = function () use ($a) { return strlen($a); };',
+            ),
+        );
+    }
 }

@@ -11,6 +11,7 @@ use Flow\ETL\Operators\GroupBy\AggregatedGroups;
 use Flow\ETL\Operators\GroupBy\Aggregators;
 use Flow\ETL\Operators\GroupBy\GroupByShape;
 use Flow\ETL\Operators\GroupBy\PartialAggregate;
+use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\Double\SpyColumn;
 use Flow\ETL\Tests\FlowTestCase;
@@ -134,6 +135,30 @@ final class AggregatedGroupsTest extends FlowTestCase
 
         static::assertEquals($shape->output, $batches[0]->schema());
         static::assertEquals(schema(str_schema('country'), float_schema('amount_sum', nullable: true)), $shape->output);
+    }
+
+    public function test_counts_every_accumulated_row_and_every_flushed_group(): void
+    {
+        $groupBy = new GroupBy(refs('country'), new Aggregators(sum(ref('amount'))));
+        $input = schema(str_schema('country'), int_schema('amount'));
+        $progress = new ProgressSpy();
+        $groups = new AggregatedGroups(
+            $groupBy,
+            GroupByShape::of($groupBy, $input),
+            flow_context(config())->backend(),
+            $progress->stage('group_by'),
+        );
+
+        $groups->accumulate(array_to_rows([
+            ['country' => 'PL', 'amount' => 10],
+            ['country' => 'DE', 'amount' => 20],
+        ], $input), flow_context(config())->backend());
+        $groups->accumulate(array_to_rows([
+            ['country' => 'PL', 'amount' => 30],
+        ], $input), flow_context(config())->backend());
+        iterator_to_array($groups->flush(1, flow_context(config())->backend()), false);
+
+        static::assertSame(3 + 2, $progress->rowsOf('group_by'));
     }
 
     public function test_it_splits_the_flushed_groups_into_batches_of_the_requested_size(): void

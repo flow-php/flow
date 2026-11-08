@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Mother;
 
+use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Functions\Join\Expression;
 use Flow\ETL\Kernels\HashJoin\Joiner;
 use Flow\ETL\Values\BatchSize;
@@ -21,7 +23,16 @@ final class JoinerMother
         JoinType $type,
         Backend $backend = new AdaptiveBackend(),
         BatchSize $batchSize = new BatchSize(1000),
+        Progress $progress = new VoidProgress(),
     ): Joiner {
-        return new Joiner($type, $expression->schema($type), $expression->keys(), $expression, $backend, $batchSize);
+        return new Joiner(
+            $type,
+            $expression->schema($type),
+            $expression->keys(),
+            $expression,
+            $backend,
+            $batchSize,
+            $progress,
+        );
     }
 }

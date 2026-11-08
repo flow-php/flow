@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Operators\Join;
 
+use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\JoinException;
 use Flow\ETL\Functions\Join\Condition\Any;
 use Flow\ETL\Functions\Join\Condition\Equal;
@@ -12,7 +13,9 @@ use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\Signal;
 use Flow\ETL\Operators\Join\HashJoin;
 use Flow\ETL\Storage\MemoryRowsStorage;
+use Flow\ETL\Tests\Context\DescribeRoundTrip;
 use Flow\ETL\Tests\Double\CountingExtractor;
+use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\Double\SpyRowsStorage;
 use Flow\ETL\Tests\FlowTestCase;
@@ -894,5 +897,17 @@ final class HashJoinTest extends FlowTestCase
                 false,
             )[0]->toArray(),
         );
+    }
+
+    public function test_rebuilds_with_the_rebuild_progress(): void
+    {
+        $spy = new ProgressSpy();
+
+        DescribeRoundTrip::rebuilt(
+            HashJoinMother::resident(Expression::on(['id' => 'user_id']), JoinType::left),
+            new Rebuild($spy),
+        );
+
+        static::assertSame(['join'], $spy->stages());
     }
 }

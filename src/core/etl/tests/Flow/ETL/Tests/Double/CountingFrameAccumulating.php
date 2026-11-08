@@ -8,6 +8,7 @@ use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\Functions\FrameAccumulating;
 use Flow\ETL\Functions\FunctionTree;
 use Flow\ETL\Functions\Reference\Reference;
@@ -36,11 +37,11 @@ final class CountingFrameAccumulating implements FrameAccumulating, WindowFuncti
         private readonly ?self $countersOwner = null,
     ) {}
 
-    public function frameValues(Rows $partition, array $bounds, Backend $backend): array
+    public function frameValues(Rows $partition, array $bounds, Backend $backend, Progress $progress): array
     {
         $this->counters()->bounds[] = $bounds;
 
-        return (new Sum($this->ref))->frameValues($partition, $bounds, $backend);
+        return (new Sum($this->ref))->frameValues($partition, $bounds, $backend, $progress);
     }
 
     public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
@@ -53,9 +54,9 @@ final class CountingFrameAccumulating implements FrameAccumulating, WindowFuncti
         return null;
     }
 
-    public function values(Rows $partition, Backend $backend): array
+    public function values(Rows $partition, Backend $backend, Progress $progress): array
     {
-        return (new FrameAccumulation($this->window()->frame()))->values($this, $partition, $backend);
+        return (new FrameAccumulation($this->window()->frame()))->values($this, $partition, $backend, $progress);
     }
 
     /**

@@ -6,6 +6,9 @@ namespace Flow\ETL\Operators\Processor;
 
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
+use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Foundation\ProgressStages;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Operators\BoundStep;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
@@ -24,6 +27,7 @@ final readonly class MemorySortProcessor implements Distributable
         /** @var list<SortColumn> */
         public array $columns,
         private ?Schema $declared = null,
+        private Progress $progress = new VoidProgress(),
     ) {}
 
     public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
@@ -31,6 +35,7 @@ final readonly class MemorySortProcessor implements Distributable
         return new self(
             array_values($rebuild->all($data['columns'] ?? null, SortColumn::class)),
             ($data['declared'] ?? null) === null ? null : Schema::fromArray(type_array()->assert($data['declared'])),
+            $rebuild->progress(ProgressStages::SORT),
         );
     }
 
@@ -63,6 +68,7 @@ final readonly class MemorySortProcessor implements Distributable
 
             $maxSize = max($batch->count(), $maxSize);
             $buffer[] = $batch->matchTo($this->declared ?? $schema, $backend);
+            $this->progress->advanced($batch->count());
         }
 
         $all = Rows::concat($this->declared ?? $schema ?? new Schema(), $backend, ...$buffer);
@@ -73,7 +79,11 @@ final readonly class MemorySortProcessor implements Distributable
             return;
         }
 
-        yield from $backend->sort($all, $this->columns)->chunks($maxSize);
+        foreach ($backend->sort($all, $this->columns)->chunks($maxSize) as $chunk) {
+            $this->progress->advanced($chunk->count());
+
+            yield $chunk;
+        }
     }
 
     public function distribution(): ?Distribution
@@ -83,6 +93,6 @@ final readonly class MemorySortProcessor implements Distributable
 
     public function bind(Schema $input): BoundStep
     {
-        return new BoundStep(new self($this->columns, $input), $input);
+        return new BoundStep(new self($this->columns, $input, $this->progress), $input);
     }
 }

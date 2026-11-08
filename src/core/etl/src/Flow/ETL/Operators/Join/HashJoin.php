@@ -9,7 +9,10 @@ use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\JoinException;
 use Flow\ETL\Foundation\Exception\SchemaDefinitionNotUniqueException;
+use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Foundation\ProgressStages;
 use Flow\ETL\Foundation\RandomValueGenerator;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Functions\Join\Expression;
 use Flow\ETL\IO\Extractor\Signal;
 use Flow\ETL\Kernels\Bucketing\Bucket;
@@ -50,6 +53,7 @@ final readonly class HashJoin implements Describable
         private RandomValueGenerator $random,
         private ?Schema $left = null,
         private ?Schema $declaredRight = null,
+        private Progress $progress = new VoidProgress(),
     ) {}
 
     public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
@@ -64,6 +68,7 @@ final readonly class HashJoin implements Describable
             )),
             ($data['left'] ?? null) === null ? null : Schema::fromArray(type_array()->assert($data['left'])),
             ($data['right'] ?? null) === null ? null : Schema::fromArray(type_array()->assert($data['right'])),
+            $rebuild->progress(ProgressStages::JOIN),
         );
     }
 
@@ -92,7 +97,15 @@ final readonly class HashJoin implements Describable
      */
     public function withRightSchema(Schema $right): self
     {
-        return new self($this->expression, $this->type, $this->config, $this->random, $this->left, $right);
+        return new self(
+            $this->expression,
+            $this->type,
+            $this->config,
+            $this->random,
+            $this->left,
+            $right,
+            $this->progress,
+        );
     }
 
     /**
@@ -119,6 +132,7 @@ final readonly class HashJoin implements Describable
             $this->expression,
             $backend,
             new BatchSize($this->config->bucketing->batchSize),
+            $this->progress,
         );
     }
 
@@ -144,7 +158,7 @@ final readonly class HashJoin implements Describable
     public function bind(Schema $left, Schema $right): BoundStep
     {
         return new BoundStep(
-            new self($this->expression, $this->type, $this->config, $this->random, $left, $right),
+            new self($this->expression, $this->type, $this->config, $this->random, $left, $right, $this->progress),
             $this->expression->schema($this->type)->output($left, $right),
         );
     }

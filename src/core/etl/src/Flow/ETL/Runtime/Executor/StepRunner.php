@@ -177,6 +177,9 @@ final readonly class StepRunner
                     break;
                 }
 
+                // outside the extraction try, so no error handler turns a heartbeat failure into a source failure
+                $context->config->heartbeat()?->beatWhenDue();
+
                 if ($rows === null) {
                     continue;
                 }

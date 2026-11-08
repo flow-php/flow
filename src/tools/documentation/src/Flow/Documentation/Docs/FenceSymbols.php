@@ -6,16 +6,23 @@ namespace Flow\Documentation\Docs;
 
 use Throwable;
 
+use function array_key_exists;
 use function array_keys;
 use function count;
+use function explode;
 use function function_exists;
 use function in_array;
 use function is_array;
 use function ltrim;
+use function mb_strpos;
 use function mb_strrpos;
+use function mb_strtolower;
 use function mb_substr;
+use function preg_split;
+use function rtrim;
 use function str_starts_with;
 use function token_get_all;
+use function trim;
 
 /**
  * A regex pass over the same fences produced 172 false positives from SQL identifiers inside string
@@ -35,8 +42,19 @@ final readonly class FenceSymbols
         }
 
         $unresolved = [];
+        $imports = $this->functionImports($tokens);
+
+        foreach ($imports as $alias => $function) {
+            if (!$declarations->declares($alias) && !function_exists($function)) {
+                $unresolved[$function] = true;
+            }
+        }
 
         foreach ($this->calls($tokens) as $name => $isMethod) {
+            if (array_key_exists(mb_strtolower($name), $imports)) {
+                continue;
+            }
+
             if ($declarations->declares($name) || function_exists($name)) {
                 continue;
             }
@@ -123,6 +141,54 @@ final readonly class FenceSymbols
 
     /**
      * @param list<array{0: int, 1: string, 2: int}|string> $tokens
+     *
+     * @return array<string, string> lowercase local name => fully qualified function, of every `use function`
+     */
+    private function functionImports(array $tokens): array
+    {
+        $imports = [];
+        $count = count($tokens);
+
+        for ($i = 0; $i < $count; $i++) {
+            if (!is_array($tokens[$i]) || $tokens[$i][0] !== T_USE) {
+                continue;
+            }
+
+            $next = $this->nextMeaningful($tokens, $i);
+
+            if ($next === null || !is_array($tokens[$next]) || $tokens[$next][0] !== T_FUNCTION) {
+                continue;
+            }
+
+            $statement = '';
+
+            for ($j = $next + 1; $j < $count && $tokens[$j] !== ';'; $j++) {
+                $statement .= is_array($tokens[$j]) ? $tokens[$j][1] : $tokens[$j];
+            }
+
+            $group = mb_strpos($statement, '{');
+            $prefix = $group === false ? '' : rtrim(trim(mb_substr($statement, 0, $group)), '\\') . '\\';
+            $items = $group === false ? [$statement] : explode(',', trim(mb_substr($statement, $group + 1), " \t\n}"));
+
+            foreach ($items as $item) {
+                $parts = preg_split('/\s+as\s+/i', trim($item));
+
+                if ($parts === false || $parts[0] === '') {
+                    continue;
+                }
+
+                $function = ltrim($prefix . $parts[0], '\\');
+                $separator = mb_strrpos($function, '\\');
+                $alias = $parts[1] ?? ($separator === false ? $function : mb_substr($function, $separator + 1));
+                $imports[mb_strtolower($alias)] = $function;
+            }
+        }
+
+        return $imports;
+    }
+
+    /**
+     * @param list<array{0: int, 1: string, 2: int}|string> $tokens
      */
     private function isFollowedByOpenParenthesis(array $tokens, int $index): bool
     {
@@ -142,6 +208,29 @@ final readonly class FenceSymbols
         }
 
         return false;
+    }
+
+    /**
+     * @param list<array{0: int, 1: string, 2: int}|string> $tokens
+     */
+    private function nextMeaningful(array $tokens, int $index): ?int
+    {
+        $count = count($tokens);
+
+        for ($i = $index + 1; $i < $count; $i++) {
+            $token = $tokens[$i];
+
+            if (
+                is_array($token)
+                && ($token[0] === T_WHITESPACE || $token[0] === T_COMMENT || $token[0] === T_DOC_COMMENT)
+            ) {
+                continue;
+            }
+
+            return $i;
+        }
+
+        return null;
     }
 
     /**

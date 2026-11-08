@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Mother;
 
 use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
+use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Functions\Reference\References;
 use Flow\ETL\Operators\Processor\RepartitionProcessor;
 use Flow\ETL\Storage\BucketingConfig;
@@ -32,11 +34,13 @@ final class RepartitionProcessorMother
         RowsStorage $storage,
         Unit $memoryLimit,
         int $bucketsCount = 4,
+        Progress $progress = new VoidProgress(),
     ): RepartitionProcessor {
         return new RepartitionProcessor(
             $by,
             new BucketingConfig($storage, $bucketsCount, 1, $memoryLimit),
             new NativePHPRandomValueGenerator(),
+            $progress,
         );
     }
 }

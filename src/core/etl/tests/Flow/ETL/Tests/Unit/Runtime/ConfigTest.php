@@ -71,4 +71,9 @@ final class ConfigTest extends FlowTestCase
         );
         static::assertSame(MemorySortConfig::class, $attributes['spill']['sort']);
     }
+
+    public function test_heartbeat_is_null_by_default(): void
+    {
+        static::assertNull(config_builder()->build()->heartbeat());
+    }
 }

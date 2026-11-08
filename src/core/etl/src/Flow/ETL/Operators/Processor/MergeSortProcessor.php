@@ -7,7 +7,10 @@ namespace Flow\ETL\Operators\Processor;
 use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
+use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Foundation\ProgressStages;
 use Flow\ETL\Foundation\RandomValueGenerator;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Kernels\Sort\ExternalSort;
 use Flow\ETL\Kernels\Sort\ExternalSortConfig;
 use Flow\ETL\Operators\BoundStep;
@@ -32,8 +35,9 @@ final readonly class MergeSortProcessor implements Distributable
         /** @var list<SortColumn> */
         public array $columns,
         private RandomValueGenerator $random,
+        private Progress $progress = new VoidProgress(),
     ) {
-        $this->sort = ExternalSort::of($columns, $config, $random);
+        $this->sort = ExternalSort::of($columns, $config, $random, $progress);
     }
 
     public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
@@ -45,6 +49,7 @@ final readonly class MergeSortProcessor implements Distributable
                 $data['random'] ?? null,
                 Describable::class,
             )),
+            $rebuild->progress(ProgressStages::SORT),
         );
     }
 

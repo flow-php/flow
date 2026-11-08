@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Operators\Processor;
 
+use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Operators\Processor\MemorySortProcessor;
+use Flow\ETL\Tests\Context\DescribeRoundTrip;
+use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Rows;
 
@@ -13,6 +16,7 @@ use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
+use function iterator_to_array;
 
 final class MemorySortProcessorTest extends FlowTestCase
 {
@@ -126,5 +130,32 @@ final class MemorySortProcessorTest extends FlowTestCase
         }
 
         static::assertEquals([['id' => 3], ['id' => 2], ['id' => 1]], $allRows);
+    }
+
+    public function test_rebuilds_with_the_rebuild_progress(): void
+    {
+        $spy = new ProgressSpy();
+
+        DescribeRoundTrip::rebuilt(new MemorySortProcessor([ref('id')->asc()]), new Rebuild($spy));
+
+        static::assertSame(['sort'], $spy->stages());
+    }
+
+    public function test_counts_every_row_in_and_out(): void
+    {
+        $progress = new ProgressSpy();
+
+        iterator_to_array(
+            (new MemorySortProcessor([ref('id')->asc()], progress: $progress->stage('sort')))->process(
+                (static function () {
+                    yield array_to_rows([['id' => 2], ['id' => 1]], schema(int_schema('id')));
+                    yield array_to_rows([['id' => 3]], schema(int_schema('id')));
+                })(),
+                flow_context()->backend(),
+            ),
+            false,
+        );
+
+        static::assertSame(3 + 3, $progress->rowsOf('sort'));
     }
 }
