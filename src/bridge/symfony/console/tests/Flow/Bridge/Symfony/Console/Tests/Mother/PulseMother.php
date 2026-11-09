@@ -16,6 +16,7 @@ final class PulseMother
         int $memoryBytes = 148_897_792,
         int $peakMemoryBytes = 325_058_560,
         int $elapsedSeconds = 83,
+        int $idleSeconds = 0,
     ): Pulse {
         return new Pulse(
             beat: $beat,
@@ -25,6 +26,7 @@ final class PulseMother
             stageRows: $stageRows,
             memoryBytes: $memoryBytes,
             peakMemoryBytes: $peakMemoryBytes,
+            idleSeconds: $idleSeconds,
         );
     }
 }

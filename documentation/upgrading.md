@@ -98,6 +98,24 @@ A custom window function calls `$progress->advanced($rows)` at least once per pa
 |-------------------------------------------------|--------------------------------------------------------|
 | `"symfony/console": "^6.4 \|\| ^7.4 \|\| ^8.0"` | `"symfony/console": "^6.4.34 \|\| ^7.4.6 \|\| ^8.0.6"` |
 
+### 9) `flow-php/etl` - inference takes a `Progress`
+
+| Before                                                                                         | After                                                                                                              |
+|------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
+| `interface InfersSchema`                                                                       | `interface InfersSchema extends ReportsInference`, `reportInferenceTo(Progress $progress): void`                   |
+| `Planner::plan(LogicalPlan $logical): PhysicalPlan`                                            | `Planner::plan(LogicalPlan $logical, ProgressStages $stages = new VoidProgress()): PhysicalPlan`                   |
+| `SchemaInferrer::infer(Sniffer $sniffer): Inferred`                                            | `SchemaInferrer::infer(Sniffer $sniffer, Progress $progress): Inferred`                                            |
+| `Sniffer::sniff(int $unit, ?int $rowBudget): Sample`                                           | `Sniffer::sniff(int $unit, ?int $rowBudget, Progress $progress): Sample`                                           |
+| `Sniffs::sniff(Sniffer $sniffer, int $units): ?array`                                          | `Sniffs::sniff(Sniffer $sniffer, int $units, Progress $progress): ?array`                                          |
+| `ColumnTypes::sniff(array $names, iterable $rows, ?int $rowBudget, TypeNarrower $typer): self` | `ColumnTypes::sniff(array $names, iterable $rows, ?int $rowBudget, TypeNarrower $typer, Progress $progress): self` |
+| `CSVOpenSource::sniff(array $names, ?int $rowBudget, TypeNarrower $typer): ColumnTypes`        | `CSVOpenSource::sniff(array $names, ?int $rowBudget, TypeNarrower $typer, Progress $progress): ColumnTypes`        |
+| `flow_php` built for `FLOW_PHP_ABI` 2                                                          | rebuild `flow_php`: `FLOW_PHP_ABI` / `FlowPhpExtension::ABI` 3, an older build is refused                          |
+
+A custom `InfersSchema` extractor adds `reportInferenceTo()`, keeps the `Progress` it gets (a `VoidProgress` until then)
+and passes it to `SchemaInferrer::infer()`. A custom `Sniffer` or `CSVOpenSource` passes `$progress` to
+`ColumnTypes::sniff()`, or calls `advanced()` every `Progress::ROWS_PER_CALL` observed rows. A custom `Sniffs` hands
+`$progress` to the sniffs it runs.
+
 ---
 
 ## Upgrading from 0.46.x to 0.47.x

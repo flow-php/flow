@@ -9,6 +9,7 @@ use Flow\ETL\Runtime\Heartbeat\ScheduledHeartbeat;
 use Flow\ETL\Tests\Context\HeartbeatContext;
 use Flow\ETL\Tests\Double\RecordingHeartbeat;
 use Flow\ETL\Tests\FlowTestCase;
+use RuntimeException;
 
 final class HeartbeatStageTest extends FlowTestCase
 {
@@ -56,5 +57,56 @@ final class HeartbeatStageTest extends FlowTestCase
         $pulse = $recording->pulses()[0];
         static::assertSame([700, 150], [$pulse->rowsRead, $pulse->stageRows]);
         static::assertLessThan(1_000_000_000_000, $pulse->memoryBytes);
+    }
+
+    public function test_ended_neither_beats_nor_throws_and_the_next_due_check_does(): void
+    {
+        $context = new HeartbeatContext();
+        $failure = new RuntimeException('lease lost');
+        $recording = new RecordingHeartbeat(throws: $failure);
+        $throttle = $context->throttle(new ScheduledHeartbeat($recording, 1));
+        $context->seconds(1);
+
+        (new HeartbeatStage('parallel', $throttle))->ended(500, 'join', 120, 1000, 0);
+
+        static::assertSame([], $recording->pulses());
+
+        try {
+            $throttle->beatWhenDue();
+            static::fail('The heartbeat failure did not stop the run');
+        } catch (RuntimeException $e) {
+            static::assertSame($failure, $e);
+        }
+    }
+
+    public function test_ended_totals_show_up_in_the_next_pulse(): void
+    {
+        $context = new HeartbeatContext();
+        $recording = new RecordingHeartbeat();
+        $throttle = $context->throttle(new ScheduledHeartbeat($recording, 1));
+        $stage = new HeartbeatStage('parallel', $throttle);
+
+        $stage->reported(300, 'join', 100, 1000, 0);
+        $stage->ended(500, 'join', 120, 1000, 0);
+        $context->seconds(1);
+        $throttle->beatWhenDue();
+
+        static::assertSame([500, 'join', 120], [
+            $recording->pulses()[0]->rowsRead,
+            $recording->pulses()[0]->stage,
+            $recording->pulses()[0]->stageRows,
+        ]);
+    }
+
+    public function test_reported_still_beats_when_due(): void
+    {
+        $context = new HeartbeatContext();
+        $recording = new RecordingHeartbeat();
+        $stage = new HeartbeatStage('parallel', $context->throttle(new ScheduledHeartbeat($recording, 1)));
+        $context->seconds(1);
+
+        $stage->reported(500, 'join', 120, 1000, 0);
+
+        static::assertCount(1, $recording->pulses());
     }
 }

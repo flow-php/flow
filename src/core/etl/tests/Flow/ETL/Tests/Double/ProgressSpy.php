@@ -15,11 +15,13 @@ final readonly class ProgressSpy implements Progress, ProgressStages
     /**
      * @param ArrayObject<int, string> $stageLog
      * @param ArrayObject<int, array{string, int}> $advancedLog
+     * @param ArrayObject<int, array{int, string, int, int, int}> $endedLog
      */
     public function __construct(
         private string $stage = '',
         private ArrayObject $stageLog = new ArrayObject(),
         private ArrayObject $advancedLog = new ArrayObject(),
+        private ArrayObject $endedLog = new ArrayObject(),
     ) {}
 
     public function advanced(int $rows): void
@@ -33,6 +35,19 @@ final readonly class ProgressSpy implements Progress, ProgressStages
     public function advancedCalls(): array
     {
         return array_values($this->advancedLog->getArrayCopy());
+    }
+
+    public function ended(int $rowsRead, string $stage, int $stageRows, int $memoryBytes, int $peakMemoryBytes): void
+    {
+        $this->endedLog->append([$rowsRead, $stage, $stageRows, $memoryBytes, $peakMemoryBytes]);
+    }
+
+    /**
+     * @return list<array{int, string, int, int, int}>
+     */
+    public function endedCalls(): array
+    {
+        return array_values($this->endedLog->getArrayCopy());
     }
 
     public function reported(
@@ -60,7 +75,7 @@ final readonly class ProgressSpy implements Progress, ProgressStages
     {
         $this->stageLog->append($name);
 
-        return new self($name, $this->stageLog, $this->advancedLog);
+        return new self($name, $this->stageLog, $this->advancedLog, $this->endedLog);
     }
 
     /**

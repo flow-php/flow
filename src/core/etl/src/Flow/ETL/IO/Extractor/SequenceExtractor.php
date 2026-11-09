@@ -7,6 +7,8 @@ namespace Flow\ETL\IO\Extractor;
 use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\SchemaMismatchException;
+use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\CorruptedRecordsRouter;
 use Flow\ETL\IO\Extractor;
 use Flow\ETL\IO\Extractor\Memory\InMemoryRows;
@@ -32,6 +34,8 @@ final class SequenceExtractor implements BatchableExtractor, Extractor, InfersSc
 
     private SchemaInference $inference;
 
+    private Progress $inferenceProgress;
+
     private ?Schema $schema = null;
 
     private ?Statistics $statistics = null;
@@ -41,6 +45,7 @@ final class SequenceExtractor implements BatchableExtractor, Extractor, InfersSc
         private readonly string $columnName,
     ) {
         $this->inference = new SchemaInference();
+        $this->inferenceProgress = new VoidProgress();
         $this->batchSize = new BatchSize();
     }
 
@@ -105,6 +110,11 @@ final class SequenceExtractor implements BatchableExtractor, Extractor, InfersSc
         return $this;
     }
 
+    public function reportInferenceTo(Progress $progress): void
+    {
+        $this->inferenceProgress = $progress;
+    }
+
     public function schema(): Schema
     {
         $schema = $this->describe();
@@ -136,7 +146,10 @@ final class SequenceExtractor implements BatchableExtractor, Extractor, InfersSc
 
         // no spill: generate() is re-runnable
         // no seeded name: PHP re-keys integer names
-        return $this->derivedSchema = (new SchemaInferrer($this->inference))->infer(new InMemoryRows($items()))->schema;
+        return $this->derivedSchema = (new SchemaInferrer($this->inference))->infer(
+            new InMemoryRows($items()),
+            $this->inferenceProgress,
+        )->schema;
     }
 
     public function statistics(): Statistics

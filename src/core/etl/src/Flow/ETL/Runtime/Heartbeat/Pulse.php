@@ -14,5 +14,6 @@ final readonly class Pulse
         public int $stageRows,
         public int $memoryBytes,
         public int $peakMemoryBytes,
+        public int $idleSeconds,
     ) {}
 }

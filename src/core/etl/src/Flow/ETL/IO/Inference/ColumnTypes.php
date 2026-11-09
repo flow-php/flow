@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\IO\Inference;
 
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Progress;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Native\NullType;
@@ -66,8 +67,13 @@ final class ColumnTypes
      * @param iterable<int, array<array-key, mixed>> $rows - one unit's rows, unstarted
      * @param null|int<0, max> $rowBudget - rows to observe, 0 for none, null for every row
      */
-    public static function sniff(array $names, iterable $rows, ?int $rowBudget, TypeNarrower $typer): self
-    {
+    public static function sniff(
+        array $names,
+        iterable $rows,
+        ?int $rowBudget,
+        TypeNarrower $typer,
+        Progress $progress,
+    ): self {
         // @mago-ignore analysis:impossible-condition,redundant-comparison,redundant-logical-operation
         if ($rowBudget !== null && $rowBudget < 0) {
             throw new InvalidArgumentException('Row budget must be 0 or more. Use null for every row.');
@@ -79,12 +85,23 @@ final class ColumnTypes
             return $columns;
         }
 
+        $unreported = 0;
+
         foreach ($rows as $row) {
             $columns->observe($row);
+
+            if (++$unreported === Progress::ROWS_PER_CALL) {
+                $progress->advanced($unreported);
+                $unreported = 0;
+            }
 
             if ($rowBudget !== null && $columns->rows() >= $rowBudget) {
                 break;
             }
+        }
+
+        if ($unreported > 0) {
+            $progress->advanced($unreported);
         }
 
         return $columns;

@@ -8,6 +8,8 @@ interface ProgressStages
 {
     public const string GROUP_BY = 'group_by';
 
+    public const string INFER = 'infer';
+
     public const string JOIN = 'join';
 
     public const string PARALLEL = 'parallel';

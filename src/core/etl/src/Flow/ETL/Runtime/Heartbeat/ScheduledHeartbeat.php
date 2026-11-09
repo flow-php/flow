@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Runtime\Heartbeat;
 
+use DateInterval;
+use DateTimeImmutable;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\Telemetry\Logger\Logger;
 use Psr\Clock\ClockInterface;
@@ -13,7 +15,9 @@ final class ScheduledHeartbeat
 {
     private int $beats = 0;
 
-    private int $nextBeatAt = 0;
+    private readonly DateInterval $interval;
+
+    private DateTimeImmutable $nextBeatAt;
 
     /**
      * @throws InvalidArgumentException when $everySeconds is below 1
@@ -29,6 +33,9 @@ final class ScheduledHeartbeat
                 $everySeconds,
             );
         }
+
+        $this->interval = new DateInterval('PT' . $everySeconds . 'S');
+        $this->nextBeatAt = new DateTimeImmutable('@0');
     }
 
     /**
@@ -47,8 +54,10 @@ final class ScheduledHeartbeat
 
             $logger->error('Heartbeat failed.', ['exception' => $failure]);
         } finally {
-            // read after the callback, so a slow heartbeat never fires again straight away
-            $this->nextBeatAt = $clock->now()->getTimestamp() + $this->everySeconds;
+            // on the interval grid; a beat called early or ending past its next due time restarts from now
+            $now = $clock->now();
+            $onGrid = $this->nextBeatAt->add($this->interval);
+            $this->nextBeatAt = $this->nextBeatAt <= $now && $onGrid > $now ? $onGrid : $now->add($this->interval);
         }
     }
 
@@ -57,14 +66,14 @@ final class ScheduledHeartbeat
         return $this->beats + 1;
     }
 
-    public function nextBeatAt(): int
+    public function nextBeatAt(): DateTimeImmutable
     {
         return $this->nextBeatAt;
     }
 
-    public function start(int $now): void
+    public function start(DateTimeImmutable $now): void
     {
         $this->beats = 0;
-        $this->nextBeatAt = $now + $this->everySeconds;
+        $this->nextBeatAt = $now->add($this->interval);
     }
 }

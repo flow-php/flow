@@ -8,6 +8,7 @@ use Flow\ETL\Adapter\CSV\IO\Extractor\CSVReadOptions;
 use Flow\ETL\Adapter\CSV\IO\Extractor\CSVSourceOpener;
 use Flow\ETL\Adapter\CSV\IO\Inference\CSVSniffer;
 use Flow\ETL\Adapter\CSV\Tests\Context\CSVFixtureContext;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Extractor\File\SourceFile;
 use Flow\ETL\IO\Inference\InferredTypes;
 use Flow\ETL\IO\Inference\SchemaInference;
@@ -51,7 +52,10 @@ final class CSVSnifferTest extends FlowTestCase
 
     public function test_a_sniff_reads_every_record_of_its_unit(): void
     {
-        static::assertSame(5, CSVFixtureContext::sniffer(['five_rows.csv'])->sniff(0, null)->columns->rows);
+        static::assertSame(
+            5,
+            CSVFixtureContext::sniffer(['five_rows.csv'])->sniff(0, null, new VoidProgress())->columns->rows,
+        );
     }
 
     public function test_a_ragged_unit_types_every_column_of_its_widest_row(): void
@@ -60,7 +64,7 @@ final class CSVSnifferTest extends FlowTestCase
             ['id', 'name', 'v'],
             array_keys(
                 CSVFixtureContext::sniffer(['ragged.csv'])
-                    ->sniff(0, null)
+                    ->sniff(0, null, new VoidProgress())
                     ->columns
                     ->schema(new TypeFloor(infer_schema()->build()->candidates()))
                     ->definitions(),
@@ -72,7 +76,7 @@ final class CSVSnifferTest extends FlowTestCase
     {
         $counting = new CountingFilesystem(new NativeLocalFilesystem());
 
-        CSVFixtureContext::sniffer(['five_rows.csv'], filesystem: $counting)->sniff(0, 2);
+        CSVFixtureContext::sniffer(['five_rows.csv'], filesystem: $counting)->sniff(0, 2, new VoidProgress());
 
         static::assertGreaterThan(0, $counting->readFromCalls);
         static::assertSame($counting->readFromCalls, $counting->closedStreams());
@@ -113,21 +117,21 @@ final class CSVSnifferTest extends FlowTestCase
 
     public function test_a_sniff_that_reached_the_end_sampled_the_whole_file(): void
     {
-        $sample = CSVFixtureContext::sniffer(['five_rows.csv'])->sniff(0, 10);
+        $sample = CSVFixtureContext::sniffer(['five_rows.csv'])->sniff(0, 10, new VoidProgress());
 
         static::assertSame([5, 20, true], [$sample->columns->rows, $sample->bytes, $sample->complete]);
     }
 
     public function test_a_sniff_without_a_budget_sampled_the_whole_file(): void
     {
-        $sample = CSVFixtureContext::sniffer(['five_rows.csv'])->sniff(0, null);
+        $sample = CSVFixtureContext::sniffer(['five_rows.csv'])->sniff(0, null, new VoidProgress());
 
         static::assertSame([5, 20, true], [$sample->columns->rows, $sample->bytes, $sample->complete]);
     }
 
     public function test_a_sniff_stopped_by_its_budget_did_not_sample_the_whole_file(): void
     {
-        $sample = CSVFixtureContext::sniffer(['five_rows.csv'])->sniff(0, 5);
+        $sample = CSVFixtureContext::sniffer(['five_rows.csv'])->sniff(0, 5, new VoidProgress());
 
         static::assertSame([5, 20, false], [$sample->columns->rows, $sample->bytes, $sample->complete]);
     }
@@ -140,7 +144,7 @@ final class CSVSnifferTest extends FlowTestCase
         static::assertInstanceOf(CSVSniffer::class, $unit);
         static::assertSame(1, $unit->units());
         static::assertSame($sniffer->names(), $unit->names());
-        static::assertEquals($sniffer->sniff(1, null), $unit->sniff(0, null));
+        static::assertEquals($sniffer->sniff(1, null, new VoidProgress()), $unit->sniff(0, null, new VoidProgress()));
     }
 
     public function test_a_unit_sniffer_rebuilt_from_its_description_sniffs_the_same(): void
@@ -154,7 +158,10 @@ final class CSVSnifferTest extends FlowTestCase
 
         static::assertNotNull($description);
         static::assertTrue($description->sensitive());
-        static::assertEquals($sniffer->sniff(1, null), DescribeRoundTrip::rebuilt($unit)->sniff(0, null));
+        static::assertEquals(
+            $sniffer->sniff(1, null, new VoidProgress()),
+            DescribeRoundTrip::rebuilt($unit)->sniff(0, null, new VoidProgress()),
+        );
     }
 
     public function test_a_source_that_fits_the_target_or_has_no_size_is_one_part(): void
@@ -177,12 +184,12 @@ final class CSVSnifferTest extends FlowTestCase
             static::assertSame(1, $part->units());
             static::assertSame($sniffer->names(), $part->names());
             $bytes += $part->bytes(0);
-            $sample = $part->sniff(0, null);
+            $sample = $part->sniff(0, null, new VoidProgress());
             $merged = $merged === null ? $sample : $merged->merge($sample);
         }
 
         static::assertSame($sniffer->bytes(0), $bytes);
-        static::assertEquals($sniffer->sniff(0, null), $merged);
+        static::assertEquals($sniffer->sniff(0, null, new VoidProgress()), $merged);
     }
 
     public function test_window_parts_resync_quoted_multiline_records(): void
@@ -200,13 +207,13 @@ final class CSVSnifferTest extends FlowTestCase
         $merged = null;
 
         foreach ($parts as $part) {
-            $sample = $part->sniff(0, null);
+            $sample = $part->sniff(0, null, new VoidProgress());
             $merged = $merged === null ? $sample : $merged->merge($sample);
         }
 
         static::assertNotNull($merged);
         static::assertSame(400, $merged->columns->rows);
-        static::assertEquals($sniffer->sniff(0, null), $merged);
+        static::assertEquals($sniffer->sniff(0, null, new VoidProgress()), $merged);
     }
 
     public function test_a_window_part_rebuilt_from_its_description_sniffs_the_same(): void
@@ -216,7 +223,10 @@ final class CSVSnifferTest extends FlowTestCase
         static::assertInstanceOf(CSVSniffer::class, $part);
 
         static::assertNotNull($part->describe());
-        static::assertEquals($part->sniff(0, null), DescribeRoundTrip::rebuilt($part)->sniff(0, null));
+        static::assertEquals(
+            $part->sniff(0, null, new VoidProgress()),
+            DescribeRoundTrip::rebuilt($part)->sniff(0, null, new VoidProgress()),
+        );
     }
 
     public function test_a_sniffer_over_a_memory_filesystem_does_not_describe(): void
@@ -241,7 +251,10 @@ final class CSVSnifferTest extends FlowTestCase
         $fixtures = ['five_rows.csv', 'ragged.csv', 'orders_flow.csv'];
 
         static::assertEquals(
-            (new SchemaInferrer($inference))->infer(CSVFixtureContext::sniffer($fixtures, $inference))->schema,
+            (new SchemaInferrer($inference))->infer(
+                CSVFixtureContext::sniffer($fixtures, $inference),
+                new VoidProgress(),
+            )->schema,
             ReversedSniffing::schema(CSVFixtureContext::sniffer($fixtures, $inference), $inference),
         );
     }

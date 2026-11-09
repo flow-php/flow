@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\IO\Inference;
 
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\Values\Schema;
 use Flow\ETL\Values\Schema\Definitions;
 
@@ -23,7 +24,7 @@ final readonly class SchemaInferrer
      * in unit order; a bounded sample drains one row budget across the units in listing order, counting a unit toward
      * filesToSniff only when it yielded a row.
      */
-    public function infer(Sniffer $sniffer): Inferred
+    public function infer(Sniffer $sniffer, Progress $progress): Inferred
     {
         $floor = new TypeFloor($this->inference->candidates());
         $samples = [];
@@ -35,13 +36,13 @@ final readonly class SchemaInferrer
                     ? $sniffer->units()
                     : min($this->inference->filesToSniff, $sniffer->units()),
             );
-            $samples = $this->inference->sniffs?->sniff($sniffer, $units);
+            $samples = $this->inference->sniffs?->sniff($sniffer, $units, $progress);
 
             if ($samples === null) {
                 $samples = [];
 
                 for ($unit = 0; $unit < $units; $unit++) {
-                    $samples[] = $sniffer->sniff($unit, null);
+                    $samples[] = $sniffer->sniff($unit, null, $progress);
                 }
             }
         } else {
@@ -57,7 +58,7 @@ final readonly class SchemaInferrer
                     break;
                 }
 
-                $sample = $sniffer->sniff($unit, max(0, $this->inference->sampleSize - $rows));
+                $sample = $sniffer->sniff($unit, max(0, $this->inference->sampleSize - $rows), $progress);
                 $rows += $sample->columns->rows;
 
                 if ($sample->columns->rows > 0) {

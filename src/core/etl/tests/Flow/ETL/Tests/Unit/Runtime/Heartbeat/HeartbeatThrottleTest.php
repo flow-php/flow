@@ -5,15 +5,21 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Runtime\Heartbeat;
 
 use ArrayObject;
+use DateTimeImmutable;
 use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\IO\Extractor\Signal;
 use Flow\ETL\Runtime\Heartbeat\HeartbeatFailure;
+use Flow\ETL\Runtime\Heartbeat\HeartbeatThrottle;
 use Flow\ETL\Runtime\Heartbeat\Pulse;
 use Flow\ETL\Runtime\Heartbeat\ScheduledHeartbeat;
 use Flow\ETL\Tests\Context\HeartbeatContext;
 use Flow\ETL\Tests\Double\RecordingHeartbeat;
 use Flow\ETL\Tests\Double\ReportingHeartbeat;
+use Flow\ETL\Tests\Double\SteppingClock;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\RowsMother;
+use Flow\ETL\Values\Column\PhpBackend;
+use Generator;
 use RuntimeException;
 
 use function array_map;
@@ -414,5 +420,255 @@ final class HeartbeatThrottleTest extends FlowTestCase
         }
 
         static::assertSame([], $b->pulses());
+    }
+
+    public function test_totals_from_other_processes_never_beat_by_themselves(): void
+    {
+        $context = new HeartbeatContext();
+        $recording = new RecordingHeartbeat();
+        $throttle = $context->throttle(new ScheduledHeartbeat($recording, 1));
+        $context->seconds(1);
+
+        $throttle->othersReported(500, 'join', 120, 1000, 0);
+
+        static::assertSame([], $recording->pulses());
+    }
+
+    public function test_the_first_beat_waits_a_whole_interval_from_a_start_inside_a_second(): void
+    {
+        $context = new HeartbeatContext();
+        $recording = new RecordingHeartbeat();
+        $context->clock->set(new DateTimeImmutable('2026-01-01 10:00:00.900'));
+        $throttle = $context->throttle(new ScheduledHeartbeat($recording, 1));
+
+        $context->clock->set(new DateTimeImmutable('2026-01-01 10:00:01.100'));
+        $throttle->beatWhenDue();
+
+        static::assertSame([], $recording->pulses());
+
+        $context->clock->set(new DateTimeImmutable('2026-01-01 10:00:01.900'));
+        $throttle->beatWhenDue();
+
+        static::assertSame([[1, 1]], HeartbeatContext::beats($recording));
+    }
+
+    public function test_elapsed_seconds_round_down_the_real_time_since_the_start(): void
+    {
+        $context = new HeartbeatContext();
+        $recording = new RecordingHeartbeat();
+        $context->clock->set(new DateTimeImmutable('2026-01-01 10:00:00.900'));
+        $throttle = $context->throttle(new ScheduledHeartbeat($recording, 1));
+
+        $context->clock->set(new DateTimeImmutable('2026-01-01 10:00:02.100'));
+        $throttle->beatWhenDue();
+
+        static::assertSame([[1, 1]], HeartbeatContext::beats($recording));
+    }
+
+    public function test_a_stage_that_took_the_previous_batch_keeps_the_label_over_the_next_read(): void
+    {
+        $context = new HeartbeatContext();
+        $recording = new RecordingHeartbeat();
+        $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
+        $reading = $throttle->reading(HeartbeatContext::batches(2));
+
+        $reading->current();
+        $throttle->stage('sort')->advanced(10);
+        $reading->next();
+        $context->seconds(120);
+        $throttle->beatWhenDue();
+
+        static::assertSame(['sort', 10, 20], [
+            $recording->pulses()[0]->stage,
+            $recording->pulses()[0]->stageRows,
+            $recording->pulses()[0]->rowsRead,
+        ]);
+    }
+
+    public function test_batches_no_stage_took_read_as_read(): void
+    {
+        $context = new HeartbeatContext();
+        $recording = new RecordingHeartbeat();
+        $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
+
+        iterator_to_array($throttle->reading(HeartbeatContext::batches(2)), false);
+        $context->seconds(120);
+        $throttle->beatWhenDue();
+
+        static::assertSame(['read', 20], [$recording->pulses()[0]->stage, $recording->pulses()[0]->stageRows]);
+    }
+
+    public function test_the_first_batch_reads_as_read_after_an_inference(): void
+    {
+        $context = new HeartbeatContext();
+        $recording = new RecordingHeartbeat();
+        $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
+
+        $throttle->stage('infer')->advanced(1000);
+        iterator_to_array($throttle->reading(HeartbeatContext::batches(1)), false);
+        $context->seconds(120);
+        $throttle->beatWhenDue();
+
+        static::assertSame(['read', 10], [$recording->pulses()[0]->stage, $recording->pulses()[0]->stageRows]);
+    }
+
+    public function test_a_new_run_reads_its_first_batch_as_read(): void
+    {
+        $context = new HeartbeatContext();
+        $recording = new RecordingHeartbeat();
+        $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
+        $sort = $throttle->stage('sort');
+
+        $throttle->started();
+        $reading = $throttle->reading(HeartbeatContext::batches(1));
+        $reading->current();
+        $sort->advanced(10);
+        $throttle->finished();
+        $throttle->started();
+        $sort->advanced(10);
+        iterator_to_array($throttle->reading(HeartbeatContext::batches(1)), false);
+        $context->seconds(120);
+        $throttle->beatWhenDue();
+
+        static::assertSame(['read', 10], [$recording->pulses()[0]->stage, $recording->pulses()[0]->stageRows]);
+    }
+
+    public function test_idle_seconds_count_from_the_last_batch(): void
+    {
+        $context = new HeartbeatContext();
+        $recording = new RecordingHeartbeat();
+        $throttle = $context->throttle(new ScheduledHeartbeat($recording, 10));
+
+        $context->seconds(3);
+        iterator_to_array($throttle->reading(HeartbeatContext::batches(1)), false);
+        $throttle->beatWhenDue();
+        $context->seconds(7);
+        $throttle->beatWhenDue();
+
+        static::assertSame(7, $recording->pulses()[0]->idleSeconds);
+    }
+
+    public function test_an_unchanged_report_keeps_idle_seconds_growing_and_a_changed_one_resets_them(): void
+    {
+        $context = new HeartbeatContext();
+        $recording = new RecordingHeartbeat();
+        $parallel = $context->throttle(new ScheduledHeartbeat($recording, 1))->stage('parallel');
+
+        $parallel->reported(500, 'join', 120, 1000, 0);
+        $context->seconds(10);
+        $parallel->reported(500, 'join', 120, 1000, 0);
+        $context->seconds(1);
+        $parallel->reported(600, 'join', 140, 1000, 0);
+
+        static::assertSame(
+            [10, 0],
+            array_map(static fn(Pulse $pulse): int => $pulse->idleSeconds, $recording->pulses()),
+        );
+    }
+
+    public function test_a_zero_advance_is_no_progress(): void
+    {
+        $context = new HeartbeatContext();
+        $recording = new RecordingHeartbeat();
+        $throttle = $context->throttle(new ScheduledHeartbeat($recording, 5));
+
+        $context->seconds(5);
+        $throttle->stage('sort')->advanced(0);
+
+        static::assertSame(5, $recording->pulses()[0]->idleSeconds);
+    }
+
+    public function test_unread_rows_leave_the_rows_read(): void
+    {
+        $context = new HeartbeatContext();
+        $recording = new RecordingHeartbeat();
+        $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
+
+        iterator_to_array(
+            $throttle->reading(
+                (static function (): Generator {
+                    yield RowsMother::sequentialIds(8);
+                })(),
+            ),
+            false,
+        );
+        $throttle->unread(5);
+        $context->seconds(120);
+        $throttle->beatWhenDue();
+
+        static::assertSame(3, $throttle->rowsRead());
+        static::assertSame([3, 'read', 8], [
+            $recording->pulses()[0]->rowsRead,
+            $recording->pulses()[0]->stage,
+            $recording->pulses()[0]->stageRows,
+        ]);
+    }
+
+    public function test_unread_rows_another_process_reported_keep_the_read_stage_rows(): void
+    {
+        $context = new HeartbeatContext();
+        $recording = new RecordingHeartbeat();
+        $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
+        $readBefore = $throttle->rowsRead();
+
+        $throttle->stage('parallel')->reported(40, 'parallel', 40, 0, 0);
+        $throttle->unread($throttle->rowsRead() - $readBefore);
+        iterator_to_array($throttle->reading(HeartbeatContext::batches(1)), false);
+        $context->seconds(120);
+        $throttle->beatWhenDue();
+
+        static::assertSame(10, $throttle->rowsRead());
+        static::assertSame([10, 'read', 10], [
+            $recording->pulses()[0]->rowsRead,
+            $recording->pulses()[0]->stage,
+            $recording->pulses()[0]->stageRows,
+        ]);
+    }
+
+    public function test_a_report_that_changes_only_memory_is_no_progress(): void
+    {
+        $context = new HeartbeatContext();
+        $recording = new RecordingHeartbeat();
+        $parallel = $context->throttle(new ScheduledHeartbeat($recording, 1))->stage('parallel');
+
+        $parallel->reported(500, 'join', 120, 1000, 0);
+        $context->seconds(10);
+        $parallel->reported(500, 'join', 120, 2000, 3000);
+
+        static::assertSame(10, $recording->pulses()[0]->idleSeconds);
+    }
+
+    public function test_an_inference_between_batches_does_not_label_the_next_read(): void
+    {
+        $context = new HeartbeatContext();
+        $recording = new RecordingHeartbeat();
+        $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
+        $reading = $throttle->reading(HeartbeatContext::batches(2));
+
+        $reading->current();
+        $throttle->stage('infer')->advanced(1000);
+        $reading->next();
+        $context->seconds(120);
+        $throttle->beatWhenDue();
+
+        static::assertSame(['read', 20], [$recording->pulses()[0]->stage, $recording->pulses()[0]->stageRows]);
+    }
+
+    public function test_beats_stay_on_the_interval_grid_when_each_callback_takes_time(): void
+    {
+        $context = new HeartbeatContext();
+        $recording = new RecordingHeartbeat();
+        $throttle = new HeartbeatThrottle(
+            new SteppingClock(),
+            new PhpBackend(),
+            $context->logger,
+            [new ScheduledHeartbeat($recording, 10)],
+        );
+
+        foreach (range(1, 40) as $_) {
+            $throttle->beatWhenDue();
+        }
+
+        static::assertSame([[1, 10], [2, 20], [3, 30], [4, 40]], HeartbeatContext::beats($recording));
     }
 }

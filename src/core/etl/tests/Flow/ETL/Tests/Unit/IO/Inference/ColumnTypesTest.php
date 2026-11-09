@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\IO\Inference;
 
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Inference\ColumnTypes;
 use Flow\ETL\IO\Inference\InferredTypes;
+use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\Double\RecordingSources;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\ColumnTypesMother;
@@ -16,6 +18,7 @@ use Flow\Types\Type\Native\String\StringTypeNarrower;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function array_keys;
+use function array_map;
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_datetime;
@@ -26,6 +29,7 @@ use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function range;
 
 final class ColumnTypesTest extends FlowTestCase
 {
@@ -428,6 +432,7 @@ final class ColumnTypesTest extends FlowTestCase
                 $sources->source(0),
                 4,
                 new StringTypeNarrower(InferredTypes::default()->toArray()),
+                new VoidProgress(),
             )->rows(),
         );
         static::assertSame([0 => 4], $sources->rowsRead);
@@ -440,6 +445,7 @@ final class ColumnTypesTest extends FlowTestCase
             [['a' => '1']],
             null,
             new StringTypeNarrower(InferredTypes::default()->toArray()),
+            new VoidProgress(),
         );
 
         static::assertSame(
@@ -463,6 +469,7 @@ final class ColumnTypesTest extends FlowTestCase
                 $sources->source(0),
                 0,
                 new StringTypeNarrower(InferredTypes::default()->toArray()),
+                new VoidProgress(),
             )->rows(),
         );
         static::assertSame([], $sources->rowsRead);
@@ -477,7 +484,13 @@ final class ColumnTypesTest extends FlowTestCase
             $bare->observe($row);
         }
 
-        $partial = ColumnTypes::sniff([], $rows, null, new StringTypeNarrower(InferredTypes::default()->toArray()));
+        $partial = ColumnTypes::sniff(
+            [],
+            $rows,
+            null,
+            new StringTypeNarrower(InferredTypes::default()->toArray()),
+            new VoidProgress(),
+        );
 
         static::assertSame(2, $partial->rows());
         static::assertEquals(
@@ -492,6 +505,57 @@ final class ColumnTypesTest extends FlowTestCase
         $this->expectExceptionMessage('Row budget must be 0 or more. Use null for every row.');
 
         // @mago-expect analysis:invalid-argument
-        ColumnTypes::sniff([], [['a' => '1']], -1, new StringTypeNarrower(InferredTypes::default()->toArray()));
+        ColumnTypes::sniff(
+            [],
+            [['a' => '1']],
+            -1,
+            new StringTypeNarrower(InferredTypes::default()->toArray()),
+            new VoidProgress(),
+        );
+    }
+
+    public function test_sniff_reports_every_thousand_rows_and_the_remainder(): void
+    {
+        $progress = new ProgressSpy();
+
+        ColumnTypes::sniff(
+            [],
+            array_map(static fn(int $id): array => ['a' => (string) $id], range(1, 2500)),
+            null,
+            new StringTypeNarrower(InferredTypes::default()->toArray()),
+            $progress,
+        );
+
+        static::assertSame([['', 1000], ['', 1000], ['', 500]], $progress->advancedCalls());
+    }
+
+    public function test_sniff_reports_only_the_rows_its_budget_observed(): void
+    {
+        $progress = new ProgressSpy();
+
+        ColumnTypes::sniff(
+            [],
+            array_map(static fn(int $id): array => ['a' => (string) $id], range(1, 2500)),
+            1200,
+            new StringTypeNarrower(InferredTypes::default()->toArray()),
+            $progress,
+        );
+
+        static::assertSame([['', 1000], ['', 200]], $progress->advancedCalls());
+    }
+
+    public function test_sniff_reports_nothing_when_the_budget_is_already_spent(): void
+    {
+        $progress = new ProgressSpy();
+
+        ColumnTypes::sniff(
+            [],
+            [['a' => '1']],
+            0,
+            new StringTypeNarrower(InferredTypes::default()->toArray()),
+            $progress,
+        );
+
+        static::assertSame([], $progress->advancedCalls());
     }
 }

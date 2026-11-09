@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\JSON\Tests\Integration\IO\Inference;
 use Flow\ETL\Adapter\JSON\IO\Inference\JsonSniffer;
 use Flow\ETL\Adapter\JSON\IO\JsonFraming;
 use Flow\ETL\Adapter\JSON\Tests\Context\JsonFixtureContext;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Extractor\File\SourceFile;
 use Flow\ETL\IO\Inference\SchemaInference;
 use Flow\ETL\IO\Inference\SchemaInferrer;
@@ -52,8 +53,8 @@ final class JsonSnifferTest extends FlowTestCase
     {
         $sniffer = JsonFixtureContext::sniffer($format, JsonFixtureContext::sources($fixture));
 
-        static::assertSame(2, $sniffer->sniff(0, 2)->columns->rows);
-        static::assertSame(5, $sniffer->sniff(0, null)->columns->rows);
+        static::assertSame(2, $sniffer->sniff(0, 2, new VoidProgress())->columns->rows);
+        static::assertSame(5, $sniffer->sniff(0, null, new VoidProgress())->columns->rows);
     }
 
     public function test_a_sniff_opens_only_its_own_unit_and_closes_it(): void
@@ -64,7 +65,7 @@ final class JsonSnifferTest extends FlowTestCase
             JsonFraming::Array,
             JsonFixtureContext::globSources('extra_key/*.json', $counting),
             $counting,
-        )->sniff(1, null);
+        )->sniff(1, null, new VoidProgress());
 
         static::assertSame(1, $counting->readFromCalls);
         static::assertSame(1, $counting->closedStreams());
@@ -77,8 +78,8 @@ final class JsonSnifferTest extends FlowTestCase
             'blank_line.jsonl',
         ));
 
-        $first = $sniffer->sniff(0, null);
-        $second = $sniffer->sniff(1, null);
+        $first = $sniffer->sniff(0, null, new VoidProgress());
+        $second = $sniffer->sniff(1, null, new VoidProgress());
 
         static::assertSame([5, 45, true], [$first->columns->rows, $first->bytes, $first->complete]);
         static::assertSame([2, 19, true], [$second->columns->rows, $second->bytes, $second->complete]);
@@ -94,7 +95,7 @@ final class JsonSnifferTest extends FlowTestCase
 
         static::assertInstanceOf(JsonSniffer::class, $unit);
         static::assertSame(1, $unit->units());
-        static::assertEquals($sniffer->sniff(1, null), $unit->sniff(0, null));
+        static::assertEquals($sniffer->sniff(1, null, new VoidProgress()), $unit->sniff(0, null, new VoidProgress()));
     }
 
     public function test_a_unit_sniffer_rebuilt_from_its_description_sniffs_the_same(): void
@@ -111,7 +112,10 @@ final class JsonSnifferTest extends FlowTestCase
 
         static::assertNotNull($description);
         static::assertTrue($description->sensitive());
-        static::assertEquals($sniffer->sniff(1, null), DescribeRoundTrip::rebuilt($unit)->sniff(0, null));
+        static::assertEquals(
+            $sniffer->sniff(1, null, new VoidProgress()),
+            DescribeRoundTrip::rebuilt($unit)->sniff(0, null, new VoidProgress()),
+        );
     }
 
     public function test_a_document_or_a_lines_file_that_fits_is_one_part(): void
@@ -143,12 +147,12 @@ final class JsonSnifferTest extends FlowTestCase
         foreach ($parts as $part) {
             static::assertSame(1, $part->units());
             $bytes += $part->bytes(0);
-            $sample = $part->sniff(0, null);
+            $sample = $part->sniff(0, null, new VoidProgress());
             $merged = $merged === null ? $sample : $merged->merge($sample);
         }
 
         static::assertSame($sniffer->bytes(0), $bytes);
-        static::assertEquals($sniffer->sniff(0, null), $merged);
+        static::assertEquals($sniffer->sniff(0, null, new VoidProgress()), $merged);
     }
 
     public function test_a_window_part_rebuilt_from_its_description_sniffs_the_same(): void
@@ -161,7 +165,10 @@ final class JsonSnifferTest extends FlowTestCase
         static::assertInstanceOf(JsonSniffer::class, $part);
 
         static::assertNotNull($part->describe());
-        static::assertEquals($part->sniff(0, null), DescribeRoundTrip::rebuilt($part)->sniff(0, null));
+        static::assertEquals(
+            $part->sniff(0, null, new VoidProgress()),
+            DescribeRoundTrip::rebuilt($part)->sniff(0, null, new VoidProgress()),
+        );
     }
 
     public function test_a_sniffer_over_a_memory_filesystem_does_not_describe(): void
@@ -197,10 +204,10 @@ final class JsonSnifferTest extends FlowTestCase
         $inference = (new SchemaInference(unionByName: true))->everyRow()->everySource();
 
         static::assertEquals(
-            (new SchemaInferrer($inference))->infer(JsonFixtureContext::sniffer(
-                $format,
-                JsonFixtureContext::sources(...$fixtures),
-            ))->schema,
+            (new SchemaInferrer($inference))->infer(
+                JsonFixtureContext::sniffer($format, JsonFixtureContext::sources(...$fixtures)),
+                new VoidProgress(),
+            )->schema,
             ReversedSniffing::schema(
                 JsonFixtureContext::sniffer($format, JsonFixtureContext::sources(...$fixtures)),
                 $inference,

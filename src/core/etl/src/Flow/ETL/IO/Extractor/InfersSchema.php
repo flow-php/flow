@@ -6,7 +6,7 @@ namespace Flow\ETL\IO\Extractor;
 
 use Flow\ETL\IO\Inference\SchemaInferenceBuilder;
 
-interface InfersSchema
+interface InfersSchema extends ReportsInference
 {
     public function inferSchema(SchemaInferenceBuilder $builder): static;
 }

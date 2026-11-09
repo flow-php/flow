@@ -28,7 +28,7 @@ expect_exception(static fn() => $source(',', ''));
 expect_exception(static fn() => $source(',', '"', '\\\\'));
 expect_exception(static fn() => $source()->batches(schema(int_schema('id')), 0, new RustBackend()));
 expect_exception(static fn() => $source()->batches(schema(int_schema('id')), -1, new RustBackend()));
-expect_exception(static fn() => $source()->sniff(['id'], -2, new StringTypeNarrower()));
+expect_exception(static fn() => $source()->sniff(['id'], -2, new StringTypeNarrower(), new Flow\ETL\Foundation\VoidProgress()));
 ?>
 --EXPECT--
 Flow\ETL\Foundation\Exception\RuntimeException: flow_php CSV separator must be exactly one byte

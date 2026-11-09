@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\SplittableExtractor;
 use Flow\ETL\IO\Inference\Sniffer;
@@ -24,7 +25,7 @@ final class RecordingLauncher implements Launcher
     public array $reads = [];
 
     /**
-     * @var list<array{Sniffer, int}>
+     * @var list<array{Sniffer, int, Progress}>
      */
     public array $sniffs = [];
 
@@ -47,10 +48,10 @@ final class RecordingLauncher implements Launcher
         return $this->delegate?->read($plan, $source, $criteria, $context, $counts);
     }
 
-    public function sniff(Sniffer $sniffer, int $units): ?array
+    public function sniff(Sniffer $sniffer, int $units, Progress $progress): ?array
     {
-        $this->sniffs[] = [$sniffer, $units];
+        $this->sniffs[] = [$sniffer, $units, $progress];
 
-        return $this->delegate?->sniff($sniffer, $units);
+        return $this->delegate?->sniff($sniffer, $units, $progress);
     }
 }

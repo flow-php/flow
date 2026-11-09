@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\SplittableExtractor;
 use Flow\ETL\IO\Inference\Sniffer;
@@ -58,7 +59,7 @@ final readonly class StubLauncher implements Launcher
         );
     }
 
-    public function sniff(Sniffer $sniffer, int $units): ?array
+    public function sniff(Sniffer $sniffer, int $units, Progress $progress): ?array
     {
         return null;
     }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\IO\Extractor\Memory;
 
 use Flow\ETL\Foundation\Exception\InvalidLogicException;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\IO\Inference\Sample;
 use Flow\ETL\IO\Inference\Sniffer;
 use Flow\Filesystem\Filesystem;
@@ -154,7 +155,7 @@ final class SpilledRows implements Sniffer
      *
      * @throws InvalidLogicException when the source was already read
      */
-    public function sniff(int $unit, ?int $rowBudget): Sample
+    public function sniff(int $unit, ?int $rowBudget, Progress $progress): Sample
     {
         if ($this->state !== SpillState::Fresh) {
             throw InvalidLogicException::because(self::ALREADY_CONSUMED);
@@ -198,7 +199,7 @@ final class SpilledRows implements Sniffer
 
         // InMemoryRows owns the raw-row naming; keeping a second copy here would put the "same names array_to_rows()
         // gives" invariant in two places.
-        return (new InMemoryRows($spilling()))->sniff(0, null);
+        return (new InMemoryRows($spilling()))->sniff(0, null, $progress);
     }
 
     public function parts(int $unit, int $targetBytes): array

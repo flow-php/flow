@@ -8,6 +8,8 @@ use Flow\ETL\Adapter\Excel\IO\Inference\ExcelSniffer;
 use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Functions\ScalarFunction;
 use Flow\ETL\IO\CorruptedRecordsRouter;
 use Flow\ETL\IO\Extractor;
@@ -65,6 +67,8 @@ final class ExcelExtractor implements
 
     private SchemaInference $inference;
 
+    private Progress $inferenceProgress;
+
     private ExcelReadOptions $readOptions;
 
     /**
@@ -102,6 +106,7 @@ final class ExcelExtractor implements
         }
 
         $this->inference = new SchemaInference();
+        $this->inferenceProgress = new VoidProgress();
         $this->readOptions = new ExcelReadOptions();
         $this->derived = new DerivedFromFiles();
         $this->files = new SourceFiles($filesystem, $this->path);
@@ -199,6 +204,11 @@ final class ExcelExtractor implements
         return $this;
     }
 
+    public function reportInferenceTo(Progress $progress): void
+    {
+        $this->inferenceProgress = $progress;
+    }
+
     public function schema(): Schema
     {
         $schema = $this->describe();
@@ -233,7 +243,7 @@ final class ExcelExtractor implements
             );
 
             try {
-                $inferred = (new SchemaInferrer($this->inference))->infer($sniffer);
+                $inferred = (new SchemaInferrer($this->inference))->infer($sniffer, $this->inferenceProgress);
                 $derived = $this->derived->learn($inferred->schema, $sniffer->header()->source ?? '');
                 $this->sampledUnits = $inferred->units;
                 $this->sampledFiles = count($sources);

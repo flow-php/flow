@@ -6,6 +6,7 @@ namespace Flow\ETL\IO\Extractor;
 
 use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\IO\Extractor;
 use Flow\ETL\Values\Cardinality;
 use Flow\ETL\Values\Column\Backend;
@@ -15,7 +16,7 @@ use Generator;
 
 use function array_reduce;
 
-final class ChainExtractor implements Extractor, Refreshable
+final class ChainExtractor implements Extractor, Refreshable, ReportsInference
 {
     private ?Schema $schema = null;
 
@@ -70,6 +71,15 @@ final class ChainExtractor implements Extractor, Refreshable
         foreach ($this->extractors as $extractor) {
             if ($extractor instanceof Refreshable) {
                 $extractor->refresh();
+            }
+        }
+    }
+
+    public function reportInferenceTo(Progress $progress): void
+    {
+        foreach ($this->extractors as $extractor) {
+            if ($extractor instanceof ReportsInference) {
+                $extractor->reportInferenceTo($progress);
             }
         }
     }

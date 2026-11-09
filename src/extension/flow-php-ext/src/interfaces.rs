@@ -29,6 +29,7 @@ const ITERATOR: DataType = DataType::object("Iterator");
 const READ_PLAN: DataType = DataType::object("Flow\\Parquet\\Reader\\ReadPlan");
 const COLUMN_TYPES: DataType = DataType::object("Flow\\ETL\\IO\\Inference\\ColumnTypes");
 const TYPE_NARROWER: DataType = DataType::object("Flow\\Types\\Type\\TypeNarrower");
+const PROGRESS: DataType = DataType::object("Flow\\ETL\\Foundation\\Progress");
 const OPERATOR: DataType = DataType::object("Flow\\Types\\Type\\Comparison\\Operator");
 const REBUILD: DataType = DataType::object("Flow\\ETL\\Foundation\\Describe\\Rebuild");
 
@@ -457,6 +458,7 @@ pub fn register() -> Result<()> {
                     Arg::new("names", DataType::Array),
                     Arg::new("rowBudget", DataType::Long).allow_null(),
                     Arg::new("typer", TYPE_NARROWER),
+                    Arg::new("progress", PROGRESS),
                 ],
                 COLUMN_TYPES,
             ),

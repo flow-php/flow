@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\IO\Inference;
 
+use Flow\ETL\Foundation\Progress;
+
 interface Sniffer
 {
     /**
@@ -22,9 +24,11 @@ interface Sniffer
     public function names(): array;
 
     /**
+     * Reports the observed rows through $progress in Progress::ROWS_PER_CALL chunks; they are never rows read.
+     *
      * @param null|int<0, max> $rowBudget rows to observe from this unit, 0 for none, null for every row
      */
-    public function sniff(int $unit, ?int $rowBudget): Sample;
+    public function sniff(int $unit, ?int $rowBudget, Progress $progress): Sample;
 
     /**
      * Live one-unit sniffers that together cover $unit (unit 0 of each; the parent-resolved header and candidate

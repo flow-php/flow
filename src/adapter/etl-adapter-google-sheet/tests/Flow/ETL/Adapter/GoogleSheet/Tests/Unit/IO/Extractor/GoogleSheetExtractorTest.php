@@ -16,6 +16,7 @@ use Flow\ETL\Foundation\Exception\SchemaValidationException;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\Statistics;
 use Flow\ETL\Tests\Context\ExtractedRows;
+use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Cardinality;
@@ -709,5 +710,19 @@ final class GoogleSheetExtractorTest extends FlowTestCase
                 $reject['fields'],
             ], $rejects),
         );
+    }
+
+    public function test_schema_reports_the_sampled_rows_to_the_inference_progress(): void
+    {
+        $progress = new ProgressSpy();
+        $extractor = GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(
+            100,
+            GoogleSheetFixtureContext::values(SheetValuesMother::range([['id'], ['1'], ['2']])),
+        ));
+        $extractor->reportInferenceTo($progress);
+
+        $extractor->schema();
+
+        static::assertSame([['', 2]], $progress->advancedCalls());
     }
 }

@@ -19,10 +19,13 @@ use Flow\ETL\IO\Extractor\File\FileSplit;
 use Flow\ETL\IO\Extractor\Signal;
 use Flow\ETL\IO\Filesystem\ScalarFunctionFilter;
 use Flow\ETL\Planning\Logical\Stage;
+use Flow\ETL\Runtime\Heartbeat\Pulse;
 use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Context\SplitCoverage;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\Double\RecordingFilesystem;
+use Flow\ETL\Tests\Double\RecordingHeartbeat;
+use Flow\ETL\Tests\Double\SteppingClock;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Rows;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
@@ -77,8 +80,10 @@ use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_xml;
 use function fopen;
+use function implode;
 use function iterator_to_array;
 use function max;
+use function range;
 use function sort;
 use function str_repeat;
 
@@ -1958,5 +1963,28 @@ final class CSVExtractorTest extends FlowTestCase
         )->run();
 
         static::assertSame([8, 12], array_column($rejects, 'offset'));
+    }
+
+    public function test_every_row_inference_beats_as_the_infer_stage_before_the_read(): void
+    {
+        $recording = new RecordingHeartbeat();
+
+        df(config_builder()->clock(new SteppingClock())->heartbeat($recording, everySeconds: 1))
+            ->read(
+                from_csv(
+                    CSVFixtureContext::memorySource()->path,
+                    filesystem: CSVFixtureContext::memory("id\n" . implode("\n", range(1, 2500)) . "\n"),
+                )->inferSchema(infer_schema()->everyRow()),
+            )
+            ->fetch();
+
+        static::assertContains(
+            ['infer', 2500, 0],
+            array_map(static fn(Pulse $pulse): array => [
+                $pulse->stage,
+                $pulse->stageRows,
+                $pulse->rowsRead,
+            ], $recording->pulses()),
+        );
     }
 }

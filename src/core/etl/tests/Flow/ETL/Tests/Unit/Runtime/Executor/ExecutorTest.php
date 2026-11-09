@@ -67,9 +67,11 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use RuntimeException;
 
+use function array_column;
 use function array_filter;
 use function array_keys;
 use function array_map;
+use function array_search;
 use function array_slice;
 use function array_sum;
 use function array_values;
@@ -89,6 +91,8 @@ use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\to_array;
 use function Flow\ETL\DSL\to_branch;
+use function Flow\Filesystem\DSL\memory_filesystem;
+use function Flow\Filesystem\DSL\path;
 use function iterator_to_array;
 
 final class ExecutorTest extends FlowTestCase
@@ -524,6 +528,57 @@ final class ExecutorTest extends FlowTestCase
                 array_slice($recording->pulses(), -1),
             ),
         );
+    }
+
+    public function test_a_spilled_source_reports_its_inference_before_the_first_batch_is_read(): void
+    {
+        $recording = new RecordingHeartbeat();
+        /** @var callable(): Generator<int, array<string, int>> $generator */
+        $generator = static function (): Generator {
+            for ($id = 1; $id <= 2500; $id++) {
+                yield ['id' => $id];
+            }
+        };
+
+        df(config_builder()->clock(new SteppingClock())->heartbeat($recording, everySeconds: 1))
+            ->read(from_array($generator(), filesystem: memory_filesystem(), spillRoot: path('memory://tmp')))
+            ->fetch();
+
+        $pulses = array_map(static fn(Pulse $pulse): array => [$pulse->stage, $pulse->rowsRead], $recording->pulses());
+        static::assertSame(['infer', 0], $pulses[0]);
+        static::assertContains(['read', 2500], $pulses);
+    }
+
+    public function test_a_frame_schema_outside_a_run_never_beats(): void
+    {
+        $recording = new RecordingHeartbeat();
+        /** @var callable(): Generator<int, array<string, int>> $generator */
+        $generator = static function (): Generator {
+            for ($id = 1; $id <= 2500; $id++) {
+                yield ['id' => $id];
+            }
+        };
+
+        df(config_builder()->clock(new SteppingClock())->heartbeat($recording, everySeconds: 1))
+            ->read(from_array($generator(), filesystem: memory_filesystem(), spillRoot: path('memory://tmp')))
+            ->schema();
+
+        static::assertSame([], $recording->pulses());
+    }
+
+    public function test_a_sort_that_takes_every_batch_read_keeps_the_label(): void
+    {
+        $recording = new RecordingHeartbeat();
+
+        df(config_builder()->clock(new SteppingClock())->heartbeat($recording, everySeconds: 1))
+            ->read(from_array(RowsMother::sequentialIds(30)->toArray())->withBatchSize(10))
+            ->sortBy(ref('id'))
+            ->fetch();
+
+        $pulses = array_map(static fn(Pulse $pulse): array => [$pulse->stage, $pulse->rowsRead], $recording->pulses());
+        $afterFirstSort = array_slice($pulses, (int) array_search('sort', array_column($pulses, 0), true));
+        static::assertNotContains('read', array_column($afterFirstSort, 0));
+        static::assertContains(['sort', 10], $afterFirstSort);
     }
 
     public function test_a_branch_write_does_not_count_its_rows_as_read_again(): void

@@ -27,11 +27,28 @@ final class HeartbeatStage implements Progress
 
     public function advanced(int $rows): void
     {
+        if ($rows === 0) {
+            $this->throttle->beatWhenDue();
+
+            return;
+        }
+
         $this->rows += $rows;
         $this->throttle->stageAdvanced($this->name, $this->rows);
     }
 
+    public function ended(int $rowsRead, string $stage, int $stageRows, int $memoryBytes, int $peakMemoryBytes): void
+    {
+        $this->fold($rowsRead, $stage, $stageRows, $memoryBytes, $peakMemoryBytes);
+    }
+
     public function reported(int $rowsRead, string $stage, int $stageRows, int $memoryBytes, int $peakMemoryBytes): void
+    {
+        $this->fold($rowsRead, $stage, $stageRows, $memoryBytes, $peakMemoryBytes);
+        $this->throttle->beatWhenDue();
+    }
+
+    private function fold(int $rowsRead, string $stage, int $stageRows, int $memoryBytes, int $peakMemoryBytes): void
     {
         if (
             $rowsRead === $this->reportedRowsRead
@@ -40,8 +57,6 @@ final class HeartbeatStage implements Progress
             && $memoryBytes === $this->reportedMemoryBytes
             && $peakMemoryBytes === $this->reportedPeakMemoryBytes
         ) {
-            $this->throttle->beatWhenDue();
-
             return;
         }
 

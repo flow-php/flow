@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\Excel\Tests\Integration\IO\Inference;
 use Flow\ETL\Adapter\Excel\IO\Extractor\ExcelReadOptions;
 use Flow\ETL\Adapter\Excel\IO\Inference\ExcelSniffer;
 use Flow\ETL\Adapter\Excel\Tests\Context\ExcelFixtureContext;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Inference\SampledUnits;
 use Flow\ETL\IO\Inference\SchemaInference;
 use Flow\ETL\Tests\Context\DescribeRoundTrip;
@@ -231,9 +232,12 @@ final class ExcelSnifferTest extends FlowTestCase
 
     public function test_sniff_folds_at_most_its_budget(): void
     {
-        static::assertSame(3, ExcelFixtureContext::sniffer('sniff/a')->sniff(0, 3)->columns->rows);
-        static::assertSame(1, ExcelFixtureContext::sniffer('sniff/a')->sniff(0, 1)->columns->rows);
-        static::assertSame(10, ExcelFixtureContext::sniffer('sniff/a')->sniff(0, null)->columns->rows);
+        static::assertSame(3, ExcelFixtureContext::sniffer('sniff/a')->sniff(0, 3, new VoidProgress())->columns->rows);
+        static::assertSame(1, ExcelFixtureContext::sniffer('sniff/a')->sniff(0, 1, new VoidProgress())->columns->rows);
+        static::assertSame(
+            10,
+            ExcelFixtureContext::sniffer('sniff/a')->sniff(0, null, new VoidProgress())->columns->rows,
+        );
     }
 
     public function test_one_unit_per_sheet_and_a_sniff_reuses_the_sheet_the_header_came_from(): void
@@ -247,7 +251,7 @@ final class ExcelSnifferTest extends FlowTestCase
         $afterHeader = $filesystem->readFromCalls;
 
         // the first unit is the sheet names() read from, so its header row is already spent
-        $firstSheet = $sniffer->sniff(0, null);
+        $firstSheet = $sniffer->sniff(0, null, new VoidProgress());
 
         static::assertSame(2, $units);
         static::assertSame(0, $beforeAnyRead);
@@ -342,7 +346,7 @@ final class ExcelSnifferTest extends FlowTestCase
 
         static::assertEquals(
             Cardinality::unknown(),
-            (new SampledUnits([$sniffer->sniff(0, 20_480)]))->exactRows($sniffer->units()),
+            (new SampledUnits([$sniffer->sniff(0, 20_480, new VoidProgress())]))->exactRows($sniffer->units()),
         );
     }
 
@@ -352,13 +356,16 @@ final class ExcelSnifferTest extends FlowTestCase
 
         static::assertEquals(
             Cardinality::exact(20),
-            (new SampledUnits([$sniffer->sniff(0, 20_480), $sniffer->sniff(1, 20_480)]))->exactRows($sniffer->units()),
+            (new SampledUnits([
+                $sniffer->sniff(0, 20_480, new VoidProgress()),
+                $sniffer->sniff(1, 20_480, new VoidProgress()),
+            ]))->exactRows($sniffer->units()),
         );
     }
 
     public function test_an_unbounded_sample_counts_the_rows_it_streamed(): void
     {
-        $sample = ExcelFixtureContext::sniffer('sniff/a')->sniff(0, null);
+        $sample = ExcelFixtureContext::sniffer('sniff/a')->sniff(0, null, new VoidProgress());
 
         static::assertSame([10, 0, true], [$sample->columns->rows, $sample->bytes, $sample->complete]);
     }
@@ -371,7 +378,7 @@ final class ExcelSnifferTest extends FlowTestCase
         static::assertInstanceOf(ExcelSniffer::class, $unit);
         static::assertSame(1, $unit->units());
         static::assertSame($sniffer->names(), $unit->names());
-        static::assertEquals($sniffer->sniff(1, null), $unit->sniff(0, null));
+        static::assertEquals($sniffer->sniff(1, null, new VoidProgress()), $unit->sniff(0, null, new VoidProgress()));
 
         $sniffer->close();
         $unit->close();
@@ -391,7 +398,10 @@ final class ExcelSnifferTest extends FlowTestCase
 
         $rebuilt = DescribeRoundTrip::rebuilt($unit);
 
-        static::assertEquals($sniffer->sniff(1, null), $rebuilt->sniff(0, null));
+        static::assertEquals(
+            $sniffer->sniff(1, null, new VoidProgress()),
+            $rebuilt->sniff(0, null, new VoidProgress()),
+        );
 
         $sniffer->close();
         $rebuilt->close();

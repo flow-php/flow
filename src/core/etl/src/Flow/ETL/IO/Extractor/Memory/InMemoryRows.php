@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\IO\Extractor\Memory;
 
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\IO\Inference\ColumnTypes;
 use Flow\ETL\IO\Inference\Sample;
 use Flow\ETL\IO\Inference\Sniffer;
@@ -34,9 +35,9 @@ final readonly class InMemoryRows implements Sniffer
         return [];
     }
 
-    public function sniff(int $unit, ?int $rowBudget): Sample
+    public function sniff(int $unit, ?int $rowBudget, Progress $progress): Sample
     {
-        $columnTypes = ColumnTypes::sniff([], $this->values(), $rowBudget, $this->typer);
+        $columnTypes = ColumnTypes::sniff([], $this->values(), $rowBudget, $this->typer, $progress);
 
         return new Sample($columnTypes->folded(), 0, $rowBudget === null || $columnTypes->rows() < $rowBudget);
     }

@@ -11,6 +11,11 @@ interface Progress
     public function advanced(int $rows): void;
 
     /**
+     * Folds the totals like reported(), and never calls a heartbeat.
+     */
+    public function ended(int $rowsRead, string $stage, int $stageRows, int $memoryBytes, int $peakMemoryBytes): void;
+
+    /**
      * Rows read and memory replace this object's previous values.
      * Stage and stage rows are the latest report's; the peak only rises.
      */

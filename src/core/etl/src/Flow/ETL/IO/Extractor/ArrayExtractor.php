@@ -8,6 +8,8 @@ use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\InvalidLogicException;
 use Flow\ETL\Foundation\Exception\SchemaMismatchException;
+use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\CorruptedRecordsRouter;
 use Flow\ETL\IO\Extractor;
 use Flow\ETL\IO\Extractor\Memory\InMemoryRows;
@@ -48,6 +50,8 @@ final class ArrayExtractor implements BatchableExtractor, Extractor, InfersSchem
 
     private SchemaInference $inference;
 
+    private Progress $inferenceProgress;
+
     private readonly ?Memory $memory;
 
     private ?Schema $schema = null;
@@ -77,6 +81,7 @@ final class ArrayExtractor implements BatchableExtractor, Extractor, InfersSchem
         $this->filesystem = $filesystem;
         $this->spillRoot = $spillRoot;
         $this->inference = new SchemaInference();
+        $this->inferenceProgress = new VoidProgress();
         $this->batchSize = new BatchSize();
     }
 
@@ -147,6 +152,11 @@ final class ArrayExtractor implements BatchableExtractor, Extractor, InfersSchem
         return $this;
     }
 
+    public function reportInferenceTo(Progress $progress): void
+    {
+        $this->inferenceProgress = $progress;
+    }
+
     public function schema(): Schema
     {
         $schema = $this->describe();
@@ -176,6 +186,7 @@ final class ArrayExtractor implements BatchableExtractor, Extractor, InfersSchem
         if ($inPlace !== null) {
             return $this->derivedSchema = (new SchemaInferrer($this->inference))->infer(
                 new InMemoryRows($inPlace),
+                $this->inferenceProgress,
             )->schema;
         }
 
@@ -190,7 +201,7 @@ final class ArrayExtractor implements BatchableExtractor, Extractor, InfersSchem
             (new SchemaInference(types: $this->inference->types, unionByName: $this->inference->unionByName))
                 ->everyRow()
                 ->everySource(),
-        ))->infer($this->source)->schema;
+        ))->infer($this->source, $this->inferenceProgress)->schema;
     }
 
     public function statistics(): Statistics

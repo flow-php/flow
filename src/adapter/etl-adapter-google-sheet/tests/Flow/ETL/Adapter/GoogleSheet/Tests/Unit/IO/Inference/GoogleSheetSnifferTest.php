@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\GoogleSheet\Tests\Unit\IO\Inference;
 
 use Flow\ETL\Adapter\GoogleSheet\Tests\Context\GoogleSheetFixtureContext;
 use Flow\ETL\Adapter\GoogleSheet\Tests\Mother\SheetValuesMother;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class GoogleSheetSnifferTest extends FlowTestCase
@@ -18,7 +19,7 @@ final class GoogleSheetSnifferTest extends FlowTestCase
         static::assertSame(1, $sniffer->units());
         static::assertSame([], $values->getCalls);
 
-        $sniffer->sniff(0, 2);
+        $sniffer->sniff(0, 2, new VoidProgress());
         static::assertCount(1, $values->getCalls);
     }
 
@@ -26,7 +27,10 @@ final class GoogleSheetSnifferTest extends FlowTestCase
     {
         $values = GoogleSheetFixtureContext::values(SheetValuesMother::range([['id'], ['1'], ['2']]));
 
-        static::assertSame(2, GoogleSheetFixtureContext::sniffer($values, 2)->sniff(0, 2)->columns->rows);
+        static::assertSame(
+            2,
+            GoogleSheetFixtureContext::sniffer($values, 2)->sniff(0, 2, new VoidProgress())->columns->rows,
+        );
         static::assertSame('sheet!A1:B3', $values->getCalls[0][1]);
     }
 
@@ -46,7 +50,7 @@ final class GoogleSheetSnifferTest extends FlowTestCase
         $sniffer = GoogleSheetFixtureContext::sniffer($values, 2);
 
         static::assertSame(['id', 'note'], $sniffer->header());
-        static::assertSame(0, $sniffer->sniff(0, 2)->columns->rows);
+        static::assertSame(0, $sniffer->sniff(0, 2, new VoidProgress())->columns->rows);
     }
 
     public function test_header_and_sniff_share_one_request(): void
@@ -55,7 +59,7 @@ final class GoogleSheetSnifferTest extends FlowTestCase
         $sniffer = GoogleSheetFixtureContext::sniffer($values, 2);
 
         $sniffer->header();
-        $sniffer->sniff(0, 2);
+        $sniffer->sniff(0, 2, new VoidProgress());
         $sniffer->header();
 
         static::assertCount(1, $values->getCalls);

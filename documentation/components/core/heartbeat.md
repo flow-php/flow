@@ -74,15 +74,16 @@ df(config_builder()
 
 ## Pulse
 
-| Field             | Value                                                                           |
-|-------------------|---------------------------------------------------------------------------------|
-| `beat`            | 1, 2, 3... counted per heartbeat                                                |
-| `elapsedSeconds`  | seconds since the run started                                                   |
-| `rowsRead`        | rows read from the source                                                       |
-| `stage`           | the stage that reported progress last                                           |
-| `stageRows`       | rows that stage processed, counted once in every pass                           |
-| `memoryBytes`     | current memory of the run, workers included                                     |
-| `peakMemoryBytes` | peak memory of the process, in a parallel run the highest of parent and workers |
+| Field             | Value                                                                                                   |
+|-------------------|---------------------------------------------------------------------------------------------------------|
+| `beat`            | 1, 2, 3... counted per heartbeat                                                                        |
+| `elapsedSeconds`  | seconds since the run started, rounded down                                                             |
+| `rowsRead`        | rows read from the source                                                                               |
+| `stage`           | the stage that reported progress last                                                                   |
+| `stageRows`       | rows that stage processed, counted once in every pass                                                   |
+| `memoryBytes`     | the whole process, not the run alone: `memory_get_usage(true)` plus native backend bytes, workers added |
+| `peakMemoryBytes` | peak memory of the process, in a parallel run the highest of parent and workers                         |
+| `idleSeconds`     | seconds since the run last made progress, growing only while the run keeps checking                     |
 
 `stageRows` is not a share of `rowsRead`. A stage counts a row in every pass over it:
 
@@ -96,16 +97,47 @@ df(config_builder()
 
 ## Stages
 
-| Stage         | Reported by                                         |
-|---------------|-----------------------------------------------------|
-| `read`        | reading from the source                             |
-| `sort`        | `sortBy()`, and `sortBy()` followed by `limit()`    |
-| `group_by`    | `groupBy()->aggregate()`                            |
-| `pivot`       | `groupBy()->pivot()->aggregate()`                   |
-| `join`        | `join()`                                            |
-| `window`      | `withColumn()` with a window function               |
-| `repartition` | `repartition()`                                     |
-| `parallel`    | the parent process until the first worker report    |
+| Stage         | Reported by                                                       |
+|---------------|-------------------------------------------------------------------|
+| `infer`       | schema inference before the first batch, `everyRow()` or a sample |
+| `read`        | reading from the source, while no other stage takes each batch    |
+| `sort`        | `sortBy()`, and `sortBy()` followed by `limit()`                  |
+| `group_by`    | `groupBy()->aggregate()`                                          |
+| `pivot`       | `groupBy()->pivot()->aggregate()`                                 |
+| `join`        | `join()`                                                          |
+| `window`      | `withColumn()` with a window function                             |
+| `repartition` | `repartition()`                                                   |
+| `parallel`    | the parent process until the first worker report                  |
+
+While `sortBy()` or `groupBy()` takes every batch read, the stage is theirs; `rowsRead` shows the source.
+
+## Stop a lease when the run stalls
+
+```php
+<?php
+
+use Flow\ETL\Runtime\Heartbeat\{Heartbeat, Pulse};
+
+final readonly class ExtendLeaseWhileProgressing implements Heartbeat
+{
+    public function __construct(private Lease $lease)
+    {
+    }
+
+    public function beat(Pulse $pulse): void
+    {
+        if ($pulse->idleSeconds < 600) {
+            $this->lease->extend(seconds: 300);
+        }
+    }
+}
+```
+
+The threshold must be well above the late-beat bound under Accuracy.
+
+`idleSeconds` grows only through checks that see no progress. A single process blocked in one call sends no beat at
+all, so its lease expires by itself. The example matters most for a parallel run, where the parent keeps checking
+while a worker hangs, and for a loop that keeps checking without producing rows.
 
 ## Failures
 
@@ -141,7 +173,6 @@ config_builder()
 A beat can be late by the interval plus the longest call that cannot report progress:
 
 - one call of an extractor that fetches a batch, or of a transformer or loader on a batch
-- `from_array()` with a generator and no schema: it reads and spills the whole generator before its first batch
 - the in-memory sort of the rows a sort holds, measured on an M1 Max:
 
 | Rows | PHP backend | Rust backend |

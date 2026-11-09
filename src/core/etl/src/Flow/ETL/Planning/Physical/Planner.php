@@ -6,7 +6,10 @@ namespace Flow\ETL\Planning\Physical;
 
 use Flow\ETL\Foundation\Exception\InvalidLogicException;
 use Flow\ETL\Foundation\Exception\SchemaNotDerivableException;
+use Flow\ETL\Foundation\ProgressStages;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Extractor\Refreshable;
+use Flow\ETL\IO\Extractor\ReportsInference;
 use Flow\ETL\IO\Loader;
 use Flow\ETL\Operators\Join\CrossJoin;
 use Flow\ETL\Operators\Join\HashJoin;
@@ -34,12 +37,13 @@ final readonly class Planner
      * The optimizer rewrites the plan first, so the one walk that translates and binds sees the final tree. A frame
      * this one joined is part of the plan: nothing is planned with another frame's planner.
      */
-    public function plan(LogicalPlan $logical): PhysicalPlan
+    public function plan(LogicalPlan $logical, ProgressStages $stages = new VoidProgress()): PhysicalPlan
     {
         $planned = new PlannedNodes();
 
         // the sources as the frame holds them, before the optimizer rebuilds any: the run refreshes them when it ends
         $refreshed = [];
+        $inferring = [];
 
         foreach ($logical->reads() as $read) {
             $extractor = $read->extractor();
@@ -47,13 +51,29 @@ final readonly class Planner
             if ($extractor instanceof Refreshable) {
                 $refreshed[] = $extractor;
             }
+
+            if ($extractor instanceof ReportsInference) {
+                $inferring[] = $extractor;
+            }
         }
 
-        $logical = $this->optimize($logical);
+        $inference = $stages->stage(ProgressStages::INFER);
 
-        $this->node($logical->root, $planned);
+        foreach ($inferring as $extractor) {
+            $extractor->reportInferenceTo($inference);
+        }
 
-        return $this->pipelines($logical, $planned)->refreshingAfterRun(...$refreshed);
+        try {
+            $logical = $this->optimize($logical);
+
+            $this->node($logical->root, $planned);
+
+            return $this->pipelines($logical, $planned)->refreshingAfterRun(...$refreshed);
+        } finally {
+            foreach ($inferring as $extractor) {
+                $extractor->reportInferenceTo(new VoidProgress());
+            }
+        }
     }
 
     public function optimize(LogicalPlan $logical): LogicalPlan
