@@ -15,6 +15,7 @@ use Flow\ETL\Kernels\Sort\ExternalSort;
 use Flow\ETL\Kernels\Sort\ExternalSortConfig;
 use Flow\ETL\Operators\BoundStep;
 use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Memory\MemoryBudget;
 use Flow\ETL\Values\Schema;
 use Flow\ETL\Values\Sort\SortColumn;
 use Generator;
@@ -89,6 +90,13 @@ final readonly class MergeSortProcessor implements Distributable
 
     public function process(Generator $rows, Backend $backend): Generator
     {
-        yield from $this->sort->sort($rows, $backend);
+        // pulled before the budget starts: what a lazy upstream allocates on its first pull (a join build) is not ours
+        $rows->valid();
+
+        yield from $this->sort->sort(
+            $rows,
+            $backend,
+            MemoryBudget::of($backend, $this->config->bucketing->memoryLimit),
+        );
     }
 }

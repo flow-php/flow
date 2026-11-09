@@ -39,12 +39,15 @@ data_frame()
 Configure the sort algorithm through `config_builder()->sort()`. All options are on the builder of the algorithm:
 
 - `external_sort()`: the default. It sorts in memory while the buffered rows stay under its memory limit. After the
-  limit, it spills each sorted run as a bucket through a `RowsStorage`.
-  [Join](/documentation/components/core/join.md) and
-  [group by](/documentation/components/core/group-by.md) use the same abstraction. Then it k-way merges the runs back
-  into one sorted stream. The default memory limit is `FLOW_MAX_MEMORY`. Without it, the limit is 70% of the
-  `memory_limit` of PHP, or 1 GB for a `memory_limit` of `-1`. The limit applies to the full process, so a sort and a
-  join in one pipeline stay under it together.
+  limit, it spills each sorted run as a bucket through a `RowsStorage`. [Join](/documentation/components/core/join.md)
+  and [group by](/documentation/components/core/group-by.md) use the same abstraction. Then it k-way merges the runs
+  back into one sorted stream. The memory limit counts only the memory the sort adds after its first input batch
+  arrives, so a sort and a join in one pipeline each get their own limit. The default is `FLOW_MAX_MEMORY`, else 70% of
+  the `memory_limit` of PHP, or 1 GB for a `memory_limit` of `-1`. With a finite `memory_limit`, a process over its cap
+  (70% of it, or `FLOW_MAX_MEMORY`) also makes the sort spill once it added `min(128 MiB, cap / 16)`. Close to
+  `memory_limit`, that floor can still pass it. A sort that would take the process past the cap spills in smaller runs.
+  With `memory_limit = -1` there is no process cap, so k operations running at once can use k x the limit: set a finite
+  `memory_limit`, or a lower `memoryLimit()`, to bound it.
 - `memory_sort()`: buffers the full dataset and sorts it in one pass. It is the fastest, but everything must fit in
   RAM. It has no options.
 

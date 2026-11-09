@@ -109,6 +109,11 @@ final readonly class AdaptiveBackend implements Backend, Describable
         return $this->backend->sort($rows, $columns);
     }
 
+    public function sortWorkingBytes(Rows $rows, array $columns): int
+    {
+        return $this->backend->sortWorkingBytes($rows, $columns);
+    }
+
     public function groupedTotals(): GroupedTotals
     {
         return $this->backend->groupedTotals();

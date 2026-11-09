@@ -27,6 +27,7 @@ final class ReportedMemoryBackend implements Backend
     public function __construct(
         public int $reported = 0,
         public readonly PhpBackend $php = new PhpBackend(),
+        public readonly ?int $sortWorkingBytes = null,
     ) {}
 
     public function adopt(Definition $definition, Column $column): Column
@@ -90,6 +91,14 @@ final class ReportedMemoryBackend implements Backend
     public function sort(Rows $rows, array $columns): Rows
     {
         return $this->php->sort($rows, $columns);
+    }
+
+    /**
+     * @param list<SortColumn> $columns
+     */
+    public function sortWorkingBytes(Rows $rows, array $columns): int
+    {
+        return $this->sortWorkingBytes ?? $this->php->sortWorkingBytes($rows, $columns);
     }
 
     public function groupedTotals(): GroupedTotals

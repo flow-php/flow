@@ -28,6 +28,8 @@ use function Flow\Types\DSL\type_bare;
 use function is_bool;
 use function is_nan;
 use function is_object;
+use function max;
+use function min;
 use function strcmp;
 
 use const SORT_ASC;
@@ -202,6 +204,14 @@ final readonly class RowOrder
 
         foreach ($keys as $key) {
             $direction = $key->descending ? SORT_DESC : SORT_ASC;
+
+            // every row is a value: the rank cannot order anything
+            if (min($key->ranks) === 1 && max($key->ranks) === 1) {
+                array_push($arguments, $key->values, $direction, $key->flag);
+
+                continue;
+            }
+
             array_push($arguments, $key->ranks, $direction, SORT_NUMERIC, $key->values, $direction, $key->flag);
         }
 

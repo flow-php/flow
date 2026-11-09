@@ -105,6 +105,19 @@ final class SortTest extends FlowIntegrationTestCase
         );
     }
 
+    public function test_a_frame_a_filter_emptied_sorts_to_no_rows(): void
+    {
+        static::assertSame(
+            [],
+            df(config_builder()->sort(external_sort())->build())
+                ->read(from_array([['id' => 1], ['id' => 2]]))
+                ->filter(ref('id')->greaterThan(lit(10)))
+                ->sortBy([ref('id')])
+                ->fetch()
+                ->reduceToArray('id'),
+        );
+    }
+
     public function test_etl_sort_by_in_memory(): void
     {
         static::assertSame(

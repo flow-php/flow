@@ -16,6 +16,7 @@ use Flow\ETL\Storage\MemoryRowsStorage;
 use Flow\ETL\Tests\Context\DescribeRoundTrip;
 use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\Double\ProgressSpy;
+use Flow\ETL\Tests\Double\ReportedMemoryBackend;
 use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\Double\SpyRowsStorage;
 use Flow\ETL\Tests\FlowTestCase;
@@ -221,6 +222,43 @@ final class HashJoinTest extends FlowTestCase
             )[0]->toArray(),
         );
         static::assertSame([], $storage->appendedRows());
+    }
+
+    public function test_memory_held_before_the_join_keeps_the_build_side_in_memory(): void
+    {
+        $storage = new SpyRowsStorage(new MemoryRowsStorage());
+
+        static::assertSame(
+            [
+                ['id' => 2, 'amount' => 20, 'user_id' => 2, 'name' => 'Bob'],
+                ['id' => 404, 'amount' => 40, 'user_id' => null, 'name' => null],
+            ],
+            iterator_to_array(
+                HashJoinMother::with(
+                    Expression::on(['id' => 'user_id']),
+                    JoinType::left,
+                    $storage,
+                    batchSize: 1,
+                    memoryLimit: Unit::fromGb(1),
+                )->join(
+                    (static function () {
+                        yield array_to_rows(
+                            [['id' => 2, 'amount' => 20], ['id' => 404, 'amount' => 40]],
+                            schema(int_schema('id'), int_schema('amount')),
+                        );
+                    })(),
+                    (static function () {
+                        yield array_to_rows(
+                            [['user_id' => 1, 'name' => 'Alice'], ['user_id' => 2, 'name' => 'Bob']],
+                            schema(int_schema('user_id'), str_schema('name')),
+                        );
+                    })(),
+                    new ReportedMemoryBackend(2_000_000_000),
+                ),
+                false,
+            )[0]->toArray(),
+        );
+        static::assertSame([], $storage->appendedRows(), 'neither side moves to the storage');
     }
 
     public function test_a_build_side_past_the_memory_limit_spills_what_it_read_and_the_rest(): void

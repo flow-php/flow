@@ -173,6 +173,108 @@ final class RepartitionProcessorTest extends FlowTestCase
         static::assertLessThanOrEqual(2, count($storage->appendedRows()));
     }
 
+    public function test_an_empty_stream_yields_no_group(): void
+    {
+        $storage = new SpyRowsStorage(new MemoryRowsStorage());
+
+        static::assertSame(
+            [],
+            iterator_to_array(
+                RepartitionProcessorMother::with(refs(ref('k')), $storage, Unit::fromBytes(1))->process(
+                    (static fn(): Generator => yield from [])(),
+                    flow_context()->backend(),
+                ),
+                false,
+            ),
+        );
+        static::assertSame([], $storage->appendedRows());
+    }
+
+    public function test_memory_held_before_the_repartition_keeps_it_in_memory(): void
+    {
+        $storage = new SpyRowsStorage(new MemoryRowsStorage());
+        $schema = schema(str_schema('k'), int_schema('v'));
+        $backend = new ReportedMemoryBackend(2_000_000_000);
+
+        static::assertSame(
+            [[1, 3], [2, 4]],
+            array_map(
+                static fn(Rows $group): array => $group->reduceToArray('v'),
+                iterator_to_array(
+                    RepartitionProcessorMother::with(refs(ref('k')), $storage, Unit::fromGb(1))->process(
+                        (static function () use ($schema): Generator {
+                            yield array_to_rows([['k' => 'a', 'v' => 1], ['k' => 'b', 'v' => 2]], $schema);
+                            yield array_to_rows([['k' => 'a', 'v' => 3], ['k' => 'b', 'v' => 4]], $schema);
+                        })(),
+                        $backend,
+                    ),
+                    false,
+                ),
+            ),
+        );
+        static::assertSame([], $storage->appendedRows());
+    }
+
+    public function test_what_the_upstream_allocates_on_its_first_pull_is_not_the_repartitions_own(): void
+    {
+        $storage = new SpyRowsStorage(new MemoryRowsStorage());
+        $schema = schema(str_schema('k'), int_schema('v'));
+        $backend = new ReportedMemoryBackend(0);
+
+        static::assertSame(
+            [[1, 3], [2, 4]],
+            array_map(
+                static fn(Rows $group): array => $group->reduceToArray('v'),
+                iterator_to_array(
+                    RepartitionProcessorMother::with(refs(ref('k')), $storage, Unit::fromGb(1))->process(
+                        (static function () use ($backend, $schema): Generator {
+                            // a lazy upstream, a join build for one, allocates before its first batch
+                            $backend->reported = 2_000_000_000;
+
+                            yield array_to_rows([['k' => 'a', 'v' => 1], ['k' => 'b', 'v' => 2]], $schema);
+                            yield array_to_rows([['k' => 'a', 'v' => 3], ['k' => 'b', 'v' => 4]], $schema);
+                        })(),
+                        $backend,
+                    ),
+                    false,
+                ),
+            ),
+        );
+        static::assertSame([], $storage->appendedRows());
+    }
+
+    public function test_the_storage_counts_the_rows_the_bounded_read_holds(): void
+    {
+        $storage = new SpyRowsStorage(new MemoryRowsStorage());
+        $schema = schema(str_schema('k'), int_schema('v'));
+        $backend = new ReportedMemoryBackend(0);
+
+        $groups = array_map(
+            static fn(Rows $group): array => $group->reduceToArray('v'),
+            iterator_to_array(
+                RepartitionProcessorMother::with(refs(ref('k')), $storage, Unit::fromBytes(1_000_000_000))->process(
+                    (static function () use ($backend, $schema): Generator {
+                        // every batch is held for the rest of the run
+                        foreach ([[['a', 1], ['b', 2]], [['a', 3], ['b', 4]], [['a', 5]]] as $batch) {
+                            $backend->reported += 600_000_000;
+
+                            yield array_to_rows(array_map(static fn(array $row): array => [
+                                'k' => $row[0],
+                                'v' => $row[1],
+                            ], $batch), $schema);
+                        }
+                    })(),
+                    $backend,
+                ),
+                false,
+            ),
+        );
+        sort($groups);
+
+        static::assertSame([[2, 4], [1, 3, 5]], $groups);
+        static::assertNotSame([], $storage->appendedRows());
+    }
+
     #[DataProvider('random_datasets')]
     public function test_crossing_the_limit_at_any_batch_gives_the_groups_one_in_memory_pass_gives(int $seed): void
     {
@@ -195,11 +297,11 @@ final class RepartitionProcessorTest extends FlowTestCase
         $backend = new ReportedMemoryBackend();
         $input = (static function () use ($batches, $crossAt, $backend): Generator {
             foreach ($batches as $position => $batch) {
+                yield $batch;
+
                 if ($position === $crossAt) {
                     $backend->reported = 1_000_000_000_000;
                 }
-
-                yield $batch;
             }
         })();
 
@@ -217,7 +319,7 @@ final class RepartitionProcessorTest extends FlowTestCase
             )->process($input, flow_context(config_builder()->backend($backend)->build())->backend())),
         );
 
-        // the batch at $crossAt is read past the limit: it and every later batch are partitioned
+        // the limit is passed once the batch at $crossAt was read, so the read batches and the rest are partitioned
         if ($crossAt < $count) {
             static::assertNotSame([], $storage->appendedRows());
         }

@@ -173,9 +173,11 @@ final readonly class GroupByAggregationProcessor implements Distributable
     {
         $shape = $this->shape;
         $groups = null;
-        $budget = new MemoryBudget($backend, $this->config->memoryLimit);
+        // pulled before the budget starts: what a lazy upstream allocates on its first pull (a join build) is not ours
+        $rows->valid();
+        $budget = MemoryBudget::of($backend, $this->config->memoryLimit);
         $spilling = false;
-        $buckets = new Buckets($this->config->spilling($backend));
+        $buckets = new Buckets($this->config->spilling($backend, $budget));
 
         try {
             while ($rows->valid()) {

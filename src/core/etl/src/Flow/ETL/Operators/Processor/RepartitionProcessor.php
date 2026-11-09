@@ -20,6 +20,7 @@ use Flow\ETL\Storage\BucketingConfig;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Grouping\KeyEncoder;
 use Flow\ETL\Values\Memory\BoundedRead;
+use Flow\ETL\Values\Memory\MemoryBudget;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
 use Generator;
@@ -87,8 +88,11 @@ final readonly class RepartitionProcessor implements Distributable
     public function process(Generator $rows, Backend $backend): Generator
     {
         $grouping = new KeyGrouping(new KeyEncoder($this->by->names()), $backend);
-        [$read, $fits] = (new BoundedRead($this->config->memoryLimit, $backend))->read($rows);
-        $buckets = new Buckets($this->config->spilling($backend));
+        // pulled before the budget starts: what a lazy upstream allocates on its first pull (a join build) is not ours
+        $rows->valid();
+        $budget = MemoryBudget::of($backend, $this->config->memoryLimit);
+        $buckets = new Buckets($this->config->spilling($backend, $budget));
+        [$read, $fits] = (new BoundedRead($budget))->read($rows);
 
         try {
             if ($fits) {

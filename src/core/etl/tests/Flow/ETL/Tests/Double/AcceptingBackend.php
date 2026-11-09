@@ -76,6 +76,14 @@ final readonly class AcceptingBackend implements Backend
         return (new PhpBackend())->sort($rows, $columns);
     }
 
+    /**
+     * @param list<SortColumn> $columns
+     */
+    public function sortWorkingBytes(Rows $rows, array $columns): int
+    {
+        return (new PhpBackend())->sortWorkingBytes($rows, $columns);
+    }
+
     public function groupedTotals(): GroupedTotals
     {
         return (new PhpBackend())->groupedTotals();

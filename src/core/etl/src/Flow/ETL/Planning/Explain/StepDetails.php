@@ -78,7 +78,7 @@ final readonly class StepDetails
             $step instanceof JoinStep => $this->node->crossJoin($step->join->prefix),
             $step instanceof MergeSortProcessor => [
                 'Sort by: ' . $this->node->sort($step->columns),
-                'Memory: ' . $step->sort->memoryLimit->inMb() . ' MB',
+                'Memory: ' . $step->config->bucketing->memoryLimit->inMb() . ' MB',
                 'Spill: ' . ObjectExtractor::shortName($step->sort->spill->storage()),
                 'Merge: ' . $step->sort->mergeFanIn . ' ways',
                 'Batch: ' . $step->sort->batchSize->size,

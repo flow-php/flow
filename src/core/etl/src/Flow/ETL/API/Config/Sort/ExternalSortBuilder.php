@@ -59,7 +59,7 @@ final class ExternalSortBuilder implements SortAlgorithmBuilder
     }
 
     /**
-     * The process memory past which the sort spills sorted runs; defaults to MemoryLimit::default().
+     * The memory the operation may add before the sort spills sorted runs; defaults to MemoryLimit::default().
      */
     public function memoryLimit(Unit $memoryLimit): self
     {

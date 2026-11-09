@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Values\Column;
 
+use Closure;
 use DateInterval;
 use DateTimeImmutable;
 use DateTimeZone;
@@ -33,7 +34,9 @@ use Flow\ETL\Values\Column\Physical\HtmlElementPhysical;
 use Flow\ETL\Values\Column\ValueColumn;
 use Flow\ETL\Values\NullsOrder;
 use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Schema;
 use Flow\ETL\Values\Schema\Definition;
+use Flow\ETL\Values\Sort\RowOrder;
 use Flow\ETL\Values\Sort\SortColumn;
 use Flow\ETL\Values\SortOrder;
 use Flow\Types\Type\Comparison\Operator;
@@ -46,6 +49,7 @@ use PHPUnit\Framework\TestCase;
 use stdClass;
 use UnitEnum;
 
+use function array_map;
 use function bin2hex;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_schema;
@@ -80,7 +84,11 @@ use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function memory_get_peak_usage;
+use function memory_get_usage;
+use function memory_reset_peak_usage;
 use function pack;
+use function range;
 use function substr;
 use function substr_replace;
 
@@ -642,6 +650,155 @@ final class PhpBackendTest extends TestCase
     public function test_allocated_bytes_is_zero(): void
     {
         static::assertSame(0, (new PhpBackend())->allocatedBytes());
+    }
+
+    /**
+     * @return Generator<string, array{Schema, Closure(int): array<string, mixed>, list<string>}>
+     */
+    public static function sort_shapes(): Generator
+    {
+        $padding = str_schema('pad');
+        $pad = static fn(int $id): string => 'pad-' . ($id % 13);
+
+        yield 'an int key' => [
+            schema(int_schema('id')),
+            static fn(int $id): array => ['id' => ($id * 7919) % 4097],
+            ['id'],
+        ];
+        yield 'two keys over strings' => [
+            schema(int_schema('id'), str_schema('k'), $padding),
+            static fn(int $id): array => ['id' => $id, 'k' => 'k' . ($id % 97), 'pad' => $pad($id)],
+            ['k', 'id'],
+        ];
+        yield 'a nullable key on the rank path' => [
+            schema(int_schema('id', nullable: true)),
+            static fn(int $id): array => ['id' => ($id % 4) === 0 ? null : ($id * 7919) % 4097],
+            ['id'],
+        ];
+        yield 'a list column' => [
+            schema(int_schema('id'), list_schema('list', type_list(type_integer()))),
+            static fn(int $id): array => ['id' => ($id * 7919) % 4097, 'list' => [$id % 97, 2, 3, 4, 5, 6, 7, 8]],
+            ['id'],
+        ];
+        yield 'a map column' => [
+            schema(int_schema('id'), map_schema('map', type_map(type_string(), type_integer()))),
+            static fn(int $id): array => ['id' => ($id * 7919) % 4097, 'map' => ['k' . ($id % 5) => $id, 'q' => 1]],
+            ['id'],
+        ];
+        yield 'a struct column' => [
+            schema(
+                int_schema('id'),
+                structure_schema('struct', type_structure(['a' => type_integer(), 'b' => type_string()])),
+            ),
+            static fn(int $id): array => ['id' => ($id * 7919) % 4097, 'struct' => ['a' => $id % 97, 'b' => $pad($id)]],
+            ['id'],
+        ];
+        yield 'a list key' => [
+            schema(list_schema('list', type_list(type_integer())), $padding),
+            static fn(int $id): array => ['list' => [($id * 7919) % 4097, $id], 'pad' => $pad($id)],
+            ['list'],
+        ];
+        yield 'a 21-int list key' => [
+            schema(list_schema('list', type_list(type_integer()))),
+            static fn(int $id): array => ['list' => range($id % 50, ($id % 50) + 20)],
+            ['list'],
+        ];
+        yield 'a struct key' => [
+            schema(
+                structure_schema('struct', type_structure(['a' => type_integer(), 'b' => type_string()])),
+                int_schema('id'),
+            ),
+            static fn(int $id): array => ['struct' => ['a' => ($id * 7919) % 4097, 'b' => $pad($id)], 'id' => $id],
+            ['struct'],
+        ];
+        yield 'a map key' => [
+            schema(map_schema('map', type_map(type_string(), type_integer())), int_schema('id')),
+            static fn(int $id): array => ['map' => ['k' . ($id % 5) => $id, 'q' => 1], 'id' => $id],
+            ['map'],
+        ];
+    }
+
+    /**
+     * @param Closure(int): array<string, mixed> $row
+     * @param list<string> $keys
+     */
+    #[DataProvider('sort_shapes')]
+    public function test_sort_working_bytes_cover_the_heap_the_sort_allocates(
+        Schema $schema,
+        Closure $row,
+        array $keys,
+    ): void {
+        $backend = new PhpBackend();
+        // one row past a power of two: every array the sort builds has grown to twice what it holds
+        $rows = array_to_rows(array_map($row, range(1, 4097)), $schema, $backend);
+        $columns = array_map(static fn(string $key): SortColumn => new SortColumn($key), $keys);
+
+        memory_reset_peak_usage();
+        $before = memory_get_usage();
+        $sorted = $backend->sort($rows, $columns);
+        $allocated = memory_get_peak_usage() - $before;
+
+        static::assertCount(4097, $sorted);
+        static::assertGreaterThanOrEqual($allocated, $backend->sortWorkingBytes($rows, $columns));
+        static::assertLessThan(3 * $allocated, $backend->sortWorkingBytes($rows, $columns));
+    }
+
+    /**
+     * @param Closure(int): array<string, mixed> $row
+     * @param list<string> $keys
+     */
+    #[DataProvider('sort_shapes')]
+    public function test_gathered_bytes_cover_what_a_copy_of_each_column_allocates(
+        Schema $schema,
+        Closure $row,
+        array $keys,
+    ): void {
+        $backend = new PhpBackend();
+        $rows = array_to_rows(array_map($row, range(1, 4097)), $schema, $backend);
+        $order = range(4096, 0, -1);
+
+        foreach ($rows->columns() as $name => $column) {
+            memory_reset_peak_usage();
+            $before = memory_get_usage();
+            $copy = $column->take($order);
+            $allocated = memory_get_peak_usage() - $before;
+
+            static::assertSame(4097, $copy->count());
+            static::assertGreaterThanOrEqual($allocated, $backend->gatheredBytes($column), (string) $name);
+            static::assertLessThan(3 * $allocated, $backend->gatheredBytes($column), (string) $name);
+        }
+    }
+
+    public function test_gathered_bytes_of_a_constant_column_are_none(): void
+    {
+        static::assertSame(
+            0,
+            (new PhpBackend())->gatheredBytes((new PhpBackend())->constant(int_schema('id'), 1, 4097)),
+        );
+    }
+
+    /**
+     * @param Closure(int): array<string, mixed> $row
+     * @param list<string> $keys
+     */
+    #[DataProvider('sort_shapes')]
+    public function test_ordered_bytes_cover_what_a_sort_key_allocates(Schema $schema, Closure $row, array $keys): void
+    {
+        $backend = new PhpBackend();
+        $rows = array_to_rows(array_map($row, range(1, 4097)), $schema, $backend);
+
+        foreach ($keys as $key) {
+            $order = new RowOrder([new SortColumn($key)]);
+
+            memory_reset_peak_usage();
+            $before = memory_get_usage();
+            $permutation = $order->permutation($order->keys($rows), 4097);
+            $allocated = memory_get_peak_usage() - $before;
+
+            static::assertCount(4097, $permutation);
+            static::assertGreaterThanOrEqual($allocated, $backend->orderedBytes($rows->column($key)), $key);
+            static::assertLessThan(3 * $allocated, $backend->orderedBytes($rows->column($key)), $key);
+        }
     }
 
     /**

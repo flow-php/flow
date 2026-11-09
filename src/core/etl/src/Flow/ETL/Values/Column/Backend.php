@@ -107,6 +107,13 @@ interface Backend
      */
     public function sort(Rows $rows, array $columns): Rows;
 
+    /**
+     * Bytes sort($rows, $columns) allocates on top of $rows, at its peak.
+     *
+     * @param list<SortColumn> $columns
+     */
+    public function sortWorkingBytes(Rows $rows, array $columns): int;
+
     public function groupedTotals(): GroupedTotals;
 
     public function groupedCounts(): GroupedCounts;

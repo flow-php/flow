@@ -30,6 +30,7 @@ use Flow\ETL\Values\Grouping\KeyEncoder;
 use Flow\ETL\Values\Join\JoinType;
 use Flow\ETL\Values\Join\Side;
 use Flow\ETL\Values\Memory\BoundedRead;
+use Flow\ETL\Values\Memory\MemoryBudget;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
 use Generator;
@@ -179,8 +180,9 @@ final readonly class HashJoin implements Describable
 
         $equalityKeys = $this->expression->keys();
         $joiner = $this->joiner($backend);
-        $leftBuckets = new Buckets($this->config->bucketing->spilling($backend));
-        $rightBuckets = new Buckets($this->config->bucketing->spilling($backend));
+        $budget = MemoryBudget::of($backend, $this->config->bucketing->memoryLimit);
+        $leftBuckets = new Buckets($this->config->bucketing->spilling($backend, $budget));
+        $rightBuckets = new Buckets($this->config->bucketing->spilling($backend, $budget));
         $resident = $rightBuckets->storage() instanceof ResidentRowsStorage;
 
         try {
@@ -195,7 +197,7 @@ final readonly class HashJoin implements Describable
             $held = null;
 
             if (!$resident) {
-                [$read, $fits] = (new BoundedRead($this->config->bucketing->memoryLimit, $backend))->read($rightRows);
+                [$read, $fits] = (new BoundedRead($budget))->read($rightRows);
 
                 if ($fits) {
                     $held = $read;

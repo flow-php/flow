@@ -387,6 +387,11 @@ pub fn register() -> Result<()> {
                 vec![Arg::new("rows", ROWS), Arg::new("columns", DataType::Array)],
                 ROWS,
             ),
+            method(
+                "sortWorkingBytes",
+                vec![Arg::new("rows", ROWS), Arg::new("columns", DataType::Array)],
+                DataType::Long,
+            ),
             method("groupedTotals", vec![], GROUPED_TOTALS),
             method("groupedCounts", vec![], GROUPED_COUNTS),
             method(

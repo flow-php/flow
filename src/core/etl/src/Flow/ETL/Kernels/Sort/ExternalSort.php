@@ -15,8 +15,8 @@ use Flow\ETL\Kernels\Sort\Merge\KWayMerge;
 use Flow\ETL\Values\BatchSize;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Memory\MemoryBudget;
-use Flow\ETL\Values\Memory\Unit;
 use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Schema;
 use Flow\ETL\Values\Sort\SortColumn;
 use Generator;
 
@@ -43,7 +43,6 @@ final readonly class ExternalSort
         public Buckets $spill,
         public Buckets $merge,
         private RandomValueGenerator $random,
-        public Unit $memoryLimit,
         public int $mergeFanIn = 10,
         public BatchSize $batchSize = new BatchSize(1000),
         private Progress $progress = new VoidProgress(),
@@ -70,7 +69,6 @@ final readonly class ExternalSort
             // without the ??, a merge side built on its own would silently spill to local disk for a MemoryBuckets user
             new Buckets($config->merge ?? $config->bucketing->storage),
             $random,
-            $config->bucketing->memoryLimit,
             $config->bucketing->bucketsCount,
             new BatchSize($config->bucketing->batchSize),
             $progress,
@@ -83,9 +81,8 @@ final readonly class ExternalSort
      *
      * @return Generator<Rows>
      */
-    public function sort(Generator $rows, Backend $backend, ?int $limit = null): Generator
+    public function sort(Generator $rows, Backend $backend, MemoryBudget $budget, ?int $limit = null): Generator
     {
-        $budget = new MemoryBudget($backend, $this->memoryLimit);
         $runId = $this->random->string(16);
 
         /** @var list<Rows> $buffer */
@@ -96,8 +93,11 @@ final readonly class ExternalSort
         $schema = null;
 
         try {
-            // draining upstream inside the try is what makes a mid-stream failure release the spilled runs
-            foreach ($rows as $batch) {
+            // drained in the try so a failure frees the runs; valid()/next(): the owner's first pull may end the stream
+            for (; $rows->valid(); $rows->next()) {
+                /** @var Rows $batch valid() holds, so current() is a batch */
+                $batch = $rows->current();
+
                 if ($batch->isEmpty()) {
                     continue;
                 }
@@ -109,34 +109,40 @@ final readonly class ExternalSort
                 // the spill concats the buffer, so it needs room for a second copy of it
                 if ($budget->exceededWith(2)) {
                     // spliced out, so neither the buffer nor its concat outlives the spill
-                    $runs[] = $this->spill(
-                        $this->sorted(Rows::concat($schema, $backend, ...array_splice($buffer, 0)), $limit, $backend),
-                        $runId,
-                        count($runs),
-                    );
+                    $runs = [
+                        ...$runs,
+                        ...$this->runs(
+                            array_splice($buffer, 0),
+                            $schema,
+                            $backend,
+                            $budget,
+                            $limit,
+                            $runId,
+                            count($runs),
+                        ),
+                    ];
                     $budget->released();
                 }
             }
 
-            if ($runs === []) {
-                if ($schema !== null) {
-                    yield from $this->counted($this->sorted(
-                        Rows::concat($schema, $backend, ...array_splice($buffer, 0)),
-                        $limit,
-                        $backend,
-                    )->chunks($this->batchSize->size));
-                }
+            if ($schema === null) {
+                return;
+            }
+
+            if ($runs === [] && $this->fitting($buffer, $backend, $budget) === count($buffer)) {
+                yield from $this->counted($this->sorted(
+                    Rows::concat($schema, $backend, ...array_splice($buffer, 0)),
+                    $limit,
+                    $backend,
+                )->chunks($this->batchSize->size));
 
                 return;
             }
 
-            if ($buffer !== [] && $schema !== null) {
-                $runs[] = $this->spill(
-                    $this->sorted(Rows::concat($schema, $backend, ...array_splice($buffer, 0)), $limit, $backend),
-                    $runId,
-                    count($runs),
-                );
-            }
+            $runs = [
+                ...$runs,
+                ...$this->runs(array_splice($buffer, 0), $schema, $backend, $budget, $limit, $runId, count($runs)),
+            ];
 
             $merger = new KWayMerge($this->columns, $backend, $this->batchSize);
             $mergedIndex = 0;
@@ -249,6 +255,63 @@ final readonly class ExternalSort
         $this->merge->add(new Bucket($bucketId, $totalRows, $index));
 
         return new BucketRun($bucketId, $this->merge);
+    }
+
+    /**
+     * @param list<Rows> $batches
+     * @param null|int $limit
+     *
+     * @return list<BucketRun>
+     */
+    public function runs(
+        array $batches,
+        Schema $schema,
+        Backend $backend,
+        MemoryBudget $budget,
+        ?int $limit,
+        string $runId,
+        int $index,
+    ): array {
+        $runs = [];
+
+        // spliced a run at a time, so the batches already spilled free the room the next run's sort needs
+        while ($batches !== []) {
+            $runs[] = $this->spill(
+                $this->sorted(
+                    Rows::concat(
+                        $schema,
+                        $backend,
+                        ...array_splice($batches, 0, $this->fitting($batches, $backend, $budget)),
+                    ),
+                    $limit,
+                    $backend,
+                ),
+                $runId,
+                $index + count($runs),
+            );
+        }
+
+        return $runs;
+    }
+
+    /**
+     * @param list<Rows> $batches
+     *
+     * @return int the leading batches whose sort stays under the process cap, at least one so every run progresses
+     */
+    public function fitting(array $batches, Backend $backend, MemoryBudget $budget): int
+    {
+        $bytes = 0;
+
+        foreach ($batches as $count => $batch) {
+            $bytes += $backend->sortWorkingBytes($batch, $this->columns);
+
+            if ($count > 0 && $budget->crossesCapWith($bytes)) {
+                return $count;
+            }
+        }
+
+        return count($batches);
     }
 
     /**

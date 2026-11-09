@@ -4,15 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Values\Memory;
 
-use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
 use Generator;
 
 final readonly class BoundedRead
 {
     public function __construct(
-        private Unit $limit,
-        private Backend $backend,
+        private MemoryBudget $budget,
     ) {}
 
     /**
@@ -32,7 +30,7 @@ final readonly class BoundedRead
     }
 
     /**
-     * Reads $rows while the process stays under the limit; $rows is left at the first batch not read.
+     * Reads $rows while the operation stays under its budget; $rows is left at the first batch not read.
      *
      * @param Generator<Rows> $rows
      *
@@ -40,7 +38,6 @@ final readonly class BoundedRead
      */
     public function read(Generator $rows): array
     {
-        $budget = new MemoryBudget($this->backend, $this->limit);
         $read = [];
 
         while ($rows->valid()) {
@@ -49,7 +46,7 @@ final readonly class BoundedRead
             $read[] = $batch;
             $rows->next();
 
-            if ($budget->exceeded()) {
+            if ($this->budget->exceeded()) {
                 return [$read, false];
             }
         }

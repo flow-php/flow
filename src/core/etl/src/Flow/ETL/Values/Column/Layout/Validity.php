@@ -8,6 +8,7 @@ use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 
 use function array_fill;
 use function chr;
+use function in_array;
 use function intdiv;
 use function ord;
 use function sprintf;
@@ -21,16 +22,17 @@ final readonly class Validity
      */
     public function fromValues(array $values): string
     {
+        if (!in_array(null, $values, true)) {
+            return '';
+        }
+
         $bitmap = '';
         $byte = 0;
         $bit = 0;
-        $hasNull = false;
 
         // @mago-ignore analysis:mixed-assignment
         foreach ($values as $value) {
-            if ($value === null) {
-                $hasNull = true;
-            } else {
+            if ($value !== null) {
                 $byte |= 1 << $bit;
             }
 
@@ -39,10 +41,6 @@ final readonly class Validity
                 $byte = 0;
                 $bit = 0;
             }
-        }
-
-        if (!$hasNull) {
-            return '';
         }
 
         return $bit === 0 ? $bitmap : $bitmap . chr($byte);

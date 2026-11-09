@@ -128,7 +128,11 @@ final readonly class TopNProcessor implements Distributable
         $kept = null;
         $maxSize = 1;
         $schema = null;
-        $budget = $this->fallback === null ? null : new MemoryBudget($backend, $this->fallback->memoryLimit);
+        // pulled before the budget starts: what a lazy upstream allocates on its first pull (a join build) is not ours
+        $rows->valid();
+        $budget = $this->config instanceof ExternalSortConfig
+            ? MemoryBudget::of($backend, $this->config->bucketing->memoryLimit)
+            : null;
 
         while ($rows->valid()) {
             $batch = $rows->current();
@@ -151,8 +155,13 @@ final readonly class TopNProcessor implements Distributable
 
             // past the memory limit the kept rows and the rest of the stream go to the spilling sort; a trimmed row
             // cannot be in the top $limit, so the result is the same
-            if ($this->fallback !== null && $budget?->exceeded()) {
-                yield from $this->fallback->sort(BoundedRead::followedBy([$kept], $rows), $backend, $this->limit);
+            if ($this->fallback !== null && $budget !== null && $budget->exceeded()) {
+                yield from $this->fallback->sort(
+                    BoundedRead::followedBy([$kept], $rows),
+                    $backend,
+                    $budget,
+                    $this->limit,
+                );
 
                 return;
             }

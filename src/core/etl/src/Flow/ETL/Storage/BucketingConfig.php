@@ -9,6 +9,7 @@ use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Values\BatchSize;
 use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Memory\MemoryBudget;
 use Flow\ETL\Values\Memory\Unit;
 use SensitiveParameter;
 
@@ -41,11 +42,11 @@ final readonly class BucketingConfig implements Describable
     /**
      * The storage behind the memory limit - a resident storage already holds everything in memory.
      */
-    public function spilling(Backend $backend): RowsStorage
+    public function spilling(Backend $backend, MemoryBudget $budget): RowsStorage
     {
         return $this->storage instanceof ResidentRowsStorage
             ? $this->storage
-            : new SpillingRowsStorage($this->storage, $this->memoryLimit, $backend, new BatchSize($this->batchSize));
+            : new SpillingRowsStorage($this->storage, $budget, $backend, new BatchSize($this->batchSize));
     }
 
     /**

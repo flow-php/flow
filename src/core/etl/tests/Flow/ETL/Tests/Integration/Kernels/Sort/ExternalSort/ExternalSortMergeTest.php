@@ -12,6 +12,7 @@ use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\ETL\Tests\Mother\ExternalSortMother;
 use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Values\Memory\MemoryBudget;
 use Flow\ETL\Values\Memory\Unit;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Generator;
@@ -59,13 +60,13 @@ final class ExternalSortMergeTest extends FlowIntegrationTestCase
         memory_reset_peak_usage();
         $before = memory_get_usage();
 
-        $ids = IdRows::ids(ExternalSortMother::with(
+        $sort = ExternalSortMother::with(
             [ref('id')->asc()],
             new FilesystemRowsStorage($this->fs, path($this->cacheDir->path() . '/sort-runs'), $backend, 40),
-            Unit::fromBytes(1),
             100,
             40,
-        )->sort($input, $backend));
+        );
+        $ids = IdRows::ids($sort->sort($input, $backend, new MemoryBudget($backend, Unit::fromBytes(1), null)));
 
         static::assertSame(range(0, 9_999), $ids);
         static::assertLessThan(Unit::fromMb(8)->inBytes(), memory_get_peak_usage() - $before);

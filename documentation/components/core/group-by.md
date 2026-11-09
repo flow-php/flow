@@ -48,8 +48,10 @@ the configured algorithm:
 ->groupBy([ref('country')], hash_group_by()->storage(new MemoryRowsStorage()))
 ```
 
-The algorithm is configured through `config_builder()->groupBy(hash_group_by())`. `memoryLimit()` defaults to the
-same limit as the join and the sort (`FLOW_MAX_MEMORY`, otherwise 70% of `memory_limit`):
+The algorithm is configured through `config_builder()->groupBy(hash_group_by())`. `memoryLimit()` counts only the
+memory the group by adds after its first input batch arrives and defaults to the same limit as the join and the sort
+(`FLOW_MAX_MEMORY`, otherwise 70% of `memory_limit`). With a finite `memory_limit`, a process over its cap also makes
+it spill once it added `min(128 MiB, cap / 16)`:
 
 ```php
 <?php
@@ -58,7 +60,7 @@ data_frame(
     config_builder()
         ->groupBy(
             hash_group_by()
-                ->memoryLimit(Unit::fromMb(512))  // process memory past which buckets go to the storage
+                ->memoryLimit(Unit::fromMb(512))  // memory the group by adds before buckets go to the storage
                 ->bucketsCount(64)                // number of buckets (default 64)
                 ->batchSize(1000)                 // rows per bucket frame and per batch read back (default 1000)
         )

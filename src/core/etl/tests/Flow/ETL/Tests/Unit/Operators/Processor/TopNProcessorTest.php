@@ -18,15 +18,20 @@ use Flow\ETL\Tests\Context\SortedRows;
 use Flow\ETL\Tests\Double\FixedRandomValueGenerator;
 use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\Double\RecordingRowsStorage;
+use Flow\ETL\Tests\Double\ReportedMemoryBackend;
+use Flow\ETL\Tests\Double\SpyRowsStorage;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\ExternalSortMother;
 use Flow\ETL\Tests\Mother\SortDatasetMother;
 use Flow\ETL\Values\Column\AdaptiveBackend;
+use Flow\ETL\Values\Memory\Unit;
 use Flow\ETL\Values\Rows;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function array_map;
 use function array_merge;
+use function array_values;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
@@ -112,6 +117,41 @@ final class TopNProcessorTest extends FlowTestCase
             )),
         );
         static::assertNotSame([], $storage->appended);
+    }
+
+    public function test_fallback_sort_counts_the_rows_top_n_already_holds(): void
+    {
+        $storage = new SpyRowsStorage(new MemoryRowsStorage());
+        $backend = new ReportedMemoryBackend(0);
+        $schema = schema(int_schema('score'), str_schema('name'));
+
+        static::assertSame(
+            [['score' => 0, 'name' => 'z'], ['score' => 1, 'name' => 'a']],
+            ScoredRows::merged((new TopNProcessor(
+                [ref('score')->asc()],
+                2,
+                ExternalSortMother::config($storage, Unit::fromBytes(1_000_000_000)),
+                new NativePHPRandomValueGenerator(),
+            ))->process(
+                (static function () use ($backend, $schema): Generator {
+                    // every batch is held for the rest of the run
+                    foreach ([[[5, 'e'], [4, 'd']], [[3, 'c'], [2, 'b']], [[1, 'a'], [0, 'z']]] as $batch) {
+                        $backend->reported += 600_000_000;
+
+                        yield array_to_rows(array_map(static fn(array $row): array => [
+                            'score' => $row[0],
+                            'name' => $row[1],
+                        ], $batch), $schema);
+                    }
+                })(),
+                $backend,
+            )),
+        );
+        static::assertSame(
+            [2, 3],
+            array_values($storage->appendedRows())[0][0]->reduceToArray('score'),
+            'the kept rows are the first run: the sort already counts the memory top-n grew',
+        );
     }
 
     public function test_a_fallback_on_the_last_batch_emits_the_kept_rows(): void
@@ -275,6 +315,19 @@ final class TopNProcessorTest extends FlowTestCase
                 [ref('score')->asc()],
                 3,
                 new MemorySortConfig(),
+                new NativePHPRandomValueGenerator(),
+            ))->process(ScoredRows::batches(), flow_context()->backend())),
+        );
+    }
+
+    public function test_an_empty_input_with_a_spilling_fallback_emits_nothing(): void
+    {
+        static::assertSame(
+            [],
+            iterator_to_array((new TopNProcessor(
+                [ref('score')->asc()],
+                3,
+                ExternalSortMother::spillingConfig(),
                 new NativePHPRandomValueGenerator(),
             ))->process(ScoredRows::batches(), flow_context()->backend())),
         );

@@ -106,6 +106,24 @@ final class MergeSortProcessorTest extends FlowTestCase
         static::assertNotSame([], $storage->appended);
     }
 
+    public function test_an_empty_stream_sorts_to_nothing(): void
+    {
+        $storage = new RecordingRowsStorage(new MemoryRowsStorage());
+
+        static::assertSame(
+            [],
+            iterator_to_array(
+                (new MergeSortProcessor(
+                    ExternalSortMother::spillingConfig($storage),
+                    [ref('id')->asc()],
+                    new NativePHPRandomValueGenerator(),
+                ))->process((static fn(): Generator => yield from [])(), flow_context()->backend()),
+                false,
+            ),
+        );
+        static::assertSame([], $storage->appended);
+    }
+
     public function test_rebuilds_with_the_rebuild_progress(): void
     {
         $spy = new ProgressSpy();

@@ -116,6 +116,25 @@ and passes it to `SchemaInferrer::infer()`. A custom `Sniffer` or `CSVOpenSource
 `ColumnTypes::sniff()`, or calls `advanced()` every `Progress::ROWS_PER_CALL` observed rows. A custom `Sniffs` hands
 `$progress` to the sniffs it runs.
 
+### 10) `flow-php/etl` - memory limits count the memory an operation adds
+
+| Before                                                                                                      | After                                                                                                                                           |
+|-------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
+| `memoryLimit()` compared with the process memory                                                            | compared with the memory the operation added since its first input batch; each live operation gets its own limit                                |
+| `FLOW_MAX_MEMORY`: the default limit, compared with the process memory                                      | the default per-operation limit and, with a finite `memory_limit`, the process cap; a value above `memory_limit` throws                         |
+| -                                                                                                           | with a finite `memory_limit`, the process over 70% of it (or `FLOW_MAX_MEMORY`) also spills, after the operation added `min(128 MiB, cap / 16)` |
+| `MemoryBudget::exceeded()` / `exceededWith()` compare the process memory with the limit                     | compare the memory added since the budget started or since `released()` with the limit, and the process with the cap                            |
+| `MemoryBudget::released()` calls `gc_mem_caches()`                                                          | only moves the baseline                                                                                                                         |
+| `Flow\ETL\Runtime\MemoryLimit`                                                                              | `Flow\ETL\Values\Memory\MemoryLimit`, plus `processCap(): ?Unit`                                                                                |
+| `new MemoryBudget(Backend, Unit)`                                                                           | `new MemoryBudget(Backend, Unit $limit, ?Unit $processCap)` or `MemoryBudget::of(Backend, Unit)`                                                |
+| `BucketingConfig::spilling(Backend)`                                                                        | `spilling(Backend, MemoryBudget)`                                                                                                               |
+| `new SpillingRowsStorage(RowsStorage, Unit, Backend, BatchSize)`, `::$memoryLimit`                          | `(RowsStorage, MemoryBudget, Backend, BatchSize)`, no `$memoryLimit`                                                                            |
+| `new BoundedRead(Unit, Backend)`                                                                            | `new BoundedRead(MemoryBudget)`                                                                                                                 |
+| `new ExternalSort(array, Buckets, Buckets, RandomValueGenerator, Unit $memoryLimit, ...)`, `::$memoryLimit` | no `$memoryLimit`: the limit comes from the `MemoryBudget` passed to `sort()`                                                                   |
+| `ExternalSort::sort(Generator, Backend, ?int)`                                                              | `sort(Generator, Backend, MemoryBudget, ?int)`                                                                                                  |
+| -                                                                                                           | with a finite `memory_limit`, a sort whose working memory would pass the cap sorts and spills in runs that fit                                  |
+| `Backend` implementations                                                                                   | implement `sortWorkingBytes(Rows $rows, array $columns): int`                                                                                   |
+
 ---
 
 ## Upgrading from 0.46.x to 0.47.x

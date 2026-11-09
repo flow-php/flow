@@ -224,11 +224,11 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
         $backend = new ReportedMemoryBackend();
         $input = (static function () use ($batches, $crossAfter, $backend): Generator {
             foreach ($batches as $position => $batch) {
+                yield $batch;
+
                 if ($position === $crossAfter) {
                     $backend->reported = 1_000_000_000_000;
                 }
-
-                yield $batch;
             }
         })();
 
@@ -287,6 +287,55 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
             ),
         );
         static::assertNotSame([], $storage->appendedRows());
+    }
+
+    public function test_memory_held_before_the_group_by_does_not_force_a_spill(): void
+    {
+        $storage = new SpyRowsStorage(new MemoryRowsStorage());
+
+        static::assertSame(
+            ['a' => 30.0, 'b' => 15.0],
+            GroupedRows::sums(GroupByAggregationProcessorMother::with(
+                new GroupBy(refs(ref('category')), new Aggregators(sum(ref('amount')))),
+                $storage,
+                Unit::fromGb(1),
+                batchSize: 1,
+            )->process(
+                GroupedRows::categories(),
+                flow_context(config_builder()->backend(new ReportedMemoryBackend(2_000_000_000))->build())->backend(),
+            )),
+        );
+        static::assertSame([], $storage->appendedRows());
+    }
+
+    public function test_what_the_upstream_allocates_on_its_first_pull_is_not_the_group_bys_own(): void
+    {
+        $storage = new SpyRowsStorage(new MemoryRowsStorage());
+        $backend = new ReportedMemoryBackend(0);
+        $schema = schema(str_schema('category'), int_schema('amount'));
+
+        static::assertSame(
+            ['a' => 30.0, 'b' => 15.0],
+            GroupedRows::sums(GroupByAggregationProcessorMother::with(
+                new GroupBy(refs(ref('category')), new Aggregators(sum(ref('amount')))),
+                $storage,
+                Unit::fromGb(1),
+                batchSize: 1,
+            )->process(
+                (static function () use ($backend, $schema): Generator {
+                    // a lazy upstream, a join build for one, allocates before its first batch
+                    $backend->reported = 2_000_000_000;
+
+                    yield array_to_rows([
+                        ['category' => 'a', 'amount' => 10],
+                        ['category' => 'b', 'amount' => 15],
+                    ], $schema);
+                    yield array_to_rows([['category' => 'a', 'amount' => 20]], $schema);
+                })(),
+                $backend,
+            )),
+        );
+        static::assertSame([], $storage->appendedRows());
     }
 
     public function test_bind_derives_the_group_by_columns_followed_by_the_aggregations(): void

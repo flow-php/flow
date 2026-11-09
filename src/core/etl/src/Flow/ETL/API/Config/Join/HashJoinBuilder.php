@@ -67,8 +67,7 @@ final class HashJoinBuilder implements JoinAlgorithmBuilder
     }
 
     /**
-     * The process memory past which the build side and the buckets move to the storage; defaults to
-     * MemoryLimit::default().
+     * The memory the operation may add before the build side and the buckets move to the storage; defaults to MemoryLimit::default().
      */
     public function memoryLimit(Unit $memoryLimit): self
     {

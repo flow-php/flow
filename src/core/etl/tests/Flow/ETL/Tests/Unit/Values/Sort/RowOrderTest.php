@@ -78,6 +78,45 @@ final class RowOrderTest extends FlowTestCase
         static::assertSame(0, $ascending->compare($ascending->keys($rows), 1, $ascending->keys($rows), 3));
     }
 
+    public function test_permutation_of_values_without_nulls_keeps_ties_in_input_order(): void
+    {
+        $ints = array_to_rows([['v' => 3], ['v' => 1], ['v' => 3], ['v' => 2], ['v' => 1]], schema(int_schema('v')));
+        $strings = array_to_rows([
+            ['v' => 'b'],
+            ['v' => 'a'],
+            ['v' => 'b'],
+            ['v' => 'c'],
+            ['v' => 'a'],
+        ], schema(str_schema('v')));
+        $ascending = new RowOrder([ref('v')->asc()]);
+        $descending = new RowOrder([ref('v')->desc()]);
+
+        static::assertSame([1, 4, 3, 0, 2], $ascending->permutation($ascending->keys($ints), 5));
+        static::assertSame([0, 2, 3, 1, 4], $descending->permutation($descending->keys($ints), 5));
+        static::assertSame([1, 4, 0, 2, 3], $ascending->permutation($ascending->keys($strings), 5));
+        static::assertSame([3, 0, 2, 1, 4], $descending->permutation($descending->keys($strings), 5));
+    }
+
+    public function test_permutation_with_nulls_and_nan_still_ranks_them(): void
+    {
+        $rows = array_to_rows([
+            ['v' => 1.0],
+            ['v' => null],
+            ['v' => NAN],
+            ['v' => -1.0],
+            ['v' => null],
+        ], schema(float_schema('v', true)));
+        $ascending = new RowOrder([ref('v')->asc()]);
+        $ascendingNullsLast = new RowOrder([ref('v')->asc(NullsOrder::LAST)]);
+        $descending = new RowOrder([ref('v')->desc()]);
+        $descendingNullsFirst = new RowOrder([ref('v')->desc(NullsOrder::FIRST)]);
+
+        static::assertSame([1, 4, 3, 0, 2], $ascending->permutation($ascending->keys($rows), 5));
+        static::assertSame([3, 0, 2, 1, 4], $ascendingNullsLast->permutation($ascendingNullsLast->keys($rows), 5));
+        static::assertSame([2, 0, 3, 1, 4], $descending->permutation($descending->keys($rows), 5));
+        static::assertSame([1, 4, 2, 0, 3], $descendingNullsFirst->permutation($descendingNullsFirst->keys($rows), 5));
+    }
+
     public function test_negative_zero_ties_with_zero(): void
     {
         $rows = array_to_rows([['v' => 0.0], ['v' => -0.0], ['v' => 0.0]], schema(float_schema('v')));

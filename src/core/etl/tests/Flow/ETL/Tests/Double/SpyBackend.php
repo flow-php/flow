@@ -134,6 +134,14 @@ final class SpyBackend implements Backend
         return $this->php->sort($rows, $columns);
     }
 
+    /**
+     * @param list<SortColumn> $columns
+     */
+    public function sortWorkingBytes(Rows $rows, array $columns): int
+    {
+        return $this->php->sortWorkingBytes($rows, $columns);
+    }
+
     public function groupedTotals(): GroupedTotals
     {
         $this->groupedTotals++;

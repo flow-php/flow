@@ -20,46 +20,13 @@ use Flow\ETL\Values\Sort\SortColumn;
 final class ExternalSortMother
 {
     /**
-     * A limit no test dataset reaches - everything sorts in memory.
-     *
-     * @param list<SortColumn> $columns
-     * @param int<1, max> $batchSize
-     */
-    public static function inMemory(
-        array $columns,
-        RowsStorage $storage = new MemoryRowsStorage(),
-        int $batchSize = 1000,
-        Progress $progress = new VoidProgress(),
-    ): ExternalSort {
-        return self::with($columns, $storage, Unit::fromGb(1), batchSize: $batchSize, progress: $progress);
-    }
-
-    /**
-     * A one byte limit - every non-empty batch is spilled as its own sorted run.
-     *
-     * @param list<SortColumn> $columns
-     * @param int<1, max> $mergeFanIn
-     * @param int<1, max> $batchSize
-     */
-    public static function spilling(
-        array $columns,
-        RowsStorage $storage = new MemoryRowsStorage(),
-        int $mergeFanIn = 10,
-        int $batchSize = 1000,
-        Progress $progress = new VoidProgress(),
-    ): ExternalSort {
-        return self::with($columns, $storage, Unit::fromBytes(1), $mergeFanIn, $batchSize, progress: $progress);
-    }
-
-    /**
      * @param list<SortColumn> $columns
      * @param int<1, max> $mergeFanIn
      * @param int<1, max> $batchSize
      */
     public static function with(
         array $columns,
-        RowsStorage $storage,
-        Unit $memoryLimit,
+        RowsStorage $storage = new MemoryRowsStorage(),
         int $mergeFanIn = 10,
         int $batchSize = 1000,
         ?RowsStorage $mergeStorage = null,
@@ -70,7 +37,6 @@ final class ExternalSortMother
             new Buckets($storage),
             new Buckets($mergeStorage ?? $storage),
             new NativePHPRandomValueGenerator(),
-            $memoryLimit,
             $mergeFanIn,
             new BatchSize($batchSize),
             $progress,
@@ -78,7 +44,7 @@ final class ExternalSortMother
     }
 
     /**
-     * The config inMemory() sorts under, for the processors built from a config.
+     * A limit no test dataset reaches - everything sorts in memory.
      *
      * @param int<1, max> $batchSize
      */
@@ -90,7 +56,7 @@ final class ExternalSortMother
     }
 
     /**
-     * The config spilling() sorts under, for the processors built from a config.
+     * A one byte limit - every non-empty batch is spilled as its own sorted run.
      *
      * @param int<1, max> $mergeFanIn
      * @param int<1, max> $batchSize
@@ -104,7 +70,7 @@ final class ExternalSortMother
     }
 
     /**
-     * The config with() sorts under: the merge fan-in is the config's bucket count.
+     * The merge fan-in is the config's bucket count.
      *
      * @param int<1, max> $mergeFanIn
      * @param int<1, max> $batchSize

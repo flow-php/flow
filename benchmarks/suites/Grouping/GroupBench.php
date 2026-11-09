@@ -31,6 +31,13 @@ final class GroupBench
         (new GroupByAggregateScenario((int) $params['rows']))->run();
     }
 
+    #[Bench\ParamProviders('rows')]
+    #[Bench\Groups(['grouping'])]
+    public function bench_group_by_spilling(array $params): void
+    {
+        (new GroupBySpillingScenario((int) $params['rows']))->run();
+    }
+
     public function rows(): Generator
     {
         $rows = BenchmarkRows::count();
