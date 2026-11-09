@@ -37,12 +37,17 @@ use Flow\ETL\Runtime\Heartbeat\Pulse;
 use Flow\ETL\Tests\Context\ExecutedPlan;
 use Flow\ETL\Tests\Context\GroupByContext;
 use Flow\ETL\Tests\Context\MemoryTelemetryContext;
+use Flow\ETL\Tests\Double\ClosureThrowingLoader;
 use Flow\ETL\Tests\Double\CountingExtractor;
+use Flow\ETL\Tests\Double\DelegatingLauncher;
+use Flow\ETL\Tests\Double\EagerFailureProcessor;
+use Flow\ETL\Tests\Double\PassThroughProcessor;
 use Flow\ETL\Tests\Double\PlanDrainingTransformer;
 use Flow\ETL\Tests\Double\RecordingExtractor;
 use Flow\ETL\Tests\Double\RecordingFileExtractor;
 use Flow\ETL\Tests\Double\RecordingHeartbeat;
 use Flow\ETL\Tests\Double\RecordingLauncher;
+use Flow\ETL\Tests\Double\RecordingLoader;
 use Flow\ETL\Tests\Double\RecordingRule;
 use Flow\ETL\Tests\Double\RecordingSplittableExtractor;
 use Flow\ETL\Tests\Double\SpyBackend;
@@ -52,6 +57,8 @@ use Flow\ETL\Tests\Double\SpyTransformer;
 use Flow\ETL\Tests\Double\SteppingClock;
 use Flow\ETL\Tests\Double\StubLauncher;
 use Flow\ETL\Tests\Double\ThrowingTransformer;
+use Flow\ETL\Tests\Double\TracedFailureProcessor;
+use Flow\ETL\Tests\Double\TracedFailureTransformer;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\NodeMother;
 use Flow\ETL\Tests\Mother\PhysicalPlanMother;
@@ -62,6 +69,7 @@ use Flow\ETL\Values\Column\PhpBackend;
 use Flow\ETL\Values\Column\RustBackend;
 use Flow\ETL\Values\Rows;
 use Flow\Filesystem\Tests\Double\RejectingFilter;
+use Flow\Telemetry\Logger\Severity;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
@@ -93,6 +101,7 @@ use function Flow\ETL\DSL\to_array;
 use function Flow\ETL\DSL\to_branch;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
+use function ini_set;
 use function iterator_to_array;
 
 final class ExecutorTest extends FlowTestCase
@@ -1014,5 +1023,444 @@ final class ExecutorTest extends FlowTestCase
 
         static::assertCount(1, $sources->statistics());
         static::assertSame(2, $sources->statistics()[0]->rows);
+    }
+
+    public function test_a_failed_run_ends_its_source_while_the_failure_is_still_held(): void
+    {
+        $previous = ini_set('zend.exception_ignore_args', '0');
+        $step = new TracedFailureTransformer();
+        $extractor = new RecordingSplittableExtractor(schema(int_schema('id')), [
+            RowsMother::sequentialIds(1),
+            RowsMother::sequentialIds(1),
+        ]);
+
+        try {
+            iterator_to_array((new Executor())->executePlan(
+                new PhysicalPlan(
+                    new Pipeline(0, new Read($extractor), new PipelineSteps([$step])),
+                    schema(int_schema('id')),
+                    null,
+                ),
+                NodeMother::context(),
+            ));
+
+            static::fail('Expected the step failure to surface.');
+        } catch (RuntimeException $e) {
+            static::assertSame($step->thrown, $e);
+            static::assertSame([], $extractor->signals);
+            static::assertSame(1, $extractor->cleanups);
+        } finally {
+            ini_set('zend.exception_ignore_args', (string) $previous);
+        }
+    }
+
+    public function test_a_failed_run_discards_its_loaders_and_never_closes_them(): void
+    {
+        $previous = ini_set('zend.exception_ignore_args', '0');
+        $loader = new RecordingLoader();
+        $step = new TracedFailureTransformer();
+        $extractor = new RecordingSplittableExtractor(schema(int_schema('id')), [
+            RowsMother::sequentialIds(1),
+            RowsMother::sequentialIds(1),
+        ]);
+
+        try {
+            iterator_to_array((new Executor())->executePlan(
+                new PhysicalPlan(
+                    new Pipeline(0, new Read($extractor), new PipelineSteps([$loader, $step])),
+                    schema(int_schema('id')),
+                    null,
+                ),
+                NodeMother::context(),
+            ));
+
+            static::fail('Expected the step failure to surface.');
+        } catch (RuntimeException $e) {
+            static::assertSame($step->thrown, $e);
+            static::assertSame(['load#1(1)', 'discard'], $loader->log);
+            static::assertSame(1, $extractor->cleanups);
+        } finally {
+            ini_set('zend.exception_ignore_args', (string) $previous);
+        }
+    }
+
+    public function test_a_failed_run_discards_the_loaders_of_a_run_before_a_processor(): void
+    {
+        $previous = ini_set('zend.exception_ignore_args', '0');
+        $loader = new RecordingLoader();
+        $step = new TracedFailureTransformer();
+        $extractor = new RecordingSplittableExtractor(schema(int_schema('id')), [
+            RowsMother::sequentialIds(1),
+            RowsMother::sequentialIds(1),
+        ]);
+
+        try {
+            iterator_to_array((new Executor())->executePlan(
+                new PhysicalPlan(
+                    new Pipeline(
+                        0,
+                        new Read($extractor),
+                        new PipelineSteps([$loader, new BatchingProcessor(new BatchSize(1)), $step]),
+                    ),
+                    schema(int_schema('id')),
+                    null,
+                ),
+                NodeMother::context(),
+            ));
+
+            static::fail('Expected the failure to surface.');
+        } catch (RuntimeException $e) {
+            static::assertSame($step->thrown, $e);
+            static::assertSame(['load#1(1)', 'discard'], $loader->log);
+            static::assertSame(1, $extractor->cleanups);
+        } finally {
+            ini_set('zend.exception_ignore_args', (string) $previous);
+        }
+    }
+
+    public function test_a_failed_run_discards_the_loaders_of_runs_two_processors_before_it(): void
+    {
+        $previous = ini_set('zend.exception_ignore_args', '0');
+        $loader = new RecordingLoader();
+        $step = new TracedFailureTransformer();
+        $extractor = new RecordingSplittableExtractor(schema(int_schema('id')), [
+            RowsMother::sequentialIds(1),
+            RowsMother::sequentialIds(1),
+        ]);
+
+        try {
+            iterator_to_array((new Executor())->executePlan(
+                new PhysicalPlan(
+                    new Pipeline(
+                        0,
+                        new Read($extractor),
+                        new PipelineSteps([
+                            $loader,
+                            new BatchingProcessor(new BatchSize(1)),
+                            new BatchingProcessor(new BatchSize(1)),
+                            $step,
+                        ]),
+                    ),
+                    schema(int_schema('id')),
+                    null,
+                ),
+                NodeMother::context(),
+            ));
+
+            static::fail('Expected the failure to surface.');
+        } catch (RuntimeException $e) {
+            static::assertSame($step->thrown, $e);
+            static::assertSame(['load#1(1)', 'discard'], $loader->log);
+            static::assertSame(1, $extractor->cleanups);
+        } finally {
+            ini_set('zend.exception_ignore_args', (string) $previous);
+        }
+    }
+
+    public function test_a_failed_run_discards_the_loaders_of_a_run_before_a_delegating_processor(): void
+    {
+        $previous = ini_set('zend.exception_ignore_args', '0');
+        $loader = new RecordingLoader();
+        $step = new TracedFailureTransformer();
+        $extractor = new RecordingSplittableExtractor(schema(int_schema('id')), [
+            RowsMother::sequentialIds(1),
+            RowsMother::sequentialIds(1),
+        ]);
+
+        try {
+            iterator_to_array((new Executor())->executePlan(
+                new PhysicalPlan(
+                    new Pipeline(
+                        0,
+                        new Read($extractor),
+                        new PipelineSteps([$loader, new PassThroughProcessor(), $step]),
+                    ),
+                    schema(int_schema('id')),
+                    null,
+                ),
+                NodeMother::context(),
+            ));
+
+            static::fail('Expected the failure to surface.');
+        } catch (RuntimeException $e) {
+            static::assertSame($step->thrown, $e);
+            static::assertSame(['load#1(1)', 'discard'], $loader->log);
+            static::assertSame(1, $extractor->cleanups);
+        } finally {
+            ini_set('zend.exception_ignore_args', (string) $previous);
+        }
+    }
+
+    public function test_a_processor_that_fails_discards_the_loaders_of_the_run_before_it(): void
+    {
+        $previous = ini_set('zend.exception_ignore_args', '0');
+        $loader = new RecordingLoader();
+        $processor = new TracedFailureProcessor();
+        $extractor = new RecordingSplittableExtractor(schema(int_schema('id')), [
+            RowsMother::sequentialIds(1),
+            RowsMother::sequentialIds(1),
+        ]);
+
+        try {
+            iterator_to_array((new Executor())->executePlan(
+                new PhysicalPlan(
+                    new Pipeline(0, new Read($extractor), new PipelineSteps([$loader, $processor])),
+                    schema(int_schema('id')),
+                    null,
+                ),
+                NodeMother::context(),
+            ));
+
+            static::fail('Expected the failure to surface.');
+        } catch (RuntimeException $e) {
+            static::assertSame($processor->thrown, $e);
+            static::assertSame(['load#1(1)', 'discard'], $loader->log);
+            static::assertSame(1, $extractor->cleanups);
+        } finally {
+            ini_set('zend.exception_ignore_args', (string) $previous);
+        }
+    }
+
+    public function test_a_failed_launched_run_ends_the_launch_while_the_failure_is_still_held(): void
+    {
+        $previous = ini_set('zend.exception_ignore_args', '0');
+        $step = new TracedFailureTransformer();
+        $extractor = new RecordingSplittableExtractor(schema(int_schema('id')), [
+            RowsMother::sequentialIds(1),
+            RowsMother::sequentialIds(1),
+        ]);
+
+        try {
+            iterator_to_array((new Executor())->executePlan(
+                new PhysicalPlan(
+                    new Pipeline(0, new Read($extractor), new PipelineSteps()),
+                    schema(int_schema('id')),
+                    null,
+                ),
+                NodeMother::context(
+                    config_builder()->launcher(new StubLauncher(rest: new PipelineSteps([$step])))->build(),
+                ),
+            ));
+
+            static::fail('Expected the step failure to surface.');
+        } catch (RuntimeException $e) {
+            static::assertSame($step->thrown, $e);
+            static::assertSame([], $extractor->signals);
+            static::assertSame(1, $extractor->cleanups);
+        } finally {
+            ini_set('zend.exception_ignore_args', (string) $previous);
+        }
+    }
+
+    public function test_a_failed_launched_run_discards_the_launchs_loaders_and_never_closes_them(): void
+    {
+        $previous = ini_set('zend.exception_ignore_args', '0');
+        $loader = new RecordingLoader();
+        $step = new TracedFailureTransformer();
+        $extractor = new RecordingSplittableExtractor(schema(int_schema('id')), [
+            RowsMother::sequentialIds(1),
+            RowsMother::sequentialIds(1),
+        ]);
+
+        try {
+            iterator_to_array((new Executor())->executePlan(
+                new PhysicalPlan(
+                    new Pipeline(0, new Read($extractor), new PipelineSteps()),
+                    schema(int_schema('id')),
+                    null,
+                ),
+                NodeMother::context(
+                    config_builder()
+                        ->launcher(new StubLauncher(new PipelineSteps([$loader]), new PipelineSteps([$step])))
+                        ->build(),
+                ),
+            ));
+
+            static::fail('Expected the step failure to surface.');
+        } catch (RuntimeException $e) {
+            static::assertSame($step->thrown, $e);
+            static::assertSame(['load#1(1)', 'discard'], $loader->log);
+            static::assertSame(1, $extractor->cleanups);
+        } finally {
+            ini_set('zend.exception_ignore_args', (string) $previous);
+        }
+    }
+
+    public function test_a_failed_launched_run_discards_its_parent_side_loaders_and_never_closes_them(): void
+    {
+        $previous = ini_set('zend.exception_ignore_args', '0');
+        $loader = new RecordingLoader();
+        $step = new TracedFailureTransformer();
+        $extractor = new RecordingSplittableExtractor(schema(int_schema('id')), [
+            RowsMother::sequentialIds(1),
+            RowsMother::sequentialIds(1),
+        ]);
+
+        try {
+            iterator_to_array((new Executor())->executePlan(
+                new PhysicalPlan(
+                    new Pipeline(0, new Read($extractor), new PipelineSteps()),
+                    schema(int_schema('id')),
+                    null,
+                ),
+                NodeMother::context(
+                    config_builder()->launcher(new StubLauncher(rest: new PipelineSteps([$loader, $step])))->build(),
+                ),
+            ));
+
+            static::fail('Expected the step failure to surface.');
+        } catch (RuntimeException $e) {
+            static::assertSame($step->thrown, $e);
+            static::assertSame(['load#1(1)', 'discard'], $loader->log);
+            static::assertSame(1, $extractor->cleanups);
+        } finally {
+            ini_set('zend.exception_ignore_args', (string) $previous);
+        }
+    }
+
+    public function test_a_failed_run_ends_a_launch_that_delegates_its_batches(): void
+    {
+        $step = new TracedFailureTransformer();
+        $extractor = new RecordingSplittableExtractor(schema(int_schema('id')), [
+            RowsMother::sequentialIds(1),
+            RowsMother::sequentialIds(1),
+        ]);
+
+        try {
+            iterator_to_array((new Executor())->executePlan(
+                new PhysicalPlan(
+                    new Pipeline(0, new Read($extractor), new PipelineSteps()),
+                    schema(int_schema('id')),
+                    null,
+                ),
+                NodeMother::context(
+                    config_builder()->launcher(new DelegatingLauncher(new PipelineSteps([$step])))->build(),
+                ),
+            ));
+
+            static::fail('Expected the step failure to surface.');
+        } catch (RuntimeException $e) {
+            static::assertSame($step->thrown, $e);
+            static::assertSame(1, $extractor->cleanups);
+        }
+    }
+
+    public function test_a_join_whose_right_side_fails_ends_the_right_source_and_never_starts_the_left(): void
+    {
+        $previous = ini_set('zend.exception_ignore_args', '0');
+        $step = new TracedFailureTransformer();
+        $left = new RecordingSplittableExtractor(schema(int_schema('id')), [RowsMother::sequentialIds(1)]);
+        $right = new RecordingSplittableExtractor(schema(int_schema('id')), [
+            RowsMother::sequentialIds(1),
+            RowsMother::sequentialIds(1),
+        ]);
+
+        try {
+            (new Executor())->fetch(
+                NodeMother::plan(NodeMother::join(
+                    NodeMother::read($left),
+                    NodeMother::joinRight(NodeMother::plan(new Transform(NodeMother::read($right), $step))),
+                )),
+                NodeMother::context(),
+            );
+
+            static::fail('Expected the right side failure to surface.');
+        } catch (RuntimeException $e) {
+            static::assertSame($step->thrown, $e);
+            static::assertSame([], $left->limits);
+            static::assertSame(1, $right->cleanups);
+        } finally {
+            ini_set('zend.exception_ignore_args', (string) $previous);
+        }
+    }
+
+    public function test_a_processor_that_fails_before_reading_under_another_never_starts_the_source(): void
+    {
+        $failure = new RuntimeException('processor exploded');
+        $extractor = new RecordingSplittableExtractor(schema(int_schema('id')), [RowsMother::sequentialIds(1)]);
+
+        try {
+            iterator_to_array((new Executor())->executePlan(
+                new PhysicalPlan(
+                    new Pipeline(
+                        0,
+                        new Read($extractor),
+                        new PipelineSteps([
+                            new EagerFailureProcessor($failure),
+                            new BatchingProcessor(new BatchSize(1)),
+                        ]),
+                    ),
+                    schema(int_schema('id')),
+                    null,
+                ),
+                NodeMother::context(),
+            ));
+
+            static::fail('Expected the processor failure to surface.');
+        } catch (RuntimeException $e) {
+            static::assertSame($failure, $e);
+            static::assertSame([], $extractor->limits);
+        }
+    }
+
+    public function test_a_launch_that_fails_to_end_leaves_the_run_failure_to_surface(): void
+    {
+        $telemetry = new MemoryTelemetryContext();
+        $step = new TracedFailureTransformer();
+        $extractor = new RecordingSplittableExtractor(schema(int_schema('id')), [RowsMother::sequentialIds(1)]);
+
+        try {
+            iterator_to_array((new Executor())->executePlan(
+                new PhysicalPlan(
+                    new Pipeline(0, new Read($extractor), new PipelineSteps()),
+                    schema(int_schema('id')),
+                    null,
+                ),
+                NodeMother::context(
+                    config_builder()
+                        ->withTelemetry($telemetry->telemetry)
+                        ->launcher(
+                            new DelegatingLauncher(
+                                new PipelineSteps([$step]),
+                                new RuntimeException('teardown exploded'),
+                            ),
+                        )
+                        ->build(),
+                ),
+            ));
+
+            static::fail('Expected the step failure to surface.');
+        } catch (RuntimeException $e) {
+            static::assertSame($step->thrown, $e);
+            static::assertNull($e->getPrevious());
+            static::assertSame(1, $extractor->cleanups);
+            static::assertCount(1, $telemetry->logs->entriesWithSeverity(Severity::WARN));
+            static::assertCount(1, $telemetry->logs->entriesContaining('The input of a failed run failed to end'));
+        }
+    }
+
+    public function test_a_run_that_fails_after_its_source_ended_leaves_it_ended(): void
+    {
+        $telemetry = new MemoryTelemetryContext();
+        $failure = new RuntimeException('closure exploded');
+        $extractor = new RecordingSplittableExtractor(schema(int_schema('id')), [RowsMother::sequentialIds(1)]);
+
+        try {
+            iterator_to_array((new Executor())->executePlan(
+                new PhysicalPlan(
+                    new Pipeline(0, new Read($extractor), new PipelineSteps([new ClosureThrowingLoader($failure)])),
+                    schema(int_schema('id')),
+                    null,
+                ),
+                $telemetry->flowContext,
+            ));
+
+            static::fail('Expected the loader failure to surface.');
+        } catch (RuntimeException $e) {
+            static::assertSame($failure, $e);
+            static::assertSame([null], $extractor->signals);
+            static::assertSame(1, $extractor->cleanups);
+            static::assertSame([], $telemetry->logs->entriesWithSeverity(Severity::WARN));
+        }
     }
 }

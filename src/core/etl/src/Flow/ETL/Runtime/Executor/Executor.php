@@ -193,10 +193,16 @@ final readonly class Executor
                 : null;
         // the launch ran the pipelines before the last one it consumed, and that one up to the launch's rest
         $last = $launch === null ? -1 : $launch->consumed - 1;
-        $generator = $launch->rows ?? (new AdoptedBatches($context->backend()))->of($source->extract(
-            $context->backend(),
-            $criteria,
-        ));
+        $started = false;
+        // the root of the source's `yield from` chain: a throw() into a delegate inside the chain is lost
+        $batches = $runner->started(
+            $launch->rows ?? (new AdoptedBatches($context->backend()))->of($source->extract(
+                $context->backend(),
+                $criteria,
+            )),
+            $started,
+        );
+        $generator = $batches;
 
         // the launcher counts its own source
         if ($counted !== null && $launch === null) {
@@ -219,10 +225,19 @@ final readonly class Executor
                     : $runner->steps($stage->steps, $generator, $context, $position === 0 ? $source : null, $counts);
         }
 
-        // a foreach, never `yield from`: the re-yield must not forward the consumer's sent signal; every stage routes
-        // or refuses a corrupted record, so one left here had no stage to meet
-        foreach ($generator as $rows) {
-            yield $rows instanceof Rows ? $rows : throw $rows;
+        try {
+            // a foreach, never `yield from`: the re-yield must not forward the consumer's sent signal; every stage
+            // routes or refuses a corrupted record, so one left here had no stage to meet
+            foreach ($generator as $rows) {
+                yield $rows instanceof Rows ? $rows : throw $rows;
+            }
+        } catch (Throwable $failure) {
+            // the failure's trace arguments keep a suspended source alive; a stop would end it as completed and commit
+            if ($started) {
+                $runner->unwind($batches, $failure, $context);
+            }
+
+            throw $failure;
         }
     }
 }

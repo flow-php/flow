@@ -19,10 +19,12 @@ use function count;
 use function Flow\Filesystem\DSL\path;
 
 /**
- * A parallel-capable source that is not a file source: it reads its batches in-process and records what it was asked.
+ * A parallel-capable source that is not a file source: it reads in-process and records what it was asked and every end.
  */
 final class RecordingSplittableExtractor implements SplittableExtractor
 {
+    public int $cleanups = 0;
+
     /**
      * @var list<null|int>
      */
@@ -45,12 +47,16 @@ final class RecordingSplittableExtractor implements SplittableExtractor
     {
         $this->limits[] = $criteria->limit;
 
-        foreach ($this->batches as $batch) {
-            $this->signals[] = yield $batch;
+        try {
+            foreach ($this->batches as $batch) {
+                $this->signals[] = yield $batch;
 
-            if ($this->signals[count($this->signals) - 1] === Signal::STOP) {
-                return;
+                if ($this->signals[count($this->signals) - 1] === Signal::STOP) {
+                    return;
+                }
             }
+        } finally {
+            $this->cleanups++;
         }
     }
 

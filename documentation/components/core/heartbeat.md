@@ -182,3 +182,7 @@ A beat can be late by the interval plus the longest call that cannot report prog
 
 In a parallel run the callback runs in the parent process. The pulse adds the rows and memory that the workers
 report, at most once per second. The stage and stage rows of the workers' latest report come through too.
+
+`rowsRead` can go down between two pulses in a parallel join. When the right side of a broadcast join grows past
+`broadcastLimit`, the attempt is dropped, and its rows leave `rowsRead` because they are read again. A progress bar on
+`rowsRead` can step back once. The final value equals the rows read from the sources.

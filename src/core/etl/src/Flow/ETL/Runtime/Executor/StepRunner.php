@@ -71,22 +71,30 @@ final readonly class StepRunner
             $step = $this->writes->step($step, $context->errorHandler(), $context);
 
             if ($step instanceof Processor || $step instanceof JoinStep) {
-                $upstream = $this->run($run, $input, $context, $source);
-                $input = $step instanceof JoinStep
-                    ? $this->telemetry->operator(
-                        $step->join::class,
-                        $step->join->join(
-                            $upstream,
-                            $context->config->executor()->executePlan($step->right, $context, $counts),
-                            $context->backend(),
+                // a fresh flag per boundary: the generators an earlier boundary built keep theirs
+                unset($upstreamStarted);
+                $upstreamStarted = false;
+                $upstream = $this->started($this->run($run, $input, $context, $source), $upstreamStarted);
+                $input = $this->unwinding(
+                    $step instanceof JoinStep
+                        ? $this->telemetry->operator(
+                            $step->join::class,
+                            $step->join->join(
+                                $upstream,
+                                $context->config->executor()->executePlan($step->right, $context, $counts),
+                                $context->backend(),
+                            ),
+                            $context,
+                        )
+                        : $this->telemetry->operator(
+                            $step::class,
+                            $step->process($upstream, $context->backend()),
+                            $context,
                         ),
-                        $context,
-                    )
-                    : $this->telemetry->operator(
-                        $step::class,
-                        $step->process($upstream, $context->backend()),
-                        $context,
-                    );
+                    $upstream,
+                    $upstreamStarted,
+                    $context,
+                );
                 $source = null;
                 $run = [];
 
@@ -271,6 +279,12 @@ final readonly class StepRunner
             }
 
             $completed = true;
+        } catch (Throwable $failure) {
+            if ($started) {
+                $this->unwind($input, $failure, $context);
+            }
+
+            throw $failure;
         } finally {
             $endings = $this->endLoaders($loaders, $context, $completed);
         }
@@ -416,5 +430,68 @@ final readonly class StepRunner
         }
 
         return $ending;
+    }
+
+    /**
+     * @template T
+     *
+     * @param Generator<int, T, null|Signal, void> $batches
+     *
+     * @return Generator<int, T, null|Signal, void>
+     */
+    public function started(Generator $batches, bool &$started): Generator
+    {
+        // a failure thrown into a generator never started would start it: open its files, launch its workers
+        $started = true;
+
+        yield from $batches;
+    }
+
+    /**
+     * Ends $input as failed: it must be the root of its `yield from` chain, as a throw() into a delegate is lost.
+     */
+    public function unwind(Generator $input, Throwable $failure, FlowContext $context): void
+    {
+        try {
+            $input->throw($failure);
+        } catch (Throwable $endFailure) {
+            if ($endFailure !== $failure) {
+                $context
+                    ->telemetry()
+                    ->logger()
+                    ->warn('The input of a failed run failed to end.', ['exception' => $endFailure]);
+            }
+        }
+    }
+
+    /**
+     * @param Generator<Rows> $output what a processor or join yields
+     * @param Generator<int, Rows, null|Signal, void> $input what it reads
+     *
+     * @return Generator<int, Rows, null|Signal, void>
+     */
+    private function unwinding(
+        Generator $output,
+        Generator $input,
+        bool &$inputStarted,
+        FlowContext $context,
+    ): Generator {
+        try {
+            // send() resumes like next() and forwards the consumer's stop to the operator
+            while ($output->valid()) {
+                /** @var Rows $batch valid() holds, so current() is a batch */
+                $batch = $output->current();
+                $output->send(yield $batch);
+            }
+        } catch (Throwable $failure) {
+            $this->unwind($output, $failure, $context);
+
+            // an operator that failed on its own, or that reads with foreach, leaves its input suspended
+            if ($inputStarted) {
+                $this->unwind($input, $failure, $context);
+            }
+
+            throw $failure;
+        }
     }
 }
