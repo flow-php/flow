@@ -5,9 +5,6 @@ on:
         type: string
         required: false
         default: '["locked"]'
-    secrets:
-      CODECOV_TOKEN:
-        required: false
 
 jobs:
   tests:
@@ -176,6 +173,5 @@ jobs:
       - name: Upload to Codecov
         uses: ./.github/actions/codecov-report
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
           php-version: ${{ matrix.php-version }}
           dependencies: ${{ matrix.dependencies }}

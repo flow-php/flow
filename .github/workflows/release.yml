@@ -45,23 +45,38 @@ jobs:
         run: |
           ./build/flow.phar --version
 
+      - name: "Load GPG signing material"
+        id: gpg
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
+        with:
+          version: "2.42.0"
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          GPG_PRIVATE_KEY: op://ci/gpg-release-signing/private
+          GPG_PASSPHRASE: op://ci/gpg-release-signing/credential
+          GPG_USER_EMAIL: op://ci/gpg-release-signing/email
+
       - name: "Import GPG Key"
         uses: crazy-max/ghaction-import-gpg@2dc316deee8e90f13e1a351ab510b4d5bc0c82cd
         with:
-          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+          gpg_private_key: ${{ steps.gpg.outputs.GPG_PRIVATE_KEY }}
+          passphrase: ${{ steps.gpg.outputs.GPG_PASSPHRASE }}
 
       - name: "Sign PHAR"
-        run: >
-          gpg
-          --batch
-          --yes
-          --local-user="${{ secrets.GPG_USER_EMAIL }}"
-          --passphrase="${{ secrets.GPG_PASSPHRASE }}"
-          --pinentry-mode="loopback"
-          --detach-sign
-          --output="./build/flow.phar.asc"
-          ./build/flow.phar
+        env:
+          GPG_PASSPHRASE: ${{ steps.gpg.outputs.GPG_PASSPHRASE }}
+          GPG_USER_EMAIL: ${{ steps.gpg.outputs.GPG_USER_EMAIL }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$GPG_PASSPHRASE" | gpg \
+            --batch \
+            --yes \
+            --local-user="$GPG_USER_EMAIL" \
+            --passphrase-fd 0 \
+            --pinentry-mode=loopback \
+            --detach-sign \
+            --output=./build/flow.phar.asc \
+            ./build/flow.phar
 
       - name: "Upload Flow PHAR for Docker build"
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

@@ -8,9 +8,6 @@ on:
         type: boolean
         required: false
         default: true
-    secrets:
-      CODECOV_TOKEN:
-        required: false
 
 jobs:
   build:
@@ -112,7 +109,7 @@ jobs:
         if: ${{ !cancelled() && matrix.php == '8.3' && runner.os == 'Linux' }}
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          use_oidc: true
           directory: ./var/phpunit/coverage/clover
           flags: flow-php-extension
 

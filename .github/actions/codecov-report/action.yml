@@ -2,9 +2,6 @@ name: Codecov Report
 description: Upload test results and code coverage to Codecov.io
 
 inputs:
-  token:
-    description: Codecov token
-    required: true
   php-version:
     description: PHP version being tested
     required: true
@@ -46,7 +43,7 @@ runs:
       if: ${{ github.event_name == 'push' && !cancelled() && inputs.php-version == '8.3' && inputs.dependencies == 'locked' }}
       uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
       with:
-        token: ${{ inputs.token }}
+        use_oidc: true
         directory: ./var/phpunit/logs
         report_type: test_results
 
@@ -54,7 +51,7 @@ runs:
       if: ${{ github.event_name == 'push' && !cancelled() && inputs.php-version == '8.3' && inputs.dependencies == 'locked' }}
       uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
       with:
-        token: ${{ inputs.token }}
+        use_oidc: true
         directory: ./var/phpunit/coverage/clover
         flags: tests
 
@@ -62,7 +59,7 @@ runs:
       if: ${{ github.event_name == 'pull_request' && !cancelled() && inputs.dependencies == 'locked' && inputs.php-version == '8.3' }}
       uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
       with:
-        token: ${{ inputs.token }}
+        use_oidc: true
         directory: ./var/phpunit/coverage/clover
         commit_parent: ${{ steps.base-commit.outputs.sha }}
         flags: tests
@@ -71,7 +68,7 @@ runs:
       if: ${{ github.event_name == 'pull_request' && !cancelled() && inputs.dependencies == 'locked' }}
       uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
       with:
-        token: ${{ inputs.token }}
+        use_oidc: true
         directory: ./var/phpunit/logs
         commit_parent: ${{ steps.base-commit.outputs.sha }}
         report_type: test_results

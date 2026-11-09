@@ -7,8 +7,9 @@ on:
     paths-ignore:
       - 'CHANGELOG.md'
 
-env:
-  GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -140,59 +141,102 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: "Ensure target repository has a 1.x branch"
+      - name: "Load GitHub App private key"
+        id: app-credentials
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
+        with:
+          version: "2.42.0"
         env:
-          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-          SPLIT_REPOSITORY: ${{ matrix.package.split_repository }}
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          APP_PRIVATE_KEY: op://ci/github-app-flow-ci/private
+
+      - name: "Create GitHub App token"
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.FLOW_PHP_CI_CLIENT_ID }}
+          private-key: ${{ steps.app-credentials.outputs.APP_PRIVATE_KEY }}
+          owner: flow-php
+          repositories: ${{ matrix.package.split_repository }}
+          permission-contents: write
+          permission-workflows: write
+
+      - name: "Resolve GitHub App bot identity"
+        id: bot
+        env:
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          remote="https://x-access-token:${ACCESS_TOKEN}@github.com/flow-php/${SPLIT_REPOSITORY}.git"
+          id="$(gh api "users/${APP_SLUG}%5Bbot%5D" --jq .id)"
+          {
+            echo "name=${APP_SLUG}[bot]"
+            echo "email=${id}+${APP_SLUG}[bot]@users.noreply.github.com"
+          } >> "$GITHUB_OUTPUT"
 
-          if [ -n "$(git ls-remote --heads "$remote" 1.x)" ]; then
-            echo "flow-php/${SPLIT_REPOSITORY} already has a 1.x branch — nothing to do."
-            exit 0
+      - name: "Split ${{ matrix.package.local_path }} to flow-php/${{ matrix.package.split_repository }}"
+        env:
+          SPLIT_TOKEN: ${{ steps.app-token.outputs.token }}
+          SPLIT_REPOSITORY: ${{ matrix.package.split_repository }}
+          SPLIT_LOCAL_PATH: ${{ matrix.package.local_path }}
+          BOT_NAME: ${{ steps.bot.outputs.name }}
+          BOT_EMAIL: ${{ steps.bot.outputs.email }}
+        run: |
+          set -euo pipefail
+          remote="https://github.com/flow-php/${SPLIT_REPOSITORY}.git"
+          helper="!f() { echo username=x-access-token; echo \"password=\${SPLIT_TOKEN}\"; }; f"
+          git_auth() { git -c credential.helper= -c credential.helper="$helper" "$@"; }
+          git_author() { git -c user.name="$BOT_NAME" -c user.email="$BOT_EMAIL" "$@"; }
+
+          message="$(git show -s --format=%B "$GITHUB_SHA")"
+          message="${message%%$'\n'*}"
+          attempt=1
+
+          while true; do
+            build="$(mktemp -d)"
+            heads="$(git_auth ls-remote --heads "$remote" 1.x)"
+
+            if [ -n "$heads" ]; then
+              git_auth clone --quiet --depth 1 --branch 1.x "$remote" "$build"
+            else
+              echo "flow-php/${SPLIT_REPOSITORY} has no 1.x branch, starting it as an orphan."
+              git -C "$build" init --quiet
+              git -C "$build" remote add origin "$remote"
+              git -C "$build" checkout --quiet --orphan 1.x
+            fi
+
+            find "$build" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+            cp -a "${SPLIT_LOCAL_PATH}/." "$build/"
+            git -C "$build" add --all
+            changes="$(git -C "$build" status --porcelain)"
+
+            if [ -z "$changes" ]; then
+              echo "flow-php/${SPLIT_REPOSITORY} 1.x is up to date."
+              break
+            fi
+
+            git_author -C "$build" commit --quiet --message "$message"
+            push_exit=0
+            push_status="$(git_auth -C "$build" push --porcelain origin 1.x)" || push_exit=$?
+
+            if [ "$push_exit" -eq 0 ]; then
+              break
+            fi
+
+            echo "$push_status"
+
+            if [ "$attempt" -eq 3 ] || ! grep -qF '[rejected]' <<< "$push_status"; then
+              exit "$push_exit"
+            fi
+
+            echo "flow-php/${SPLIT_REPOSITORY} 1.x moved during the split, attempt $((attempt + 1)) of 3."
+            rm -rf "$build"
+            attempt=$((attempt + 1))
+          done
+
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            git_author -C "$build" tag -a "$GITHUB_REF_NAME" -m "Publishing $GITHUB_REF_NAME"
+            git_auth -C "$build" push --quiet origin "$GITHUB_REF_NAME"
           fi
 
-          echo "flow-php/${SPLIT_REPOSITORY} has no 1.x branch — creating an empty one to bootstrap the split."
-          tmp="$(mktemp -d)"
-          git clone "$remote" "$tmp"
-          git -C "$tmp" \
-            -c user.name="norberttech" \
-            -c user.email="norbert@orzechowicz.pl" \
-            checkout --orphan 1.x
-          git -C "$tmp" \
-            -c user.name="norberttech" \
-            -c user.email="norbert@orzechowicz.pl" \
-            commit --allow-empty -m "Initialize repository"
-          git -C "$tmp" push origin 1.x
-          rm -rf "$tmp"
-
-      # no tag
-      -
-        if: "!startsWith(github.ref, 'refs/tags/')"
-        uses: danharrin/monorepo-split-github-action@14e42e2437f674b8987c1f50ca3689116aea1893 # v2.4.5
-        with:
-          package_directory: '${{ matrix.package.local_path }}'
-
-          branch: 1.x
-          repository_organization: 'flow-php'
-          repository_name: '${{ matrix.package.split_repository }}'
-
-          user_name: "norberttech"
-          user_email: "norbert@orzechowicz.pl"
-
-      # with tag
-      -
-        if: "startsWith(github.ref, 'refs/tags/')"
-        uses: danharrin/monorepo-split-github-action@14e42e2437f674b8987c1f50ca3689116aea1893 # v2.4.5
-        with:
-          tag: ${GITHUB_REF#refs/tags/}
-
-          package_directory: '${{ matrix.package.local_path }}'
-
-          branch: 1.x
-          repository_organization: 'flow-php'
-          repository_name: '${{ matrix.package.split_repository }}'
-
-          user_name: "norberttech"
-          user_email: "norbert@orzechowicz.pl"
+          rm -rf "$build"

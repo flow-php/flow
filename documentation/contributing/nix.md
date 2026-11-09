@@ -20,6 +20,7 @@ nix-shell
 > For full isolation, use the `nix-shell --pure` command. Nix then isolates your development environment from the system.
 
 This command gives you all the tools and dependencies of the project in a new shell.
+The default shell has Node.js 24.
 
 By default, the shell uses [Starship](https://starship.rs/) for the bash prompt.
 To override it, create `/.nix/shell/starship.toml` from the `/.nix/shell/starship.toml.dist` file.
@@ -85,6 +86,49 @@ nix-shell --arg with-blackfire true
 
 To configure blackfire, create a file `./.nix/php/lib/blackfire.ini` with your blackfire configuration.
 
+## 1Password
+
+`gh`, `composer` and `blackfire` in the nix shell read their credentials from 1Password, once per call.
+
+```shell
+cp .nix/1password/op.env.dist .nix/1password/op.env
+```
+
+```shell
+OP_ACCOUNT=my-team.1password.com
+OP_VAULT="My vault"
+```
+
+| Variable     | Value                                                       | Empty                               |
+|--------------|-------------------------------------------------------------|-------------------------------------|
+| `OP_ACCOUNT` | 1Password sign-in address                                   | op's default account                |
+| `OP_VAULT`   | vault that holds the items below (quote a name with spaces) | plain `gh`, `composer`, `blackfire` |
+
+| Item               | Field        | Used by          | Becomes                     |
+|--------------------|--------------|------------------|-----------------------------|
+| `github-gh-cli`    | `credential` | `gh`, `composer` | `GH_TOKEN`, `COMPOSER_AUTH` |
+| `blackfire-client` | `client-id`  | `blackfire`      | `BLACKFIRE_CLIENT_ID`       |
+| `blackfire-client` | `credential` | `blackfire`      | `BLACKFIRE_CLIENT_TOKEN`    |
+
+Nothing is exported to the shell. A `COMPOSER_AUTH` you set yourself is kept. The wrappers run `op run --no-masking`,
+so a command that prints its own secret, such as `gh auth token`, shows it.
+
+Each wrapped call reads from 1Password. A call takes about 0.8 s, the first call about 3 s. 1Password asks for one
+approval per terminal session.
+
+To run a tool without 1Password:
+
+```shell
+FLOW_OP_ENV_FILE= gh pr list
+```
+
+The wrappers set `OP_BIOMETRIC_UNLOCK_ENABLED=true`. macOS 27 can block `op` from the configuration of the 1Password
+app, and `op` then reports "No accounts configured". To keep your own value, export it:
+
+```shell
+export OP_BIOMETRIC_UNLOCK_ENABLED=false
+```
+
 ## Benchmarking PHP
 
 The default shell runs PHP with a development configuration. OPcache is off for the CLI, so the JIT is also off.
@@ -139,7 +183,7 @@ For more information, read the [WASM Interactive Playground Build](/documentatio
 
 ### Terraform
 
-To add Terraform and Node.js for infrastructure development:
+To add Terraform for infrastructure development:
 
 ```shell
 nix-shell --arg with-terraform true

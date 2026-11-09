@@ -298,7 +298,7 @@ Only `2` gives PHP an 8-byte `zend_long` without Memory64 support in the engine 
 |--------------------------------------|--------------|----------------------------------|
 | `sizeof(long)`                       | 8            | 8                                |
 | Engine requirement                   | Memory64     | runs on today's wasm32 engines   |
-| Node needed to run build-time probes | ≥ 23         | works on the nix shell's node 22 |
+| Node needed to run build-time probes | ≥ 23         | works on emscripten's node 24    |
 
 The node requirement is important. Under `emconfigure`, the PHP `configure` reports `checking whether we are cross
 compiling... no` and runs its `AC_RUN_IFELSE` probes through node. With `=1`, the PHP configure fails or detects the

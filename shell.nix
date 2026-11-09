@@ -40,10 +40,10 @@ let
             (final: prev:
                 if prev.stdenv.hostPlatform.system == "aarch64-darwin" then {
                     blackfire = prev.blackfire.overrideAttrs (old: {
-                        version = "2026.9.1";
+                        version = "2026.10.2";
                         src = prev.fetchurl {
-                            url = "https://packages.blackfire.io/blackfire/2026.9.1/blackfire-darwin_arm64.pkg.tar.gz";
-                            sha256 = "sha256-xNn78U4jdABzWrSKMSSZXE5tuf/SRK8OwdhldKBBKk0=";
+                            url = "https://packages.blackfire.io/blackfire/2026.10.2/blackfire-darwin_arm64.pkg.tar.gz";
+                            sha256 = "sha256-8XYmYKnE5AFf9l698kSEDhYTfFGyRoXVoaFBRl9BFgk=";
                         };
                     });
                 } else {}
@@ -109,15 +109,18 @@ let
 
     polars-python = pkgs.python3.withPackages (ps: [ ps.polars ps.pyarrow ]);
     spark = pkgs.spark.override { RSupport = false; };
+    op-wrappers = pkgs.callPackage ./.nix/1password/wrappers.nix { composer = php.packages.composer; };
 in
 pkgs.mkShell {
     buildInputs = [
         php
-        php.packages.composer
+        op-wrappers.composer
         pkgs.starship
         pkgs.figlet
         pkgs.symfony-cli
         pkgs.act
+        pkgs._1password-cli
+        op-wrappers.gh
         pkgs.hyperfine
         pkgs.actionlint
         pkgs.zizmor
@@ -125,8 +128,9 @@ pkgs.mkShell {
         pkgs.oxipng
         pkgs.jpegoptim
         pkgs.thrift
+        pkgs.nodejs_24
     ]
-        ++ pkgs.lib.optional with-blackfire pkgs.blackfire
+        ++ pkgs.lib.optional with-blackfire op-wrappers.blackfire
         ++ pkgs.lib.optionals with-wasm [
             # WASM build tools
             pkgs.emscripten
@@ -138,11 +142,7 @@ pkgs.mkShell {
             pkgs.libxml2
             pkgs.pkg-config
         ]
-        ++ pkgs.lib.optionals with-terraform [
-            # Terraform
-            pkgs.terraform
-            pkgs.nodejs_24
-        ]
+        ++ pkgs.lib.optional with-terraform pkgs.terraform
         ++ pkgs.lib.optionals with-c [
             # C development tools for pg-query-ext extension development
             pkgs.gcc
@@ -200,6 +200,8 @@ pkgs.mkShell {
     if [ -f "$PWD/.nix/blackfire/blackfire.env" ]; then
         set -a; . "$PWD/.nix/blackfire/blackfire.env"; set +a
     fi
+
+    export FLOW_OP_ENV_FILE="$PWD/.nix/1password/op.env"
 
     eval "$(${pkgs.starship}/bin/starship init bash)"
 

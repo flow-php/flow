@@ -1,8 +1,5 @@
 on:
   workflow_call:
-    secrets:
-      CODECOV_TOKEN:
-        required: false
 
 jobs:
   extension-tests:
@@ -55,6 +52,6 @@ jobs:
         if: ${{ !cancelled() && matrix.php-version == '8.3' }}
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          use_oidc: true
           directory: ./var/phpunit/coverage/clover
           flags: extension-tests

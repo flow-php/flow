@@ -90,6 +90,9 @@ jobs:
 
   publish-website:
     runs-on: blacksmith-2vcpu-ubuntu-2404
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: false
     strategy:
       fail-fast: false
       matrix:
@@ -136,8 +139,7 @@ jobs:
           DOMAIN: flow-php.com
           PLAYGROUND_API_URL: https://flow-php.com/api/playground/snippets
           PLAYGROUND_SNIPPETS_URL: https://playground-snippets.flow-php.com
-          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-          UMAMI_ID: '${{ vars.UMAMI_ID }}'
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           FLOW_VERSION: ${{ steps.flow_version.outputs.tag }}
         working-directory: "web/landing"
 
@@ -152,11 +154,59 @@ jobs:
       - name: "Build Pagefind index"
         run: "npx --yes pagefind@1.5.2 --site web/landing/build --output-subdir pagefind"
 
-      - name: Pushes build to website repository
-        uses: cpina/github-action-push-to-another-repository@55306faa4ed53b815ae49e564af8cfb359d32ae2 # main
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.ACCESS_TOKEN }}
+      - name: "Load GitHub App private key"
+        id: app-credentials
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
         with:
-          source-directory: 'web/landing/build'
-          destination-github-username: 'flow-php'
-          destination-repository-name: 'flow-php.com'
+          version: "2.42.0"
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          APP_PRIVATE_KEY: op://ci/github-app-flow-ci/private
+
+      - name: "Create GitHub App token"
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.FLOW_PHP_CI_CLIENT_ID }}
+          private-key: ${{ steps.app-credentials.outputs.APP_PRIVATE_KEY }}
+          owner: flow-php
+          repositories: flow-php.com
+          permission-contents: write
+
+      - name: "Resolve GitHub App bot identity"
+        id: bot
+        env:
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          id="$(gh api "users/${APP_SLUG}%5Bbot%5D" --jq .id)"
+          {
+            echo "name=${APP_SLUG}[bot]"
+            echo "email=${id}+${APP_SLUG}[bot]@users.noreply.github.com"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: "Push build to website repository"
+        env:
+          WEBSITE_TOKEN: ${{ steps.app-token.outputs.token }}
+          COMMIT_MESSAGE: "Update from https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
+          BOT_NAME: ${{ steps.bot.outputs.name }}
+          BOT_EMAIL: ${{ steps.bot.outputs.email }}
+        run: |
+          set -euo pipefail
+          target="$(mktemp -d)"
+          helper="!f() { echo username=x-access-token; echo \"password=\${WEBSITE_TOKEN}\"; }; f"
+          git -c credential.helper= -c credential.helper="$helper" clone --quiet --depth 1 --branch main \
+            https://github.com/flow-php/flow-php.com.git "$target"
+          find "$target" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -a web/landing/build/. "$target/"
+          git -C "$target" add --all
+          if git -C "$target" diff --cached --quiet; then
+            echo "flow-php.com is up to date."
+            exit 0
+          fi
+          git -C "$target" \
+            -c user.name="$BOT_NAME" \
+            -c user.email="$BOT_EMAIL" \
+            commit --quiet -m "$COMMIT_MESSAGE"
+          git -C "$target" -c credential.helper= -c credential.helper="$helper" push --quiet origin HEAD:main

@@ -8,6 +8,32 @@ permissions:
 
 jobs:
   automation:
-    uses: aeon-php/actions/.github/workflows/automation-changelog-update.yml@ed056e3e36c7011d5c0f633471e7d888737e628a # main
-    secrets:
-      automation_github_token: "${{ secrets.ACCESS_TOKEN }}"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Load GitHub App private key"
+        id: app-credentials
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
+        with:
+          version: "2.42.0"
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          APP_PRIVATE_KEY: op://ci/github-app-flow-ci/private
+
+      - name: "Create GitHub App token"
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.FLOW_PHP_CI_CLIENT_ID }}
+          private-key: ${{ steps.app-credentials.outputs.APP_PRIVATE_KEY }}
+          owner: flow-php
+          repositories: flow
+          permission-contents: write
+          permission-pull-requests: read
+
+      - name: "Update Changelog File"
+        uses: docker://aeonphp/automation@sha256:efd2a2ed267aab2c45bed40540f0e522487c6817f5ae81f76032768b6ef47ed6
+        env:
+          AEON_AUTOMATION_GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        with:
+          entrypoint: "/composer/vendor/bin/automation"
+          args: "changelog:generate ${{ github.repository }} --github-file-update-path=CHANGELOG.md --skip-from=\"dependabot[bot]\" --skip-from=\"aeon-automation\""
