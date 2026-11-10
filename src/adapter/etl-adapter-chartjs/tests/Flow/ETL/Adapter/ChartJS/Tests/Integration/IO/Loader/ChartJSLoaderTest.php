@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\ChartJS\Tests\Integration\IO\Loader;
 
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\Adapter\ChartJS\bar_chart;
@@ -14,13 +15,19 @@ use function Flow\ETL\Adapter\ChartJS\pie_chart;
 use function Flow\ETL\Adapter\ChartJS\to_chartjs;
 use function Flow\ETL\Adapter\ChartJS\to_chartjs_file;
 use function Flow\ETL\Adapter\ChartJS\to_chartjs_var;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\first;
+use function Flow\ETL\DSL\float_schema;
+use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\sum;
+use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 
 final class ChartJSLoaderTest extends FlowTestCase
@@ -32,6 +39,26 @@ final class ChartJSLoaderTest extends FlowTestCase
         . 'given: "memory://chart.html".');
 
         to_chartjs(bar_chart(ref('Date'), refs(ref('Revenue'))))->withOutputPath(path('memory://chart.html'));
+    }
+
+    public function test_closure_reports_the_removal_the_template_read_and_the_write(): void
+    {
+        $filesystem = memory_filesystem();
+        $filesystem->writeTo(path('memory://out/chart.html'))->append('old')->close();
+        $loader = to_chartjs(bar_chart(ref('Date'), refs(ref('Revenue'))))
+            ->withOutputPath(path('memory://out/chart.html'), $filesystem);
+        $loader->load(
+            array_to_rows(
+                [['Date' => '2023-01-01', 'Revenue' => 1.5]],
+                schema(str_schema('Date'), float_schema('Revenue')),
+            ),
+            flow_context()->backend(),
+        );
+        $progress = new ProgressSpy('commit');
+
+        $loader->closure($progress);
+
+        static::assertSame(1 + 1 + 1, $progress->rowsOf('commit'));
     }
 
     public function test_chartjs_output_path_without_an_extension_throws_at_build(): void

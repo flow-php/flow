@@ -122,7 +122,7 @@ and passes it to `SchemaInferrer::infer()`. A custom `Sniffer` or `CSVOpenSource
 | Before                                                                                                      | After                                                                                                                                           |
 |-------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
 | `memoryLimit()` compared with the process memory                                                            | compared with the memory the operation itself added; each live operation gets its own limit                                                     |
-| `FLOW_MAX_MEMORY`: the default limit, compared with the process memory                                      | the default per-operation limit and, with a finite `memory_limit`, the process cap; a value above `memory_limit` throws                         |
+| `FLOW_MAX_MEMORY`: the default limit, compared with the process memory                                      | the default per-operation limit and, with a finite `memory_limit`, the process cap                                                              |
 | -                                                                                                           | with a finite `memory_limit`, the process over 70% of it (or `FLOW_MAX_MEMORY`) also spills, after the operation added `min(128 MiB, cap / 16)` |
 | `MemoryBudget::exceeded()` / `exceededWith()` compare the process memory with the limit                     | compare the memory added since the budget started or since `released()` with the limit, and the process with the cap                            |
 | `MemoryBudget::released()` calls `gc_mem_caches()`                                                          | only moves the baseline                                                                                                                         |
@@ -144,6 +144,41 @@ and passes it to `SchemaInferrer::infer()`. A custom `Sniffer` or `CSVOpenSource
 | a failed run destroyed the generator of a source                       | the failure is thrown at the `yield` of the source |
 | a `finally` around the `yield` ran late, after the caller's `catch`    | it runs before the failure gets to the caller      |
 | a `catch (Throwable)` around the `yield` saw only the source's failure | it also gets the failures of later steps           |
+
+### 12) `flow-php/etl` and the file adapters - a write that ends reports its file operations
+
+| Before                                   | After                                            |
+|------------------------------------------|--------------------------------------------------|
+| `Closure::closure(): void`               | `closure(Progress $progress): void`              |
+| `FileWrite::closure(): void`             | `closure(Progress $progress): void`              |
+| `FileCommit::commit(array $tasks): void` | `commit(array $tasks, Progress $progress): void` |
+| `WorkbookManager::close(): void`         | `close(Progress $progress): void`                |
+| -                                        | `Config::progress(): ProgressStages`             |
+
+A custom `Closure` loader:
+
+Before:
+
+```php
+public function closure(): void
+{
+    $this->client->flush();
+}
+```
+
+After:
+
+```php
+use Flow\ETL\Foundation\Progress;
+
+public function closure(Progress $progress): void
+{
+    $this->client->flush();
+    $progress->advanced(1);
+}
+```
+
+Code that calls `FileCommit::commit()` outside a run passes `new VoidProgress()`.
 
 ---
 

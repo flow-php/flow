@@ -11,6 +11,7 @@ use Flow\ETL\Adapter\XML\IO\Loader\XMLWriter\DOMDocumentWriter;
 use Flow\ETL\Adapter\XML\IO\Loader\XMLWriter\StringXMLWriter;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Filesystem\SaveMode;
 use Flow\ETL\IO\Loader\File\FileCommit;
 use Flow\ETL\IO\Loader\File\Part;
@@ -61,7 +62,7 @@ final class XMLLoaderTest extends FlowTestCase
             ['_id' => 2, 'name' => 'b'],
             ['_id' => 3, 'name' => 'c'],
         ], $schema), flow_context()->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         static::assertSame(
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<rows>\n"
@@ -83,7 +84,7 @@ final class XMLLoaderTest extends FlowTestCase
             ['id' => 2, 'group' => 'b'],
         ], $schema), flow_context()->backend());
         $loader->load(array_to_rows([['id' => 3, 'group' => 'a']], $schema), flow_context()->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         static::assertSame(
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<rows>\n<row><id>1</id></row>\n<row><id>3</id></row>\n</rows>",
@@ -112,7 +113,7 @@ final class XMLLoaderTest extends FlowTestCase
                 ),
                 flow_context()->backend(),
             );
-            $loader->closure();
+            $loader->closure(new VoidProgress());
             $read[] = $filesystem->readFrom(path('memory://group=' . $group . '/out.xml'))->content();
         }
 

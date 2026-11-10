@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\IO\Loader\File\FileCommit\Partitioned;
 
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Tests\Context\FileCommitContext;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Filesystem\Partition;
@@ -33,11 +34,11 @@ final class OverwriteMultipleFilesTest extends FlowIntegrationTestCase
 
         $sales = $this->context->commit($this->context->path(__FUNCTION__ . '/sales.csv'), overwrite());
         $sales->open([new Partition('partition', 'value')])->append('sales data');
-        $sales->commit([0]);
+        $sales->commit([0], new VoidProgress());
 
         $orders = $this->context->commit($this->context->path(__FUNCTION__ . '/orders.csv'), overwrite());
         $orders->open([new Partition('partition', 'value')])->append('orders data');
-        $orders->commit([0]);
+        $orders->commit([0], new VoidProgress());
 
         $files = iterator_to_array($this->fs()->list(path(
             $this->cacheDir->path() . '/' . __FUNCTION__ . '/partition=value/*',
@@ -73,7 +74,7 @@ final class OverwriteMultipleFilesTest extends FlowIntegrationTestCase
 
         $files = $this->context->commit($this->context->path(__FUNCTION__ . '/file.csv'), overwrite());
         $files->open([new Partition('partition', 'value')])->append('overwritten content');
-        $files->commit([0]);
+        $files->commit([0], new VoidProgress());
 
         $files = iterator_to_array($this->fs()->list(path(
             $this->cacheDir->path() . '/' . __FUNCTION__ . '/partition=value/*',
@@ -96,7 +97,7 @@ final class OverwriteMultipleFilesTest extends FlowIntegrationTestCase
 
         $files = $this->context->commit($this->context->path(__FUNCTION__ . '/orders.csv'), overwrite());
         $files->open([new Partition('partition', 'value')])->append('orders data');
-        $files->commit([0]);
+        $files->commit([0], new VoidProgress());
 
         $files = iterator_to_array($this->fs()->list(path(
             $this->cacheDir->path() . '/' . __FUNCTION__ . '/partition=value/*',
@@ -122,7 +123,7 @@ final class OverwriteMultipleFilesTest extends FlowIntegrationTestCase
 
         $files = $this->context->commit($this->context->path(__FUNCTION__ . '/file.csv'), overwrite());
         $files->open([new Partition('partition', 'value')])->append('new content');
-        $files->commit([0]);
+        $files->commit([0], new VoidProgress());
 
         $files = iterator_to_array($this->fs()->list(path(
             $this->cacheDir->path() . '/' . __FUNCTION__ . '/partition=value/*',

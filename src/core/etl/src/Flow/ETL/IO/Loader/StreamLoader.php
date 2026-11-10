@@ -8,6 +8,7 @@ use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\Foundation\Telemetry\SpanAttributes;
 use Flow\ETL\Foundation\Telemetry\TelemetryAttributes;
 use Flow\ETL\IO\Formatter;
@@ -89,7 +90,7 @@ final class StreamLoader implements Closure, Loader, SpanAttributes
         return new self('php://stdout', Mode::WRITE, $truncate, $output, $formatter, $schemaFormatter, Type::stdout);
     }
 
-    public function closure(): void
+    public function closure(Progress $progress): void
     {
         $this->closeStream();
     }

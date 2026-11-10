@@ -44,7 +44,8 @@ One line, redrawn in place on every beat:
 ```
 
 The values are `stageRows`, `rowsRead`, `memoryBytes`, `peakMemoryBytes` and `elapsedSeconds` of
-[`Pulse`](/documentation/components/core/heartbeat.md#pulse).
+[`Pulse`](/documentation/components/core/heartbeat.md#pulse). For the `commit` stage the count is file
+operations: `commit: 12 file operations`.
 
 - On a terminal the line is cut to the terminal width.
 - A `ConsoleOutputInterface` (the `$output` of a Symfony command) prints to its error output, stderr.

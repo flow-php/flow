@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Runtime\Executor;
 
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\IO\Loader;
 use Flow\ETL\IO\Loader\Closure;
 use Flow\ETL\IO\Loader\Discardable;
@@ -82,14 +83,14 @@ final readonly class TransactionLoader implements NestedLoader
     /**
      * The endings path offers nothing, so nothing is wrapped: a failing drain surfaces as the user's own exception.
      */
-    public function closure(): void
+    public function closure(Progress $progress): void
     {
         $this->transaction->begin();
 
         try {
             foreach ($this->children as $child) {
                 if ($child instanceof Closure) {
-                    $child->closure();
+                    $child->closure($progress);
                 }
             }
 

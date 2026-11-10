@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Double;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\IO\Loader;
 use Flow\ETL\IO\Loader\Closure;
 use Flow\ETL\IO\Loader\Discardable;
@@ -26,7 +27,7 @@ final class ClosureThrowingLoader implements Closure, Discardable, Loader
         private readonly ?Throwable $discardFailure = null,
     ) {}
 
-    public function closure(): void
+    public function closure(Progress $progress): void
     {
         throw $this->throwable;
     }

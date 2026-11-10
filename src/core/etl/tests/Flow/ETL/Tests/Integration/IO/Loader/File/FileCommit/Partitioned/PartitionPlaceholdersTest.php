@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\IO\Loader\File\FileCommit\Partitioned;
 
 use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Loader\File\FileCommit;
 use Flow\ETL\Tests\Context\FileCommitContext;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
@@ -40,7 +41,7 @@ final class PartitionPlaceholdersTest extends FlowIntegrationTestCase
 
         $files = new FileCommit($this->fs, $file, append(), 'r1');
         $files->open([new Partition('order-name', '123456-PL')])->append('new content');
-        $files->commit([0]);
+        $files->commit([0], new VoidProgress());
 
         $files = iterator_to_array($this->fs()->list(path($this->context->path(__FUNCTION__)->path() . '/*.csv')));
 
@@ -91,7 +92,7 @@ final class PartitionPlaceholdersTest extends FlowIntegrationTestCase
 
         $files = new FileCommit($this->fs, $file, overwrite(), 'r1');
         $files->open([new Partition('order-name', '123456-PL')])->append('new content');
-        $files->commit([0]);
+        $files->commit([0], new VoidProgress());
 
         $files = iterator_to_array($this->fs()->list(path($this->context->path(__FUNCTION__)->path() . '/*.csv')));
 
@@ -111,7 +112,7 @@ final class PartitionPlaceholdersTest extends FlowIntegrationTestCase
 
         $files = new FileCommit($this->fs, $file, overwrite(), 'r1');
         $files->open([new Partition('order-name', '123456-PL')])->append('new content');
-        $files->commit([0]);
+        $files->commit([0], new VoidProgress());
 
         $files = iterator_to_array($this->fs()->list(path($this->context->path(__FUNCTION__)->path() . '/*.csv')));
 
@@ -127,7 +128,7 @@ final class PartitionPlaceholdersTest extends FlowIntegrationTestCase
 
         $files = $this->context->commit($file, exception_if_exists());
         $files->open([new Partition('order-name', '123456-PL')])->append('file content');
-        $files->commit([0]);
+        $files->commit([0], new VoidProgress());
 
         $files = iterator_to_array($this->fs()->list(path($this->context->path(__FUNCTION__)->path() . '/*.csv')));
 
@@ -146,7 +147,7 @@ final class PartitionPlaceholdersTest extends FlowIntegrationTestCase
             new Partition('order-year', '2024'),
             new Partition('order-name', '123456-PL'),
         ])->append('file content');
-        $files->commit([0]);
+        $files->commit([0], new VoidProgress());
 
         $files = iterator_to_array($this->fs()->list(path($this->context->path(__FUNCTION__)->path() . '/**/*.csv')));
 

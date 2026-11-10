@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Flow\ETL\Adapter\CSV\IO\Loader\CSVLoader;
 use Flow\ETL\Foundation\Exception\RuntimeException;
 use Flow\ETL\Foundation\FlowPhpExtension;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Filesystem\SaveMode;
 use Flow\ETL\IO\Loader\File\FileCommit;
 use Flow\ETL\IO\Loader\File\Part;
@@ -67,7 +68,7 @@ final class CSVLoaderTest extends FlowTestCase
             ['id' => 2, 'name' => 'c', 'price' => 2.0, 'active' => false],
             ['id' => 3, 'name' => 'd', 'price' => 3.5, 'active' => true],
         ], $schema), flow_context()->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         static::assertSame(
             "id,name,price,active\n1,\"a b\",0.30000000000000004,true\n2,c,2.0,false\n3,d,3.5,true\n",
@@ -89,7 +90,7 @@ final class CSVLoaderTest extends FlowTestCase
             ['id' => 2, 'group' => 'b'],
         ], $schema), flow_context()->backend());
         $loader->load(array_to_rows([['id' => 3, 'group' => 'a']], $schema), flow_context()->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         static::assertSame("id\n1\n3\n", $filesystem->readFrom(path('memory://out/group=a/file.csv'))->content());
         static::assertSame("id\n2\n", $filesystem->readFrom(path('memory://out/group=b/file.csv'))->content());
@@ -113,7 +114,7 @@ final class CSVLoaderTest extends FlowTestCase
             ),
             flow_context()->backend(),
         );
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         static::assertSame(
             "'it''s;';'2026-01-02 03:04'\r\n",
@@ -127,10 +128,10 @@ final class CSVLoaderTest extends FlowTestCase
         $loader = to_csv(path('memory://out.csv'), filesystem: $filesystem)->withNewLineSeparator("\n");
 
         $loader->load(array_to_rows([['id' => 1]], schema(int_schema('id'))), flow_context()->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
         $filesystem->rm(path('memory://out.csv'));
         $loader->load(array_to_rows([['id' => 2]], schema(int_schema('id'))), flow_context()->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         static::assertSame("id\n2\n", $filesystem->readFrom(path('memory://out.csv'))->content());
     }
@@ -143,7 +144,7 @@ final class CSVLoaderTest extends FlowTestCase
         $loader->load(array_to_rows([['id' => 1]], schema(int_schema('id'))), flow_context()->backend());
         $loader->discard();
         $loader->load(array_to_rows([['id' => 2]], schema(int_schema('id'))), flow_context()->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         static::assertSame("id\n2\n", $filesystem->readFrom(path('memory://out.csv'))->content());
     }
@@ -166,7 +167,7 @@ final class CSVLoaderTest extends FlowTestCase
                 ),
                 flow_context()->backend(),
             );
-            $loader->closure();
+            $loader->closure(new VoidProgress());
             $read[] = $filesystem->readFrom(path('memory://group=' . $group . '/out.csv'))->content();
         }
 

@@ -6,6 +6,8 @@ namespace Flow\ETL\Foundation;
 
 interface ProgressStages
 {
+    public const string COMMIT = 'commit';
+
     public const string GROUP_BY = 'group_by';
 
     public const string INFER = 'infer';

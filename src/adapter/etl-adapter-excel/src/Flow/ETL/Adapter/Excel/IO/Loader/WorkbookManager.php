@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Excel\IO\Loader;
 
 use DateTimeInterface;
+use Flow\ETL\Foundation\Progress;
 use LogicException;
 use OpenSpout\Common\Entity\Row as OpenSpoutRow;
 use OpenSpout\Common\Entity\Style\Style;
@@ -43,10 +44,11 @@ final class WorkbookManager
         private readonly OdsOptions|XlsxOptions|null $options = null,
     ) {}
 
-    public function close(): void
+    public function close(Progress $progress): void
     {
         foreach ($this->writers as $writer) {
             $writer->close();
+            $progress->advanced(1);
         }
 
         $this->writers = [];

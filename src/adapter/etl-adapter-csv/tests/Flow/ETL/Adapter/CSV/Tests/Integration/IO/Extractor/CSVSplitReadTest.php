@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV\Tests\Integration\IO\Extractor;
 
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\File\FileSplit;
 use Flow\ETL\IO\Loader\File\FileLoader;
@@ -155,7 +156,7 @@ final class CSVSplitReadTest extends FlowTestCase
             ),
             false,
         );
-        $loader->commit('run1', 1)?->commit([0]);
+        $loader->commit('run1', 1)?->commit([0], new VoidProgress());
 
         static::assertSame(
             [1, 3],

@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\JSON\Tests\Integration;
 
 use Flow\ETL\Adapter\JSON\IO\JsonFraming;
 use Flow\ETL\Adapter\JSON\IO\Loader\JsonLoader;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -86,7 +87,7 @@ final class JsonLinesTest extends FlowTestCase
         );
 
         $loader->load(rows(schema()), flow_context(config())->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         static::assertFileDoesNotExist($path);
     }

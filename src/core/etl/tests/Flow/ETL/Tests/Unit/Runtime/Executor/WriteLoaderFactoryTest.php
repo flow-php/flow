@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Runtime\Executor;
 
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Operators\Transformer\LimitTransformer;
 use Flow\ETL\Planning\Logical\Node\Transform;
 use Flow\ETL\Planning\Physical\PlannedNodes;
@@ -44,7 +45,7 @@ final class WriteLoaderFactoryTest extends FlowTestCase
             $context,
         );
         $feed->load(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))));
-        $feed->closure();
+        $feed->closure(new VoidProgress());
 
         static::assertSame([2], $spy->loadedRowCounts());
         static::assertSame(1, $spy->closureCount);
@@ -61,7 +62,7 @@ final class WriteLoaderFactoryTest extends FlowTestCase
 
         $feed = (new WriteLoaderFactory())->feed($branch, $context->errorHandler(), $context);
         $feed->load(array_to_rows([['id' => 1]], schema(int_schema('id'))));
-        $feed->closure();
+        $feed->closure(new VoidProgress());
 
         static::assertNotNull($planned->refusal());
         static::assertEquals(new Schema(), $branch->input);
@@ -100,7 +101,7 @@ final class WriteLoaderFactoryTest extends FlowTestCase
 
         $feed = (new WriteLoaderFactory())->feed($outer, $context->errorHandler(), $context);
         $feed->load(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))));
-        $feed->closure();
+        $feed->closure(new VoidProgress());
 
         static::assertSame([2], $spy->loadedRowCounts());
     }
@@ -113,7 +114,7 @@ final class WriteLoaderFactoryTest extends FlowTestCase
 
         $loader = (new WriteLoaderFactory())->transactional(new TransactionGroup($transaction, [$spy]), $context);
         $loader->load(array_to_rows([['id' => 1]], schema(int_schema('id'))));
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         static::assertInstanceOf(TransactionLoader::class, $loader);
         static::assertSame([1], $spy->loadedRowCounts());

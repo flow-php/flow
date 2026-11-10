@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\Console;
 
+use Flow\ETL\Foundation\ProgressStages;
 use Flow\ETL\Runtime\Heartbeat\Heartbeat;
 use Flow\ETL\Runtime\Heartbeat\Pulse;
 use Symfony\Component\Console\Cursor;
@@ -18,12 +19,13 @@ use Symfony\Component\Console\Terminal;
 use function implode;
 use function intdiv;
 use function max;
-use function mb_strimwidth;
 use function number_format;
 use function sprintf;
 
 final class ConsoleHeartbeat implements Heartbeat
 {
+    private const int INDICATOR_AND_LAST_COLUMN = 4;
+
     private const array TIME_UNITS = ['d' => 86_400, 'h' => 3_600, 'min' => 60, 's' => 1];
 
     private ?ProgressIndicator $indicator = null;
@@ -41,16 +43,17 @@ final class ConsoleHeartbeat implements Heartbeat
             '%s: %s %s · %s read · %s (peak %s) · %s',
             $pulse->stage === '' ? 'starting' : $pulse->stage,
             number_format($pulse->stageRows),
-            $pulse->stageRows === 1 ? 'row' : 'rows',
+            ($pulse->stage === ProgressStages::COMMIT ? 'file operation' : 'row')
+            . ($pulse->stageRows === 1 ? '' : 's'),
             number_format($pulse->rowsRead),
             Helper::formatMemory($pulse->memoryBytes),
             Helper::formatMemory($pulse->peakMemoryBytes),
             self::elapsed($pulse->elapsedSeconds),
         );
+        // a line that wraps leaves its first row behind on every redraw
         $message = OutputFormatter::escape(
             $this->output->isDecorated() && !$this->output instanceof ConsoleSectionOutput
-                // a line that wraps leaves its first row behind on every redraw; 4 = the indicator and the last column
-                ? mb_strimwidth($line, 0, max(1, (new Terminal())->getWidth() - 4))
+                ? Helper::substr($line, 0, max(1, (new Terminal())->getWidth() - self::INDICATOR_AND_LAST_COLUMN))
                 : $line,
         );
 

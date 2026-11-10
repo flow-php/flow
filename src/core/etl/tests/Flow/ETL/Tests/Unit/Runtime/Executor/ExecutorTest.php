@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Runtime\Executor;
 
 use ArrayObject;
+use DateTimeImmutable;
+use Flow\ETL\Foundation\Clock\FakeClock;
 use Flow\ETL\Foundation\Exception\EvaluationException;
 use Flow\ETL\Foundation\Exception\InvalidLogicException;
 use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
@@ -70,6 +72,9 @@ use Flow\ETL\Values\Column\PhpBackend;
 use Flow\ETL\Values\Column\RustBackend;
 use Flow\ETL\Values\Memory\Unit;
 use Flow\ETL\Values\Rows;
+use Flow\Filesystem\FileStatus;
+use Flow\Filesystem\Path;
+use Flow\Filesystem\Testing\FilesystemOperation;
 use Flow\Filesystem\Tests\Double\RejectingFilter;
 use Flow\Telemetry\Logger\Severity;
 use Generator;
@@ -96,6 +101,8 @@ use function Flow\ETL\DSL\hash_join;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\overwrite;
+use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\rows;
@@ -103,8 +110,10 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\to_array;
 use function Flow\ETL\DSL\to_branch;
+use function Flow\Filesystem\DSL\intercepted_filesystem;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
+use function Flow\Floe\DSL\to_floe;
 use function ini_set;
 use function iterator_to_array;
 
@@ -1494,5 +1503,76 @@ final class ExecutorTest extends FlowTestCase
             static::assertSame(1, $extractor->cleanups);
             static::assertSame([], $telemetry->logs->entriesWithSeverity(Severity::WARN));
         }
+    }
+
+    public function test_a_heartbeat_stop_while_a_write_ends_keeps_the_moved_and_the_replaced_files(): void
+    {
+        $clock = new FakeClock(new DateTimeImmutable('2026-01-01 00:00:00'));
+        $failure = new RuntimeException('lease lost');
+        $heartbeat = new RecordingHeartbeat(throws: $failure);
+        $memory = memory_filesystem();
+        $memory->writeTo(path('memory://out/part-00007.floe'))->append('old')->close();
+        $filesystem = intercepted_filesystem($memory)->onCall(static function (
+            FilesystemOperation $operation,
+            Path $path,
+        ) use ($clock): void {
+            if ($operation === FilesystemOperation::Mv) {
+                $clock->modify('+10 seconds');
+            }
+        });
+
+        try {
+            df(
+                config_builder()
+                    ->clock($clock)
+                    ->heartbeat($heartbeat, everySeconds: 10, onFailure: HeartbeatFailure::stop),
+            )
+                ->read(from_array([['id' => 1]]))
+                ->write(to_floe(path('memory://out/part-{part}.floe'), filesystem: $filesystem)->saveMode(overwrite()))
+                ->run();
+            static::fail('The heartbeat failure did not stop the run');
+        } catch (RuntimeException $e) {
+            static::assertSame($failure, $e);
+        }
+
+        static::assertSame(
+            ['commit'],
+            array_map(static fn(Pulse $pulse): string => $pulse->stage, $heartbeat->pulses()),
+        );
+        static::assertSame(
+            ['memory://out/part-00000.floe', 'memory://out/part-00007.floe'],
+            array_map(
+                static fn(FileStatus $status): string => $status->path->uri(),
+                iterator_to_array($memory->list(path('memory://out/**/*')), false),
+            ),
+        );
+    }
+
+    public function test_an_overwrite_beats_while_its_files_move_into_place(): void
+    {
+        $clock = new FakeClock(new DateTimeImmutable('2026-01-01 00:00:00'));
+        $recording = new RecordingHeartbeat();
+        $filesystem = intercepted_filesystem(memory_filesystem())->onCall(static function (
+            FilesystemOperation $operation,
+            Path $path,
+        ) use ($clock): void {
+            if ($operation === FilesystemOperation::Mv) {
+                $clock->modify('+10 seconds');
+            }
+        });
+
+        df(config_builder()->clock($clock)->heartbeat($recording, everySeconds: 10))
+            ->read(from_array([['id' => 1, 'dept' => 'a'], ['id' => 2, 'dept' => 'b'], ['id' => 3, 'dept' => 'c']]))
+            ->write(
+                to_floe(path('memory://out/rows.floe'), filesystem: $filesystem)
+                    ->partitionBy(partition_by('dept'))
+                    ->saveMode(overwrite()),
+            )
+            ->run();
+
+        static::assertSame(
+            [['commit', 10], ['commit', 20], ['commit', 30]],
+            array_map(static fn(Pulse $pulse): array => [$pulse->stage, $pulse->elapsedSeconds], $recording->pulses()),
+        );
     }
 }

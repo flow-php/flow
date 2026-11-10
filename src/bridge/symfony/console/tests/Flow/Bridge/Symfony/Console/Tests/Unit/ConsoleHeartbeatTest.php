@@ -16,6 +16,7 @@ use Symfony\Component\Console\Output\StreamOutput;
 
 use function Flow\Bridge\Symfony\Console\DSL\console_heartbeat;
 use function fopen;
+use function getenv;
 use function putenv;
 use function rewind;
 use function stream_get_contents;
@@ -23,6 +24,21 @@ use function substr_count;
 
 final class ConsoleHeartbeatTest extends FlowTestCase
 {
+    public false|string $columns = false;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->columns = getenv('COLUMNS');
+        putenv('COLUMNS=120');
+    }
+
+    protected function tearDown(): void
+    {
+        putenv($this->columns === false ? 'COLUMNS' : 'COLUMNS=' . $this->columns);
+        parent::tearDown();
+    }
+
     public function test_a_beat_after_finish_starts_a_new_indicator(): void
     {
         $output = new BufferedOutput();
@@ -89,13 +105,7 @@ final class ConsoleHeartbeatTest extends FlowTestCase
         $stream = fopen('php://memory', 'w+b');
         $output = new StreamOutput($stream, OutputInterface::VERBOSITY_NORMAL, true);
         $heartbeat = console_heartbeat($output);
-        putenv('COLUMNS=120');
-
-        try {
-            $heartbeat->beat(PulseMother::pulse());
-        } finally {
-            putenv('COLUMNS');
-        }
+        $heartbeat->beat(PulseMother::pulse());
 
         $heartbeat->finish();
         $output->write('command line');
@@ -141,6 +151,15 @@ final class ConsoleHeartbeatTest extends FlowTestCase
         static::assertStringStartsWith(' sort: 1 row · 2,000,000 read · ', $output->fetch());
     }
 
+    public function test_a_single_file_operation_is_singular(): void
+    {
+        $output = new BufferedOutput();
+
+        console_heartbeat($output)->beat(PulseMother::pulse(stage: 'commit', stageRows: 1));
+
+        static::assertStringStartsWith(' commit: 1 file operation · ', $output->fetch());
+    }
+
     public function test_a_stage_with_console_tags_prints_them_literally(): void
     {
         $output = new BufferedOutput();
@@ -154,14 +173,8 @@ final class ConsoleHeartbeatTest extends FlowTestCase
     {
         $stream = fopen('php://memory', 'w+b');
         $heartbeat = console_heartbeat(new StreamOutput($stream, OutputInterface::VERBOSITY_NORMAL, true));
-        putenv('COLUMNS=120');
-
-        try {
-            $heartbeat->beat(PulseMother::pulse(beat: 1));
-            $heartbeat->beat(PulseMother::pulse(beat: 2, stageRows: 1_500_000));
-        } finally {
-            putenv('COLUMNS');
-        }
+        $heartbeat->beat(PulseMother::pulse(beat: 1));
+        $heartbeat->beat(PulseMother::pulse(beat: 2, stageRows: 1_500_000));
 
         rewind($stream);
         static::assertStringStartsWith(
@@ -176,12 +189,8 @@ final class ConsoleHeartbeatTest extends FlowTestCase
         $stream = fopen('php://memory', 'w+b');
         putenv('COLUMNS=60');
 
-        try {
-            console_heartbeat(new StreamOutput($stream, OutputInterface::VERBOSITY_NORMAL, true))
-                ->beat(PulseMother::pulse());
-        } finally {
-            putenv('COLUMNS');
-        }
+        console_heartbeat(new StreamOutput($stream, OutputInterface::VERBOSITY_NORMAL, true))
+            ->beat(PulseMother::pulse());
 
         rewind($stream);
         static::assertSame(
@@ -195,12 +204,8 @@ final class ConsoleHeartbeatTest extends FlowTestCase
         $stream = fopen('php://memory', 'w+b');
         putenv('COLUMNS=2');
 
-        try {
-            console_heartbeat(new StreamOutput($stream, OutputInterface::VERBOSITY_NORMAL, true))
-                ->beat(PulseMother::pulse());
-        } finally {
-            putenv('COLUMNS');
-        }
+        console_heartbeat(new StreamOutput($stream, OutputInterface::VERBOSITY_NORMAL, true))
+            ->beat(PulseMother::pulse());
 
         rewind($stream);
         static::assertSame("\x0D\x1B[2K - s", stream_get_contents($stream));
@@ -218,11 +223,7 @@ final class ConsoleHeartbeatTest extends FlowTestCase
         );
         putenv('COLUMNS=60');
 
-        try {
-            console_heartbeat($output)->beat(PulseMother::pulse());
-        } finally {
-            putenv('COLUMNS');
-        }
+        console_heartbeat($output)->beat(PulseMother::pulse());
 
         static::assertSame(
             " - sort: 1,250,000 rows · 2,000,000 read · 142.0 MiB (peak 310.0 MiB) · 1 min, 23 s\n",
@@ -237,6 +238,15 @@ final class ConsoleHeartbeatTest extends FlowTestCase
         console_heartbeat($output)->beat(PulseMother::pulse(stage: ''));
 
         static::assertStringStartsWith(' starting: 1,250,000 rows · ', $output->fetch());
+    }
+
+    public function test_the_commit_stage_counts_file_operations(): void
+    {
+        $output = new BufferedOutput();
+
+        console_heartbeat($output)->beat(PulseMother::pulse(stage: 'commit', stageRows: 12));
+
+        static::assertStringStartsWith(' commit: 12 file operations · ', $output->fetch());
     }
 
     #[TestWith([0, '0 s'])]
@@ -293,13 +303,7 @@ final class ConsoleHeartbeatTest extends FlowTestCase
     {
         $stream = fopen('php://memory', 'w+b');
         $heartbeat = console_heartbeat(new StreamOutput($stream, OutputInterface::VERBOSITY_NORMAL, true));
-        putenv('COLUMNS=120');
-
-        try {
-            $heartbeat->beat(PulseMother::pulse());
-        } finally {
-            putenv('COLUMNS');
-        }
+        $heartbeat->beat(PulseMother::pulse());
 
         $heartbeat->finish();
 

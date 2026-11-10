@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Flow\ETL\Adapter\JSON\IO\JsonFraming;
 use Flow\ETL\Adapter\JSON\IO\Loader\JsonLoader;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Tests\Double\RecordingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Path\Option;
@@ -50,7 +51,7 @@ final class JsonLinesLoaderTest extends FlowTestCase
             ['id' => 2, 'price' => 2.0],
             ['id' => 3, 'price' => 3.5],
         ], $schema), flow_context()->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         static::assertSame(
             "{\"id\":1,\"price\":0.30000000000000004}\n{\"id\":2,\"price\":2}\n{\"id\":3,\"price\":3.5}\n",
@@ -69,7 +70,7 @@ final class JsonLinesLoaderTest extends FlowTestCase
         $loader->load(array_to_rows([[
             'at' => new DateTimeImmutable('2026-01-02 03:04:05 UTC'),
         ]], schema(datetime_schema('at'))), flow_context()->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         static::assertSame(
             "{\"at\":\"02/01/2026 03:04\"}\n",
@@ -98,7 +99,7 @@ final class JsonLinesLoaderTest extends FlowTestCase
             ['id' => 2, 'group' => 'b'],
         ], $schema), flow_context()->backend());
         $loader->load(array_to_rows([['id' => 3, 'group' => 'a']], $schema), flow_context()->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         static::assertSame(
             "{\"id\":1}\n{\"id\":3}\n",
@@ -115,7 +116,7 @@ final class JsonLinesLoaderTest extends FlowTestCase
         $loader->load(array_to_rows([['id' => 1]], schema(int_schema('id'))), flow_context()->backend());
         $loader->discard();
         $loader->load(array_to_rows([['id' => 2]], schema(int_schema('id'))), flow_context()->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         static::assertSame("{\"id\":2}\n", $filesystem->readFrom(path('memory://out.jsonl'))->content());
     }

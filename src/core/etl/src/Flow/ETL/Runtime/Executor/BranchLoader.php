@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Runtime\Executor;
 
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\IO\Extractor\FeedExtractor;
 use Flow\ETL\IO\Loader;
 use Flow\ETL\IO\Loader\Discardable;
@@ -63,7 +64,7 @@ final class BranchLoader implements NestedLoader
         return null;
     }
 
-    public function closure(): void
+    public function closure(Progress $progress): void
     {
         $this->feed->finish();
 

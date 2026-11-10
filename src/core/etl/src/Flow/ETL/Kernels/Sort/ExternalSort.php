@@ -308,8 +308,7 @@ final readonly class ExternalSort
 
             if (
                 $count > 0
-                && $budget->crossesCapWith($bytes)
-                && ($bytes > $budget->floor() || !$budget->crossesCapWith(0))
+                && ($budget->crossesCapWith(0) ? $bytes > $budget->floor() : $budget->crossesCapWith($bytes))
             ) {
                 return $count;
             }

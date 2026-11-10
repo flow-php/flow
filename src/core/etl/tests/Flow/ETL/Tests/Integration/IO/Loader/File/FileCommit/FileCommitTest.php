@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\IO\Loader\File\FileCommit;
 
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Filesystem\SaveMode;
 use Flow\ETL\IO\Loader\File\FileCommit;
 use Flow\ETL\Tests\Context\FileCommitContext;
@@ -57,7 +58,7 @@ final class FileCommitTest extends FlowIntegrationTestCase
         $b->append('b');
 
         try {
-            $files->commit([0]);
+            $files->commit([0], new VoidProgress());
             static::fail('commit() was expected to throw');
         } catch (FilesystemRuntimeException $failure) {
             static::assertSame('Closing "' . $b->path()->uri() . '" failed', $failure->getMessage());
@@ -176,7 +177,7 @@ final class FileCommitTest extends FlowIntegrationTestCase
         $file = $this->context->path(__FUNCTION__ . '/file.txt');
         $files = new FileCommit($this->fs, $file, SaveMode::Overwrite, 'r1');
         $files->open()->append('some content');
-        $files->commit([0]);
+        $files->commit([0], new VoidProgress());
 
         $files->abort();
 

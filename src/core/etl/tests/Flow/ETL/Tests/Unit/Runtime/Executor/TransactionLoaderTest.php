@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Runtime\Executor;
 
 use DomainException;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Operators\Transformer\LimitTransformer;
 use Flow\ETL\Runtime\ErrorHandler\LoadingError;
 use Flow\ETL\Runtime\Executor\OfferedFailure;
 use Flow\ETL\Runtime\Executor\TransactionLoader;
 use Flow\ETL\Tests\Context\MemoryTelemetryContext;
+use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\Double\RecordingLoader;
 use Flow\ETL\Tests\Double\RecordingTransaction;
+use Flow\ETL\Tests\Double\SpyLoader;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\BranchLoaderMother;
 use Flow\ETL\Tests\Mother\NodeMother;
@@ -56,11 +59,23 @@ final class TransactionLoaderTest extends FlowTestCase
         );
         $transactional->load(BranchLoaderMother::batch());
 
-        $transactional->closure();
+        $transactional->closure(new VoidProgress());
 
         static::assertSame(['begin', 'commit', 'begin', 'commit'], $transaction->log);
         static::assertSame(['load#1(1)', 'closure'], $bare->log);
         static::assertSame(['load#1(1)', 'closure'], $side->log);
+    }
+
+    public function test_closure_forwards_its_progress_to_every_child(): void
+    {
+        $first = new SpyLoader();
+        $second = new SpyLoader();
+        $spy = new ProgressSpy('commit');
+
+        (new TransactionLoader(new RecordingTransaction(), [$first, $second], NodeMother::context()))->closure($spy);
+
+        static::assertSame($spy, $first->closedWith);
+        static::assertSame($spy, $second->closedWith);
     }
 
     public function test_a_child_failure_rolls_back_and_names_the_users_loader_inside_the_child(): void
@@ -215,7 +230,9 @@ final class TransactionLoaderTest extends FlowTestCase
         $transaction = new RecordingTransaction(commitFailure: $failure);
 
         try {
-            (new TransactionLoader($transaction, [new RecordingLoader()], NodeMother::context()))->closure();
+            (new TransactionLoader($transaction, [new RecordingLoader()], NodeMother::context()))->closure(
+                new VoidProgress(),
+            );
             static::fail('closure() must rethrow the commit failure');
         } catch (RuntimeException $thrown) {
             static::assertSame($failure, $thrown);
@@ -293,7 +310,7 @@ final class TransactionLoaderTest extends FlowTestCase
                 ),
                 [new RecordingLoader()],
                 $telemetry->flowContext,
-            ))->closure();
+            ))->closure(new VoidProgress());
             static::fail('closure() must rethrow the commit failure');
         } catch (RuntimeException $thrown) {
             static::assertSame($failure, $thrown);
@@ -317,7 +334,7 @@ final class TransactionLoaderTest extends FlowTestCase
                     ),
                 ],
                 NodeMother::context(),
-            ))->closure();
+            ))->closure(new VoidProgress());
             static::fail('closure() must rethrow the drain failure');
         } catch (DomainException $thrown) {
             static::assertSame($drain, $thrown);

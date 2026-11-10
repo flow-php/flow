@@ -10,8 +10,8 @@ use Flow\ETL\Foundation\Describe\ConfiguredFilesystem;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\IO\Filesystem\SaveMode;
-use Flow\ETL\IO\Loader;
 use Flow\ETL\IO\Loader\Closure;
 use Flow\ETL\IO\Loader\Discardable;
 use Flow\ETL\IO\Loader\File\FileCommit;
@@ -39,7 +39,7 @@ use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_enum;
 use function Flow\Types\DSL\type_string;
 
-final class ParquetLoader implements Closure, Discardable, FileLoader, Loader
+final class ParquetLoader implements Closure, Discardable, FileLoader
 {
     private ?FileWrite $frame = null;
 
@@ -146,9 +146,9 @@ final class ParquetLoader implements Closure, Discardable, FileLoader, Loader
         return $this;
     }
 
-    public function closure(): void
+    public function closure(Progress $progress): void
     {
-        $this->frame()->closure();
+        $this->frame()->closure($progress);
         $this->frame = null;
     }
 

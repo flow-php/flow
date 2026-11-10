@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\IO\Loader\File\FileCommit\NotPartitioned;
 
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Tests\Context\FileCommitContext;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
@@ -33,7 +34,7 @@ final class IgnoreModeTest extends FlowIntegrationTestCase
 
         static::assertFalse($files->admit(false));
 
-        $files->commit([0]);
+        $files->commit([0], new VoidProgress());
 
         static::assertFileExists($path->path());
         static::assertSame('some content', file_get_contents($path->path()));
@@ -48,7 +49,7 @@ final class IgnoreModeTest extends FlowIntegrationTestCase
 
         $files = $this->context->commit($path, ignore());
         $files->open()->append('some content');
-        $files->commit([0]);
+        $files->commit([0], new VoidProgress());
 
         static::assertFileExists($path->path());
         static::assertSame('some content', file_get_contents($path->path()));

@@ -8,6 +8,7 @@ use Flow\ETL\Adapter\Parquet\IO\Loader\ParquetLoader;
 use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetFilesContext;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Filesystem\SaveMode;
 use Flow\ETL\IO\Loader\File\FileCommit;
 use Flow\ETL\IO\Loader\File\Part;
@@ -52,9 +53,9 @@ final class ParquetLoaderTest extends TestCase
         $loader = to_parquet(path('memory://runs/data.parquet'), filesystem: $memory)->saveMode(SaveMode::Append);
 
         $loader->load(array_to_rows([['id' => 1]], schema(int_schema('id'))), $context->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
         $loader->load(array_to_rows([['name' => 'a']], schema(str_schema('name'))), $context->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         $written = [];
 
@@ -73,7 +74,7 @@ final class ParquetLoaderTest extends TestCase
         $loader = to_parquet(path('memory://out.parquet'), filesystem: $filesystem);
 
         $loader->load(array_to_rows([], schema(int_schema('id'))), flow_context(config())->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         static::assertNull($filesystem->status(path('memory://out.parquet')));
     }

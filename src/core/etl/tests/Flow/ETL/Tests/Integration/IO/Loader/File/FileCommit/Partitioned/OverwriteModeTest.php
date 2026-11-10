@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\IO\Loader\File\FileCommit\Partitioned;
 
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Loader\File\FileCommit;
 use Flow\ETL\Tests\Context\FileCommitContext;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
@@ -38,7 +39,7 @@ final class OverwriteModeTest extends FlowIntegrationTestCase
         $files = $this->context->commit($file, overwrite());
 
         $files->open([new Partition('partition', 'value')])->append('new content');
-        $files->commit([0]);
+        $files->commit([0], new VoidProgress());
 
         $files = iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/**/*.txt')));
 
@@ -59,7 +60,7 @@ final class OverwriteModeTest extends FlowIntegrationTestCase
         $files = $this->context->commit($file, overwrite());
 
         $files->open([new Partition('partition', 'value')])->append('new content');
-        $files->commit([0]);
+        $files->commit([0], new VoidProgress());
 
         $files = iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/**/*.txt')));
 
@@ -78,7 +79,7 @@ final class OverwriteModeTest extends FlowIntegrationTestCase
         $files = $this->context->commit($file, overwrite());
 
         $files->open([new Partition('partition', 'value')])->append('new content');
-        $files->commit([0]);
+        $files->commit([0], new VoidProgress());
 
         $files = iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/partition=value/*')));
 
@@ -101,7 +102,7 @@ final class OverwriteModeTest extends FlowIntegrationTestCase
         $files = new FileCommit($fs, $file, overwrite(), 'r1');
 
         $files->open([new Partition('partition', 'value')])->append('new content');
-        $files->commit([0]);
+        $files->commit([0], new VoidProgress());
 
         $files = iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/partition=value/*')));
 

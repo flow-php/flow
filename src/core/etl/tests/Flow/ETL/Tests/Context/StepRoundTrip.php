@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Context;
 
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Loader;
 use Flow\ETL\IO\Loader\Closure;
 use Flow\ETL\Operators\Transformer;
@@ -40,7 +41,7 @@ final class StepRoundTrip
         $loader->load($rows, $context->backend());
 
         if ($loader instanceof Closure) {
-            $loader->closure();
+            $loader->closure(new VoidProgress());
         }
 
         $filesystem = new NativeLocalFilesystem();

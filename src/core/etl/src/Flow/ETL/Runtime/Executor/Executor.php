@@ -6,7 +6,6 @@ namespace Flow\ETL\Runtime\Executor;
 
 use Flow\ETL\Foundation\Exception\InvalidLogicException;
 use Flow\ETL\Foundation\Exception\SchemaNotDerivableException;
-use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Extractor;
 use Flow\ETL\IO\Extractor\CacheExtractor;
 use Flow\ETL\IO\Extractor\Criteria;
@@ -61,7 +60,7 @@ final readonly class Executor
         $plan = null;
 
         try {
-            $plan = $context->config->planner()->plan($logical, $context->config->heartbeat() ?? new VoidProgress());
+            $plan = $context->config->planner()->plan($logical, $context->config->progress());
 
             foreach ($this->executePlan($plan, $context, $counts) as $rows) {
                 // disarmed across our own yield: while parked we are not advancing, so a second read

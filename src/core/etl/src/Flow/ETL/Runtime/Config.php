@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Runtime;
 
 use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
+use Flow\ETL\Foundation\ProgressStages;
 use Flow\ETL\Foundation\RandomValueGenerator;
 use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Kernels\Sort\ExternalSortConfig;
@@ -61,7 +62,7 @@ final readonly class Config
                 $grouping,
                 $join,
                 $repartition,
-                $heartbeat ?? new VoidProgress(),
+                $this->progress(),
             ),
             $backend,
         );
@@ -119,6 +120,11 @@ final readonly class Config
     public function planner(): Planner
     {
         return $this->planner;
+    }
+
+    public function progress(): ProgressStages
+    {
+        return $this->heartbeat ?? new VoidProgress();
     }
 
     public function randomValueGenerator(): RandomValueGenerator

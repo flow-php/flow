@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Runtime\Executor;
 
 use Flow\ETL\Foundation\Exception\CorruptedRecordException;
+use Flow\ETL\Foundation\ProgressStages;
 use Flow\ETL\IO\CorruptedRecordsRouter;
 use Flow\ETL\IO\Extractor;
 use Flow\ETL\IO\Extractor\Reader;
@@ -366,12 +367,13 @@ final readonly class StepRunner
     public function endLoaders(array $loaders, FlowContext $context, bool $completed): array
     {
         $ending = [];
+        $progress = $context->config->progress()->stage(ProgressStages::COMMIT);
 
         foreach ($loaders as $loader) {
             try {
                 if ($completed) {
                     if ($loader instanceof Closure) {
-                        $loader->closure();
+                        $loader->closure($progress);
                     }
                 } elseif ($loader instanceof Discardable) {
                     $loader->discard();
@@ -457,7 +459,6 @@ final readonly class StepRunner
         ?RunCounts $counts,
     ): Generator {
         $upstreamStarted = false;
-        $rightStarted = false;
         $upstream = $this->started($this->run($run, $input, $context, $source), $upstreamStarted);
 
         if (!$step instanceof JoinStep) {
@@ -469,6 +470,7 @@ final readonly class StepRunner
             );
         }
 
+        $rightStarted = false;
         $right = $this->started(
             $context->config->executor()->executePlan($step->right, $context, $counts),
             $rightStarted,

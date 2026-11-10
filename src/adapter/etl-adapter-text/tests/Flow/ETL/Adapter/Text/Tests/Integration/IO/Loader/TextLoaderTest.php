@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\Text\Tests\Integration\IO\Loader;
 
 use Flow\ETL\Adapter\Text\IO\Loader\TextLoader;
 use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Filesystem\SaveMode;
 use Flow\ETL\IO\Loader\File\FileCommit;
 use Flow\ETL\IO\Loader\File\Part;
@@ -54,7 +55,7 @@ final class TextLoaderTest extends FlowTestCase
             ['price' => 2.0],
         ], schema(float_schema('price'))), flow_context()->backend());
         $loader->load(array_to_rows([['price' => 3.5]], schema(float_schema('price'))), flow_context()->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         static::assertSame(
             "0.30000000000000004\n2.0\n3.5\n",
@@ -80,7 +81,7 @@ final class TextLoaderTest extends FlowTestCase
                 ),
                 flow_context()->backend(),
             );
-            $loader->closure();
+            $loader->closure(new VoidProgress());
             $read[] = $filesystem->readFrom(path('memory://group=' . $group . '/out.txt'))->content();
         }
 

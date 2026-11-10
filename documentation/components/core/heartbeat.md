@@ -7,8 +7,8 @@
 ## Register a heartbeat
 
 A heartbeat is a callback. Flow calls it every N seconds while a run is busy, also during a sort, group by, pivot,
-join or window function. The start and the end of a run call no heartbeat, so a run shorter than `everySeconds` never
-calls it.
+join or window function, and while a file write ends. Flow adds no beat at the start or at the end of a run, so a run
+shorter than `everySeconds` never calls it.
 
 ```php
 <?php
@@ -81,7 +81,7 @@ df(config_builder()
 | `elapsedSeconds`  | seconds since the run started, rounded down                                                             |
 | `rowsRead`        | rows read from the source                                                                               |
 | `stage`           | the stage that reported progress last, `''` before the first                                            |
-| `stageRows`       | rows that stage processed, counted once in every pass                                                   |
+| `stageRows`       | rows that stage processed, counted once in every pass, file operations for `commit`                     |
 | `memoryBytes`     | the whole process, not the run alone: `memory_get_usage(true)` plus native backend bytes, workers added |
 | `peakMemoryBytes` | peak memory of the process, in a parallel run the highest of parent and workers                         |
 | `idleSeconds`     | seconds since the run last made progress, growing only while the run keeps checking                     |
@@ -91,27 +91,28 @@ spill.
 
 `stageRows` is not a share of `rowsRead`. A stage counts a row in every pass over it:
 
-| Stage                          | `stageRows` after N rows        |
-|--------------------------------|---------------------------------|
-| `sort` in memory               | 2 x N (in and out)              |
-| `sort` that spills             | more than 2 x N (every merge)   |
-| `sort` followed by `limit()`   | N + the limit                   |
-| `group_by`                     | N + the number of groups        |
-| `window` with `partitionBy()`  | at least 2 x N                  |
+| Stage                         | `stageRows` after N rows      |
+|-------------------------------|-------------------------------|
+| `sort` in memory              | 2 x N (in and out)            |
+| `sort` that spills            | more than 2 x N (every merge) |
+| `sort` followed by `limit()`  | N + the limit                 |
+| `group_by`                    | N + the number of groups      |
+| `window` with `partitionBy()` | at least 2 x N                |
 
 ## Stages
 
-| Stage         | Reported by                                                       |
-|---------------|-------------------------------------------------------------------|
-| `infer`       | schema inference before the first batch, `everyRow()` or a sample |
-| `read`        | reading from the source, while no other stage takes each batch    |
-| `sort`        | `sortBy()`, and `sortBy()` followed by `limit()`                  |
-| `group_by`    | `groupBy()->aggregate()`                                          |
-| `pivot`       | `groupBy()->pivot()->aggregate()`                                 |
-| `join`        | `join()`                                                          |
-| `window`      | `withColumn()` with a window function                             |
-| `repartition` | `repartition()`                                                   |
-| `parallel`    | the parent process until the first worker report                  |
+| Stage         | Reported by                                                                                 |
+|---------------|---------------------------------------------------------------------------------------------|
+| `infer`       | schema inference before the first batch, `everyRow()` or a sample                           |
+| `read`        | reading from the source, while no other stage takes each batch                              |
+| `sort`        | `sortBy()`, and `sortBy()` followed by `limit()`                                            |
+| `group_by`    | `groupBy()->aggregate()`                                                                    |
+| `pivot`       | `groupBy()->pivot()->aggregate()`                                                           |
+| `join`        | `join()`                                                                                    |
+| `window`      | `withColumn()` with a window function                                                       |
+| `repartition` | `repartition()`                                                                             |
+| `commit`      | the end of a run, while each file write ends, and each custom `Closure` loader that reports |
+| `parallel`    | the parent process until the first worker report                                            |
 
 While `sortBy()` or `groupBy()` takes every batch read, the stage is theirs; `rowsRead` shows the source.
 
@@ -150,6 +151,9 @@ while a worker hangs, and for a loop that keeps checking without producing rows.
 | `HeartbeatFailure::stop` (default) | the exception stops the run unchanged, later heartbeats are not called |
 | `HeartbeatFailure::log`            | the exception is logged as `Heartbeat failed.`, the run continues      |
 
+A `HeartbeatFailure::stop` throw while a write ends fails the write: the files it already moved stay, and the rest is
+discarded. With `overwrite()`, the files the write would replace also stay, next to the moved ones.
+
 `HeartbeatFailure::log` writes to the telemetry logger. The default telemetry records nothing, so configure a logger
 to see the failures:
 
@@ -177,6 +181,8 @@ config_builder()
 A beat can be late by the interval plus the longest call that cannot report progress:
 
 - one call of an extractor that fetches a batch, or of a transformer or loader on a batch
+- one file operation while a write ends: closing one file (a format's footer or the end of an upload), moving one file,
+  listing one directory, or removing one file
 - the in-memory sort of the rows a sort holds, measured on an M1 Max:
 
 | Rows | PHP backend | Rust backend |
