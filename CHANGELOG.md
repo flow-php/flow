@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-11-06
+## [Unreleased] - 2026-11-10
 
 ### Added
 - [#2728](https://github.com/flow-php/flow/pull/2728) - **flow-php/postgresql - ALTER EXTENSION ... SET SCHEMA in the query builder** - [@norberttech](https://github.com/norberttech)
@@ -14,6 +14,8 @@
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - Pipe operator documentation page** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [6e715f](https://github.com/flow-php/flow/commit/6e715f04fa485cf2b5a9314a4862d539046eaddd) - **chore(flow-php/flow): run CI on GitHub-hosted runners** - [@norberttech](https://github.com/norberttech)
+- [151d48](https://github.com/flow-php/flow/commit/151d48566b4f3cf68f07accd4ea06d89d5eef1a2) - **chore(flow-php/flow): read CI and nix shell credentials from 1Password** - [@norberttech](https://github.com/norberttech)
 - [#2728](https://github.com/flow-php/flow/pull/2728) - **flow-php/postgresql - schema objects store their schema and inherit it from the containing Schema** - [@norberttech](https://github.com/norberttech)
 - [#2728](https://github.com/flow-php/flow/pull/2728) - **flow-php/postgresql - extensions are declared on the Catalog, with a schema per extension** - [@norberttech](https://github.com/norberttech)
 - [#2727](https://github.com/flow-php/flow/pull/2727) - **flow-php/postgresql - unsupported condition node errors name the node kind** - [@norberttech](https://github.com/norberttech)
