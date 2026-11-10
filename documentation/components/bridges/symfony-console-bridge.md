@@ -43,6 +43,10 @@ One line, redrawn in place on every beat:
  / sort: 1,250,000 rows · 2,000,000 read · 142.0 MiB (peak 310.0 MiB) · 1 min, 23 s
 ```
 
+The values are `stageRows`, `rowsRead`, `memoryBytes`, `peakMemoryBytes` and `elapsedSeconds` of
+[`Pulse`](/documentation/components/core/heartbeat.md#pulse).
+
+- On a terminal the line is cut to the terminal width.
 - A `ConsoleOutputInterface` (the `$output` of a Symfony command) prints to its error output, stderr.
 - An output that is not a terminal gets one line per beat.
 - At `-q` it prints nothing.

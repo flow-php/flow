@@ -81,7 +81,7 @@ final class PhysicalOutlineTest extends FlowTestCase
                          │     On: id = id
                          │     Prefix: joined_
                          │     Storage: FilesystemRowsStorage
-                         │     Memory: 64 MB
+                         │     Memory: 64 MiB
                          │     Buckets: 64
                          │     Batch: 1000
                          └─ Right side: Pipeline #0

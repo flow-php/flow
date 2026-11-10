@@ -9,19 +9,19 @@ Each section links to the page with the details.
 
 Flow is built in layers. A layer uses only the layers below it. `mago guard` enforces this rule in CI.
 
-| Layer      | Namespace                | What lives there                                        | Types you meet                                                |
-|------------|--------------------------|---------------------------------------------------------|---------------------------------------------------------------|
-| DSL        | `Flow\ETL\DSL`           | the functions you call                                  | `data_frame()`, `ref()`, `from_array()`, `to_output()`        |
-| API        | `Flow\ETL\API`           | the user-facing objects                                 | `DataFrame`, `ConfigBuilder`, `Branch`, `Transactional`       |
-| Runtime    | `Flow\ETL\Runtime`       | the run: config, context, executor, telemetry           | `Config`, `FlowContext`, `Executor`                           |
-| Planning   | `Flow\ETL\Planning`      | plans, the optimizer, the physical planner, `explain()` | `LogicalPlan`, `Optimizer`, `PhysicalPlan`                    |
-| Operators  | `Flow\ETL\Operators`     | the steps a pipeline runs                               | `Transformer`, `Processor`, `HashJoin`                        |
-| IO         | `Flow\ETL\IO`            | reading, writing, schema inference, formatting          | `Extractor`, `Loader`, `FileLoader`, `SaveMode`               |
-| Functions  | `Flow\ETL\Functions`     | expressions over columns                                | `ScalarFunction`, `AggregatingFunction`, `WindowFunction`     |
-| Kernels    | `Flow\ETL\Kernels`       | the algorithms: sort, hash join, bucketing, hashing     | `ExternalSort`, `Joiner`, `HashBucketing`                     |
-| Storage    | `Flow\ETL\Storage`       | where rows wait: cache, spill files, Floe encoding      | `RowsStorage`, `FilesystemRowsStorage`                        |
-| Values     | `Flow\ETL\Values`        | the data itself                                         | `Rows`, `Schema`, `Column`, `Backend`                         |
-| Foundation | `Flow\ETL\Foundation`    | shared basics: describe/rebuild, exceptions, clock      | `Describable`, `InvalidArgumentException`                     |
+| Layer      | Namespace             | What lives there                                             | Types you meet                                            |
+|------------|-----------------------|--------------------------------------------------------------|-----------------------------------------------------------|
+| DSL        | `Flow\ETL\DSL`        | the functions you call                                       | `data_frame()`, `ref()`, `from_array()`, `to_output()`    |
+| API        | `Flow\ETL\API`        | the user-facing objects                                      | `DataFrame`, `ConfigBuilder`, `Branch`, `Transactional`   |
+| Runtime    | `Flow\ETL\Runtime`    | the run: config, context, executor, telemetry, heartbeat     | `Config`, `FlowContext`, `Executor`, `Heartbeat`, `Pulse` |
+| Planning   | `Flow\ETL\Planning`   | plans, the optimizer, the physical planner, `explain()`      | `LogicalPlan`, `Optimizer`, `PhysicalPlan`                |
+| Operators  | `Flow\ETL\Operators`  | the steps a pipeline runs                                    | `Transformer`, `Processor`, `HashJoin`                    |
+| IO         | `Flow\ETL\IO`         | reading, writing, schema inference, formatting               | `Extractor`, `Loader`, `FileLoader`, `SaveMode`           |
+| Functions  | `Flow\ETL\Functions`  | expressions over columns                                     | `ScalarFunction`, `AggregatingFunction`, `WindowFunction` |
+| Kernels    | `Flow\ETL\Kernels`    | the algorithms: sort, hash join, bucketing, hashing          | `ExternalSort`, `Joiner`, `HashBucketing`                 |
+| Storage    | `Flow\ETL\Storage`    | where rows wait: cache, spill files, Floe encoding           | `RowsStorage`, `FilesystemRowsStorage`                    |
+| Values     | `Flow\ETL\Values`     | the data itself                                              | `Rows`, `Schema`, `Column`, `Backend`                     |
+| Foundation | `Flow\ETL\Foundation` | shared basics: describe/rebuild, exceptions, clock, progress | `Describable`, `InvalidArgumentException`, `Progress`     |
 
 `Flow\ETL\Flow` is the one class at the root. It is the object `data_frame()` returns.
 
@@ -133,7 +133,7 @@ Physical plan
             Processor: GroupByAggregationProcessor
                Group by: country
                Aggregations: Sum
-               Memory: 1024 MB
+               Memory: 1024 MiB
                Storage: FilesystemRowsStorage
                Batch: 1000
 ```

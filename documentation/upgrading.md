@@ -56,6 +56,7 @@ Upgrading from older versions: [0.41.x to 0.43.x](/documentation/upgrading-0.41-
 | `Unit::fromString('10TB')`, `'1.5G'` or `'M'` return a value                 | throw `InvalidArgumentException`                                               |
 | `hash_join()` broadcast limit defaults to 10 000 000 bytes                   | 10 485 760 bytes                                                               |
 | `MemoryLimit::default()` is 1 000 000 000 bytes for a `memory_limit` of `-1` | 1 073 741 824 bytes                                                            |
+| `explain()` prints `Memory: 64 MB`                                           | `Memory: 64 MiB`, the same number                                              |
 
 ### 5) `flow-php/etl` - `FrameAccumulating` computes every frame of a partition in one call
 
@@ -77,7 +78,7 @@ and returns one value per pair.
 | `new Rebuild()`                                                                                    | `new Rebuild(ProgressStages $progress = new VoidProgress())`                                                           |
 | -                                                                                                  | `Rebuild::progress(string $stage): Progress`                                                                           |
 
-A custom window function calls `$progress->advanced($rows)` at least once per partition, or ignores it.
+A custom window function can call `$progress->advanced($rows)` once per partition. The call is optional.
 
 ### 7) `flow-php/cli` - `--config` returns a `ConfigBuilder`
 
@@ -120,12 +121,13 @@ and passes it to `SchemaInferrer::infer()`. A custom `Sniffer` or `CSVOpenSource
 
 | Before                                                                                                      | After                                                                                                                                           |
 |-------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
-| `memoryLimit()` compared with the process memory                                                            | compared with the memory the operation added since its first input batch; each live operation gets its own limit                                |
+| `memoryLimit()` compared with the process memory                                                            | compared with the memory the operation itself added; each live operation gets its own limit                                                     |
 | `FLOW_MAX_MEMORY`: the default limit, compared with the process memory                                      | the default per-operation limit and, with a finite `memory_limit`, the process cap; a value above `memory_limit` throws                         |
 | -                                                                                                           | with a finite `memory_limit`, the process over 70% of it (or `FLOW_MAX_MEMORY`) also spills, after the operation added `min(128 MiB, cap / 16)` |
 | `MemoryBudget::exceeded()` / `exceededWith()` compare the process memory with the limit                     | compare the memory added since the budget started or since `released()` with the limit, and the process with the cap                            |
 | `MemoryBudget::released()` calls `gc_mem_caches()`                                                          | only moves the baseline                                                                                                                         |
 | `Flow\ETL\Runtime\MemoryLimit`                                                                              | `Flow\ETL\Values\Memory\MemoryLimit`, plus `processCap(): ?Unit`                                                                                |
+| `MemoryLimit::default()` takes any `FLOW_MAX_MEMORY`                                                        | throws `InvalidArgumentException` for a value above a finite `memory_limit`, so the config build fails                                          |
 | `new MemoryBudget(Backend, Unit)`                                                                           | `new MemoryBudget(Backend, Unit $limit, ?Unit $processCap)` or `MemoryBudget::of(Backend, Unit)`                                                |
 | `BucketingConfig::spilling(Backend)`                                                                        | `spilling(Backend, MemoryBudget)`                                                                                                               |
 | `new SpillingRowsStorage(RowsStorage, Unit, Backend, BatchSize)`, `::$memoryLimit`                          | `(RowsStorage, MemoryBudget, Backend, BatchSize)`, no `$memoryLimit`                                                                            |
@@ -134,6 +136,14 @@ and passes it to `SchemaInferrer::infer()`. A custom `Sniffer` or `CSVOpenSource
 | `ExternalSort::sort(Generator, Backend, ?int)`                                                              | `sort(Generator, Backend, MemoryBudget, ?int)`                                                                                                  |
 | -                                                                                                           | with a finite `memory_limit`, a sort whose working memory would pass the cap sorts and spills in runs that fit                                  |
 | `Backend` implementations                                                                                   | implement `sortWorkingBytes(Rows $rows, array $columns): int`                                                                                   |
+
+### 11) `flow-php/etl` - a failed run ends its sources first
+
+| Before                                                                 | After                                              |
+|------------------------------------------------------------------------|----------------------------------------------------|
+| a failed run destroyed the generator of a source                       | the failure is thrown at the `yield` of the source |
+| a `finally` around the `yield` ran late, after the caller's `catch`    | it runs before the failure gets to the caller      |
+| a `catch (Throwable)` around the `yield` saw only the source's failure | it also gets the failures of later steps           |
 
 ---
 

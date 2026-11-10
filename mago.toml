@@ -179,7 +179,7 @@ namespace = "Flow\\ETL\\Foundation\\"
 permit = [
     "@self", "@native", "Flow\\Types\\**", "Flow\\Filesystem\\**", "Brick\\Math\\**", "Psr\\Clock\\**",
 ]
-reason = "Layer 0 foundation: math, clocks, arrays, random values, similar names, the exceptions, describe and rebuild, the telemetry attribute contract. It uses no other ETL layer."
+reason = "Layer 0 foundation: math, clocks, arrays, random values, similar names, the exceptions, describe and rebuild, the telemetry attribute contract, the progress contract (Progress, ProgressStages, VoidProgress). It uses no other ETL layer."
 
 [[guard.perimeter.rules]]
 namespace = "Flow\\ETL\\Values\\"
@@ -246,7 +246,7 @@ permit = [
     "Flow\\ETL\\Functions\\**", "Flow\\ETL\\Kernels\\**", "Flow\\ETL\\Storage\\**", "Flow\\ETL\\Values\\**",
     "Flow\\ETL\\Foundation\\**", "Flow\\Types\\**", "Flow\\Filesystem\\**", "Flow\\Telemetry\\**", "Psr\\Clock\\**",
 ]
-reason = "Layer 8 runtime: the executor, step runner, sink runs, the context, the config, error handling, run metrics, telemetry and the launcher seam. They run the physical plan and use planning and every lower layer."
+reason = "Layer 8 runtime: the executor, step runner, sink runs, the context, the config, error handling, run metrics, telemetry, the heartbeat (Heartbeat, Pulse) and the launcher seam. They run the physical plan and use planning and every lower layer."
 
 [[guard.perimeter.restrictions]]
 dependency = "Flow\\ETL\\DSL\\**"

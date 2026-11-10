@@ -13,9 +13,12 @@ use Symfony\Component\Console\Helper\ProgressIndicator;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\ConsoleSectionOutput;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Terminal;
 
 use function implode;
 use function intdiv;
+use function max;
+use function mb_strimwidth;
 use function number_format;
 use function sprintf;
 
@@ -34,9 +37,9 @@ final class ConsoleHeartbeat implements Heartbeat
 
     public function beat(Pulse $pulse): void
     {
-        $message = sprintf(
+        $line = sprintf(
             '%s: %s %s · %s read · %s (peak %s) · %s',
-            OutputFormatter::escape($pulse->stage === '' ? 'starting' : $pulse->stage),
+            $pulse->stage === '' ? 'starting' : $pulse->stage,
             number_format($pulse->stageRows),
             $pulse->stageRows === 1 ? 'row' : 'rows',
             number_format($pulse->rowsRead),
@@ -44,9 +47,14 @@ final class ConsoleHeartbeat implements Heartbeat
             Helper::formatMemory($pulse->peakMemoryBytes),
             self::elapsed($pulse->elapsedSeconds),
         );
+        $message = OutputFormatter::escape(
+            $this->output->isDecorated() && !$this->output instanceof ConsoleSectionOutput
+                // a line that wraps leaves its first row behind on every redraw; 4 = the indicator and the last column
+                ? mb_strimwidth($line, 0, max(1, (new Terminal())->getWidth() - 4))
+                : $line,
+        );
 
-        // beat 1 is a new run: a new indicator, so a second run of the same config never calls start() twice
-        if ($pulse->beat === 1 || $this->indicator === null) {
+        if ($this->indicator === null) {
             $this->indicator = new ProgressIndicator(
                 $this->output,
                 $this->output->isDecorated() ? 'normal' : 'normal_no_ansi',

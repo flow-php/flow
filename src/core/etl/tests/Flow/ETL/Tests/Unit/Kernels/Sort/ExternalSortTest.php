@@ -206,6 +206,47 @@ final class ExternalSortTest extends FlowTestCase
         ));
     }
 
+    public function test_a_sort_under_the_floor_stays_in_memory_while_the_process_is_over_the_cap(): void
+    {
+        $storage = new SpyRowsStorage(new MemoryRowsStorage());
+        $cap = Unit::fromGb(10);
+        $backend = new ReportedMemoryBackend($cap->inBytes() - memory_get_usage(false) + Unit::fromMb(100)->inBytes());
+
+        static::assertSame(
+            [1, 2, 3],
+            IdRows::ids(ExternalSortMother::with([ref('id')->asc()], $storage)->sort(
+                IdRows::batches([3], [1], [2]),
+                $backend,
+                new MemoryBudget($backend, Unit::fromGb(1), $cap),
+            )),
+        );
+        static::assertSame([], $storage->appendedRows());
+    }
+
+    public function test_a_sort_over_the_floor_spills_runs_of_the_floor_while_the_process_is_over_the_cap(): void
+    {
+        $storage = new SpyRowsStorage(new MemoryRowsStorage());
+        $cap = Unit::fromGb(10);
+        // the floor is 128 MiB and each batch needs 50 MB to sort: two batches fit in a run
+        $backend = new ReportedMemoryBackend(
+            $cap->inBytes() - memory_get_usage(false) + Unit::fromMb(100)->inBytes(),
+            sortWorkingBytes: Unit::fromMb(50)->inBytes(),
+        );
+
+        static::assertSame(
+            [1, 2, 3, 4, 5, 6],
+            IdRows::ids(ExternalSortMother::with([ref('id')->asc()], $storage)->sort(
+                IdRows::batches([6], [3], [5], [1], [4], [2]),
+                $backend,
+                new MemoryBudget($backend, Unit::fromGb(1), $cap),
+            )),
+        );
+        static::assertCount(3, array_filter(
+            $storage->readBucketIds(),
+            static fn(string $id): bool => str_starts_with($id, 'sort-') && !str_starts_with($id, 'sort-merge-'),
+        ));
+    }
+
     public function test_a_spill_whose_sort_would_cross_the_cap_writes_runs_that_fit(): void
     {
         $storage = new SpyRowsStorage(new MemoryRowsStorage());

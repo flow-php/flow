@@ -71,30 +71,7 @@ final readonly class StepRunner
             $step = $this->writes->step($step, $context->errorHandler(), $context);
 
             if ($step instanceof Processor || $step instanceof JoinStep) {
-                // a fresh flag per boundary: the generators an earlier boundary built keep theirs
-                unset($upstreamStarted);
-                $upstreamStarted = false;
-                $upstream = $this->started($this->run($run, $input, $context, $source), $upstreamStarted);
-                $input = $this->unwinding(
-                    $step instanceof JoinStep
-                        ? $this->telemetry->operator(
-                            $step->join::class,
-                            $step->join->join(
-                                $upstream,
-                                $context->config->executor()->executePlan($step->right, $context, $counts),
-                                $context->backend(),
-                            ),
-                            $context,
-                        )
-                        : $this->telemetry->operator(
-                            $step::class,
-                            $step->process($upstream, $context->backend()),
-                            $context,
-                        ),
-                    $upstream,
-                    $upstreamStarted,
-                    $context,
-                );
+                $input = $this->boundary($step, $run, $input, $context, $source, $counts);
                 $source = null;
                 $run = [];
 
@@ -434,10 +411,11 @@ final readonly class StepRunner
 
     /**
      * @template T
+     * @template TSend
      *
-     * @param Generator<int, T, null|Signal, void> $batches
+     * @param Generator<int, T, TSend, mixed> $batches
      *
-     * @return Generator<int, T, null|Signal, void>
+     * @return Generator<int, T, TSend, void>
      */
     public function started(Generator $batches, bool &$started): Generator
     {
@@ -465,16 +443,65 @@ final readonly class StepRunner
     }
 
     /**
+     * @param list<Loader|NestedLoader|Transformer> $run
+     * @param Generator<CorruptedRecordException|Rows> $input
+     *
+     * @return Generator<int, Rows, null|Signal, void>
+     */
+    private function boundary(
+        Processor|JoinStep $step,
+        array $run,
+        Generator $input,
+        FlowContext $context,
+        Extractor|Reader|null $source,
+        ?RunCounts $counts,
+    ): Generator {
+        $upstreamStarted = false;
+        $rightStarted = false;
+        $upstream = $this->started($this->run($run, $input, $context, $source), $upstreamStarted);
+
+        if (!$step instanceof JoinStep) {
+            return $this->unwinding(
+                $this->telemetry->operator($step::class, $step->process($upstream, $context->backend()), $context),
+                $context,
+                $upstream,
+                $upstreamStarted,
+            );
+        }
+
+        $right = $this->started(
+            $context->config->executor()->executePlan($step->right, $context, $counts),
+            $rightStarted,
+        );
+
+        return $this->unwinding(
+            $this->telemetry->operator(
+                $step->join::class,
+                $step->join->join($upstream, $right, $context->backend()),
+                $context,
+            ),
+            $context,
+            $upstream,
+            $upstreamStarted,
+            $right,
+            $rightStarted,
+        );
+    }
+
+    /**
      * @param Generator<Rows> $output what a processor or join yields
      * @param Generator<int, Rows, null|Signal, void> $input what it reads
+     * @param null|Generator<int, Rows, mixed, void> $right what a join reads as its right side
      *
      * @return Generator<int, Rows, null|Signal, void>
      */
     private function unwinding(
         Generator $output,
+        FlowContext $context,
         Generator $input,
         bool &$inputStarted,
-        FlowContext $context,
+        ?Generator $right = null,
+        bool &$rightStarted = false,
     ): Generator {
         try {
             // send() resumes like next() and forwards the consumer's stop to the operator
@@ -489,6 +516,10 @@ final readonly class StepRunner
             // an operator that failed on its own, or that reads with foreach, leaves its input suspended
             if ($inputStarted) {
                 $this->unwind($input, $failure, $context);
+            }
+
+            if ($right !== null && $rightStarted) {
+                $this->unwind($right, $failure, $context);
             }
 
             throw $failure;

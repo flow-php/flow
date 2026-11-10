@@ -35,7 +35,7 @@ final class HashJoinBuilder implements JoinAlgorithmBuilder
     }
 
     /**
-     * The right side's size under which a join read by workers broadcasts it to every task; default 10 MB.
+     * The right side's size under which a join read by workers broadcasts it to every task; default 10 MiB.
      */
     public function broadcastLimit(Unit $broadcastLimit): self
     {

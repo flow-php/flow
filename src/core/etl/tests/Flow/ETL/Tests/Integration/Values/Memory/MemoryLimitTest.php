@@ -39,6 +39,39 @@ final class MemoryLimitTest extends FlowIntegrationTestCase
         }
     }
 
+    public function test_the_environment_is_the_default_when_the_memory_limit_is_unlimited(): void
+    {
+        $memoryLimit = (string) ini_get('memory_limit');
+        ini_set('memory_limit', '-1');
+        putenv(MemoryLimit::ENV . '=64M');
+
+        try {
+            static::assertSame(Unit::fromMb(64)->inBytes(), MemoryLimit::default()->inBytes());
+        } finally {
+            putenv(MemoryLimit::ENV);
+            ini_set('memory_limit', $memoryLimit);
+        }
+    }
+
+    public function test_default_refuses_an_environment_above_the_memory_limit(): void
+    {
+        $memoryLimit = (string) ini_get('memory_limit');
+        ini_set('memory_limit', '1G');
+        putenv(MemoryLimit::ENV . '=2G');
+
+        try {
+            $this->expectExceptionObject(new InvalidArgumentException(
+                'FLOW_MAX_MEMORY=2G is above memory_limit=1G, so the process cap could never be reached; '
+                . 'lower FLOW_MAX_MEMORY or raise memory_limit.',
+            ));
+
+            MemoryLimit::default();
+        } finally {
+            putenv(MemoryLimit::ENV);
+            ini_set('memory_limit', $memoryLimit);
+        }
+    }
+
     public function test_the_environment_wins_over_the_memory_limit(): void
     {
         $memoryLimit = (string) ini_get('memory_limit');

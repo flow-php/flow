@@ -297,7 +297,7 @@ final readonly class ExternalSort
     /**
      * @param list<Rows> $batches
      *
-     * @return int the leading batches whose sort stays under the process cap, at least one so every run progresses
+     * @return int the leading batches whose sort stays under the process cap, or the floor once over it, at least one
      */
     public function fitting(array $batches, Backend $backend, MemoryBudget $budget): int
     {
@@ -306,7 +306,11 @@ final readonly class ExternalSort
         foreach ($batches as $count => $batch) {
             $bytes += $backend->sortWorkingBytes($batch, $this->columns);
 
-            if ($count > 0 && $budget->crossesCapWith($bytes)) {
+            if (
+                $count > 0
+                && $budget->crossesCapWith($bytes)
+                && ($bytes > $budget->floor() || !$budget->crossesCapWith(0))
+            ) {
                 return $count;
             }
         }

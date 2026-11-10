@@ -40,6 +40,8 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function ini_get;
+use function ini_set;
 use function iterator_to_array;
 use function serialize;
 
@@ -121,37 +123,44 @@ final class TopNProcessorTest extends FlowTestCase
 
     public function test_fallback_sort_counts_the_rows_top_n_already_holds(): void
     {
-        $storage = new SpyRowsStorage(new MemoryRowsStorage());
-        $backend = new ReportedMemoryBackend(0);
-        $schema = schema(int_schema('score'), str_schema('name'));
+        $memoryLimit = (string) ini_get('memory_limit');
+        ini_set('memory_limit', '-1');
 
-        static::assertSame(
-            [['score' => 0, 'name' => 'z'], ['score' => 1, 'name' => 'a']],
-            ScoredRows::merged((new TopNProcessor(
-                [ref('score')->asc()],
-                2,
-                ExternalSortMother::config($storage, Unit::fromBytes(1_000_000_000)),
-                new NativePHPRandomValueGenerator(),
-            ))->process(
-                (static function () use ($backend, $schema): Generator {
-                    // every batch is held for the rest of the run
-                    foreach ([[[5, 'e'], [4, 'd']], [[3, 'c'], [2, 'b']], [[1, 'a'], [0, 'z']]] as $batch) {
-                        $backend->reported += 600_000_000;
+        try {
+            $storage = new SpyRowsStorage(new MemoryRowsStorage());
+            $backend = new ReportedMemoryBackend(0);
+            $schema = schema(int_schema('score'), str_schema('name'));
 
-                        yield array_to_rows(array_map(static fn(array $row): array => [
-                            'score' => $row[0],
-                            'name' => $row[1],
-                        ], $batch), $schema);
-                    }
-                })(),
-                $backend,
-            )),
-        );
-        static::assertSame(
-            [2, 3],
-            array_values($storage->appendedRows())[0][0]->reduceToArray('score'),
-            'the kept rows are the first run: the sort already counts the memory top-n grew',
-        );
+            static::assertSame(
+                [['score' => 0, 'name' => 'z'], ['score' => 1, 'name' => 'a']],
+                ScoredRows::merged((new TopNProcessor(
+                    [ref('score')->asc()],
+                    2,
+                    ExternalSortMother::config($storage, Unit::fromBytes(1_000_000_000)),
+                    new NativePHPRandomValueGenerator(),
+                ))->process(
+                    (static function () use ($backend, $schema): Generator {
+                        // every batch is held for the rest of the run
+                        foreach ([[[5, 'e'], [4, 'd']], [[3, 'c'], [2, 'b']], [[1, 'a'], [0, 'z']]] as $batch) {
+                            $backend->reported += 600_000_000;
+
+                            yield array_to_rows(array_map(static fn(array $row): array => [
+                                'score' => $row[0],
+                                'name' => $row[1],
+                            ], $batch), $schema);
+                        }
+                    })(),
+                    $backend,
+                )),
+            );
+            static::assertSame(
+                [2, 3],
+                array_values($storage->appendedRows())[0][0]->reduceToArray('score'),
+                'the kept rows are the first run: the sort already counts the memory top-n grew',
+            );
+        } finally {
+            ini_set('memory_limit', $memoryLimit);
+        }
     }
 
     public function test_a_fallback_on_the_last_batch_emits_the_kept_rows(): void

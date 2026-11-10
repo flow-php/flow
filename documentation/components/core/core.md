@@ -206,7 +206,7 @@ Physical plan
          │     On: id = id
          │     Prefix: joined_
          │     Storage: FilesystemRowsStorage
-         │     Memory: 1024 MB
+         │     Memory: 1024 MiB
          │     Buckets: 64
          │     Batch: 1000
          └─ Right side: Pipeline #0
@@ -214,10 +214,8 @@ Physical plan
                   Statistics: rows exact 1 · size unknown
 ```
 
-`Memory: 1024 MB` is the default limit under `memory_limit = -1`: the memory the join may add after it starts. If
-`memory_limit` has a value, the limit is 70% of it, or `FLOW_MAX_MEMORY`, and a process over that cap also spills
-after the operation added `min(128 MiB, cap / 16)`. With `memory_limit = -1` there is no process cap, so k operations
-running at once can use k x the limit: set a finite `memory_limit`, or a lower `memoryLimit()`, to bound it.
+`Memory: 1024 MiB` is the default limit under `memory_limit = -1`: the memory the join may add after it starts.
+[Memory limit](/documentation/components/core/sort.md#memory-limit) lists the other defaults and the process cap.
 
 The planner plans a joined frame separately, so its pipelines have their own numbers. `Right side:` tells which
 plan they belong to. Before it reads a row, every source lists what it declares about itself. The values are

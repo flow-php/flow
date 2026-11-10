@@ -334,7 +334,7 @@ The output has `path`, a `partitions` map, and one string column for each partit
 ## Repartitioning
 
 `repartition()` moves rows in the stream so that all rows with the same values in the given columns are in one
-batch. While the process stays under the memory limit, it groups the rows in memory. Past the limit, it first
+batch. While it stays under its memory limit, it groups the rows in memory. Past the limit, it first
 partitions the input into buckets. You configure this with
 `config_builder()->repartition(hash_repartition()->memoryLimit(...))`. It does not write directories. For
 directories, use `partitionBy()` on the loader.

@@ -16,6 +16,7 @@ use Symfony\Component\Console\Output\StreamOutput;
 
 use function Flow\Bridge\Symfony\Console\DSL\console_heartbeat;
 use function fopen;
+use function putenv;
 use function rewind;
 use function stream_get_contents;
 use function substr_count;
@@ -88,7 +89,14 @@ final class ConsoleHeartbeatTest extends FlowTestCase
         $stream = fopen('php://memory', 'w+b');
         $output = new StreamOutput($stream, OutputInterface::VERBOSITY_NORMAL, true);
         $heartbeat = console_heartbeat($output);
-        $heartbeat->beat(PulseMother::pulse());
+        putenv('COLUMNS=120');
+
+        try {
+            $heartbeat->beat(PulseMother::pulse());
+        } finally {
+            putenv('COLUMNS');
+        }
+
         $heartbeat->finish();
         $output->write('command line');
 
@@ -146,15 +154,79 @@ final class ConsoleHeartbeatTest extends FlowTestCase
     {
         $stream = fopen('php://memory', 'w+b');
         $heartbeat = console_heartbeat(new StreamOutput($stream, OutputInterface::VERBOSITY_NORMAL, true));
+        putenv('COLUMNS=120');
 
-        $heartbeat->beat(PulseMother::pulse(beat: 1));
-        $heartbeat->beat(PulseMother::pulse(beat: 2, stageRows: 1_500_000));
+        try {
+            $heartbeat->beat(PulseMother::pulse(beat: 1));
+            $heartbeat->beat(PulseMother::pulse(beat: 2, stageRows: 1_500_000));
+        } finally {
+            putenv('COLUMNS');
+        }
 
         rewind($stream);
         static::assertStringStartsWith(
             "\x0D\x1B[2K - sort: 1,250,000 rows · 2,000,000 read · 142.0 MiB (peak 310.0 MiB) · 1 min, 23 s"
             . "\x0D\x1B[2K - sort: 1,500,000 rows · 2,000,000 read · 142.0 MiB (peak 310.0 MiB) · 1 min, 23 s",
             (string) stream_get_contents($stream),
+        );
+    }
+
+    public function test_a_terminal_line_is_cut_to_the_terminal_width(): void
+    {
+        $stream = fopen('php://memory', 'w+b');
+        putenv('COLUMNS=60');
+
+        try {
+            console_heartbeat(new StreamOutput($stream, OutputInterface::VERBOSITY_NORMAL, true))
+                ->beat(PulseMother::pulse());
+        } finally {
+            putenv('COLUMNS');
+        }
+
+        rewind($stream);
+        static::assertSame(
+            "\x0D\x1B[2K - sort: 1,250,000 rows · 2,000,000 read · 142.0 MiB (peak ",
+            stream_get_contents($stream),
+        );
+    }
+
+    public function test_a_terminal_narrower_than_the_indicator_keeps_one_column(): void
+    {
+        $stream = fopen('php://memory', 'w+b');
+        putenv('COLUMNS=2');
+
+        try {
+            console_heartbeat(new StreamOutput($stream, OutputInterface::VERBOSITY_NORMAL, true))
+                ->beat(PulseMother::pulse());
+        } finally {
+            putenv('COLUMNS');
+        }
+
+        rewind($stream);
+        static::assertSame("\x0D\x1B[2K - s", stream_get_contents($stream));
+    }
+
+    public function test_a_section_line_is_not_cut(): void
+    {
+        $sections = [];
+        $output = new ConsoleSectionOutput(
+            fopen('php://memory', 'w+b'),
+            $sections,
+            OutputInterface::VERBOSITY_NORMAL,
+            true,
+            new OutputFormatter(),
+        );
+        putenv('COLUMNS=60');
+
+        try {
+            console_heartbeat($output)->beat(PulseMother::pulse());
+        } finally {
+            putenv('COLUMNS');
+        }
+
+        static::assertSame(
+            " - sort: 1,250,000 rows · 2,000,000 read · 142.0 MiB (peak 310.0 MiB) · 1 min, 23 s\n",
+            $output->getContent(),
         );
     }
 
@@ -165,23 +237,6 @@ final class ConsoleHeartbeatTest extends FlowTestCase
         console_heartbeat($output)->beat(PulseMother::pulse(stage: ''));
 
         static::assertStringStartsWith(' starting: 1,250,000 rows · ', $output->fetch());
-    }
-
-    public function test_beat_one_starts_a_new_indicator(): void
-    {
-        $output = new BufferedOutput();
-        $heartbeat = console_heartbeat($output);
-
-        $heartbeat->beat(PulseMother::pulse(beat: 1));
-        $heartbeat->beat(PulseMother::pulse(beat: 2, stageRows: 1_500_000));
-        $heartbeat->beat(PulseMother::pulse(beat: 1, stage: 'read', stageRows: 10));
-
-        static::assertSame(
-            " sort: 1,250,000 rows · 2,000,000 read · 142.0 MiB (peak 310.0 MiB) · 1 min, 23 s\n"
-            . " sort: 1,500,000 rows · 2,000,000 read · 142.0 MiB (peak 310.0 MiB) · 1 min, 23 s\n"
-            . " read: 10 rows · 2,000,000 read · 142.0 MiB (peak 310.0 MiB) · 1 min, 23 s\n",
-            $output->fetch(),
-        );
     }
 
     #[TestWith([0, '0 s'])]
@@ -238,7 +293,13 @@ final class ConsoleHeartbeatTest extends FlowTestCase
     {
         $stream = fopen('php://memory', 'w+b');
         $heartbeat = console_heartbeat(new StreamOutput($stream, OutputInterface::VERBOSITY_NORMAL, true));
-        $heartbeat->beat(PulseMother::pulse());
+        putenv('COLUMNS=120');
+
+        try {
+            $heartbeat->beat(PulseMother::pulse());
+        } finally {
+            putenv('COLUMNS');
+        }
 
         $heartbeat->finish();
 

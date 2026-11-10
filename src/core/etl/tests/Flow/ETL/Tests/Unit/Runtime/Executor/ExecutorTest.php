@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Runtime\Executor;
 
 use ArrayObject;
+use Flow\ETL\Foundation\Exception\EvaluationException;
 use Flow\ETL\Foundation\Exception\InvalidLogicException;
 use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Foundation\Exception\SchemaNotDerivableException;
@@ -67,6 +68,7 @@ use Flow\ETL\Tests\Mother\RowsMother;
 use Flow\ETL\Values\BatchSize;
 use Flow\ETL\Values\Column\PhpBackend;
 use Flow\ETL\Values\Column\RustBackend;
+use Flow\ETL\Values\Memory\Unit;
 use Flow\ETL\Values\Rows;
 use Flow\Filesystem\Tests\Double\RejectingFilter;
 use Flow\Telemetry\Logger\Severity;
@@ -90,6 +92,7 @@ use function Flow\ETL\DSL\count;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\hash_join;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\lit;
@@ -97,6 +100,7 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\to_array;
 use function Flow\ETL\DSL\to_branch;
 use function Flow\Filesystem\DSL\memory_filesystem;
@@ -1368,6 +1372,34 @@ final class ExecutorTest extends FlowTestCase
         } catch (RuntimeException $e) {
             static::assertSame($step->thrown, $e);
             static::assertSame([], $left->limits);
+            static::assertSame(1, $right->cleanups);
+        } finally {
+            ini_set('zend.exception_ignore_args', (string) $previous);
+        }
+    }
+
+    public function test_a_join_that_fails_while_it_builds_ends_the_right_source(): void
+    {
+        $previous = ini_set('zend.exception_ignore_args', '0');
+        $left = new RecordingSplittableExtractor(schema(int_schema('id')), [RowsMother::sequentialIds(1)]);
+        $right = new RecordingSplittableExtractor(schema(str_schema('id')), [
+            array_to_rows([['id' => 'not a number']], schema(str_schema('id'))),
+            array_to_rows([['id' => '2']], schema(str_schema('id'))),
+        ]);
+
+        try {
+            (new Executor())->fetch(
+                NodeMother::plan(NodeMother::join(
+                    NodeMother::read($left),
+                    NodeMother::joinRight(NodeMother::plan(NodeMother::read($right))),
+                )),
+                NodeMother::context(config_builder()->join(hash_join()->memoryLimit(Unit::fromBytes(1)))->build()),
+            );
+
+            static::fail('Expected the join build failure to surface.');
+        } catch (EvaluationException $e) {
+            static::assertStringStartsWith('Column "id" value \'not a number\' cannot be cast', $e->getMessage());
+            static::assertSame([null], $right->signals);
             static::assertSame(1, $right->cleanups);
         } finally {
             ini_set('zend.exception_ignore_args', (string) $previous);

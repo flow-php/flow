@@ -7,7 +7,8 @@
 ## Register a heartbeat
 
 A heartbeat is a callback. Flow calls it every N seconds while a run is busy, also during a sort, group by, pivot,
-join or window function.
+join or window function. The start and the end of a run call no heartbeat, so a run shorter than `everySeconds` never
+calls it.
 
 ```php
 <?php
@@ -79,11 +80,14 @@ df(config_builder()
 | `beat`            | 1, 2, 3... counted per heartbeat                                                                        |
 | `elapsedSeconds`  | seconds since the run started, rounded down                                                             |
 | `rowsRead`        | rows read from the source                                                                               |
-| `stage`           | the stage that reported progress last                                                                   |
+| `stage`           | the stage that reported progress last, `''` before the first                                            |
 | `stageRows`       | rows that stage processed, counted once in every pass                                                   |
 | `memoryBytes`     | the whole process, not the run alone: `memory_get_usage(true)` plus native backend bytes, workers added |
 | `peakMemoryBytes` | peak memory of the process, in a parallel run the highest of parent and workers                         |
 | `idleSeconds`     | seconds since the run last made progress, growing only while the run keeps checking                     |
+
+`memoryBytes` is allocated memory. A memory limit compares live memory, so `memoryBytes` can stay above it after a
+spill.
 
 `stageRows` is not a share of `rowsRead`. A stage counts a row in every pass over it:
 
@@ -165,7 +169,7 @@ $telemetry->registerShutdownFunction();
 
 config_builder()
     ->withTelemetry($telemetry)
-    ->heartbeat(new ConsoleProgress(), everySeconds: 1, onFailure: HeartbeatFailure::log);
+    ->heartbeat(new ExtendLease($lease), everySeconds: 120, onFailure: HeartbeatFailure::log);
 ```
 
 ## Accuracy
@@ -184,5 +188,5 @@ In a parallel run the callback runs in the parent process. The pulse adds the ro
 report, at most once per second. The stage and stage rows of the workers' latest report come through too.
 
 `rowsRead` can go down between two pulses in a parallel join. When the right side of a broadcast join grows past
-`broadcastLimit`, the attempt is dropped, and its rows leave `rowsRead` because they are read again. A progress bar on
-`rowsRead` can step back once. The final value equals the rows read from the sources.
+`broadcastLimit`, or the parallel launch is refused after the right side was read, the rows read so far leave
+`rowsRead` because they are read again. A progress bar on `rowsRead` can step back once.

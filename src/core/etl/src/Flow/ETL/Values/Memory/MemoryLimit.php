@@ -12,9 +12,6 @@ use function is_string;
 use function sprintf;
 use function str_starts_with;
 
-/**
- * Operation default limit and the process cap; read in the running process.
- */
 final readonly class MemoryLimit
 {
     public const int PERCENTAGE_OF_MEMORY_LIMIT = 70;
@@ -23,21 +20,22 @@ final readonly class MemoryLimit
 
     public const int WITHOUT_MEMORY_LIMIT_GB = 1;
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public static function default(): Unit
     {
+        $cap = self::processCap();
+
+        if ($cap !== null) {
+            return $cap;
+        }
+
         $value = getenv(self::ENV);
 
-        if (is_string($value) && $value !== '') {
-            return Unit::fromString($value);
-        }
-
-        $limit = ini_get('memory_limit');
-
-        if ($limit === false || str_starts_with($limit, '-')) {
-            return Unit::fromGb(self::WITHOUT_MEMORY_LIMIT_GB);
-        }
-
-        return Unit::fromString($limit)->percentage(self::PERCENTAGE_OF_MEMORY_LIMIT);
+        return is_string($value) && $value !== ''
+            ? Unit::fromString($value)
+            : Unit::fromGb(self::WITHOUT_MEMORY_LIMIT_GB);
     }
 
     /**

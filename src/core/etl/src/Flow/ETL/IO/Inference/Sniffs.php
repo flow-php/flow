@@ -9,7 +9,7 @@ use Flow\ETL\Foundation\Progress;
 interface Sniffs
 {
     /**
-     * Whole-unit sniffs for everyRow(): units 0..$units-1, every unit sniffed with budget -1, Samples in unit order.
+     * Whole-unit sniffs for everyRow(): units 0..$units-1, each sniffed with a null budget, Samples in unit order.
      *
      * @param int<0, max> $units
      *

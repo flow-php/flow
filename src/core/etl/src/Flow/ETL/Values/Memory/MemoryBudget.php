@@ -30,9 +30,6 @@ final class MemoryBudget
         $this->baseline = $this->consumption->capture()->inBytes();
     }
 
-    /**
-     * The operation's budget; started once its first input batch arrived, growth from there is the operation's own.
-     */
     public static function of(Backend $backend, Unit $limit): self
     {
         return new self($backend, $limit, MemoryLimit::processCap());

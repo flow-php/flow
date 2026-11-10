@@ -119,7 +119,7 @@ final class StepDetailsTest extends FlowTestCase
             $details->settings(new MemorySortProcessor([ref('id')->asc(), ref('name')->desc()])),
         );
         static::assertSame(
-            ['Sort by: id desc', 'Memory: 64 MB', 'Spill: MemoryRowsStorage', 'Merge: 4 ways', 'Batch: 50'],
+            ['Sort by: id desc', 'Memory: 64 MiB', 'Spill: MemoryRowsStorage', 'Merge: 4 ways', 'Batch: 50'],
             $details->settings(
                 new MergeSortProcessor(
                     ExternalSortMother::config(new MemoryRowsStorage(), Unit::fromMb(64), 4, 50),
@@ -146,7 +146,7 @@ final class StepDetailsTest extends FlowTestCase
     public function test_a_group_by_lists_its_columns_and_aggregations(): void
     {
         static::assertSame(
-            ['Group by: name', 'Aggregations: Sum', 'Memory: 64 MB', 'Storage: MemoryRowsStorage', 'Batch: 25'],
+            ['Group by: name', 'Aggregations: Sum', 'Memory: 64 MiB', 'Storage: MemoryRowsStorage', 'Batch: 25'],
             (new StepDetails())->settings(GroupByAggregationProcessorMother::with(
                 new GroupBy(refs(ref('name')), new Aggregators(sum(ref('id')))),
                 new MemoryRowsStorage(),
@@ -184,7 +184,7 @@ final class StepDetailsTest extends FlowTestCase
     public function test_a_repartition_lists_its_columns_and_storage(): void
     {
         static::assertSame(
-            ['By: id', 'Memory: 64 MB', 'Storage: MemoryRowsStorage'],
+            ['By: id', 'Memory: 64 MiB', 'Storage: MemoryRowsStorage'],
             (new StepDetails())->settings(RepartitionProcessorMother::with(
                 refs(ref('id')),
                 new MemoryRowsStorage(),
