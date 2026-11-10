@@ -10,6 +10,8 @@ on:
       - '.github/actions/composer-install/**'
   push:
     branches: [ 1.x ]
+    paths-ignore:
+      - 'CHANGELOG.md'
   schedule:
     - cron: '0 4 * * *'
   workflow_dispatch:

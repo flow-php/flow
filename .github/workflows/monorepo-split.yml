@@ -18,128 +18,81 @@ jobs:
   packages_split:
     runs-on: ubuntu-24.04
 
-    strategy:
-      fail-fast: false
-      matrix:
-        # define package to repository map
-        package:
-          - local_path: 'src/core/etl'
-            split_repository: 'etl'
-          - local_path: 'src/cli'
-            split_repository: 'cli'
+    env:
+      PACKAGES: |
+        src/core/etl etl
+        src/cli cli
 
-          - local_path: 'src/lib/array-dot'
-            split_repository: 'array-dot'
-          - local_path: 'src/lib/azure-sdk'
-            split_repository: 'azure-sdk'
-          - local_path: 'src/lib/doctrine-dbal-bulk'
-            split_repository: 'doctrine-dbal-bulk'
-          - local_path: 'src/lib/parquet'
-            split_repository: 'parquet'
-          - local_path: 'src/lib/parquet-viewer'
-            split_repository: 'parquet-viewer'
-          - local_path: 'src/lib/dremel'
-            split_repository: 'dremel'
-          - local_path: 'src/lib/filesystem'
-            split_repository: 'filesystem'
-          - local_path: 'src/lib/snappy'
-            split_repository: 'snappy'
-          - local_path: 'src/lib/types'
-            split_repository: 'types'
-          - local_path: 'src/lib/postgresql'
-            split_repository: 'postgresql'
-          - local_path: 'src/lib/telemetry'
-            split_repository: 'telemetry'
+        src/lib/array-dot array-dot
+        src/lib/azure-sdk azure-sdk
+        src/lib/doctrine-dbal-bulk doctrine-dbal-bulk
+        src/lib/parquet parquet
+        src/lib/parquet-viewer parquet-viewer
+        src/lib/dremel dremel
+        src/lib/filesystem filesystem
+        src/lib/snappy snappy
+        src/lib/types types
+        src/lib/postgresql postgresql
+        src/lib/telemetry telemetry
 
-          - local_path: 'src/adapter/etl-adapter-avro'
-            split_repository: 'etl-adapter-avro'
-          - local_path: 'src/adapter/etl-adapter-chartjs'
-            split_repository: 'etl-adapter-chartjs'
-          - local_path: 'src/adapter/etl-adapter-csv'
-            split_repository: 'etl-adapter-csv'
-          - local_path: 'src/adapter/etl-adapter-doctrine'
-            split_repository: 'etl-adapter-doctrine'
-          - local_path: 'src/adapter/etl-adapter-excel'
-            split_repository: 'etl-adapter-excel'
-          - local_path: 'src/adapter/etl-adapter-google-sheet'
-            split_repository: 'etl-adapter-google-sheet'
-          - local_path: 'src/adapter/etl-adapter-http'
-            split_repository: 'etl-adapter-http'
-          - local_path: 'src/adapter/etl-adapter-json'
-            split_repository: 'etl-adapter-json'
-          - local_path: 'src/adapter/etl-adapter-logger'
-            split_repository: 'etl-adapter-logger'
-          - local_path: 'src/adapter/etl-adapter-parquet'
-            split_repository: 'etl-adapter-parquet'
-          - local_path: 'src/adapter/etl-adapter-text'
-            split_repository: 'etl-adapter-text'
-          - local_path: 'src/adapter/etl-adapter-xml'
-            split_repository: 'etl-adapter-xml'
-          - local_path: 'src/adapter/etl-adapter-postgresql'
-            split_repository: 'etl-adapter-postgresql'
-          - local_path: 'src/adapter/etl-adapter-seal'
-            split_repository: 'etl-adapter-seal'
+        src/adapter/etl-adapter-avro etl-adapter-avro
+        src/adapter/etl-adapter-chartjs etl-adapter-chartjs
+        src/adapter/etl-adapter-csv etl-adapter-csv
+        src/adapter/etl-adapter-doctrine etl-adapter-doctrine
+        src/adapter/etl-adapter-excel etl-adapter-excel
+        src/adapter/etl-adapter-google-sheet etl-adapter-google-sheet
+        src/adapter/etl-adapter-http etl-adapter-http
+        src/adapter/etl-adapter-json etl-adapter-json
+        src/adapter/etl-adapter-logger etl-adapter-logger
+        src/adapter/etl-adapter-parquet etl-adapter-parquet
+        src/adapter/etl-adapter-text etl-adapter-text
+        src/adapter/etl-adapter-xml etl-adapter-xml
+        src/adapter/etl-adapter-postgresql etl-adapter-postgresql
+        src/adapter/etl-adapter-seal etl-adapter-seal
 
-          - local_path: 'src/bridge/filesystem/azure'
-            split_repository: 'filesystem-azure-bridge'
-          - local_path: 'src/bridge/filesystem/async-aws'
-            split_repository: 'filesystem-async-aws-bridge'
-          - local_path: 'src/bridge/filesystem/sftp'
-            split_repository: 'filesystem-sftp-bridge'
-          - local_path: 'src/bridge/monolog/http'
-            split_repository: 'monolog-http-bridge'
-          - local_path: 'src/bridge/monolog/telemetry'
-            split_repository: 'monolog-telemetry-bridge'
-          - local_path: 'src/bridge/openapi/specification'
-            split_repository: 'openapi-specification-bridge'
-          - local_path: 'src/bridge/mago/types'
-            split_repository: 'mago-types-bridge'
-          - local_path: 'src/bridge/phpstan/types'
-            split_repository: 'phpstan-types-bridge'
-          - local_path: 'src/bridge/postgresql/valinor'
-            split_repository: 'postgresql-valinor-bridge'
-          - local_path: 'src/bridge/psr3/telemetry'
-            split_repository: 'psr3-telemetry-bridge'
-          - local_path: 'src/bridge/psr7/telemetry'
-            split_repository: 'psr7-telemetry-bridge'
-          - local_path: 'src/bridge/psr18/telemetry'
-            split_repository: 'psr18-telemetry-bridge'
-          - local_path: 'src/bridge/symfony/filesystem-bundle'
-            split_repository: 'symfony-filesystem-bundle'
-          - local_path: 'src/bridge/symfony/filesystem-cache'
-            split_repository: 'symfony-filesystem-cache-bridge'
-          - local_path: 'src/bridge/symfony/http-foundation'
-            split_repository: 'symfony-http-foundation-bridge'
-          - local_path: 'src/bridge/symfony/http-foundation-telemetry'
-            split_repository: 'symfony-http-foundation-telemetry-bridge'
-          - local_path: 'src/bridge/symfony/postgresql-bundle'
-            split_repository: 'symfony-postgresql-bundle'
-          - local_path: 'src/bridge/symfony/postgresql-cache'
-            split_repository: 'symfony-postgresql-cache-bridge'
-          - local_path: 'src/bridge/symfony/postgresql-messenger'
-            split_repository: 'symfony-postgresql-messenger-bridge'
-          - local_path: 'src/bridge/symfony/postgresql-session'
-            split_repository: 'symfony-postgresql-session-bridge'
-          - local_path: 'src/bridge/symfony/telemetry-bundle'
-            split_repository: 'symfony-telemetry-bundle'
-          - local_path: 'src/bridge/telemetry/otlp'
-            split_repository: 'telemetry-otlp-bridge'
-          - local_path: 'src/bridge/phpunit/postgresql'
-            split_repository: 'phpunit-postgresql-bridge'
-          - local_path: 'src/bridge/phpunit/telemetry'
-            split_repository: 'phpunit-telemetry-bridge'
+        src/bridge/filesystem/azure filesystem-azure-bridge
+        src/bridge/filesystem/async-aws filesystem-async-aws-bridge
+        src/bridge/filesystem/sftp filesystem-sftp-bridge
+        src/bridge/monolog/http monolog-http-bridge
+        src/bridge/monolog/telemetry monolog-telemetry-bridge
+        src/bridge/openapi/specification openapi-specification-bridge
+        src/bridge/mago/types mago-types-bridge
+        src/bridge/phpstan/types phpstan-types-bridge
+        src/bridge/postgresql/valinor postgresql-valinor-bridge
+        src/bridge/psr3/telemetry psr3-telemetry-bridge
+        src/bridge/psr7/telemetry psr7-telemetry-bridge
+        src/bridge/psr18/telemetry psr18-telemetry-bridge
+        src/bridge/symfony/filesystem-bundle symfony-filesystem-bundle
+        src/bridge/symfony/filesystem-cache symfony-filesystem-cache-bridge
+        src/bridge/symfony/http-foundation symfony-http-foundation-bridge
+        src/bridge/symfony/http-foundation-telemetry symfony-http-foundation-telemetry-bridge
+        src/bridge/symfony/postgresql-bundle symfony-postgresql-bundle
+        src/bridge/symfony/postgresql-cache symfony-postgresql-cache-bridge
+        src/bridge/symfony/postgresql-messenger symfony-postgresql-messenger-bridge
+        src/bridge/symfony/postgresql-session symfony-postgresql-session-bridge
+        src/bridge/symfony/telemetry-bundle symfony-telemetry-bundle
+        src/bridge/telemetry/otlp telemetry-otlp-bridge
+        src/bridge/phpunit/postgresql phpunit-postgresql-bridge
+        src/bridge/phpunit/telemetry phpunit-telemetry-bridge
 
-          - local_path: 'src/extension/pg-query-ext'
-            split_repository: 'pg-query-ext'
-          - local_path: 'src/extension/arrow-ext'
-            split_repository: 'arrow-ext'
-          - local_path: 'src/extension/flow-php-ext'
-            split_repository: 'flow-php-ext'
+        src/extension/pg-query-ext pg-query-ext
+        src/extension/arrow-ext arrow-ext
+        src/extension/flow-php-ext flow-php-ext
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: "List split repositories"
+        id: packages
+        run: |
+          set -euo pipefail
+          {
+            echo "repositories<<REPOSITORIES"
+            awk 'NF && NF != 2 { exit 1 } NF { print $2 }' <<< "$PACKAGES"
+            echo "REPOSITORIES"
+          } >> "$GITHUB_OUTPUT"
 
       - name: "Load GitHub App private key"
         id: app-credentials
@@ -157,7 +110,7 @@ jobs:
           client-id: ${{ vars.FLOW_PHP_CI_CLIENT_ID }}
           private-key: ${{ steps.app-credentials.outputs.APP_PRIVATE_KEY }}
           owner: flow-php
-          repositories: ${{ matrix.package.split_repository }}
+          repositories: ${{ steps.packages.outputs.repositories }}
           permission-contents: write
           permission-workflows: write
 
@@ -174,69 +127,30 @@ jobs:
             echo "email=${id}+${APP_SLUG}[bot]@users.noreply.github.com"
           } >> "$GITHUB_OUTPUT"
 
-      - name: "Split ${{ matrix.package.local_path }} to flow-php/${{ matrix.package.split_repository }}"
+      - name: "Split packages"
         env:
           SPLIT_TOKEN: ${{ steps.app-token.outputs.token }}
-          SPLIT_REPOSITORY: ${{ matrix.package.split_repository }}
-          SPLIT_LOCAL_PATH: ${{ matrix.package.local_path }}
           BOT_NAME: ${{ steps.bot.outputs.name }}
           BOT_EMAIL: ${{ steps.bot.outputs.email }}
         run: |
           set -euo pipefail
-          remote="https://github.com/flow-php/${SPLIT_REPOSITORY}.git"
-          helper="!f() { echo username=x-access-token; echo \"password=\${SPLIT_TOKEN}\"; }; f"
-          git_auth() { git -c credential.helper= -c credential.helper="$helper" "$@"; }
-          git_author() { git -c user.name="$BOT_NAME" -c user.email="$BOT_EMAIL" "$@"; }
+          failed=()
 
-          message="$(git show -s --format=%B "$GITHUB_SHA")"
-          message="${message%%$'\n'*}"
-          attempt=1
-
-          while true; do
-            build="$(mktemp -d)"
-            heads="$(git_auth ls-remote --heads "$remote" 1.x)"
-
-            if [ -n "$heads" ]; then
-              git_auth clone --quiet --depth 1 --branch 1.x "$remote" "$build"
-            else
-              echo "flow-php/${SPLIT_REPOSITORY} has no 1.x branch, starting it as an orphan."
-              git -C "$build" init --quiet
-              git -C "$build" remote add origin "$remote"
-              git -C "$build" checkout --quiet --orphan 1.x
+          while read -r local_path split_repository; do
+            if [ -z "$local_path" ]; then
+              continue
             fi
 
-            find "$build" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
-            cp -a "${SPLIT_LOCAL_PATH}/." "$build/"
-            git -C "$build" add --all
-            changes="$(git -C "$build" status --porcelain)"
+            echo "::group::${local_path} to flow-php/${split_repository}"
 
-            if [ -z "$changes" ]; then
-              echo "flow-php/${SPLIT_REPOSITORY} 1.x is up to date."
-              break
+            if ! bash .github/scripts/monorepo-split.sh "$local_path" "$split_repository" < /dev/null; then
+              failed+=("$split_repository")
             fi
 
-            git_author -C "$build" commit --quiet --message "$message"
-            push_exit=0
-            push_status="$(git_auth -C "$build" push --porcelain origin 1.x)" || push_exit=$?
+            echo "::endgroup::"
+          done <<< "$PACKAGES"
 
-            if [ "$push_exit" -eq 0 ]; then
-              break
-            fi
-
-            echo "$push_status"
-
-            if [ "$attempt" -eq 3 ] || ! grep -qF '[rejected]' <<< "$push_status"; then
-              exit "$push_exit"
-            fi
-
-            echo "flow-php/${SPLIT_REPOSITORY} 1.x moved during the split, attempt $((attempt + 1)) of 3."
-            rm -rf "$build"
-            attempt=$((attempt + 1))
-          done
-
-          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
-            git_author -C "$build" tag -a "$GITHUB_REF_NAME" -m "Publishing $GITHUB_REF_NAME"
-            git_auth -C "$build" push --quiet origin "$GITHUB_REF_NAME"
+          if [ "${#failed[@]}" -gt 0 ]; then
+            echo "::error::Split failed for: ${failed[*]}"
+            exit 1
           fi
-
-          rm -rf "$build"

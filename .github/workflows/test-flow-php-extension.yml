@@ -13,6 +13,8 @@ on:
       - '.github/actions/rust-extension-toolchain/**'
   push:
     branches: [ 1.x ]
+    paths-ignore:
+      - 'CHANGELOG.md'
   schedule:
     - cron: '0 4 * * *'
   workflow_dispatch:
