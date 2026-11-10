@@ -12,7 +12,7 @@ jobs:
         php-version:
           - "8.3"
         operating-system:
-          - "blacksmith-4vcpu-ubuntu-2404"
+          - "ubuntu-24.04"
 
     steps:
       - name: "Checkout"

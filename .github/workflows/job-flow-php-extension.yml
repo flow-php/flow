@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['blacksmith-2vcpu-ubuntu-2404', 'macos-latest']
+        os: ['ubuntu-24.04', 'macos-latest']
         php: ['8.3', '8.4', '8.5']
         exclude: ${{ fromJSON(inputs.full-matrix && '[]' || '[{"os":"macos-latest","php":"8.3"},{"os":"macos-latest","php":"8.4"}]') }}
 
@@ -121,7 +121,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['blacksmith-2vcpu-ubuntu-2404', 'macos-latest']
+        os: ['ubuntu-24.04', 'macos-latest']
         exclude: ${{ fromJSON(inputs.full-matrix && '[]' || '[{"os":"macos-latest"}]') }}
 
     steps:

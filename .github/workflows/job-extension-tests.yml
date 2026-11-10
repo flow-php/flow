@@ -14,7 +14,7 @@ jobs:
           - "8.4"
           - "8.5"
         operating-system:
-          - "blacksmith-2vcpu-ubuntu-2404"
+          - "ubuntu-24.04"
 
     steps:
       - name: "Checkout"

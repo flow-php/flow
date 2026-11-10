@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   build-phar:
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
 
     steps:
       - name: "Checkout"
@@ -60,7 +60,7 @@ jobs:
         php-version:
           - "8.3"
         operating-system:
-          - "blacksmith-2vcpu-ubuntu-2404"
+          - "ubuntu-24.04"
 
     steps:
       - name: "Checkout"

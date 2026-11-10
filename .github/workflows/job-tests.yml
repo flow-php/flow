@@ -51,7 +51,7 @@ jobs:
           - "8.4"
           - "8.5"
         operating-system:
-          - "blacksmith-4vcpu-ubuntu-2404"
+          - "ubuntu-24.04"
         exclude:
           - dependencies: "lowest"
             php-version: "8.4"
