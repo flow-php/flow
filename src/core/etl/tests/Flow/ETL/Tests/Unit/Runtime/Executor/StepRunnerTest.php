@@ -24,6 +24,7 @@ use Flow\ETL\Runtime\ErrorHandler\ThrowError;
 use Flow\ETL\Runtime\ErrorHandler\TransformationError;
 use Flow\ETL\Runtime\Executor\StepRunner;
 use Flow\ETL\Tests\Context\MemoryTelemetryContext;
+use Flow\ETL\Tests\Double\ClosureThrowingLoader;
 use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\Double\RecordingErrorHandler;
 use Flow\ETL\Tests\Double\RecordingLoader;
@@ -98,6 +99,17 @@ final class StepRunnerTest extends FlowTestCase
 
         static::assertSame([$failure], (new StepRunner())->endLoaders([$loader], flow_context(config()), true));
         static::assertSame(['closure THROW', 'discard'], $loader->log);
+    }
+
+    public function test_a_failing_closure_still_closes_the_loaders_after_it(): void
+    {
+        $failure = new RuntimeException('closure failed');
+        $failing = new ClosureThrowingLoader($failure);
+        $next = new RecordingLoader();
+
+        static::assertSame([$failure], (new StepRunner())->endLoaders([$failing, $next], flow_context(config()), true));
+        static::assertSame(1, $failing->discarded);
+        static::assertSame(['closure'], $next->log);
     }
 
     public function test_steps_without_a_source_rethrow_their_input_error_untouched(): void

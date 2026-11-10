@@ -324,6 +324,62 @@ final class HeartbeatThrottleTest extends FlowTestCase
         }
     }
 
+    public function test_a_stopped_throttle_calls_no_heartbeat_again(): void
+    {
+        $context = new HeartbeatContext();
+        $failure = new RuntimeException('lease lost');
+        $recording = new RecordingHeartbeat(throws: $failure);
+        $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
+        $context->seconds(120);
+
+        try {
+            $throttle->beatWhenDue();
+            static::fail('The heartbeat failure did not stop the run');
+        } catch (RuntimeException $e) {
+            static::assertSame($failure, $e);
+        }
+
+        $context->seconds(120);
+        $throttle->beatWhenDue();
+        $throttle->beatNow();
+
+        static::assertCount(1, $recording->pulses());
+        static::assertTrue($throttle->stopped());
+    }
+
+    public function test_a_new_run_beats_again_after_a_stop(): void
+    {
+        $context = new HeartbeatContext();
+        $failure = new RuntimeException('lease lost');
+        $recording = new RecordingHeartbeat(throws: $failure);
+        $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
+        $throttle->started();
+        $context->seconds(120);
+
+        try {
+            $throttle->beatWhenDue();
+            static::fail('The heartbeat failure did not stop the run');
+        } catch (RuntimeException $e) {
+            static::assertSame($failure, $e);
+        }
+
+        $throttle->finished();
+        $throttle->started();
+
+        static::assertFalse($throttle->stopped());
+
+        $context->seconds(120);
+
+        try {
+            $throttle->beatWhenDue();
+            static::fail('The heartbeat failure did not stop the run');
+        } catch (RuntimeException $e) {
+            static::assertSame($failure, $e);
+        }
+
+        static::assertCount(2, $recording->pulses());
+    }
+
     public function test_log_logs_the_heartbeat_failure_and_keeps_beating(): void
     {
         $context = new HeartbeatContext();

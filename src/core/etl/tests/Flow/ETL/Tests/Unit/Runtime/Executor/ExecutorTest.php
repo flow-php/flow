@@ -1548,6 +1548,97 @@ final class ExecutorTest extends FlowTestCase
         );
     }
 
+    public function test_a_heartbeat_stop_while_writes_end_discards_the_writes_not_ended_yet(): void
+    {
+        $clock = new FakeClock(new DateTimeImmutable('2026-01-01 00:00:00'));
+        $failure = new RuntimeException('lease lost');
+        $heartbeat = new RecordingHeartbeat(throws: $failure);
+        $memory = memory_filesystem();
+        $memory->writeTo(path('memory://b/part-00007.floe'))->append('old')->close();
+        $filesystem = intercepted_filesystem($memory)->onCall(static function (
+            FilesystemOperation $operation,
+            Path $path,
+        ) use ($clock): void {
+            if ($operation === FilesystemOperation::Mv) {
+                $clock->modify('+10 seconds');
+            }
+        });
+
+        try {
+            df(
+                config_builder()
+                    ->clock($clock)
+                    ->heartbeat($heartbeat, everySeconds: 10, onFailure: HeartbeatFailure::stop),
+            )
+                ->read(from_array([['id' => 1]]))
+                ->write(to_floe(path('memory://a/part-{part}.floe'), filesystem: $filesystem)->saveMode(overwrite()))
+                ->write(to_floe(path('memory://b/part-{part}.floe'), filesystem: $filesystem)->saveMode(overwrite()))
+                ->run();
+            static::fail('The heartbeat failure did not stop the run');
+        } catch (RuntimeException $e) {
+            static::assertSame($failure, $e);
+        }
+
+        static::assertSame(
+            ['commit'],
+            array_map(static fn(Pulse $pulse): string => $pulse->stage, $heartbeat->pulses()),
+        );
+        static::assertSame(
+            ['memory://a/part-00000.floe', 'memory://b/part-00007.floe'],
+            array_map(
+                static fn(FileStatus $status): string => $status->path->uri(),
+                iterator_to_array($memory->list(path('memory://*/**/*')), false),
+            ),
+        );
+    }
+
+    public function test_a_heartbeat_stop_inside_a_branch_discards_the_writes_after_it(): void
+    {
+        $clock = new FakeClock(new DateTimeImmutable('2026-01-01 00:00:00'));
+        $failure = new RuntimeException('lease lost');
+        $heartbeat = new RecordingHeartbeat(throws: $failure);
+        $memory = memory_filesystem();
+        $memory->writeTo(path('memory://b/part-00007.floe'))->append('old')->close();
+        $filesystem = intercepted_filesystem($memory)->onCall(static function (
+            FilesystemOperation $operation,
+            Path $path,
+        ) use ($clock): void {
+            if ($operation === FilesystemOperation::Mv) {
+                $clock->modify('+10 seconds');
+            }
+        });
+
+        try {
+            df(
+                config_builder()
+                    ->clock($clock)
+                    ->heartbeat($heartbeat, everySeconds: 10, onFailure: HeartbeatFailure::stop),
+            )
+                ->read(from_array([['id' => 1]]))
+                ->write(to_branch(
+                    ref('id')->isNotNull(),
+                    to_floe(path('memory://a/part-{part}.floe'), filesystem: $filesystem)->saveMode(overwrite()),
+                ))
+                ->write(to_floe(path('memory://b/part-{part}.floe'), filesystem: $filesystem)->saveMode(overwrite()))
+                ->run();
+            static::fail('The heartbeat failure did not stop the run');
+        } catch (RuntimeException $e) {
+            static::assertSame($failure, $e);
+        }
+
+        static::assertSame(
+            ['commit'],
+            array_map(static fn(Pulse $pulse): string => $pulse->stage, $heartbeat->pulses()),
+        );
+        static::assertSame(
+            ['memory://a/part-00000.floe', 'memory://b/part-00007.floe'],
+            array_map(
+                static fn(FileStatus $status): string => $status->path->uri(),
+                iterator_to_array($memory->list(path('memory://*/**/*')), false),
+            ),
+        );
+    }
+
     public function test_an_overwrite_beats_while_its_files_move_into_place(): void
     {
         $clock = new FakeClock(new DateTimeImmutable('2026-01-01 00:00:00'));

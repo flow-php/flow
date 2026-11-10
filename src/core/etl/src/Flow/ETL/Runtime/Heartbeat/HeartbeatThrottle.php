@@ -61,6 +61,8 @@ final class HeartbeatThrottle implements ProgressStages
 
     private DateTimeImmutable $startedAt;
 
+    private bool $stopped = false;
+
     private int $unreadRows = 0;
 
     /**
@@ -179,11 +181,20 @@ final class HeartbeatThrottle implements ProgressStages
         }
     }
 
+    public function stopped(): bool
+    {
+        return $this->stopped;
+    }
+
     /**
      * @throws Throwable what a heartbeat failing with HeartbeatFailure::stop threw
      */
     public function beatWhenDue(): void
     {
+        if ($this->stopped) {
+            return;
+        }
+
         $now = $this->clock->now();
         $this->settleProgress($now);
 
@@ -205,6 +216,10 @@ final class HeartbeatThrottle implements ProgressStages
      */
     public function beatNow(): void
     {
+        if ($this->stopped) {
+            return;
+        }
+
         $now = $this->clock->now();
         $this->settleProgress($now);
         $this->beat($now, $this->heartbeats);
@@ -244,6 +259,11 @@ final class HeartbeatThrottle implements ProgressStages
                     $this->logger,
                 );
             }
+        } catch (Throwable $failure) {
+            // ScheduledHeartbeat::beat() rethrows only under HeartbeatFailure::stop
+            $this->stopped = true;
+
+            throw $failure;
         } finally {
             $this->nextBeatAt = min(array_map(
                 static fn(ScheduledHeartbeat $heartbeat): DateTimeImmutable => $heartbeat->nextBeatAt(),
@@ -283,6 +303,7 @@ final class HeartbeatThrottle implements ProgressStages
         $this->othersMemory = 0;
         $this->othersPeak = 0;
         $this->othersNewer = false;
+        $this->stopped = false;
 
         foreach ($this->heartbeats as $heartbeat) {
             $heartbeat->start($now);

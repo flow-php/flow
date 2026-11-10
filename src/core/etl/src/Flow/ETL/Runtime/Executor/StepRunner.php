@@ -370,8 +370,11 @@ final readonly class StepRunner
         $progress = $context->config->progress()->stage(ProgressStages::COMMIT);
 
         foreach ($loaders as $loader) {
+            // a stopped heartbeat ends the run, so nothing more is published
+            $closing = $completed && !($context->config->heartbeat()?->stopped() ?? false);
+
             try {
-                if ($completed) {
+                if ($closing) {
                     if ($loader instanceof Closure) {
                         $loader->closure($progress);
                     }
@@ -380,7 +383,7 @@ final readonly class StepRunner
                 }
             } catch (Throwable $failure) {
                 // one write failing to end must not strand the others
-                if ($completed) {
+                if ($closing) {
                     $ending[] = $failure;
 
                     // a closure() that threw published at most part of its output; the rest is abandoned as on

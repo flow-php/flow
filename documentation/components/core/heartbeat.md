@@ -151,8 +151,9 @@ while a worker hangs, and for a loop that keeps checking without producing rows.
 | `HeartbeatFailure::stop` (default) | the exception stops the run unchanged, later heartbeats are not called |
 | `HeartbeatFailure::log`            | the exception is logged as `Heartbeat failed.`, the run continues      |
 
-A `HeartbeatFailure::stop` throw while a write ends fails the write: the files it already moved stay, and the rest is
-discarded. With `overwrite()`, the files the write would replace also stay, next to the moved ones.
+A `HeartbeatFailure::stop` throw while the writes of a run end stops all of them. The write that was ending keeps the
+files that it already moved. With `overwrite()`, the files that it replaces also stay. Every write that did not end
+yet is discarded, a write inside `to_branch()` included. The heartbeat is not called again in that run.
 
 `HeartbeatFailure::log` writes to the telemetry logger. The default telemetry records nothing, so configure a logger
 to see the failures:

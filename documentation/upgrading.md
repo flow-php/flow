@@ -180,6 +180,16 @@ public function closure(Progress $progress): void
 
 Code that calls `FileCommit::commit()` outside a run passes `new VoidProgress()`.
 
+### 13) `flow-php/etl` - a stopped heartbeat discards the writes that did not end yet
+
+| Before                                                                | After                                     |
+|-----------------------------------------------------------------------|-------------------------------------------|
+| a `HeartbeatFailure::stop` throw while one write ended failed only it | every write that did not end is discarded |
+| the other writes of the run still published their output              | nothing more is published                 |
+| the heartbeat was called again at its next due time                   | it is not called again in that run        |
+
+No code changes. A `HeartbeatFailure::log` heartbeat is not affected.
+
 ---
 
 ## Upgrading from 0.46.x to 0.47.x
