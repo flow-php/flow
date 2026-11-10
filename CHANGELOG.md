@@ -14,6 +14,7 @@
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - Pipe operator documentation page** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [b5dd52](https://github.com/flow-php/flow/commit/b5dd523da18d0323b557850a2a65e01ba5db3eed) - **chore(flow-php/flow): split the monorepo in one CI job** - [@norberttech](https://github.com/norberttech)
 - [6e715f](https://github.com/flow-php/flow/commit/6e715f04fa485cf2b5a9314a4862d539046eaddd) - **chore(flow-php/flow): run CI on GitHub-hosted runners** - [@norberttech](https://github.com/norberttech)
 - [151d48](https://github.com/flow-php/flow/commit/151d48566b4f3cf68f07accd4ea06d89d5eef1a2) - **chore(flow-php/flow): read CI and nix shell credentials from 1Password** - [@norberttech](https://github.com/norberttech)
 - [#2728](https://github.com/flow-php/flow/pull/2728) - **flow-php/postgresql - schema objects store their schema and inherit it from the containing Schema** - [@norberttech](https://github.com/norberttech)
