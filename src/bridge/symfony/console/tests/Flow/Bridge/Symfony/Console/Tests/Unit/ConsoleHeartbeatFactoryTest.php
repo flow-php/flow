@@ -12,6 +12,7 @@ use Flow\Bridge\Symfony\Console\TaskListHeartbeat;
 use Flow\Bridge\Symfony\Console\Tests\Context\TerminalContext;
 use Flow\Bridge\Symfony\Console\Tests\Mother\PulseMother;
 use Flow\Bridge\Symfony\Console\Tests\Mother\StageProgressMother;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\TestWith;
 use Symfony\Component\Console\Output\BufferedOutput;
@@ -91,7 +92,7 @@ final class ConsoleHeartbeatFactoryTest extends FlowTestCase
             $console = $terminal->console();
 
             console_heartbeat($console, $style)->beat(PulseMother::pulse(elapsedSeconds: 3.0, stages: [
-                StageProgressMother::done('read', 3, endedAtSeconds: 1.0),
+                StageProgressMother::done(StageName::read, 3, endedAtSeconds: 1.0),
             ]));
 
             static::assertSame(['', true], [

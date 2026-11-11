@@ -28,13 +28,34 @@ use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_cache;
+use function Flow\ETL\DSL\infer_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function iterator_to_array;
 
 final class CacheExtractorTest extends FlowIntegrationTestCase
 {
+    public function test_infer_schema_reaches_the_fallback(): void
+    {
+        $extractor = from_cache('id', from_array([['id' => 1]]), cache: new MemoryRowsStorage());
+        $before = $extractor->schema();
+
+        $extractor->inferSchema(infer_schema()->allStrings());
+
+        $batches = iterator_to_array($extractor->extract(new PhpBackend(), new Criteria()), false);
+        static::assertEquals([
+            schema(int_schema('id', nullable: true)),
+            schema(str_schema('id', nullable: true)),
+            schema(str_schema('id', nullable: true)),
+        ], [
+            $before,
+            $extractor->schema(),
+            $batches[0] instanceof Rows ? $batches[0]->schema() : null,
+        ]);
+    }
+
     public function test_a_cached_index_declares_its_rows_exactly(): void
     {
         $cache = new MemoryRowsStorage();

@@ -101,7 +101,7 @@ A custom window function can call `$progress->advanced($rows)` once per partitio
 
 | Before                                                                                         | After                                                                                                              |
 |------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
-| `interface InfersSchema`                                                                       | `interface InfersSchema extends ReportsInference`, `reportInferenceTo(Progress $progress): void`                   |
+| `interface InfersSchema`                                                                       | `interface InfersSchema` with `reportInferenceTo(Progress $progress): void`                                        |
 | `SchemaInferrer::infer(Sniffer $sniffer): Inferred`                                            | `SchemaInferrer::infer(Sniffer $sniffer, Progress $progress): Inferred`                                            |
 | `Sniffer::sniff(int $unit, ?int $rowBudget): Sample`                                           | `Sniffer::sniff(int $unit, ?int $rowBudget, Progress $progress): Sample`                                           |
 | `Sniffs::sniff(Sniffer $sniffer, int $units): ?array`                                          | `Sniffs::sniff(Sniffer $sniffer, int $units, Progress $progress): ?array`                                          |
@@ -183,6 +183,13 @@ Code that calls `FileCommit::commit()` outside a run passes `new VoidProgress()`
 | Before                                | After                                                     |
 |---------------------------------------|-----------------------------------------------------------|
 | `Distribution::ordered(array $order)` | `Distribution::ordered(array $order, Progress $progress)` |
+
+### 14) `flow-php/etl` - `DataFrame::schema()` runs the heartbeat
+
+| Before                                      | After                                                                                      |
+|---------------------------------------------|--------------------------------------------------------------------------------------------|
+| `DataFrame::schema()` never beats            | it beats during schema inference and once at its end                                      |
+| a heartbeat failure never leaves `schema()` | a heartbeat that fails with `HeartbeatFailure::stop` throws its exception out of `schema()` |
 
 ---
 

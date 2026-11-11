@@ -8,12 +8,29 @@ use Flow\Bridge\Symfony\Console\Tests\Mother\PulseMother;
 use Flow\Bridge\Symfony\Console\Tests\Mother\StageProgressMother;
 use Flow\Bridge\Symfony\Console\ThroughputGraph;
 use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function range;
 
 final class ThroughputGraphTest extends FlowTestCase
 {
+    public function test_a_planned_stage_draws_no_bar_and_counts_from_its_first_start(): void
+    {
+        $graph = new ThroughputGraph();
+
+        $graph->recorded(PulseMother::pulse(beat: 1, elapsedSeconds: 1.0, stages: [StageProgressMother::planned()]));
+        $planned = $graph->sparkline(StageProgressMother::planned(), 0);
+        $graph->recorded(PulseMother::pulse(beat: 2, elapsedSeconds: 4.0, stages: [
+            StageProgressMother::open(count: 30, startedAtSeconds: 3.0, id: 2),
+        ]));
+
+        static::assertSame(['', '<fg=cyan>█</>'], [
+            $planned,
+            $graph->sparkline(StageProgressMother::open(count: 30, startedAtSeconds: 3.0, id: 2), 0),
+        ]);
+    }
+
     public function test_rates_between_beats_draw_bars(): void
     {
         $graph = new ThroughputGraph();
@@ -90,16 +107,16 @@ final class ThroughputGraphTest extends FlowTestCase
     {
         $graph = new ThroughputGraph();
         $graph->recorded(PulseMother::pulse(beat: 1, elapsedSeconds: 1.0, stages: [StageProgressMother::open(
-            'group_by',
+            StageName::group_by,
             1_000,
         )]));
 
         $graph->recorded(PulseMother::pulse(beat: 2, elapsedSeconds: 2.0, stages: [
-            StageProgressMother::open('group_by', 3, unit: ProgressUnit::groups),
+            StageProgressMother::open(StageName::group_by, 3, unit: ProgressUnit::groups),
         ]));
 
         static::assertSame('<fg=cyan>█</>', $graph->sparkline(
-            StageProgressMother::open('group_by', 3, unit: ProgressUnit::groups),
+            StageProgressMother::open(StageName::group_by, 3, unit: ProgressUnit::groups),
             0,
         ));
     }

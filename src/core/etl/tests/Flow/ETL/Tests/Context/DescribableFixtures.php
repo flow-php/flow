@@ -8,8 +8,8 @@ use Closure;
 use Flow\ETL\Foundation\Describe\ConfiguredFilesystem;
 use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
-use Flow\ETL\Foundation\ProgressStages;
 use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Functions\DenseRank;
 use Flow\ETL\Functions\Evaluation\Filter;
@@ -321,7 +321,7 @@ final class DescribableFixtures
             ),
             HashJoinConfig::class => static fn(): Describable => new HashJoinConfig(self::bucketing(), Unit::fromKb(9)),
             HeartbeatStage::class => static fn(): Describable => new HeartbeatStage(
-                ProgressStages::SORT,
+                StageName::sort,
                 ProgressUnit::rows,
                 7,
                 'memory://in/orders.floe',

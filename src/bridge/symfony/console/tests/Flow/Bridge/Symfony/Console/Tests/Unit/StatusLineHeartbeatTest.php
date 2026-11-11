@@ -9,6 +9,7 @@ use Flow\Bridge\Symfony\Console\Tests\Context\TerminalContext;
 use Flow\Bridge\Symfony\Console\Tests\Mother\PulseMother;
 use Flow\Bridge\Symfony\Console\Tests\Mother\StageProgressMother;
 use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\StageProgress;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\TestWith;
@@ -36,10 +37,10 @@ final class StatusLineHeartbeatTest extends FlowTestCase
         parent::setUp();
         $this->terminal = new TerminalContext(120);
         $this->stages = [
-            StageProgressMother::done('read', 30_000_000, 0.0, 5.0, location: 'memory://in/orders.csv'),
-            StageProgressMother::open('sort', 24_600_000, 30_000_000, 0.2, id: 2, location: 'memory://in/x/'),
-            StageProgressMother::open('group_by', 12, id: 3, unit: ProgressUnit::groups),
-            StageProgressMother::open('join', 1_000_000, id: 4),
+            StageProgressMother::done(StageName::read, 30_000_000, 0.0, 5.0, subject: 'memory://in/orders.csv'),
+            StageProgressMother::open(StageName::sort, 24_600_000, 30_000_000, 0.2, id: 2, subject: 'memory://in/x/'),
+            StageProgressMother::open(StageName::group_by, 12, id: 3, unit: ProgressUnit::groups),
+            StageProgressMother::open(StageName::join, 1_000_000, id: 4),
         ];
     }
 
@@ -77,8 +78,8 @@ final class StatusLineHeartbeatTest extends FlowTestCase
             peakMemoryBytes: 671_088_640,
             elapsedSeconds: 9.2,
             stages: [
-                StageProgressMother::done('read', 30_000_000, endedAtSeconds: 5.0),
-                StageProgressMother::done('commit', 82, 7.6, 9.2, id: 2, unit: ProgressUnit::files),
+                StageProgressMother::done(StageName::read, 30_000_000, endedAtSeconds: 5.0),
+                StageProgressMother::done(StageName::commit, 82, 7.6, 9.2, id: 2, unit: ProgressUnit::files),
             ],
         ));
 
@@ -96,8 +97,8 @@ final class StatusLineHeartbeatTest extends FlowTestCase
         $output = $this->terminal->stream();
         $heartbeat = new StatusLineHeartbeat($output);
         $heartbeat->beat(PulseMother::pulse(rowsRead: 1, peakMemoryBytes: 671_088_640, elapsedSeconds: 1.0, stages: [
-            StageProgressMother::done('read', 1, endedAtSeconds: 0.5),
-            StageProgressMother::done('commit', 1, 0.5, 1.0, id: 2, unit: ProgressUnit::files),
+            StageProgressMother::done(StageName::read, 1, endedAtSeconds: 0.5),
+            StageProgressMother::done(StageName::commit, 1, 0.5, 1.0, id: 2, unit: ProgressUnit::files),
         ]));
 
         $heartbeat->finish();
@@ -107,6 +108,32 @@ final class StatusLineHeartbeatTest extends FlowTestCase
             "\n",
             $this->terminal->text($output),
         ));
+    }
+
+    public function test_no_summary_without_a_read_entry(): void
+    {
+        $output = $this->terminal->stream();
+        $heartbeat = new StatusLineHeartbeat($output);
+        $heartbeat->beat(PulseMother::pulse(rowsRead: 0, elapsedSeconds: 1.0, stages: [
+            StageProgressMother::done(StageName::infer, 2_500, endedAtSeconds: 1.0, id: null),
+        ]));
+
+        $heartbeat->finish();
+
+        static::assertStringNotContainsString('0 rows in', $this->terminal->text($output));
+    }
+
+    public function test_a_planned_entry_is_left_out_and_a_skipped_one_is_finished_without_a_mark(): void
+    {
+        $output = $this->terminal->stream();
+
+        (new StatusLineHeartbeat($output))->beat(PulseMother::pulse(elapsedSeconds: 6.0, stages: [
+            StageProgressMother::skipped(StageName::sort, 5.0, id: 1),
+            StageProgressMother::open(StageName::read, 10, id: 2),
+            StageProgressMother::planned(StageName::commit, id: 3),
+        ]));
+
+        static::assertStringEndsWith(' ⠋ sort › read 10 rows 2/s 6.0s', $this->terminal->text($output));
     }
 
     public function test_finish_after_a_failed_run_clears_the_line(): void
@@ -179,13 +206,15 @@ final class StatusLineHeartbeatTest extends FlowTestCase
         static::assertSame('', $output->getContent());
     }
 
-    public function test_a_stage_with_console_tags_prints_them_literally(): void
+    public function test_a_subject_with_console_tags_prints_them_literally(): void
     {
         $output = $this->terminal->stream();
 
-        (new StatusLineHeartbeat($output))->beat(PulseMother::pulse(stage: '<error>x</error>'));
+        (new StatusLineHeartbeat($output))->beat(PulseMother::pulse(stages: [
+            StageProgressMother::open(count: 1_250_000, subject: '<error>x'),
+        ]));
 
-        static::assertStringEndsWith(' <error>x</error> 1.3M rows 15.1K/s 1m 23s', $this->terminal->text($output));
+        static::assertStringEndsWith(' sort <error>x 1.3M rows 15.1K/s 1m 23s', $this->terminal->text($output));
     }
 
     public function test_a_beat_after_finish_starts_a_new_indicator(): void
@@ -196,7 +225,7 @@ final class StatusLineHeartbeatTest extends FlowTestCase
         $heartbeat->finish();
         $finished = strlen($this->terminal->raw($output));
 
-        $heartbeat->beat(PulseMother::pulse(beat: 2, stage: 'join'));
+        $heartbeat->beat(PulseMother::pulse(beat: 2, stage: StageName::join));
 
         static::assertStringEndsWith(' join 1.3M rows 15.1K/s 1m 23s', $this->terminal->text($output));
         static::assertStringNotContainsString(' sort ', substr($this->terminal->raw($output), $finished));
@@ -231,11 +260,11 @@ final class StatusLineHeartbeatTest extends FlowTestCase
         $output = $this->terminal->stream();
 
         (new StatusLineHeartbeat($output))->beat(PulseMother::pulse(elapsedSeconds: 2.0, stages: [
-            StageProgressMother::open('sort', 15_301_437, location: 'memory://in/orders.floe'),
-            StageProgressMother::open('join', 11, id: 2),
-            StageProgressMother::open('group_by', 3, id: 3),
-            StageProgressMother::open('window', 4_000_000, id: 4),
-            StageProgressMother::open('pivot', 5_000_000, id: 5),
+            StageProgressMother::open(StageName::sort, 15_301_437, subject: 'memory://in/orders.floe'),
+            StageProgressMother::open(StageName::join, 11, id: 2),
+            StageProgressMother::open(StageName::group_by, 3, id: 3),
+            StageProgressMother::open(StageName::window, 4_000_000, id: 4),
+            StageProgressMother::open(StageName::pivot, 5_000_000, id: 5),
         ]));
 
         static::assertStringEndsWith(' pivot 5.0M rows 2.5M/s · +4 running 2.0s', $this->terminal->text($output));
@@ -248,7 +277,10 @@ final class StatusLineHeartbeatTest extends FlowTestCase
 
         (new StatusLineHeartbeat(
             $output,
-        ))->beat(PulseMother::pulse(elapsedSeconds: 2.0, stages: [StageProgressMother::open('sort', 15_301_437)]));
+        ))->beat(PulseMother::pulse(elapsedSeconds: 2.0, stages: [StageProgressMother::open(
+            StageName::sort,
+            15_301_437,
+        )]));
 
         static::assertStringEndsWith('⠋ s', $this->terminal->text($output));
     }

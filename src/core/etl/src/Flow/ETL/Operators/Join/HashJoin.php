@@ -10,8 +10,8 @@ use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\JoinException;
 use Flow\ETL\Foundation\Exception\SchemaDefinitionNotUniqueException;
 use Flow\ETL\Foundation\Progress;
-use Flow\ETL\Foundation\ProgressStages;
 use Flow\ETL\Foundation\RandomValueGenerator;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Functions\Join\Expression;
 use Flow\ETL\IO\Extractor\Signal;
@@ -69,7 +69,7 @@ final readonly class HashJoin implements Describable
             )),
             ($data['left'] ?? null) === null ? null : Schema::fromArray(type_array()->assert($data['left'])),
             ($data['right'] ?? null) === null ? null : Schema::fromArray(type_array()->assert($data['right'])),
-            $rebuild->progress(ProgressStages::JOIN, $data['progress'] ?? null),
+            $rebuild->progress(StageName::join, $data['progress'] ?? null),
         );
     }
 

@@ -7,7 +7,9 @@ namespace Flow\ETL\Planning\Physical;
 use Flow\ETL\Foundation\Exception\InvalidLogicException;
 use Flow\ETL\Foundation\ProgressStages;
 use Flow\ETL\Foundation\RandomValueGenerator;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\VoidProgress;
+use Flow\ETL\Functions\Join\Expression;
 use Flow\ETL\IO\Loader;
 use Flow\ETL\IO\Loader\File\FileLoader;
 use Flow\ETL\IO\Loader\File\Part;
@@ -61,6 +63,7 @@ use Flow\Filesystem\Path;
 use function array_filter;
 use function array_map;
 use function array_values;
+use function implode;
 
 final readonly class NodeTranslator
 {
@@ -76,6 +79,22 @@ final readonly class NodeTranslator
         private BucketingConfig $repartition,
         private ProgressStages $progress = new VoidProgress(),
     ) {}
+
+    // "{type} on {pairs}": a pair is "l" when both names are equal, "l = r" otherwise; no keys: "{type}"
+    public function joinSubject(JoinType $type, Expression $on): string
+    {
+        $keys = $on->keys();
+
+        return $keys === null
+            ? $type->value
+            : $type->value
+            . ' on '
+            . implode(', ', array_map(
+                static fn(string $left, string $right): string => $left === $right ? $left : $left . ' = ' . $right,
+                $keys->left,
+                $keys->right,
+            ));
+    }
 
     /**
      * Called once per plan, so a step Flow constructs here is rebuilt every run and a second run never sees the
@@ -102,7 +121,7 @@ final readonly class NodeTranslator
             $node instanceof Node\Aggregate && $node->groupBy->isPivot() => [new PivotProcessor(
                 $node->groupBy,
                 $node->algorithm?->build($this->cacheDir, $this->backend) ?? $this->grouping,
-                progress: $this->progress->stage(ProgressStages::PIVOT),
+                progress: $this->progress->stage(StageName::pivot),
             )],
             $node instanceof Node\Aggregate => [
                 ...array_map(
@@ -113,7 +132,7 @@ final readonly class NodeTranslator
                     $node->groupBy,
                     $node->algorithm?->build($this->cacheDir, $this->backend) ?? $this->grouping,
                     $this->randomValueGenerator,
-                    progress: $this->progress->stage(ProgressStages::GROUP_BY),
+                    progress: $this->progress->stage(StageName::group_by),
                 ),
             ],
             $node instanceof Node\BatchBy => [new BatchingByProcessor($node->column, $node->minSize)],
@@ -153,7 +172,7 @@ final readonly class NodeTranslator
                 $node->type,
                 $node->algorithm?->build($this->cacheDir, $this->backend) ?? $this->join,
                 $this->randomValueGenerator,
-                progress: $this->progress->stage(ProgressStages::JOIN),
+                progress: $this->progress->stage(StageName::join, subject: $this->joinSubject($node->type, $node->on)),
             )],
             $node instanceof Node\Limit => [new LimitTransformer($node->limit)],
             $node instanceof Node\Offset => [new OffsetProcessor($node->offset)],
@@ -163,7 +182,7 @@ final readonly class NodeTranslator
                 $node->by,
                 $this->repartition,
                 $this->randomValueGenerator,
-                $this->progress->stage(ProgressStages::REPARTITION),
+                $this->progress->stage(StageName::repartition),
             )],
             $node instanceof Node\Select => [new SelectColumnsTransformer(...$node->columns)],
             $node instanceof Node\Sort => array_map(
@@ -172,9 +191,9 @@ final readonly class NodeTranslator
                         $sort,
                         $node->columns,
                         $this->randomValueGenerator,
-                        $this->progress->stage(ProgressStages::SORT),
+                        $this->progress->stage(StageName::sort),
                     )
-                    : new MemorySortProcessor($node->columns, progress: $this->progress->stage(ProgressStages::SORT)),
+                    : new MemorySortProcessor($node->columns, progress: $this->progress->stage(StageName::sort)),
                 [$node->algorithm?->build($this->cacheDir, $this->backend) ?? $this->sort],
             ),
             $node instanceof Node\TopN => [new TopNProcessor(
@@ -182,7 +201,7 @@ final readonly class NodeTranslator
                 $node->limit,
                 $node->algorithm?->build($this->cacheDir, $this->backend) ?? $this->sort,
                 $this->randomValueGenerator,
-                progress: $this->progress->stage(ProgressStages::SORT),
+                progress: $this->progress->stage(StageName::sort),
             )],
             $node instanceof Node\Transform => [
                 $node->transformer instanceof Stateful ? $node->transformer->fresh() : $node->transformer,
@@ -201,7 +220,7 @@ final readonly class NodeTranslator
      */
     private function window(Node\WindowColumn $node): array
     {
-        $progress = $this->progress->stage(ProgressStages::WINDOW);
+        $progress = $this->progress->stage(StageName::window);
 
         return (
             $node->function->window()->partitions()->count()
@@ -211,7 +230,7 @@ final readonly class NodeTranslator
                         $this->repartition,
                         $this->randomValueGenerator,
                         $progress,
-                        ProgressStages::WINDOW,
+                        StageName::window,
                     ),
                     new WindowProcessor($node->column, $node->function, progress: $progress),
                 ]

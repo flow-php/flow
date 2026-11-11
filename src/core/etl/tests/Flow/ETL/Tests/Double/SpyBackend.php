@@ -57,6 +57,13 @@ final class SpyBackend implements Backend
         return $this->allocatedBytes;
     }
 
+    public function allocatedPeakBytes(): int
+    {
+        return 0;
+    }
+
+    public function resetAllocatedPeak(): void {}
+
     public function builder(Definition $definition): ColumnBuilder
     {
         $this->builders++;

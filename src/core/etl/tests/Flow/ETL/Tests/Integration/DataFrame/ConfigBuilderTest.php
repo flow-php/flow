@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use ArrayObject;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Kernels\Sort\ExternalSortConfig;
 use Flow\ETL\Kernels\Sort\MemorySortConfig;
 use Flow\ETL\Planning\Optimizer\Optimizer;
@@ -93,7 +94,7 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
     {
         $recording = new RecordingHeartbeat();
         $builder = config_builder()->clock(new SteppingClock())->heartbeat($recording, everySeconds: 1);
-        $sort = $builder->build()->heartbeat()?->stage('sort');
+        $sort = $builder->build()->heartbeat()?->stage(StageName::sort);
 
         $sort?->advanced(1);
         $sort?->advanced(1);
@@ -293,8 +294,8 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
             ->heartbeat();
 
         $throttle?->started();
-        $throttle?->stage('sort')->advanced(1);
-        $throttle?->stage('sort')->advanced(1);
+        $throttle?->stage(StageName::sort)->advanced(1);
+        $throttle?->stage(StageName::sort)->advanced(1);
 
         static::assertNotSame([], $recording->pulses());
         static::assertNull($recording->pulses()[0]->stages[0]->id);

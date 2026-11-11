@@ -53,6 +53,7 @@ use Flow\ETL\Values\SchemaValidator;
 use Flow\ETL\Values\Sort\SortColumn;
 use Generator;
 use NoDiscard;
+use Throwable;
 
 use function array_map;
 use function array_unique;
@@ -673,10 +674,15 @@ final readonly class DataFrame
      * @lazy
      *
      * @throws SchemaNotDerivableException
+     * @throws Throwable what a heartbeat failing with HeartbeatFailure::stop threw
      */
     public function schema(): Schema
     {
-        return $this->context->config->planner()->plan(Trigger::rows->plan($this->root, $this->writes))->schema();
+        return $this->context
+            ->config
+            ->executor()
+            ->plan(Trigger::rows->plan($this->root, $this->writes), $this->context)
+            ->schema();
     }
 
     /**

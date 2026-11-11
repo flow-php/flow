@@ -9,8 +9,8 @@ use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Foundation\Progress;
-use Flow\ETL\Foundation\ProgressStages;
 use Flow\ETL\Foundation\RandomValueGenerator;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Kernels\Bucketing\Buckets;
 use Flow\ETL\Kernels\Bucketing\HashBucketing;
@@ -78,7 +78,7 @@ final readonly class GroupByAggregationProcessor implements Distributable
             ($data['input'] ?? null) === null
                 ? null
                 : GroupByShape::of($groupBy, Schema::fromArray(type_array()->assert($data['input']))),
-            $rebuild->progress(ProgressStages::GROUP_BY, $data['progress'] ?? null),
+            $rebuild->progress(StageName::group_by, $data['progress'] ?? null),
         );
     }
 

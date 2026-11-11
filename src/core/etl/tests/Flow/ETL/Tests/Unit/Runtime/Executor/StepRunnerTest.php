@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Runtime\Executor;
 
 use Flow\ETL\Foundation\Clock\FakeClock;
 use Flow\ETL\Foundation\Exception\CorruptedRecordException;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\StageProgress;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\Operators\Join\CrossJoin;
@@ -143,8 +144,8 @@ final class StepRunnerTest extends FlowTestCase
         static::assertSame(
             ['memory://a/', 'memory://b/'],
             array_map(
-                static fn(StageProgress $commit): ?string => $commit->location,
-                HeartbeatContext::entries($recording, 'commit')[0],
+                static fn(StageProgress $commit): ?string => $commit->subject,
+                HeartbeatContext::entries($recording, StageName::commit)[0],
             ),
         );
     }
@@ -706,7 +707,7 @@ final class StepRunnerTest extends FlowTestCase
             [true, true],
             array_map(
                 static fn(StageProgress $commit): bool => $commit->endedAtSeconds !== null,
-                HeartbeatContext::entries($recording, 'commit')[0],
+                HeartbeatContext::entries($recording, StageName::commit)[0],
             ),
         );
     }

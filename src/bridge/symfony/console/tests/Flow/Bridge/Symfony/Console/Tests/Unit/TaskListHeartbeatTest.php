@@ -11,15 +11,20 @@ use Flow\Bridge\Symfony\Console\Tests\Context\TerminalContext;
 use Flow\Bridge\Symfony\Console\Tests\Mother\PulseMother;
 use Flow\Bridge\Symfony\Console\Tests\Mother\StageProgressMother;
 use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\TestWith;
 use Symfony\Component\Console\Helper\Helper;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Output\StreamOutput;
 
+use function array_filter;
+use function array_map;
+use function array_values;
 use function count;
 use function explode;
 use function Flow\Types\DSL\type_instance_of;
+use function preg_match;
 use function preg_match_all;
 use function rtrim;
 use function str_contains;
@@ -49,8 +54,8 @@ final class TaskListHeartbeatTest extends FlowTestCase
         $output = $this->terminal->stream();
 
         (new TaskListHeartbeat($output))->beat(PulseMother::pulse(elapsedSeconds: 2.0, stages: [
-            StageProgressMother::open('read', 15_301_437, 30_000_000, location: 'memory://in/orders.csv'),
-            StageProgressMother::open('sort', 11_300_000, id: 2, startedAtSeconds: 0.2),
+            StageProgressMother::open(StageName::read, 15_301_437, 30_000_000, subject: 'memory://in/orders.csv'),
+            StageProgressMother::open(StageName::sort, 11_300_000, id: 2, startedAtSeconds: 0.2),
         ]));
 
         static::assertSame(
@@ -71,7 +76,7 @@ final class TaskListHeartbeatTest extends FlowTestCase
         $output = $this->terminal->stream();
 
         (new TaskListHeartbeat($output))->beat(PulseMother::pulse(elapsedSeconds: 2.0, stages: [
-            StageProgressMother::open('read', 15_301_437, 30_000_000, location: 'memory://in/orders.csv'),
+            StageProgressMother::open(StageName::read, 15_301_437, 30_000_000, subject: 'memory://in/orders.csv'),
         ]));
 
         static::assertSame($line . "\n", $this->terminal->text($output));
@@ -84,19 +89,19 @@ final class TaskListHeartbeatTest extends FlowTestCase
         $heartbeat = new TaskListHeartbeat($output);
 
         $read = StageProgressMother::done(
-            'read',
+            StageName::read,
             1_000_000,
             endedAtSeconds: 1.0,
-            location: 'memory://in/orders-1000000.floe',
+            subject: 'memory://in/orders-1000000.floe',
         );
 
         $heartbeat->beat(PulseMother::pulse(elapsedSeconds: 2.0, stages: [
             $read,
-            StageProgressMother::open('sort', 1_000_000, id: 2),
+            StageProgressMother::open(StageName::sort, 1_000_000, id: 2),
         ]));
         $heartbeat->beat(PulseMother::pulse(beat: 2, elapsedSeconds: 3.0, stages: [
             $read,
-            StageProgressMother::done('sort', 1_000_000, endedAtSeconds: 3.0, id: 2),
+            StageProgressMother::done(StageName::sort, 1_000_000, endedAtSeconds: 3.0, id: 2),
         ]));
 
         $text = $this->terminal->text($output);
@@ -115,12 +120,12 @@ final class TaskListHeartbeatTest extends FlowTestCase
         $heartbeat = new TaskListHeartbeat($output);
         $heartbeat->beat(PulseMother::pulse(elapsedSeconds: 3.0, stages: [
             StageProgressMother::done(
-                'read',
+                StageName::read,
                 1_000_000,
                 endedAtSeconds: 1.0,
-                location: 'memory://in/orders-1000000.floe',
+                subject: 'memory://in/orders-1000000.floe',
             ),
-            StageProgressMother::done('sort', 1_000_000, endedAtSeconds: 3.0, id: 2),
+            StageProgressMother::done(StageName::sort, 1_000_000, endedAtSeconds: 3.0, id: 2),
         ]));
 
         $heartbeat->finish();
@@ -129,12 +134,88 @@ final class TaskListHeartbeatTest extends FlowTestCase
         static::assertSame([true, false], [str_contains($text, $shown), str_contains($text, $hidden)]);
     }
 
+    public function test_a_planned_stage_shows_waiting_and_a_skipped_one_shows_skipped(): void
+    {
+        $output = $this->terminal->stream();
+        $heartbeat = new TaskListHeartbeat($output);
+
+        $heartbeat->beat(PulseMother::pulse(elapsedSeconds: 2.0, stages: [
+            StageProgressMother::done(StageName::read, 1, endedAtSeconds: 1.0, id: 1),
+            StageProgressMother::planned(),
+        ]));
+        $heartbeat->beat(PulseMother::pulse(beat: 2, elapsedSeconds: 3.0, stages: [
+            StageProgressMother::done(StageName::read, 1, endedAtSeconds: 1.0, id: 1),
+            StageProgressMother::skipped(endedAtSeconds: 3.0),
+        ]));
+
+        $text = $this->terminal->text($output);
+        static::assertSame([1, 1], [
+            preg_match('/^  ○ sort\s+\.+ waiting$/mu', $text),
+            preg_match('/^  – sort\s+\.+ skipped$/mu', $text),
+        ]);
+    }
+
+    public function test_a_new_run_keeps_the_lines_of_the_run_before(): void
+    {
+        $output = $this->terminal->stream();
+        $heartbeat = new TaskListHeartbeat($output);
+
+        $heartbeat->beat(PulseMother::pulse(elapsedSeconds: 1.0, stages: [
+            StageProgressMother::done(StageName::infer, 2_500, endedAtSeconds: 1.0, id: null),
+        ]));
+        $heartbeat->beat(PulseMother::pulse(elapsedSeconds: 1.0, stages: [
+            StageProgressMother::open(StageName::read, 10, id: 1),
+        ]));
+
+        static::assertSame([false, 1], [
+            str_contains($this->terminal->raw($output), "\x1B[1A"),
+            preg_match('/✔ infer .*\n  \S read      10 rows/u', $this->terminal->text($output)),
+        ]);
+    }
+
+    public function test_no_summary_without_a_read_entry(): void
+    {
+        $output = $this->terminal->stream();
+        $heartbeat = new TaskListHeartbeat($output);
+        $heartbeat->beat(PulseMother::pulse(rowsRead: 0, elapsedSeconds: 1.0, stages: [
+            StageProgressMother::done(StageName::infer, 2_500, endedAtSeconds: 1.0, id: null),
+        ]));
+
+        $heartbeat->finish();
+
+        static::assertStringNotContainsString('   DONE  ', $this->terminal->text($output));
+    }
+
+    public function test_the_summary_fits_the_terminal_width(): void
+    {
+        $this->terminal->columns(60);
+        $output = $this->terminal->stream();
+        $heartbeat = new TaskListHeartbeat($output);
+        $heartbeat->beat(PulseMother::pulse(
+            rowsRead: 1_010_000,
+            peakMemoryBytes: 217_055_232,
+            elapsedSeconds: 1.0,
+            stages: [
+                StageProgressMother::done(StageName::read, 1_010_000, endedAtSeconds: 0.8),
+                StageProgressMother::done(StageName::commit, 48, 0.8, 1.0, id: 2, unit: ProgressUnit::files),
+            ],
+        ));
+
+        $heartbeat->finish();
+
+        $summary = array_values(array_filter(
+            explode("\n", $this->terminal->text($output)),
+            static fn(string $line): bool => str_contains($line, '   DONE  '),
+        ));
+        static::assertSame([true], array_map(static fn(string $line): bool => Helper::width($line) <= 60, $summary));
+    }
+
     public function test_memory_shows_at_verbose(): void
     {
         $output = $this->terminal->stream(OutputInterface::VERBOSITY_VERBOSE);
 
         (new TaskListHeartbeat($output))->beat(PulseMother::pulse(elapsedSeconds: 2.0, stages: [
-            StageProgressMother::open('sort', 11_300_000),
+            StageProgressMother::open(StageName::sort, 11_300_000),
         ]));
 
         static::assertSame(
@@ -149,12 +230,12 @@ final class TaskListHeartbeatTest extends FlowTestCase
         $heartbeat = new TaskListHeartbeat($output);
 
         $heartbeat->beat(PulseMother::pulse(elapsedSeconds: 2.0, stages: [
-            StageProgressMother::open('sort', 4, id: 1),
-            StageProgressMother::open('sort', 2, id: 2),
+            StageProgressMother::open(StageName::sort, 4, id: 1),
+            StageProgressMother::open(StageName::sort, 2, id: 2),
         ]));
         $heartbeat->beat(PulseMother::pulse(beat: 2, elapsedSeconds: 3.0, stages: [
-            StageProgressMother::done('sort', 6, endedAtSeconds: 2.5, id: 1),
-            StageProgressMother::done('sort', 6, endedAtSeconds: 3.0, id: 2),
+            StageProgressMother::done(StageName::sort, 6, endedAtSeconds: 2.5, id: 1),
+            StageProgressMother::done(StageName::sort, 6, endedAtSeconds: 3.0, id: 2),
         ]));
 
         $text = $this->terminal->text($output);
@@ -167,7 +248,7 @@ final class TaskListHeartbeatTest extends FlowTestCase
         $output = $this->terminal->stream();
         $heartbeat = new TaskListHeartbeat($output);
         $stages = [
-            StageProgressMother::done('read', 30, location: 'memory://in/orders.csv'),
+            StageProgressMother::done(StageName::read, 30, subject: 'memory://in/orders.csv'),
             StageProgressMother::open(id: 2),
         ];
 
@@ -189,23 +270,23 @@ final class TaskListHeartbeatTest extends FlowTestCase
             peakMemoryBytes: 671_088_640,
             elapsedSeconds: 9.2,
             stages: [
-                StageProgressMother::done('read', 30_000_000, endedAtSeconds: 5.0),
+                StageProgressMother::done(StageName::read, 30_000_000, endedAtSeconds: 5.0),
                 StageProgressMother::done(
-                    'commit',
+                    StageName::commit,
                     40,
                     7.6,
                     9.2,
                     id: 2,
-                    location: 'memory://a/',
+                    subject: 'memory://a/',
                     unit: ProgressUnit::files,
                 ),
                 StageProgressMother::done(
-                    'commit',
+                    StageName::commit,
                     42,
                     7.6,
                     9.2,
                     id: 3,
-                    location: 'memory://b/',
+                    subject: 'memory://b/',
                     unit: ProgressUnit::files,
                 ),
             ],
@@ -224,15 +305,15 @@ final class TaskListHeartbeatTest extends FlowTestCase
         $output = $this->terminal->stream();
         $heartbeat = new TaskListHeartbeat($output);
         $heartbeat->beat(PulseMother::pulse(rowsRead: 1, peakMemoryBytes: 671_088_640, elapsedSeconds: 1.0, stages: [
-            StageProgressMother::done('read', 1, endedAtSeconds: 0.2),
-            StageProgressMother::done('group_by', 1, 0.2, 0.4, id: 2, unit: ProgressUnit::groups),
+            StageProgressMother::done(StageName::read, 1, endedAtSeconds: 0.2),
+            StageProgressMother::done(StageName::group_by, 1, 0.2, 0.4, id: 2, unit: ProgressUnit::groups),
             StageProgressMother::done(
-                'commit',
+                StageName::commit,
                 1,
                 0.4,
                 1.0,
                 id: 3,
-                location: 'memory://out/',
+                subject: 'memory://out/',
                 unit: ProgressUnit::files,
             ),
         ]));
@@ -253,7 +334,7 @@ final class TaskListHeartbeatTest extends FlowTestCase
         $output = $this->terminal->stream();
         $heartbeat = new TaskListHeartbeat($output);
         $heartbeat->beat(PulseMother::pulse(rowsRead: 3, peakMemoryBytes: 671_088_640, elapsedSeconds: 1.0, stages: [
-            StageProgressMother::done('read', 3, endedAtSeconds: 1.0),
+            StageProgressMother::done(StageName::read, 3, endedAtSeconds: 1.0),
         ]));
 
         $heartbeat->finish();
@@ -277,11 +358,19 @@ final class TaskListHeartbeatTest extends FlowTestCase
     {
         $output = $this->terminal->stream();
         $heartbeat = new TaskListHeartbeat($output);
-        $heartbeat->beat(PulseMother::pulse(stages: [StageProgressMother::done('read', 3, endedAtSeconds: 1.0)]));
+        $heartbeat->beat(PulseMother::pulse(stages: [StageProgressMother::done(
+            StageName::read,
+            3,
+            endedAtSeconds: 1.0,
+        )]));
         $heartbeat->finish();
         $before = $this->terminal->text($output);
 
-        $heartbeat->beat(PulseMother::pulse(stages: [StageProgressMother::done('read', 3, endedAtSeconds: 1.0)]));
+        $heartbeat->beat(PulseMother::pulse(stages: [StageProgressMother::done(
+            StageName::read,
+            3,
+            endedAtSeconds: 1.0,
+        )]));
 
         static::assertStringStartsWith($before . '  ✔ read      3 rows ', $this->terminal->text($output));
     }
@@ -291,7 +380,7 @@ final class TaskListHeartbeatTest extends FlowTestCase
         $output = $this->terminal->stream();
 
         (new TaskListHeartbeat($output))->beat(PulseMother::pulse(stages: [StageProgressMother::done(
-            'group_by',
+            StageName::group_by,
             40,
             6.6,
             7.6,
@@ -309,7 +398,11 @@ final class TaskListHeartbeatTest extends FlowTestCase
         $output = $this->terminal->stream(OutputInterface::VERBOSITY_QUIET);
         $heartbeat = new TaskListHeartbeat($output);
 
-        $heartbeat->beat(PulseMother::pulse(stages: [StageProgressMother::done('read', 3, endedAtSeconds: 1.0)]));
+        $heartbeat->beat(PulseMother::pulse(stages: [StageProgressMother::done(
+            StageName::read,
+            3,
+            endedAtSeconds: 1.0,
+        )]));
         $heartbeat->finish();
 
         static::assertSame('', $this->terminal->raw($output));
@@ -320,13 +413,25 @@ final class TaskListHeartbeatTest extends FlowTestCase
         $output = $this->terminal->stream();
         $heartbeat = new TaskListHeartbeat($output);
         $heartbeat->beat(PulseMother::pulse(stages: [
-            StageProgressMother::open('read', 3, location: 'memory://in/orders.floe'),
-            StageProgressMother::done('read', 2, endedAtSeconds: 1.0, id: 2, location: 'memory://in/customers.floe'),
+            StageProgressMother::open(StageName::read, 3, subject: 'memory://in/orders.floe'),
+            StageProgressMother::done(
+                StageName::read,
+                2,
+                endedAtSeconds: 1.0,
+                id: 2,
+                subject: 'memory://in/customers.floe',
+            ),
         ]));
 
         $heartbeat->beat(PulseMother::pulse(beat: 2, stages: [
-            StageProgressMother::done('read', 3, endedAtSeconds: 2.0, location: 'memory://in/orders.floe'),
-            StageProgressMother::done('read', 2, endedAtSeconds: 1.0, id: 2, location: 'memory://in/customers.floe'),
+            StageProgressMother::done(StageName::read, 3, endedAtSeconds: 2.0, subject: 'memory://in/orders.floe'),
+            StageProgressMother::done(
+                StageName::read,
+                2,
+                endedAtSeconds: 1.0,
+                id: 2,
+                subject: 'memory://in/customers.floe',
+            ),
         ]));
 
         $text = $this->terminal->text($output);
@@ -338,13 +443,19 @@ final class TaskListHeartbeatTest extends FlowTestCase
         $output = $this->terminal->stream();
         $heartbeat = new TaskListHeartbeat($output);
         $heartbeat->beat(PulseMother::pulse(stages: [
-            StageProgressMother::open('read', 3, location: 'memory://in/orders.floe'),
-            StageProgressMother::open('read', 2, id: 2, location: 'memory://in/customers.floe'),
+            StageProgressMother::open(StageName::read, 3, subject: 'memory://in/orders.floe'),
+            StageProgressMother::open(StageName::read, 2, id: 2, subject: 'memory://in/customers.floe'),
         ]));
 
         $heartbeat->beat(PulseMother::pulse(beat: 2, stages: [
-            StageProgressMother::open('read', 3, location: 'memory://in/orders.floe'),
-            StageProgressMother::done('read', 2, endedAtSeconds: 1.0, id: 2, location: 'memory://in/customers.floe'),
+            StageProgressMother::open(StageName::read, 3, subject: 'memory://in/orders.floe'),
+            StageProgressMother::done(
+                StageName::read,
+                2,
+                endedAtSeconds: 1.0,
+                id: 2,
+                subject: 'memory://in/customers.floe',
+            ),
         ]));
 
         $redraw = substr($this->terminal->raw($output), (int) strrpos($this->terminal->raw($output), "\x1B[2A\x1B[0J"));
@@ -357,11 +468,11 @@ final class TaskListHeartbeatTest extends FlowTestCase
         $output = $this->terminal->stream();
         $heartbeat = new TaskListHeartbeat($output);
         $stages = [
-            StageProgressMother::done('read', 1, id: 1),
-            StageProgressMother::done('sort', 1, id: 2),
-            StageProgressMother::done('join', 1, id: 3),
-            StageProgressMother::done('window', 1, id: 4),
-            StageProgressMother::open('group_by', 1, id: 5),
+            StageProgressMother::done(StageName::read, 1, id: 1),
+            StageProgressMother::done(StageName::sort, 1, id: 2),
+            StageProgressMother::done(StageName::join, 1, id: 3),
+            StageProgressMother::done(StageName::window, 1, id: 4),
+            StageProgressMother::open(StageName::group_by, 1, id: 5),
         ];
 
         $heartbeat->beat(PulseMother::pulse(stages: $stages));
@@ -382,12 +493,24 @@ final class TaskListHeartbeatTest extends FlowTestCase
         $output = $this->terminal->stream();
         $heartbeat = new TaskListHeartbeat($output);
         $heartbeat->beat(PulseMother::pulse(stages: [
-            StageProgressMother::open('read', 3, location: 'memory://in/orders.floe'),
-            StageProgressMother::done('read', 2, endedAtSeconds: 1.0, id: 2, location: 'memory://in/customers.floe'),
+            StageProgressMother::open(StageName::read, 3, subject: 'memory://in/orders.floe'),
+            StageProgressMother::done(
+                StageName::read,
+                2,
+                endedAtSeconds: 1.0,
+                id: 2,
+                subject: 'memory://in/customers.floe',
+            ),
         ]));
         $heartbeat->beat(PulseMother::pulse(beat: 2, stages: [
-            StageProgressMother::done('read', 3, endedAtSeconds: 2.0, location: 'memory://in/orders.floe'),
-            StageProgressMother::done('read', 2, endedAtSeconds: 1.0, id: 2, location: 'memory://in/customers.floe'),
+            StageProgressMother::done(StageName::read, 3, endedAtSeconds: 2.0, subject: 'memory://in/orders.floe'),
+            StageProgressMother::done(
+                StageName::read,
+                2,
+                endedAtSeconds: 1.0,
+                id: 2,
+                subject: 'memory://in/customers.floe',
+            ),
         ]));
 
         $heartbeat->finish();
@@ -402,17 +525,17 @@ final class TaskListHeartbeatTest extends FlowTestCase
         $heartbeat = new TaskListHeartbeat($output);
 
         $heartbeat->beat(PulseMother::pulse(elapsedSeconds: 8.0, stages: [StageProgressMother::done(
-            'sort',
+            StageName::sort,
             10,
             0.0,
             6.0,
         )]));
         $heartbeat->beat(PulseMother::pulse(beat: 2, elapsedSeconds: 9.0, stages: [StageProgressMother::open(
-            'sort',
+            StageName::sort,
             20,
         )]));
         $heartbeat->beat(PulseMother::pulse(beat: 3, elapsedSeconds: 13.0, stages: [StageProgressMother::done(
-            'sort',
+            StageName::sort,
             30,
             0.0,
             12.0,
@@ -432,8 +555,8 @@ final class TaskListHeartbeatTest extends FlowTestCase
         $heartbeat = new TaskListHeartbeat($output);
 
         $heartbeat->beat(PulseMother::pulse(elapsedSeconds: 4.0, stages: [
-            StageProgressMother::done('sort', 4, endedAtSeconds: 3.0, id: 1),
-            StageProgressMother::done('sort', 2, endedAtSeconds: 3.0, id: 2),
+            StageProgressMother::done(StageName::sort, 4, endedAtSeconds: 3.0, id: 1),
+            StageProgressMother::done(StageName::sort, 2, endedAtSeconds: 3.0, id: 2),
         ]));
         $heartbeat->finish();
 
@@ -493,13 +616,13 @@ final class TaskListHeartbeatTest extends FlowTestCase
         $heartbeat = new TaskListHeartbeat($output);
 
         $heartbeat->beat(PulseMother::pulse(elapsedSeconds: 7.0, stages: [StageProgressMother::done(
-            'sort',
+            StageName::sort,
             10,
             0.0,
             6.0,
         )]));
         $heartbeat->beat(PulseMother::pulse(beat: 2, elapsedSeconds: 13.0, stages: [StageProgressMother::done(
-            'sort',
+            StageName::sort,
             30,
             0.0,
             12.0,
@@ -517,13 +640,13 @@ final class TaskListHeartbeatTest extends FlowTestCase
         $heartbeat = new TaskListHeartbeat($output);
 
         $heartbeat->beat(PulseMother::pulse(elapsedSeconds: 7.0, stages: [StageProgressMother::done(
-            'sort',
+            StageName::sort,
             10,
             0.0,
             6.0,
         )]));
         $heartbeat->beat(PulseMother::pulse(beat: 2, elapsedSeconds: 8.0, stages: [StageProgressMother::open(
-            'sort',
+            StageName::sort,
             20,
         )]));
         $heartbeat->finish();
@@ -537,11 +660,11 @@ final class TaskListHeartbeatTest extends FlowTestCase
         $output = $this->terminal->stream();
         $heartbeat = new TaskListHeartbeat($output);
         $stages = [
-            StageProgressMother::open('group_by', 1, id: 1),
-            StageProgressMother::done('read', 1, id: 2),
-            StageProgressMother::done('sort', 1, id: 3),
-            StageProgressMother::done('join', 1, id: 4),
-            StageProgressMother::done('window', 1, id: 5),
+            StageProgressMother::open(StageName::group_by, 1, id: 1),
+            StageProgressMother::done(StageName::read, 1, id: 2),
+            StageProgressMother::done(StageName::sort, 1, id: 3),
+            StageProgressMother::done(StageName::join, 1, id: 4),
+            StageProgressMother::done(StageName::window, 1, id: 5),
         ];
 
         $heartbeat->beat(PulseMother::pulse(stages: $stages));
@@ -558,7 +681,12 @@ final class TaskListHeartbeatTest extends FlowTestCase
         $output = $this->terminal->stream();
 
         (new TaskListHeartbeat($output))->beat(PulseMother::pulse(elapsedSeconds: 2.0, stages: [
-            StageProgressMother::open('sort', 15_301_437, 30_000_000, location: 'memory://in/orders-80000000.floe'),
+            StageProgressMother::open(
+                StageName::sort,
+                15_301_437,
+                30_000_000,
+                subject: 'memory://in/orders-80000000.floe',
+            ),
         ]));
 
         static::assertSame(99, Helper::width(rtrim($this->terminal->text($output), "\n")));
@@ -571,7 +699,10 @@ final class TaskListHeartbeatTest extends FlowTestCase
 
         (new TaskListHeartbeat(
             $output,
-        ))->beat(PulseMother::pulse(elapsedSeconds: 2.0, stages: [StageProgressMother::open('sort', 15_301_437)]));
+        ))->beat(PulseMother::pulse(elapsedSeconds: 2.0, stages: [StageProgressMother::open(
+            StageName::sort,
+            15_301_437,
+        )]));
 
         static::assertSame("  ⠙ sort      15,301,437 rows ........... 7.7M/s · 2.0s\n", $this->terminal->text($output));
     }
@@ -582,7 +713,12 @@ final class TaskListHeartbeatTest extends FlowTestCase
         $output = $this->terminal->stream();
 
         (new TaskListHeartbeat($output))->beat(PulseMother::pulse(elapsedSeconds: 2.0, stages: [
-            StageProgressMother::open('sort', 15_301_437, 30_000_000, location: 'memory://in/orders-80000000.floe'),
+            StageProgressMother::open(
+                StageName::sort,
+                15_301_437,
+                30_000_000,
+                subject: 'memory://in/orders-80000000.floe',
+            ),
         ]));
 
         static::assertSame("  ⠙ sort      15.3M/30.0M  51% 2.0s\n", $this->terminal->text($output));

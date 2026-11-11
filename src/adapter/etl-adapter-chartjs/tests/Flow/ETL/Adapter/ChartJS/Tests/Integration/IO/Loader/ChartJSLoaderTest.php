@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\ChartJS\Tests\Integration\IO\Loader;
 
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -54,11 +55,11 @@ final class ChartJSLoaderTest extends FlowTestCase
             ),
             flow_context()->backend(),
         );
-        $progress = new ProgressSpy('commit');
+        $progress = new ProgressSpy(StageName::commit);
 
         $loader->closure($progress);
 
-        static::assertSame([1, 2], [$progress->countOf('commit'), $progress->busyCalls('commit')]);
+        static::assertSame([1, 2], [$progress->countOf(StageName::commit), $progress->busyCalls(StageName::commit)]);
     }
 
     public function test_chartjs_output_path_without_an_extension_throws_at_build(): void

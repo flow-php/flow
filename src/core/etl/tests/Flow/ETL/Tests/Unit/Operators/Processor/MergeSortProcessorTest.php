@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Operators\Processor;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
 use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Kernels\Sort\ExternalSortConfig;
 use Flow\ETL\Operators\Processor\MergeSortProcessor;
 use Flow\ETL\Storage\MemoryRowsStorage;
@@ -148,7 +149,7 @@ final class MergeSortProcessorTest extends FlowTestCase
         );
 
         static::assertSame(['sort'], $spy->stages());
-        static::assertGreaterThan(0, $spy->countOf('sort'));
+        static::assertGreaterThan(0, $spy->countOf(StageName::sort));
     }
 
     public function test_merge_sort_processor_describes_its_progress(): void
@@ -160,7 +161,7 @@ final class MergeSortProcessorTest extends FlowTestCase
                 new ExternalSortConfig(config()->grouping),
                 [ref('id')->asc()],
                 new NativePHPRandomValueGenerator(),
-                HeartbeatContext::stageWithId('sort', 7),
+                HeartbeatContext::stageWithId(StageName::sort, 7),
             ),
             new Rebuild($spy),
         );
@@ -175,7 +176,7 @@ final class MergeSortProcessorTest extends FlowTestCase
             new ExternalSortConfig(config()->grouping),
             [ref('id')->asc()],
             new NativePHPRandomValueGenerator(),
-            $progress->stage('sort'),
+            $progress->stage(StageName::sort),
         ))->process(
             (static function (): Generator {
                 yield array_to_rows([['id' => 2], ['id' => 1]], schema(int_schema('id')));
@@ -185,16 +186,16 @@ final class MergeSortProcessorTest extends FlowTestCase
 
         $output->current();
 
-        static::assertSame(0, $progress->doneCalls('sort'));
+        static::assertSame(0, $progress->doneCalls(StageName::sort));
 
         iterator_to_array($output, false);
 
-        static::assertSame(1, $progress->doneCalls('sort'));
+        static::assertSame(1, $progress->doneCalls(StageName::sort));
     }
 
     public function test_its_distribution_holds_the_stage_it_reports_to(): void
     {
-        $stage = new ProgressSpy('sort');
+        $stage = new ProgressSpy(StageName::sort);
 
         static::assertSame(
             $stage,

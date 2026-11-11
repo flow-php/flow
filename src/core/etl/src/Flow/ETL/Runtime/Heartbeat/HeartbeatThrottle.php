@@ -9,13 +9,13 @@ use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Progress;
 use Flow\ETL\Foundation\ProgressStages;
 use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\StageProgress;
 use Flow\ETL\IO\Extractor;
 use Flow\ETL\IO\Extractor\File\FileExtractor;
 use Flow\ETL\IO\Extractor\Signal;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Memory\Consumption;
-use Flow\ETL\Values\Memory\Unit;
 use Flow\ETL\Values\Rows;
 use Flow\Telemetry\Logger\Logger;
 use Generator;
@@ -30,15 +30,26 @@ use function array_reverse;
 use function array_sum;
 use function array_values;
 use function max;
+use function memory_get_peak_usage;
 use function min;
 use function usort;
 
 /**
- * @type OwnStage = array{id: ?int, name: string, unit: ProgressUnit, location: ?string, count: int, total: ?int, startedAt: float, endedAt: ?float, open: int}
+ * @type OwnStage = array{id: ?int, name: StageName, unit: ProgressUnit, subject: ?string, count: int, total: ?int, startedAt: ?float, endedAt: ?float, open: int}
  * @type ReportedTimes = array{startedAt: float, endedAt: ?float}
  */
 final class HeartbeatThrottle implements ProgressStages
 {
+    /**
+     * @var int the PHP peak when the run started: a higher peak was reached by this run
+     */
+    private int $heapMark = 0;
+
+    /**
+     * @var array<string, OwnStage> stages made since started() that are not listed yet, by key
+     */
+    private array $made = [];
+
     private readonly Consumption $memory;
 
     private ?DateTimeImmutable $nextBeatAt = null;
@@ -102,7 +113,7 @@ final class HeartbeatThrottle implements ProgressStages
      */
     public function __construct(
         private readonly ClockInterface $clock,
-        Backend $backend,
+        private readonly Backend $backend,
         private readonly Logger $logger,
         private readonly array $heartbeats,
     ) {
@@ -140,7 +151,7 @@ final class HeartbeatThrottle implements ProgressStages
         $now = $this->secondsSinceStart();
 
         foreach ($this->stages as $key => $stage) {
-            if ($stage['open'] > 0) {
+            if ($stage['open'] > 0 || $stage['startedAt'] === null && $stage['endedAt'] === null) {
                 $this->stages[$key]['open'] = 0;
                 $this->stages[$key]['endedAt'] = $now;
             }
@@ -214,13 +225,12 @@ final class HeartbeatThrottle implements ProgressStages
      * No beat here: the reader of the batches beats, outside the source's failure path.
      *
      * @param Generator<CorruptedRecordException|Rows> $batches
-     * @param null|int $total the exact rows of the source, null when it has none or the read is narrowed
      *
      * @return Generator<int, CorruptedRecordException|Rows, null|Signal, void>
      */
-    public function reading(Generator $batches, HeartbeatStage $read, ?int $total): Generator
+    public function reading(Generator $batches, Progress $read): Generator
     {
-        $read->startedReading($total);
+        $read = $read instanceof HeartbeatStage ? $read : $this->stage(StageName::read);
 
         try {
             foreach ($batches as $batch) {
@@ -241,14 +251,18 @@ final class HeartbeatThrottle implements ProgressStages
         }
     }
 
-    public function readStage(?Progress $planned, Extractor $source): HeartbeatStage
+    /**
+     * @param null|int $total the exact rows of the source, null when it has none or the read is narrowed
+     */
+    public function readStage(?Progress $planned, Extractor $source, ?int $total): HeartbeatStage
     {
         // a pipeline planned without the run's heartbeat reads into a stage of its own
         return $planned instanceof HeartbeatStage
             ? $planned
             : $this->stage(
-                ProgressStages::READ,
-                location: $source instanceof FileExtractor ? $source->source()->location() : null,
+                StageName::read,
+                subject: $source instanceof FileExtractor ? $source->source()->location() : null,
+                total: $total,
             );
     }
 
@@ -258,21 +272,30 @@ final class HeartbeatThrottle implements ProgressStages
     }
 
     public function stage(
-        string $name,
+        StageName $stage,
         ProgressUnit $unit = ProgressUnit::rows,
         ?int $id = null,
-        ?string $location = null,
+        ?string $subject = null,
+        ?int $total = null,
     ): HeartbeatStage {
         $object = $this->objects++;
+        $id ??= $this->assignsIds() ? $object : null;
 
-        return new HeartbeatStage(
-            $name,
-            $unit,
-            $id ?? ($this->assignsIds() ? $object : null),
-            $location,
-            $this,
-            $object,
-        );
+        if ($this->assignsIds()) {
+            $this->made[$id === null ? 'object:' . $object : 'id:' . $id] = [
+                'id' => $id,
+                'name' => $stage,
+                'unit' => $unit,
+                'subject' => $subject,
+                'count' => 0,
+                'total' => $total,
+                'startedAt' => null,
+                'endedAt' => null,
+                'open' => 0,
+            ];
+        }
+
+        return new HeartbeatStage($stage, $unit, $id, $subject, $this, $object, $total);
     }
 
     /**
@@ -303,13 +326,6 @@ final class HeartbeatThrottle implements ProgressStages
         $this->progressed = $this->progressed || $rows > 0;
     }
 
-    public function stageTotalled(string $key, ?int $total): void
-    {
-        if (array_key_exists($key, $this->stages)) {
-            $this->stages[$key]['total'] = $total;
-        }
-    }
-
     public function stageCountsIn(string $key, ProgressUnit $unit): void
     {
         if (array_key_exists($key, $this->stages) && $this->stages[$key]['unit'] !== $unit) {
@@ -320,6 +336,12 @@ final class HeartbeatThrottle implements ProgressStages
 
     public function stageClosed(string $key): void
     {
+        if (array_key_exists($key, $this->made)) {
+            unset($this->made[$key]);
+
+            return;
+        }
+
         // completed() closed the entry already, or a new run started after the object opened
         if (($this->stages[$key]['open'] ?? 0) === 0) {
             return;
@@ -332,17 +354,25 @@ final class HeartbeatThrottle implements ProgressStages
         }
     }
 
-    public function stageOpened(string $key, ?int $id, string $name, ProgressUnit $unit, ?string $location): void
-    {
+    public function stageOpened(
+        string $key,
+        ?int $id,
+        StageName $name,
+        ProgressUnit $unit,
+        ?string $subject,
+        ?int $total,
+    ): void {
+        unset($this->made[$key]);
+
         if (!array_key_exists($key, $this->stages)) {
             $this->order[$key] = true;
             $this->stages[$key] = [
                 'id' => $id,
                 'name' => $name,
                 'unit' => $unit,
-                'location' => $location,
+                'subject' => $subject,
                 'count' => 0,
-                'total' => null,
+                'total' => $total,
                 'startedAt' => $this->secondsSinceStart(),
                 'endedAt' => null,
                 'open' => 1,
@@ -351,8 +381,19 @@ final class HeartbeatThrottle implements ProgressStages
             return;
         }
 
+        $this->stages[$key]['startedAt'] ??= $this->secondsSinceStart();
         $this->stages[$key]['endedAt'] = null;
         $this->stages[$key]['open']++;
+    }
+
+    public function planned(): void
+    {
+        foreach ($this->made as $key => $entry) {
+            $this->order[$key] = true;
+            $this->stages[$key] = $entry;
+        }
+
+        $this->made = [];
     }
 
     /**
@@ -363,7 +404,7 @@ final class HeartbeatThrottle implements ProgressStages
         $this->unreadRows += $rows;
 
         foreach (array_reverse(array_keys($this->stages)) as $key) {
-            if ($this->stages[$key]['name'] === ProgressStages::READ) {
+            if ($this->stages[$key]['name'] === StageName::read) {
                 $this->stages[$key]['count'] -= $rows;
 
                 return;
@@ -470,12 +511,9 @@ final class HeartbeatThrottle implements ProgressStages
      */
     private static function longestRun(array $parts): float
     {
-        return max(array_map(
-            static fn(StageProgress $stage): float => (
-                ($stage->endedAtSeconds ?? $stage->startedAtSeconds) - $stage->startedAtSeconds
-            ),
-            $parts,
-        ));
+        return max(array_map(static fn(StageProgress $stage): float => $stage->startedAtSeconds === null
+            ? 0.0
+            : ($stage->endedAtSeconds ?? $stage->startedAtSeconds) - $stage->startedAtSeconds, $parts));
     }
 
     private static function seconds(DateTimeImmutable $from, DateTimeImmutable $to): float
@@ -496,8 +534,14 @@ final class HeartbeatThrottle implements ProgressStages
         $stages = $this->stageList();
         $memoryBytes = $this->memory->capture()->inBytes() + $this->othersMemory;
         $this->totalPeak = max($this->totalPeak, $memoryBytes);
+        $heapPeak = memory_get_peak_usage(true);
         // a reporter's own peak is a true lower bound of the total at its moment, and it catches a spike between reports
-        $peakMemoryBytes = max(Unit::processPeak()->inBytes(), $this->othersPeak, $this->totalPeak);
+        $peakMemoryBytes = max(
+            $this->totalPeak,
+            $this->othersPeak,
+            $heapPeak > $this->heapMark ? $heapPeak : 0,
+            $this->backend->allocatedPeakBytes(),
+        );
         // a heartbeat that reports progress itself must not be called again inside its own beat
         $this->nextBeatAt = null;
 
@@ -585,12 +629,14 @@ final class HeartbeatThrottle implements ProgressStages
             $times = $this->reportedTimes[$key] ?? null;
 
             if ($own !== null) {
-                [$id, $name, $location, $total] = [$own['id'], $own['name'], $own['location'], $own['total']];
-                $startedAt = min($own['startedAt'], $times['startedAt'] ?? $own['startedAt']);
-                $endedAt = $own['endedAt'];
+                [$id, $name, $subject, $total] = [$own['id'], $own['name'], $own['subject'], $own['total']];
+                $startedAt = $own['startedAt'] === null
+                    ? $times['startedAt'] ?? null
+                    : min($own['startedAt'], $times['startedAt'] ?? $own['startedAt']);
+                $endedAt = $own['startedAt'] === null && $times !== null ? $times['endedAt'] : $own['endedAt'];
                 $unit = $own['unit'];
             } elseif ($others !== [] && $times !== null) {
-                [$id, $name, $location, $total] = [$others[0]->id, $others[0]->name, $others[0]->location, null];
+                [$id, $name, $subject, $total] = [$others[0]->id, $others[0]->name, $others[0]->subject, null];
                 $startedAt = $times['startedAt'];
                 $endedAt = 0.0;
                 $unit = ProgressUnit::rows;
@@ -618,7 +664,7 @@ final class HeartbeatThrottle implements ProgressStages
                 $endedAt = $endedAt === null || $times['endedAt'] === null ? null : max($endedAt, $times['endedAt']);
             }
 
-            $list[] = new StageProgress($id, $name, $unit, $location, $count, $total, $startedAt, $endedAt);
+            $list[] = new StageProgress($id, $name, $unit, $subject, $count, $total, $startedAt, $endedAt);
         }
 
         // the planner numbers stages in step order, so ids give the pipeline order; an entry without an id keeps its place
@@ -656,8 +702,11 @@ final class HeartbeatThrottle implements ProgressStages
         $this->othersMemory = 0;
         $this->othersPeak = 0;
         $this->totalPeak = 0;
+        $this->heapMark = memory_get_peak_usage(true);
+        $this->backend->resetAllocatedPeak();
         $this->stopped = false;
         $this->stages = [];
+        $this->made = [];
         $this->reports = [];
         $this->reporters = [];
         $this->reportedTimes = [];

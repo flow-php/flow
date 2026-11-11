@@ -8,8 +8,8 @@ use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Progress;
-use Flow\ETL\Foundation\ProgressStages;
 use Flow\ETL\Foundation\RandomValueGenerator;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Functions\Reference\References;
 use Flow\ETL\Kernels\Bucketing\Buckets;
@@ -39,12 +39,12 @@ final readonly class RepartitionProcessor implements Distributable
         public BucketingConfig $config,
         private RandomValueGenerator $random,
         private Progress $progress = new VoidProgress(),
-        private string $stage = ProgressStages::REPARTITION,
+        private StageName $stage = StageName::repartition,
     ) {}
 
     public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
     {
-        $stage = type_string()->assert($data['stage'] ?? ProgressStages::REPARTITION);
+        $stage = StageName::from(type_string()->assert($data['stage'] ?? StageName::repartition->value));
 
         return new self(
             $rebuild->of($data['by'] ?? null, References::class),
@@ -69,7 +69,7 @@ final readonly class RepartitionProcessor implements Distributable
                     'by' => $this->by,
                     'config' => $this->config,
                     'random' => $this->random,
-                    'stage' => $this->stage,
+                    'stage' => $this->stage->value,
                     'progress' => $this->progress instanceof Describable ? $this->progress : new VoidProgress(),
                 ])
                 : null

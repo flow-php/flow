@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\Console\Tests\Mother;
 
 use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\StageProgress;
 use Flow\ETL\Runtime\Heartbeat\Pulse;
 
@@ -15,7 +16,7 @@ final class PulseMother
      */
     public static function pulse(
         int $beat = 1,
-        string $stage = 'sort',
+        StageName $stage = StageName::sort,
         int $count = 1_250_000,
         int $rowsRead = 2_000_000,
         int $memoryBytes = 148_897_792,

@@ -9,10 +9,12 @@ use Flow\ETL\IO\Loader;
 use Flow\ETL\IO\Loader\Closure;
 use Flow\ETL\IO\Loader\Discardable;
 use Flow\ETL\IO\Transaction;
+use Flow\ETL\Operators\Transformer;
 use Flow\ETL\Runtime\ErrorHandler\LoadingError;
 use Flow\ETL\Runtime\ErrorHandler\TransformationError;
 use Flow\ETL\Runtime\FlowContext;
 use Flow\ETL\Values\Rows;
+use SplObjectStorage;
 use Throwable;
 
 /**
@@ -22,11 +24,13 @@ final readonly class TransactionLoader implements NestedLoader
 {
     /**
      * @param list<Loader|NestedLoader> $children
+     * @param null|SplObjectStorage<Loader|Transformer, Progress> $stages the stage the planner built for each write
      */
     public function __construct(
         private Transaction $transaction,
         private array $children,
         private FlowContext $context,
+        private ?SplObjectStorage $stages = null,
     ) {}
 
     /**
@@ -90,7 +94,11 @@ final readonly class TransactionLoader implements NestedLoader
         try {
             foreach ($this->children as $child) {
                 if ($child instanceof Closure) {
-                    $child->closure($progress);
+                    $child->closure(
+                        $child instanceof Loader && $this->stages !== null && $this->stages->offsetExists($child)
+                            ? $this->stages->offsetGet($child)
+                            : $progress,
+                    );
                 }
             }
 

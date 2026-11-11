@@ -9,7 +9,7 @@ use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Foundation\Progress;
-use Flow\ETL\Foundation\ProgressStages;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Functions\Reference\Reference;
 use Flow\ETL\Functions\ReferenceResolver;
@@ -56,7 +56,7 @@ final class WindowProcessor implements Processor
         $unbound = new self(
             is_array($column) ? Definitions::fromArray($column) : type_string()->assert($column),
             $rebuild->of($data['function'] ?? null, WindowFunction::class),
-            progress: $rebuild->progress(ProgressStages::WINDOW, $data['progress'] ?? null),
+            progress: $rebuild->progress(StageName::window, $data['progress'] ?? null),
         );
 
         return ($data['input'] ?? null) === null

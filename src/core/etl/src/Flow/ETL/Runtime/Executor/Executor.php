@@ -39,6 +39,24 @@ final readonly class Executor
     }
 
     /**
+     * @throws Throwable what a heartbeat failing with HeartbeatFailure::stop threw
+     */
+    public function plan(LogicalPlan $logical, FlowContext $context): PhysicalPlan
+    {
+        $heartbeat = $context->config->heartbeat();
+        $heartbeat?->started();
+
+        try {
+            $plan = $context->config->planner()->plan($logical, $context->config->progress());
+            $heartbeat?->completed();
+
+            return $plan;
+        } finally {
+            $heartbeat?->finished();
+        }
+    }
+
+    /**
      * Plans and runs a whole plan inside one DataFrame span of $context: a planning failure closes the span as failed.
      *
      * @param null|RunCounts $counts counts the rows every source yields, a joined frame's included, and the peak of
@@ -61,6 +79,7 @@ final readonly class Executor
 
         try {
             $plan = $context->config->planner()->plan($logical, $context->config->progress());
+            $context->config->heartbeat()?->planned();
 
             foreach ($this->executePlan($plan, $context, $counts) as $rows) {
                 // disarmed across our own yield: while parked we are not advancing, so a second read
@@ -214,11 +233,11 @@ final readonly class Executor
 
         // a launch reports its totals through Progress::reported(), a fed branch was counted at its source
         if ($heartbeat !== null && $launch === null && $read instanceof Read) {
-            $generator = $heartbeat->reading(
-                $generator,
-                $heartbeat->readStage($chain[0]->read, $source),
+            $generator = $heartbeat->reading($generator, $heartbeat->readStage(
+                $chain[0]->read,
+                $source,
                 $criteria->narrows() ? null : $source->statistics()->rows->exactly(),
-            );
+            ));
         }
 
         foreach ($chain as $position => $stage) {

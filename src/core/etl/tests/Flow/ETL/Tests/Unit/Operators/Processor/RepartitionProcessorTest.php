@@ -6,8 +6,8 @@ namespace Flow\ETL\Tests\Unit\Operators\Processor;
 
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
-use Flow\ETL\Foundation\ProgressStages;
 use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Operators\Processor\RepartitionProcessor;
 use Flow\ETL\Storage\MemoryRowsStorage;
 use Flow\ETL\Tests\Context\DescribeRoundTrip;
@@ -345,7 +345,7 @@ final class RepartitionProcessorTest extends FlowTestCase
         );
 
         static::assertSame(['repartition'], $spy->stages());
-        static::assertGreaterThan(0, $spy->countOf('repartition'));
+        static::assertGreaterThan(0, $spy->countOf(StageName::repartition));
     }
 
     public function test_a_window_repartition_rebuilds_with_the_window_stage(): void
@@ -357,7 +357,7 @@ final class RepartitionProcessorTest extends FlowTestCase
                 refs('id'),
                 config()->repartition,
                 new NativePHPRandomValueGenerator(),
-                stage: ProgressStages::WINDOW,
+                stage: StageName::window,
             ),
             new Rebuild($spy),
         );
@@ -393,7 +393,7 @@ final class RepartitionProcessorTest extends FlowTestCase
                 refs(ref('k')),
                 new MemoryRowsStorage(),
                 Unit::fromBytes($memoryLimitBytes),
-                progress: $progress->stage('repartition'),
+                progress: $progress->stage(StageName::repartition),
             )->process(
                 (static function () use ($schema): Generator {
                     yield array_to_rows([['k' => 'a', 'v' => 1], ['k' => 'b', 'v' => 2]], $schema);
@@ -404,7 +404,7 @@ final class RepartitionProcessorTest extends FlowTestCase
             false,
         );
 
-        static::assertSame(4, $progress->countOf('repartition'));
+        static::assertSame(4, $progress->countOf(StageName::repartition));
     }
 
     public function test_repartition_processor_describes_its_progress(): void
@@ -416,8 +416,8 @@ final class RepartitionProcessorTest extends FlowTestCase
                 refs('id'),
                 config()->repartition,
                 new NativePHPRandomValueGenerator(),
-                HeartbeatContext::stageWithId('window', 7),
-                'window',
+                HeartbeatContext::stageWithId(StageName::window, 7),
+                StageName::window,
             ),
             new Rebuild($spy),
         );
@@ -432,7 +432,7 @@ final class RepartitionProcessorTest extends FlowTestCase
             refs('id'),
             config()->repartition,
             new NativePHPRandomValueGenerator(),
-            $progress->stage('repartition'),
+            $progress->stage(StageName::repartition),
         ))->process(
             (static function (): Generator {
                 yield array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
@@ -442,16 +442,16 @@ final class RepartitionProcessorTest extends FlowTestCase
 
         $output->current();
 
-        static::assertSame(0, $progress->doneCalls('repartition'));
+        static::assertSame(0, $progress->doneCalls(StageName::repartition));
 
         iterator_to_array($output, false);
 
-        static::assertSame(1, $progress->doneCalls('repartition'));
+        static::assertSame(1, $progress->doneCalls(StageName::repartition));
     }
 
     public function test_its_distribution_holds_the_stage_it_reports_to(): void
     {
-        $stage = new ProgressSpy('repartition');
+        $stage = new ProgressSpy(StageName::repartition);
 
         static::assertSame(
             $stage,
@@ -473,7 +473,7 @@ final class RepartitionProcessorTest extends FlowTestCase
                 refs(ref('id')),
                 new MemoryRowsStorage(),
                 Unit::fromBytes(1),
-                progress: $progress->stage('repartition'),
+                progress: $progress->stage(StageName::repartition),
             )->process(
                 (static function (): Generator {
                     yield array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
@@ -484,6 +484,6 @@ final class RepartitionProcessorTest extends FlowTestCase
             false,
         );
 
-        static::assertSame(1, $progress->doneCalls('repartition'));
+        static::assertSame(1, $progress->doneCalls(StageName::repartition));
     }
 }

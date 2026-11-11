@@ -22,6 +22,7 @@ use function count;
 use function implode;
 use function max;
 use function min;
+use function number_format;
 use function sprintf;
 use function str_pad;
 use function str_repeat;
@@ -32,7 +33,7 @@ final class TaskListHeartbeat implements ConsoleHeartbeat
 
     private const int LABEL_WIDTH = 10;
 
-    private const int LOCATION_WIDTH = 24;
+    private const int SUBJECT_WIDTH = 24;
 
     private const int MIN_DOTS = 3;
 
@@ -60,6 +61,14 @@ final class TaskListHeartbeat implements ConsoleHeartbeat
     {
         if ($this->output->isQuiet()) {
             return;
+        }
+
+        // a first beat after an earlier one is a new run: the lines of the run before stay where they are
+        if ($pulse->beat === 1 && $this->last !== null) {
+            $this->redrawableLines = 0;
+            $this->frozenLines = 0;
+            $this->printed = [];
+            $this->short = false;
         }
 
         $this->graph?->recorded($pulse);
@@ -96,16 +105,9 @@ final class TaskListHeartbeat implements ConsoleHeartbeat
         // a failed run leaves its DONE lines; the open ones go
         $this->redraw($done, array_fill(0, count($done), true));
 
-        if (StageLine::runCompleted($last)) {
-            $files = StageLine::filesWritten($last);
+        if (StageLine::readCompleted($last)) {
             $this->output->writeln('');
-            $this->output->writeln(sprintf(
-                '  <bg=green;fg=black> DONE </> <options=bold>%s</> in <options=bold>%s</><fg=gray> · peak %s%s</>',
-                StageLine::counted($last->rowsRead, ProgressUnit::rows),
-                StageLine::seconds($last->elapsedSeconds),
-                StageLine::memory($last->peakMemoryBytes),
-                $files === null ? '' : ' · ' . StageLine::counted($files, ProgressUnit::files) . ' written',
-            ));
+            $this->output->writeln($this->summary($last, min(self::MAX_WIDTH, (new Terminal())->getWidth()) - 1));
             $this->output->writeln('');
         }
 
@@ -137,7 +139,21 @@ final class TaskListHeartbeat implements ConsoleHeartbeat
             $rate = $line->rate();
             $key = StageLine::key($stage, $position);
 
-            if ($stage->endedAtSeconds === null) {
+            if (!$line->started()) {
+                $skipped = $stage->endedAtSeconds !== null;
+                $drawn = $this->notStartedLine(
+                    $skipped ? '<fg=gray>–</>' : '<fg=gray>○</>',
+                    $line,
+                    $width,
+                    $skipped ? '<fg=gray>skipped</>' : '<fg=gray>waiting</>',
+                );
+
+                if ($skipped) {
+                    $this->printed[$key] = [$stage->endedAtSeconds, $drawn, $drawn];
+                } else {
+                    unset($this->printed[$key]);
+                }
+            } elseif ($stage->endedAtSeconds === null) {
                 unset($this->printed[$key]);
                 $icon = '<fg=cyan>' . self::SPINNER[$this->frame % count(self::SPINNER)] . '</>';
                 $right = [
@@ -146,7 +162,7 @@ final class TaskListHeartbeat implements ConsoleHeartbeat
                     'memory' => $this->output->isVerbose()
                         ? '<fg=gray>' . StageLine::memory($pulse->memoryBytes) . '</>'
                         : null,
-                    'time' => $line->duration(),
+                    'time' => (string) $line->duration(),
                 ];
                 $drawn = $short
                     ? $this->shortLine($icon, $line, $width, $right)
@@ -158,7 +174,7 @@ final class TaskListHeartbeat implements ConsoleHeartbeat
                         'graph' => $this->graph($stage, $position, $width),
                         'rate' => $rate === null ? null : '<fg=gray>' . $rate . '</>',
                         'memory' => null,
-                        'time' => '<fg=gray>' . $line->duration() . '</> <fg=green;options=bold>DONE</>',
+                        'time' => '<fg=gray>' . (string) $line->duration() . '</> <fg=green;options=bold>DONE</>',
                     ];
                     $this->printed[$key] = [
                         $stage->endedAtSeconds,
@@ -186,7 +202,7 @@ final class TaskListHeartbeat implements ConsoleHeartbeat
     private function exactLine(string $icon, StageLine $line, int $width, array $right): ?string
     {
         return $this->fittedDroppingColumns(
-            $this->label($icon, $line) . $this->location($line->location(self::LOCATION_WIDTH)) . $line->exactCount()
+            $this->label($icon, $line) . $this->subject($line->subject(self::SUBJECT_WIDTH)) . $line->exactCount()
                 . $this->percent($line),
             $right,
             $width,
@@ -199,9 +215,9 @@ final class TaskListHeartbeat implements ConsoleHeartbeat
     private function shortLine(string $icon, StageLine $line, int $width, array $right): string
     {
         $label = $this->label($icon, $line);
-        $location = $line->location(self::LOCATION_WIDTH);
+        $subject = $line->subject(self::SUBJECT_WIDTH);
         $count = $line->shortCount() . $this->percent($line);
-        $drawn = $this->fittedDroppingColumns($label . $this->location($location) . $count, $right, $width);
+        $drawn = $this->fittedDroppingColumns($label . $this->subject($subject) . $count, $right, $width);
 
         if ($drawn !== null) {
             return $drawn;
@@ -209,10 +225,10 @@ final class TaskListHeartbeat implements ConsoleHeartbeat
 
         $columns = ['time' => $right['time']];
 
-        if ($location !== null) {
+        if ($subject !== null) {
             $room = $width - $this->visible($label . $count) - $this->visible($right['time']) - 2 - self::MIN_DOTS - 2;
-            $cut = $line->location($room);
-            $drawn = $cut === null ? null : $this->fitted($label . $this->location($cut) . $count, $columns, $width);
+            $cut = $line->subject($room);
+            $drawn = $cut === null ? null : $this->fitted($label . $this->subject($cut) . $count, $columns, $width);
 
             if ($drawn !== null) {
                 return $drawn;
@@ -242,6 +258,55 @@ final class TaskListHeartbeat implements ConsoleHeartbeat
         return null;
     }
 
+    private function notStartedLine(string $icon, StageLine $line, int $width, string $state): string
+    {
+        $label = $this->label($icon, $line);
+        $columns = ['time' => $state];
+
+        return (
+            $this->fitted($label . $this->subject($line->subject(self::SUBJECT_WIDTH)), $columns, $width)
+            ?? $this->fitted($label, $columns, $width)
+            ?? $label . ' ' . $state
+        );
+    }
+
+    // the first form that fits: exact counts, short counts, without the files, without the peak
+    private function summary(Pulse $last, int $width): string
+    {
+        $files = StageLine::filesWritten($last);
+        $rows = StageLine::unitName($last->rowsRead, ProgressUnit::rows);
+        $written = $files === null
+            ? null
+            : '<fg=gray>' . StageLine::counted($files, ProgressUnit::files) . ' written</>';
+        $time = ' in <options=bold>' . StageLine::seconds($last->elapsedSeconds) . '</>';
+        $peak = '<fg=gray>peak ' . StageLine::memory($last->peakMemoryBytes) . '</>';
+        $forms = [
+            [number_format($last->rowsRead) . ' ' . $rows, $peak, $written],
+            [StageLine::human($last->rowsRead) . ' ' . $rows, $peak, $written],
+            [StageLine::human($last->rowsRead) . ' ' . $rows, $peak, null],
+            [StageLine::human($last->rowsRead) . ' ' . $rows, null, null],
+        ];
+        $lines = array_map(
+            static fn(array $form): string => '  <bg=green;fg=black> DONE </> <options=bold>'
+            . $form[0]
+            . '</>'
+            . $time
+            . implode('', array_map(
+                static fn(string $part): string => '<fg=gray> · </>' . $part,
+                array_filter([$form[1], $form[2]], static fn(?string $part): bool => $part !== null),
+            )),
+            $forms,
+        );
+
+        foreach ($lines as $line) {
+            if ($this->visible($line) <= $width) {
+                return $line;
+            }
+        }
+
+        return $lines[count($lines) - 1];
+    }
+
     private function label(string $icon, StageLine $line): string
     {
         return (
@@ -259,9 +324,9 @@ final class TaskListHeartbeat implements ConsoleHeartbeat
         return $line->percent() === null ? '' : sprintf(' <fg=gray>%3d%%</>', $line->percent());
     }
 
-    private function location(?string $location): string
+    private function subject(?string $subject): string
     {
-        return $location === null ? '' : '<fg=gray>' . OutputFormatter::escape($location) . '</>  ';
+        return $subject === null ? '' : '<fg=gray>' . OutputFormatter::escape($subject) . '</>  ';
     }
 
     /**

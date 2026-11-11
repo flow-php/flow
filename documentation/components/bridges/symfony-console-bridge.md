@@ -96,6 +96,10 @@ A run with a join, 5,000,000 rows, while it reads:
   ⠼ sort      1,075,200 rows .................................................... 1.1M/s · 1.0s
 ```
 
+- Every planned stage has a line from the first beat, so the lines keep their place. A stage that has not started
+  shows `waiting`. A stage that ended without a start, such as a sort after a filter that drops every row, shows
+  `skipped`.
+- A join line shows its condition, for example `join      inner on customer_id  1,075,200 rows`.
 - A read with an exact total shows a percentage while it runs.
 - A rate shows only for rows, and only for a stage that ran at least 0.5 s.
 - After it took in every row, a `sort` shows its full row count. It stays open while it merges and emits.
@@ -103,6 +107,8 @@ A run with a join, 5,000,000 rows, while it reads:
 - On a narrow terminal a line drops columns from the right: memory, rate, graph. Then the count turns short
   (`15.3M/30.0M`), then the line cuts the location, then drops it.
 - At `-v` a running line also shows the memory.
+- The summary takes the first of these forms that fits the terminal: exact counts, short counts (`1.0M rows`), without
+  the files, without the peak.
 
 ### graph
 
@@ -119,7 +125,8 @@ its sparkline. The sparkline needs 90 columns. Below that, the style draws `task
 
 `ConsoleStyle::line`. One status line. A finished stage shrinks to `read √ ›`. When the line does not fit, it drops
 the locations, then the finished stages, then shows only the latest running stage and `+1 running`. The summary
-replaces the line and stays. Use it on a narrow terminal, or in a command that prints its own output between runs.
+replaces the line and stays. A stage that has not started is left out, and a skipped stage counts as finished, with
+no check mark. Use it on a narrow terminal, or in a command that prints its own output between runs.
 
 ```
  ⠸ read √ › sort 80.0M rows 9.2M/s · group by 9.5M rows 3.0M/s 8.8s
@@ -132,8 +139,9 @@ replaces the line and stays. Use it on a narrow terminal, or in a command that p
 ### log
 
 `ConsoleStyle::log`. Lines that are only appended, each with the time since the start. A stage that ends gets one
-line. Every 10 seconds, each running stage gets one line. One summary ends the run. No cursor moves. Use it for CI
-and for files.
+line. Every 10 seconds, each running stage gets one line. A stage that has not started prints nothing, and a stage
+that never started prints `skipped` once at the end of the run. One summary ends the run. No cursor moves. Use it for
+CI and for files.
 
 ```
 [00:05] read      orders-80000000.floe  done 80,000,000 rows in 6.0s, 13.4M rows/s
@@ -174,4 +182,7 @@ Call `finish()` after each run, in a `finally` block.
 - After a completed run it prints the summary and leaves the finished lines on the screen. Its `peak` is
   `Pulse::$peakMemoryBytes`: in a parallel run, the highest memory of all processes together.
 - It always clears the running lines. After a failed run only the finished lines stay.
+- A run that read nothing, such as `DataFrame::schema()`, gets no summary.
 - A beat after `finish()` starts a new block.
+- A first beat (`Pulse::$beat` is 1) after an earlier beat starts a new run without `finish()`: `tasks` and `graph`
+  keep the lines of the run before, and `log` starts its 10-second lines again.

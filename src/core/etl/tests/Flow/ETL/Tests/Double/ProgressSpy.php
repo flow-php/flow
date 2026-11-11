@@ -8,6 +8,7 @@ use ArrayObject;
 use Flow\ETL\Foundation\Progress;
 use Flow\ETL\Foundation\ProgressStages;
 use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
 
 use function array_keys;
 use function array_map;
@@ -17,15 +18,19 @@ use function is_int;
 
 final readonly class ProgressSpy implements Progress, ProgressStages
 {
+    private string $stage;
+
     /**
      * @param ArrayObject<int, array{string, int|'busy'|'done'|ProgressUnit}> $advancedLog
      * @param ArrayObject<int, array{string, ProgressUnit, ?int, ?string}> $builtLog
      */
     public function __construct(
-        private string $stage = '',
+        ?StageName $stage = null,
         private ArrayObject $advancedLog = new ArrayObject(),
         private ArrayObject $builtLog = new ArrayObject(),
-    ) {}
+    ) {
+        $this->stage = $stage->value ?? '';
+    }
 
     public function advanced(int $rows): void
     {
@@ -51,13 +56,13 @@ final readonly class ProgressSpy implements Progress, ProgressStages
     /**
      * What $stage counted while it counted in $unit; a stage counts in rows until its first countsIn().
      */
-    public function countIn(string $stage, ProgressUnit $unit): int
+    public function countIn(StageName $stage, ProgressUnit $unit): int
     {
         $count = 0;
         $current = ProgressUnit::rows;
 
         foreach ($this->advancedLog as [$name, $logged]) {
-            if ($name !== $stage) {
+            if ($name !== $stage->value) {
                 continue;
             }
 
@@ -74,12 +79,12 @@ final readonly class ProgressSpy implements Progress, ProgressStages
     /**
      * @return list<ProgressUnit> the units $stage switched to, in call order
      */
-    public function unitsOf(string $stage): array
+    public function unitsOf(StageName $stage): array
     {
         $units = [];
 
         foreach ($this->advancedLog as [$name, $logged]) {
-            if ($name === $stage && $logged instanceof ProgressUnit) {
+            if ($name === $stage->value && $logged instanceof ProgressUnit) {
                 $units[] = $logged;
             }
         }
@@ -97,9 +102,9 @@ final readonly class ProgressSpy implements Progress, ProgressStages
         $this->advancedLog->append([$this->stage, 'busy']);
     }
 
-    public function busyCalls(string $stage): int
+    public function busyCalls(StageName $stage): int
     {
-        return count(array_keys($this->advancedCalls(), [$stage, 'busy'], true));
+        return count(array_keys($this->advancedCalls(), [$stage->value, 'busy'], true));
     }
 
     public function done(): void
@@ -107,9 +112,9 @@ final readonly class ProgressSpy implements Progress, ProgressStages
         $this->advancedLog->append([$this->stage, 'done']);
     }
 
-    public function doneCalls(string $stage): int
+    public function doneCalls(StageName $stage): int
     {
-        return count(array_keys($this->advancedCalls(), [$stage, 'done'], true));
+        return count(array_keys($this->advancedCalls(), [$stage->value, 'done'], true));
     }
 
     public function ended(int $rowsRead, array $stages, int $memoryBytes, int $peakMemoryBytes): void {}
@@ -127,12 +132,15 @@ final readonly class ProgressSpy implements Progress, ProgressStages
         return null;
     }
 
-    public function countOf(string $stage): int
+    /**
+     * @param null|StageName $stage null: what a spy built with no stage counted
+     */
+    public function countOf(?StageName $stage): int
     {
         $rows = 0;
 
         foreach ($this->advancedLog as [$name, $advanced]) {
-            if ($name === $stage && is_int($advanced)) {
+            if ($name === ($stage->value ?? '') && is_int($advanced)) {
                 $rows += $advanced;
             }
         }
@@ -141,14 +149,15 @@ final readonly class ProgressSpy implements Progress, ProgressStages
     }
 
     public function stage(
-        string $name,
+        StageName $stage,
         ProgressUnit $unit = ProgressUnit::rows,
         ?int $id = null,
-        ?string $location = null,
+        ?string $subject = null,
+        ?int $total = null,
     ): Progress {
-        $this->builtLog->append([$name, $unit, $id, $location]);
+        $this->builtLog->append([$stage->value, $unit, $id, $subject]);
 
-        return new self($name, $this->advancedLog, $this->builtLog);
+        return new self($stage, $this->advancedLog, $this->builtLog);
     }
 
     /**

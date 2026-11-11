@@ -11,7 +11,7 @@ use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\RuntimeException;
 use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Foundation\Progress;
-use Flow\ETL\Foundation\ProgressStages;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Operators\BoundStep;
 use Flow\ETL\Operators\GroupBy;
@@ -53,7 +53,7 @@ final readonly class PivotProcessor implements Distributable
             ($data['input'] ?? null) === null
                 ? null
                 : PivotShape::of($groupBy, Schema::fromArray(type_array()->assert($data['input']))),
-            $rebuild->progress(ProgressStages::PIVOT, $data['progress'] ?? null),
+            $rebuild->progress(StageName::pivot, $data['progress'] ?? null),
         );
     }
 

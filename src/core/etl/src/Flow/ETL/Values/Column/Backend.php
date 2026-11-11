@@ -138,4 +138,11 @@ interface Backend
      * Bytes this backend holds outside PHP's memory manager (invisible to memory_get_usage() and memory_limit).
      */
     public function allocatedBytes(): int;
+
+    /**
+     * The highest allocatedBytes() since the last resetAllocatedPeak().
+     */
+    public function allocatedPeakBytes(): int;
+
+    public function resetAllocatedPeak(): void;
 }

@@ -46,10 +46,11 @@ final readonly class VoidProgress implements Describable, Progress, ProgressStag
     }
 
     public function stage(
-        string $name,
+        StageName $stage,
         ProgressUnit $unit = ProgressUnit::rows,
         ?int $id = null,
-        ?string $location = null,
+        ?string $subject = null,
+        ?int $total = null,
     ): Progress {
         return $this;
     }

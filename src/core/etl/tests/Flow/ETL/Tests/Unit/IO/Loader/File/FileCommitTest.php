@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\IO\Loader\File;
 use ArrayObject;
 use Flow\ETL\Foundation\Exception\RuntimeException;
 use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Filesystem\SaveMode;
 use Flow\ETL\IO\Loader\File\FileCommit;
@@ -132,7 +133,7 @@ final class FileCommitTest extends FlowTestCase
         $commit->open([new Partition('dept', 'b')])->append('b');
         $this->log->exchangeArray([]);
 
-        $commit->commit([0], new ProgressSpy('commit', advancedLog: $this->log));
+        $commit->commit([0], new ProgressSpy(StageName::commit, advancedLog: $this->log));
 
         static::assertSame(
             [
@@ -182,7 +183,7 @@ final class FileCommitTest extends FlowTestCase
         $commit->open([new Partition('dept', 'b')])->append('b');
         $this->log->exchangeArray([]);
 
-        $commit->commit([0], new ProgressSpy('commit', advancedLog: $this->log));
+        $commit->commit([0], new ProgressSpy(StageName::commit, advancedLog: $this->log));
 
         static::assertSame([['commit', 1], ['commit', 1]], $this->log->getArrayCopy());
     }
@@ -195,7 +196,7 @@ final class FileCommitTest extends FlowTestCase
         $commit->open([new Partition('dept', 'a')])->append('a');
         $this->log->exchangeArray([]);
 
-        $commit->commit([0], new ProgressSpy('commit', advancedLog: $this->log));
+        $commit->commit([0], new ProgressSpy(StageName::commit, advancedLog: $this->log));
 
         static::assertSame(
             [
@@ -221,7 +222,7 @@ final class FileCommitTest extends FlowTestCase
         $commit->admit(true);
         $this->log->exchangeArray([]);
 
-        $commit->commit([0], new ProgressSpy('commit', advancedLog: $this->log));
+        $commit->commit([0], new ProgressSpy(StageName::commit, advancedLog: $this->log));
 
         static::assertSame(
             [['List', 0], ['commit', 'busy'], ['List', 0], ['commit', 'busy']],
@@ -242,7 +243,7 @@ final class FileCommitTest extends FlowTestCase
             $job->task(0),
         ))->open([new Partition('dept', 'a')])->append('a');
 
-        $job->commit([1], new ProgressSpy('commit', advancedLog: $this->log));
+        $job->commit([1], new ProgressSpy(StageName::commit, advancedLog: $this->log));
 
         static::assertSame(
             [['List', 0], ['commit', 'busy'], ['List', 0], ['commit', 'busy'], ['Rm', 0], ['commit', 'busy']],

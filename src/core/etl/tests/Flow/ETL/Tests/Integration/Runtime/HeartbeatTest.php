@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Integration\Runtime;
 
 use Closure;
 use Flow\ETL\API\DataFrame;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\StageProgress;
 use Flow\ETL\Tests\Context\HeartbeatContext;
 use Flow\ETL\Tests\Double\RecordingHeartbeat;
@@ -96,7 +97,7 @@ final class HeartbeatTest extends FlowIntegrationTestCase
         static::assertNotSame(
             [],
             array_filter(
-                HeartbeatContext::entries($recording, $stage),
+                HeartbeatContext::entries($recording, StageName::from($stage)),
                 static fn(array $entries): bool => $entries !== [],
             ),
         );
@@ -122,7 +123,7 @@ final class HeartbeatTest extends FlowIntegrationTestCase
             20,
             max(array_map(
                 static fn(StageProgress $sort): int => $sort->count,
-                array_merge(...HeartbeatContext::entries($recording, 'sort')),
+                array_merge(...HeartbeatContext::entries($recording, StageName::sort)),
             )),
         );
     }

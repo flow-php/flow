@@ -6,8 +6,8 @@ namespace Flow\ETL\Runtime\Executor;
 
 use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Progress;
-use Flow\ETL\Foundation\ProgressStages;
 use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\IO\CorruptedRecordsRouter;
 use Flow\ETL\IO\Extractor;
 use Flow\ETL\IO\Extractor\Reader;
@@ -73,10 +73,10 @@ final readonly class StepRunner
         $run = [];
 
         foreach ($steps->breaker === null ? $steps->steps : [...$steps->steps, $steps->breaker] as $step) {
-            $step = $this->writes->step($step, $context->errorHandler(), $context);
+            $step = $this->writes->step($step, $context->errorHandler(), $context, $steps->stages);
 
             if ($step instanceof Processor || $step instanceof JoinStep) {
-                $input = $this->boundary($step, $run, $input, $context, $source, $counts, $steps->commits);
+                $input = $this->boundary($step, $run, $input, $context, $source, $counts, $steps->stages);
                 $source = null;
                 $run = [];
 
@@ -86,7 +86,7 @@ final readonly class StepRunner
             $run[] = $step;
         }
 
-        return $this->run($run, $input, $context, $source, $steps->commits);
+        return $this->run($run, $input, $context, $source, $steps->stages);
     }
 
     /**
@@ -98,7 +98,7 @@ final readonly class StepRunner
      * @param Generator<CorruptedRecordException|Rows> $input
      * @param null|Extractor|Reader $source the source $input comes from directly, so its failures reach the error
      *                                      handler and its corrupted records its reject loader
-     * @param null|SplObjectStorage<Loader, Progress> $commits the commit stage the planner built for each write
+     * @param null|SplObjectStorage<Loader|Transformer, Progress> $stages the stage the planner built for each write and each join_each
      *
      * @return Generator<int, Rows, null|Signal, void>
      */
@@ -107,7 +107,7 @@ final readonly class StepRunner
         Generator $input,
         FlowContext $context,
         Extractor|Reader|null $source = null,
-        ?SplObjectStorage $commits = null,
+        ?SplObjectStorage $stages = null,
     ): Generator {
         $loaders = [];
         $limits = [];
@@ -119,11 +119,18 @@ final readonly class StepRunner
             $loaders[] = $rejects;
         }
 
+        /** @var SplObjectStorage<Transformer, Progress> $joinStages */
+        $joinStages = new SplObjectStorage();
+
         foreach ($steps as $step) {
             if (!$step instanceof Transformer) {
                 $loaders[] = $step;
             } elseif ($step instanceof Limiting) {
                 $limits[] = $step;
+            }
+
+            if ($step instanceof Transformer && $stages !== null && $stages->offsetExists($step)) {
+                $joinStages->offsetSet($step, $stages->offsetGet($step));
             }
         }
 
@@ -206,6 +213,10 @@ final readonly class StepRunner
                         continue;
                     }
 
+                    if ($joinStages->offsetExists($step)) {
+                        $joinStages->offsetGet($step)->advanced($rows->count());
+                    }
+
                     try {
                         $rows = $this->telemetry->transform($step, $rows, $context);
                     } catch (Throwable $failure) {
@@ -270,7 +281,11 @@ final readonly class StepRunner
 
             throw $failure;
         } finally {
-            $endings = $this->endLoaders($loaders, $context, $completed, $commits);
+            foreach ($joinStages as $step) {
+                $joinStages->offsetGet($step)->done();
+            }
+
+            $endings = $this->endLoaders($loaders, $context, $completed, $stages);
         }
 
         // unreachable while an exception is in flight, so a failed run keeps its own exception
@@ -367,7 +382,7 @@ final readonly class StepRunner
      * wrapper left to distrust.
      *
      * @param array<Loader|NestedLoader> $loaders
-     * @param null|SplObjectStorage<Loader, Progress> $commits the commit stage the planner built for each write
+     * @param null|SplObjectStorage<Loader|Transformer, Progress> $stages the stage the planner built for each write and each join_each
      *
      * @return array<Throwable> failures raised while ending, empty when the run did not complete
      */
@@ -375,7 +390,7 @@ final readonly class StepRunner
         array $loaders,
         FlowContext $context,
         bool $completed,
-        ?SplObjectStorage $commits = null,
+        ?SplObjectStorage $stages = null,
     ): array {
         $ending = [];
         $heartbeat = $context->config->heartbeat();
@@ -384,12 +399,12 @@ final readonly class StepRunner
             // a stopped heartbeat ends the run, so nothing more is published
             $closing = $completed && !($heartbeat?->stopped() ?? false);
             // a write the planner did not see, such as a reject loader, gets its stage here
-            $progress = $loader instanceof Loader && $commits !== null && $commits->offsetExists($loader)
-                ? $commits->offsetGet($loader)
+            $progress = $loader instanceof Loader && $stages !== null && $stages->offsetExists($loader)
+                ? $stages->offsetGet($loader)
                 : $context->config->progress()->stage(
-                    ProgressStages::COMMIT,
+                    StageName::commit,
                     ProgressUnit::files,
-                    location: $heartbeat !== null && $loader instanceof FileLoader
+                    subject: $heartbeat !== null && $loader instanceof FileLoader
                         ? FileCommit::locationOf($loader->destination())
                         : null,
                 );
@@ -473,7 +488,7 @@ final readonly class StepRunner
     /**
      * @param list<Loader|NestedLoader|Transformer> $run
      * @param Generator<CorruptedRecordException|Rows> $input
-     * @param null|SplObjectStorage<Loader, Progress> $commits
+     * @param null|SplObjectStorage<Loader|Transformer, Progress> $stages
      *
      * @return Generator<int, Rows, null|Signal, void>
      */
@@ -484,10 +499,10 @@ final readonly class StepRunner
         FlowContext $context,
         Extractor|Reader|null $source,
         ?RunCounts $counts,
-        ?SplObjectStorage $commits,
+        ?SplObjectStorage $stages,
     ): Generator {
         $upstreamStarted = false;
-        $upstream = $this->started($this->run($run, $input, $context, $source, $commits), $upstreamStarted);
+        $upstream = $this->started($this->run($run, $input, $context, $source, $stages), $upstreamStarted);
 
         if (!$step instanceof JoinStep) {
             return $this->unwinding(

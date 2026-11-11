@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Foundation;
 
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -15,7 +16,7 @@ final class VoidProgressTest extends FlowTestCase
     {
         $progress = new VoidProgress();
 
-        static::assertSame($progress, $progress->stage('sort'));
+        static::assertSame($progress, $progress->stage(StageName::sort));
     }
 
     public function test_reports_change_nothing(): void

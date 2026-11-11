@@ -141,4 +141,14 @@ final readonly class AdaptiveBackend implements Backend, Describable
     {
         return $this->backend->allocatedBytes();
     }
+
+    public function allocatedPeakBytes(): int
+    {
+        return $this->backend->allocatedPeakBytes();
+    }
+
+    public function resetAllocatedPeak(): void
+    {
+        $this->backend->resetAllocatedPeak();
+    }
 }

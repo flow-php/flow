@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Planning\Physical;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\InvalidLogicException;
+use Flow\ETL\Functions\Join\Expression;
 use Flow\ETL\IO\Loader\SchemaValidationLoader;
 use Flow\ETL\Kernels\Sort\MemorySortConfig;
 use Flow\ETL\Operators\Constraint\UniqueConstraint;
@@ -108,8 +109,10 @@ use function array_keys;
 use function array_map;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\compare_any;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
+use function Flow\ETL\DSL\equal;
 use function Flow\ETL\DSL\external_sort;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
@@ -188,6 +191,37 @@ final class NodeTranslatorTest extends FlowTestCase
         NodeTranslatorMother::of(config(), $spy)->steps($node);
 
         static::assertSame([$stage], $spy->stages());
+    }
+
+    /**
+     * @return Generator<string, array{JoinType, Expression, string}>
+     */
+    public static function join_subjects(): Generator
+    {
+        yield 'one pair of equal names' => [JoinType::inner, join_on(['id' => 'id']), 'inner on id'];
+        yield 'two pairs' => [JoinType::left, join_on(['a' => 'b', 'c' => 'c']), 'left on a = b, c'];
+        yield 'no keys' => [JoinType::inner, join_on(compare_any(equal('a', 'b'), equal('c', 'd'))), 'inner'];
+    }
+
+    #[DataProvider('join_subjects')]
+    public function test_a_join_stage_carries_its_condition_as_subject(
+        JoinType $type,
+        Expression $on,
+        string $subject,
+    ): void {
+        $spy = new ProgressSpy();
+
+        NodeTranslatorMother::of(config(), $spy)->steps(
+            new Join(
+                NodeMother::read(),
+                NodeMother::joinRight(NodeMother::plan(NodeMother::read())),
+                $on,
+                $type,
+                hash_join(),
+            ),
+        );
+
+        static::assertSame([$subject], array_map(static fn(array $built): ?string => $built[3], $spy->built()));
     }
 
     public function test_a_window_repartition_rebuilt_in_a_worker_keeps_the_window_stage(): void

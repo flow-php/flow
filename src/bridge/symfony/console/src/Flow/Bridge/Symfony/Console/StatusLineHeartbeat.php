@@ -27,7 +27,7 @@ final class StatusLineHeartbeat implements ConsoleHeartbeat
 {
     private const int INDICATOR_AND_LAST_COLUMN = 4;
 
-    private const int LOCATION_WIDTH = 16;
+    private const int SUBJECT_WIDTH = 16;
 
     private ?ProgressIndicator $indicator = null;
 
@@ -61,7 +61,7 @@ final class StatusLineHeartbeat implements ConsoleHeartbeat
 
     public function finish(): void
     {
-        if ($this->indicator !== null && $this->last !== null && StageLine::runCompleted($this->last)) {
+        if ($this->indicator !== null && $this->last !== null && StageLine::readCompleted($this->last)) {
             $files = StageLine::filesWritten($this->last);
             $this->indicator->finish(sprintf(
                 '<options=bold>%s</> in <options=bold>%s</> <fg=gray>· peak %s%s</>',
@@ -95,8 +95,12 @@ final class StatusLineHeartbeat implements ConsoleHeartbeat
             $label = OutputFormatter::escape($line->label());
 
             if ($stage->endedAtSeconds !== null) {
-                $finished[] = '<fg=gray>' . $label . '</> <fg=green>✔</>';
+                $finished[] = '<fg=gray>' . $label . '</>' . ($line->started() ? ' <fg=green>✔</>' : '');
 
+                continue;
+            }
+
+            if (!$line->started()) {
                 continue;
             }
 
@@ -106,13 +110,13 @@ final class StatusLineHeartbeat implements ConsoleHeartbeat
                 $line->shortCount()
                 . ($percent === null ? '' : sprintf(' <fg=gray>%d%%</>', $percent))
                 . ($rate === null ? '' : ' <fg=yellow>' . $rate . '</>');
-            $location = $line->location(self::LOCATION_WIDTH);
+            $subject = $line->subject(self::SUBJECT_WIDTH);
             $running[] = '<options=bold>' . $label . '</> ' . $count;
             $located[] =
                 '<options=bold>'
                 . $label
                 . '</> '
-                . ($location === null ? '' : '<fg=gray>' . OutputFormatter::escape($location) . '</> ')
+                . ($subject === null ? '' : '<fg=gray>' . OutputFormatter::escape($subject) . '</> ')
                 . $count;
         }
 

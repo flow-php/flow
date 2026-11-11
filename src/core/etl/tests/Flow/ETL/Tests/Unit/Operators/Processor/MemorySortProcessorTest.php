@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Operators\Processor;
 
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Operators\Processor\MemorySortProcessor;
 use Flow\ETL\Tests\Context\DescribeRoundTrip;
 use Flow\ETL\Tests\Context\HeartbeatContext;
@@ -150,7 +151,7 @@ final class MemorySortProcessorTest extends FlowTestCase
         );
 
         static::assertSame(['sort'], $spy->stages());
-        static::assertGreaterThan(0, $spy->countOf('sort'));
+        static::assertGreaterThan(0, $spy->countOf(StageName::sort));
     }
 
     public function test_a_bound_sort_counts_with_its_progress(): void
@@ -158,7 +159,7 @@ final class MemorySortProcessorTest extends FlowTestCase
         $progress = new ProgressSpy();
 
         iterator_to_array(
-            (new MemorySortProcessor([ref('id')->asc()], progress: $progress->stage('sort')))
+            (new MemorySortProcessor([ref('id')->asc()], progress: $progress->stage(StageName::sort)))
                 ->bind(schema(int_schema('id')))
                 ->step->process(
                     (static function () {
@@ -169,7 +170,7 @@ final class MemorySortProcessorTest extends FlowTestCase
             false,
         );
 
-        static::assertSame(2, $progress->countOf('sort'));
+        static::assertSame(2, $progress->countOf(StageName::sort));
     }
 
     public function test_counts_every_row_it_takes_once_and_is_busy_while_it_emits(): void
@@ -177,7 +178,7 @@ final class MemorySortProcessorTest extends FlowTestCase
         $progress = new ProgressSpy();
 
         iterator_to_array(
-            (new MemorySortProcessor([ref('id')->asc()], progress: $progress->stage('sort')))->process(
+            (new MemorySortProcessor([ref('id')->asc()], progress: $progress->stage(StageName::sort)))->process(
                 (static function () {
                     yield array_to_rows([['id' => 2], ['id' => 1]], schema(int_schema('id')));
                     yield array_to_rows([['id' => 3]], schema(int_schema('id')));
@@ -187,7 +188,7 @@ final class MemorySortProcessorTest extends FlowTestCase
             false,
         );
 
-        static::assertSame([3, 2], [$progress->countOf('sort'), $progress->busyCalls('sort')]);
+        static::assertSame([3, 2], [$progress->countOf(StageName::sort), $progress->busyCalls(StageName::sort)]);
     }
 
     public function test_memory_sort_processor_describes_its_progress(): void
@@ -195,7 +196,7 @@ final class MemorySortProcessorTest extends FlowTestCase
         $spy = new ProgressSpy();
 
         DescribeRoundTrip::rebuilt(
-            new MemorySortProcessor([ref('id')->asc()], progress: HeartbeatContext::stageWithId('sort', 7)),
+            new MemorySortProcessor([ref('id')->asc()], progress: HeartbeatContext::stageWithId(StageName::sort, 7)),
             new Rebuild($spy),
         );
 
@@ -205,7 +206,7 @@ final class MemorySortProcessorTest extends FlowTestCase
     public function test_memory_sort_processor_is_done_after_its_last_batch(): void
     {
         $progress = new ProgressSpy();
-        $output = (new MemorySortProcessor([ref('id')->asc()], progress: $progress->stage('sort')))->process(
+        $output = (new MemorySortProcessor([ref('id')->asc()], progress: $progress->stage(StageName::sort)))->process(
             (static function (): Generator {
                 yield array_to_rows([['id' => 2], ['id' => 1]], schema(int_schema('id')));
             })(),
@@ -214,16 +215,16 @@ final class MemorySortProcessorTest extends FlowTestCase
 
         $output->current();
 
-        static::assertSame(0, $progress->doneCalls('sort'));
+        static::assertSame(0, $progress->doneCalls(StageName::sort));
 
         iterator_to_array($output, false);
 
-        static::assertSame(1, $progress->doneCalls('sort'));
+        static::assertSame(1, $progress->doneCalls(StageName::sort));
     }
 
     public function test_its_distribution_holds_the_stage_it_reports_to(): void
     {
-        $stage = new ProgressSpy('sort');
+        $stage = new ProgressSpy(StageName::sort);
 
         static::assertSame(
             $stage,
@@ -236,7 +237,7 @@ final class MemorySortProcessorTest extends FlowTestCase
         $progress = new ProgressSpy();
 
         iterator_to_array(
-            (new MemorySortProcessor([ref('id')->asc()], progress: $progress->stage('sort')))->process(
+            (new MemorySortProcessor([ref('id')->asc()], progress: $progress->stage(StageName::sort)))->process(
                 (static function (): Generator {
                     yield from [];
                 })(),
@@ -245,6 +246,6 @@ final class MemorySortProcessorTest extends FlowTestCase
             false,
         );
 
-        static::assertSame(1, $progress->doneCalls('sort'));
+        static::assertSame(1, $progress->doneCalls(StageName::sort));
     }
 }

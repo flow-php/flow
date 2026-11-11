@@ -18,7 +18,7 @@ final class LogHeartbeat implements ConsoleHeartbeat
 {
     private const int LABEL_WIDTH = 9;
 
-    private const int LOCATION_WIDTH = 40;
+    private const int SUBJECT_WIDTH = 40;
 
     private const float SECONDS_BETWEEN_LINES = 10.0;
 
@@ -46,6 +46,12 @@ final class LogHeartbeat implements ConsoleHeartbeat
             return;
         }
 
+        // a first beat after an earlier one is a new run: its ids and its clock start again
+        if ($pulse->beat === 1 && $this->last !== null) {
+            $this->nextLineAt = self::SECONDS_BETWEEN_LINES;
+            $this->printed = [];
+        }
+
         $this->last = $pulse;
         $progress = $pulse->elapsedSeconds >= $this->nextLineAt;
 
@@ -59,12 +65,12 @@ final class LogHeartbeat implements ConsoleHeartbeat
             $rate = $perSecond === null ? '' : ', ' . StageLine::human($perSecond) . ' rows/s';
 
             if ($stage->endedAtSeconds === null) {
-                if ($progress) {
+                if ($progress && $line->started()) {
                     $percent = $line->percent();
                     $this->output->writeln(sprintf(
                         '%s %s%s%s, memory %s',
                         self::stamp($pulse->elapsedSeconds),
-                        $this->labelAndLocation($line),
+                        $this->labelAndSubject($line),
                         $percent === null
                             ? StageLine::counted($stage->count, $stage->unit)
                             : sprintf(
@@ -83,23 +89,36 @@ final class LogHeartbeat implements ConsoleHeartbeat
 
             $key = StageLine::key($stage, $position);
 
-            if (($this->printed[$key] ?? null) !== $stage->endedAtSeconds) {
-                $this->printed[$key] = $stage->endedAtSeconds;
-                $this->output->writeln(sprintf(
-                    '%s %s<fg=green>done</> %s in %s%s',
-                    self::stamp($stage->endedAtSeconds),
-                    $this->labelAndLocation($line),
-                    $line->exactCount(),
-                    $line->duration(),
-                    $rate,
-                ));
+            if (($this->printed[$key] ?? null) === $stage->endedAtSeconds) {
+                continue;
             }
+
+            $this->printed[$key] = $stage->endedAtSeconds;
+
+            if (!$line->started()) {
+                $this->output->writeln(sprintf(
+                    '%s %s<fg=gray>skipped</>',
+                    self::stamp($stage->endedAtSeconds),
+                    $this->labelAndSubject($line),
+                ));
+
+                continue;
+            }
+
+            $this->output->writeln(sprintf(
+                '%s %s<fg=green>done</> %s in %s%s',
+                self::stamp($stage->endedAtSeconds),
+                $this->labelAndSubject($line),
+                $line->exactCount(),
+                $line->duration(),
+                $rate,
+            ));
         }
     }
 
     public function finish(): void
     {
-        if (!$this->output->isQuiet() && $this->last !== null && StageLine::runCompleted($this->last)) {
+        if (!$this->output->isQuiet() && $this->last !== null && StageLine::readCompleted($this->last)) {
             $files = StageLine::filesWritten($this->last);
             $this->output->writeln(sprintf(
                 '%s <fg=green>finished</>  %s in %s, peak memory %s%s',
@@ -116,14 +135,14 @@ final class LogHeartbeat implements ConsoleHeartbeat
         $this->printed = [];
     }
 
-    private function labelAndLocation(StageLine $line): string
+    private function labelAndSubject(StageLine $line): string
     {
-        $location = $line->location(self::LOCATION_WIDTH);
+        $subject = $line->subject(self::SUBJECT_WIDTH);
 
         return (
             OutputFormatter::escape(str_pad($line->label(), self::LABEL_WIDTH))
             . ' '
-            . ($location === null ? '' : OutputFormatter::escape($location) . '  ')
+            . ($subject === null ? '' : OutputFormatter::escape($subject) . '  ')
         );
     }
 }

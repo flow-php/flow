@@ -21,12 +21,12 @@ final readonly class PipelineSteps
      *                                                                                         processor or cross join
      *                                                                                         among them streams
      * @param null|JoinStep|Processor $breaker the step that needs every row before it emits, ending the pipeline
-     * @param null|SplObjectStorage<Loader, Progress> $commits the commit stage the planner built for each write
+     * @param null|SplObjectStorage<Loader|Transformer, Progress> $stages the stage the planner built for each write and each join_each
      */
     public function __construct(
         public array $steps = [],
         public JoinStep|Processor|null $breaker = null,
-        public ?SplObjectStorage $commits = null,
+        public ?SplObjectStorage $stages = null,
     ) {}
 
     /**
@@ -43,7 +43,7 @@ final readonly class PipelineSteps
         return new self(
             $at === false ? [] : array_values(array_slice($this->steps, $at)),
             $this->breaker,
-            $this->commits,
+            $this->stages,
         );
     }
 

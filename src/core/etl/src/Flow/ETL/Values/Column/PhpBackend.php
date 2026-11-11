@@ -655,6 +655,13 @@ final readonly class PhpBackend implements Backend, Describable
         return 0;
     }
 
+    public function allocatedPeakBytes(): int
+    {
+        return 0;
+    }
+
+    public function resetAllocatedPeak(): void {}
+
     /**
      * @param list<mixed> $results
      */

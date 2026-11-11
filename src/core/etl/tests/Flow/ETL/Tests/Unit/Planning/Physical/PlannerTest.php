@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Planning\Physical;
 use ArrayObject;
 use Flow\ETL\Foundation\Exception\DataDependentSchemaException;
 use Flow\ETL\Foundation\Exception\InvalidLogicException;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Floe\FloeLoader;
 use Flow\ETL\IO\Loader\ArrayLoader;
@@ -1348,7 +1349,7 @@ final class PlannerTest extends FlowTestCase
         config()->planner()->plan(NodeMother::plan(NodeMother::read($extractor)), $progress);
 
         static::assertSame(['infer', 'read'], $progress->stages());
-        static::assertGreaterThan(0, $progress->countOf('infer'));
+        static::assertGreaterThan(0, $progress->countOf(StageName::infer));
         static::assertCount(2, $extractor->reportedTo);
         static::assertNotInstanceOf(VoidProgress::class, $extractor->reportedTo[0]);
         static::assertInstanceOf(VoidProgress::class, $extractor->reportedTo[1]);
@@ -1393,6 +1394,6 @@ final class PlannerTest extends FlowTestCase
 
         config()->planner()->plan(NodeMother::plan(NodeMother::read(new InferenceRecordingExtractor())), $progress);
 
-        static::assertSame(1, $progress->doneCalls('infer'));
+        static::assertSame(1, $progress->doneCalls(StageName::infer));
     }
 }

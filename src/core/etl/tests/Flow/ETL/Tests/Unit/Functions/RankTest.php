@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Functions;
 
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Tests\Context\AggregatorRoundTrip;
 use Flow\ETL\Tests\Context\RankingContext;
@@ -97,7 +98,7 @@ final class RankTest extends FlowTestCase
 
         rank()
             ->over(window()->orderBy(ref('id')))
-            ->values(RowsMother::sequentialIds(2500), flow_context()->backend(), $progress->stage('window'));
+            ->values(RowsMother::sequentialIds(2500), flow_context()->backend(), $progress->stage(StageName::window));
 
         static::assertSame([['window', 1000], ['window', 1000], ['window', 500]], $progress->advancedCalls());
     }

@@ -11,6 +11,7 @@ use Flow\ETL\Adapter\Excel\IO\Loader\ExcelWriter;
 use Flow\ETL\Adapter\Excel\Tests\Double\RecordingCellStyler;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\IO\Filesystem\SaveMode;
 use Flow\ETL\IO\Loader\File\FileCommit;
 use Flow\ETL\IO\Loader\File\Part;
@@ -625,12 +626,15 @@ final class ExcelLoaderTest extends FlowTestCase
         $scratch = ReaderRoundTrip::scratch('excel-progress');
         $loader = to_excel($scratch->suffix('/rows.xlsx'));
         $loader->load(array_to_rows([['id' => 1]], schema(int_schema('id'))), flow_context()->backend());
-        $progress = new ProgressSpy('commit');
+        $progress = new ProgressSpy(StageName::commit);
 
         try {
             $loader->closure($progress);
 
-            static::assertSame([1, 1], [$progress->countOf('commit'), $progress->busyCalls('commit')]);
+            static::assertSame([1, 1], [
+                $progress->countOf(StageName::commit),
+                $progress->busyCalls(StageName::commit),
+            ]);
         } finally {
             native_local_filesystem()->rm($scratch);
         }
@@ -647,12 +651,15 @@ final class ExcelLoaderTest extends FlowTestCase
             ),
             flow_context()->backend(),
         );
-        $progress = new ProgressSpy('commit');
+        $progress = new ProgressSpy(StageName::commit);
 
         try {
             $loader->closure($progress);
 
-            static::assertSame([2, 2], [$progress->countOf('commit'), $progress->busyCalls('commit')]);
+            static::assertSame([2, 2], [
+                $progress->countOf(StageName::commit),
+                $progress->busyCalls(StageName::commit),
+            ]);
         } finally {
             native_local_filesystem()->rm($scratch);
         }

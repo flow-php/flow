@@ -90,6 +90,6 @@ final class ExcelExtractorTest extends FlowTestCase
 
         $extractor->schema();
 
-        static::assertSame(10, $progress->countOf(''));
+        static::assertSame(10, $progress->countOf(null));
     }
 }

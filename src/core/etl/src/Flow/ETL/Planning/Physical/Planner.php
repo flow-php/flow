@@ -7,9 +7,10 @@ namespace Flow\ETL\Planning\Physical;
 use Flow\ETL\Foundation\Exception\InvalidLogicException;
 use Flow\ETL\Foundation\Exception\SchemaNotDerivableException;
 use Flow\ETL\Foundation\ProgressStages;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\VoidProgress;
+use Flow\ETL\IO\Extractor\InfersSchema;
 use Flow\ETL\IO\Extractor\Refreshable;
-use Flow\ETL\IO\Extractor\ReportsInference;
 use Flow\ETL\IO\Loader;
 use Flow\ETL\Operators\Join\CrossJoin;
 use Flow\ETL\Operators\Join\HashJoin;
@@ -52,12 +53,12 @@ final readonly class Planner
                 $refreshed[] = $extractor;
             }
 
-            if ($extractor instanceof ReportsInference) {
+            if ($extractor instanceof InfersSchema) {
                 $inferring[] = $extractor;
             }
         }
 
-        $inference = $stages->stage(ProgressStages::INFER);
+        $inference = $stages->stage(StageName::infer);
 
         foreach ($inferring as $extractor) {
             $extractor->reportInferenceTo($inference);
@@ -137,6 +138,10 @@ final readonly class Planner
         foreach ($this->translator->steps($node) as $step) {
             if ($node instanceof Node\Write && $step instanceof Loader) {
                 $planned->planCommit($step);
+            }
+
+            if ($node instanceof Node\JoinEach && $step instanceof Transformer) {
+                $planned->planJoinEach($step, $this->translator->joinSubject($node->type, $node->on));
             }
 
             $steps[] = match (true) {
@@ -290,7 +295,7 @@ final readonly class Planner
                 $from = new Pipeline(
                     $firstId + count($pipelines),
                     $from,
-                    new PipelineSteps($current, $breaker, $planned->commits()),
+                    new PipelineSteps($current, $breaker, $planned->stages()),
                     $from instanceof Read ? $planned->readStageOf($from) : null,
                 );
                 $pipelines[] = $from;
@@ -311,7 +316,7 @@ final readonly class Planner
         $pipelines[] = new Pipeline(
             $firstId + count($pipelines),
             $from,
-            new PipelineSteps($current, $breaker, $planned->commits()),
+            new PipelineSteps($current, $breaker, $planned->stages()),
             $from instanceof Read ? $planned->readStageOf($from) : null,
         );
 

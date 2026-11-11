@@ -9,6 +9,7 @@ use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
 use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Operators\GroupBy;
 use Flow\ETL\Operators\GroupBy\Aggregators;
 use Flow\ETL\Operators\GroupBy\DeclaredPivotValues;
@@ -671,7 +672,7 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
         );
 
         static::assertSame(['group_by'], $spy->stages());
-        static::assertGreaterThan(0, $spy->countOf('group_by'));
+        static::assertGreaterThan(0, $spy->countOf(StageName::group_by));
     }
 
     public function test_past_the_limit_counts_every_row_it_takes_then_every_group(): void
@@ -684,14 +685,14 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
                 new MemoryRowsStorage(),
                 Unit::fromBytes(1),
                 batchSize: 1,
-                progress: $progress->stage('group_by'),
+                progress: $progress->stage(StageName::group_by),
             )->process(GroupedRows::categories(), flow_context()->backend()),
             false,
         );
 
         static::assertSame([3, 2], [
-            $progress->countIn('group_by', ProgressUnit::rows),
-            $progress->countIn('group_by', ProgressUnit::groups),
+            $progress->countIn(StageName::group_by, ProgressUnit::rows),
+            $progress->countIn(StageName::group_by, ProgressUnit::groups),
         ]);
     }
 
@@ -704,14 +705,14 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
                 new GroupBy(refs(ref('category')), new Aggregators(sum(ref('amount')))),
                 config()->grouping,
                 new NativePHPRandomValueGenerator(),
-                progress: $progress->stage('group_by'),
+                progress: $progress->stage(StageName::group_by),
             ))->process(GroupedRows::categories(), flow_context()->backend()),
             false,
         );
 
         static::assertSame([3, 2], [
-            $progress->countIn('group_by', ProgressUnit::rows),
-            $progress->countIn('group_by', ProgressUnit::groups),
+            $progress->countIn(StageName::group_by, ProgressUnit::rows),
+            $progress->countIn(StageName::group_by, ProgressUnit::groups),
         ]);
     }
 
@@ -725,7 +726,7 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
                 new GroupBy(refs(ref('category')), new Aggregators(sum(ref('amount')))),
                 config()->grouping,
                 new NativePHPRandomValueGenerator(),
-                progress: $partials->stage('group_by'),
+                progress: $partials->stage(StageName::group_by),
             ))->bind($input)->step)
             ->distribution();
         $partialStep = DescribeRoundTrip::rebuilt(
@@ -746,10 +747,10 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
         );
 
         static::assertSame([3, 0, 0, 2], [
-            $partials->countIn('group_by', ProgressUnit::rows),
-            $partials->countIn('group_by', ProgressUnit::groups),
-            $merged->countIn('group_by', ProgressUnit::rows),
-            $merged->countIn('group_by', ProgressUnit::groups),
+            $partials->countIn(StageName::group_by, ProgressUnit::rows),
+            $partials->countIn(StageName::group_by, ProgressUnit::groups),
+            $merged->countIn(StageName::group_by, ProgressUnit::rows),
+            $merged->countIn(StageName::group_by, ProgressUnit::groups),
         ]);
     }
 
@@ -762,7 +763,7 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
                 new GroupBy(refs('id')),
                 config()->grouping,
                 new NativePHPRandomValueGenerator(),
-                progress: HeartbeatContext::stageWithId('group_by', 7),
+                progress: HeartbeatContext::stageWithId(StageName::group_by, 7),
             ),
             new Rebuild($spy),
         );
@@ -777,7 +778,7 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
             new GroupBy(refs('id')),
             config()->grouping,
             new NativePHPRandomValueGenerator(),
-            progress: $progress->stage('group_by'),
+            progress: $progress->stage(StageName::group_by),
         ))->process(
             (static function (): Generator {
                 yield array_to_rows([['id' => 1], ['id' => 1], ['id' => 2]], schema(int_schema('id')));
@@ -787,16 +788,16 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
 
         $output->current();
 
-        static::assertSame(0, $progress->doneCalls('group_by'));
+        static::assertSame(0, $progress->doneCalls(StageName::group_by));
 
         iterator_to_array($output, false);
 
-        static::assertSame(1, $progress->doneCalls('group_by'));
+        static::assertSame(1, $progress->doneCalls(StageName::group_by));
     }
 
     public function test_its_distribution_holds_the_stage_it_reports_to(): void
     {
-        $stage = new ProgressSpy('group_by');
+        $stage = new ProgressSpy(StageName::group_by);
 
         static::assertSame(
             $stage,
@@ -822,12 +823,12 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
                 new MemoryRowsStorage(),
                 Unit::fromBytes(1),
                 batchSize: 1,
-                progress: $progress->stage('group_by'),
+                progress: $progress->stage(StageName::group_by),
             )->process(GroupedRows::categories(), flow_context()->backend()),
             false,
         );
 
-        static::assertSame(1, $progress->doneCalls('group_by'));
+        static::assertSame(1, $progress->doneCalls(StageName::group_by));
     }
 
     public function test_a_group_by_over_an_empty_input_is_done_once(): void
@@ -839,7 +840,7 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
                 new GroupBy(refs('id')),
                 config()->grouping,
                 new NativePHPRandomValueGenerator(),
-                progress: $progress->stage('group_by'),
+                progress: $progress->stage(StageName::group_by),
             ))->process(
                 (static function (): Generator {
                     yield from [];
@@ -849,7 +850,7 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
             false,
         );
 
-        static::assertSame(1, $progress->doneCalls('group_by'));
+        static::assertSame(1, $progress->doneCalls(StageName::group_by));
     }
 
     public function test_the_group_by_that_merges_is_busy_for_each_partial_batch(): void
@@ -876,6 +877,6 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
             false,
         );
 
-        static::assertCount($merged->busyCalls('group_by'), $partials);
+        static::assertCount($merged->busyCalls(StageName::group_by), $partials);
     }
 }

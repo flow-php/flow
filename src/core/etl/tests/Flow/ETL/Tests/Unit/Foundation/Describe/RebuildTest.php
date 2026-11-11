@@ -10,6 +10,7 @@ use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Runtime\Heartbeat\HeartbeatStage;
 use Flow\ETL\Runtime\Heartbeat\ScheduledHeartbeat;
@@ -96,14 +97,14 @@ final class RebuildTest extends FlowTestCase
 
     public function test_progress_is_void_by_default(): void
     {
-        static::assertInstanceOf(VoidProgress::class, (new Rebuild())->progress('sort'));
+        static::assertInstanceOf(VoidProgress::class, (new Rebuild())->progress(StageName::sort));
     }
 
     public function test_progress_is_bound_by_the_given_stages(): void
     {
         $spy = new ProgressSpy();
 
-        (new Rebuild($spy))->progress('join');
+        (new Rebuild($spy))->progress(StageName::join);
 
         static::assertSame(['join'], $spy->stages());
     }
@@ -112,9 +113,9 @@ final class RebuildTest extends FlowTestCase
     {
         $spy = new ProgressSpy();
         (new Rebuild($spy))->progress(
-            'sort',
+            StageName::sort,
             (new HeartbeatStage(
-                'sort',
+                StageName::sort,
                 ProgressUnit::rows,
                 7,
                 'memory://in/x.floe',
@@ -132,8 +133,8 @@ final class RebuildTest extends FlowTestCase
     {
         $spy = new ProgressSpy();
 
-        (new Rebuild($spy))->progress('group_by');
-        (new Rebuild($spy))->progress('sort', (new VoidProgress())->describe()?->normalize());
+        (new Rebuild($spy))->progress(StageName::group_by);
+        (new Rebuild($spy))->progress(StageName::sort, (new VoidProgress())->describe()?->normalize());
 
         static::assertSame(
             [

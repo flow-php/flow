@@ -8,6 +8,7 @@ use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
 use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Kernels\Sort\ExternalSortConfig;
 use Flow\ETL\Kernels\Sort\MemorySortConfig;
 use Flow\ETL\Operators\Processor\MemorySortProcessor;
@@ -133,13 +134,13 @@ final class TopNProcessorTest extends FlowTestCase
             2,
             ExternalSortMother::spillingConfig(),
             new NativePHPRandomValueGenerator(),
-            progress: $progress->stage('sort'),
+            progress: $progress->stage(StageName::sort),
         ))->process(
             ScoredRows::batches([[3, 'c'], [1, 'a']], [[2, 'b'], [0, 'z']], [[1, 'y']]),
             flow_context()->backend(),
         ));
 
-        static::assertSame(5, $progress->countOf('sort'));
+        static::assertSame(5, $progress->countOf(StageName::sort));
     }
 
     public function test_fallback_sort_counts_the_rows_top_n_already_holds(): void
@@ -448,7 +449,7 @@ final class TopNProcessorTest extends FlowTestCase
         );
 
         static::assertSame(['sort'], $spy->stages());
-        static::assertGreaterThan(0, $spy->countOf('sort'));
+        static::assertGreaterThan(0, $spy->countOf(StageName::sort));
     }
 
     public function test_a_bound_top_n_counts_with_its_progress(): void
@@ -461,7 +462,7 @@ final class TopNProcessorTest extends FlowTestCase
                 2,
                 new MemorySortConfig(),
                 new NativePHPRandomValueGenerator(),
-                progress: $progress->stage('sort'),
+                progress: $progress->stage(StageName::sort),
             ))
                 ->bind(schema(int_schema('id')))
                 ->step->process(
@@ -473,7 +474,7 @@ final class TopNProcessorTest extends FlowTestCase
             false,
         );
 
-        static::assertSame(3, $progress->countOf('sort'));
+        static::assertSame(3, $progress->countOf(StageName::sort));
     }
 
     public function test_counts_every_row_it_takes_once(): void
@@ -486,7 +487,7 @@ final class TopNProcessorTest extends FlowTestCase
                 2,
                 new MemorySortConfig(),
                 new NativePHPRandomValueGenerator(),
-                progress: $progress->stage('sort'),
+                progress: $progress->stage(StageName::sort),
             ))->process(
                 (static function (): Generator {
                     yield array_to_rows([['id' => 4], ['id' => 3]], schema(int_schema('id')));
@@ -497,7 +498,7 @@ final class TopNProcessorTest extends FlowTestCase
             false,
         );
 
-        static::assertSame(4, $progress->countOf('sort'));
+        static::assertSame(4, $progress->countOf(StageName::sort));
     }
 
     public function test_top_n_processor_describes_its_progress(): void
@@ -510,7 +511,7 @@ final class TopNProcessorTest extends FlowTestCase
                 2,
                 new ExternalSortConfig(config()->grouping),
                 new NativePHPRandomValueGenerator(),
-                progress: HeartbeatContext::stageWithId('sort', 7),
+                progress: HeartbeatContext::stageWithId(StageName::sort, 7),
             ),
             new Rebuild($spy),
         );
@@ -526,7 +527,7 @@ final class TopNProcessorTest extends FlowTestCase
             2,
             new MemorySortConfig(),
             new NativePHPRandomValueGenerator(),
-            progress: $progress->stage('sort'),
+            progress: $progress->stage(StageName::sort),
         ))->process(
             (static function (): Generator {
                 yield array_to_rows([['id' => 3], ['id' => 1], ['id' => 2]], schema(int_schema('id')));
@@ -536,16 +537,16 @@ final class TopNProcessorTest extends FlowTestCase
 
         $output->current();
 
-        static::assertSame(0, $progress->doneCalls('sort'));
+        static::assertSame(0, $progress->doneCalls(StageName::sort));
 
         iterator_to_array($output, false);
 
-        static::assertSame(1, $progress->doneCalls('sort'));
+        static::assertSame(1, $progress->doneCalls(StageName::sort));
     }
 
     public function test_its_distribution_holds_the_stage_it_reports_to(): void
     {
-        $stage = new ProgressSpy('sort');
+        $stage = new ProgressSpy(StageName::sort);
 
         static::assertSame(
             $stage,
@@ -568,13 +569,13 @@ final class TopNProcessorTest extends FlowTestCase
             2,
             ExternalSortMother::spillingConfig(),
             new NativePHPRandomValueGenerator(),
-            progress: $progress->stage('sort'),
+            progress: $progress->stage(StageName::sort),
         ))->process(
             ScoredRows::batches([[3, 'c'], [1, 'a']], [[2, 'b'], [0, 'z']], [[1, 'y']]),
             flow_context()->backend(),
         ));
 
-        static::assertSame(1, $progress->doneCalls('sort'));
+        static::assertSame(1, $progress->doneCalls(StageName::sort));
     }
 
     public function test_a_top_n_over_an_empty_input_is_done_once(): void
@@ -587,7 +588,7 @@ final class TopNProcessorTest extends FlowTestCase
                 2,
                 new MemorySortConfig(),
                 new NativePHPRandomValueGenerator(),
-                progress: $progress->stage('sort'),
+                progress: $progress->stage(StageName::sort),
             ))->process(
                 (static function (): Generator {
                     yield from [];
@@ -597,7 +598,7 @@ final class TopNProcessorTest extends FlowTestCase
             false,
         );
 
-        static::assertSame(1, $progress->doneCalls('sort'));
+        static::assertSame(1, $progress->doneCalls(StageName::sort));
     }
 
     public function test_a_top_n_is_busy_for_each_batch_it_emits(): void
@@ -610,7 +611,7 @@ final class TopNProcessorTest extends FlowTestCase
                 2,
                 new MemorySortConfig(),
                 new NativePHPRandomValueGenerator(),
-                progress: $progress->stage('sort'),
+                progress: $progress->stage(StageName::sort),
             ))->process(
                 (static function (): Generator {
                     yield array_to_rows([['id' => 3], ['id' => 1], ['id' => 2]], schema(int_schema('id')));
@@ -620,6 +621,6 @@ final class TopNProcessorTest extends FlowTestCase
             false,
         );
 
-        static::assertSame(count($emitted), $progress->busyCalls('sort'));
+        static::assertSame(count($emitted), $progress->busyCalls(StageName::sort));
     }
 }

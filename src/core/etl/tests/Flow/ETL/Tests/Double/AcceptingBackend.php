@@ -131,4 +131,11 @@ final readonly class AcceptingBackend implements Backend
     {
         return 0;
     }
+
+    public function allocatedPeakBytes(): int
+    {
+        return 0;
+    }
+
+    public function resetAllocatedPeak(): void {}
 }

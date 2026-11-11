@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\IO\Loader\File;
 
 use Flow\ETL\Foundation\Exception\RuntimeException as FlowRuntimeException;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Filesystem\SaveMode;
 use Flow\ETL\IO\Loader\File\FileWrite;
@@ -173,11 +174,11 @@ final class FileWriteTest extends FlowTestCase
             ),
             flow_context()->backend(),
         );
-        $spy = new ProgressSpy('commit');
+        $spy = new ProgressSpy(StageName::commit);
 
         $frame->closure($spy);
 
-        static::assertSame([2, 2 + 6], [$spy->countOf('commit'), $spy->busyCalls('commit')]);
+        static::assertSame([2, 2 + 6], [$spy->countOf(StageName::commit), $spy->busyCalls(StageName::commit)]);
     }
 
     public function test_closure_reports_a_writer_whose_close_failed(): void
@@ -196,13 +197,13 @@ final class FileWriteTest extends FlowTestCase
             ),
             flow_context()->backend(),
         );
-        $spy = new ProgressSpy('commit');
+        $spy = new ProgressSpy(StageName::commit);
 
         try {
             $frame->closure($spy);
             static::fail('Expected the writer close failure to surface.');
         } catch (RuntimeException) {
-            static::assertSame([0, 2], [$spy->countOf('commit'), $spy->busyCalls('commit')]);
+            static::assertSame([0, 2], [$spy->countOf(StageName::commit), $spy->busyCalls(StageName::commit)]);
         }
     }
 

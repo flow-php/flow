@@ -8,8 +8,8 @@ use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Progress;
-use Flow\ETL\Foundation\ProgressStages;
 use Flow\ETL\Foundation\RandomValueGenerator;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Kernels\Sort\ExternalSort;
 use Flow\ETL\Kernels\Sort\ExternalSortConfig;
@@ -50,7 +50,7 @@ final readonly class MergeSortProcessor implements Distributable
                 $data['random'] ?? null,
                 Describable::class,
             )),
-            $rebuild->progress(ProgressStages::SORT, $data['progress'] ?? null),
+            $rebuild->progress(StageName::sort, $data['progress'] ?? null),
         );
     }
 

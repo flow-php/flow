@@ -8,7 +8,7 @@ use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Progress;
-use Flow\ETL\Foundation\ProgressStages;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Operators\BoundStep;
 use Flow\ETL\Values\Column\Backend;
@@ -36,7 +36,7 @@ final readonly class MemorySortProcessor implements Distributable
         return new self(
             array_values($rebuild->all($data['columns'] ?? null, SortColumn::class)),
             ($data['declared'] ?? null) === null ? null : Schema::fromArray(type_array()->assert($data['declared'])),
-            $rebuild->progress(ProgressStages::SORT, $data['progress'] ?? null),
+            $rebuild->progress(StageName::sort, $data['progress'] ?? null),
         );
     }
 

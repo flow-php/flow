@@ -8,6 +8,7 @@ use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Functions\AggregatingFunction;
 use Flow\ETL\Functions\WindowFunction;
 use Flow\ETL\Operators\Processor\WindowProcessor;
@@ -568,7 +569,7 @@ final class WindowProcessorTest extends FlowTestCase
         );
 
         static::assertSame(['window'], $spy->stages());
-        static::assertGreaterThan(0, $spy->countOf('window'));
+        static::assertGreaterThan(0, $spy->countOf(StageName::window));
     }
 
     public function test_a_bound_window_counts_with_its_progress(): void
@@ -579,7 +580,7 @@ final class WindowProcessorTest extends FlowTestCase
             (new WindowProcessor(
                 'rank',
                 rank()->over(window()->orderBy(ref('n'))),
-                progress: $progress->stage('window'),
+                progress: $progress->stage(StageName::window),
             ))
                 ->bind(schema(int_schema('n')))
                 ->step->process(
@@ -591,7 +592,7 @@ final class WindowProcessorTest extends FlowTestCase
             false,
         );
 
-        static::assertGreaterThan(0, $progress->countOf('window'));
+        static::assertGreaterThan(0, $progress->countOf(StageName::window));
     }
 
     public function test_window_processor_describes_its_progress(): void
@@ -602,7 +603,7 @@ final class WindowProcessorTest extends FlowTestCase
             new WindowProcessor(
                 'rank',
                 rank()->over(window()->orderBy(ref('n'))),
-                progress: HeartbeatContext::stageWithId('window', 7),
+                progress: HeartbeatContext::stageWithId(StageName::window, 7),
             ),
             new Rebuild($spy),
         );
@@ -616,7 +617,7 @@ final class WindowProcessorTest extends FlowTestCase
         $output = (new WindowProcessor(
             'rank',
             rank()->over(window()->orderBy(ref('n'))),
-            progress: $progress->stage('window'),
+            progress: $progress->stage(StageName::window),
         ))->process(
             (static function (): Generator {
                 yield array_to_rows([['n' => 2], ['n' => 1]], schema(int_schema('n')));
@@ -626,10 +627,10 @@ final class WindowProcessorTest extends FlowTestCase
 
         $output->current();
 
-        static::assertSame(0, $progress->doneCalls('window'));
+        static::assertSame(0, $progress->doneCalls(StageName::window));
 
         iterator_to_array($output, false);
 
-        static::assertSame(1, $progress->doneCalls('window'));
+        static::assertSame(1, $progress->doneCalls(StageName::window));
     }
 }

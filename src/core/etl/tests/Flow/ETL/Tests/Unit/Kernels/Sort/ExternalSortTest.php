@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Kernels\Sort;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\RuntimeException;
 use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Kernels\Bucketing\Bucket;
 use Flow\ETL\Kernels\Bucketing\Buckets;
 use Flow\ETL\Kernels\Sort\ExternalSort;
@@ -360,7 +361,7 @@ final class ExternalSortTest extends FlowTestCase
     {
         $progress = new ProgressSpy();
         $backend = config()->backend();
-        $sort = ExternalSortMother::with([ref('id')->asc()], progress: $progress->stage('sort'));
+        $sort = ExternalSortMother::with([ref('id')->asc()], progress: $progress->stage(StageName::sort));
 
         IdRows::ids($sort->sort(
             $sort->counted(IdRows::batches([10, 0], [11, 1], [2, 12], [13, 3])),
@@ -368,15 +369,19 @@ final class ExternalSortTest extends FlowTestCase
             new MemoryBudget($backend, Unit::fromGb(1), null),
         ));
 
-        static::assertSame(8, $progress->countOf('sort'));
-        static::assertGreaterThan(0, $progress->busyCalls('sort'));
+        static::assertSame(8, $progress->countOf(StageName::sort));
+        static::assertGreaterThan(0, $progress->busyCalls(StageName::sort));
     }
 
     public function test_a_spilling_sort_counts_every_row_it_takes_once_and_is_busy_while_it_merges(): void
     {
         $progress = new ProgressSpy();
         $backend = config()->backend();
-        $sort = ExternalSortMother::with([ref('id')->asc()], mergeFanIn: 2, progress: $progress->stage('sort'));
+        $sort = ExternalSortMother::with(
+            [ref('id')->asc()],
+            mergeFanIn: 2,
+            progress: $progress->stage(StageName::sort),
+        );
 
         IdRows::ids($sort->sort(
             $sort->counted(IdRows::batches(...array_map(
@@ -388,8 +393,8 @@ final class ExternalSortTest extends FlowTestCase
         ));
 
         // spills, three merge passes (10 -> 5 -> 3 -> 2 runs) and the output only report that the sort is busy
-        static::assertSame(20, $progress->countOf('sort'));
-        static::assertGreaterThan(20, $progress->busyCalls('sort'));
+        static::assertSame(20, $progress->countOf(StageName::sort));
+        static::assertGreaterThan(20, $progress->busyCalls(StageName::sort));
     }
 
     public function test_runs_past_the_fan_in_are_reduced_to_merged_runs_first(): void

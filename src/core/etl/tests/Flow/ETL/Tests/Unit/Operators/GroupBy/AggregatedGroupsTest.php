@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Operators\GroupBy;
 
 use ArrayObject;
 use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Functions\AggregatingFunction;
 use Flow\ETL\Operators\GroupBy;
 use Flow\ETL\Operators\GroupBy\AggregatedGroups;
@@ -147,7 +148,7 @@ final class AggregatedGroupsTest extends FlowTestCase
             $groupBy,
             GroupByShape::of($groupBy, $input),
             flow_context(config())->backend(),
-            $progress->stage('group_by'),
+            $progress->stage(StageName::group_by),
         );
 
         $groups->accumulate(array_to_rows([
@@ -160,9 +161,9 @@ final class AggregatedGroupsTest extends FlowTestCase
         iterator_to_array($groups->flush(1, flow_context(config())->backend()), false);
 
         static::assertSame([0, 2, [ProgressUnit::groups]], [
-            $progress->countIn('group_by', ProgressUnit::rows),
-            $progress->countIn('group_by', ProgressUnit::groups),
-            $progress->unitsOf('group_by'),
+            $progress->countIn(StageName::group_by, ProgressUnit::rows),
+            $progress->countIn(StageName::group_by, ProgressUnit::groups),
+            $progress->unitsOf(StageName::group_by),
         ]);
     }
 
@@ -175,10 +176,10 @@ final class AggregatedGroupsTest extends FlowTestCase
             $groupBy,
             GroupByShape::of($groupBy, schema(int_schema('amount'))),
             flow_context(config())->backend(),
-            $progress->stage('group_by'),
+            $progress->stage(StageName::group_by),
         ))->noInputRow(flow_context(config())->backend());
 
-        static::assertSame(1, $progress->countIn('group_by', ProgressUnit::groups));
+        static::assertSame(1, $progress->countIn(StageName::group_by, ProgressUnit::groups));
     }
 
     public function test_a_flush_of_partials_is_busy_and_keeps_counting_in_rows(): void
@@ -190,7 +191,7 @@ final class AggregatedGroupsTest extends FlowTestCase
             $groupBy,
             GroupByShape::of($groupBy, $input),
             flow_context(config())->backend(),
-            $progress->stage('group_by'),
+            $progress->stage(StageName::group_by),
         );
         $groups->accumulate(array_to_rows([
             ['country' => 'PL', 'amount' => 10],
@@ -200,9 +201,9 @@ final class AggregatedGroupsTest extends FlowTestCase
         iterator_to_array($groups->flush(1, flow_context(config())->backend()), false);
 
         static::assertSame([[], 0, 2], [
-            $progress->unitsOf('group_by'),
-            $progress->countOf('group_by'),
-            $progress->busyCalls('group_by'),
+            $progress->unitsOf(StageName::group_by),
+            $progress->countOf(StageName::group_by),
+            $progress->busyCalls(StageName::group_by),
         ]);
     }
 

@@ -437,6 +437,16 @@ impl RustBackend {
     pub fn allocated_bytes(&self) -> i64 {
         crate::alloc::allocated_bytes()
     }
+
+    #[php(name = "allocatedPeakBytes")]
+    pub fn allocated_peak_bytes(&self) -> i64 {
+        crate::alloc::allocated_peak_bytes()
+    }
+
+    #[php(name = "resetAllocatedPeak")]
+    pub fn reset_allocated_peak(&self) {
+        crate::alloc::reset_peak();
+    }
 }
 
 /// The schema and backend every batch of one source is adopted under.

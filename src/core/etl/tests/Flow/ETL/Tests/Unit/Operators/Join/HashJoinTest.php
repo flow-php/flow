@@ -8,6 +8,7 @@ use ArrayObject;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\JoinException;
 use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Functions\Join\Condition\Any;
 use Flow\ETL\Functions\Join\Condition\Equal;
 use Flow\ETL\Functions\Join\Expression;
@@ -964,7 +965,7 @@ final class HashJoinTest extends FlowTestCase
         );
 
         static::assertSame(['join'], $spy->stages());
-        static::assertGreaterThan(0, $spy->countOf('join'));
+        static::assertGreaterThan(0, $spy->countOf(StageName::join));
     }
 
     public function test_hash_join_describes_its_progress(): void
@@ -975,7 +976,7 @@ final class HashJoinTest extends FlowTestCase
             HashJoinMother::resident(
                 Expression::on(['id' => 'user_id']),
                 JoinType::left,
-                progress: HeartbeatContext::stageWithId('join', 7),
+                progress: HeartbeatContext::stageWithId(StageName::join, 7),
             ),
             new Rebuild($spy),
         );
@@ -989,7 +990,7 @@ final class HashJoinTest extends FlowTestCase
         $output = HashJoinMother::resident(
             Expression::on(['id' => 'user_id']),
             JoinType::left,
-            progress: $progress->stage('join'),
+            progress: $progress->stage(StageName::join),
         )->join(
             (static function (): Generator {
                 yield array_to_rows([['id' => 1]], schema(int_schema('id')));
@@ -1002,16 +1003,16 @@ final class HashJoinTest extends FlowTestCase
 
         $output->current();
 
-        static::assertSame(0, $progress->doneCalls('join'));
+        static::assertSame(0, $progress->doneCalls(StageName::join));
 
         iterator_to_array($output, false);
 
-        static::assertSame(1, $progress->doneCalls('join'));
+        static::assertSame(1, $progress->doneCalls(StageName::join));
     }
 
     public function test_its_distribution_holds_the_stage_it_reports_to(): void
     {
-        $stage = new ProgressSpy('join');
+        $stage = new ProgressSpy(StageName::join);
 
         static::assertSame(
             $stage,
@@ -1028,7 +1029,7 @@ final class HashJoinTest extends FlowTestCase
 
     public function test_a_whole_join_ends_its_stage_at_its_end(): void
     {
-        $stage = new ProgressSpy('join');
+        $stage = new ProgressSpy(StageName::join);
 
         iterator_to_array(
             HashJoinMother::resident(Expression::on(['id' => 'id']), JoinType::inner, progress: $stage)->joined(
@@ -1047,12 +1048,12 @@ final class HashJoinTest extends FlowTestCase
             false,
         );
 
-        static::assertSame(1, $stage->doneCalls('join'));
+        static::assertSame(1, $stage->doneCalls(StageName::join));
     }
 
     public function test_a_whole_join_ends_its_stage_after_a_stop_and_stops_its_probe_side(): void
     {
-        $stage = new ProgressSpy('join');
+        $stage = new ProgressSpy(StageName::join);
         $signals = new ArrayObject();
         $joined = HashJoinMother::resident(Expression::on(['id' => 'id']), JoinType::inner, progress: $stage)->joined(
             flow_context()->backend(),
@@ -1068,12 +1069,12 @@ final class HashJoinTest extends FlowTestCase
 
         $joined->send(Signal::STOP);
 
-        static::assertSame([1, [Signal::STOP]], [$stage->doneCalls('join'), $signals->getArrayCopy()]);
+        static::assertSame([1, [Signal::STOP]], [$stage->doneCalls(StageName::join), $signals->getArrayCopy()]);
     }
 
     public function test_a_failed_whole_join_leaves_its_stage_open(): void
     {
-        $stage = new ProgressSpy('join');
+        $stage = new ProgressSpy(StageName::join);
         $joined = HashJoinMother::resident(Expression::on(['id' => 'id']), JoinType::inner, progress: $stage)->joined(
             flow_context()->backend(),
             JoinSide::of(
@@ -1095,12 +1096,12 @@ final class HashJoinTest extends FlowTestCase
         } catch (RuntimeException) {
         }
 
-        static::assertSame(0, $stage->doneCalls('join'));
+        static::assertSame(0, $stage->doneCalls(StageName::join));
     }
 
     public function test_a_spilling_join_ends_its_stage_once_after_its_last_bucket_pair(): void
     {
-        $stage = new ProgressSpy('join');
+        $stage = new ProgressSpy(StageName::join);
 
         iterator_to_array(
             HashJoinMother::with(
@@ -1122,6 +1123,6 @@ final class HashJoinTest extends FlowTestCase
             false,
         );
 
-        static::assertSame(1, $stage->doneCalls('join'));
+        static::assertSame(1, $stage->doneCalls(StageName::join));
     }
 }

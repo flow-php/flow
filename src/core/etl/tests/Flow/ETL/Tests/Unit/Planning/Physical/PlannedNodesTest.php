@@ -80,7 +80,7 @@ final class PlannedNodesTest extends FlowTestCase
         $planned->planCommit($loader);
 
         static::assertSame([['commit', ProgressUnit::files, null, 'memory://out/']], $spy->built());
-        static::assertCount(1, $planned->commits());
+        static::assertCount(1, $planned->stages());
     }
 
     public function test_with_nobody_listening_a_commit_stage_asks_its_write_for_nothing(): void
@@ -107,7 +107,7 @@ final class PlannedNodesTest extends FlowTestCase
         $joined->planRead($read);
 
         static::assertSame([true, true], [
-            $planned->commits()->offsetExists($loader),
+            $planned->stages()->offsetExists($loader),
             $planned->readStageOf($read) !== null,
         ]);
         $this->expectException(InvalidLogicException::class);

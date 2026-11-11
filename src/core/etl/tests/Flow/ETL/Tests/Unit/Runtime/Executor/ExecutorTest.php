@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Runtime\Executor;
 
 use ArrayObject;
+use Flow\ETL\API\Transactional;
 use Flow\ETL\Foundation\Clock\FakeClock;
 use Flow\ETL\Foundation\Exception\EvaluationException;
 use Flow\ETL\Foundation\Exception\InvalidLogicException;
 use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Foundation\Exception\SchemaNotDerivableException;
 use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\StageProgress;
 use Flow\ETL\IO\Extractor;
 use Flow\ETL\IO\Extractor\Criteria;
@@ -38,6 +40,7 @@ use Flow\ETL\Runtime\Executor\Executor;
 use Flow\ETL\Runtime\Executor\RunCounts;
 use Flow\ETL\Runtime\Heartbeat\HeartbeatFailure;
 use Flow\ETL\Runtime\Heartbeat\Pulse;
+use Flow\ETL\Storage\Memory\ArrayMemory;
 use Flow\ETL\Tests\Context\ExecutedPlan;
 use Flow\ETL\Tests\Context\GroupByContext;
 use Flow\ETL\Tests\Context\HeartbeatContext;
@@ -56,10 +59,13 @@ use Flow\ETL\Tests\Double\RecordingLauncher;
 use Flow\ETL\Tests\Double\RecordingLoader;
 use Flow\ETL\Tests\Double\RecordingRule;
 use Flow\ETL\Tests\Double\RecordingSplittableExtractor;
+use Flow\ETL\Tests\Double\RecordingTransaction;
+use Flow\ETL\Tests\Double\ReportingAtEndLoader;
 use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\Double\SpyColumn;
 use Flow\ETL\Tests\Double\SpyLoader;
 use Flow\ETL\Tests\Double\SpyTransformer;
+use Flow\ETL\Tests\Double\StaticExtractorFactory;
 use Flow\ETL\Tests\Double\SteppingClock;
 use Flow\ETL\Tests\Double\StubLauncher;
 use Flow\ETL\Tests\Double\ThrowingTransformer;
@@ -84,8 +90,12 @@ use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use RuntimeException;
 
 use function array_filter;
+use function array_key_exists;
+use function array_key_last;
 use function array_keys;
 use function array_map;
+use function array_merge;
+use function array_pop;
 use function array_slice;
 use function array_sum;
 use function array_values;
@@ -109,14 +119,18 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\to_array;
 use function Flow\ETL\DSL\to_branch;
+use function Flow\ETL\DSL\to_memory;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Floe\DSL\from_floe;
 use function Flow\Floe\DSL\to_floe;
 use function ini_set;
 use function iterator_to_array;
+use function memory_get_peak_usage;
 use function range;
 use function sort;
+use function str_repeat;
+use function usort;
 
 final class ExecutorTest extends FlowTestCase
 {
@@ -548,7 +562,7 @@ final class ExecutorTest extends FlowTestCase
             array_slice($recording->pulses(), -1)[0]->rowsRead,
             array_map(
                 static fn(StageProgress $read): int => $read->count,
-                array_slice(HeartbeatContext::entries($recording, 'read'), -1)[0],
+                array_slice(HeartbeatContext::entries($recording, StageName::read), -1)[0],
             ),
         ]);
     }
@@ -569,7 +583,7 @@ final class ExecutorTest extends FlowTestCase
 
         $first = $recording->pulses()[0];
         static::assertSame([['infer'], 0], [
-            array_map(static fn(StageProgress $stage): string => $stage->name, $first->stages),
+            array_map(static fn(StageProgress $stage): string => $stage->name->value, $first->stages),
             $first->rowsRead,
         ]);
         static::assertContains(
@@ -579,26 +593,229 @@ final class ExecutorTest extends FlowTestCase
                     static fn(StageProgress $read): int => $read->count,
                     $reads,
                 ),
-                HeartbeatContext::entries($recording, 'read'),
+                HeartbeatContext::entries($recording, StageName::read),
             ),
         );
     }
 
-    public function test_a_frame_schema_outside_a_run_never_beats(): void
+    public function test_schema_beats_during_inference_and_once_at_its_end(): void
     {
         $recording = new RecordingHeartbeat();
-        /** @var callable(): Generator<int, array<string, int>> $generator */
-        $generator = static function (): Generator {
-            for ($id = 1; $id <= 2500; $id++) {
-                yield ['id' => $id];
-            }
-        };
 
-        df(config_builder()->clock(new SteppingClock())->heartbeat($recording, everySeconds: 1))
-            ->read(from_array($generator(), filesystem: memory_filesystem(), spillRoot: path('memory://tmp')))
+        df(config_builder()->clock(new SteppingClock())->heartbeat($recording, everySeconds: 0.1))
+            ->read(from_array(array_map(static fn(int $id): array => ['id' => $id], range(1, 2500))))
             ->schema();
 
-        static::assertSame([], $recording->pulses());
+        $entries = HeartbeatContext::entries($recording, StageName::infer);
+        static::assertSame([true, null, true], [
+            array_key_exists(1, $entries),
+            $entries[0][0]->endedAtSeconds,
+            array_slice($entries, -1)[0][0]->endedAtSeconds !== null,
+        ]);
+    }
+
+    public function test_a_stop_throw_during_inference_comes_out_of_schema(): void
+    {
+        $lost = new RuntimeException('lease lost');
+        $recording = new RecordingHeartbeat(throws: $lost);
+        $frame = df(config_builder()->clock(new SteppingClock())->heartbeat($recording, everySeconds: 0.1))
+            ->read(from_array(array_map(static fn(int $id): array => ['id' => $id], range(1, 2500))));
+        $thrown = [];
+
+        foreach ([1, 2] as $_) {
+            try {
+                $frame->schema();
+            } catch (RuntimeException $exception) {
+                $thrown[] = [$exception, array_key_last($recording->pulses())];
+            }
+        }
+
+        static::assertSame([[$lost, 0], [$lost, 1]], $thrown);
+    }
+
+    public function test_the_peak_of_a_run_is_not_the_peak_of_an_earlier_run(): void
+    {
+        $recording = new RecordingHeartbeat();
+        $freed = str_repeat('x', 64 * 1024 * 1024);
+        unset($freed);
+
+        df(config_builder()->clock(new SteppingClock())->heartbeat($recording, everySeconds: 1))
+            ->read(from_array([['id' => 1]]))->run();
+
+        static::assertLessThan(memory_get_peak_usage(true), array_slice($recording->pulses(), -1)[0]->peakMemoryBytes);
+    }
+
+    public function test_a_write_that_commits_no_files_has_no_commit_entry(): void
+    {
+        $recording = new RecordingHeartbeat();
+        $written = [];
+
+        df(config_builder()->clock(new SteppingClock())->heartbeat($recording, everySeconds: 1))
+            ->read(from_array([['id' => 1], ['id' => 2]]))
+            ->write(to_array($written))
+            ->run();
+
+        static::assertSame([[], [['id' => 1], ['id' => 2]]], [
+            array_merge(...HeartbeatContext::entries($recording, StageName::commit)),
+            $written,
+        ]);
+    }
+
+    public function test_a_write_to_files_has_its_commit_entry_from_the_first_beat(): void
+    {
+        $recording = new RecordingHeartbeat();
+
+        df(config_builder()->clock(new SteppingClock())->heartbeat($recording, everySeconds: 1))
+            ->read(from_array([['id' => 1], ['id' => 2]], schema(int_schema('id'))))
+            ->write(to_floe(path('memory://out/rows.floe'), filesystem: memory_filesystem()))
+            ->run();
+
+        static::assertSame(
+            [null],
+            array_map(
+                static fn(StageProgress $commit): ?float => $commit->startedAtSeconds,
+                HeartbeatContext::entries($recording, StageName::commit)[0],
+            ),
+        );
+    }
+
+    public function test_a_write_to_files_in_a_transaction_has_one_commit_entry_that_counts_its_file(): void
+    {
+        $recording = new RecordingHeartbeat();
+
+        df(config_builder()->clock(new SteppingClock())->heartbeat($recording, everySeconds: 1))
+            ->read(from_array([['id' => 1], ['id' => 2]], schema(int_schema('id'))))
+            ->write(
+                new Transactional(
+                    new RecordingTransaction(),
+                    to_floe(path('memory://out/rows.floe'), filesystem: memory_filesystem()),
+                ),
+            )
+            ->run();
+
+        $pulses = HeartbeatContext::entries($recording, StageName::commit);
+        static::assertSame(
+            [[1, true]],
+            array_map(
+                static fn(StageProgress $commit): array => [$commit->count, $commit->startedAtSeconds !== null],
+                array_pop($pulses) ?? [],
+            ),
+        );
+    }
+
+    public function test_a_transaction_of_a_file_and_a_memory_write_has_only_the_file_commit_entry(): void
+    {
+        $recording = new RecordingHeartbeat();
+
+        df(config_builder()->clock(new SteppingClock())->heartbeat($recording, everySeconds: 1))
+            ->read(from_array([['id' => 1], ['id' => 2]], schema(int_schema('id'))))
+            ->write(
+                new Transactional(
+                    new RecordingTransaction(),
+                    to_floe(path('memory://out/rows.floe'), filesystem: memory_filesystem()),
+                    to_memory(new ArrayMemory()),
+                ),
+            )
+            ->run();
+
+        $pulses = HeartbeatContext::entries($recording, StageName::commit);
+        static::assertSame(
+            [['memory://out/', 1, true]],
+            array_map(
+                static fn(StageProgress $commit): array => [
+                    $commit->subject,
+                    $commit->count,
+                    $commit->startedAtSeconds !== null,
+                ],
+                array_pop($pulses) ?? [],
+            ),
+        );
+    }
+
+    public function test_a_write_to_files_in_a_branch_has_one_commit_entry_that_counts_its_file(): void
+    {
+        $recording = new RecordingHeartbeat();
+
+        df(config_builder()->clock(new SteppingClock())->heartbeat($recording, everySeconds: 1))
+            ->read(from_array([['id' => 1], ['id' => 2]], schema(int_schema('id'))))
+            ->write(to_branch(
+                ref('id')->greaterThan(lit(1)),
+                to_floe(path('memory://out/rows.floe'), filesystem: memory_filesystem()),
+            ))
+            ->run();
+
+        $pulses = HeartbeatContext::entries($recording, StageName::commit);
+        static::assertSame(
+            [[1, true]],
+            array_map(
+                static fn(StageProgress $commit): array => [$commit->count, $commit->startedAtSeconds !== null],
+                array_pop($pulses) ?? [],
+            ),
+        );
+    }
+
+    public function test_a_write_that_reports_at_its_end_lists_its_commit_entry_only_then(): void
+    {
+        $recording = new RecordingHeartbeat();
+
+        df(config_builder()->clock(new SteppingClock())->heartbeat($recording, everySeconds: 1))
+            ->read(from_array([['id' => 1], ['id' => 2]]))
+            ->write(new ReportingAtEndLoader())
+            ->run();
+
+        $shapes = array_map(static fn(StageProgress $commit): array => [
+            $commit->count,
+            $commit->startedAtSeconds !== null,
+        ], array_merge(...HeartbeatContext::entries($recording, StageName::commit)));
+        static::assertSame([true, []], [
+            $shapes !== [],
+            array_values(array_filter($shapes, static fn(array $shape): bool => $shape !== [1, true])),
+        ]);
+    }
+
+    public function test_a_stage_that_never_starts_ends_with_the_run(): void
+    {
+        $recording = new RecordingHeartbeat();
+
+        df(config_builder()->clock(new SteppingClock())->heartbeat($recording, everySeconds: 1))
+            ->read(from_array([['id' => 1]]))
+            ->filter(ref('id')->greaterThan(lit(1)))
+            ->sortBy(ref('id'))
+            ->write(to_floe(path('memory://out/rows.floe'), filesystem: memory_filesystem()))
+            ->run();
+
+        $sort = array_slice(HeartbeatContext::entries($recording, StageName::sort), -1)[0][0];
+        static::assertSame([null, true], [$sort->startedAtSeconds, $sort->endedAtSeconds !== null]);
+    }
+
+    public function test_join_each_reports_a_join_stage_that_ends_with_its_input(): void
+    {
+        $recording = new RecordingHeartbeat();
+
+        df(config_builder()->clock(new SteppingClock())->heartbeat($recording, everySeconds: 1))
+            ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]))
+            ->joinEach(new StaticExtractorFactory(from_array([['id' => 1]])), join_on(['id' => 'id']))
+            ->sortBy(ref('id'))
+            ->run();
+
+        $ended = array_values(array_filter(
+            array_slice($recording->pulses(), -1)[0]->stages,
+            static fn(StageProgress $stage): bool => (
+                $stage->name === StageName::join
+                || $stage->name === StageName::sort
+            ),
+        ));
+        usort(
+            $ended,
+            static fn(StageProgress $left, StageProgress $right): int => (
+                (float) $left->endedAtSeconds <=> (float) $right->endedAtSeconds
+            ),
+        );
+
+        static::assertSame(
+            ['join', 'sort'],
+            array_map(static fn(StageProgress $stage): string => $stage->name->value, $ended),
+        );
     }
 
     public function test_a_sort_counts_every_batch_it_takes(): void
@@ -617,7 +834,7 @@ final class ExecutorTest extends FlowTestCase
                     static fn(StageProgress $sort): int => $sort->count,
                     $sorts,
                 ),
-                HeartbeatContext::entries($recording, 'sort'),
+                HeartbeatContext::entries($recording, StageName::sort),
             ),
         );
     }
@@ -640,7 +857,7 @@ final class ExecutorTest extends FlowTestCase
             array_slice($recording->pulses(), -1)[0]->rowsRead,
             array_map(
                 static fn(StageProgress $read): int => $read->count,
-                array_slice(HeartbeatContext::entries($recording, 'read'), -1)[0],
+                array_slice(HeartbeatContext::entries($recording, StageName::read), -1)[0],
             ),
         ]);
     }
@@ -1550,7 +1767,7 @@ final class ExecutorTest extends FlowTestCase
         static::assertSame(
             ['commit'],
             array_map(
-                static fn(Pulse $pulse): string => array_slice($pulse->stages, -1)[0]->name,
+                static fn(Pulse $pulse): string => array_slice($pulse->stages, -1)[0]->name->value,
                 $heartbeat->pulses(),
             ),
         );
@@ -1590,7 +1807,7 @@ final class ExecutorTest extends FlowTestCase
         static::assertSame(
             ['commit'],
             array_map(
-                static fn(Pulse $pulse): string => array_slice($pulse->stages, -1)[0]->name,
+                static fn(Pulse $pulse): string => array_slice($pulse->stages, -1)[0]->name->value,
                 $heartbeat->pulses(),
             ),
         );
@@ -1633,7 +1850,7 @@ final class ExecutorTest extends FlowTestCase
         static::assertSame(
             ['commit'],
             array_map(
-                static fn(Pulse $pulse): string => array_slice($pulse->stages, -1)[0]->name,
+                static fn(Pulse $pulse): string => array_slice($pulse->stages, -1)[0]->name->value,
                 $heartbeat->pulses(),
             ),
         );
@@ -1663,7 +1880,7 @@ final class ExecutorTest extends FlowTestCase
         static::assertSame(
             [['commit', 10.0], ['commit', 20.0], ['commit', 30.0], ['commit', 30.0]],
             array_map(static fn(Pulse $pulse): array => [
-                array_slice($pulse->stages, -1)[0]->name,
+                array_slice($pulse->stages, -1)[0]->name->value,
                 $pulse->elapsedSeconds,
             ], $recording->pulses()),
         );
@@ -1682,7 +1899,7 @@ final class ExecutorTest extends FlowTestCase
             ->sortBy(ref('g'))
             ->run();
 
-        $sorts = HeartbeatContext::entries($recording, 'sort');
+        $sorts = HeartbeatContext::entries($recording, StageName::sort);
         $last = array_slice($sorts, -1)[0];
         static::assertCount(2, $last);
         static::assertNotSame($last[0]->id, $last[1]->id);
@@ -1722,18 +1939,18 @@ final class ExecutorTest extends FlowTestCase
             ->write(to_floe(path('memory://c/part-{part}.floe'), filesystem: $filesystem)->saveMode(overwrite()))
             ->run();
 
-        $commits = HeartbeatContext::entries($recording, 'commit');
+        $commits = HeartbeatContext::entries($recording, StageName::commit);
         $last = array_slice($commits, -1)[0];
         static::assertSame(
             ['memory://a/', 'memory://b/', 'memory://c/'],
-            array_map(static fn(StageProgress $commit): ?string => $commit->location, $last),
+            array_map(static fn(StageProgress $commit): ?string => $commit->subject, $last),
         );
 
         foreach ($last as $commit) {
             static::assertCount(
                 $commit->count,
                 array_filter(
-                    iterator_to_array($memory->list(path((string) $commit->location . '**/*')), false),
+                    iterator_to_array($memory->list(path((string) $commit->subject . '**/*')), false),
                     static fn(FileStatus $status): bool => $status->isFile(),
                 ),
             );
@@ -1763,12 +1980,12 @@ final class ExecutorTest extends FlowTestCase
             ->join(df()->read(from_array([['id' => 1], ['id' => 2]])), join_on(['id' => 'id'], 'r_'))
             ->run();
 
-        $last = array_slice(HeartbeatContext::entries($recording, 'read'), -1)[0];
+        $last = array_slice(HeartbeatContext::entries($recording, StageName::read), -1)[0];
         static::assertEqualsCanonicalizing(
             [3, 2],
             array_map(static fn(StageProgress $read): ?int => $read->total, $last),
         );
-        static::assertSame([null, null], array_map(static fn(StageProgress $read): ?string => $read->location, $last));
+        static::assertSame([null, null], array_map(static fn(StageProgress $read): ?string => $read->subject, $last));
     }
 
     public function test_a_file_read_has_its_location(): void
@@ -1786,8 +2003,8 @@ final class ExecutorTest extends FlowTestCase
         static::assertSame(
             ['memory://in/orders.floe'],
             array_map(
-                static fn(StageProgress $read): ?string => $read->location,
-                HeartbeatContext::entries($recording, 'read')[0],
+                static fn(StageProgress $read): ?string => $read->subject,
+                HeartbeatContext::entries($recording, StageName::read)[0],
             ),
         );
     }
@@ -1805,8 +2022,8 @@ final class ExecutorTest extends FlowTestCase
         static::assertSame(
             ['sftp://host/in/orders.csv'],
             array_map(
-                static fn(StageProgress $read): ?string => $read->location,
-                HeartbeatContext::entries($recording, 'read')[0],
+                static fn(StageProgress $read): ?string => $read->subject,
+                HeartbeatContext::entries($recording, StageName::read)[0],
             ),
         );
     }
@@ -1858,7 +2075,7 @@ final class ExecutorTest extends FlowTestCase
             [3],
             array_map(
                 static fn(StageProgress $read): ?int => $read->total,
-                HeartbeatContext::entries($recording, 'read')[0],
+                HeartbeatContext::entries($recording, StageName::read)[0],
             ),
         );
     }
@@ -1876,7 +2093,7 @@ final class ExecutorTest extends FlowTestCase
             [null],
             array_map(
                 static fn(StageProgress $read): ?int => $read->total,
-                HeartbeatContext::entries($recording, 'read')[0],
+                HeartbeatContext::entries($recording, StageName::read)[0],
             ),
         );
     }
@@ -1897,7 +2114,7 @@ final class ExecutorTest extends FlowTestCase
         $shown = array_map(static fn(array $entries): array => [
             $entries[0]->unit,
             $entries[0]->count,
-        ], array_values(array_filter(HeartbeatContext::entries($recording, 'group_by'), static fn(array $entries): bool => $entries !== [])));
+        ], array_values(array_filter(HeartbeatContext::entries($recording, StageName::group_by), static fn(array $entries): bool => $entries !== [])));
         static::assertContains([ProgressUnit::rows, 6], $shown);
         static::assertSame([ProgressUnit::groups, 3], array_slice($shown, -1)[0]);
     }
@@ -1921,17 +2138,17 @@ final class ExecutorTest extends FlowTestCase
             [
                 ['read',     3,    null],
                 ['read',     2,    null],
-                ['join',     null, null],
+                ['join',     null, 'left on id'],
                 ['commit',   null, 'memory://joined/'],
                 ['sort',     null, null],
                 ['group_by', null, null],
                 ['commit',   null, 'memory://grouped/'],
             ],
             array_map(static fn(StageProgress $stage): array => [
-                $stage->name,
+                $stage->name->value,
                 $stage->total,
-                $stage->location,
-            ], array_values(array_filter(array_slice($recording->pulses(), -1)[0]->stages, static fn(StageProgress $stage): bool => $stage->name !== 'infer'))),
+                $stage->subject,
+            ], array_values(array_filter(array_slice($recording->pulses(), -1)[0]->stages, static fn(StageProgress $stage): bool => $stage->name !== StageName::infer))),
         );
     }
 
@@ -1948,7 +2165,7 @@ final class ExecutorTest extends FlowTestCase
         static::assertSame(
             [[['infer', 3], ['read', 3], ['sort', 3]], [['read', 3], ['sort', 3]]],
             array_map(static fn(Pulse $pulse): array => array_map(static fn(StageProgress $stage): array => [
-                $stage->name,
+                $stage->name->value,
                 $stage->count,
             ], $pulse->stages), $recording->pulses()),
         );

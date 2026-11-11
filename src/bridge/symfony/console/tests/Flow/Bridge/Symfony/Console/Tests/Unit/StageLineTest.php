@@ -8,6 +8,7 @@ use Flow\Bridge\Symfony\Console\StageLine;
 use Flow\Bridge\Symfony\Console\Tests\Mother\PulseMother;
 use Flow\Bridge\Symfony\Console\Tests\Mother\StageProgressMother;
 use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\TestWith;
 
@@ -24,9 +25,9 @@ final class StageLineTest extends FlowTestCase
         static::assertSame(
             $shown,
             (new StageLine(
-                StageProgressMother::open(location: $location),
+                StageProgressMother::open(subject: $location),
                 PulseMother::pulse(elapsedSeconds: 2.0),
-            ))->location(24),
+            ))->subject(24),
         );
     }
 
@@ -35,36 +36,39 @@ final class StageLineTest extends FlowTestCase
         static::assertSame(
             '…' . str_repeat('a', 15) . '.csv',
             (new StageLine(
-                StageProgressMother::open(location: 'memory://in/' . str_repeat('a', 36) . '.csv'),
+                StageProgressMother::open(subject: 'memory://in/' . str_repeat('a', 36) . '.csv'),
                 PulseMother::pulse(elapsedSeconds: 2.0),
-            ))->location(20),
+            ))->subject(20),
         );
     }
 
     public function test_no_location_below_eight_columns_or_without_one(): void
     {
         static::assertNull((new StageLine(
-            StageProgressMother::open(location: 'memory://in/orders.csv'),
+            StageProgressMother::open(subject: 'memory://in/orders.csv'),
             PulseMother::pulse(elapsedSeconds: 2.0),
-        ))->location(7));
+        ))->subject(7));
         static::assertNull((new StageLine(
             StageProgressMother::open(),
             PulseMother::pulse(elapsedSeconds: 2.0),
-        ))->location(24));
+        ))->subject(24));
     }
 
     public function test_the_label_reads_without_an_underscore(): void
     {
         static::assertSame(
             'group by',
-            (new StageLine(StageProgressMother::open('group_by'), PulseMother::pulse(elapsedSeconds: 2.0)))->label(),
+            (new StageLine(
+                StageProgressMother::open(StageName::group_by),
+                PulseMother::pulse(elapsedSeconds: 2.0),
+            ))->label(),
         );
     }
 
     public function test_an_open_entry_with_a_total_counts_against_it_and_has_a_percentage(): void
     {
         $line = new StageLine(
-            StageProgressMother::open('read', 15_301_437, 30_000_000),
+            StageProgressMother::open(StageName::read, 15_301_437, 30_000_000),
             PulseMother::pulse(elapsedSeconds: 2.0),
         );
 
@@ -92,11 +96,11 @@ final class StageLineTest extends FlowTestCase
     {
         static::assertSame(['0 / 1 row', '1 / 5 rows'], [
             (new StageLine(
-                StageProgressMother::open('read', 0, 1),
+                StageProgressMother::open(StageName::read, 0, 1),
                 PulseMother::pulse(elapsedSeconds: 2.0),
             ))->exactCount(),
             (new StageLine(
-                StageProgressMother::open('read', 1, 5),
+                StageProgressMother::open(StageName::read, 1, 5),
                 PulseMother::pulse(elapsedSeconds: 2.0),
             ))->exactCount(),
         ]);
@@ -105,7 +109,10 @@ final class StageLineTest extends FlowTestCase
     public function test_an_entry_without_a_total_or_ended_shows_its_count_only(): void
     {
         $open = new StageLine(StageProgressMother::open(count: 11_300_000), PulseMother::pulse(elapsedSeconds: 2.0));
-        $done = new StageLine(StageProgressMother::done('read', 30_000_000), PulseMother::pulse(elapsedSeconds: 2.0));
+        $done = new StageLine(
+            StageProgressMother::done(StageName::read, 30_000_000),
+            PulseMother::pulse(elapsedSeconds: 2.0),
+        );
 
         static::assertSame(['11,300,000 rows', '11.3M rows', '30,000,000 rows', null], [
             $open->exactCount(),
@@ -121,8 +128,11 @@ final class StageLineTest extends FlowTestCase
 
         static::assertSame(['5.5M/s', null, null], [
             (new StageLine(StageProgressMother::open(count: 11_000_000), $pulse))->rate(),
-            (new StageLine(StageProgressMother::open('group_by', 40, unit: ProgressUnit::groups), $pulse))->rate(),
-            (new StageLine(StageProgressMother::open('commit', 8, unit: ProgressUnit::files), $pulse))->rate(),
+            (new StageLine(
+                StageProgressMother::open(StageName::group_by, 40, unit: ProgressUnit::groups),
+                $pulse,
+            ))->rate(),
+            (new StageLine(StageProgressMother::open(StageName::commit, 8, unit: ProgressUnit::files), $pulse))->rate(),
         ]);
     }
 
@@ -172,15 +182,21 @@ final class StageLineTest extends FlowTestCase
         static::assertSame('640 MiB', StageLine::memory(671_088_640));
     }
 
-    public function test_a_run_completed_when_it_has_entries_and_none_is_open(): void
+    public function test_a_run_read_and_completed_when_it_has_a_read_entry_and_none_is_open(): void
     {
-        static::assertSame([true, false, false], [
-            StageLine::runCompleted(PulseMother::pulse(stages: [StageProgressMother::done()])),
-            StageLine::runCompleted(PulseMother::pulse(stages: [
-                StageProgressMother::done(),
+        static::assertSame([true, false, false, false], [
+            StageLine::readCompleted(PulseMother::pulse(stages: [
+                StageProgressMother::done(StageName::read),
+                StageProgressMother::done(id: 2),
+            ])),
+            StageLine::readCompleted(PulseMother::pulse(stages: [
+                StageProgressMother::done(StageName::read),
                 StageProgressMother::open(id: 2),
             ])),
-            StageLine::runCompleted(PulseMother::pulse(stages: [])),
+            StageLine::readCompleted(PulseMother::pulse(stages: [])),
+            StageLine::readCompleted(PulseMother::pulse(stages: [
+                StageProgressMother::done(StageName::infer, 2_500, endedAtSeconds: 1.0, id: null),
+            ])),
         ]);
     }
 
@@ -188,8 +204,8 @@ final class StageLineTest extends FlowTestCase
     {
         static::assertSame([82, null], [
             StageLine::filesWritten(PulseMother::pulse(stages: [
-                StageProgressMother::done('commit', 40, unit: ProgressUnit::files),
-                StageProgressMother::done('commit', 42, id: 2, unit: ProgressUnit::files),
+                StageProgressMother::done(StageName::commit, 40, unit: ProgressUnit::files),
+                StageProgressMother::done(StageName::commit, 42, id: 2, unit: ProgressUnit::files),
             ])),
             StageLine::filesWritten(PulseMother::pulse(stages: [StageProgressMother::done()])),
         ]);
@@ -199,11 +215,11 @@ final class StageLineTest extends FlowTestCase
     {
         static::assertSame([null, null], [
             (new StageLine(
-                StageProgressMother::done('read', 30_000_000, total: 30_000_000),
+                StageProgressMother::done(StageName::read, 30_000_000, total: 30_000_000),
                 PulseMother::pulse(elapsedSeconds: 7.0),
             ))->percent(),
             (new StageLine(
-                StageProgressMother::open('read', 0, 0),
+                StageProgressMother::open(StageName::read, 0, 0),
                 PulseMother::pulse(elapsedSeconds: 2.0),
             ))->percent(),
         ]);

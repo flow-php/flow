@@ -67,6 +67,13 @@ as one wider schema. Without it, CSV, Excel and Google Sheet reject such sources
 set with the header. JSON has no header to compare, so it drops the columns that a later source adds. Every inferred
 column is nullable. Where narrowing is not safe, the column falls back to `string`.
 
+A chain and a cache pass the options to every source behind them that infers:
+
+```php
+from_all(from_csv('a.csv'), from_csv('b.csv'))->inferSchema(infer_schema()->allStrings());
+from_cache('orders', from_csv('orders.csv'))->inferSchema(infer_schema()->sampleSize(500));
+```
+
 `from_array()`, `from_memory()` and the `from_sequence_*()` extractors infer the same way, from their first
 `sampleSize` rows (20,480 by default). If `from_array()` gets an iterable that is not an array, it types every row.
 If a row after the sample does not fit the inferred type, the read fails with an `InferredSchemaException`. The

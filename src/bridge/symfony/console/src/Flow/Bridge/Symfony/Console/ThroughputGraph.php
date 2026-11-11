@@ -42,7 +42,8 @@ final class ThroughputGraph
         }
 
         foreach ($pulse->stages as $position => $stage) {
-            if ($stage->endedAtSeconds !== null) {
+            // a planned stage draws no bar, and its first rate counts from its first start
+            if ($stage->endedAtSeconds !== null || $stage->startedAtSeconds === null) {
                 continue;
             }
 

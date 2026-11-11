@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\Console;
 
-use Flow\ETL\Foundation\ProgressStages;
 use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\StageProgress;
 use Flow\ETL\Runtime\Heartbeat\Pulse;
 use Symfony\Component\Console\Helper\Helper;
@@ -25,7 +25,7 @@ use function substr;
 
 final readonly class StageLine
 {
-    private const int SHORTEST_LOCATION = 8;
+    private const int SHORTEST_SUBJECT = 8;
 
     private const float SHORTEST_RATE_SECONDS = 0.5;
 
@@ -34,15 +34,19 @@ final readonly class StageLine
         private Pulse $pulse,
     ) {}
 
-    public static function runCompleted(Pulse $pulse): bool
+    public static function readCompleted(Pulse $pulse): bool
     {
+        $read = false;
+
         foreach ($pulse->stages as $stage) {
             if ($stage->endedAtSeconds === null) {
                 return false;
             }
+
+            $read = $read || $stage->name === StageName::read;
         }
 
-        return $pulse->stages !== [];
+        return $read;
     }
 
     public static function filesWritten(Pulse $pulse): ?int
@@ -50,7 +54,7 @@ final readonly class StageLine
         $files = null;
 
         foreach ($pulse->stages as $stage) {
-            if ($stage->name === ProgressStages::COMMIT) {
+            if ($stage->name === StageName::commit) {
                 $files = ($files ?? 0) + $stage->count;
             }
         }
@@ -91,9 +95,9 @@ final readonly class StageLine
         return $stage->id === null ? 'position:' . $position : 'id:' . $stage->id;
     }
 
-    public function duration(): string
+    public function duration(): ?string
     {
-        return self::seconds($this->runningSeconds());
+        return $this->started() ? self::seconds($this->runningSeconds()) : null;
     }
 
     public function exactCount(): string
@@ -103,48 +107,56 @@ final readonly class StageLine
             : number_format($this->stage->count) . ' / ' . self::counted((int) $this->stage->total, $this->stage->unit);
     }
 
-    public function label(): string
+    public function started(): bool
     {
-        return str_replace('_', ' ', $this->stage->name);
+        return $this->stage->startedAtSeconds !== null;
     }
 
-    public function location(int $width): ?string
+    public function label(): string
     {
-        if ($this->stage->location === null || $width < self::SHORTEST_LOCATION) {
-            $location = null;
+        return str_replace('_', ' ', $this->stage->name->value);
+    }
+
+    public function subject(int $width): ?string
+    {
+        if ($this->stage->subject === null || $width < self::SHORTEST_SUBJECT) {
+            $subject = null;
         } else {
-            $separator = strpos($this->stage->location, '://');
+            $separator = strpos($this->stage->subject, '://');
             $segments = explode(
                 '/',
-                $separator === false ? $this->stage->location : substr($this->stage->location, $separator + 3),
+                $separator === false ? $this->stage->subject : substr($this->stage->subject, $separator + 3),
             );
-            $location = implode('/', array_slice($segments, -match (true) {
-                str_ends_with($this->stage->location, '/') => 3,
+            $subject = implode('/', array_slice($segments, -match (true) {
+                str_ends_with($this->stage->subject, '/') => 3,
                 strpbrk($segments[count($segments) - 1], '*?[{') !== false => 2,
                 default => 1,
             }));
         }
 
-        return $location === null || Helper::length($location) <= $width
-            ? $location
-            : '…' . Helper::substr($location, -($width - 1));
+        return $subject === null || Helper::length($subject) <= $width
+            ? $subject
+            : '…' . Helper::substr($subject, -($width - 1));
     }
 
     public function percent(): ?int
     {
-        return $this->stage->total === null || $this->stage->total === 0 || $this->stage->endedAtSeconds !== null
+        return $this->stage->total === null
+        || $this->stage->total === 0
+        || $this->stage->endedAtSeconds !== null
+        || !$this->started()
             ? null
             : (int) floor((100 * $this->stage->count) / $this->stage->total);
     }
 
     /**
-     * @return null|float null for groups and files, and for a stage too short for a rate to mean anything
+     * @return null|float null for groups and files, a stage not started, and one too short for a rate to mean anything
      */
     public function perSecond(): ?float
     {
         $seconds = $this->runningSeconds();
 
-        return $this->stage->unit === ProgressUnit::rows && $seconds >= self::SHORTEST_RATE_SECONDS
+        return $this->stage->unit === ProgressUnit::rows && $this->started() && $seconds >= self::SHORTEST_RATE_SECONDS
             ? $this->stage->count / $seconds
             : null;
     }
@@ -163,7 +175,7 @@ final readonly class StageLine
             : self::human($this->stage->count) . '/' . self::human((int) $this->stage->total);
     }
 
-    private static function unitName(int $count, ProgressUnit $unit): string
+    public static function unitName(int $count, ProgressUnit $unit): string
     {
         if ($count !== 1) {
             return $unit->name;
@@ -178,6 +190,6 @@ final readonly class StageLine
 
     private function runningSeconds(): float
     {
-        return ($this->stage->endedAtSeconds ?? $this->pulse->elapsedSeconds) - $this->stage->startedAtSeconds;
+        return ($this->stage->endedAtSeconds ?? $this->pulse->elapsedSeconds) - (float) $this->stage->startedAtSeconds;
     }
 }

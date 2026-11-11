@@ -13,6 +13,7 @@ use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\SchemaDefinitionNotUniqueException;
 use Flow\ETL\Foundation\Exception\SchemaValidationException;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\StageProgress;
 use Flow\ETL\Functions\ScalarFunction;
 use Flow\ETL\IO\Extractor\Criteria;
@@ -1986,7 +1987,7 @@ final class CSVExtractorTest extends FlowTestCase
                     static fn(StageProgress $stage): int => $stage->count,
                     array_values(array_filter(
                         $pulse->stages,
-                        static fn(StageProgress $stage): bool => $stage->name === 'infer',
+                        static fn(StageProgress $stage): bool => $stage->name === StageName::infer,
                     )),
                 ),
                 $pulse->rowsRead,

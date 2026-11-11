@@ -5,6 +5,15 @@ use std::alloc::{GlobalAlloc, Layout, System};
 use std::sync::atomic::{AtomicI64, Ordering};
 
 static ALLOCATED: AtomicI64 = AtomicI64::new(0);
+static PEAK: AtomicI64 = AtomicI64::new(0);
+
+fn added(bytes: i64) {
+    let now = ALLOCATED.fetch_add(bytes, Ordering::Relaxed) + bytes;
+
+    if now > PEAK.load(Ordering::Relaxed) {
+        PEAK.fetch_max(now, Ordering::Relaxed);
+    }
+}
 
 struct Counting;
 
@@ -13,7 +22,7 @@ unsafe impl GlobalAlloc for Counting {
         let ptr = System.alloc(layout);
 
         if !ptr.is_null() {
-            ALLOCATED.fetch_add(layout.size() as i64, Ordering::Relaxed);
+            added(layout.size() as i64);
         }
 
         ptr
@@ -23,7 +32,7 @@ unsafe impl GlobalAlloc for Counting {
         let ptr = System.alloc_zeroed(layout);
 
         if !ptr.is_null() {
-            ALLOCATED.fetch_add(layout.size() as i64, Ordering::Relaxed);
+            added(layout.size() as i64);
         }
 
         ptr
@@ -38,7 +47,7 @@ unsafe impl GlobalAlloc for Counting {
         let new = System.realloc(ptr, layout, new_size);
 
         if !new.is_null() {
-            ALLOCATED.fetch_add(new_size as i64 - layout.size() as i64, Ordering::Relaxed);
+            added(new_size as i64 - layout.size() as i64);
         }
 
         new
@@ -51,4 +60,13 @@ static GLOBAL: Counting = Counting;
 /// Process-wide: on ZTS every thread's allocations.
 pub fn allocated_bytes() -> i64 {
     ALLOCATED.load(Ordering::Relaxed) + flow_arrow_c::imported_bytes()
+}
+
+/// Imported Arrow buffers are another allocator's: they count as they are now, not at their own peak.
+pub fn allocated_peak_bytes() -> i64 {
+    PEAK.load(Ordering::Relaxed).max(allocated_bytes())
+}
+
+pub fn reset_peak() {
+    PEAK.store(ALLOCATED.load(Ordering::Relaxed), Ordering::Relaxed);
 }

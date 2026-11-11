@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Functions\Window;
 
 use ArrayObject;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Functions\FrameAccumulating;
 use Flow\ETL\Functions\Window\FrameAccumulation;
@@ -433,7 +434,7 @@ final class FrameAccumulationTest extends FlowTestCase
             $function,
             RowsMother::sequentialIds(2500),
             flow_context()->backend(),
-            $progress->stage('window'),
+            $progress->stage(StageName::window),
         );
 
         static::assertSame(

@@ -8,6 +8,7 @@ use ArrayObject;
 use DateTimeImmutable;
 use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\StageProgress;
 use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Extractor\Signal;
@@ -36,6 +37,7 @@ use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\path;
 use function iterator_to_array;
 use function max;
+use function memory_get_peak_usage;
 use function range;
 use function restore_error_handler;
 use function set_error_handler;
@@ -49,7 +51,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
 
         $context->seconds(119);
-        $throttle->stage('sort')->advanced(10);
+        $throttle->stage(StageName::sort)->advanced(10);
 
         static::assertSame([], $recording->pulses());
     }
@@ -61,7 +63,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
 
         $context->seconds(120);
-        $throttle->stage('sort')->advanced(10);
+        $throttle->stage(StageName::sort)->advanced(10);
 
         static::assertCount(1, $recording->pulses());
         $pulse = $recording->pulses()[0];
@@ -69,7 +71,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
             $pulse->beat,
             $pulse->elapsedSeconds,
             $pulse->rowsRead,
-            $pulse->stages[0]->name,
+            $pulse->stages[0]->name->value,
             $pulse->stages[0]->count,
         ]);
         static::assertGreaterThan(0, $pulse->memoryBytes);
@@ -80,7 +82,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
     {
         $context = new HeartbeatContext();
         $recording = new RecordingHeartbeat();
-        $sort = $context->throttle(new ScheduledHeartbeat($recording, 120))->stage('sort');
+        $sort = $context->throttle(new ScheduledHeartbeat($recording, 120))->stage(StageName::sort);
 
         $context->seconds(120);
         $sort->advanced(1);
@@ -98,7 +100,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $recording = new RecordingHeartbeat();
         $corrupted = new CorruptedRecordException(null, 2, null, 'not a number', 'x');
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
-        $reading = $throttle->reading(HeartbeatContext::batches(3, $corrupted), $throttle->stage('read'), null);
+        $reading = $throttle->reading(HeartbeatContext::batches(3, $corrupted), $throttle->stage(StageName::read));
 
         $reading->current();
         $reading->next();
@@ -112,7 +114,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $throttle->beatWhenDue();
 
         static::assertSame(['read', 30, 30], [
-            $recording->pulses()[0]->stages[0]->name,
+            $recording->pulses()[0]->stages[0]->name->value,
             $recording->pulses()[0]->stages[0]->count,
             $recording->pulses()[0]->rowsRead,
         ]);
@@ -122,7 +124,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
     {
         $stopped = new ArrayObject();
         $throttle = (new HeartbeatContext())->throttle(new ScheduledHeartbeat(new RecordingHeartbeat(), 120));
-        $generator = $throttle->reading(HeartbeatContext::stoppable($stopped), $throttle->stage('read'), null);
+        $generator = $throttle->reading(HeartbeatContext::stoppable($stopped), $throttle->stage(StageName::read));
 
         $generator->current();
         $generator->send(Signal::STOP);
@@ -136,15 +138,15 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $context = new HeartbeatContext();
         $recording = new RecordingHeartbeat();
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
-        $join = $throttle->stage('join');
-        $parallel = $throttle->stage('parallel');
+        $join = $throttle->stage(StageName::join);
+        $parallel = $throttle->stage(StageName::parallel);
 
-        iterator_to_array($throttle->reading(HeartbeatContext::batches(1), $throttle->stage('read'), null), false);
+        iterator_to_array($throttle->reading(HeartbeatContext::batches(1), $throttle->stage(StageName::read)), false);
         $join->advanced(4);
         $context->seconds(120);
         $parallel->reported(
             500,
-            [new StageProgress(7, 'sort', ProgressUnit::rows, null, 1200, null, 0.0, null)],
+            [new StageProgress(7, StageName::sort, ProgressUnit::rows, null, 1200, null, 0.0, null)],
             1000,
             9_000_000_000,
             false,
@@ -153,8 +155,8 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $parallel->reported(
             700,
             [
-                new StageProgress(7, 'sort', ProgressUnit::rows, null, 1200, null, 0.0, null),
-                new StageProgress(8, 'group_by', ProgressUnit::groups, null, 300, null, 0.0, null),
+                new StageProgress(7, StageName::sort, ProgressUnit::rows, null, 1200, null, 0.0, null),
+                new StageProgress(8, StageName::group_by, ProgressUnit::groups, null, 300, null, 0.0, null),
             ],
             2000,
             10_000_000_000,
@@ -169,7 +171,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
             [1200],
             array_map(
                 static fn(StageProgress $sort): int => $sort->count,
-                HeartbeatContext::entries($recording, 'sort')[0],
+                HeartbeatContext::entries($recording, StageName::sort)[0],
             ),
         );
         static::assertGreaterThan(1000, $first->memoryBytes);
@@ -178,14 +180,14 @@ final class HeartbeatThrottleTest extends FlowTestCase
             [300],
             array_map(
                 static fn(StageProgress $groups): int => $groups->count,
-                HeartbeatContext::entries($recording, 'group_by')[1],
+                HeartbeatContext::entries($recording, StageName::group_by)[1],
             ),
         );
         static::assertSame([710, [5]], [
             $third->rowsRead,
             array_map(
                 static fn(StageProgress $join): int => $join->count,
-                HeartbeatContext::entries($recording, 'join')[2],
+                HeartbeatContext::entries($recording, StageName::join)[2],
             ),
         ]);
     }
@@ -196,7 +198,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $recording = new RecordingHeartbeat();
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
 
-        iterator_to_array($throttle->reading(HeartbeatContext::batches(2), $throttle->stage('read'), null), false);
+        iterator_to_array($throttle->reading(HeartbeatContext::batches(2), $throttle->stage(StageName::read)), false);
         $context->seconds(30);
         $throttle->beatNow();
         $context->seconds(100);
@@ -213,8 +215,8 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $context = new HeartbeatContext();
         $recording = new RecordingHeartbeat();
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
-        $finishing = $throttle->stage('parallel');
-        $running = $throttle->stage('parallel');
+        $finishing = $throttle->stage(StageName::parallel);
+        $running = $throttle->stage(StageName::parallel);
 
         $finishing->reported(10, [], 1_000_000_000_000, 0, false);
         $running->reported(10, [], 7, 0, false);
@@ -236,16 +238,16 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $recording = new RecordingHeartbeat();
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
 
-        $throttle->stage('parallel')->reported(
+        $throttle->stage(StageName::parallel)->reported(
             500,
-            [new StageProgress(7, 'sort', ProgressUnit::rows, null, 500, null, 0.0, null)],
+            [new StageProgress(7, StageName::sort, ProgressUnit::rows, null, 500, null, 0.0, null)],
             1_000_000_000_000,
             9_000_000_000_000,
             false,
         );
         $throttle->started();
         $context->seconds(120);
-        $throttle->stage('parallel')->reported(0, [], 0, 0, false);
+        $throttle->stage(StageName::parallel)->reported(0, [], 0, 0, false);
 
         $pulse = $recording->pulses()[0];
         static::assertSame([0, []], [$pulse->rowsRead, $pulse->stages]);
@@ -259,7 +261,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $recording = new RecordingHeartbeat();
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
         $throttle->started();
-        $read = $throttle->stage('read');
+        $read = $throttle->stage(StageName::read);
         $read->read(5);
         $throttle->finished();
         $throttle->started();
@@ -272,7 +274,6 @@ final class HeartbeatThrottleTest extends FlowTestCase
 
         try {
             $read->read(3);
-            $read->startedReading(10);
             $throttle->unread(1);
             $throttle->beatNow();
         } finally {
@@ -286,15 +287,117 @@ final class HeartbeatThrottleTest extends FlowTestCase
         ]);
     }
 
+    public function test_a_run_after_a_larger_run_reports_its_own_peak(): void
+    {
+        $context = new HeartbeatContext();
+        $recording = new RecordingHeartbeat();
+        $backend = new ReportedMemoryBackend(Unit::fromMb(300)->inBytes(), reportedPeak: Unit::fromMb(300)->inBytes());
+        $throttle = new HeartbeatThrottle($context->clock, $backend, $context->logger, [
+            new ScheduledHeartbeat($recording, 120),
+        ]);
+        $throttle->started();
+        $throttle->beatNow();
+        $throttle->finished();
+        $backend->reported = Unit::fromMb(10)->inBytes();
+
+        $throttle->started();
+        $throttle->beatNow();
+
+        [$first, $second] = $recording->pulses();
+        static::assertLessThan($first->peakMemoryBytes - Unit::fromMb(200)->inBytes(), $second->peakMemoryBytes);
+    }
+
+    public function test_two_stages_of_one_parent_id_in_a_worker_add_up_to_one_entry_that_ends_with_both(): void
+    {
+        $context = new HeartbeatContext();
+        $recording = new RecordingHeartbeat();
+        $worker = $context->throttleToParent(new ScheduledHeartbeat($recording, 120));
+        $first = $worker->stage(StageName::sort, id: 7);
+        $second = $worker->stage(StageName::sort, id: 7);
+
+        $first->advanced(2);
+        $second->advanced(3);
+        $first->done();
+        $worker->beatNow();
+        $second->done();
+        $worker->beatNow();
+
+        static::assertSame(
+            [[[7, 5, false]], [[7, 5, true]]],
+            array_map(static fn(Pulse $pulse): array => array_map(static fn(StageProgress $stage): array => [
+                $stage->id,
+                $stage->count,
+                $stage->endedAtSeconds !== null,
+            ], $pulse->stages), $recording->pulses()),
+        );
+    }
+
+    public function test_a_read_stage_for_a_plan_without_one_carries_the_total_it_is_given(): void
+    {
+        $context = new HeartbeatContext();
+        $recording = new RecordingHeartbeat();
+        $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
+        $throttle->started();
+
+        $throttle->readStage(null, from_array([['id' => 1]]), 3)->busy();
+        $throttle->beatNow();
+
+        static::assertSame(3, HeartbeatContext::entries($recording, StageName::read)[0][0]->total);
+    }
+
+    public function test_planned_lists_every_stage_made_since_the_run_started(): void
+    {
+        $context = new HeartbeatContext();
+        $recording = new RecordingHeartbeat();
+        $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
+        $throttle->started();
+        $throttle->stage(StageName::read);
+        $throttle->stage(StageName::sort);
+
+        $throttle->planned();
+        $throttle->beatNow();
+
+        static::assertSame(
+            [['read', 0, null], ['sort', 1, null]],
+            array_map(static fn(StageProgress $stage): array => [
+                $stage->name->value,
+                $stage->id,
+                $stage->startedAtSeconds,
+            ], $recording->pulses()[0]->stages),
+        );
+    }
+
+    public function test_a_stage_that_ended_before_planned_is_never_listed(): void
+    {
+        $context = new HeartbeatContext();
+        $recording = new RecordingHeartbeat();
+        $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
+        $throttle->started();
+        $throttle->stage(StageName::infer)->done();
+        $throttle->stage(StageName::sort);
+
+        $throttle->planned();
+        $throttle->beatNow();
+        $throttle->completed();
+
+        static::assertSame(
+            [['sort'], ['sort']],
+            array_map(static fn(Pulse $pulse): array => array_map(
+                static fn(StageProgress $stage): string => $stage->name->value,
+                $pulse->stages,
+            ), $recording->pulses()),
+        );
+    }
+
     public function test_a_heartbeat_that_reports_progress_is_not_called_again_inside_its_own_beat(): void
     {
         $context = new HeartbeatContext();
         $heartbeat = new ReportingHeartbeat();
         $throttle = $context->throttle(new ScheduledHeartbeat($heartbeat, 120));
-        $heartbeat->reportsTo = $throttle->stage('sort');
+        $heartbeat->reportsTo = $throttle->stage(StageName::sort);
 
         $context->seconds(120);
-        $throttle->stage('sort')->advanced(1);
+        $throttle->stage(StageName::sort)->advanced(1);
 
         static::assertSame(1, $heartbeat->beats);
     }
@@ -305,7 +408,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $failure = new RuntimeException('lease lost');
         $sort = $context
             ->throttle(new ScheduledHeartbeat(new RecordingHeartbeat(throws: $failure), 120))
-            ->stage('sort');
+            ->stage(StageName::sort);
         $context->seconds(120);
 
         try {
@@ -376,7 +479,9 @@ final class HeartbeatThrottleTest extends FlowTestCase
     {
         $context = new HeartbeatContext();
         $recording = new RecordingHeartbeat(throws: new RuntimeException('lease lost'));
-        $sort = $context->throttle(new ScheduledHeartbeat($recording, 120, HeartbeatFailure::log))->stage('sort');
+        $sort = $context
+            ->throttle(new ScheduledHeartbeat($recording, 120, HeartbeatFailure::log))
+            ->stage(StageName::sort);
 
         $context->seconds(120);
         $sort->advanced(1);
@@ -394,7 +499,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $context = new HeartbeatContext();
         $recording = new RecordingHeartbeat();
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
-        $sort = $throttle->stage('sort');
+        $sort = $throttle->stage(StageName::sort);
 
         $throttle->started();
         $context->seconds(60);
@@ -417,7 +522,9 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $calls = new ArrayObject();
         $a = new RecordingHeartbeat('a', calls: $calls);
         $b = new RecordingHeartbeat('b', calls: $calls);
-        $sort = $context->throttle(new ScheduledHeartbeat($a, 120), new ScheduledHeartbeat($b, 1))->stage('sort');
+        $sort = $context
+            ->throttle(new ScheduledHeartbeat($a, 120), new ScheduledHeartbeat($b, 1))
+            ->stage(StageName::sort);
 
         foreach (range(1, 240) as $_) {
             $context->seconds(1);
@@ -436,7 +543,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $b = new RecordingHeartbeat('b');
         $sort = $context
             ->throttle(new ScheduledHeartbeat($a, 1, HeartbeatFailure::log), new ScheduledHeartbeat($b, 1))
-            ->stage('sort');
+            ->stage(StageName::sort);
 
         $context->seconds(1);
         $sort->advanced(1);
@@ -457,7 +564,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $b = new RecordingHeartbeat('b');
         $sort = $context
             ->throttle(new ScheduledHeartbeat(new RecordingHeartbeat('a', $failure), 1), new ScheduledHeartbeat($b, 1))
-            ->stage('sort');
+            ->stage(StageName::sort);
         $context->seconds(1);
 
         try {
@@ -480,7 +587,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $throttle->othersReported(
             0,
             500,
-            [new StageProgress(7, 'join', ProgressUnit::rows, null, 120, null, 0.0, null)],
+            [new StageProgress(7, StageName::join, ProgressUnit::rows, null, 120, null, 0.0, null)],
             1000,
             0,
             false,
@@ -527,7 +634,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 10));
 
         $context->seconds(3);
-        iterator_to_array($throttle->reading(HeartbeatContext::batches(1), $throttle->stage('read'), null), false);
+        iterator_to_array($throttle->reading(HeartbeatContext::batches(1), $throttle->stage(StageName::read)), false);
         $throttle->beatWhenDue();
         $context->seconds(7);
         $throttle->beatWhenDue();
@@ -539,11 +646,11 @@ final class HeartbeatThrottleTest extends FlowTestCase
     {
         $context = new HeartbeatContext();
         $recording = new RecordingHeartbeat();
-        $parallel = $context->throttle(new ScheduledHeartbeat($recording, 1))->stage('parallel');
+        $parallel = $context->throttle(new ScheduledHeartbeat($recording, 1))->stage(StageName::parallel);
 
         $parallel->reported(
             500,
-            [new StageProgress(7, 'join', ProgressUnit::rows, null, 120, null, 0.0, null)],
+            [new StageProgress(7, StageName::join, ProgressUnit::rows, null, 120, null, 0.0, null)],
             1000,
             0,
             false,
@@ -551,7 +658,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $context->seconds(10);
         $parallel->reported(
             500,
-            [new StageProgress(7, 'join', ProgressUnit::rows, null, 120, null, 0.0, null)],
+            [new StageProgress(7, StageName::join, ProgressUnit::rows, null, 120, null, 0.0, null)],
             1000,
             0,
             false,
@@ -559,7 +666,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $context->seconds(1);
         $parallel->reported(
             600,
-            [new StageProgress(7, 'join', ProgressUnit::rows, null, 140, null, 0.0, null)],
+            [new StageProgress(7, StageName::join, ProgressUnit::rows, null, 140, null, 0.0, null)],
             1000,
             0,
             false,
@@ -578,7 +685,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 5));
 
         $context->seconds(5);
-        $throttle->stage('sort')->advanced(0);
+        $throttle->stage(StageName::sort)->advanced(0);
 
         static::assertSame(5.0, $recording->pulses()[0]->idleSeconds);
     }
@@ -594,8 +701,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
                 (static function (): Generator {
                     yield RowsMother::sequentialIds(8);
                 })(),
-                $throttle->stage('read'),
-                null,
+                $throttle->stage(StageName::read),
             ),
             false,
         );
@@ -610,11 +716,11 @@ final class HeartbeatThrottleTest extends FlowTestCase
     {
         $context = new HeartbeatContext();
         $recording = new RecordingHeartbeat();
-        $parallel = $context->throttle(new ScheduledHeartbeat($recording, 1))->stage('parallel');
+        $parallel = $context->throttle(new ScheduledHeartbeat($recording, 1))->stage(StageName::parallel);
 
         $parallel->reported(
             500,
-            [new StageProgress(7, 'join', ProgressUnit::rows, null, 120, null, 0.0, null)],
+            [new StageProgress(7, StageName::join, ProgressUnit::rows, null, 120, null, 0.0, null)],
             1000,
             0,
             false,
@@ -622,7 +728,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $context->seconds(10);
         $parallel->reported(
             500,
-            [new StageProgress(7, 'join', ProgressUnit::rows, null, 120, null, 0.0, null)],
+            [new StageProgress(7, StageName::join, ProgressUnit::rows, null, 120, null, 0.0, null)],
             2000,
             3000,
             false,
@@ -655,15 +761,15 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $recording = new RecordingHeartbeat();
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
         $throttle->started();
-        $first = $throttle->stage('sort');
-        $second = $throttle->stage('sort');
+        $first = $throttle->stage(StageName::sort);
+        $second = $throttle->stage(StageName::sort);
 
         $first->advanced(3);
         $second->advanced(5);
         $context->seconds(120);
         $throttle->beatWhenDue();
 
-        $sorts = HeartbeatContext::entries($recording, 'sort')[0];
+        $sorts = HeartbeatContext::entries($recording, StageName::sort)[0];
         static::assertSame([3, 5], array_map(static fn(StageProgress $sort): int => $sort->count, $sorts));
         static::assertNotSame($sorts[0]->id, $sorts[1]->id);
     }
@@ -675,8 +781,8 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
         $throttle->started();
 
-        $throttle->stage('sort', ProgressUnit::rows, 7)->advanced(3);
-        $throttle->stage('sort', ProgressUnit::rows, 7)->advanced(5);
+        $throttle->stage(StageName::sort, ProgressUnit::rows, 7)->advanced(3);
+        $throttle->stage(StageName::sort, ProgressUnit::rows, 7)->advanced(5);
         $context->seconds(120);
         $throttle->beatWhenDue();
 
@@ -684,9 +790,9 @@ final class HeartbeatThrottleTest extends FlowTestCase
             [[7, 'sort', ProgressUnit::rows, null, 8, null, 0.0, null]],
             array_map(static fn(StageProgress $stage): array => [
                 $stage->id,
-                $stage->name,
+                $stage->name->value,
                 $stage->unit,
-                $stage->location,
+                $stage->subject,
                 $stage->count,
                 $stage->total,
                 $stage->startedAtSeconds,
@@ -701,7 +807,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $recording = new RecordingHeartbeat();
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
 
-        $throttle->stage('sort')->advanced(3);
+        $throttle->stage(StageName::sort)->advanced(3);
         $context->seconds(120);
         $throttle->beatWhenDue();
 
@@ -709,9 +815,9 @@ final class HeartbeatThrottleTest extends FlowTestCase
             [[null, 'sort', ProgressUnit::rows, null, 3, null, 0.0, null]],
             array_map(static fn(StageProgress $stage): array => [
                 $stage->id,
-                $stage->name,
+                $stage->name->value,
                 $stage->unit,
-                $stage->location,
+                $stage->subject,
                 $stage->count,
                 $stage->total,
                 $stage->startedAtSeconds,
@@ -726,13 +832,13 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $recording = new RecordingHeartbeat();
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
         $throttle->started();
-        $sort = $throttle->stage('sort', ProgressUnit::rows, 7);
-        $parallel = $throttle->stage('parallel');
+        $sort = $throttle->stage(StageName::sort, ProgressUnit::rows, 7);
+        $parallel = $throttle->stage(StageName::parallel);
 
         $sort->advanced(3);
         $parallel->reported(
             0,
-            [new StageProgress(7, 'sort', ProgressUnit::rows, null, 4, null, 0.0, null)],
+            [new StageProgress(7, StageName::sort, ProgressUnit::rows, null, 4, null, 0.0, null)],
             0,
             0,
             false,
@@ -742,7 +848,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $throttle->beatWhenDue();
         $parallel->reported(
             0,
-            [new StageProgress(7, 'sort', ProgressUnit::rows, null, 4, null, 0.0, 1.0)],
+            [new StageProgress(7, StageName::sort, ProgressUnit::rows, null, 4, null, 0.0, 1.0)],
             0,
             0,
             false,
@@ -754,7 +860,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
             [[7, null], [7, 120.0]],
             array_map(
                 static fn(array $sorts): array => [$sorts[0]->count, $sorts[0]->endedAtSeconds],
-                HeartbeatContext::entries($recording, 'sort'),
+                HeartbeatContext::entries($recording, StageName::sort),
             ),
         );
     }
@@ -765,7 +871,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $recording = new RecordingHeartbeat();
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
         $throttle->started();
-        $sort = $throttle->stage('sort');
+        $sort = $throttle->stage(StageName::sort);
 
         $sort->advanced(1);
         $sort->done();
@@ -779,7 +885,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
             [[1, 0.0], [2, null]],
             array_map(
                 static fn(array $sorts): array => [$sorts[0]->count, $sorts[0]->endedAtSeconds],
-                HeartbeatContext::entries($recording, 'sort'),
+                HeartbeatContext::entries($recording, StageName::sort),
             ),
         );
     }
@@ -792,14 +898,14 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $throttle->started();
 
         $context->seconds(10);
-        $throttle->stage('commit', ProgressUnit::files)->busy();
+        $throttle->stage(StageName::commit, ProgressUnit::files)->busy();
 
         $pulse = $recording->pulses()[0];
         static::assertSame(0.0, $pulse->idleSeconds);
         static::assertSame(
             [['commit', ProgressUnit::files, 0, null]],
             array_map(static fn(StageProgress $stage): array => [
-                $stage->name,
+                $stage->name->value,
                 $stage->unit,
                 $stage->count,
                 $stage->endedAtSeconds,
@@ -814,7 +920,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
         $throttle->started();
 
-        $throttle->stage('sort')->done();
+        $throttle->stage(StageName::sort)->done();
         $context->seconds(120);
         $throttle->beatWhenDue();
 
@@ -827,15 +933,15 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $recording = new RecordingHeartbeat();
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
         $throttle->started();
-        $sort = $throttle->stage('sort');
-        $join = $throttle->stage('join');
+        $sort = $throttle->stage(StageName::sort);
+        $join = $throttle->stage(StageName::join);
 
         $join->advanced(1);
-        $throttle->stage('parallel')->reported(
+        $throttle->stage(StageName::parallel)->reported(
             5,
             [
-                new StageProgress(99, 'group_by', ProgressUnit::groups, null, 2, null, 0.0, null),
-                new StageProgress(null, 'read', ProgressUnit::rows, null, 5, null, 0.0, null),
+                new StageProgress(99, StageName::group_by, ProgressUnit::groups, null, 2, null, 0.0, null),
+                new StageProgress(null, StageName::read, ProgressUnit::rows, null, 5, null, 0.0, null),
             ],
             0,
             0,
@@ -848,7 +954,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
 
         static::assertSame(
             ['sort', 'join', 'group_by'],
-            array_map(static fn(StageProgress $stage): string => $stage->name, $recording->pulses()[0]->stages),
+            array_map(static fn(StageProgress $stage): string => $stage->name->value, $recording->pulses()[0]->stages),
         );
     }
 
@@ -859,10 +965,10 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
         $throttle->started();
 
-        $throttle->stage('sort', ProgressUnit::rows, 7)->advanced(3);
-        $throttle->stage('parallel')->reported(
+        $throttle->stage(StageName::sort, ProgressUnit::rows, 7)->advanced(3);
+        $throttle->stage(StageName::parallel)->reported(
             0,
-            [new StageProgress(7, 'sort', ProgressUnit::rows, null, 4, null, 0.0, null)],
+            [new StageProgress(7, StageName::sort, ProgressUnit::rows, null, 4, null, 0.0, null)],
             0,
             0,
             false,
@@ -875,7 +981,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
             array_map(static fn(StageProgress $sort): array => [
                 $sort->id,
                 $sort->count,
-            ], HeartbeatContext::entries($recording, 'sort')[0]),
+            ], HeartbeatContext::entries($recording, StageName::sort)[0]),
         );
     }
 
@@ -885,19 +991,19 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $recording = new RecordingHeartbeat();
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
         $throttle->started();
-        $waveOne = $throttle->stage('parallel');
-        $waveTwo = $throttle->stage('parallel');
+        $waveOne = $throttle->stage(StageName::parallel);
+        $waveTwo = $throttle->stage(StageName::parallel);
 
         $waveOne->reported(
             500,
-            [new StageProgress(7, 'sort', ProgressUnit::rows, null, 300, null, 0.0, null)],
+            [new StageProgress(7, StageName::sort, ProgressUnit::rows, null, 300, null, 0.0, null)],
             1000,
             9_000_000_000,
             false,
         );
         $waveOne->reported(
             500,
-            [new StageProgress(7, 'sort', ProgressUnit::rows, null, 500, null, 0.0, null)],
+            [new StageProgress(7, StageName::sort, ProgressUnit::rows, null, 500, null, 0.0, null)],
             0,
             9_000_000_000,
             false,
@@ -905,7 +1011,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $context->seconds(120);
         $waveTwo->reported(
             0,
-            [new StageProgress(7, 'sort', ProgressUnit::rows, null, 40, null, 0.0, null)],
+            [new StageProgress(7, StageName::sort, ProgressUnit::rows, null, 40, null, 0.0, null)],
             2000,
             8_000_000_000,
             false,
@@ -918,7 +1024,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
             array_map(static fn(StageProgress $sort): array => [
                 $sort->id,
                 $sort->count,
-            ], HeartbeatContext::entries($recording, 'sort')[0]),
+            ], HeartbeatContext::entries($recording, StageName::sort)[0]),
         );
     }
 
@@ -929,9 +1035,9 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
         $throttle->started();
 
-        $throttle->stage('parallel')->reported(
+        $throttle->stage(StageName::parallel)->reported(
             4,
-            [new StageProgress(null, 'read', ProgressUnit::rows, null, 4, null, 0.0, null)],
+            [new StageProgress(null, StageName::read, ProgressUnit::rows, null, 4, null, 0.0, null)],
             0,
             0,
             false,
@@ -949,9 +1055,9 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
         $throttle->started();
 
-        $throttle->stage('parallel')->reported(
+        $throttle->stage(StageName::parallel)->reported(
             4,
-            [new StageProgress(7, 'read', ProgressUnit::rows, 'memory://in/orders.floe', 4, 4, 0.0, null)],
+            [new StageProgress(7, StageName::read, ProgressUnit::rows, 'memory://in/orders.floe', 4, 4, 0.0, null)],
             0,
             0,
             false,
@@ -962,9 +1068,9 @@ final class HeartbeatThrottleTest extends FlowTestCase
         static::assertSame(
             [['memory://in/orders.floe', null]],
             array_map(static fn(StageProgress $read): array => [
-                $read->location,
+                $read->subject,
                 $read->total,
-            ], HeartbeatContext::entries($recording, 'read')[0]),
+            ], HeartbeatContext::entries($recording, StageName::read)[0]),
         );
     }
 
@@ -975,9 +1081,9 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
         $throttle->started();
 
-        $throttle->stage('parallel')->reported(
+        $throttle->stage(StageName::parallel)->reported(
             0,
-            [new StageProgress(null, 'commit', ProgressUnit::files, 'memory://out/', 3, null, 0.0, null)],
+            [new StageProgress(null, StageName::commit, ProgressUnit::files, 'memory://out/', 3, null, 0.0, null)],
             0,
             0,
             false,
@@ -994,12 +1100,12 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $recording = new RecordingHeartbeat();
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
         $throttle->started();
-        $parallel = $throttle->stage('parallel');
+        $parallel = $throttle->stage(StageName::parallel);
 
         $context->seconds(5);
         $parallel->reported(
             0,
-            [new StageProgress(7, 'sort', ProgressUnit::rows, null, 4, null, 100.0, null)],
+            [new StageProgress(7, StageName::sort, ProgressUnit::rows, null, 4, null, 100.0, null)],
             0,
             0,
             false,
@@ -1007,7 +1113,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $context->seconds(5);
         $parallel->reported(
             0,
-            [new StageProgress(7, 'sort', ProgressUnit::rows, null, 6, null, 100.0, 200.0)],
+            [new StageProgress(7, StageName::sort, ProgressUnit::rows, null, 6, null, 100.0, 200.0)],
             0,
             0,
             false,
@@ -1020,7 +1126,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
             array_map(static fn(StageProgress $sort): array => [
                 $sort->startedAtSeconds,
                 $sort->endedAtSeconds,
-            ], HeartbeatContext::entries($recording, 'sort')[0]),
+            ], HeartbeatContext::entries($recording, StageName::sort)[0]),
         );
     }
 
@@ -1031,18 +1137,18 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
         $throttle->started();
 
-        $throttle->stage('parallel')->reported(
+        $throttle->stage(StageName::parallel)->reported(
             0,
-            [new StageProgress(7, 'join', ProgressUnit::rows, null, 1, 10, 0.0, null)],
+            [new StageProgress(7, StageName::join, ProgressUnit::rows, null, 1, 10, 0.0, null)],
             0,
             0,
             false,
         );
         $context->seconds(120);
         $throttle->beatWhenDue();
-        $throttle->stage('parallel')->reported(
+        $throttle->stage(StageName::parallel)->reported(
             0,
-            [new StageProgress(7, 'join', ProgressUnit::rows, null, 1, null, 0.0, null)],
+            [new StageProgress(7, StageName::join, ProgressUnit::rows, null, 1, null, 0.0, null)],
             0,
             0,
             false,
@@ -1052,7 +1158,10 @@ final class HeartbeatThrottleTest extends FlowTestCase
 
         static::assertSame(
             [null, null],
-            array_map(static fn(array $joins): ?int => $joins[0]->total, HeartbeatContext::entries($recording, 'join')),
+            array_map(
+                static fn(array $joins): ?int => $joins[0]->total,
+                HeartbeatContext::entries($recording, StageName::join),
+            ),
         );
     }
 
@@ -1064,18 +1173,18 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $throttle = $context->throttle(new ScheduledHeartbeat($first, 120), new ScheduledHeartbeat($second, 60));
         $throttle->started();
 
-        $throttle->stage('sort')->advanced(1);
+        $throttle->stage(StageName::sort)->advanced(1);
         $context->seconds(5);
         $throttle->completed();
 
         static::assertSame([[[1, 5.0]], [[1, 5.0]]], [
             array_map(
                 static fn(array $sorts): array => [$sorts[0]->count, $sorts[0]->endedAtSeconds],
-                HeartbeatContext::entries($first, 'sort'),
+                HeartbeatContext::entries($first, StageName::sort),
             ),
             array_map(
                 static fn(array $sorts): array => [$sorts[0]->count, $sorts[0]->endedAtSeconds],
-                HeartbeatContext::entries($second, 'sort'),
+                HeartbeatContext::entries($second, StageName::sort),
             ),
         ]);
     }
@@ -1088,7 +1197,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $throttle->started();
         $throttle->started();
 
-        $throttle->stage('sort')->advanced(1);
+        $throttle->stage(StageName::sort)->advanced(1);
         $throttle->completed();
 
         static::assertSame([], $recording->pulses());
@@ -1140,8 +1249,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
                 (static function (): Generator {
                     yield RowsMother::sequentialIds(8);
                 })(),
-                $throttle->stage('read'),
-                null,
+                $throttle->stage(StageName::read),
             ),
             false,
         );
@@ -1153,7 +1261,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
             $recording->pulses()[0]->rowsRead,
             array_map(
                 static fn(StageProgress $read): int => $read->count,
-                HeartbeatContext::entries($recording, 'read')[0],
+                HeartbeatContext::entries($recording, StageName::read)[0],
             ),
         ]);
     }
@@ -1163,11 +1271,11 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $context = new HeartbeatContext();
         $recording = new RecordingHeartbeat();
         $throttle = $context->throttleToParent(new ScheduledHeartbeat($recording, 120));
-        $throttle->stage('sort', ProgressUnit::rows, 0)->advanced(5);
-        iterator_to_array($throttle->reading(HeartbeatContext::batches(1), $throttle->stage('read'), null), false);
+        $throttle->stage(StageName::sort, ProgressUnit::rows, 0)->advanced(5);
+        iterator_to_array($throttle->reading(HeartbeatContext::batches(1), $throttle->stage(StageName::read)), false);
 
         $throttle->started();
-        $throttle->stage('infer')->advanced(8);
+        $throttle->stage(StageName::infer)->advanced(8);
         $throttle->finished();
         $context->seconds(120);
         $throttle->beatWhenDue();
@@ -1177,7 +1285,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
             [[0, 'sort', 5], [null, 'read', 10], [null, 'infer', 8]],
             array_map(static fn(StageProgress $stage): array => [
                 $stage->id,
-                $stage->name,
+                $stage->name->value,
                 $stage->count,
             ], $pulse->stages),
         );
@@ -1190,7 +1298,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $recording = new RecordingHeartbeat();
         $throttle = $context->throttleToParent(new ScheduledHeartbeat($recording, 120));
         $throttle->started();
-        $throttle->stage('sort')->advanced(1);
+        $throttle->stage(StageName::sort)->advanced(1);
 
         $throttle->completed();
 
@@ -1203,7 +1311,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $recording = new RecordingHeartbeat();
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
         $throttle->started();
-        $groupBy = $throttle->stage('group_by');
+        $groupBy = $throttle->stage(StageName::group_by);
 
         $groupBy->advanced(10);
         $groupBy->countsIn(ProgressUnit::groups);
@@ -1227,12 +1335,12 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $recording = new RecordingHeartbeat();
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
         $throttle->started();
-        $merging = $throttle->stage('group_by', ProgressUnit::rows, 7);
-        $parallel = $throttle->stage('parallel');
+        $merging = $throttle->stage(StageName::group_by, ProgressUnit::rows, 7);
+        $parallel = $throttle->stage(StageName::parallel);
 
         $parallel->reported(
             100,
-            [new StageProgress(7, 'group_by', ProgressUnit::rows, null, 100, null, 0.0, null)],
+            [new StageProgress(7, StageName::group_by, ProgressUnit::rows, null, 100, null, 0.0, null)],
             0,
             0,
             false,
@@ -1251,7 +1359,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
             ],
             array_map(
                 static fn(array $entries): array => [$entries[0]->unit, $entries[0]->count],
-                HeartbeatContext::entries($recording, 'group_by'),
+                HeartbeatContext::entries($recording, StageName::group_by),
             ),
         );
     }
@@ -1263,8 +1371,11 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
         $throttle->started();
 
-        iterator_to_array($throttle->reading(HeartbeatContext::batches(1), $throttle->stage('read'), 10), false);
-        $throttle->stage('sort')->advanced(10);
+        iterator_to_array(
+            $throttle->reading(HeartbeatContext::batches(1), $throttle->stage(StageName::read, total: 10)),
+            false,
+        );
+        $throttle->stage(StageName::sort)->advanced(10);
         $context->seconds(120);
         $throttle->beatWhenDue();
 
@@ -1281,10 +1392,10 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
         $throttle->started();
 
-        $throttle->stage('read', ProgressUnit::rows, 7)->startedReading(3);
-        $throttle->stage('parallel')->reported(
+        $throttle->stage(StageName::read, ProgressUnit::rows, 7, total: 3)->busy();
+        $throttle->stage(StageName::parallel)->reported(
             2,
-            [new StageProgress(7, 'read', ProgressUnit::rows, null, 2, null, 0.0, null)],
+            [new StageProgress(7, StageName::read, ProgressUnit::rows, null, 2, null, 0.0, null)],
             0,
             0,
             false,
@@ -1297,7 +1408,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
             array_map(static fn(StageProgress $read): array => [
                 $read->count,
                 $read->total,
-            ], HeartbeatContext::entries($recording, 'read')[0]),
+            ], HeartbeatContext::entries($recording, StageName::read)[0]),
         );
     }
 
@@ -1323,11 +1434,11 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $throttle->started();
         $context->seconds(120);
 
-        $throttle->stage('parallel')->reported(
+        $throttle->stage(StageName::parallel)->reported(
             0,
             [
-                new StageProgress(7, 'sort', ProgressUnit::rows, null, 10, null, 2.0, 2.75),
-                new StageProgress(7, 'sort', ProgressUnit::rows, null, 5, null, 1.0, 1.5),
+                new StageProgress(7, StageName::sort, ProgressUnit::rows, null, 10, null, 2.0, 2.75),
+                new StageProgress(7, StageName::sort, ProgressUnit::rows, null, 5, null, 1.0, 1.5),
             ],
             0,
             0,
@@ -1339,7 +1450,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
             array_map(static fn(StageProgress $stage): array => [
                 $stage->startedAtSeconds,
                 $stage->endedAtSeconds,
-            ], HeartbeatContext::entries($recording, 'sort')[0]),
+            ], HeartbeatContext::entries($recording, StageName::sort)[0]),
         );
     }
 
@@ -1349,12 +1460,12 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $recording = new RecordingHeartbeat();
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
         $throttle->started();
-        $launch = $throttle->stage('parallel');
+        $launch = $throttle->stage(StageName::parallel);
         $context->seconds(120);
 
         $launch->reported(
             0,
-            [new StageProgress(7, 'sort', ProgressUnit::rows, null, 10, null, 2.0, null)],
+            [new StageProgress(7, StageName::sort, ProgressUnit::rows, null, 10, null, 2.0, null)],
             0,
             0,
             false,
@@ -1362,7 +1473,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $context->seconds(120);
         $launch->reported(
             0,
-            [new StageProgress(7, 'sort', ProgressUnit::rows, null, 20, null, 2.0, 200.0)],
+            [new StageProgress(7, StageName::sort, ProgressUnit::rows, null, 20, null, 2.0, 200.0)],
             0,
             0,
             false,
@@ -1373,7 +1484,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
             array_map(static fn(StageProgress $stage): array => [
                 $stage->startedAtSeconds,
                 $stage->endedAtSeconds,
-            ], HeartbeatContext::entries($recording, 'sort')[1]),
+            ], HeartbeatContext::entries($recording, StageName::sort)[1]),
         );
     }
 
@@ -1383,12 +1494,12 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $recording = new RecordingHeartbeat();
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
         $throttle->started();
-        $launch = $throttle->stage('parallel');
+        $launch = $throttle->stage(StageName::parallel);
         $context->seconds(120);
 
         $launch->reported(
             0,
-            [new StageProgress(7, 'group_by', ProgressUnit::groups, null, 3, null, 0.0, 0.5)],
+            [new StageProgress(7, StageName::group_by, ProgressUnit::groups, null, 3, null, 0.0, 0.5)],
             0,
             0,
             false,
@@ -1396,7 +1507,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $context->seconds(120);
         $launch->reported(
             0,
-            [new StageProgress(7, 'group_by', ProgressUnit::groups, null, 4, null, 0.0, 0.5)],
+            [new StageProgress(7, StageName::group_by, ProgressUnit::groups, null, 4, null, 0.0, 0.5)],
             0,
             0,
             false,
@@ -1407,7 +1518,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
             array_map(static fn(StageProgress $stage): array => [
                 $stage->startedAtSeconds,
                 $stage->endedAtSeconds,
-            ], HeartbeatContext::entries($recording, 'group_by')[1]),
+            ], HeartbeatContext::entries($recording, StageName::group_by)[1]),
         );
     }
 
@@ -1419,17 +1530,17 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $throttle->started();
         $context->seconds(120);
 
-        $throttle->stage('parallel')->reported(
+        $throttle->stage(StageName::parallel)->reported(
             0,
-            [new StageProgress(7, 'group_by', ProgressUnit::rows, null, 30, null, 0.0, 0.5)],
+            [new StageProgress(7, StageName::group_by, ProgressUnit::rows, null, 30, null, 0.0, 0.5)],
             0,
             0,
             false,
         );
         $context->seconds(120);
-        $throttle->stage('parallel')->reported(
+        $throttle->stage(StageName::parallel)->reported(
             0,
-            [new StageProgress(7, 'group_by', ProgressUnit::groups, null, 3, null, 0.0, 0.5)],
+            [new StageProgress(7, StageName::group_by, ProgressUnit::groups, null, 3, null, 0.0, 0.5)],
             0,
             0,
             false,
@@ -1440,7 +1551,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
             array_map(static fn(StageProgress $stage): array => [
                 $stage->startedAtSeconds,
                 $stage->endedAtSeconds,
-            ], HeartbeatContext::entries($recording, 'group_by')[1]),
+            ], HeartbeatContext::entries($recording, StageName::group_by)[1]),
         );
     }
 
@@ -1452,7 +1563,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $throttle->started();
 
         $context->seconds(10);
-        $throttle->stage('parallel')->reported(0, [], 0, 0, true);
+        $throttle->stage(StageName::parallel)->reported(0, [], 0, 0, true);
 
         static::assertSame(0.0, $recording->pulses()[0]->idleSeconds);
     }
@@ -1465,7 +1576,7 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $throttle->started();
 
         $context->seconds(10);
-        $throttle->stage('parallel')->reported(0, [], 0, 0, false);
+        $throttle->stage(StageName::parallel)->reported(0, [], 0, 0, false);
         $throttle->beatWhenDue();
 
         static::assertSame(10.0, $recording->pulses()[0]->idleSeconds);
@@ -1529,8 +1640,8 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $recording = new RecordingHeartbeat();
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
         $throttle->started();
-        $first = $throttle->stage('parallel');
-        $second = $throttle->stage('parallel');
+        $first = $throttle->stage(StageName::parallel);
+        $second = $throttle->stage(StageName::parallel);
 
         $first->reported(0, [], 300 * 1_048_576, 300 * 1_048_576, true);
         $second->reported(0, [], 300 * 1_048_576, 300 * 1_048_576, true);
@@ -1553,8 +1664,8 @@ final class HeartbeatThrottleTest extends FlowTestCase
         $recording = new RecordingHeartbeat();
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
         $throttle->started();
-        $first = $throttle->stage('parallel');
-        $second = $throttle->stage('parallel');
+        $first = $throttle->stage(StageName::parallel);
+        $second = $throttle->stage(StageName::parallel);
 
         $first->reported(0, [], 300 * 1_048_576, 300 * 1_048_576, true);
         $second->reported(0, [], 300 * 1_048_576, 300 * 1_048_576, true);
@@ -1585,30 +1696,26 @@ final class HeartbeatThrottleTest extends FlowTestCase
         static::assertGreaterThanOrEqual($pulse->memoryBytes, $pulse->peakMemoryBytes);
     }
 
-    public function test_a_serial_run_peak_is_the_process_peak(): void
+    public function test_a_serial_run_peak_is_at_least_its_sampled_memory_and_at_most_the_php_peak(): void
     {
         $context = new HeartbeatContext();
         $recording = new RecordingHeartbeat();
         $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
         $throttle->started();
-        $before = Unit::processPeak()->inBytes();
         $context->seconds(120);
         $throttle->beatWhenDue();
 
         $pulse = $recording->pulses()[0];
-        static::assertGreaterThanOrEqual($before, $pulse->peakMemoryBytes);
-        static::assertLessThanOrEqual(
-            max(Unit::processPeak()->inBytes(), $pulse->memoryBytes),
-            $pulse->peakMemoryBytes,
-        );
+        static::assertGreaterThanOrEqual($pulse->memoryBytes, $pulse->peakMemoryBytes);
+        static::assertLessThanOrEqual(max(memory_get_peak_usage(true), $pulse->memoryBytes), $pulse->peakMemoryBytes);
     }
 
     public function test_the_read_stage_is_the_planned_one_when_the_plan_has_it(): void
     {
         $throttle = (new HeartbeatContext())->throttle(new ScheduledHeartbeat(new RecordingHeartbeat(), 120));
-        $planned = $throttle->stage('read');
+        $planned = $throttle->stage(StageName::read);
 
-        static::assertSame($planned, $throttle->readStage($planned, from_array([['id' => 1]])));
+        static::assertSame($planned, $throttle->readStage($planned, from_array([['id' => 1]]), null));
     }
 
     public function test_a_plan_without_a_read_stage_reads_into_a_new_one_at_the_file_it_reads(): void
@@ -1622,12 +1729,13 @@ final class HeartbeatThrottleTest extends FlowTestCase
             ->readStage(
                 new VoidProgress(),
                 (new RecordingFileExtractor(schema(int_schema('id'))))->withSource(path('memory://in/orders.csv')),
+                null,
             )
             ->read(1);
         $context->seconds(120);
         $throttle->beatWhenDue();
 
         $read = $recording->pulses()[0]->stages[0];
-        static::assertSame(['read', 'memory://in/orders.csv'], [$read->name, $read->location]);
+        static::assertSame(['read', 'memory://in/orders.csv'], [$read->name->value, $read->subject]);
     }
 }

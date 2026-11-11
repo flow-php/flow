@@ -9,6 +9,7 @@ use Flow\Bridge\Symfony\Console\Tests\Context\TerminalContext;
 use Flow\Bridge\Symfony\Console\Tests\Mother\PulseMother;
 use Flow\Bridge\Symfony\Console\Tests\Mother\StageProgressMother;
 use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Tests\FlowTestCase;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -37,8 +38,8 @@ final class LogHeartbeatTest extends FlowTestCase
         $output = new BufferedOutput();
         $heartbeat = new LogHeartbeat($output);
         $stages = [
-            StageProgressMother::open('read', 21_541_120, 30_000_000, location: 'memory://in/orders.csv'),
-            StageProgressMother::open('sort', 11_000_000, id: 2),
+            StageProgressMother::open(StageName::read, 21_541_120, 30_000_000, subject: 'memory://in/orders.csv'),
+            StageProgressMother::open(StageName::sort, 11_000_000, id: 2),
         ];
 
         $heartbeat->beat(PulseMother::pulse(memoryBytes: 633_339_904, elapsedSeconds: 10.0, stages: $stages));
@@ -56,11 +57,11 @@ final class LogHeartbeatTest extends FlowTestCase
         $output = new BufferedOutput();
         $heartbeat = new LogHeartbeat($output);
         $stages = [StageProgressMother::done(
-            'commit',
+            StageName::commit,
             82,
             7.6,
             9.2,
-            location: 'memory://warehouse/orders/',
+            subject: 'memory://warehouse/orders/',
             unit: ProgressUnit::files,
         )];
 
@@ -78,7 +79,10 @@ final class LogHeartbeatTest extends FlowTestCase
             rowsRead: 30_000_000,
             peakMemoryBytes: 671_088_640,
             elapsedSeconds: 9.2,
-            stages: [StageProgressMother::done('commit', 82, 7.6, 9.2, unit: ProgressUnit::files)],
+            stages: [
+                StageProgressMother::done(StageName::read, 30_000_000, endedAtSeconds: 5.0, id: 2),
+                StageProgressMother::done(StageName::commit, 82, 7.6, 9.2, unit: ProgressUnit::files),
+            ],
         ));
         $output->fetch();
 
@@ -95,8 +99,8 @@ final class LogHeartbeatTest extends FlowTestCase
         $output = new BufferedOutput();
         $heartbeat = new LogHeartbeat($output);
         $heartbeat->beat(PulseMother::pulse(rowsRead: 1, peakMemoryBytes: 671_088_640, elapsedSeconds: 10.0, stages: [
-            StageProgressMother::open('read', 1, 1),
-            StageProgressMother::open('sort', 1, id: 2),
+            StageProgressMother::open(StageName::read, 1, 1),
+            StageProgressMother::open(StageName::sort, 1, id: 2),
         ]));
         $heartbeat->beat(PulseMother::pulse(
             beat: 2,
@@ -104,9 +108,9 @@ final class LogHeartbeatTest extends FlowTestCase
             peakMemoryBytes: 671_088_640,
             elapsedSeconds: 11.0,
             stages: [
-                StageProgressMother::done('read', 1, endedAtSeconds: 10.5),
-                StageProgressMother::done('group_by', 1, 10.5, 10.8, id: 2, unit: ProgressUnit::groups),
-                StageProgressMother::done('commit', 1, 10.8, 11.0, id: 3, unit: ProgressUnit::files),
+                StageProgressMother::done(StageName::read, 1, endedAtSeconds: 10.5),
+                StageProgressMother::done(StageName::group_by, 1, 10.5, 10.8, id: 2, unit: ProgressUnit::groups),
+                StageProgressMother::done(StageName::commit, 1, 10.8, 11.0, id: 3, unit: ProgressUnit::files),
             ],
         ));
 
@@ -121,6 +125,47 @@ final class LogHeartbeatTest extends FlowTestCase
             . "[00:11] finished  1 row in 11.0s, peak memory 640 MiB, 1 file written\n",
             $output->fetch(),
         );
+    }
+
+    public function test_no_summary_without_a_read_entry(): void
+    {
+        $output = new BufferedOutput();
+        $heartbeat = new LogHeartbeat($output);
+        $heartbeat->beat(PulseMother::pulse(rowsRead: 0, elapsedSeconds: 1.0, stages: [
+            StageProgressMother::done(StageName::infer, 2_500, endedAtSeconds: 1.0, id: null),
+        ]));
+
+        $heartbeat->finish();
+
+        static::assertStringNotContainsString('finished', $output->fetch());
+    }
+
+    public function test_a_new_run_starts_its_progress_lines_again(): void
+    {
+        $output = new BufferedOutput();
+        $heartbeat = new LogHeartbeat($output);
+        $stages = [StageProgressMother::open(StageName::sort, 11_000_000)];
+
+        $heartbeat->beat(PulseMother::pulse(memoryBytes: 633_339_904, elapsedSeconds: 10.0, stages: $stages));
+        $heartbeat->beat(PulseMother::pulse(memoryBytes: 633_339_904, elapsedSeconds: 10.0, stages: $stages));
+
+        static::assertSame(2, substr_count($output->fetch(), '[00:10] sort      11,000,000 rows'));
+    }
+
+    public function test_a_planned_entry_prints_nothing_and_a_skipped_one_prints_skipped_once(): void
+    {
+        $output = new BufferedOutput();
+        $heartbeat = new LogHeartbeat($output);
+
+        $heartbeat->beat(PulseMother::pulse(elapsedSeconds: 10.0, stages: [StageProgressMother::planned()]));
+        $heartbeat->beat(PulseMother::pulse(beat: 2, elapsedSeconds: 12.0, stages: [
+            StageProgressMother::skipped(endedAtSeconds: 11.0),
+        ]));
+        $heartbeat->beat(PulseMother::pulse(beat: 3, elapsedSeconds: 13.0, stages: [
+            StageProgressMother::skipped(endedAtSeconds: 11.0),
+        ]));
+
+        static::assertSame("[00:11] sort      skipped\n", $output->fetch());
     }
 
     public function test_finish_after_a_failed_run_writes_nothing(): void
@@ -151,17 +196,17 @@ final class LogHeartbeatTest extends FlowTestCase
         $heartbeat = new LogHeartbeat($output);
 
         $heartbeat->beat(PulseMother::pulse(elapsedSeconds: 8.0, stages: [StageProgressMother::done(
-            'sort',
+            StageName::sort,
             10,
             0.0,
             6.0,
         )]));
         $heartbeat->beat(PulseMother::pulse(beat: 2, elapsedSeconds: 10.0, stages: [StageProgressMother::open(
-            'sort',
+            StageName::sort,
             20,
         )]));
         $heartbeat->beat(PulseMother::pulse(beat: 3, elapsedSeconds: 13.0, stages: [StageProgressMother::done(
-            'sort',
+            StageName::sort,
             30,
             0.0,
             12.0,
@@ -180,8 +225,8 @@ final class LogHeartbeatTest extends FlowTestCase
         $output = new BufferedOutput();
         $heartbeat = new LogHeartbeat($output);
         $stages = [
-            StageProgressMother::done('sort', 4, endedAtSeconds: 3.0, id: 1),
-            StageProgressMother::done('sort', 2, endedAtSeconds: 3.0, id: 2),
+            StageProgressMother::done(StageName::sort, 4, endedAtSeconds: 3.0, id: 1),
+            StageProgressMother::done(StageName::sort, 2, endedAtSeconds: 3.0, id: 2),
         ];
 
         $heartbeat->beat(PulseMother::pulse(elapsedSeconds: 4.0, stages: $stages));
@@ -196,13 +241,10 @@ final class LogHeartbeatTest extends FlowTestCase
     {
         $output = new BufferedOutput();
         $heartbeat = new LogHeartbeat($output);
-        $heartbeat->beat(PulseMother::pulse(elapsedSeconds: 9.2, stages: [StageProgressMother::done(
-            'commit',
-            82,
-            7.6,
-            9.2,
-            unit: ProgressUnit::files,
-        )]));
+        $heartbeat->beat(PulseMother::pulse(elapsedSeconds: 9.2, stages: [
+            StageProgressMother::done(StageName::read, 3, endedAtSeconds: 5.0, id: 2),
+            StageProgressMother::done(StageName::commit, 82, 7.6, 9.2, unit: ProgressUnit::files),
+        ]));
 
         $heartbeat->finish();
         $heartbeat->finish();
@@ -218,7 +260,7 @@ final class LogHeartbeatTest extends FlowTestCase
             $console = $terminal->console();
 
             (new LogHeartbeat($console))->beat(PulseMother::pulse(elapsedSeconds: 3.0, stages: [
-                StageProgressMother::done('read', 3, endedAtSeconds: 1.0),
+                StageProgressMother::done(StageName::read, 3, endedAtSeconds: 1.0),
             ]));
 
             static::assertSame([true, ''], [

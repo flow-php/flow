@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Operators\Processor;
 
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Kernels\HashJoin\JoinKeys;
 use Flow\ETL\Operators\Processor\CountingProcessor;
@@ -84,7 +85,7 @@ final class DistributionTest extends FlowTestCase
 
     public function test_a_distribution_holds_the_stage_it_is_given(): void
     {
-        $stage = new ProgressSpy('sort');
+        $stage = new ProgressSpy(StageName::sort);
 
         static::assertSame($stage, Distribution::ordered([ref('id')->asc()], $stage)->progress);
         static::assertSame($stage, Distribution::clustered(['country'], progress: $stage)->progress);

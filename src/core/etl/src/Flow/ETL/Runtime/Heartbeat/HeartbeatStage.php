@@ -10,6 +10,7 @@ use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Progress;
 use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\StageProgress;
 use Flow\ETL\Foundation\VoidProgress;
 use SensitiveParameter;
@@ -19,6 +20,8 @@ final class HeartbeatStage implements Describable, Progress
     private readonly string $key;
 
     private bool $open = false;
+
+    private bool $opened = false;
 
     private int $reportedMemoryBytes = 0;
 
@@ -32,12 +35,13 @@ final class HeartbeatStage implements Describable, Progress
     private array $reportedStages = [];
 
     public function __construct(
-        private readonly string $name,
+        private readonly StageName $name,
         private readonly ProgressUnit $unit,
         private readonly ?int $id,
-        private readonly ?string $location,
+        private readonly ?string $subject,
         private readonly HeartbeatThrottle $throttle,
         private readonly int $object,
+        private readonly ?int $total = null,
     ) {
         $this->key = $id === null ? 'object:' . $object : 'id:' . $id;
     }
@@ -71,16 +75,17 @@ final class HeartbeatStage implements Describable, Progress
             $this->id === null
                 ? Description::compose(VoidProgress::class, [])
                 : Description::compose(self::class, [
-                    'name' => $this->name,
+                    'name' => $this->name->value,
                     'id' => $this->id,
-                    'location' => $this->location,
+                    'subject' => $this->subject,
                 ])
         );
     }
 
     public function done(): void
     {
-        if ($this->open) {
+        // a stage that never opened still closes: one made before planned() is then never listed
+        if ($this->open || !$this->opened) {
             $this->open = false;
             $this->throttle->stageClosed($this->key);
         }
@@ -123,15 +128,6 @@ final class HeartbeatStage implements Describable, Progress
     }
 
     /**
-     * @param null|int $total the exact rows of the source, null when it has none or the read is narrowed
-     */
-    public function startedReading(?int $total): void
-    {
-        $this->open();
-        $this->throttle->stageTotalled($this->key, $total);
-    }
-
-    /**
      * @param list<StageProgress> $stages
      */
     private function fold(int $rowsRead, array $stages, int $memoryBytes, int $peakMemoryBytes, bool $progressed): void
@@ -167,7 +163,8 @@ final class HeartbeatStage implements Describable, Progress
     {
         if (!$this->open) {
             $this->open = true;
-            $this->throttle->stageOpened($this->key, $this->id, $this->name, $this->unit, $this->location);
+            $this->opened = true;
+            $this->throttle->stageOpened($this->key, $this->id, $this->name, $this->unit, $this->subject, $this->total);
         }
     }
 }

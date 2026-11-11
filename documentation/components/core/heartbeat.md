@@ -67,7 +67,7 @@ final readonly class LogOpenStages implements Heartbeat
     {
         foreach ($pulse->stages as $stage) {
             if ($stage->endedAtSeconds === null) {
-                $this->logger->info(sprintf('%s %s: %d', $stage->name, $stage->location ?? '', $stage->count));
+                $this->logger->info(sprintf('%s %s: %d', $stage->name->value, $stage->subject ?? '', $stage->count));
             }
         }
     }
@@ -107,25 +107,42 @@ terminal.
 | `rowsRead`        | rows read from the source                                                                                           |
 | `stages`          | one entry per stage, in the order of the pipeline's steps, two entries can have the same name                       |
 | `memoryBytes`     | the whole process, not the run alone: `memory_get_usage(true)` plus native backend bytes, workers added             |
-| `peakMemoryBytes` | the highest memory of the run: the process peak, in a parallel run the highest total of parent and workers together |
+| `peakMemoryBytes` | the highest memory of this run, in the measure of `memoryBytes`, workers included                                   |
 | `idleSeconds`     | seconds since the run last made progress, with a fraction, growing only while the run keeps checking                |
 
 `memoryBytes` is allocated memory. A memory limit compares live memory, so `memoryBytes` can stay above it after a
-spill. In a parallel run, `peakMemoryBytes` is sampled at each worker report and each beat, so a spike between two
-samples is not seen.
+spill.
+
+`peakMemoryBytes` is a lower bound of the run's peak. It is the highest of these values:
+
+- the highest `memoryBytes` sampled at a beat or a worker report
+- the PHP peak (`memory_get_peak_usage(true)`) that this run raised above the peak at its start
+- the highest native backend memory since the run started
+- the peak that a worker reported
+
+An earlier run in the same process does not raise it. Only a sample catches two kinds of spike: a PHP heap spike below
+an earlier run's peak, and a spike of Arrow buffers imported from another extension.
 
 Each entry of `stages` is a `StageProgress`:
 
 | Field              | Value                                                                                                              |
 |--------------------|--------------------------------------------------------------------------------------------------------------------|
 | `id`               | the same in every beat, use it to follow one stage over beats, null for a stage that a worker builds itself        |
-| `name`             | a stage from the table under Stages                                                                                |
+| `name`             | a `StageName` case from the table under Stages, for example `StageName::sort`                                      |
 | `unit`             | `rows`, or `files` for `commit`. `group_by` starts in `rows`, then counts `groups`                                 |
-| `location`         | a read's file or glob, a write's directory, else null, never a user, password, port, query or fragment             |
+| `subject`          | a read's file or glob, a write's directory, else null, never a user, password, port, query or fragment             |
 | `count`            | what the stage processed, in its unit                                                                              |
 | `total`            | exact only for a read that nothing pushed narrows (`limit()`, `offset()`, a filter, a partition filter), else null |
-| `startedAtSeconds` | seconds since the run started                                                                                      |
+| `startedAtSeconds` | seconds since the run started, null for a stage that is planned and has not started yet                            |
 | `endedAtSeconds`   | seconds since the run started, null while the stage is open                                                        |
+
+Every stage of the plan is in the list from the first beat after planning, with `startedAtSeconds` null until it
+starts. A stage that never starts, for example a sort after a filter that drops every row, ends with the run: its
+`endedAtSeconds` is set and its `startedAtSeconds` stays null. A join's `subject` is its condition, for example
+`inner on id` or `left on order_id = id, region`.
+
+`DataFrame::schema()` beats too. A long schema inference reports to the `infer` stage, and `schema()` ends with a last
+beat. A heartbeat that fails with `HeartbeatFailure::stop` throws out of `schema()`.
 
 `count` is not a share of `rowsRead`:
 
@@ -140,6 +157,8 @@ Each entry of `stages` is a `StageProgress`:
 
 ## Stages
 
+Each stage is a case of the enum `Flow\ETL\Foundation\StageName`. Its value is the name in the table.
+
 | Stage         | Reported by                                                            |
 |---------------|------------------------------------------------------------------------|
 | `infer`       | schema inference before the first batch, `everyRow()` or a sample      |
@@ -150,7 +169,7 @@ Each entry of `stages` is a `StageProgress`:
 | `join`        | `join()`                                                               |
 | `window`      | `withColumn()` with a window function                                  |
 | `repartition` | `repartition()`                                                        |
-| `commit`      | one entry per write, counting the files it makes visible               |
+| `commit`      | one entry per write to files, counting the files it makes visible      |
 | `parallel`    | no entry, the workers' stages add to the entries of the steps they run |
 
 A `join` counts the rows of the side it streams: the left side, or the larger side of each bucket pair after it
@@ -264,7 +283,7 @@ A beat can be late by the interval plus the longest call that cannot report prog
 In a parallel run the callback runs in the parent process. The pulse adds the rows and memory that the workers
 report, at most once per second. The workers' stages add to the entries of the steps they run. A worker reports
 through `heartbeatToParent()`: its stages carry only the ids the parent gave them, and a DataFrame that a worker step
-runs adds to what the worker counted. A parallel read is the read entry the parent planned, with its location and its
+runs adds to what the worker counted. A parallel read is the read entry the parent planned, with its subject and its
 exact total. The workers add their counts to it. A stage that a worker builds itself does not show. `idleSeconds`
 stays low while any worker works, also between its counts.
 

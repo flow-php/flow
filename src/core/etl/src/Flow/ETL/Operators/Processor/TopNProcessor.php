@@ -9,8 +9,8 @@ use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Progress;
-use Flow\ETL\Foundation\ProgressStages;
 use Flow\ETL\Foundation\RandomValueGenerator;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Kernels\Sort\ExternalSort;
 use Flow\ETL\Kernels\Sort\ExternalSortConfig;
@@ -80,7 +80,7 @@ final readonly class TopNProcessor implements Distributable
                 Describable::class,
             )),
             ($data['declared'] ?? null) === null ? null : Schema::fromArray(type_array()->assert($data['declared'])),
-            $rebuild->progress(ProgressStages::SORT, $data['progress'] ?? null),
+            $rebuild->progress(StageName::sort, $data['progress'] ?? null),
         );
     }
 

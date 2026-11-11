@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Context;
 use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Functions\ScalarFunction;
 use Flow\ETL\IO\Extractor\Criteria;
@@ -142,11 +143,11 @@ final readonly class FileFormatContract
     {
         $loader = $format->loader($this->cacheDir->suffix('/out/data.' . $format->extension()));
         $loader->load(array_to_rows([['text' => 'a']], schema(str_schema('text'))), flow_context()->backend());
-        $progress = new ProgressSpy('commit');
+        $progress = new ProgressSpy(StageName::commit);
 
         $loader->closure($progress);
 
-        Assert::assertGreaterThan(0, $progress->countOf('commit'));
+        Assert::assertGreaterThan(0, $progress->countOf(StageName::commit));
     }
 
     public function aPartitionedWriteReadsBackEveryPartition(FileFormat $format): void

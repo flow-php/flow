@@ -405,6 +405,8 @@ pub fn register() -> Result<()> {
                 COLUMN,
             ),
             method("allocatedBytes", vec![], DataType::Long),
+            method("allocatedPeakBytes", vec![], DataType::Long),
+            method("resetAllocatedPeak", vec![], DataType::Void),
         ],
     )?;
     interface(

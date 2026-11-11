@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Functions;
 
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Functions\Window;
 use Flow\ETL\Tests\Context\AggregatorRoundTrip;
@@ -103,7 +104,7 @@ final class RowNumberTest extends FlowTestCase
 
         row_number()
             ->over(window()->orderBy(ref('id')))
-            ->values(RowsMother::sequentialIds(2500), flow_context()->backend(), $progress->stage('window'));
+            ->values(RowsMother::sequentialIds(2500), flow_context()->backend(), $progress->stage(StageName::window));
 
         static::assertSame([['window', 2500]], $progress->advancedCalls());
     }

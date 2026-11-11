@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Kernels\HashJoin;
 
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\SchemaDefinitionNotUniqueException;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Functions\Join\Condition\All;
 use Flow\ETL\Functions\Join\Condition\Any;
 use Flow\ETL\Functions\Join\Condition\Equal;
@@ -142,7 +143,11 @@ final class JoinerTest extends FlowTestCase
         $progress = new ProgressSpy();
 
         iterator_to_array(
-            JoinerMother::of(join_on(['id' => 'user_id']), JoinType::inner, progress: $progress->stage('join'))->join(
+            JoinerMother::of(
+                join_on(['id' => 'user_id']),
+                JoinType::inner,
+                progress: $progress->stage(StageName::join),
+            )->join(
                 JoinSide::of($batches(array_to_rows(
                     array_map(static fn(int $id): array => ['id' => $id], range(1, 10)),
                     schema(int_schema('id')),
@@ -889,7 +894,11 @@ final class JoinerTest extends FlowTestCase
         $progress = new ProgressSpy();
 
         iterator_to_array(
-            JoinerMother::of(join_on(['id' => 'user_id']), JoinType::left, progress: $progress->stage('join'))->join(
+            JoinerMother::of(
+                join_on(['id' => 'user_id']),
+                JoinType::left,
+                progress: $progress->stage(StageName::join),
+            )->join(
                 JoinSide::of($batches(array_to_rows([
                     ['id' => 1],
                     ['id' => 2],

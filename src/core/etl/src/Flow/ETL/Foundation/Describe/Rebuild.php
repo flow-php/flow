@@ -8,6 +8,7 @@ use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Progress;
 use Flow\ETL\Foundation\ProgressStages;
 use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\VoidProgress;
 use Flow\Types\Exception\InvalidTypeException;
 use ReflectionClass;
@@ -108,7 +109,7 @@ final readonly class Rebuild
      * @throws InvalidArgumentException
      * @throws InvalidTypeException
      */
-    public function progress(string $stage, mixed $described = null): Progress
+    public function progress(StageName $stage, mixed $described = null): Progress
     {
         if ($described === null) {
             return $this->progress->stage($stage);
@@ -120,10 +121,10 @@ final readonly class Rebuild
         return $description->class === VoidProgress::class
             ? $this->progress->stage($stage)
             : $this->progress->stage(
-                type_string()->assert($description->data['name'] ?? null),
+                StageName::from(type_string()->assert($description->data['name'] ?? null)),
                 ProgressUnit::rows,
                 type_integer()->assert($description->data['id'] ?? null),
-                type_union(type_string(), type_null())->assert($description->data['location'] ?? null),
+                type_union(type_string(), type_null())->assert($description->data['subject'] ?? null),
             );
     }
 }

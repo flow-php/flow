@@ -8,6 +8,7 @@ use ArrayObject;
 use Flow\ETL\Foundation\Clock\FakeClock;
 use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\StageProgress;
 use Flow\ETL\IO\Extractor\Signal;
 use Flow\ETL\Runtime\Heartbeat\HeartbeatStage;
@@ -88,7 +89,7 @@ final readonly class HeartbeatContext
     /**
      * @return list<list<StageProgress>> the entries named $name of every pulse
      */
-    public static function entries(RecordingHeartbeat $recording, string $name): array
+    public static function entries(RecordingHeartbeat $recording, StageName $name): array
     {
         return array_map(static fn(Pulse $pulse): array => array_values(array_filter(
             $pulse->stages,
@@ -135,7 +136,7 @@ final readonly class HeartbeatContext
         }
     }
 
-    public static function stageWithId(string $name, int $id): HeartbeatStage
+    public static function stageWithId(StageName $name, int $id): HeartbeatStage
     {
         return (new self())
             ->throttle(new ScheduledHeartbeat(new RecordingHeartbeat(), 120))
