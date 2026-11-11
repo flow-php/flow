@@ -1,6 +1,16 @@
-## [Unreleased] - 2026-11-10
+## [Unreleased] - 2026-11-11
 
 ### Added
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl - heartbeat callbacks during long-running operations, through config_builder()->heartbeat()** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl - Pulse lists every stage of a run, planned stages included** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl - heartbeat during schema inference, file commits and DataFrame::schema()** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl - write stage for every loader and join stage for join_each** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl - memory peak per run in the pulse** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl - per-operation memory budgets with a process cap** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl - inferSchema() on chained and cached extractors** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/symfony-console-bridge - new package with a console heartbeat in four styles** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/cli - console progress in the file commands** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/flow-php-ext - inference progress and an allocation peak counter** - [@norberttech](https://github.com/norberttech)
 - [#2728](https://github.com/flow-php/flow/pull/2728) - **flow-php/postgresql - ALTER EXTENSION ... SET SCHEMA in the query builder** - [@norberttech](https://github.com/norberttech)
 - [#2728](https://github.com/flow-php/flow/pull/2728) - **flow-php/postgresql - schema diff moves extensions between schemas** - [@norberttech](https://github.com/norberttech)
 - [#2726](https://github.com/flow-php/flow/pull/2726) - **flow-php/filesystem - InterceptedFilesystem with an onCall() hook and intercepted_filesystem() DSL for testing filesystem failures** - [@norberttech](https://github.com/norberttech)
@@ -14,6 +24,25 @@
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - Pipe operator documentation page** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl - sliding window frames are computed in one call per partition** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl - window functions, schema inference and Closure::closure() take a Progress** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl - memory limits count the memory an operation adds** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl - MemoryLimit moved to Flow\ETL\Values\Memory** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl - InfersSchema reports inference progress** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl-adapter-csv - inference and file writes report progress** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl-adapter-json - inference and file writes report progress** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl-adapter-excel - inference and file writes report progress** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl-adapter-google-sheet - inference reports progress** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl-adapter-parquet - file writes report progress** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl-adapter-text - file writes report progress** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl-adapter-xml - file writes report progress** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl-adapter-chartjs - file writes report progress** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/cli - --config file returns a ConfigBuilder** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/cli - symfony/console lower bound raised** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/symfony-telemetry-bundle - symfony/console lower bound raised** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/symfony-postgresql-bundle - symfony/console lower bound raised** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/parquet-viewer - symfony/console lower bound raised** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/flow-php-ext - ABI version 3** - [@norberttech](https://github.com/norberttech)
 - [b5dd52](https://github.com/flow-php/flow/commit/b5dd523da18d0323b557850a2a65e01ba5db3eed) - **chore(flow-php/flow): split the monorepo in one CI job** - [@norberttech](https://github.com/norberttech)
 - [6e715f](https://github.com/flow-php/flow/commit/6e715f04fa485cf2b5a9314a4862d539046eaddd) - **chore(flow-php/flow): run CI on GitHub-hosted runners** - [@norberttech](https://github.com/norberttech)
 - [151d48](https://github.com/flow-php/flow/commit/151d48566b4f3cf68f07accd4ea06d89d5eef1a2) - **chore(flow-php/flow): read CI and nix shell credentials from 1Password** - [@norberttech](https://github.com/norberttech)
@@ -34,6 +63,11 @@
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - print_rows(Rows) renamed to format_rows()** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl - memory units are binary and the external sort merge stays within its memory budget** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl - spill reader yields a full batch before it decodes the next frame** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl - a failed run ends its sources and upstream steps before the error reaches the caller** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl - a stopped heartbeat discards the writes that did not end yet** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl - PHP crash while a failed launched run ends a source that closes a handle in finally** - [@norberttech](https://github.com/norberttech)
 - [#2728](https://github.com/flow-php/flow/pull/2728) - **flow-php/postgresql - schema diff qualifies every object with its schema** - [@norberttech](https://github.com/norberttech)
 - [#2728](https://github.com/flow-php/flow/pull/2728) - **flow-php/postgresql - DROP INDEX honours dropIfExists** - [@norberttech](https://github.com/norberttech)
 - [#2728](https://github.com/flow-php/flow/pull/2728) - **flow-php/postgresql - catalog provider reads materialized view indexes and owned sequences** - [@norberttech](https://github.com/norberttech)
@@ -53,6 +87,9 @@
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - explain() default trigger in the documentation** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/cli - ProgressBarLoader** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/cli - --config option from commands that never used it** - [@norberttech](https://github.com/norberttech)
+- [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl - ExternalSort::$memoryLimit** - [@norberttech](https://github.com/norberttech)
 - [#2728](https://github.com/flow-php/flow/pull/2728) - **flow-php/postgresql - DependentView** - [@norberttech](https://github.com/norberttech)
 - [#2726](https://github.com/flow-php/flow/pull/2726) - **flow-php/symfony-filesystem-bundle - FstabBuilder** - [@norberttech](https://github.com/norberttech)
 - [#2724](https://github.com/flow-php/flow/pull/2724) - **flow-php/web - DSL definitions inlined into every page** - [@norberttech](https://github.com/norberttech)
