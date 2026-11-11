@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Values\Memory;
 
+use Flow\ETL\Tests\Double\FixedProcessMemoryBackend;
 use Flow\ETL\Tests\Double\ReportedMemoryBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Memory\MemoryBudget;
@@ -129,13 +130,14 @@ final class MemoryBudgetTest extends FlowTestCase
 
     public function test_an_allocation_up_to_exactly_the_cap_does_not_cross_it(): void
     {
-        $cap = Unit::fromGb(2);
-        $backend = new ReportedMemoryBackend(Unit::fromGb(1)->inBytes());
-        $budget = new MemoryBudget($backend, Unit::fromGb(1), $cap);
-        $headroom = $cap->inBytes() - memory_get_usage(false) - $backend->reported;
+        $budget = new MemoryBudget(
+            new FixedProcessMemoryBackend(Unit::fromGb(1)->inBytes()),
+            Unit::fromGb(1),
+            Unit::fromGb(2),
+        );
 
-        static::assertFalse($budget->crossesCapWith($headroom));
-        static::assertTrue($budget->crossesCapWith($headroom + 1));
+        static::assertFalse($budget->crossesCapWith(Unit::fromGb(1)->inBytes()));
+        static::assertTrue($budget->crossesCapWith(Unit::fromGb(1)->inBytes() + 1));
     }
 
     public function test_without_a_cap_no_allocation_crosses_it(): void

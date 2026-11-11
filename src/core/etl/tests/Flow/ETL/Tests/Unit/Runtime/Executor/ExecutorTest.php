@@ -706,7 +706,7 @@ final class ExecutorTest extends FlowTestCase
             array_map(
                 static fn(StageProgress $stage): array => [$stage->name->value, $stage->count, $stage->subject],
                 array_values(array_filter(
-                    array_pop($pulses)?->stages ?? [],
+                    array_pop($pulses)->stages ?? [],
                     static fn(StageProgress $stage): bool => in_array(
                         $stage->name,
                         [StageName::write, StageName::commit],
@@ -742,7 +742,7 @@ final class ExecutorTest extends FlowTestCase
             array_map(
                 static fn(StageProgress $stage): array => [$stage->name->value, $stage->count, $stage->subject],
                 array_values(array_filter(
-                    array_pop($pulses)?->stages ?? [],
+                    array_pop($pulses)->stages ?? [],
                     static fn(StageProgress $stage): bool => in_array(
                         $stage->name,
                         [StageName::write, StageName::commit],

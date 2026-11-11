@@ -60,25 +60,7 @@ final readonly class StepTelemetry
             return $batches;
         }
 
-        return (static function () use ($class, $batches, $context): Generator {
-            $step = $context->telemetry()->stepStarted(StepKind::operator, $class);
-
-            try {
-                // send() resumes like next() and forwards the consumer's stop to the operator
-                while ($batches->valid()) {
-                    $batches->send(yield $batches->current());
-                }
-
-                return $batches->getReturn();
-            } catch (Throwable $e) {
-                $context->telemetry()->stepFailed($step, StepKind::operator, $class, $e);
-
-                throw $e;
-            } finally {
-                // a no-op after a failure; after an early stop, the abandoned operator completes here
-                $context->telemetry()->stepCompleted($step);
-            }
-        })();
+        return $this->traced($class, $batches, $context);
     }
 
     public function transform(Transformer $transformer, Rows $rows, FlowContext $context): Rows
@@ -107,5 +89,35 @@ final readonly class StepTelemetry
         ]);
 
         return $result;
+    }
+
+    /**
+     * @param class-string $class
+     * @param Generator<Rows> $batches
+     *
+     * @return Generator<Rows>
+     */
+    private function traced(string $class, Generator $batches, FlowContext $context): Generator
+    {
+        // a parameter, never a closure's use: PHP 8.4+ keeps a finished closure generator's bound values until it is freed
+        $step = $context->telemetry()->stepStarted(StepKind::operator, $class);
+
+        try {
+            // send() resumes like next() and forwards the consumer's stop to the operator
+            while ($batches->valid()) {
+                /** @var Rows $batch valid() holds, so current() is a batch */
+                $batch = $batches->current();
+                $batches->send(yield $batch);
+            }
+
+            return $batches->getReturn();
+        } catch (Throwable $e) {
+            $context->telemetry()->stepFailed($step, StepKind::operator, $class, $e);
+
+            throw $e;
+        } finally {
+            // a no-op after a failure; after an early stop, the abandoned operator completes here
+            $context->telemetry()->stepCompleted($step);
+        }
     }
 }

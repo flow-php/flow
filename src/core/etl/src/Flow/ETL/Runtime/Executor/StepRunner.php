@@ -535,8 +535,11 @@ final readonly class StepRunner
         $upstream = $this->started($this->run($run, $input, $context, $source, $stages, $writes), $upstreamStarted);
 
         if (!$step instanceof JoinStep) {
+            $operator = $step->process($upstream, $context->backend());
+
             return $this->unwinding(
-                $this->telemetry->operator($step::class, $step->process($upstream, $context->backend()), $context),
+                $this->telemetry->operator($step::class, $operator, $context),
+                $operator,
                 $context,
                 $upstream,
                 $upstreamStarted,
@@ -549,12 +552,11 @@ final readonly class StepRunner
             $rightStarted,
         );
 
+        $operator = $step->join->join($upstream, $right, $context->backend());
+
         return $this->unwinding(
-            $this->telemetry->operator(
-                $step->join::class,
-                $step->join->join($upstream, $right, $context->backend()),
-                $context,
-            ),
+            $this->telemetry->operator($step->join::class, $operator, $context),
+            $operator,
             $context,
             $upstream,
             $upstreamStarted,
@@ -564,7 +566,8 @@ final readonly class StepRunner
     }
 
     /**
-     * @param Generator<Rows> $output what a processor or join yields
+     * @param Generator<Rows> $output what a processor or join yields, through its telemetry when traced
+     * @param Generator<Rows> $operator the processor or join itself, $output when untraced
      * @param Generator<int, Rows, null|Signal, void> $input what it reads
      * @param null|Generator<int, Rows, mixed, void> $right what a join reads as its right side
      *
@@ -572,6 +575,7 @@ final readonly class StepRunner
      */
     private function unwinding(
         Generator $output,
+        Generator $operator,
         FlowContext $context,
         Generator $input,
         bool &$inputStarted,
@@ -587,6 +591,8 @@ final readonly class StepRunner
             }
         } catch (Throwable $failure) {
             $this->unwind($output, $failure, $context);
+            // the telemetry around a traced operator never forwards the failure, so the operator gets it here
+            $this->unwind($operator, $failure, $context);
 
             // an operator that failed on its own, or that reads with foreach, leaves its input suspended
             if ($inputStarted) {

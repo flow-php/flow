@@ -48,7 +48,6 @@ final class StatusLineHeartbeat implements ConsoleHeartbeat
                 'normal',
                 100,
                 array_map(static fn(string $frame): string => "<fg=cyan>{$frame}</>", self::SPINNER),
-                '<fg=green>✔</>',
             );
             $this->indicator->start($message);
 
@@ -61,22 +60,28 @@ final class StatusLineHeartbeat implements ConsoleHeartbeat
 
     public function finish(): void
     {
-        if ($this->indicator !== null && $this->last !== null && StageLine::readCompleted($this->last)) {
-            $files = StageLine::filesWritten($this->last);
-            $this->indicator->finish(sprintf(
-                '<options=bold>%s</> in <options=bold>%s</> <fg=gray>· peak %s%s</>',
-                StageLine::counted($this->last->rowsRead, ProgressUnit::rows),
-                StageLine::seconds($this->last->elapsedSeconds),
-                StageLine::memory($this->last->peakMemoryBytes),
-                $files === null ? '' : ' · ' . StageLine::counted($files, ProgressUnit::files),
-            ));
-        } elseif ($this->indicator !== null) {
+        if ($this->indicator !== null) {
+            $files = $this->last === null ? null : StageLine::filesWritten($this->last);
+            $summary = $this->last !== null && StageLine::readCompleted($this->last)
+                ? sprintf(
+                    ' <fg=green>✔</> <options=bold>%s</> in <options=bold>%s</> <fg=gray>· peak %s%s</>',
+                    StageLine::counted($this->last->rowsRead, ProgressUnit::rows),
+                    StageLine::seconds($this->last->elapsedSeconds),
+                    StageLine::memory($this->last->peakMemoryBytes),
+                    $files === null ? '' : ' · ' . StageLine::counted($files, ProgressUnit::files),
+                )
+                : null;
+
             if ($this->output instanceof ConsoleSectionOutput) {
-                $this->output->clear();
+                $summary === null ? $this->output->clear() : $this->output->overwrite($summary);
             } else {
                 (new Cursor($this->output))
                     ->moveToColumn(1)
                     ->clearLine();
+
+                if ($summary !== null) {
+                    $this->output->writeln($summary);
+                }
             }
         }
 

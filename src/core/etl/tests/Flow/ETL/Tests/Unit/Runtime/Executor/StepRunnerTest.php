@@ -37,10 +37,12 @@ use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\Double\RecordingErrorHandler;
 use Flow\ETL\Tests\Double\RecordingHeartbeat;
 use Flow\ETL\Tests\Double\RecordingLoader;
+use Flow\ETL\Tests\Double\RecordingProcessor;
 use Flow\ETL\Tests\Double\SpyLoader;
 use Flow\ETL\Tests\Double\ThrowingLoader;
 use Flow\ETL\Tests\Double\ThrowingTransformer;
 use Flow\ETL\Tests\Double\ThrowWhenRowMatches;
+use Flow\ETL\Tests\Double\TracedFailureTransformer;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\PhysicalPlanMother;
 use Flow\ETL\Tests\Mother\RowsMother;
@@ -50,6 +52,7 @@ use Flow\Telemetry\Logger\LogEntry;
 use Generator;
 use LogicException;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 use RuntimeException;
 
 use function array_map;
@@ -198,6 +201,37 @@ final class StepRunnerTest extends FlowTestCase
         (new StepRunner())->unwind($operator, new RuntimeException('failed'), $telemetry->flowContext);
 
         static::assertSame(['processor finally'], $ended->getArrayCopy());
+    }
+
+    #[TestWith([true])]
+    #[TestWith([false])]
+    public function test_a_failed_run_throws_its_failure_into_a_processor_before_it_ends_the_source(bool $traced): void
+    {
+        $log = new ArrayObject();
+        $steps = (new StepRunner())->steps(
+            new PipelineSteps([new RecordingProcessor($log), new TracedFailureTransformer()]),
+            (static function () use ($log): Generator {
+                try {
+                    yield RowsMother::sequentialIds(1);
+                    yield RowsMother::sequentialIds(1);
+                } finally {
+                    $log->append('source finally');
+                }
+            })(),
+            (new MemoryTelemetryContext(new TelemetryOptions(traceTransformations: $traced)))->flowContext,
+        );
+
+        try {
+            iterator_to_array($steps);
+
+            static::fail('Expected the failure to surface.');
+        } catch (RuntimeException $e) {
+            static::assertSame('step exploded', $e->getMessage());
+            static::assertSame(
+                ['processor caught step exploded', 'processor finally', 'source finally'],
+                $log->getArrayCopy(),
+            );
+        }
     }
 
     public function test_unwinding_an_operator_ends_the_chain_it_holds_in_a_local(): void
