@@ -177,7 +177,7 @@ final class FileWriteTest extends FlowTestCase
 
         $frame->closure($spy);
 
-        static::assertSame(2 + 8, $spy->rowsOf('commit'));
+        static::assertSame([2, 2 + 6], [$spy->countOf('commit'), $spy->busyCalls('commit')]);
     }
 
     public function test_closure_reports_a_writer_whose_close_failed(): void
@@ -202,7 +202,7 @@ final class FileWriteTest extends FlowTestCase
             $frame->closure($spy);
             static::fail('Expected the writer close failure to surface.');
         } catch (RuntimeException) {
-            static::assertSame(2, $spy->rowsOf('commit'));
+            static::assertSame([0, 2], [$spy->countOf('commit'), $spy->busyCalls('commit')]);
         }
     }
 

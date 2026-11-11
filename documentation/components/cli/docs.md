@@ -15,8 +15,8 @@ For the installation instructions, read the [installation page](/documentation/i
 ## Commands
 
 `file:analyze`, `file:convert` and `file:rows:count` show the run's progress on stderr. The
-[Symfony Console Bridge](/documentation/components/bridges/symfony-console-bridge.md#what-it-prints) page shows the line
-and how to hide it.
+[Symfony Console Bridge](/documentation/components/bridges/symfony-console-bridge.md#styles) page shows the styles and
+how to hide them.
 
 ### Config 
 

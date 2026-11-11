@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Mother;
 
 use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
+use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Functions\Join\Expression;
 use Flow\ETL\Operators\Join\HashJoin;
 use Flow\ETL\Operators\Join\HashJoinConfig;
@@ -45,9 +47,13 @@ final class HashJoinMother
      *
      * @param int<1, max> $batchSize
      */
-    public static function resident(Expression $on, JoinType $type, int $batchSize = 1000): HashJoin
-    {
-        return self::with($on, $type, new MemoryRowsStorage(), batchSize: $batchSize);
+    public static function resident(
+        Expression $on,
+        JoinType $type,
+        int $batchSize = 1000,
+        Progress $progress = new VoidProgress(),
+    ): HashJoin {
+        return self::with($on, $type, new MemoryRowsStorage(), batchSize: $batchSize, progress: $progress);
     }
 
     /**
@@ -61,6 +67,7 @@ final class HashJoinMother
         int $bucketsCount = 64,
         int $batchSize = 1000,
         ?Unit $memoryLimit = null,
+        Progress $progress = new VoidProgress(),
     ): HashJoin {
         return new HashJoin(
             $on,
@@ -70,6 +77,7 @@ final class HashJoinMother
                 Unit::fromMb(10),
             ),
             new NativePHPRandomValueGenerator(),
+            progress: $progress,
         );
     }
 }

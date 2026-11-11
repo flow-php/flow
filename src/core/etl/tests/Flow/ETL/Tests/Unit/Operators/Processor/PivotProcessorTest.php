@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Operators\Processor;
 
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\ProgressUnit;
 use Flow\ETL\Functions\AggregatingFunction;
 use Flow\ETL\Operators\GroupBy;
 use Flow\ETL\Operators\GroupBy\Aggregators;
@@ -15,6 +16,7 @@ use Flow\ETL\Operators\Processor\PivotProcessor;
 use Flow\ETL\Storage\BucketingConfig;
 use Flow\ETL\Storage\MemoryRowsStorage;
 use Flow\ETL\Tests\Context\DescribeRoundTrip;
+use Flow\ETL\Tests\Context\HeartbeatContext;
 use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Memory\Unit;
@@ -352,10 +354,10 @@ final class PivotProcessorTest extends FlowTestCase
         );
 
         static::assertSame(['pivot'], $spy->stages());
-        static::assertGreaterThan(0, $spy->rowsOf('pivot'));
+        static::assertGreaterThan(0, $spy->countOf('pivot'));
     }
 
-    public function test_counts_every_row_in_and_every_pivoted_row_out(): void
+    public function test_counts_every_row_it_takes_once_and_is_busy_while_it_emits(): void
     {
         $progress = new ProgressSpy();
         $input = schema(str_schema('date'), str_schema('user'), int_schema('contributions'));
@@ -382,6 +384,78 @@ final class PivotProcessorTest extends FlowTestCase
             false,
         );
 
-        static::assertSame(3 + 2, $progress->rowsOf('pivot'));
+        static::assertSame([3, 1], [$progress->countOf('pivot'), $progress->busyCalls('pivot')]);
+    }
+
+    public function test_pivot_processor_describes_its_progress(): void
+    {
+        $spy = new ProgressSpy();
+
+        DescribeRoundTrip::rebuilt(
+            new PivotProcessor(
+                new GroupBy(
+                    refs(ref('date')),
+                    new Aggregators(sum(ref('contributions'))),
+                    new Pivot(ref('user'), pivot_values('norbert')),
+                ),
+                config()->grouping,
+                progress: HeartbeatContext::stageWithId('pivot', 7),
+            ),
+            new Rebuild($spy),
+        );
+
+        static::assertSame([['pivot', ProgressUnit::rows, 7, null]], $spy->built());
+    }
+
+    public function test_pivot_processor_is_done_after_its_last_batch(): void
+    {
+        $progress = new ProgressSpy();
+        $input = schema(str_schema('date'), str_schema('user'), int_schema('contributions'));
+        $output = (new PivotProcessor(
+            new GroupBy(
+                refs(ref('date')),
+                new Aggregators(sum(ref('contributions'))),
+                new Pivot(ref('user'), pivot_values('norbert', 'stloyd')),
+            ),
+            config()->grouping,
+            progress: $progress->stage('pivot'),
+        ))->process(
+            (static function () use ($input): Generator {
+                yield array_to_rows([
+                    ['date' => '2024-01-01', 'user' => 'norbert', 'contributions' => 1],
+                    ['date' => '2024-01-01', 'user' => 'stloyd', 'contributions' => 2],
+                ], $input);
+            })(),
+            flow_context()->backend(),
+        );
+
+        $output->current();
+
+        static::assertSame(0, $progress->doneCalls('pivot'));
+
+        iterator_to_array($output, false);
+
+        static::assertSame(1, $progress->doneCalls('pivot'));
+    }
+
+    public function test_its_distribution_holds_the_stage_it_reports_to(): void
+    {
+        $stage = new ProgressSpy('pivot');
+
+        static::assertSame(
+            $stage,
+            type_instance_of(PivotProcessor::class)
+                ->assert((new PivotProcessor(
+                    new GroupBy(
+                        refs('name'),
+                        new Aggregators(sum(ref('id'))),
+                        new Pivot(ref('country'), pivot_values('USA')),
+                    ),
+                    config()->grouping,
+                    progress: $stage,
+                ))->bind(schema(str_schema('name'), int_schema('id'), str_schema('country')))->step)
+                ->distribution()
+                ?->progress,
+        );
     }
 }

@@ -36,7 +36,7 @@ final readonly class MergeSortProcessor implements Distributable
         /** @var list<SortColumn> */
         public array $columns,
         private RandomValueGenerator $random,
-        Progress $progress = new VoidProgress(),
+        private Progress $progress = new VoidProgress(),
     ) {
         $this->sort = ExternalSort::of($columns, $config, $random, $progress);
     }
@@ -50,7 +50,7 @@ final readonly class MergeSortProcessor implements Distributable
                 $data['random'] ?? null,
                 Describable::class,
             )),
-            $rebuild->progress(ProgressStages::SORT),
+            $rebuild->progress(ProgressStages::SORT, $data['progress'] ?? null),
         );
     }
 
@@ -65,6 +65,7 @@ final readonly class MergeSortProcessor implements Distributable
                     'config' => $this->config,
                     'columns' => $this->columns,
                     'random' => $this->random,
+                    'progress' => $this->progress instanceof Describable ? $this->progress : new VoidProgress(),
                 ])
                 : null
         );
@@ -75,7 +76,9 @@ final readonly class MergeSortProcessor implements Distributable
      */
     public function distribution(): ?Distribution
     {
-        return $this->columns === [] || $this->describe() === null ? null : Distribution::ordered($this->columns);
+        return $this->columns === [] || $this->describe() === null
+            ? null
+            : Distribution::ordered($this->columns, $this->progress);
     }
 
     public function bind(Schema $input): BoundStep
@@ -94,9 +97,10 @@ final readonly class MergeSortProcessor implements Distributable
         $rows->valid();
 
         yield from $this->sort->sort(
-            $rows,
+            $this->sort->counted($rows),
             $backend,
             MemoryBudget::of($backend, $this->config->bucketing->memoryLimit),
         );
+        $this->progress->done();
     }
 }

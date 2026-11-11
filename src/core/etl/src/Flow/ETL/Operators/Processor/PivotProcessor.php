@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Operators\Processor;
 
+use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
@@ -52,7 +53,7 @@ final readonly class PivotProcessor implements Distributable
             ($data['input'] ?? null) === null
                 ? null
                 : PivotShape::of($groupBy, Schema::fromArray(type_array()->assert($data['input']))),
-            $rebuild->progress(ProgressStages::PIVOT),
+            $rebuild->progress(ProgressStages::PIVOT, $data['progress'] ?? null),
         );
     }
 
@@ -62,6 +63,7 @@ final readonly class PivotProcessor implements Distributable
             'group_by' => $this->groupBy,
             'config' => $this->config,
             'input' => $this->shape?->input->normalize(),
+            'progress' => $this->progress instanceof Describable ? $this->progress : new VoidProgress(),
         ]);
     }
 
@@ -74,7 +76,7 @@ final readonly class PivotProcessor implements Distributable
 
         return $this->shape === null || $keys === [] || $this->describe() === null
             ? null
-            : Distribution::clustered($keys);
+            : Distribution::clustered($keys, progress: $this->progress);
     }
 
     /**
@@ -122,10 +124,12 @@ final readonly class PivotProcessor implements Distributable
 
         if ($table !== null) {
             foreach ($table->flush(new BatchSize($this->config->batchSize), $backend) as $batch) {
-                $this->progress->advanced($batch->count());
+                $this->progress->busy();
 
                 yield $batch;
             }
         }
+
+        $this->progress->done();
     }
 }

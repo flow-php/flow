@@ -80,7 +80,7 @@ final readonly class TopNProcessor implements Distributable
                 Describable::class,
             )),
             ($data['declared'] ?? null) === null ? null : Schema::fromArray(type_array()->assert($data['declared'])),
-            $rebuild->progress(ProgressStages::SORT),
+            $rebuild->progress(ProgressStages::SORT, $data['progress'] ?? null),
         );
     }
 
@@ -97,6 +97,7 @@ final readonly class TopNProcessor implements Distributable
                     'config' => $this->config,
                     'random' => $this->random,
                     'declared' => $this->declared?->normalize(),
+                    'progress' => $this->progress instanceof Describable ? $this->progress : new VoidProgress(),
                 ])
                 : null
         );
@@ -107,7 +108,7 @@ final readonly class TopNProcessor implements Distributable
      */
     public function distribution(): ?Distribution
     {
-        return $this->describe() === null ? null : Distribution::single($this);
+        return $this->describe() === null ? null : Distribution::single($this, progress: $this->progress);
     }
 
     public function bind(Schema $input): BoundStep
@@ -156,12 +157,14 @@ final readonly class TopNProcessor implements Distributable
             // past the memory limit the kept rows and the rest of the stream go to the spilling sort; a trimmed row
             // cannot be in the top $limit, so the result is the same
             if ($this->fallback !== null && $budget !== null && $budget->exceeded()) {
+                // the kept rows were counted when top-n took them, the rest is counted as the sort takes it
                 yield from $this->fallback->sort(
-                    BoundedRead::followedBy([$kept], $rows),
+                    BoundedRead::followedBy([$kept], $this->fallback->counted($rows)),
                     $backend,
                     $budget,
                     $this->limit,
                 );
+                $this->progress->done();
 
                 return;
             }
@@ -169,15 +172,18 @@ final readonly class TopNProcessor implements Distributable
 
         if ($kept === null) {
             yield from Rows::empty($this->declared ?? $schema ?? new Schema(), $backend)->chunks($maxSize);
+            $this->progress->done();
 
             return;
         }
 
         foreach ($this->top($kept, $backend)->chunks($maxSize) as $chunk) {
-            $this->progress->advanced($chunk->count());
+            $this->progress->busy();
 
             yield $chunk;
         }
+
+        $this->progress->done();
     }
 
     public function top(Rows $rows, Backend $backend): Rows

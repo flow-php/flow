@@ -58,7 +58,7 @@ final class ChartJSLoaderTest extends FlowTestCase
 
         $loader->closure($progress);
 
-        static::assertSame(1 + 1 + 1, $progress->rowsOf('commit'));
+        static::assertSame([1, 2], [$progress->countOf('commit'), $progress->busyCalls('commit')]);
     }
 
     public function test_chartjs_output_path_without_an_extension_throws_at_build(): void

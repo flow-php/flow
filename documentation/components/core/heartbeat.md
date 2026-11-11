@@ -6,9 +6,9 @@
 
 ## Register a heartbeat
 
-A heartbeat is a callback. Flow calls it every N seconds while a run is busy, also during a sort, group by, pivot,
-join or window function, and while a file write ends. Flow adds no beat at the start or at the end of a run, so a run
-shorter than `everySeconds` never calls it.
+A heartbeat is a callback. Flow calls it every N seconds while a run is busy. This includes a sort, group by, pivot,
+join or window function, and the end of a file write. A completed run beats once more, with every stage ended. A
+failed run does not.
 
 ```php
 <?php
@@ -27,7 +27,7 @@ df(config_builder()->heartbeat(new ExtendLease($lease), everySeconds: 120))
 config_builder()->heartbeat(new ExtendLease($lease), everySeconds: 120, onFailure: HeartbeatFailure::log);
 ```
 
-`everySeconds` must be at least 1.
+`everySeconds` is a float. The minimum is 0.1.
 
 ## Implement a heartbeat
 
@@ -49,6 +49,31 @@ final readonly class ExtendLease implements Heartbeat
 }
 ```
 
+A heartbeat that logs every open stage:
+
+```php
+<?php
+
+use Flow\ETL\Runtime\Heartbeat\{Heartbeat, Pulse};
+use Psr\Log\LoggerInterface;
+
+final readonly class LogOpenStages implements Heartbeat
+{
+    public function __construct(private LoggerInterface $logger)
+    {
+    }
+
+    public function beat(Pulse $pulse): void
+    {
+        foreach ($pulse->stages as $stage) {
+            if ($stage->endedAtSeconds === null) {
+                $this->logger->info(sprintf('%s %s: %d', $stage->name, $stage->location ?? '', $stage->count));
+            }
+        }
+    }
+}
+```
+
 ## Several heartbeats
 
 Each `heartbeat()` call adds one more heartbeat with its own interval, failure mode and beat count. Heartbeats that
@@ -58,63 +83,108 @@ are due together are called in the order they were registered.
 <?php
 
 use Flow\ETL\Runtime\Heartbeat\HeartbeatFailure;
-use function Flow\Bridge\Symfony\Console\DSL\console_heartbeat;
 use function Flow\ETL\Adapter\CSV\{from_csv, to_csv};
 use function Flow\ETL\DSL\{config_builder, df, ref};
 
 df(config_builder()
     ->heartbeat(new ExtendLease($lease), everySeconds: 120)
-    ->heartbeat(console_heartbeat($output), everySeconds: 1, onFailure: HeartbeatFailure::log))
+    ->heartbeat(new LogOpenStages($logger), everySeconds: 1, onFailure: HeartbeatFailure::log))
     ->read(from_csv($path))
     ->sortBy(ref('id'))
     ->write(to_csv($out))
     ->run();
 ```
 
-`console_heartbeat()` comes from the [Symfony Console Bridge](/documentation/components/bridges/symfony-console-bridge.md).
+The [Symfony Console Bridge](/documentation/components/bridges/symfony-console-bridge.md) draws a run's progress in a
+terminal.
 
 ## Pulse
 
-| Field             | Value                                                                                                   |
-|-------------------|---------------------------------------------------------------------------------------------------------|
-| `beat`            | 1, 2, 3... counted per heartbeat                                                                        |
-| `elapsedSeconds`  | seconds since the run started, rounded down                                                             |
-| `rowsRead`        | rows read from the source                                                                               |
-| `stage`           | the stage that reported progress last, `''` before the first                                            |
-| `stageRows`       | rows that stage processed, counted once in every pass, file operations for `commit`                     |
-| `memoryBytes`     | the whole process, not the run alone: `memory_get_usage(true)` plus native backend bytes, workers added |
-| `peakMemoryBytes` | peak memory of the process, in a parallel run the highest of parent and workers                         |
-| `idleSeconds`     | seconds since the run last made progress, growing only while the run keeps checking                     |
+| Field             | Value                                                                                                               |
+|-------------------|---------------------------------------------------------------------------------------------------------------------|
+| `beat`            | 1, 2, 3... counted per heartbeat                                                                                    |
+| `elapsedSeconds`  | seconds since the run started, with a fraction                                                                      |
+| `rowsRead`        | rows read from the source                                                                                           |
+| `stages`          | one entry per stage, in the order of the pipeline's steps, two entries can have the same name                       |
+| `memoryBytes`     | the whole process, not the run alone: `memory_get_usage(true)` plus native backend bytes, workers added             |
+| `peakMemoryBytes` | the highest memory of the run: the process peak, in a parallel run the highest total of parent and workers together |
+| `idleSeconds`     | seconds since the run last made progress, with a fraction, growing only while the run keeps checking                |
 
 `memoryBytes` is allocated memory. A memory limit compares live memory, so `memoryBytes` can stay above it after a
-spill.
+spill. In a parallel run, `peakMemoryBytes` is sampled at each worker report and each beat, so a spike between two
+samples is not seen.
 
-`stageRows` is not a share of `rowsRead`. A stage counts a row in every pass over it:
+Each entry of `stages` is a `StageProgress`:
 
-| Stage                         | `stageRows` after N rows      |
+| Field              | Value                                                                                                              |
+|--------------------|--------------------------------------------------------------------------------------------------------------------|
+| `id`               | the same in every beat, use it to follow one stage over beats, null for a stage that a worker builds itself        |
+| `name`             | a stage from the table under Stages                                                                                |
+| `unit`             | `rows`, or `files` for `commit`. `group_by` starts in `rows`, then counts `groups`                                 |
+| `location`         | a read's file or glob, a write's directory, else null, never a user, password, port, query or fragment             |
+| `count`            | what the stage processed, in its unit                                                                              |
+| `total`            | exact only for a read that nothing pushed narrows (`limit()`, `offset()`, a filter, a partition filter), else null |
+| `startedAtSeconds` | seconds since the run started                                                                                      |
+| `endedAtSeconds`   | seconds since the run started, null while the stage is open                                                        |
+
+`count` is not a share of `rowsRead`:
+
+| Stage                         | `count` after N rows          |
 |-------------------------------|-------------------------------|
-| `sort` in memory              | 2 x N (in and out)            |
-| `sort` that spills            | more than 2 x N (every merge) |
-| `sort` followed by `limit()`  | N + the limit                 |
-| `group_by`                    | N + the number of groups      |
+| `sort`, in memory or spilling | N, merges and output add none |
+| `sort` followed by `limit()`  | N                             |
+| `group_by`                    | N rows, then the groups       |
+| `join`                        | the rows the join streams     |
 | `window` with `partitionBy()` | at least 2 x N                |
+| `commit`                      | the files written             |
 
 ## Stages
 
-| Stage         | Reported by                                                                                 |
-|---------------|---------------------------------------------------------------------------------------------|
-| `infer`       | schema inference before the first batch, `everyRow()` or a sample                           |
-| `read`        | reading from the source, while no other stage takes each batch                              |
-| `sort`        | `sortBy()`, and `sortBy()` followed by `limit()`                                            |
-| `group_by`    | `groupBy()->aggregate()`                                                                    |
-| `pivot`       | `groupBy()->pivot()->aggregate()`                                                           |
-| `join`        | `join()`                                                                                    |
-| `window`      | `withColumn()` with a window function                                                       |
-| `repartition` | `repartition()`                                                                             |
-| `commit`      | the end of a run, while each file write ends, and each custom `Closure` loader that reports |
-| `parallel`    | the parent process until the first worker report                                            |
+| Stage         | Reported by                                                            |
+|---------------|------------------------------------------------------------------------|
+| `infer`       | schema inference before the first batch, `everyRow()` or a sample      |
+| `read`        | reading from the source, one entry per source                          |
+| `sort`        | `sortBy()`, and `sortBy()` followed by `limit()`                       |
+| `group_by`    | `groupBy()->aggregate()`                                               |
+| `pivot`       | `groupBy()->pivot()->aggregate()`                                      |
+| `join`        | `join()`                                                               |
+| `window`      | `withColumn()` with a window function                                  |
+| `repartition` | `repartition()`                                                        |
+| `commit`      | one entry per write, counting the files it makes visible               |
+| `parallel`    | no entry, the workers' stages add to the entries of the steps they run |
 
-While `sortBy()` or `groupBy()` takes every batch read, the stage is theirs; `rowsRead` shows the source.
+A `join` counts the rows of the side it streams: the left side, or the larger side of each bucket pair after it
+spills. The side it holds counts in its own `read` entry. Two `sortBy()` are two `sort` entries. The right read of a
+join comes after the left read.
+
+A count only grows while its unit stays, except the `read` count under Accuracy. A unit changes at most once.
+
+## Report progress from a loader
+
+A loader that also implements `Closure` reports through the `Progress` that `closure()` takes:
+
+```php
+<?php
+
+use Flow\ETL\Foundation\Progress;
+use Flow\ETL\IO\Loader;
+use Flow\ETL\IO\Loader\Closure;
+
+final readonly class ClientLoader implements Closure, Loader
+{
+    // the constructor, load(), describe() and fromDescription() of the loader
+
+    public function closure(Progress $progress): void
+    {
+        $this->client->flush();
+        $progress->busy();
+    }
+}
+```
+
+- `advanced(1)` counts a file that became visible at its target.
+- `busy()` reports any other blocking call.
+- The runtime calls `done()`.
 
 ## Stop a lease when the run stalls
 
@@ -141,8 +211,8 @@ final readonly class ExtendLeaseWhileProgressing implements Heartbeat
 The threshold must be well above the late-beat bound under Accuracy.
 
 `idleSeconds` grows only through checks that see no progress. A single process blocked in one call sends no beat at
-all, so its lease expires by itself. The example matters most for a parallel run, where the parent keeps checking
-while a worker hangs, and for a loop that keeps checking without producing rows.
+all, so its lease expires by itself. The example matters most for a parallel run: the parent keeps checking while a
+worker hangs. It also matters for a loop that keeps checking without producing rows.
 
 ## Failures
 
@@ -192,8 +262,13 @@ A beat can be late by the interval plus the longest call that cannot report prog
 | 5M   | 5.7 s       | 1.5 s        |
 
 In a parallel run the callback runs in the parent process. The pulse adds the rows and memory that the workers
-report, at most once per second. The stage and stage rows of the workers' latest report come through too.
+report, at most once per second. The workers' stages add to the entries of the steps they run. A worker reports
+through `heartbeatToParent()`: its stages carry only the ids the parent gave them, and a DataFrame that a worker step
+runs adds to what the worker counted. A parallel read is the read entry the parent planned, with its location and its
+exact total. The workers add their counts to it. A stage that a worker builds itself does not show. `idleSeconds`
+stays low while any worker works, also between its counts.
 
-`rowsRead` can go down between two pulses in a parallel join. When the right side of a broadcast join grows past
-`broadcastLimit`, or the parallel launch is refused after the right side was read, the rows read so far leave
-`rowsRead` because they are read again. A progress bar on `rowsRead` can step back once.
+`rowsRead` and the `count` of that `read` entry can go down between two pulses in a parallel join. If the right side
+of a broadcast join grows past `broadcastLimit`, the rows read so far are read again, so they leave the count. If the
+parallel launch is refused after the right side was read, the same happens. A progress bar on `rowsRead` can step back
+once.

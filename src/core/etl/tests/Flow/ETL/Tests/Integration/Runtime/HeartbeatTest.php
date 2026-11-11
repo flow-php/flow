@@ -6,7 +6,8 @@ namespace Flow\ETL\Tests\Integration\Runtime;
 
 use Closure;
 use Flow\ETL\API\DataFrame;
-use Flow\ETL\Runtime\Heartbeat\Pulse;
+use Flow\ETL\Foundation\StageProgress;
+use Flow\ETL\Tests\Context\HeartbeatContext;
 use Flow\ETL\Tests\Double\RecordingHeartbeat;
 use Flow\ETL\Tests\Double\SteppingClock;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
@@ -16,7 +17,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 use function array_filter;
 use function array_map;
-use function array_values;
+use function array_merge;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\external_sort;
@@ -92,13 +93,16 @@ final class HeartbeatTest extends FlowIntegrationTestCase
                 ->read(from_array(self::ROWS)),
         )->run();
 
-        static::assertContains($stage, array_map(
-            static fn(Pulse $pulse): string => $pulse->stage,
-            $recording->pulses(),
-        ));
+        static::assertNotSame(
+            [],
+            array_filter(
+                HeartbeatContext::entries($recording, $stage),
+                static fn(array $entries): bool => $entries !== [],
+            ),
+        );
     }
 
-    public function test_a_spilling_sort_counts_every_merge_pass(): void
+    public function test_a_spilling_sort_counts_every_row_once(): void
     {
         $recording = new RecordingHeartbeat();
         $rows = array_map(static fn(int $id): array => ['id' => $id], range(20, 1));
@@ -114,14 +118,11 @@ final class HeartbeatTest extends FlowIntegrationTestCase
             ->sortBy(ref('id'))
             ->run();
 
-        static::assertGreaterThan(
-            2 * 20,
+        static::assertSame(
+            20,
             max(array_map(
-                static fn(Pulse $pulse): int => $pulse->stageRows,
-                array_values(array_filter(
-                    $recording->pulses(),
-                    static fn(Pulse $pulse): bool => $pulse->stage === 'sort',
-                )),
+                static fn(StageProgress $sort): int => $sort->count,
+                array_merge(...HeartbeatContext::entries($recording, 'sort')),
             )),
         );
     }

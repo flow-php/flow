@@ -134,7 +134,7 @@ final class JoinerTest extends FlowTestCase
         );
     }
 
-    public function test_counts_the_build_the_hash_table_in_chunks_and_every_probe_batch(): void
+    public function test_counts_every_probe_row_once_and_is_busy_for_the_build_and_the_hash_table(): void
     {
         $batches = static function (Rows $rows): Generator {
             yield $rows;
@@ -156,7 +156,7 @@ final class JoinerTest extends FlowTestCase
         );
 
         static::assertSame(
-            [['join', 2500], ['join', 1000], ['join', 1000], ['join', 500], ['join', 10]],
+            [['join', 'busy'], ['join', 'busy'], ['join', 'busy'], ['join', 'busy'], ['join', 10]],
             $progress->advancedCalls(),
         );
     }
@@ -881,7 +881,7 @@ final class JoinerTest extends FlowTestCase
         ));
     }
 
-    public function test_counts_the_unmatched_build_rows_it_emits(): void
+    public function test_a_left_build_counts_the_right_probe_rows_and_is_busy_for_the_unmatched_rows(): void
     {
         $batches = static function (Rows $rows): Generator {
             yield $rows;
@@ -901,6 +901,9 @@ final class JoinerTest extends FlowTestCase
             false,
         );
 
-        static::assertSame([['join', 3], ['join', 3], ['join', 1], ['join', 2]], $progress->advancedCalls());
+        static::assertSame(
+            [['join', 'busy'], ['join', 'busy'], ['join', 1], ['join', 'busy']],
+            $progress->advancedCalls(),
+        );
     }
 }

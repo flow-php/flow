@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Operators\Processor;
 
+use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Progress;
@@ -35,7 +36,7 @@ final readonly class MemorySortProcessor implements Distributable
         return new self(
             array_values($rebuild->all($data['columns'] ?? null, SortColumn::class)),
             ($data['declared'] ?? null) === null ? null : Schema::fromArray(type_array()->assert($data['declared'])),
-            $rebuild->progress(ProgressStages::SORT),
+            $rebuild->progress(ProgressStages::SORT, $data['progress'] ?? null),
         );
     }
 
@@ -44,6 +45,7 @@ final readonly class MemorySortProcessor implements Distributable
         return Description::compose(self::class, [
             'columns' => $this->columns,
             'declared' => $this->declared?->normalize(),
+            'progress' => $this->progress instanceof Describable ? $this->progress : new VoidProgress(),
         ]);
     }
 
@@ -75,20 +77,23 @@ final readonly class MemorySortProcessor implements Distributable
 
         if ($all->isEmpty()) {
             yield from $all->chunks($maxSize);
+            $this->progress->done();
 
             return;
         }
 
         foreach ($backend->sort($all, $this->columns)->chunks($maxSize) as $chunk) {
-            $this->progress->advanced($chunk->count());
+            $this->progress->busy();
 
             yield $chunk;
         }
+
+        $this->progress->done();
     }
 
     public function distribution(): ?Distribution
     {
-        return $this->columns === [] ? null : Distribution::ordered($this->columns);
+        return $this->columns === [] ? null : Distribution::ordered($this->columns, $this->progress);
     }
 
     public function bind(Schema $input): BoundStep

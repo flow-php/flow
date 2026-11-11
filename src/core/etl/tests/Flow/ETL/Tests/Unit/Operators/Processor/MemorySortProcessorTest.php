@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Operators\Processor;
 
 use Flow\ETL\Foundation\Describe\Rebuild;
+use Flow\ETL\Foundation\ProgressUnit;
 use Flow\ETL\Operators\Processor\MemorySortProcessor;
 use Flow\ETL\Tests\Context\DescribeRoundTrip;
+use Flow\ETL\Tests\Context\HeartbeatContext;
 use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Rows;
+use Generator;
 
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\flow_context;
@@ -147,7 +150,7 @@ final class MemorySortProcessorTest extends FlowTestCase
         );
 
         static::assertSame(['sort'], $spy->stages());
-        static::assertGreaterThan(0, $spy->rowsOf('sort'));
+        static::assertGreaterThan(0, $spy->countOf('sort'));
     }
 
     public function test_a_bound_sort_counts_with_its_progress(): void
@@ -166,10 +169,10 @@ final class MemorySortProcessorTest extends FlowTestCase
             false,
         );
 
-        static::assertSame(2 + 2, $progress->rowsOf('sort'));
+        static::assertSame(2, $progress->countOf('sort'));
     }
 
-    public function test_counts_every_row_in_and_out(): void
+    public function test_counts_every_row_it_takes_once_and_is_busy_while_it_emits(): void
     {
         $progress = new ProgressSpy();
 
@@ -184,6 +187,64 @@ final class MemorySortProcessorTest extends FlowTestCase
             false,
         );
 
-        static::assertSame(3 + 3, $progress->rowsOf('sort'));
+        static::assertSame([3, 2], [$progress->countOf('sort'), $progress->busyCalls('sort')]);
+    }
+
+    public function test_memory_sort_processor_describes_its_progress(): void
+    {
+        $spy = new ProgressSpy();
+
+        DescribeRoundTrip::rebuilt(
+            new MemorySortProcessor([ref('id')->asc()], progress: HeartbeatContext::stageWithId('sort', 7)),
+            new Rebuild($spy),
+        );
+
+        static::assertSame([['sort', ProgressUnit::rows, 7, null]], $spy->built());
+    }
+
+    public function test_memory_sort_processor_is_done_after_its_last_batch(): void
+    {
+        $progress = new ProgressSpy();
+        $output = (new MemorySortProcessor([ref('id')->asc()], progress: $progress->stage('sort')))->process(
+            (static function (): Generator {
+                yield array_to_rows([['id' => 2], ['id' => 1]], schema(int_schema('id')));
+            })(),
+            flow_context()->backend(),
+        );
+
+        $output->current();
+
+        static::assertSame(0, $progress->doneCalls('sort'));
+
+        iterator_to_array($output, false);
+
+        static::assertSame(1, $progress->doneCalls('sort'));
+    }
+
+    public function test_its_distribution_holds_the_stage_it_reports_to(): void
+    {
+        $stage = new ProgressSpy('sort');
+
+        static::assertSame(
+            $stage,
+            (new MemorySortProcessor([ref('id')->desc()], progress: $stage))->distribution()?->progress,
+        );
+    }
+
+    public function test_a_memory_sort_over_an_empty_input_is_done_once(): void
+    {
+        $progress = new ProgressSpy();
+
+        iterator_to_array(
+            (new MemorySortProcessor([ref('id')->asc()], progress: $progress->stage('sort')))->process(
+                (static function (): Generator {
+                    yield from [];
+                })(),
+                flow_context()->backend(),
+            ),
+            false,
+        );
+
+        static::assertSame(1, $progress->doneCalls('sort'));
     }
 }

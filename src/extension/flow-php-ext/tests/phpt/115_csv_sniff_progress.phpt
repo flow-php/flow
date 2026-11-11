@@ -21,11 +21,28 @@ final class AdvancedLog implements Progress
         $this->advanced[] = $rows;
     }
 
-    public function reported(int $rowsRead, string $stage, int $stageRows, int $memoryBytes, int $peakMemoryBytes): void
+    public function busy(): void
     {
     }
 
-    public function ended(int $rowsRead, string $stage, int $stageRows, int $memoryBytes, int $peakMemoryBytes): void
+    public function countsIn(Flow\ETL\Foundation\ProgressUnit $unit): void
+    {
+    }
+
+    public function done(): void
+    {
+    }
+
+    public function reported(int $rowsRead, array $stages, int $memoryBytes, int $peakMemoryBytes, bool $progressed): void
+    {
+    }
+
+    public function reportsEverySeconds(): ?float
+    {
+        return null;
+    }
+
+    public function ended(int $rowsRead, array $stages, int $memoryBytes, int $peakMemoryBytes): void
     {
     }
 }

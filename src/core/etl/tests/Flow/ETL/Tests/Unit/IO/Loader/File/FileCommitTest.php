@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\IO\Loader\File;
 
 use ArrayObject;
 use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Foundation\ProgressUnit;
 use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Filesystem\SaveMode;
 use Flow\ETL\IO\Loader\File\FileCommit;
@@ -21,6 +22,7 @@ use Flow\Filesystem\Path;
 use Flow\Filesystem\Testing\FilesystemOperation;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 
 use function array_search;
 use function Flow\ETL\DSL\append;
@@ -38,7 +40,7 @@ use function sprintf;
 
 final class FileCommitTest extends FlowTestCase
 {
-    /** @var ArrayObject<int, array{string, int}> */
+    /** @var ArrayObject<int, array{string, int|'busy'|'done'|ProgressUnit}> */
     public ArrayObject $log;
 
     public Filesystem $memory;
@@ -134,23 +136,55 @@ final class FileCommitTest extends FlowTestCase
 
         static::assertSame(
             [
-                ['commit', 1],
-                ['commit', 1],
+                ['commit', 'busy'],
+                ['commit', 'busy'],
                 ['List', 0],
-                ['commit', 1],
+                ['commit', 'busy'],
                 ['Mv', 0],
                 ['commit', 1],
                 ['Mv', 0],
                 ['commit', 1],
                 ['List', 0],
-                ['commit', 1],
+                ['commit', 'busy'],
                 ['List', 0],
-                ['commit', 1],
+                ['commit', 'busy'],
                 ['Rm', 0],
-                ['commit', 1],
+                ['commit', 'busy'],
             ],
             $this->log->getArrayCopy(),
         );
+    }
+
+    #[TestWith(['memory://out/rows.csv', 'memory://out/'])]
+    #[TestWith(['memory://warehouse/orders/part-{part}.csv', 'memory://warehouse/orders/'])]
+    #[TestWith(['sftp://user:secret@host:22/out/rows.csv#frag', 'sftp://host/out/'])]
+    public function test_location_is_the_directory_the_files_land_in(string $destination, string $location): void
+    {
+        static::assertSame([$location, $location], [
+            (new FileCommit($this->memory, path($destination), overwrite(), 'r1'))->location(),
+            FileCommit::locationOf(path($destination)),
+        ]);
+    }
+
+    public function test_a_destination_with_a_query_is_refused_before_it_has_a_location(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage("Destination path can't be pattern");
+
+        new FileCommit($this->memory, path('sftp://user:secret@host/out/rows.csv?token=t'), overwrite(), 'r1');
+    }
+
+    public function test_a_write_in_place_counts_each_file_at_its_close(): void
+    {
+        $commit = new FileCommit($this->recording, path('memory://out/part-{part}.csv'), append(), 'r1');
+        $commit->admit(true);
+        $commit->open([new Partition('dept', 'a')])->append('a');
+        $commit->open([new Partition('dept', 'b')])->append('b');
+        $this->log->exchangeArray([]);
+
+        $commit->commit([0], new ProgressSpy('commit', advancedLog: $this->log));
+
+        static::assertSame([['commit', 1], ['commit', 1]], $this->log->getArrayCopy());
     }
 
     public function test_commit_reports_every_stale_file_it_removes(): void
@@ -165,17 +199,17 @@ final class FileCommitTest extends FlowTestCase
 
         static::assertSame(
             [
-                ['commit', 1],
+                ['commit', 'busy'],
                 ['List', 0],
-                ['commit', 1],
+                ['commit', 'busy'],
                 ['Mv', 0],
                 ['commit', 1],
                 ['List', 0],
-                ['commit', 1],
+                ['commit', 'busy'],
                 ['Rm', 0],
-                ['commit', 1],
+                ['commit', 'busy'],
                 ['Rm', 0],
-                ['commit', 1],
+                ['commit', 'busy'],
             ],
             $this->log->getArrayCopy(),
         );
@@ -189,7 +223,10 @@ final class FileCommitTest extends FlowTestCase
 
         $commit->commit([0], new ProgressSpy('commit', advancedLog: $this->log));
 
-        static::assertSame([['List', 0], ['commit', 1], ['List', 0], ['commit', 1]], $this->log->getArrayCopy());
+        static::assertSame(
+            [['List', 0], ['commit', 'busy'], ['List', 0], ['commit', 'busy']],
+            $this->log->getArrayCopy(),
+        );
     }
 
     public function test_commit_reports_removing_what_a_task_without_a_result_staged(): void
@@ -208,7 +245,7 @@ final class FileCommitTest extends FlowTestCase
         $job->commit([1], new ProgressSpy('commit', advancedLog: $this->log));
 
         static::assertSame(
-            [['List', 0], ['commit', 1], ['List', 0], ['commit', 1], ['Rm', 0], ['commit', 1]],
+            [['List', 0], ['commit', 'busy'], ['List', 0], ['commit', 'busy'], ['Rm', 0], ['commit', 'busy']],
             $this->log->getArrayCopy(),
         );
     }

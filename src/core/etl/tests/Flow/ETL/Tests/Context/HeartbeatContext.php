@@ -7,13 +7,19 @@ namespace Flow\ETL\Tests\Context;
 use ArrayObject;
 use Flow\ETL\Foundation\Clock\FakeClock;
 use Flow\ETL\Foundation\Exception\CorruptedRecordException;
+use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageProgress;
 use Flow\ETL\IO\Extractor\Signal;
+use Flow\ETL\Runtime\Heartbeat\HeartbeatStage;
 use Flow\ETL\Runtime\Heartbeat\HeartbeatThrottle;
 use Flow\ETL\Runtime\Heartbeat\Pulse;
 use Flow\ETL\Runtime\Heartbeat\ScheduledHeartbeat;
 use Flow\ETL\Tests\Double\RecordingHeartbeat;
 use Flow\ETL\Values\Column\PhpBackend;
 use Flow\ETL\Values\Rows;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Path;
+use Flow\Filesystem\Testing\FilesystemOperation;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\Logger;
 use Flow\Telemetry\Logger\LoggerProvider;
@@ -23,12 +29,14 @@ use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\Resource;
 use Generator;
 
+use function array_filter;
 use function array_map;
 use function array_values;
 use function count;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
+use function Flow\Filesystem\DSL\intercepted_filesystem;
 use function range;
 
 final readonly class HeartbeatContext
@@ -67,7 +75,7 @@ final readonly class HeartbeatContext
     }
 
     /**
-     * @return list<array{int, int}> beat number and elapsed seconds of every pulse
+     * @return list<array{int, float}> beat number and elapsed seconds of every pulse
      */
     public static function beats(RecordingHeartbeat $heartbeat): array
     {
@@ -77,9 +85,31 @@ final readonly class HeartbeatContext
         ], $heartbeat->pulses());
     }
 
+    /**
+     * @return list<list<StageProgress>> the entries named $name of every pulse
+     */
+    public static function entries(RecordingHeartbeat $recording, string $name): array
+    {
+        return array_map(static fn(Pulse $pulse): array => array_values(array_filter(
+            $pulse->stages,
+            static fn(StageProgress $stage): bool => $stage->name === $name,
+        )), $recording->pulses());
+    }
+
     public function errorLogs(): int
     {
         return count($this->logs->entriesWithSeverity(Severity::ERROR));
+    }
+
+    public function slowMoves(Filesystem $filesystem, int $seconds = 10): Filesystem
+    {
+        return intercepted_filesystem($filesystem)->onCall(function (FilesystemOperation $operation, Path $path) use (
+            $seconds,
+        ): void {
+            if ($operation === FilesystemOperation::Mv) {
+                $this->clock->modify('+' . $seconds . ' seconds');
+            }
+        });
     }
 
     public function seconds(int $seconds): void
@@ -103,6 +133,18 @@ final readonly class HeartbeatContext
                 return;
             }
         }
+    }
+
+    public static function stageWithId(string $name, int $id): HeartbeatStage
+    {
+        return (new self())
+            ->throttle(new ScheduledHeartbeat(new RecordingHeartbeat(), 120))
+            ->stage($name, ProgressUnit::rows, $id);
+    }
+
+    public function throttleToParent(ScheduledHeartbeat $heartbeat): HeartbeatThrottle
+    {
+        return HeartbeatThrottle::reportingToParent($this->clock, new PhpBackend(), $this->logger, [$heartbeat]);
     }
 
     public function throttle(ScheduledHeartbeat $first, ScheduledHeartbeat ...$more): HeartbeatThrottle

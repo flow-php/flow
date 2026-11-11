@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Operators\GroupBy;
 
 use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Foundation\ProgressUnit;
 use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Functions\AggregatesByGroup;
 use Flow\ETL\Functions\AggregatesNumericTotal;
@@ -107,8 +108,6 @@ final class AggregatedGroups
         foreach ($this->accumulating as $aggregation) {
             $aggregation->aggregateGroups($batch, $ids, $backend);
         }
-
-        $this->progress->advanced($batch->count());
     }
 
     public function count(): int
@@ -168,8 +167,10 @@ final class AggregatedGroups
     public function flush(int $batchSize, Backend $backend): Generator
     {
         if ($this->count() > 0) {
+            $this->countsGroups();
+
             foreach ($this->rows($this->count(), $backend)->chunks($batchSize) as $chunk) {
-                $this->progress->advanced($chunk->count());
+                $this->emitted($chunk->count());
 
                 yield $chunk;
             }
@@ -186,6 +187,9 @@ final class AggregatedGroups
             $column->append($aggregator->value());
             $columns[$definition->name()] = $column->finish();
         }
+
+        $this->countsGroups();
+        $this->emitted(1);
 
         return Rows::fromColumns($this->shape->output, $columns, 1);
     }
@@ -215,5 +219,20 @@ final class AggregatedGroups
         }
 
         return Rows::fromColumns($output, $columns, $groups);
+    }
+
+    /**
+     * Partials are not the groups of the result: only the step that merges them counts groups.
+     */
+    private function countsGroups(): void
+    {
+        if ($this->partialPositions === []) {
+            $this->progress->countsIn(ProgressUnit::groups);
+        }
+    }
+
+    private function emitted(int $groups): void
+    {
+        $this->partialPositions === [] ? $this->progress->advanced($groups) : $this->progress->busy();
     }
 }

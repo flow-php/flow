@@ -11,6 +11,8 @@ use Flow\Telemetry\Logger\Logger;
 use Psr\Clock\ClockInterface;
 use Throwable;
 
+use function round;
+
 final class ScheduledHeartbeat
 {
     private int $beats = 0;
@@ -20,21 +22,21 @@ final class ScheduledHeartbeat
     private DateTimeImmutable $nextBeatAt;
 
     /**
-     * @throws InvalidArgumentException when $everySeconds is below 1
+     * @throws InvalidArgumentException when $everySeconds is below 0.1
      */
     public function __construct(
         public readonly Heartbeat $heartbeat,
-        public readonly int $everySeconds,
+        public readonly float $everySeconds,
         public readonly HeartbeatFailure $onFailure = HeartbeatFailure::stop,
     ) {
-        if ($everySeconds < 1) {
+        if ($everySeconds < 0.1) {
             throw InvalidArgumentException::because(
-                'Heartbeat interval must be at least 1 second, got %d',
+                'Heartbeat interval must be at least 0.1 seconds, got %s',
                 $everySeconds,
             );
         }
 
-        $this->interval = new DateInterval('PT' . $everySeconds . 'S');
+        $this->interval = DateInterval::createFromDateString((int) round($everySeconds * 1_000_000) . ' microseconds');
         $this->nextBeatAt = new DateTimeImmutable('@0');
     }
 

@@ -7,10 +7,12 @@ namespace Flow\ETL\Tests\Unit\Operators\Processor;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
 use Flow\ETL\Foundation\ProgressStages;
+use Flow\ETL\Foundation\ProgressUnit;
 use Flow\ETL\Operators\Processor\RepartitionProcessor;
 use Flow\ETL\Storage\MemoryRowsStorage;
 use Flow\ETL\Tests\Context\DescribeRoundTrip;
 use Flow\ETL\Tests\Context\GroupedRows;
+use Flow\ETL\Tests\Context\HeartbeatContext;
 use Flow\ETL\Tests\Double\FixedRandomValueGenerator;
 use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\Double\ReportedMemoryBackend;
@@ -343,7 +345,7 @@ final class RepartitionProcessorTest extends FlowTestCase
         );
 
         static::assertSame(['repartition'], $spy->stages());
-        static::assertGreaterThan(0, $spy->rowsOf('repartition'));
+        static::assertGreaterThan(0, $spy->countOf('repartition'));
     }
 
     public function test_a_window_repartition_rebuilds_with_the_window_stage(): void
@@ -402,6 +404,86 @@ final class RepartitionProcessorTest extends FlowTestCase
             false,
         );
 
-        static::assertSame(4, $progress->rowsOf('repartition'));
+        static::assertSame(4, $progress->countOf('repartition'));
+    }
+
+    public function test_repartition_processor_describes_its_progress(): void
+    {
+        $spy = new ProgressSpy();
+
+        DescribeRoundTrip::rebuilt(
+            new RepartitionProcessor(
+                refs('id'),
+                config()->repartition,
+                new NativePHPRandomValueGenerator(),
+                HeartbeatContext::stageWithId('window', 7),
+                'window',
+            ),
+            new Rebuild($spy),
+        );
+
+        static::assertSame([['window', ProgressUnit::rows, 7, null]], $spy->built());
+    }
+
+    public function test_repartition_processor_is_done_after_its_last_batch(): void
+    {
+        $progress = new ProgressSpy();
+        $output = (new RepartitionProcessor(
+            refs('id'),
+            config()->repartition,
+            new NativePHPRandomValueGenerator(),
+            $progress->stage('repartition'),
+        ))->process(
+            (static function (): Generator {
+                yield array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
+            })(),
+            flow_context()->backend(),
+        );
+
+        $output->current();
+
+        static::assertSame(0, $progress->doneCalls('repartition'));
+
+        iterator_to_array($output, false);
+
+        static::assertSame(1, $progress->doneCalls('repartition'));
+    }
+
+    public function test_its_distribution_holds_the_stage_it_reports_to(): void
+    {
+        $stage = new ProgressSpy('repartition');
+
+        static::assertSame(
+            $stage,
+            (new RepartitionProcessor(
+                refs('country', 'day'),
+                config()->repartition,
+                new NativePHPRandomValueGenerator(),
+                $stage,
+            ))->distribution()?->progress,
+        );
+    }
+
+    public function test_a_repartition_past_its_memory_limit_is_done_once(): void
+    {
+        $progress = new ProgressSpy();
+
+        iterator_to_array(
+            RepartitionProcessorMother::with(
+                refs(ref('id')),
+                new MemoryRowsStorage(),
+                Unit::fromBytes(1),
+                progress: $progress->stage('repartition'),
+            )->process(
+                (static function (): Generator {
+                    yield array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
+                    yield array_to_rows([['id' => 3]], schema(int_schema('id')));
+                })(),
+                flow_context()->backend(),
+            ),
+            false,
+        );
+
+        static::assertSame(1, $progress->doneCalls('repartition'));
     }
 }

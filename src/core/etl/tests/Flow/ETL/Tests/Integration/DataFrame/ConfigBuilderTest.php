@@ -27,6 +27,7 @@ use Flow\ETL\Values\Column\Php\ScalarColumn;
 use Flow\ETL\Values\Column\PhpBackend;
 use Flow\ETL\Values\Rows;
 use Override;
+use RuntimeException;
 
 use function array_map;
 use function array_merge;
@@ -80,12 +81,12 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         static::assertSame([['lease', 1], ['console', 1]], array_slice($calls->getArrayCopy(), 0, 2));
     }
 
-    public function test_heartbeat_refuses_an_interval_below_one_second(): void
+    public function test_heartbeat_refuses_an_interval_below_a_tenth_of_a_second(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Heartbeat interval must be at least 1 second, got 0');
+        $this->expectExceptionMessage('Heartbeat interval must be at least 0.1 seconds, got 0.05');
 
-        config_builder()->heartbeat(new RecordingHeartbeat(), everySeconds: 0);
+        config_builder()->heartbeat(new RecordingHeartbeat(), everySeconds: 0.05);
     }
 
     public function test_each_build_schedules_its_own_beats(): void
@@ -280,5 +281,46 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         ]], schema(int_schema('id')))));
 
         static::assertSame(1, $backend->decodeFrames());
+    }
+
+    public function test_a_heartbeat_to_the_parent_assigns_no_id_and_logs_its_failures(): void
+    {
+        $recording = new RecordingHeartbeat(throws: new RuntimeException('the parent stopped listening'));
+        $throttle = config_builder()
+            ->clock(new SteppingClock())
+            ->heartbeatToParent($recording, everySeconds: 1)
+            ->build()
+            ->heartbeat();
+
+        $throttle?->started();
+        $throttle?->stage('sort')->advanced(1);
+        $throttle?->stage('sort')->advanced(1);
+
+        static::assertNotSame([], $recording->pulses());
+        static::assertNull($recording->pulses()[0]->stages[0]->id);
+    }
+
+    public function test_a_heartbeat_after_a_heartbeat_to_the_parent_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'heartbeat() and heartbeatToParent() cannot be mixed on one ConfigBuilder. A worker reports to its parent through heartbeatToParent() only. Register every other heartbeat in the parent.',
+        );
+
+        config_builder()
+            ->heartbeatToParent(new RecordingHeartbeat(), everySeconds: 1)
+            ->heartbeat(new RecordingHeartbeat(), everySeconds: 1);
+    }
+
+    public function test_a_heartbeat_to_the_parent_after_a_heartbeat_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'heartbeat() and heartbeatToParent() cannot be mixed on one ConfigBuilder. A worker reports to its parent through heartbeatToParent() only. Register every other heartbeat in the parent.',
+        );
+
+        config_builder()
+            ->heartbeat(new RecordingHeartbeat(), everySeconds: 1)
+            ->heartbeatToParent(new RecordingHeartbeat(), everySeconds: 1);
     }
 }

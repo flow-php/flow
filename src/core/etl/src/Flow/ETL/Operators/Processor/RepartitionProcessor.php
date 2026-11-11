@@ -53,7 +53,7 @@ final readonly class RepartitionProcessor implements Distributable
                 $data['random'] ?? null,
                 Describable::class,
             )),
-            $rebuild->progress($stage),
+            $rebuild->progress($stage, $data['progress'] ?? null),
             $stage,
         );
     }
@@ -70,6 +70,7 @@ final readonly class RepartitionProcessor implements Distributable
                     'config' => $this->config,
                     'random' => $this->random,
                     'stage' => $this->stage,
+                    'progress' => $this->progress instanceof Describable ? $this->progress : new VoidProgress(),
                 ])
                 : null
         );
@@ -102,6 +103,8 @@ final readonly class RepartitionProcessor implements Distributable
                     yield $group;
                 }
 
+                $this->progress->done();
+
                 return;
             }
 
@@ -122,6 +125,8 @@ final readonly class RepartitionProcessor implements Distributable
                     yield $group;
                 }
             }
+
+            $this->progress->done();
         } finally {
             $buckets->clear();
         }
@@ -134,7 +139,9 @@ final readonly class RepartitionProcessor implements Distributable
     {
         $names = $this->by->names();
 
-        return $names === [] || $this->describe() === null ? null : Distribution::clustered($names);
+        return $names === [] || $this->describe() === null
+            ? null
+            : Distribution::clustered($names, progress: $this->progress);
     }
 
     public function bind(Schema $input): BoundStep

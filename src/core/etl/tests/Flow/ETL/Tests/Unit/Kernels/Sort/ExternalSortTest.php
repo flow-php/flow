@@ -356,35 +356,40 @@ final class ExternalSortTest extends FlowTestCase
         static::assertSame([], $storage->appended);
     }
 
-    public function test_an_in_memory_sort_counts_every_row_in_and_out(): void
+    public function test_an_in_memory_sort_counts_every_row_it_takes_once(): void
     {
         $progress = new ProgressSpy();
         $backend = config()->backend();
         $sort = ExternalSortMother::with([ref('id')->asc()], progress: $progress->stage('sort'));
 
         IdRows::ids($sort->sort(
-            IdRows::batches([10, 0], [11, 1], [2, 12], [13, 3]),
+            $sort->counted(IdRows::batches([10, 0], [11, 1], [2, 12], [13, 3])),
             $backend,
             new MemoryBudget($backend, Unit::fromGb(1), null),
         ));
 
-        static::assertSame(16, $progress->rowsOf('sort'));
+        static::assertSame(8, $progress->countOf('sort'));
+        static::assertGreaterThan(0, $progress->busyCalls('sort'));
     }
 
-    public function test_a_spilling_sort_counts_every_row_of_every_merge_pass(): void
+    public function test_a_spilling_sort_counts_every_row_it_takes_once_and_is_busy_while_it_merges(): void
     {
         $progress = new ProgressSpy();
         $backend = config()->backend();
         $sort = ExternalSortMother::with([ref('id')->asc()], mergeFanIn: 2, progress: $progress->stage('sort'));
 
         IdRows::ids($sort->sort(
-            IdRows::batches(...array_map(static fn(int $i): array => [($i * 2) + 1, $i * 2], range(9, 0))),
+            $sort->counted(IdRows::batches(...array_map(
+                static fn(int $i): array => [($i * 2) + 1, $i * 2],
+                range(9, 0),
+            ))),
             $backend,
             new MemoryBudget($backend, Unit::fromBytes(1), null),
         ));
 
-        // 20 read, 20 spilled, three merge passes of 20 (10 -> 5 -> 3 -> 2 runs), 20 out
-        static::assertSame(120, $progress->rowsOf('sort'));
+        // spills, three merge passes (10 -> 5 -> 3 -> 2 runs) and the output only report that the sort is busy
+        static::assertSame(20, $progress->countOf('sort'));
+        static::assertGreaterThan(20, $progress->busyCalls('sort'));
     }
 
     public function test_runs_past_the_fan_in_are_reduced_to_merged_runs_first(): void

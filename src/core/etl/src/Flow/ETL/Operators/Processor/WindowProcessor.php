@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Operators\Processor;
 
+use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
@@ -55,7 +56,7 @@ final class WindowProcessor implements Processor
         $unbound = new self(
             is_array($column) ? Definitions::fromArray($column) : type_string()->assert($column),
             $rebuild->of($data['function'] ?? null, WindowFunction::class),
-            progress: $rebuild->progress(ProgressStages::WINDOW),
+            progress: $rebuild->progress(ProgressStages::WINDOW, $data['progress'] ?? null),
         );
 
         return ($data['input'] ?? null) === null
@@ -74,6 +75,7 @@ final class WindowProcessor implements Processor
             'column' => $this->column instanceof Definition ? $this->column->normalize() : $this->column,
             'function' => $this->function,
             'input' => $this->bound?->input->normalize(),
+            'progress' => $this->progress instanceof Describable ? $this->progress : new VoidProgress(),
         ]);
     }
 
@@ -106,6 +108,8 @@ final class WindowProcessor implements Processor
             // partition key into a single Rows before this processor ever sees it
             yield $this->processPartition($bound, $batch, $backend);
         }
+
+        $this->progress->done();
     }
 
     /**

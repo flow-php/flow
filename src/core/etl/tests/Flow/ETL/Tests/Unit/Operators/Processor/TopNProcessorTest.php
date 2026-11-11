@@ -7,12 +7,14 @@ namespace Flow\ETL\Tests\Unit\Operators\Processor;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
+use Flow\ETL\Foundation\ProgressUnit;
 use Flow\ETL\Kernels\Sort\ExternalSortConfig;
 use Flow\ETL\Kernels\Sort\MemorySortConfig;
 use Flow\ETL\Operators\Processor\MemorySortProcessor;
 use Flow\ETL\Operators\Processor\TopNProcessor;
 use Flow\ETL\Storage\MemoryRowsStorage;
 use Flow\ETL\Tests\Context\DescribeRoundTrip;
+use Flow\ETL\Tests\Context\HeartbeatContext;
 use Flow\ETL\Tests\Context\ScoredRows;
 use Flow\ETL\Tests\Context\SortedRows;
 use Flow\ETL\Tests\Double\FixedRandomValueGenerator;
@@ -32,6 +34,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use function array_map;
 use function array_merge;
 use function array_values;
+use function count;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
@@ -119,6 +122,24 @@ final class TopNProcessorTest extends FlowTestCase
             )),
         );
         static::assertNotSame([], $storage->appended);
+    }
+
+    public function test_a_fallback_counts_every_row_it_takes_once(): void
+    {
+        $progress = new ProgressSpy();
+
+        ScoredRows::merged((new TopNProcessor(
+            [ref('score')->asc()],
+            2,
+            ExternalSortMother::spillingConfig(),
+            new NativePHPRandomValueGenerator(),
+            progress: $progress->stage('sort'),
+        ))->process(
+            ScoredRows::batches([[3, 'c'], [1, 'a']], [[2, 'b'], [0, 'z']], [[1, 'y']]),
+            flow_context()->backend(),
+        ));
+
+        static::assertSame(5, $progress->countOf('sort'));
     }
 
     public function test_fallback_sort_counts_the_rows_top_n_already_holds(): void
@@ -427,7 +448,7 @@ final class TopNProcessorTest extends FlowTestCase
         );
 
         static::assertSame(['sort'], $spy->stages());
-        static::assertGreaterThan(0, $spy->rowsOf('sort'));
+        static::assertGreaterThan(0, $spy->countOf('sort'));
     }
 
     public function test_a_bound_top_n_counts_with_its_progress(): void
@@ -452,10 +473,10 @@ final class TopNProcessorTest extends FlowTestCase
             false,
         );
 
-        static::assertSame(3 + 2, $progress->rowsOf('sort'));
+        static::assertSame(3, $progress->countOf('sort'));
     }
 
-    public function test_counts_every_row_in_and_every_kept_row_out(): void
+    public function test_counts_every_row_it_takes_once(): void
     {
         $progress = new ProgressSpy();
 
@@ -476,6 +497,129 @@ final class TopNProcessorTest extends FlowTestCase
             false,
         );
 
-        static::assertSame(4 + 2, $progress->rowsOf('sort'));
+        static::assertSame(4, $progress->countOf('sort'));
+    }
+
+    public function test_top_n_processor_describes_its_progress(): void
+    {
+        $spy = new ProgressSpy();
+
+        DescribeRoundTrip::rebuilt(
+            new TopNProcessor(
+                [ref('id')->asc()],
+                2,
+                new ExternalSortConfig(config()->grouping),
+                new NativePHPRandomValueGenerator(),
+                progress: HeartbeatContext::stageWithId('sort', 7),
+            ),
+            new Rebuild($spy),
+        );
+
+        static::assertSame([['sort', ProgressUnit::rows, 7, null]], $spy->built());
+    }
+
+    public function test_top_n_processor_is_done_after_its_last_batch(): void
+    {
+        $progress = new ProgressSpy();
+        $output = (new TopNProcessor(
+            [ref('id')->asc()],
+            2,
+            new MemorySortConfig(),
+            new NativePHPRandomValueGenerator(),
+            progress: $progress->stage('sort'),
+        ))->process(
+            (static function (): Generator {
+                yield array_to_rows([['id' => 3], ['id' => 1], ['id' => 2]], schema(int_schema('id')));
+            })(),
+            flow_context()->backend(),
+        );
+
+        $output->current();
+
+        static::assertSame(0, $progress->doneCalls('sort'));
+
+        iterator_to_array($output, false);
+
+        static::assertSame(1, $progress->doneCalls('sort'));
+    }
+
+    public function test_its_distribution_holds_the_stage_it_reports_to(): void
+    {
+        $stage = new ProgressSpy('sort');
+
+        static::assertSame(
+            $stage,
+            (new TopNProcessor(
+                [ref('id')->desc()],
+                2,
+                new MemorySortConfig(),
+                new NativePHPRandomValueGenerator(),
+                progress: $stage,
+            ))->distribution()?->progress,
+        );
+    }
+
+    public function test_a_top_n_that_falls_back_to_the_spilling_sort_is_done_once(): void
+    {
+        $progress = new ProgressSpy();
+
+        ScoredRows::merged((new TopNProcessor(
+            [ref('score')->asc()],
+            2,
+            ExternalSortMother::spillingConfig(),
+            new NativePHPRandomValueGenerator(),
+            progress: $progress->stage('sort'),
+        ))->process(
+            ScoredRows::batches([[3, 'c'], [1, 'a']], [[2, 'b'], [0, 'z']], [[1, 'y']]),
+            flow_context()->backend(),
+        ));
+
+        static::assertSame(1, $progress->doneCalls('sort'));
+    }
+
+    public function test_a_top_n_over_an_empty_input_is_done_once(): void
+    {
+        $progress = new ProgressSpy();
+
+        iterator_to_array(
+            (new TopNProcessor(
+                [ref('id')->asc()],
+                2,
+                new MemorySortConfig(),
+                new NativePHPRandomValueGenerator(),
+                progress: $progress->stage('sort'),
+            ))->process(
+                (static function (): Generator {
+                    yield from [];
+                })(),
+                flow_context()->backend(),
+            ),
+            false,
+        );
+
+        static::assertSame(1, $progress->doneCalls('sort'));
+    }
+
+    public function test_a_top_n_is_busy_for_each_batch_it_emits(): void
+    {
+        $progress = new ProgressSpy();
+
+        $emitted = iterator_to_array(
+            (new TopNProcessor(
+                [ref('id')->asc()],
+                2,
+                new MemorySortConfig(),
+                new NativePHPRandomValueGenerator(),
+                progress: $progress->stage('sort'),
+            ))->process(
+                (static function (): Generator {
+                    yield array_to_rows([['id' => 3], ['id' => 1], ['id' => 2]], schema(int_schema('id')));
+                })(),
+                flow_context()->backend(),
+            ),
+            false,
+        );
+
+        static::assertSame(count($emitted), $progress->busyCalls('sort'));
     }
 }

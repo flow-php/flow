@@ -71,6 +71,8 @@ final readonly class Executor
 
                 $this->advancing[$context] = true;
             }
+
+            $context->config->heartbeat()?->completed();
         } catch (Throwable $e) {
             $context->telemetry()->dataFrameFailed($e);
 
@@ -208,9 +210,15 @@ final readonly class Executor
             $generator = $counted->count($source, $generator, $criteria->narrows());
         }
 
+        $heartbeat = $context->config->heartbeat();
+
         // a launch reports its totals through Progress::reported(), a fed branch was counted at its source
-        if ($launch === null && $read instanceof Read) {
-            $generator = $context->config->heartbeat()?->reading($generator) ?? $generator;
+        if ($heartbeat !== null && $launch === null && $read instanceof Read) {
+            $generator = $heartbeat->reading(
+                $generator,
+                $heartbeat->readStage($chain[0]->read, $source),
+                $criteria->narrows() ? null : $source->statistics()->rows->exactly(),
+            );
         }
 
         foreach ($chain as $position => $stage) {

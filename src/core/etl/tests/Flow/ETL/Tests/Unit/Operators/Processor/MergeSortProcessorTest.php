@@ -6,10 +6,12 @@ namespace Flow\ETL\Tests\Unit\Operators\Processor;
 
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
+use Flow\ETL\Foundation\ProgressUnit;
 use Flow\ETL\Kernels\Sort\ExternalSortConfig;
 use Flow\ETL\Operators\Processor\MergeSortProcessor;
 use Flow\ETL\Storage\MemoryRowsStorage;
 use Flow\ETL\Tests\Context\DescribeRoundTrip;
+use Flow\ETL\Tests\Context\HeartbeatContext;
 use Flow\ETL\Tests\Double\FixedRandomValueGenerator;
 use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\Double\RecordingRowsStorage;
@@ -146,6 +148,62 @@ final class MergeSortProcessorTest extends FlowTestCase
         );
 
         static::assertSame(['sort'], $spy->stages());
-        static::assertGreaterThan(0, $spy->rowsOf('sort'));
+        static::assertGreaterThan(0, $spy->countOf('sort'));
+    }
+
+    public function test_merge_sort_processor_describes_its_progress(): void
+    {
+        $spy = new ProgressSpy();
+
+        DescribeRoundTrip::rebuilt(
+            new MergeSortProcessor(
+                new ExternalSortConfig(config()->grouping),
+                [ref('id')->asc()],
+                new NativePHPRandomValueGenerator(),
+                HeartbeatContext::stageWithId('sort', 7),
+            ),
+            new Rebuild($spy),
+        );
+
+        static::assertSame([['sort', ProgressUnit::rows, 7, null]], $spy->built());
+    }
+
+    public function test_merge_sort_processor_is_done_after_its_last_batch(): void
+    {
+        $progress = new ProgressSpy();
+        $output = (new MergeSortProcessor(
+            new ExternalSortConfig(config()->grouping),
+            [ref('id')->asc()],
+            new NativePHPRandomValueGenerator(),
+            $progress->stage('sort'),
+        ))->process(
+            (static function (): Generator {
+                yield array_to_rows([['id' => 2], ['id' => 1]], schema(int_schema('id')));
+            })(),
+            flow_context()->backend(),
+        );
+
+        $output->current();
+
+        static::assertSame(0, $progress->doneCalls('sort'));
+
+        iterator_to_array($output, false);
+
+        static::assertSame(1, $progress->doneCalls('sort'));
+    }
+
+    public function test_its_distribution_holds_the_stage_it_reports_to(): void
+    {
+        $stage = new ProgressSpy('sort');
+
+        static::assertSame(
+            $stage,
+            (new MergeSortProcessor(
+                new ExternalSortConfig(config()->grouping),
+                [ref('id')->desc()],
+                new NativePHPRandomValueGenerator(),
+                $stage,
+            ))->distribution()?->progress,
+        );
     }
 }

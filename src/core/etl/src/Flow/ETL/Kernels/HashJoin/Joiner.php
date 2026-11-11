@@ -141,7 +141,7 @@ final readonly class Joiner
             : null;
 
         foreach (array_chunk($table->unmatched(), $this->batchSize->size) as $unmatched) {
-            $this->progress->advanced(count($unmatched));
+            $this->progress->busy();
 
             yield $nullProbe === null
                 ? $build->gather($unmatched)->project($output, $this->backend)
@@ -163,7 +163,8 @@ final readonly class Joiner
 
         foreach ($side->rows as $batch) {
             $schema ??= $batch->schema();
-            $this->progress->advanced($batch->count());
+            // the build side's rows stand on that side's read line; the join counts the stream it probes
+            $this->progress->busy();
 
             if (!$batch->isEmpty()) {
                 $parts[] = $batch->project($schema, $this->backend);
@@ -212,12 +213,12 @@ final readonly class Joiner
             $table->add($key, $index);
 
             if (++$unreported === Progress::ROWS_PER_CALL) {
-                $this->progress->advanced($unreported);
+                $this->progress->busy();
                 $unreported = 0;
             }
         }
 
-        $this->progress->advanced($unreported);
+        $this->progress->busy();
 
         return $table;
     }

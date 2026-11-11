@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Planning\Physical;
 
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\Planning\Logical\Node\Read;
 
 final readonly class Pipeline
@@ -14,11 +15,13 @@ final readonly class Pipeline
      * @param null|Pipeline|Read $input the read this pipeline starts from, or the pipeline whose output is its rows; null
      *                                  when the branch holding it feeds it batch by batch
      * @param PipelineSteps $steps bound where the schema was derivable, raw where it was not
+     * @param null|Progress $read the stage the planner built for the read; null when this pipeline reads no source
      */
     public function __construct(
         public int $id,
         public Read|self|null $input,
         public PipelineSteps $steps,
+        public ?Progress $read = null,
     ) {}
 
     /**

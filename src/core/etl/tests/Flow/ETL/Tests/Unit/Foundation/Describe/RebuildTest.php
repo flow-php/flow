@@ -9,9 +9,14 @@ use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\ProgressUnit;
 use Flow\ETL\Foundation\VoidProgress;
+use Flow\ETL\Runtime\Heartbeat\HeartbeatStage;
+use Flow\ETL\Runtime\Heartbeat\ScheduledHeartbeat;
+use Flow\ETL\Tests\Context\HeartbeatContext;
 use Flow\ETL\Tests\Double\Described;
 use Flow\ETL\Tests\Double\ProgressSpy;
+use Flow\ETL\Tests\Double\RecordingHeartbeat;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Exception\InvalidTypeException;
 
@@ -101,5 +106,41 @@ final class RebuildTest extends FlowTestCase
         (new Rebuild($spy))->progress('join');
 
         static::assertSame(['join'], $spy->stages());
+    }
+
+    public function test_progress_from_a_stage_description_reports_into_its_id(): void
+    {
+        $spy = new ProgressSpy();
+        (new Rebuild($spy))->progress(
+            'sort',
+            (new HeartbeatStage(
+                'sort',
+                ProgressUnit::rows,
+                7,
+                'memory://in/x.floe',
+                (new HeartbeatContext())->throttle(new ScheduledHeartbeat(new RecordingHeartbeat(), 1)),
+                0,
+            ))
+                ->describe()
+                ?->normalize(),
+        );
+
+        static::assertSame([['sort', ProgressUnit::rows, 7, 'memory://in/x.floe']], $spy->built());
+    }
+
+    public function test_progress_without_a_description_is_a_new_stage_of_the_name(): void
+    {
+        $spy = new ProgressSpy();
+
+        (new Rebuild($spy))->progress('group_by');
+        (new Rebuild($spy))->progress('sort', (new VoidProgress())->describe()?->normalize());
+
+        static::assertSame(
+            [
+                ['group_by', ProgressUnit::rows, null, null],
+                ['sort',     ProgressUnit::rows, null, null],
+            ],
+            $spy->built(),
+        );
     }
 }

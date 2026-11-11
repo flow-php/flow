@@ -104,7 +104,6 @@ final readonly class ExternalSort
 
                 $schema ??= $batch->schema();
                 $buffer[] = $batch->matchTo($schema, $backend);
-                $this->progress->advanced($batch->count());
 
                 // the spill concats the buffer, so it needs room for a second copy of it
                 if ($budget->exceededWith(2)) {
@@ -130,7 +129,7 @@ final readonly class ExternalSort
             }
 
             if ($runs === [] && $this->fitting($buffer, $backend, $budget) === count($buffer)) {
-                yield from $this->counted($this->sorted(
+                yield from $this->emitted($this->sorted(
                     Rows::concat($schema, $backend, ...array_splice($buffer, 0)),
                     $limit,
                     $backend,
@@ -156,7 +155,7 @@ final readonly class ExternalSort
                 );
             }
 
-            yield from $this->counted($this->firstRows(
+            yield from $this->emitted($this->firstRows(
                 $merger->merge(array_map(static fn(BucketRun $run): Generator => $run->rows(), $runs)),
                 $limit,
             ));
@@ -177,8 +176,25 @@ final readonly class ExternalSort
      */
     public function counted(Generator $batches): Generator
     {
-        foreach ($batches as $batch) {
+        // valid()/next(), never a rewind: top-n hands over a stream it already pulled from
+        for (; $batches->valid(); $batches->next()) {
+            /** @var Rows $batch valid() holds, so current() is a batch */
+            $batch = $batches->current();
             $this->progress->advanced($batch->count());
+
+            yield $batch;
+        }
+    }
+
+    /**
+     * @param Generator<Rows> $batches
+     *
+     * @return Generator<int, Rows>
+     */
+    private function emitted(Generator $batches): Generator
+    {
+        foreach ($batches as $batch) {
+            $this->progress->busy();
 
             yield $batch;
         }
@@ -245,7 +261,7 @@ final readonly class ExternalSort
         ) as $batch) {
             $this->merge->storage()->append($bucketId, $batch);
             $totalRows += $batch->count();
-            $this->progress->advanced($batch->count());
+            $this->progress->busy();
         }
 
         foreach ($group as $run) {
@@ -333,7 +349,7 @@ final readonly class ExternalSort
         // one frame per batch, so a merge cursor decodes one batch of the run at a time
         foreach ($run->chunks($this->batchSize->size) as $chunk) {
             $this->spill->storage()->append($bucketId, $chunk);
-            $this->progress->advanced($chunk->count());
+            $this->progress->busy();
         }
 
         $this->spill->storage()->close($bucketId);

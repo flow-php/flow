@@ -21,6 +21,7 @@ use function is_a;
 use function is_array;
 use function is_scalar;
 use function is_string;
+use function parse_url;
 
 use const PHP_OS_FAMILY;
 
@@ -221,6 +222,16 @@ final readonly class Path
     public function isPattern(): bool
     {
         return $this->implementation->isPattern();
+    }
+
+    /**
+     * The uri without user, password, port, query and fragment, safe to print.
+     */
+    public function location(): string
+    {
+        $parts = parse_url($this->uri()) ?: [];
+
+        return ($parts['scheme'] ?? $this->protocol()) . '://' . ($parts['host'] ?? '') . ($parts['path'] ?? '');
     }
 
     public function matches(self $path): bool

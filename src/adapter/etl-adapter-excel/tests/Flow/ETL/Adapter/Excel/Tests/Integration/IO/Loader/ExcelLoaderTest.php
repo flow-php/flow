@@ -630,7 +630,7 @@ final class ExcelLoaderTest extends FlowTestCase
         try {
             $loader->closure($progress);
 
-            static::assertSame(1 + 1, $progress->rowsOf('commit'));
+            static::assertSame([1, 1], [$progress->countOf('commit'), $progress->busyCalls('commit')]);
         } finally {
             native_local_filesystem()->rm($scratch);
         }
@@ -652,7 +652,7 @@ final class ExcelLoaderTest extends FlowTestCase
         try {
             $loader->closure($progress);
 
-            static::assertSame(2 + 2, $progress->rowsOf('commit'));
+            static::assertSame([2, 2], [$progress->countOf('commit'), $progress->busyCalls('commit')]);
         } finally {
             native_local_filesystem()->rm($scratch);
         }

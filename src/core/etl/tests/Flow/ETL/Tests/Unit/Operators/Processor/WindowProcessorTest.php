@@ -7,10 +7,12 @@ namespace Flow\ETL\Tests\Unit\Operators\Processor;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
+use Flow\ETL\Foundation\ProgressUnit;
 use Flow\ETL\Functions\AggregatingFunction;
 use Flow\ETL\Functions\WindowFunction;
 use Flow\ETL\Operators\Processor\WindowProcessor;
 use Flow\ETL\Tests\Context\DescribeRoundTrip;
+use Flow\ETL\Tests\Context\HeartbeatContext;
 use Flow\ETL\Tests\Context\WindowProcessorContext;
 use Flow\ETL\Tests\Double\CountingFrameAccumulating;
 use Flow\ETL\Tests\Double\ProgressSpy;
@@ -566,7 +568,7 @@ final class WindowProcessorTest extends FlowTestCase
         );
 
         static::assertSame(['window'], $spy->stages());
-        static::assertGreaterThan(0, $spy->rowsOf('window'));
+        static::assertGreaterThan(0, $spy->countOf('window'));
     }
 
     public function test_a_bound_window_counts_with_its_progress(): void
@@ -589,6 +591,45 @@ final class WindowProcessorTest extends FlowTestCase
             false,
         );
 
-        static::assertGreaterThan(0, $progress->rowsOf('window'));
+        static::assertGreaterThan(0, $progress->countOf('window'));
+    }
+
+    public function test_window_processor_describes_its_progress(): void
+    {
+        $spy = new ProgressSpy();
+
+        DescribeRoundTrip::rebuilt(
+            new WindowProcessor(
+                'rank',
+                rank()->over(window()->orderBy(ref('n'))),
+                progress: HeartbeatContext::stageWithId('window', 7),
+            ),
+            new Rebuild($spy),
+        );
+
+        static::assertSame([['window', ProgressUnit::rows, 7, null]], $spy->built());
+    }
+
+    public function test_window_processor_is_done_after_its_last_batch(): void
+    {
+        $progress = new ProgressSpy();
+        $output = (new WindowProcessor(
+            'rank',
+            rank()->over(window()->orderBy(ref('n'))),
+            progress: $progress->stage('window'),
+        ))->process(
+            (static function (): Generator {
+                yield array_to_rows([['n' => 2], ['n' => 1]], schema(int_schema('n')));
+            })(),
+            flow_context()->backend(),
+        );
+
+        $output->current();
+
+        static::assertSame(0, $progress->doneCalls('window'));
+
+        iterator_to_array($output, false);
+
+        static::assertSame(1, $progress->doneCalls('window'));
     }
 }

@@ -64,7 +64,7 @@ final class ChartJSLoader implements Closure, Loader
         if ($this->output !== null && $this->outputFilesystem !== null) {
             if ($this->outputFilesystem->status($this->output) !== null) {
                 $this->outputFilesystem->rm($this->output);
-                $progress->advanced(1);
+                $progress->busy();
             }
 
             $output = $this->outputFilesystem->writeTo($this->output);
@@ -73,7 +73,7 @@ final class ChartJSLoader implements Closure, Loader
 
             $template = implode('', iterator_to_array($templateStream->readLines()));
             $templateStream->close();
-            $progress->advanced(1);
+            $progress->busy();
 
             $output->append(str_replace(
                 '%_CHART_DATA_%',

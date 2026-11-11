@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Runtime\Executor;
 
+use Flow\ETL\Foundation\Clock\FakeClock;
 use Flow\ETL\Foundation\Exception\CorruptedRecordException;
+use Flow\ETL\Foundation\StageProgress;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\Operators\Join\CrossJoin;
 use Flow\ETL\Operators\Processor\BatchingProcessor;
@@ -23,10 +25,12 @@ use Flow\ETL\Runtime\ErrorHandler\SkipRows;
 use Flow\ETL\Runtime\ErrorHandler\ThrowError;
 use Flow\ETL\Runtime\ErrorHandler\TransformationError;
 use Flow\ETL\Runtime\Executor\StepRunner;
+use Flow\ETL\Tests\Context\HeartbeatContext;
 use Flow\ETL\Tests\Context\MemoryTelemetryContext;
 use Flow\ETL\Tests\Double\ClosureThrowingLoader;
 use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\Double\RecordingErrorHandler;
+use Flow\ETL\Tests\Double\RecordingHeartbeat;
 use Flow\ETL\Tests\Double\RecordingLoader;
 use Flow\ETL\Tests\Double\SpyLoader;
 use Flow\ETL\Tests\Double\ThrowingLoader;
@@ -47,6 +51,7 @@ use function array_merge;
 use function array_slice;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
@@ -56,6 +61,9 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function Flow\Filesystem\DSL\memory_filesystem;
+use function Flow\Filesystem\DSL\path;
+use function Flow\Floe\DSL\to_floe;
 use function iterator_to_array;
 
 final class StepRunnerTest extends FlowTestCase
@@ -110,6 +118,35 @@ final class StepRunnerTest extends FlowTestCase
         static::assertSame([$failure], (new StepRunner())->endLoaders([$failing, $next], flow_context(config()), true));
         static::assertSame(1, $failing->discarded);
         static::assertSame(['closure'], $next->log);
+    }
+
+    public function test_a_commit_entry_has_the_location_of_its_write(): void
+    {
+        $recording = new RecordingHeartbeat();
+        $context = flow_context(
+            config_builder()->clock(new FakeClock())->heartbeat($recording, everySeconds: 60)->build(),
+        );
+        $memory = memory_filesystem();
+        $loaders = [
+            to_floe(path('memory://a/part-{part}.floe'), filesystem: $memory),
+            to_floe(path('memory://b/rows.floe'), filesystem: $memory),
+        ];
+        $context->config->heartbeat()?->started();
+
+        foreach ($loaders as $loader) {
+            $loader->load(RowsMother::sequentialIds(2), $context->backend());
+        }
+
+        (new StepRunner())->endLoaders($loaders, $context, true);
+        $context->config->heartbeat()?->completed();
+
+        static::assertSame(
+            ['memory://a/', 'memory://b/'],
+            array_map(
+                static fn(StageProgress $commit): ?string => $commit->location,
+                HeartbeatContext::entries($recording, 'commit')[0],
+            ),
+        );
     }
 
     public function test_steps_without_a_source_rethrow_their_input_error_untouched(): void
@@ -642,6 +679,35 @@ final class StepRunnerTest extends FlowTestCase
         static::assertCount(
             1,
             $telemetry->logs->entriesContaining('Routed 2 corrupted records to ' . SpyLoader::class . '.'),
+        );
+    }
+
+    public function test_end_loaders_is_done_after_every_loader(): void
+    {
+        $recording = new RecordingHeartbeat();
+        $context = flow_context(
+            config_builder()->clock(new FakeClock())->heartbeat($recording, everySeconds: 60)->build(),
+        );
+        $memory = memory_filesystem();
+        $loaders = [
+            to_floe(path('memory://a/part-{part}.floe'), filesystem: $memory),
+            to_floe(path('memory://b/rows.floe'), filesystem: $memory),
+        ];
+        $context->config->heartbeat()?->started();
+
+        foreach ($loaders as $loader) {
+            $loader->load(RowsMother::sequentialIds(2), $context->backend());
+        }
+
+        (new StepRunner())->endLoaders($loaders, $context, true);
+        $context->config->heartbeat()?->beatNow();
+
+        static::assertSame(
+            [true, true],
+            array_map(
+                static fn(StageProgress $commit): bool => $commit->endedAtSeconds !== null,
+                HeartbeatContext::entries($recording, 'commit')[0],
+            ),
         );
     }
 }

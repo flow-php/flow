@@ -13,6 +13,7 @@ use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\SchemaDefinitionNotUniqueException;
 use Flow\ETL\Foundation\Exception\SchemaValidationException;
+use Flow\ETL\Foundation\StageProgress;
 use Flow\ETL\Functions\ScalarFunction;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\File\FileSplit;
@@ -1979,10 +1980,15 @@ final class CSVExtractorTest extends FlowTestCase
             ->fetch();
 
         static::assertContains(
-            ['infer', 2500, 0],
+            [[2500], 0],
             array_map(static fn(Pulse $pulse): array => [
-                $pulse->stage,
-                $pulse->stageRows,
+                array_map(
+                    static fn(StageProgress $stage): int => $stage->count,
+                    array_values(array_filter(
+                        $pulse->stages,
+                        static fn(StageProgress $stage): bool => $stage->name === 'infer',
+                    )),
+                ),
                 $pulse->rowsRead,
             ], $recording->pulses()),
         );

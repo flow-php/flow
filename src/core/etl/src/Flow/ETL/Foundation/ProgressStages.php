@@ -26,5 +26,10 @@ interface ProgressStages
 
     public const string WINDOW = 'window';
 
-    public function stage(string $name): Progress;
+    public function stage(
+        string $name,
+        ProgressUnit $unit = ProgressUnit::rows,
+        ?int $id = null,
+        ?string $location = null,
+    ): Progress;
 }

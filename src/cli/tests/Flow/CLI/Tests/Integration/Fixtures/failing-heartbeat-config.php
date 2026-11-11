@@ -9,4 +9,4 @@ use function Flow\ETL\DSL\config_builder;
 
 return config_builder()
     ->clock(new SteppingClock())
-    ->heartbeat(new RecordingHeartbeat(throws: new RuntimeException('lease lost')), everySeconds: 2);
+    ->heartbeat(new RecordingHeartbeat(throws: new RuntimeException('lease lost')), everySeconds: 3);

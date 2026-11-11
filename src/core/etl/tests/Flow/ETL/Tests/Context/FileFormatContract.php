@@ -146,7 +146,7 @@ final readonly class FileFormatContract
 
         $loader->closure($progress);
 
-        Assert::assertGreaterThan(0, $progress->rowsOf('commit'));
+        Assert::assertGreaterThan(0, $progress->countOf('commit'));
     }
 
     public function aPartitionedWriteReadsBackEveryPartition(FileFormat $format): void

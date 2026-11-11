@@ -29,7 +29,7 @@ final class FileAnalyzeCommandTest extends FlowTestCase
             static::assertSame('lease lost', $e->getMessage());
         }
 
-        static::assertStringEndsWith("\x1B[1G\x1B[2K", $tester->getErrorOutput());
+        static::assertStringEndsWith("\x1B[1A\x1B[0J", $tester->getErrorOutput());
     }
 
     public function test_a_plain_output_gets_no_progress(): void

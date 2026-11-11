@@ -46,7 +46,6 @@ use Flow\ETL\Planning\Optimizer\Rule\CombineSortAndLimit;
 use Flow\ETL\Planning\Physical\BranchPipeline;
 use Flow\ETL\Planning\Physical\JoinStep;
 use Flow\ETL\Planning\Physical\Pipeline;
-use Flow\ETL\Planning\Physical\PipelineSteps;
 use Flow\ETL\Planning\Physical\PlannedNode;
 use Flow\ETL\Planning\Physical\PlannedNodes;
 use Flow\ETL\Planning\Physical\Planner;
@@ -1267,10 +1266,10 @@ final class PlannerTest extends FlowTestCase
         $offset = new OffsetProcessor(1);
 
         static::assertEquals(
-            [new PipelineSteps([$offset, $limit])],
+            [[[$offset, $limit], null]],
             array_map(
-                static fn(Pipeline $pipeline): PipelineSteps => $pipeline->steps,
-                Planner::cut(null, [$offset, $limit], 0),
+                static fn(Pipeline $pipeline): array => [$pipeline->steps->steps, $pipeline->steps->breaker],
+                Planner::cut(null, [$offset, $limit], 0, new PlannedNodes()),
             ),
         );
     }
@@ -1282,10 +1281,10 @@ final class PlannerTest extends FlowTestCase
         $count = new CountingProcessor();
 
         static::assertEquals(
-            [new PipelineSteps([$limit], $collect), new PipelineSteps([], $count)],
+            [[[$limit], $collect], [[], $count]],
             array_map(
-                static fn(Pipeline $pipeline): PipelineSteps => $pipeline->steps,
-                Planner::cut(null, [$limit, $collect, $count], 0),
+                static fn(Pipeline $pipeline): array => [$pipeline->steps->steps, $pipeline->steps->breaker],
+                Planner::cut(null, [$limit, $collect, $count], 0, new PlannedNodes()),
             ),
         );
     }
@@ -1296,10 +1295,10 @@ final class PlannerTest extends FlowTestCase
         $limit = new LimitTransformer(1);
 
         static::assertEquals(
-            [new PipelineSteps([], $collect), new PipelineSteps([$limit])],
+            [[[], $collect], [[$limit], null]],
             array_map(
-                static fn(Pipeline $pipeline): PipelineSteps => $pipeline->steps,
-                Planner::cut(null, [$collect, $limit], 0),
+                static fn(Pipeline $pipeline): array => [$pipeline->steps->steps, $pipeline->steps->breaker],
+                Planner::cut(null, [$collect, $limit], 0, new PlannedNodes()),
             ),
         );
     }
@@ -1312,10 +1311,10 @@ final class PlannerTest extends FlowTestCase
         $limit = new LimitTransformer(1);
 
         static::assertEquals(
-            [new PipelineSteps([$cross], $hash), new PipelineSteps([$limit])],
+            [[[$cross], $hash], [[$limit], null]],
             array_map(
-                static fn(Pipeline $pipeline): PipelineSteps => $pipeline->steps,
-                Planner::cut(null, [$cross, $hash, $limit], 0),
+                static fn(Pipeline $pipeline): array => [$pipeline->steps->steps, $pipeline->steps->breaker],
+                Planner::cut(null, [$cross, $hash, $limit], 0, new PlannedNodes()),
             ),
         );
     }
@@ -1326,7 +1325,7 @@ final class PlannerTest extends FlowTestCase
         $collect = new CollectingProcessor();
         $limit = new LimitTransformer(1);
 
-        $pipelines = Planner::cut($read, [$collect, $limit], 4);
+        $pipelines = Planner::cut($read, [$collect, $limit], 4, new PlannedNodes());
 
         static::assertCount(2, $pipelines);
         static::assertSame([4, 5], [$pipelines[0]->id, $pipelines[1]->id]);
@@ -1338,7 +1337,7 @@ final class PlannerTest extends FlowTestCase
 
     public function test_cut_of_a_fed_branch_starts_without_input(): void
     {
-        static::assertNull(Planner::cut(null, [new LimitTransformer(1)], 0)[0]->input);
+        static::assertNull(Planner::cut(null, [new LimitTransformer(1)], 0, new PlannedNodes())[0]->input);
     }
 
     public function test_a_read_that_infers_reports_to_the_infer_stage_only_while_planning(): void
@@ -1348,8 +1347,8 @@ final class PlannerTest extends FlowTestCase
 
         config()->planner()->plan(NodeMother::plan(NodeMother::read($extractor)), $progress);
 
-        static::assertSame(['infer'], $progress->stages());
-        static::assertGreaterThan(0, $progress->rowsOf('infer'));
+        static::assertSame(['infer', 'read'], $progress->stages());
+        static::assertGreaterThan(0, $progress->countOf('infer'));
         static::assertCount(2, $extractor->reportedTo);
         static::assertNotInstanceOf(VoidProgress::class, $extractor->reportedTo[0]);
         static::assertInstanceOf(VoidProgress::class, $extractor->reportedTo[1]);
@@ -1386,5 +1385,14 @@ final class PlannerTest extends FlowTestCase
 
         static::assertCount(2, $extractor->reportedTo);
         static::assertInstanceOf(VoidProgress::class, $extractor->reportedTo[1]);
+    }
+
+    public function test_inference_is_done_after_planning(): void
+    {
+        $progress = new ProgressSpy();
+
+        config()->planner()->plan(NodeMother::plan(NodeMother::read(new InferenceRecordingExtractor())), $progress);
+
+        static::assertSame(1, $progress->doneCalls('infer'));
     }
 }

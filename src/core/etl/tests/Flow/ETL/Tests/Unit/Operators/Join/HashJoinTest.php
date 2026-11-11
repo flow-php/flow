@@ -4,16 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Operators\Join;
 
+use ArrayObject;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\JoinException;
+use Flow\ETL\Foundation\ProgressUnit;
 use Flow\ETL\Functions\Join\Condition\Any;
 use Flow\ETL\Functions\Join\Condition\Equal;
 use Flow\ETL\Functions\Join\Expression;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\Signal;
+use Flow\ETL\Kernels\HashJoin\JoinSide;
 use Flow\ETL\Operators\Join\HashJoin;
 use Flow\ETL\Storage\MemoryRowsStorage;
 use Flow\ETL\Tests\Context\DescribeRoundTrip;
+use Flow\ETL\Tests\Context\HeartbeatContext;
 use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\Double\ReportedMemoryBackend;
@@ -24,6 +28,8 @@ use Flow\ETL\Tests\Mother\HashJoinMother;
 use Flow\ETL\Tests\Mother\RowsMother;
 use Flow\ETL\Values\Join\JoinType;
 use Flow\ETL\Values\Memory\Unit;
+use Generator;
+use RuntimeException;
 
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config_builder;
@@ -958,6 +964,164 @@ final class HashJoinTest extends FlowTestCase
         );
 
         static::assertSame(['join'], $spy->stages());
-        static::assertGreaterThan(0, $spy->rowsOf('join'));
+        static::assertGreaterThan(0, $spy->countOf('join'));
+    }
+
+    public function test_hash_join_describes_its_progress(): void
+    {
+        $spy = new ProgressSpy();
+
+        DescribeRoundTrip::rebuilt(
+            HashJoinMother::resident(
+                Expression::on(['id' => 'user_id']),
+                JoinType::left,
+                progress: HeartbeatContext::stageWithId('join', 7),
+            ),
+            new Rebuild($spy),
+        );
+
+        static::assertSame([['join', ProgressUnit::rows, 7, null]], $spy->built());
+    }
+
+    public function test_hash_join_is_done_after_its_last_batch(): void
+    {
+        $progress = new ProgressSpy();
+        $output = HashJoinMother::resident(
+            Expression::on(['id' => 'user_id']),
+            JoinType::left,
+            progress: $progress->stage('join'),
+        )->join(
+            (static function (): Generator {
+                yield array_to_rows([['id' => 1]], schema(int_schema('id')));
+            })(),
+            (static function (): Generator {
+                yield array_to_rows([['user_id' => 1]], schema(int_schema('user_id')));
+            })(),
+            flow_context()->backend(),
+        );
+
+        $output->current();
+
+        static::assertSame(0, $progress->doneCalls('join'));
+
+        iterator_to_array($output, false);
+
+        static::assertSame(1, $progress->doneCalls('join'));
+    }
+
+    public function test_its_distribution_holds_the_stage_it_reports_to(): void
+    {
+        $stage = new ProgressSpy('join');
+
+        static::assertSame(
+            $stage,
+            type_instance_of(HashJoin::class)
+                ->assert(HashJoinMother::resident(
+                    Expression::on(['id' => 'user_id']),
+                    JoinType::left,
+                    progress: $stage,
+                )->bind(schema(int_schema('id')), schema(int_schema('user_id')))->step)
+                ->distribution()
+                ?->progress,
+        );
+    }
+
+    public function test_a_whole_join_ends_its_stage_at_its_end(): void
+    {
+        $stage = new ProgressSpy('join');
+
+        iterator_to_array(
+            HashJoinMother::resident(Expression::on(['id' => 'id']), JoinType::inner, progress: $stage)->joined(
+                flow_context()->backend(),
+                JoinSide::of(
+                    (static function () {
+                        yield RowsMother::sequentialIds(3);
+                    })(),
+                ),
+                JoinSide::of(
+                    (static function () {
+                        yield RowsMother::sequentialIds(3);
+                    })(),
+                ),
+            ),
+            false,
+        );
+
+        static::assertSame(1, $stage->doneCalls('join'));
+    }
+
+    public function test_a_whole_join_ends_its_stage_after_a_stop_and_stops_its_probe_side(): void
+    {
+        $stage = new ProgressSpy('join');
+        $signals = new ArrayObject();
+        $joined = HashJoinMother::resident(Expression::on(['id' => 'id']), JoinType::inner, progress: $stage)->joined(
+            flow_context()->backend(),
+            JoinSide::of(HeartbeatContext::stoppable($signals)),
+            JoinSide::of(
+                (static function () {
+                    yield RowsMother::sequentialIds(1);
+                })(),
+            ),
+        );
+
+        static::assertTrue($joined->valid());
+
+        $joined->send(Signal::STOP);
+
+        static::assertSame([1, [Signal::STOP]], [$stage->doneCalls('join'), $signals->getArrayCopy()]);
+    }
+
+    public function test_a_failed_whole_join_leaves_its_stage_open(): void
+    {
+        $stage = new ProgressSpy('join');
+        $joined = HashJoinMother::resident(Expression::on(['id' => 'id']), JoinType::inner, progress: $stage)->joined(
+            flow_context()->backend(),
+            JoinSide::of(
+                (static function () {
+                    yield RowsMother::sequentialIds(1);
+
+                    throw new RuntimeException('source failed');
+                })(),
+            ),
+            JoinSide::of(
+                (static function () {
+                    yield RowsMother::sequentialIds(1);
+                })(),
+            ),
+        );
+
+        try {
+            iterator_to_array($joined, false);
+        } catch (RuntimeException) {
+        }
+
+        static::assertSame(0, $stage->doneCalls('join'));
+    }
+
+    public function test_a_spilling_join_ends_its_stage_once_after_its_last_bucket_pair(): void
+    {
+        $stage = new ProgressSpy('join');
+
+        iterator_to_array(
+            HashJoinMother::with(
+                Expression::on(['id' => 'id']),
+                JoinType::inner,
+                new MemoryRowsStorage(),
+                bucketsCount: 4,
+                memoryLimit: Unit::fromBytes(1),
+                progress: $stage,
+            )->join(
+                (static function () {
+                    yield RowsMother::sequentialIds(20);
+                })(),
+                (static function () {
+                    yield RowsMother::sequentialIds(20);
+                })(),
+                flow_context()->backend(),
+            ),
+            false,
+        );
+
+        static::assertSame(1, $stage->doneCalls('join'));
     }
 }

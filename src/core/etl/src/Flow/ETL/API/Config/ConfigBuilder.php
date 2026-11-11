@@ -59,6 +59,8 @@ final class ConfigBuilder
      */
     private array $heartbeats = [];
 
+    private bool $heartbeatsToParent = false;
+
     private ?string $id;
 
     private ?Launcher $launcher;
@@ -165,14 +167,21 @@ final class ConfigBuilder
             randomValueGenerator: $this->randomValueGenerator,
             backend: $backend,
             launcher: $this->launcher,
-            heartbeat: $heartbeats === []
-                ? null
-                : new HeartbeatThrottle(
+            heartbeat: match (true) {
+                $heartbeats === [] => null,
+                $this->heartbeatsToParent => HeartbeatThrottle::reportingToParent(
                     $this->getClock(),
                     $backend,
                     $telemetryConfig->telemetry->logger('flow_php_dataframe', $this->version),
                     $heartbeats,
                 ),
+                default => new HeartbeatThrottle(
+                    $this->getClock(),
+                    $backend,
+                    $telemetryConfig->telemetry->logger('flow_php_dataframe', $this->version),
+                    $heartbeats,
+                ),
+            },
         );
     }
 
@@ -214,14 +223,39 @@ final class ConfigBuilder
     /**
      * Calls $heartbeat every $everySeconds while the run is busy; each call appends one more heartbeat.
      *
-     * @throws InvalidArgumentException when $everySeconds is below 1
+     * @throws InvalidArgumentException when $everySeconds is below 0.1, or after heartbeatToParent()
      */
     public function heartbeat(
         Heartbeat $heartbeat,
-        int $everySeconds,
+        float $everySeconds,
         HeartbeatFailure $onFailure = HeartbeatFailure::stop,
     ): self {
+        if ($this->heartbeatsToParent) {
+            throw new InvalidArgumentException(
+                'heartbeat() and heartbeatToParent() cannot be mixed on one ConfigBuilder. A worker reports to its parent through heartbeatToParent() only. Register every other heartbeat in the parent.',
+            );
+        }
+
         $this->heartbeats[] = new ScheduledHeartbeat($heartbeat, $everySeconds, $onFailure);
+
+        return $this;
+    }
+
+    /**
+     * A failing report is logged, never thrown, because the parent ends a worker it stopped listening to.
+     *
+     * @throws InvalidArgumentException when $everySeconds is below 0.1, or after heartbeat()
+     */
+    public function heartbeatToParent(Heartbeat $heartbeat, float $everySeconds): self
+    {
+        if (!$this->heartbeatsToParent && $this->heartbeats !== []) {
+            throw new InvalidArgumentException(
+                'heartbeat() and heartbeatToParent() cannot be mixed on one ConfigBuilder. A worker reports to its parent through heartbeatToParent() only. Register every other heartbeat in the parent.',
+            );
+        }
+
+        $this->heartbeats[] = new ScheduledHeartbeat($heartbeat, $everySeconds, HeartbeatFailure::log);
+        $this->heartbeatsToParent = true;
 
         return $this;
     }

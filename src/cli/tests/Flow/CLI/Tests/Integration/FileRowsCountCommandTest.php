@@ -29,7 +29,7 @@ final class FileRowsCountCommandTest extends TestCase
             static::assertSame('lease lost', $e->getMessage());
         }
 
-        static::assertStringEndsWith("\x1B[1G\x1B[2K", $tester->getErrorOutput());
+        static::assertStringEndsWith("\x1B[1A\x1B[0J", $tester->getErrorOutput());
     }
 
     public function test_a_plain_output_gets_only_the_count(): void
@@ -54,7 +54,7 @@ final class FileRowsCountCommandTest extends TestCase
         ], ['capture_stderr_separately' => true]);
 
         static::assertSame('43', $tester->getDisplay());
-        static::assertMatchesRegularExpression('/^ read: 43 rows · 43 read · /m', $tester->getErrorOutput());
+        static::assertMatchesRegularExpression('/^\[\d\d:\d\d\] finished  43 rows in /m', $tester->getErrorOutput());
     }
 
     public function test_count_rows_csv(): void

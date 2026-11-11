@@ -40,6 +40,8 @@ use function range;
  */
 final readonly class GroupByAggregationProcessor implements Distributable
 {
+    private bool $merges;
+
     /**
      * @param BucketingConfig $config the effective grouping config: the operation's own or the frame's
      */
@@ -49,7 +51,15 @@ final readonly class GroupByAggregationProcessor implements Distributable
         private RandomValueGenerator $random,
         private ?GroupByShape $shape = null,
         private Progress $progress = new VoidProgress(),
-    ) {}
+    ) {
+        $merges = false;
+
+        foreach ($groupBy->aggregations() as $aggregation) {
+            $merges = $merges || $aggregation instanceof MergedAggregate;
+        }
+
+        $this->merges = $merges;
+    }
 
     /**
      * @throws SchemaDefinitionNotFoundException
@@ -68,7 +78,7 @@ final readonly class GroupByAggregationProcessor implements Distributable
             ($data['input'] ?? null) === null
                 ? null
                 : GroupByShape::of($groupBy, Schema::fromArray(type_array()->assert($data['input']))),
-            $rebuild->progress(ProgressStages::GROUP_BY),
+            $rebuild->progress(ProgressStages::GROUP_BY, $data['progress'] ?? null),
         );
     }
 
@@ -84,6 +94,7 @@ final readonly class GroupByAggregationProcessor implements Distributable
                     'config' => $this->config,
                     'random' => $this->random,
                     'input' => $this->shape?->input->normalize(),
+                    'progress' => $this->progress instanceof Describable ? $this->progress : new VoidProgress(),
                 ])
                 : null
         );
@@ -134,8 +145,8 @@ final readonly class GroupByAggregationProcessor implements Distributable
         $keys = $this->groupBy->refs()->names();
 
         return $keys === []
-            ? Distribution::single($partialStep, $finalStep)
-            : Distribution::clustered($keys, $partialStep, $finalStep);
+            ? Distribution::single($partialStep, $finalStep, $this->progress)
+            : Distribution::clustered($keys, $partialStep, $finalStep, $this->progress);
     }
 
     /**
@@ -192,6 +203,7 @@ final readonly class GroupByAggregationProcessor implements Distributable
                 $shape ??= GroupByShape::of($this->groupBy, $batch->schema());
                 $groups ??= new AggregatedGroups($this->groupBy, $shape, $backend, $this->progress);
                 $groups->accumulate($batch, $backend);
+                $this->took($batch);
 
                 if ($budget->exceeded()) {
                     $spilling = true;
@@ -202,12 +214,14 @@ final readonly class GroupByAggregationProcessor implements Distributable
 
             if ($spilling && $groups !== null && $shape !== null) {
                 yield from $this->spilled($groups, $shape, $rows, $buckets, $backend);
+                $this->progress->done();
 
                 return;
             }
 
             if ($groups !== null) {
                 yield from $groups->flush($this->config->batchSize, $backend);
+                $this->progress->done();
 
                 return;
             }
@@ -216,6 +230,8 @@ final readonly class GroupByAggregationProcessor implements Distributable
             if ($shape !== null && $this->groupBy->isGlobal()) {
                 yield (new AggregatedGroups($this->groupBy, $shape, $backend, $this->progress))->noInputRow($backend);
             }
+
+            $this->progress->done();
         } finally {
             $buckets->clear();
         }
@@ -240,7 +256,10 @@ final readonly class GroupByAggregationProcessor implements Distributable
             'group-by',
         );
 
-        foreach ($bucketing->bucketize(BoundedRead::followedBy([], $rest), $buckets->storage()) as $bucket) {
+        foreach ($bucketing->bucketize(
+            BoundedRead::followedBy([], $this->taken($rest)),
+            $buckets->storage(),
+        ) as $bucket) {
             $buckets->add($bucket);
         }
 
@@ -276,5 +295,28 @@ final readonly class GroupByAggregationProcessor implements Distributable
         }
 
         yield from $remaining->flush($this->config->batchSize, $backend);
+    }
+
+    /**
+     * @param Generator<Rows> $rows
+     *
+     * @return Generator<Rows>
+     */
+    private function taken(Generator $rows): Generator
+    {
+        // valid()/next(), never a rewind: the stream was read up to the batch that passed the limit
+        for (; $rows->valid(); $rows->next()) {
+            /** @var Rows $batch valid() holds, so current() is a batch */
+            $batch = $rows->current();
+            $this->took($batch);
+
+            yield $batch;
+        }
+    }
+
+    private function took(Rows $batch): void
+    {
+        // the step that merges takes partials, which are not rows of the input
+        $this->merges ? $this->progress->busy() : $this->progress->advanced($batch->count());
     }
 }

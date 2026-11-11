@@ -69,7 +69,7 @@ final readonly class HashJoin implements Describable
             )),
             ($data['left'] ?? null) === null ? null : Schema::fromArray(type_array()->assert($data['left'])),
             ($data['right'] ?? null) === null ? null : Schema::fromArray(type_array()->assert($data['right'])),
-            $rebuild->progress(ProgressStages::JOIN),
+            $rebuild->progress(ProgressStages::JOIN, $data['progress'] ?? null),
         );
     }
 
@@ -87,6 +87,7 @@ final readonly class HashJoin implements Describable
                     'random' => $this->random,
                     'left' => $this->left?->normalize(),
                     'right' => $this->declaredRight?->normalize(),
+                    'progress' => $this->progress instanceof Describable ? $this->progress : new VoidProgress(),
                 ])
                 : null
         );
@@ -118,7 +119,29 @@ final readonly class HashJoin implements Describable
 
         return $keys === null || $this->leftSchema() === null || $this->rightSchema() === null
             ? null
-            : Distribution::coPartitioned($keys);
+            : Distribution::coPartitioned($keys, $this->progress);
+    }
+
+    /**
+     * Joins two whole sides and ends the join's stage at the end or after a STOP, which reaches the probe side.
+     *
+     * @return Generator<int, Rows, null|Signal, void>
+     */
+    public function joined(Backend $backend, JoinSide $left, JoinSide $right, bool $buildLeft = false): Generator
+    {
+        foreach ($this->joiner($backend)->join($left, $right, $buildLeft) as $batch) {
+            // a yield inside the condition hides the generator from mago
+            $signal = yield $batch;
+
+            if ($signal === Signal::STOP) {
+                ($buildLeft ? $right : $left)->rows->send(Signal::STOP);
+                $this->progress->done();
+
+                return;
+            }
+        }
+
+        $this->progress->done();
     }
 
     /**
@@ -223,21 +246,11 @@ final readonly class HashJoin implements Describable
             if ($resident || $held !== null) {
                 $rightBucket = $rightBuckets->all()[0] ?? null;
 
-                $joinedBatches = $joiner->join(JoinSide::of($leftRows, $leftSchema), JoinSide::of(match (true) {
+                yield from $this->joined($backend, JoinSide::of($leftRows, $leftSchema), JoinSide::of(match (true) {
                     $held !== null => BoundedRead::followedBy($held, self::noRows()),
                     $rightBucket === null => self::noRows(),
                     default => $rightBuckets->rows($rightBucket->id),
                 }, $rightSchema));
-
-                // the left side streams through the join, so a stop has to reach its source: the upstream
-                // run then completes and closes its loaders instead of being abandoned mid-run
-                foreach ($joinedBatches as $joinedBatch) {
-                    if ((yield $joinedBatch) === Signal::STOP) {
-                        $left->send(Signal::STOP);
-
-                        return;
-                    }
-                }
 
                 return;
             }
@@ -263,6 +276,8 @@ final readonly class HashJoin implements Describable
                     yield $joinedBatch;
                 }
             }
+
+            $this->progress->done();
         } catch (SchemaDefinitionNotUniqueException $e) {
             throw new JoinException($e->getMessage(), (int) $e->getCode(), $e);
         } finally {
@@ -330,17 +345,26 @@ final readonly class HashJoin implements Describable
     }
 
     /**
-     * @param Generator<Rows> $rows
+     * @template TSend
+     *
+     * @param Generator<mixed, Rows, null|TSend, mixed> $rows
      * @param null|Schema $schema - out parameter, the schema of the first batch flowing through
      *
-     * @return Generator<Rows>
+     * @return Generator<int, Rows, null|TSend, void>
      */
     private function tap(Generator $rows, ?Schema &$schema): Generator
     {
         foreach ($rows as $batch) {
             $schema ??= $batch->schema();
 
-            yield $batch;
+            // a stop reaches the source, so the upstream run completes and closes its loaders
+            $sent = yield $batch;
+
+            if ($sent !== null) {
+                $rows->send($sent);
+
+                return;
+            }
         }
     }
 }

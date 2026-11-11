@@ -118,7 +118,7 @@ final class FileWrite
                 $failure ??= $e;
             }
 
-            $progress->advanced(1);
+            $progress->busy();
         }
 
         return $failure;

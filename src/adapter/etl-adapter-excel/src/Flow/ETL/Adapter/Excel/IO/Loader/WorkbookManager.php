@@ -48,7 +48,7 @@ final class WorkbookManager
     {
         foreach ($this->writers as $writer) {
             $writer->close();
-            $progress->advanced(1);
+            $progress->busy();
         }
 
         $this->writers = [];

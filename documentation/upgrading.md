@@ -68,15 +68,13 @@ Upgrading from older versions: [0.41.x to 0.43.x](/documentation/upgrading-0.41-
 A custom `FrameAccumulating` gets one `[start, end]` pair per row of the sorted partition, `[1, 0]` for an empty frame,
 and returns one value per pair.
 
-### 6) `flow-php/etl` - window functions and `Rebuild` take a `Progress`
+### 6) `flow-php/etl` - window functions take a `Progress`
 
 | Before                                                                                             | After                                                                                                                  |
 |----------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
 | `WindowFunction::values(Rows $partition, Backend $backend): array`                                 | `WindowFunction::values(Rows $partition, Backend $backend, Progress $progress): array`                                 |
 | `FrameAccumulation::values(FrameAccumulating $function, Rows $partition, Backend $backend): array` | `FrameAccumulation::values(FrameAccumulating $function, Rows $partition, Backend $backend, Progress $progress): array` |
 | -                                                                                                  | `NumericTotal::frames(array $values, array $bounds, bool $exact, Progress $progress): array`                           |
-| `new Rebuild()`                                                                                    | `new Rebuild(ProgressStages $progress = new VoidProgress())`                                                           |
-| -                                                                                                  | `Rebuild::progress(string $stage): Progress`                                                                           |
 
 A custom window function can call `$progress->advanced($rows)` once per partition. The call is optional.
 
@@ -88,12 +86,12 @@ A custom window function can call `$progress->advanced($rows)` once per partitio
 | `ConfigOption::get(): Config`                                       | `ConfigOption::get(): ConfigBuilder`                                                   |
 | `Flow\CLI\Loader\ProgressBarLoader`                                 | removed, the commands use `console_heartbeat()` from `flow-php/symfony-console-bridge` |
 | `Flow\CLI\Style\FlowStyle::clear()`                                 | removed                                                                                |
-| `file:analyze` progress bar on stdout                               | progress line on stderr, also for `file:convert` and `file:rows:count`                 |
+| `file:analyze` progress bar on stdout                               | `tasks` on stderr, `log` lines off a terminal, also `file:convert`, `file:rows:count`  |
 | `Heap Peak 40.9 MB` in the `file:analyze` and `pipeline:run` report | `Heap Peak 40.9 MiB`, the same for every memory row                                    |
 | `flow pipeline:run --config .flow.php pipeline.php`                 | `flow pipeline:run pipeline.php`, the pipeline file configures its own frame           |
 | `--config` on `db:table:list`, `db:table:schema`, `schema:format`   | removed, these commands never used it                                                  |
 
-### 8) `flow-php/cli`, `flow-php/symfony-console-bridge`, `flow-php/symfony-telemetry-bundle`, `flow-php/symfony-postgresql-bundle`, `flow-php/parquet-viewer` - `symfony/console` lower bound raised
+### 8) `flow-php/cli`, `flow-php/symfony-telemetry-bundle`, `flow-php/symfony-postgresql-bundle`, `flow-php/parquet-viewer` - `symfony/console` lower bound raised
 
 | Before                                          | After                                                  |
 |-------------------------------------------------|--------------------------------------------------------|
@@ -104,7 +102,6 @@ A custom window function can call `$progress->advanced($rows)` once per partitio
 | Before                                                                                         | After                                                                                                              |
 |------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
 | `interface InfersSchema`                                                                       | `interface InfersSchema extends ReportsInference`, `reportInferenceTo(Progress $progress): void`                   |
-| `Planner::plan(LogicalPlan $logical): PhysicalPlan`                                            | `Planner::plan(LogicalPlan $logical, ProgressStages $stages = new VoidProgress()): PhysicalPlan`                   |
 | `SchemaInferrer::infer(Sniffer $sniffer): Inferred`                                            | `SchemaInferrer::infer(Sniffer $sniffer, Progress $progress): Inferred`                                            |
 | `Sniffer::sniff(int $unit, ?int $rowBudget): Sample`                                           | `Sniffer::sniff(int $unit, ?int $rowBudget, Progress $progress): Sample`                                           |
 | `Sniffs::sniff(Sniffer $sniffer, int $units): ?array`                                          | `Sniffs::sniff(Sniffer $sniffer, int $units, Progress $progress): ?array`                                          |
@@ -145,7 +142,7 @@ and passes it to `SchemaInferrer::infer()`. A custom `Sniffer` or `CSVOpenSource
 | a `finally` around the `yield` ran late, after the caller's `catch`    | it runs before the failure gets to the caller      |
 | a `catch (Throwable)` around the `yield` saw only the source's failure | it also gets the failures of later steps           |
 
-### 12) `flow-php/etl` and the file adapters - a write that ends reports its file operations
+### 12) `flow-php/etl` and the file adapters - a write that ends reports the files it writes
 
 | Before                                   | After                                            |
 |------------------------------------------|--------------------------------------------------|
@@ -153,7 +150,6 @@ and passes it to `SchemaInferrer::infer()`. A custom `Sniffer` or `CSVOpenSource
 | `FileWrite::closure(): void`             | `closure(Progress $progress): void`              |
 | `FileCommit::commit(array $tasks): void` | `commit(array $tasks, Progress $progress): void` |
 | `WorkbookManager::close(): void`         | `close(Progress $progress): void`                |
-| -                                        | `Config::progress(): ProgressStages`             |
 
 A custom `Closure` loader:
 
@@ -174,21 +170,19 @@ use Flow\ETL\Foundation\Progress;
 public function closure(Progress $progress): void
 {
     $this->client->flush();
-    $progress->advanced(1);
+    $progress->busy();
 }
 ```
 
+`advanced(1)` counts a file that became visible at its target, `busy()` reports any other blocking call.
+
 Code that calls `FileCommit::commit()` outside a run passes `new VoidProgress()`.
 
-### 13) `flow-php/etl` - a stopped heartbeat discards the writes that did not end yet
+### 13) `flow-php/etl` - `Distribution::ordered()` takes the stage of the step it splits
 
-| Before                                                                | After                                     |
-|-----------------------------------------------------------------------|-------------------------------------------|
-| a `HeartbeatFailure::stop` throw while one write ended failed only it | every write that did not end is discarded |
-| the other writes of the run still published their output              | nothing more is published                 |
-| the heartbeat was called again at its next due time                   | it is not called again in that run        |
-
-No code changes. A `HeartbeatFailure::log` heartbeat is not affected.
+| Before                                | After                                                     |
+|---------------------------------------|-----------------------------------------------------------|
+| `Distribution::ordered(array $order)` | `Distribution::ordered(array $order, Progress $progress)` |
 
 ---
 

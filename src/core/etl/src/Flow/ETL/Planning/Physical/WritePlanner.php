@@ -281,7 +281,7 @@ final class WritePlanner
             }
         }
 
-        $pipelines = Planner::cut(null, [...$steps, ...$tail], $this->next);
+        $pipelines = Planner::cut(null, [...$steps, ...$tail], $this->next, $this->planned);
         $this->next += count($pipelines);
 
         return new BranchPipeline($pipelines[count($pipelines) - 1], $this->planned->of($host)->schema ?? new Schema());

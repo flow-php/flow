@@ -80,7 +80,7 @@ final class FileCommit
             throw new RuntimeException("Destination path can't be pattern, given: " . $destination->uri());
         }
 
-        $this->root = $destination->isPattern() ? $destination->staticPart() : $destination->parentDirectory();
+        $this->root = self::root($destination);
         // the destination tells apart two loaders of one job writing under the same root
         $this->temporary = $this->root->suffix(
             '/' . self::TEMPORARY_OUTPUT_PREFIX . $run . '-' . hash('xxh32', $destination->uri()),
@@ -107,6 +107,19 @@ final class FileCommit
         $commit = new self($filesystem, $destination, $saveMode, $run, $tasks);
 
         return $commit->admit($partitioned) ? $commit : null;
+    }
+
+    /**
+     * The directory the files of $destination land in: the static part of a pattern, the parent of a plain file.
+     */
+    public static function locationOf(Path $destination): string
+    {
+        return self::root($destination)->location() . '/';
+    }
+
+    private static function root(Path $destination): Path
+    {
+        return $destination->isPattern() ? $destination->staticPart() : $destination->parentDirectory();
     }
 
     /**
@@ -157,7 +170,7 @@ final class FileCommit
      * the stale files the moved ones replace, and the temporary output goes. A move that fails leaves the old files
      * in place: a failed commit duplicates, it never loses. A task whose result never arrived commits nothing.
      *
-     * $progress advances once after each file operation.
+     * $progress counts each moved file and is busy after every other file operation.
      *
      * @param list<int> $tasks the indices of the tasks whose results arrived
      *
@@ -194,10 +207,15 @@ final class FileCommit
         // the moves left the directories behind, which a listing no longer sees
         if ($staged !== []) {
             $this->filesystem->rm($this->temporary);
-            $progress->advanced(1);
+            $progress->busy();
         } else {
             $this->removeDirectory($this->temporary, $progress);
         }
+    }
+
+    public function location(): string
+    {
+        return self::locationOf($this->destination);
     }
 
     /**
@@ -251,15 +269,22 @@ final class FileCommit
 
         // every handle closes first: a format writer flushes its footer on close, and a file is moved or removed
         // after that, not before
-        foreach ($streams as $stream) {
-            if ($stream->isOpen()) {
+        foreach ($streams as $uri => $stream) {
+            $closing = $stream->isOpen();
+
+            if ($closing) {
                 try {
                     $stream->close();
                 } catch (Throwable $closeFailure) {
                     $failure ??= $closeFailure;
                 }
+            }
 
+            // a serial write in place is visible at its target once its stream closed, here or by its format writer
+            if (array_key_exists($uri, $this->created)) {
                 $progress->advanced(1);
+            } elseif ($closing) {
+                $progress->busy();
             }
         }
 
@@ -292,11 +317,11 @@ final class FileCommit
     private function removeDirectory(Path $directory, Progress $progress): void
     {
         $holdsFiles = $this->filesystem->list($directory->suffix('/**/*'))->valid();
-        $progress->advanced(1);
+        $progress->busy();
 
         if ($holdsFiles) {
             $this->filesystem->rm($directory);
-            $progress->advanced(1);
+            $progress->busy();
         }
     }
 
@@ -332,13 +357,13 @@ final class FileCommit
 
         foreach ($globs as $glob) {
             $parts = $this->parts($glob);
-            $progress->advanced(1);
+            $progress->busy();
 
             foreach ($parts as $stale) {
                 // by path: a filesystem may list under another scheme than it was given
                 if (!array_key_exists($stale->path->path(), $kept)) {
                     $this->filesystem->rm($stale->path);
-                    $progress->advanced(1);
+                    $progress->busy();
                 }
             }
         }
@@ -367,7 +392,7 @@ final class FileCommit
                 }
             }
 
-            $progress->advanced(1);
+            $progress->busy();
         }
 
         return $files;
