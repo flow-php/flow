@@ -260,13 +260,23 @@ final class TaskListHeartbeat implements ConsoleHeartbeat
 
     private function notStartedLine(string $icon, StageLine $line, int $width, string $state): string
     {
-        $label = $this->label($icon, $line);
+        // no count follows, so the label is padded only to align a subject, and one space leads to the dots
+        $name = '  ' . $icon . ' <options=bold>' . OutputFormatter::escape($line->label()) . '</>';
+        $subject = $line->subject(self::SUBJECT_WIDTH);
         $columns = ['time' => $state];
 
         return (
-            $this->fitted($label . $this->subject($line->subject(self::SUBJECT_WIDTH)), $columns, $width)
-            ?? $this->fitted($label, $columns, $width)
-            ?? $label . ' ' . $state
+            (
+                $subject === null
+                    ? null
+                    : $this->fitted(
+                        $this->label($icon, $line) . '<fg=gray>' . OutputFormatter::escape($subject) . '</>',
+                        $columns,
+                        $width,
+                    )
+            )
+            ?? $this->fitted($name, $columns, $width)
+            ?? $name . ' ' . $state
         );
     }
 

@@ -73,10 +73,19 @@ final readonly class StepRunner
         $run = [];
 
         foreach ($steps->breaker === null ? $steps->steps : [...$steps->steps, $steps->breaker] as $step) {
-            $step = $this->writes->step($step, $context->errorHandler(), $context, $steps->stages);
+            $step = $this->writes->step($step, $context->errorHandler(), $context, $steps->stages, $steps->writes);
 
             if ($step instanceof Processor || $step instanceof JoinStep) {
-                $input = $this->boundary($step, $run, $input, $context, $source, $counts, $steps->stages);
+                $input = $this->boundary(
+                    $step,
+                    $run,
+                    $input,
+                    $context,
+                    $source,
+                    $counts,
+                    $steps->stages,
+                    $steps->writes,
+                );
                 $source = null;
                 $run = [];
 
@@ -86,7 +95,7 @@ final readonly class StepRunner
             $run[] = $step;
         }
 
-        return $this->run($run, $input, $context, $source, $steps->stages);
+        return $this->run($run, $input, $context, $source, $steps->stages, $steps->writes);
     }
 
     /**
@@ -99,6 +108,7 @@ final readonly class StepRunner
      * @param null|Extractor|Reader $source the source $input comes from directly, so its failures reach the error
      *                                      handler and its corrupted records its reject loader
      * @param null|SplObjectStorage<Loader|Transformer, Progress> $stages the stage the planner built for each write and each join_each
+     * @param null|SplObjectStorage<Loader, Progress> $writes the write stage the planner built for each loader
      *
      * @return Generator<int, Rows, null|Signal, void>
      */
@@ -108,6 +118,7 @@ final readonly class StepRunner
         FlowContext $context,
         Extractor|Reader|null $source = null,
         ?SplObjectStorage $stages = null,
+        ?SplObjectStorage $writes = null,
     ): Generator {
         $loaders = [];
         $limits = [];
@@ -121,8 +132,14 @@ final readonly class StepRunner
 
         /** @var SplObjectStorage<Transformer, Progress> $joinStages */
         $joinStages = new SplObjectStorage();
+        /** @var SplObjectStorage<Loader, Progress> $writeStages */
+        $writeStages = new SplObjectStorage();
 
         foreach ($steps as $step) {
+            if ($step instanceof Loader && $writes !== null && $writes->offsetExists($step)) {
+                $writeStages->offsetSet($step, $writes->offsetGet($step));
+            }
+
             if (!$step instanceof Transformer) {
                 $loaders[] = $step;
             } elseif ($step instanceof Limiting) {
@@ -208,6 +225,10 @@ final readonly class StepRunner
 
                 foreach ($steps as $step) {
                     if (!$step instanceof Transformer) {
+                        if ($step instanceof Loader && $writeStages->offsetExists($step) && $rows->count() > 0) {
+                            $writeStages->offsetGet($step)->advanced($rows->count());
+                        }
+
                         $this->load($step, $rows, $context);
 
                         continue;
@@ -283,6 +304,10 @@ final readonly class StepRunner
         } finally {
             foreach ($joinStages as $step) {
                 $joinStages->offsetGet($step)->done();
+            }
+
+            foreach ($writeStages as $step) {
+                $writeStages->offsetGet($step)->done();
             }
 
             $endings = $this->endLoaders($loaders, $context, $completed, $stages);
@@ -473,8 +498,11 @@ final readonly class StepRunner
      */
     public function unwind(Generator $input, Throwable $failure, FlowContext $context): void
     {
+        $rooted = false;
+
         try {
-            $input->throw($failure);
+            // a generator closing under throw()'s frame can crash PHP; a yield-from delegate closes under a safe one
+            ($input->valid() ? $this->started($input, $rooted) : $input)->throw($failure);
         } catch (Throwable $endFailure) {
             if ($endFailure !== $failure) {
                 $context
@@ -489,6 +517,7 @@ final readonly class StepRunner
      * @param list<Loader|NestedLoader|Transformer> $run
      * @param Generator<CorruptedRecordException|Rows> $input
      * @param null|SplObjectStorage<Loader|Transformer, Progress> $stages
+     * @param null|SplObjectStorage<Loader, Progress> $writes
      *
      * @return Generator<int, Rows, null|Signal, void>
      */
@@ -500,9 +529,10 @@ final readonly class StepRunner
         Extractor|Reader|null $source,
         ?RunCounts $counts,
         ?SplObjectStorage $stages,
+        ?SplObjectStorage $writes,
     ): Generator {
         $upstreamStarted = false;
-        $upstream = $this->started($this->run($run, $input, $context, $source, $stages), $upstreamStarted);
+        $upstream = $this->started($this->run($run, $input, $context, $source, $stages, $writes), $upstreamStarted);
 
         if (!$step instanceof JoinStep) {
             return $this->unwinding(

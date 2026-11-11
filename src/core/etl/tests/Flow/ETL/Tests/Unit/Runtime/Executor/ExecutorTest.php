@@ -124,6 +124,7 @@ use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Floe\DSL\from_floe;
 use function Flow\Floe\DSL\to_floe;
+use function in_array;
 use function ini_set;
 use function iterator_to_array;
 use function memory_get_peak_usage;
@@ -643,6 +644,132 @@ final class ExecutorTest extends FlowTestCase
             ->read(from_array([['id' => 1]]))->run();
 
         static::assertLessThan(memory_get_peak_usage(true), array_slice($recording->pulses(), -1)[0]->peakMemoryBytes);
+    }
+
+    public function test_a_write_to_memory_has_a_write_entry_that_counts_its_rows(): void
+    {
+        $recording = new RecordingHeartbeat();
+
+        df(config_builder()->clock(new SteppingClock())->heartbeat($recording, everySeconds: 1))
+            ->read(from_array([['id' => 1], ['id' => 2]], schema(int_schema('id'))))
+            ->write(to_memory(new ArrayMemory()))
+            ->run();
+
+        $pulses = HeartbeatContext::entries($recording, StageName::write);
+        static::assertSame(
+            [[StageName::write, 2, null, true]],
+            array_map(
+                static fn(StageProgress $write): array => [
+                    $write->name,
+                    $write->count,
+                    $write->subject,
+                    $write->endedAtSeconds !== null,
+                ],
+                array_pop($pulses) ?? [],
+            ),
+        );
+    }
+
+    public function test_a_write_entry_is_listed_from_the_first_beat(): void
+    {
+        $recording = new RecordingHeartbeat();
+
+        df(config_builder()->clock(new SteppingClock())->heartbeat($recording, everySeconds: 1))
+            ->read(from_array([['id' => 1], ['id' => 2]], schema(int_schema('id'))))
+            ->write(to_memory(new ArrayMemory()))
+            ->run();
+
+        static::assertSame(
+            [null],
+            array_map(
+                static fn(StageProgress $write): ?float => $write->startedAtSeconds,
+                HeartbeatContext::entries($recording, StageName::write)[0],
+            ),
+        );
+    }
+
+    public function test_a_write_to_files_has_a_write_entry_then_its_commit_entry(): void
+    {
+        $recording = new RecordingHeartbeat();
+
+        df(config_builder()->clock(new SteppingClock())->heartbeat($recording, everySeconds: 1))
+            ->read(from_array([['id' => 1], ['id' => 2]], schema(int_schema('id'))))
+            ->write(to_floe(path('memory://out/rows.floe'), filesystem: memory_filesystem()))
+            ->run();
+
+        $pulses = $recording->pulses();
+        static::assertSame(
+            [
+                ['write',  2, 'memory://out/'],
+                ['commit', 1, 'memory://out/'],
+            ],
+            array_map(
+                static fn(StageProgress $stage): array => [$stage->name->value, $stage->count, $stage->subject],
+                array_values(array_filter(
+                    array_pop($pulses)?->stages ?? [],
+                    static fn(StageProgress $stage): bool => in_array(
+                        $stage->name,
+                        [StageName::write, StageName::commit],
+                        true,
+                    ),
+                )),
+            ),
+        );
+    }
+
+    public function test_a_transaction_of_a_file_and_a_memory_write_has_two_write_entries_and_one_commit_entry(): void
+    {
+        $recording = new RecordingHeartbeat();
+
+        df(config_builder()->clock(new SteppingClock())->heartbeat($recording, everySeconds: 1))
+            ->read(from_array([['id' => 1], ['id' => 2]], schema(int_schema('id'))))
+            ->write(
+                new Transactional(
+                    new RecordingTransaction(),
+                    to_floe(path('memory://out/rows.floe'), filesystem: memory_filesystem()),
+                    to_memory(new ArrayMemory()),
+                ),
+            )
+            ->run();
+
+        $pulses = $recording->pulses();
+        static::assertSame(
+            [
+                ['write',  2, 'memory://out/'],
+                ['commit', 1, 'memory://out/'],
+                ['write',  2, null],
+            ],
+            array_map(
+                static fn(StageProgress $stage): array => [$stage->name->value, $stage->count, $stage->subject],
+                array_values(array_filter(
+                    array_pop($pulses)?->stages ?? [],
+                    static fn(StageProgress $stage): bool => in_array(
+                        $stage->name,
+                        [StageName::write, StageName::commit],
+                        true,
+                    ),
+                )),
+            ),
+        );
+    }
+
+    public function test_a_write_in_a_branch_counts_the_rows_of_the_branch(): void
+    {
+        $recording = new RecordingHeartbeat();
+
+        df(config_builder()->clock(new SteppingClock())->heartbeat($recording, everySeconds: 1))
+            ->read(from_array([['id' => 1], ['id' => 2]], schema(int_schema('id'))))
+            ->write(to_branch(
+                ref('id')->greaterThan(lit(1)),
+                to_floe(path('memory://out/rows.floe'), filesystem: memory_filesystem()),
+            ))
+            ->run();
+
+        $pulses = HeartbeatContext::entries($recording, StageName::write);
+        static::assertSame(
+            [1],
+            array_map(static fn(StageProgress $write): int => $write->count, array_pop($pulses) ?? []),
+        );
     }
 
     public function test_a_write_that_commits_no_files_has_no_commit_entry(): void
@@ -2139,9 +2266,11 @@ final class ExecutorTest extends FlowTestCase
                 ['read',     3,    null],
                 ['read',     2,    null],
                 ['join',     null, 'left on id'],
+                ['write',    null, 'memory://joined/'],
                 ['commit',   null, 'memory://joined/'],
                 ['sort',     null, null],
                 ['group_by', null, null],
+                ['write',    null, 'memory://grouped/'],
                 ['commit',   null, 'memory://grouped/'],
             ],
             array_map(static fn(StageProgress $stage): array => [

@@ -137,7 +137,7 @@ final readonly class Planner
 
         foreach ($this->translator->steps($node) as $step) {
             if ($node instanceof Node\Write && $step instanceof Loader) {
-                $planned->planCommit($step);
+                $planned->planWrite($step);
             }
 
             if ($node instanceof Node\JoinEach && $step instanceof Transformer) {
@@ -199,7 +199,7 @@ final readonly class Planner
         $planned->add($node, new PlannedNode($steps, $bound, $schema));
 
         foreach ($planned->hostedBy($node) as [$write, $plannedHere]) {
-            $planned->planCommit($write->loader);
+            $planned->planWrite($write->loader);
 
             if ($plannedHere) {
                 $this->node($write, $planned);
@@ -295,7 +295,7 @@ final readonly class Planner
                 $from = new Pipeline(
                     $firstId + count($pipelines),
                     $from,
-                    new PipelineSteps($current, $breaker, $planned->stages()),
+                    new PipelineSteps($current, $breaker, $planned->stages(), $planned->writes()),
                     $from instanceof Read ? $planned->readStageOf($from) : null,
                 );
                 $pipelines[] = $from;
@@ -316,7 +316,7 @@ final readonly class Planner
         $pipelines[] = new Pipeline(
             $firstId + count($pipelines),
             $from,
-            new PipelineSteps($current, $breaker, $planned->stages()),
+            new PipelineSteps($current, $breaker, $planned->stages(), $planned->writes()),
             $from instanceof Read ? $planned->readStageOf($from) : null,
         );
 

@@ -37,6 +37,11 @@ final class PlannedNodes
     private SplObjectStorage $stepStages;
 
     /**
+     * @var SplObjectStorage<Loader, Progress> the write stage of every loader, built where its write stands
+     */
+    private SplObjectStorage $writeStages;
+
+    /**
      * @var SplObjectStorage<Node\Read, Progress> the read stage of every source, built where its read stands
      */
     private SplObjectStorage $reads;
@@ -58,6 +63,9 @@ final class PlannedNodes
         /** @var SplObjectStorage<Loader|Transformer, Progress> $stepStages */
         $stepStages = new SplObjectStorage();
         $this->stepStages = $stepStages;
+        /** @var SplObjectStorage<Loader, Progress> $writeStages */
+        $writeStages = new SplObjectStorage();
+        $this->writeStages = $writeStages;
         /** @var SplObjectStorage<Node\Read, Progress> $reads */
         $reads = new SplObjectStorage();
         $this->reads = $reads;
@@ -82,19 +90,34 @@ final class PlannedNodes
     /**
      * Every stage is built in the order the plan is walked, which is the order a heartbeat lists them in.
      */
-    public function planCommit(Loader $loader): void
+    public function planWrite(Loader $loader): void
     {
-        // only a write to files always reports; any other write gets its stage when it ends, listed once it reports
-        if (!$loader instanceof FileLoader || $this->stepStages->offsetExists($loader)) {
+        if ($this->writeStages->offsetExists($loader)) {
             return;
         }
 
         // with no heartbeat, nothing is built for a stage: no root, no location
-        $this->stepStages->offsetSet($loader, $this->stages->stage(
-            StageName::commit,
-            ProgressUnit::files,
-            subject: $this->stages instanceof VoidProgress ? null : FileCommit::locationOf($loader->destination()),
-        ));
+        $subject = $loader instanceof FileLoader && !$this->stages instanceof VoidProgress
+            ? FileCommit::locationOf($loader->destination())
+            : null;
+        $this->writeStages->offsetSet($loader, $this->stages->stage(StageName::write, subject: $subject));
+
+        // only a write to files always reports; any other write gets its stage when it ends, listed once it reports
+        if ($loader instanceof FileLoader) {
+            $this->stepStages->offsetSet($loader, $this->stages->stage(
+                StageName::commit,
+                ProgressUnit::files,
+                subject: $subject,
+            ));
+        }
+    }
+
+    /**
+     * @return SplObjectStorage<Loader, Progress>
+     */
+    public function writes(): SplObjectStorage
+    {
+        return $this->writeStages;
     }
 
     public function planJoinEach(Transformer $step, string $subject): void
@@ -117,6 +140,7 @@ final class PlannedNodes
     {
         $joined = new self($this->stages);
         $joined->stepStages = $this->stepStages;
+        $joined->writeStages = $this->writeStages;
         $joined->reads = $this->reads;
 
         return $joined;

@@ -58,6 +58,7 @@ final class WriteLoaderFactory
                     $offers,
                     $context,
                     $branch->pipeline->steps->stages,
+                    $branch->pipeline->steps->writes,
                 ),
                 $branch->writes(),
             ),
@@ -68,11 +69,13 @@ final class WriteLoaderFactory
      * One transaction around its writes; a failure of a write in it rolls the transaction back, so none is offered.
      *
      * @param null|SplObjectStorage<Loader|Transformer, Progress> $stages
+     * @param null|SplObjectStorage<Loader, Progress> $writes
      */
     public function transactional(
         TransactionGroup $branch,
         FlowContext $context,
         ?SplObjectStorage $stages = null,
+        ?SplObjectStorage $writes = null,
     ): TransactionLoader {
         return new TransactionLoader(
             $branch->transaction,
@@ -81,6 +84,7 @@ final class WriteLoaderFactory
                 : $child, $branch->children),
             $context,
             $stages,
+            $writes,
         );
     }
 
@@ -89,12 +93,14 @@ final class WriteLoaderFactory
      * writes, the same one each time; a loader is itself.
      *
      * @param null|SplObjectStorage<Loader|Transformer, Progress> $stages
+     * @param null|SplObjectStorage<Loader, Progress> $writes
      */
     public function write(
         Loader|BranchPipeline|TransactionGroup $write,
         ErrorHandler $handler,
         FlowContext $context,
         ?SplObjectStorage $stages = null,
+        ?SplObjectStorage $writes = null,
     ): Loader|NestedLoader {
         return match (true) {
             $write instanceof BranchPipeline => $this->built[$write] ??= $this->feed($write, $handler, $context),
@@ -102,6 +108,7 @@ final class WriteLoaderFactory
                 $write,
                 $context,
                 $stages,
+                $writes,
             ),
             default => $write,
         };
@@ -109,15 +116,17 @@ final class WriteLoaderFactory
 
     /**
      * @param null|SplObjectStorage<Loader|Transformer, Progress> $stages
+     * @param null|SplObjectStorage<Loader, Progress> $writes
      */
     public function step(
         JoinStep|Loader|Processor|BranchPipeline|TransactionGroup|Transformer $step,
         ErrorHandler $handler,
         FlowContext $context,
         ?SplObjectStorage $stages = null,
+        ?SplObjectStorage $writes = null,
     ): JoinStep|Loader|Processor|Transformer|NestedLoader {
         return $step instanceof JoinStep || $step instanceof Processor || $step instanceof Transformer
             ? $step
-            : $this->write($step, $handler, $context, $stages);
+            : $this->write($step, $handler, $context, $stages, $writes);
     }
 }

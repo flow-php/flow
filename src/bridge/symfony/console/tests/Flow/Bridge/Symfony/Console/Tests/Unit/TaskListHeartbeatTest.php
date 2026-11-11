@@ -150,8 +150,8 @@ final class TaskListHeartbeatTest extends FlowTestCase
 
         $text = $this->terminal->text($output);
         static::assertSame([1, 1], [
-            preg_match('/^  ○ sort\s+\.+ waiting$/mu', $text),
-            preg_match('/^  – sort\s+\.+ skipped$/mu', $text),
+            preg_match('/^  ○ sort \.+ waiting$/mu', $text),
+            preg_match('/^  – sort \.+ skipped$/mu', $text),
         ]);
     }
 

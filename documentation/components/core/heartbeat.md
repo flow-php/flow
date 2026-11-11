@@ -153,6 +153,7 @@ beat. A heartbeat that fails with `HeartbeatFailure::stop` throws out of `schema
 | `group_by`                    | N rows, then the groups       |
 | `join`                        | the rows the join streams     |
 | `window` with `partitionBy()` | at least 2 x N                |
+| `write`                       | the rows written              |
 | `commit`                      | the files written             |
 
 ## Stages
@@ -169,6 +170,7 @@ Each stage is a case of the enum `Flow\ETL\Foundation\StageName`. Its value is t
 | `join`        | `join()`                                                               |
 | `window`      | `withColumn()` with a window function                                  |
 | `repartition` | `repartition()`                                                        |
+| `write`       | one entry per loader, counting the rows handed to it                   |
 | `commit`      | one entry per write to files, counting the files it makes visible      |
 | `parallel`    | no entry, the workers' stages add to the entries of the steps they run |
 

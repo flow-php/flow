@@ -25,6 +25,10 @@ use Flow\ETL\Tests\Mother\NodeMother;
 use RuntimeException;
 use SplObjectStorage;
 
+use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\schema;
+
 final class TransactionLoaderTest extends FlowTestCase
 {
     public function test_one_transaction_per_batch(): void
@@ -81,6 +85,27 @@ final class TransactionLoaderTest extends FlowTestCase
 
         static::assertSame($spy, $first->closedWith);
         static::assertSame($spy, $second->closedWith);
+    }
+
+    public function test_load_advances_the_write_stage_of_each_child(): void
+    {
+        $first = new SpyLoader();
+        $second = new SpyLoader();
+        $firstWrite = new ProgressSpy(StageName::write);
+        $secondWrite = new ProgressSpy(StageName::write);
+        /** @var SplObjectStorage<Loader, Progress> $writes */
+        $writes = new SplObjectStorage();
+        $writes->offsetSet($first, $firstWrite);
+        $writes->offsetSet($second, $secondWrite);
+
+        (new TransactionLoader(
+            new RecordingTransaction(),
+            [$first, $second],
+            NodeMother::context(),
+            writes: $writes,
+        ))->load(array_to_rows([['id' => 1], ['id' => 2], ['id' => 3]], schema(int_schema('id'))));
+
+        static::assertSame([3, 3], [$firstWrite->countOf(StageName::write), $secondWrite->countOf(StageName::write)]);
     }
 
     public function test_closure_gives_a_child_with_a_planned_stage_that_stage(): void

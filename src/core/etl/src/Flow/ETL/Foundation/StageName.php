@@ -15,6 +15,7 @@ enum StageName: string
     case join = 'join';
     case window = 'window';
     case repartition = 'repartition';
+    case write = 'write';
     case commit = 'commit';
     case parallel = 'parallel';
 }

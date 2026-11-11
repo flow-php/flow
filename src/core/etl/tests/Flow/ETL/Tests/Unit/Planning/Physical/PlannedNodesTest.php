@@ -11,11 +11,13 @@ use Flow\ETL\Operators\Transformer\LimitTransformer;
 use Flow\ETL\Planning\Logical\Node\Write;
 use Flow\ETL\Planning\Physical\PlannedNode;
 use Flow\ETL\Planning\Physical\PlannedNodes;
+use Flow\ETL\Storage\Memory\ArrayMemory;
 use Flow\ETL\Tests\Double\CountingFileLoader;
 use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\NodeMother;
 
+use function Flow\ETL\DSL\to_memory;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Floe\DSL\to_floe;
@@ -76,11 +78,28 @@ final class PlannedNodesTest extends FlowTestCase
         $planned = new PlannedNodes($spy);
         $loader = to_floe(path('memory://out/part-{part}.floe'), filesystem: memory_filesystem());
 
-        $planned->planCommit($loader);
-        $planned->planCommit($loader);
+        $planned->planWrite($loader);
+        $planned->planWrite($loader);
 
-        static::assertSame([['commit', ProgressUnit::files, null, 'memory://out/']], $spy->built());
+        static::assertSame(
+            [
+                ['write',  ProgressUnit::rows,  null, 'memory://out/'],
+                ['commit', ProgressUnit::files, null, 'memory://out/'],
+            ],
+            $spy->built(),
+        );
         static::assertCount(1, $planned->stages());
+    }
+
+    public function test_plan_write_plans_a_write_stage_for_every_loader_and_a_commit_for_a_file_loader(): void
+    {
+        $spy = new ProgressSpy();
+        $planned = new PlannedNodes($spy);
+
+        $planned->planWrite(to_memory(new ArrayMemory()));
+        $planned->planWrite(to_floe(path('memory://out/part-{part}.floe'), filesystem: memory_filesystem()));
+
+        static::assertSame(['write', 'write', 'commit'], $spy->stages());
     }
 
     public function test_with_nobody_listening_a_commit_stage_asks_its_write_for_nothing(): void
@@ -90,7 +109,7 @@ final class PlannedNodesTest extends FlowTestCase
             filesystem: memory_filesystem(),
         ));
 
-        (new PlannedNodes())->planCommit($loader);
+        (new PlannedNodes())->planWrite($loader);
 
         static::assertSame(0, $loader->destinationCalls->count());
     }
@@ -103,7 +122,7 @@ final class PlannedNodesTest extends FlowTestCase
         $read = NodeMother::read();
         $joined->add($read, new PlannedNode([], [], null));
 
-        $joined->planCommit($loader);
+        $joined->planWrite($loader);
         $joined->planRead($read);
 
         static::assertSame([true, true], [
