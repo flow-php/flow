@@ -295,13 +295,19 @@ final class HeartbeatThrottle implements ProgressStages
     public function stageRead(string $key, int $rows): void
     {
         $this->rowsRead += $rows;
-        $this->stages[$key]['count'] += $rows;
+
+        if (array_key_exists($key, $this->stages)) {
+            $this->stages[$key]['count'] += $rows;
+        }
+
         $this->progressed = $this->progressed || $rows > 0;
     }
 
     public function stageTotalled(string $key, ?int $total): void
     {
-        $this->stages[$key]['total'] = $total;
+        if (array_key_exists($key, $this->stages)) {
+            $this->stages[$key]['total'] = $total;
+        }
     }
 
     public function stageCountsIn(string $key, ProgressUnit $unit): void

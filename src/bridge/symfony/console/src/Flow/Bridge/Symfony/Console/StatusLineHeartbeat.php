@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\Console;
 
+use Flow\ETL\Foundation\ProgressUnit;
 use Flow\ETL\Runtime\Heartbeat\Pulse;
 use Symfony\Component\Console\Cursor;
 use Symfony\Component\Console\Formatter\OutputFormatter;
@@ -20,7 +21,6 @@ use function count;
 use function implode;
 use function max;
 use function min;
-use function number_format;
 use function sprintf;
 
 final class StatusLineHeartbeat implements ConsoleHeartbeat
@@ -64,11 +64,11 @@ final class StatusLineHeartbeat implements ConsoleHeartbeat
         if ($this->indicator !== null && $this->last !== null && StageLine::runCompleted($this->last)) {
             $files = StageLine::filesWritten($this->last);
             $this->indicator->finish(sprintf(
-                '<options=bold>%s rows</> in <options=bold>%s</> <fg=gray>· peak %s%s</>',
-                number_format($this->last->rowsRead),
+                '<options=bold>%s</> in <options=bold>%s</> <fg=gray>· peak %s%s</>',
+                StageLine::counted($this->last->rowsRead, ProgressUnit::rows),
                 StageLine::seconds($this->last->elapsedSeconds),
                 StageLine::memory($this->last->peakMemoryBytes),
-                $files === null ? '' : ' · ' . number_format($files) . ' files',
+                $files === null ? '' : ' · ' . StageLine::counted($files, ProgressUnit::files),
             ));
         } elseif ($this->indicator !== null) {
             if ($this->output instanceof ConsoleSectionOutput) {

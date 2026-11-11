@@ -75,6 +75,33 @@ final class StageLineTest extends FlowTestCase
         ]);
     }
 
+    #[TestWith([ProgressUnit::rows, '1 row'])]
+    #[TestWith([ProgressUnit::groups, '1 group'])]
+    #[TestWith([ProgressUnit::files, '1 file'])]
+    public function test_a_count_of_one_names_its_unit_in_the_singular(ProgressUnit $unit, string $count): void
+    {
+        $line = new StageLine(
+            StageProgressMother::open(count: 1, unit: $unit),
+            PulseMother::pulse(elapsedSeconds: 2.0),
+        );
+
+        static::assertSame([$count, $count], [$line->exactCount(), $line->shortCount()]);
+    }
+
+    public function test_a_count_against_a_total_of_one_names_its_unit_in_the_singular(): void
+    {
+        static::assertSame(['0 / 1 row', '1 / 5 rows'], [
+            (new StageLine(
+                StageProgressMother::open('read', 0, 1),
+                PulseMother::pulse(elapsedSeconds: 2.0),
+            ))->exactCount(),
+            (new StageLine(
+                StageProgressMother::open('read', 1, 5),
+                PulseMother::pulse(elapsedSeconds: 2.0),
+            ))->exactCount(),
+        ]);
+    }
+
     public function test_an_entry_without_a_total_or_ended_shows_its_count_only(): void
     {
         $open = new StageLine(StageProgressMother::open(count: 11_300_000), PulseMother::pulse(elapsedSeconds: 2.0));

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\Console;
 
+use Flow\ETL\Foundation\ProgressUnit;
 use Flow\ETL\Runtime\Heartbeat\Pulse;
 use Symfony\Component\Console\Formatter\OutputFormatter;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -65,12 +66,11 @@ final class LogHeartbeat implements ConsoleHeartbeat
                         self::stamp($pulse->elapsedSeconds),
                         $this->labelAndLocation($line),
                         $percent === null
-                            ? number_format($stage->count) . ' ' . $stage->unit->name
+                            ? StageLine::counted($stage->count, $stage->unit)
                             : sprintf(
-                                '%s of %s %s (%d%%)',
+                                '%s of %s (%d%%)',
                                 number_format($stage->count),
-                                number_format((int) $stage->total),
-                                $stage->unit->name,
+                                StageLine::counted((int) $stage->total, $stage->unit),
                                 $percent,
                             ),
                         $rate,
@@ -102,12 +102,12 @@ final class LogHeartbeat implements ConsoleHeartbeat
         if (!$this->output->isQuiet() && $this->last !== null && StageLine::runCompleted($this->last)) {
             $files = StageLine::filesWritten($this->last);
             $this->output->writeln(sprintf(
-                '%s <fg=green>finished</>  %s rows in %s, peak memory %s%s',
+                '%s <fg=green>finished</>  %s in %s, peak memory %s%s',
                 self::stamp($this->last->elapsedSeconds),
-                number_format($this->last->rowsRead),
+                StageLine::counted($this->last->rowsRead, ProgressUnit::rows),
                 StageLine::seconds($this->last->elapsedSeconds),
                 StageLine::memory($this->last->peakMemoryBytes),
-                $files === null ? '' : ', ' . number_format($files) . ' files written',
+                $files === null ? '' : ', ' . StageLine::counted($files, ProgressUnit::files) . ' written',
             ));
         }
 

@@ -89,7 +89,7 @@ final class FileRowsCountCommand extends Command
         $progress = $output instanceof ConsoleOutputInterface ? console_heartbeat($output) : null;
 
         if ($progress !== null) {
-            $this->flowConfig->heartbeat($progress, everySeconds: 1, onFailure: HeartbeatFailure::log);
+            $this->flowConfig->heartbeat($progress, everySeconds: 0.25, onFailure: HeartbeatFailure::log);
         }
 
         $df = df($this->flowConfig)->read((new ExtractorFactory($this->sourcePath, $this->fileFormat))->get($input));

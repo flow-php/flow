@@ -9,7 +9,7 @@ use Flow\ETL\Foundation\StageProgress;
 final readonly class Pulse
 {
     /**
-     * @param list<StageProgress> $stages in the order this process first saw them
+     * @param list<StageProgress> $stages
      */
     public function __construct(
         public int $beat,

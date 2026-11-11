@@ -17,7 +17,6 @@ use function floor;
 use function implode;
 use function intdiv;
 use function number_format;
-use function sprintf;
 use function str_ends_with;
 use function str_replace;
 use function strpbrk;
@@ -82,6 +81,11 @@ final readonly class StageLine
         };
     }
 
+    public static function counted(int $count, ProgressUnit $unit): string
+    {
+        return number_format($count) . ' ' . self::unitName($count, $unit);
+    }
+
     public static function key(StageProgress $stage, int $position): string
     {
         return $stage->id === null ? 'position:' . $position : 'id:' . $stage->id;
@@ -95,13 +99,8 @@ final readonly class StageLine
     public function exactCount(): string
     {
         return $this->percent() === null
-            ? number_format($this->stage->count) . ' ' . $this->stage->unit->name
-            : sprintf(
-                '%s / %s %s',
-                number_format($this->stage->count),
-                number_format((int) $this->stage->total),
-                $this->stage->unit->name,
-            );
+            ? self::counted($this->stage->count, $this->stage->unit)
+            : number_format($this->stage->count) . ' / ' . self::counted((int) $this->stage->total, $this->stage->unit);
     }
 
     public function label(): string
@@ -160,8 +159,21 @@ final readonly class StageLine
     public function shortCount(): string
     {
         return $this->percent() === null
-            ? self::human($this->stage->count) . ' ' . $this->stage->unit->name
+            ? self::human($this->stage->count) . ' ' . self::unitName($this->stage->count, $this->stage->unit)
             : self::human($this->stage->count) . '/' . self::human((int) $this->stage->total);
+    }
+
+    private static function unitName(int $count, ProgressUnit $unit): string
+    {
+        if ($count !== 1) {
+            return $unit->name;
+        }
+
+        return match ($unit) {
+            ProgressUnit::rows => 'row',
+            ProgressUnit::groups => 'group',
+            ProgressUnit::files => 'file',
+        };
     }
 
     private function runningSeconds(): float

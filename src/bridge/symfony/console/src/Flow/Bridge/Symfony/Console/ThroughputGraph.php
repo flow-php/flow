@@ -11,13 +11,11 @@ use Flow\ETL\Runtime\Heartbeat\Pulse;
 use function array_key_exists;
 use function array_map;
 use function array_slice;
-use function count;
 use function floor;
 use function implode;
 use function max;
 use function min;
 use function sprintf;
-use function str_repeat;
 
 final class ThroughputGraph
 {
@@ -75,9 +73,8 @@ final class ThroughputGraph
         $top = max(1.0, max($recent));
 
         return sprintf(
-            '<fg=%s>%s%s</>',
+            '<fg=%s>%s</>',
             $stage->endedAtSeconds === null ? 'cyan' : 'gray',
-            str_repeat(' ', max(0, self::POINTS - count($recent))),
             implode('', array_map(
                 static fn(float $rate): string => self::BARS[(int) max(0, min(7, floor(($rate / $top) * 7)))],
                 $recent,

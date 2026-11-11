@@ -17,6 +17,8 @@ use Symfony\Component\Console\Helper\Helper;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Output\StreamOutput;
 
+use function count;
+use function explode;
 use function Flow\Types\DSL\type_instance_of;
 use function preg_match_all;
 use function rtrim;
@@ -73,6 +75,58 @@ final class TaskListHeartbeatTest extends FlowTestCase
         ]));
 
         static::assertSame($line . "\n", $this->terminal->text($output));
+    }
+
+    public function test_when_one_line_needs_the_short_count_every_line_of_the_frame_uses_it(): void
+    {
+        $this->terminal->columns(60);
+        $output = $this->terminal->stream();
+        $heartbeat = new TaskListHeartbeat($output);
+
+        $read = StageProgressMother::done(
+            'read',
+            1_000_000,
+            endedAtSeconds: 1.0,
+            location: 'memory://in/orders-1000000.floe',
+        );
+
+        $heartbeat->beat(PulseMother::pulse(elapsedSeconds: 2.0, stages: [
+            $read,
+            StageProgressMother::open('sort', 1_000_000, id: 2),
+        ]));
+        $heartbeat->beat(PulseMother::pulse(beat: 2, elapsedSeconds: 3.0, stages: [
+            $read,
+            StageProgressMother::done('sort', 1_000_000, endedAtSeconds: 3.0, id: 2),
+        ]));
+
+        $text = $this->terminal->text($output);
+        static::assertSame([0, 4], [substr_count($text, '1,000,000 rows'), substr_count($text, '1.0M rows')]);
+    }
+
+    #[TestWith([60, '1.0M rows', '1,000,000 rows'])]
+    #[TestWith([100, '1,000,000 rows', '1.0M rows'])]
+    public function test_finish_redraws_the_done_lines_in_the_format_of_the_last_frame(
+        int $columns,
+        string $shown,
+        string $hidden,
+    ): void {
+        $this->terminal->columns($columns);
+        $output = $this->terminal->stream();
+        $heartbeat = new TaskListHeartbeat($output);
+        $heartbeat->beat(PulseMother::pulse(elapsedSeconds: 3.0, stages: [
+            StageProgressMother::done(
+                'read',
+                1_000_000,
+                endedAtSeconds: 1.0,
+                location: 'memory://in/orders-1000000.floe',
+            ),
+            StageProgressMother::done('sort', 1_000_000, endedAtSeconds: 3.0, id: 2),
+        ]));
+
+        $heartbeat->finish();
+
+        $text = $this->terminal->text($output);
+        static::assertSame([true, false], [str_contains($text, $shown), str_contains($text, $hidden)]);
     }
 
     public function test_memory_shows_at_verbose(): void
@@ -163,6 +217,35 @@ final class TaskListHeartbeatTest extends FlowTestCase
             "\n   DONE  30,000,000 rows in 9.2s · peak 640 MiB · 82 files written\n\n",
             $this->terminal->text($output),
         );
+    }
+
+    public function test_one_row_one_group_and_one_file_are_singular_in_the_lines_and_the_summary(): void
+    {
+        $output = $this->terminal->stream();
+        $heartbeat = new TaskListHeartbeat($output);
+        $heartbeat->beat(PulseMother::pulse(rowsRead: 1, peakMemoryBytes: 671_088_640, elapsedSeconds: 1.0, stages: [
+            StageProgressMother::done('read', 1, endedAtSeconds: 0.2),
+            StageProgressMother::done('group_by', 1, 0.2, 0.4, id: 2, unit: ProgressUnit::groups),
+            StageProgressMother::done(
+                'commit',
+                1,
+                0.4,
+                1.0,
+                id: 3,
+                location: 'memory://out/',
+                unit: ProgressUnit::files,
+            ),
+        ]));
+
+        $heartbeat->finish();
+
+        $text = $this->terminal->text($output);
+        static::assertSame([true, true, true], [
+            str_contains($text, '  ✔ read      1 row .'),
+            str_contains($text, '  ✔ group by  1 group .'),
+            str_contains($text, '  ✔ commit    out/  1 file .'),
+        ]);
+        static::assertStringEndsWith("\n   DONE  1 row in 1.0s · peak 640 MiB · 1 file written\n\n", $text);
     }
 
     public function test_the_summary_names_files_only_with_a_commit_entry(): void
@@ -373,6 +456,20 @@ final class TaskListHeartbeatTest extends FlowTestCase
             ->beat(PulseMother::pulse(elapsedSeconds: 2.0, stages: [StageProgressMother::open(count: 11_300_000)]));
 
         static::assertSame($drawn, str_contains($this->terminal->text($output), '█'));
+    }
+
+    public function test_the_dot_leader_of_a_short_sparkline_runs_up_to_its_first_bar(): void
+    {
+        $output = $this->terminal->stream();
+        $heartbeat = (new ConsoleHeartbeatFactory())->create($output, ConsoleStyle::graph);
+
+        $heartbeat->beat(PulseMother::pulse(elapsedSeconds: 1.0, stages: [StageProgressMother::open(count: 10)]));
+        $heartbeat->beat(PulseMother::pulse(beat: 2, elapsedSeconds: 2.0, stages: [
+            StageProgressMother::open(count: 40),
+        ]));
+
+        $lines = explode("\n", rtrim($this->terminal->text($output)));
+        static::assertMatchesRegularExpression('/ \.+ [▁▂▃▄▅▆▇█]{2} · /u', $lines[count($lines) - 1]);
     }
 
     public function test_a_beat_after_finish_never_moves_the_cursor_into_the_finished_block(): void

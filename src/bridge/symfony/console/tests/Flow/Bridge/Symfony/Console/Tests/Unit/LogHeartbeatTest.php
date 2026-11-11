@@ -90,6 +90,39 @@ final class LogHeartbeatTest extends FlowTestCase
         );
     }
 
+    public function test_one_row_one_group_and_one_file_are_singular_in_the_lines_and_the_finished_line(): void
+    {
+        $output = new BufferedOutput();
+        $heartbeat = new LogHeartbeat($output);
+        $heartbeat->beat(PulseMother::pulse(rowsRead: 1, peakMemoryBytes: 671_088_640, elapsedSeconds: 10.0, stages: [
+            StageProgressMother::open('read', 1, 1),
+            StageProgressMother::open('sort', 1, id: 2),
+        ]));
+        $heartbeat->beat(PulseMother::pulse(
+            beat: 2,
+            rowsRead: 1,
+            peakMemoryBytes: 671_088_640,
+            elapsedSeconds: 11.0,
+            stages: [
+                StageProgressMother::done('read', 1, endedAtSeconds: 10.5),
+                StageProgressMother::done('group_by', 1, 10.5, 10.8, id: 2, unit: ProgressUnit::groups),
+                StageProgressMother::done('commit', 1, 10.8, 11.0, id: 3, unit: ProgressUnit::files),
+            ],
+        ));
+
+        $heartbeat->finish();
+
+        static::assertSame(
+            "[00:10] read      1 of 1 row (100%), 0 rows/s, memory 142 MiB\n"
+            . "[00:10] sort      1 row, 0 rows/s, memory 142 MiB\n"
+            . "[00:10] read      done 1 row in 10.5s, 0 rows/s\n"
+            . "[00:10] group by  done 1 group in 0.3s\n"
+            . "[00:11] commit    done 1 file in 0.2s\n"
+            . "[00:11] finished  1 row in 11.0s, peak memory 640 MiB, 1 file written\n",
+            $output->fetch(),
+        );
+    }
+
     public function test_finish_after_a_failed_run_writes_nothing(): void
     {
         $output = new BufferedOutput();

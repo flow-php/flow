@@ -91,6 +91,24 @@ final class StatusLineHeartbeatTest extends FlowTestCase
         ));
     }
 
+    public function test_one_row_and_one_file_are_singular_in_the_summary(): void
+    {
+        $output = $this->terminal->stream();
+        $heartbeat = new StatusLineHeartbeat($output);
+        $heartbeat->beat(PulseMother::pulse(rowsRead: 1, peakMemoryBytes: 671_088_640, elapsedSeconds: 1.0, stages: [
+            StageProgressMother::done('read', 1, endedAtSeconds: 0.5),
+            StageProgressMother::done('commit', 1, 0.5, 1.0, id: 2, unit: ProgressUnit::files),
+        ]));
+
+        $heartbeat->finish();
+
+        static::assertStringEndsWith(' ✔ 1 row in 1.0s · peak 640 MiB · 1 file' . "\n", str_replace(
+            "\r",
+            "\n",
+            $this->terminal->text($output),
+        ));
+    }
+
     public function test_finish_after_a_failed_run_clears_the_line(): void
     {
         $output = $this->terminal->stream();

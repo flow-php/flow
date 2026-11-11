@@ -25,7 +25,7 @@ final class ThroughputGraphTest extends FlowTestCase
             count: 80,
         )]));
 
-        static::assertSame('<fg=cyan>          ▂█</>', $graph->sparkline(StageProgressMother::open(count: 80), 0));
+        static::assertSame('<fg=cyan>▂█</>', $graph->sparkline(StageProgressMother::open(count: 80), 0));
     }
 
     public function test_keeps_the_last_twelve_rates(): void
@@ -52,7 +52,7 @@ final class ThroughputGraphTest extends FlowTestCase
             StageProgressMother::open(count: 0, id: 2),
         ]));
 
-        static::assertSame(['<fg=cyan>           █</>', '<fg=cyan>           ▁</>'], [
+        static::assertSame(['<fg=cyan>█</>', '<fg=cyan>▁</>'], [
             $graph->sparkline(StageProgressMother::open(id: 1), 0),
             $graph->sparkline(StageProgressMother::open(id: 2), 0),
         ]);
@@ -66,7 +66,7 @@ final class ThroughputGraphTest extends FlowTestCase
             count: 100,
         )]));
 
-        static::assertSame(['<fg=gray>           █</>', ''], [
+        static::assertSame(['<fg=gray>█</>', ''], [
             $graph->sparkline(StageProgressMother::done(), 0),
             $graph->sparkline(StageProgressMother::open(id: 9), 0),
         ]);
@@ -83,7 +83,7 @@ final class ThroughputGraphTest extends FlowTestCase
             count: 0,
         )]));
 
-        static::assertSame('<fg=cyan>           ▁</>', $graph->sparkline(StageProgressMother::open(), 0));
+        static::assertSame('<fg=cyan>▁</>', $graph->sparkline(StageProgressMother::open(), 0));
     }
 
     public function test_a_count_in_another_unit_starts_a_new_history(): void
@@ -98,7 +98,7 @@ final class ThroughputGraphTest extends FlowTestCase
             StageProgressMother::open('group_by', 3, unit: ProgressUnit::groups),
         ]));
 
-        static::assertSame('<fg=cyan>           █</>', $graph->sparkline(
+        static::assertSame('<fg=cyan>█</>', $graph->sparkline(
             StageProgressMother::open('group_by', 3, unit: ProgressUnit::groups),
             0,
         ));
@@ -124,10 +124,7 @@ final class ThroughputGraphTest extends FlowTestCase
             startedAtSeconds: 2.0,
         )]));
 
-        static::assertSame('<fg=cyan>           ▁</>', $graph->sparkline(
-            StageProgressMother::open(startedAtSeconds: 2.0),
-            0,
-        ));
+        static::assertSame('<fg=cyan>▁</>', $graph->sparkline(StageProgressMother::open(startedAtSeconds: 2.0), 0));
     }
 
     public function test_a_count_that_goes_down_draws_the_lowest_bar(): void
@@ -141,6 +138,6 @@ final class ThroughputGraphTest extends FlowTestCase
             count: 50,
         )]));
 
-        static::assertSame('<fg=cyan>          █▁</>', $graph->sparkline(StageProgressMother::open(), 0));
+        static::assertSame('<fg=cyan>█▁</>', $graph->sparkline(StageProgressMother::open(), 0));
     }
 }

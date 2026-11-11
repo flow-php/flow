@@ -37,6 +37,8 @@ use function Flow\Filesystem\DSL\path;
 use function iterator_to_array;
 use function max;
 use function range;
+use function restore_error_handler;
+use function set_error_handler;
 
 final class HeartbeatThrottleTest extends FlowTestCase
 {
@@ -249,6 +251,39 @@ final class HeartbeatThrottleTest extends FlowTestCase
         static::assertSame([0, []], [$pulse->rowsRead, $pulse->stages]);
         static::assertLessThan(1_000_000_000_000, $pulse->memoryBytes);
         static::assertLessThan(9_000_000_000_000, $pulse->peakMemoryBytes);
+    }
+
+    public function test_a_read_stage_from_before_a_new_run_adds_no_entry_and_its_rows_still_count(): void
+    {
+        $context = new HeartbeatContext();
+        $recording = new RecordingHeartbeat();
+        $throttle = $context->throttle(new ScheduledHeartbeat($recording, 120));
+        $throttle->started();
+        $read = $throttle->stage('read');
+        $read->read(5);
+        $throttle->finished();
+        $throttle->started();
+        $warnings = new ArrayObject();
+        set_error_handler(static function (int $level, string $message) use ($warnings): bool {
+            $warnings->append($message);
+
+            return true;
+        });
+
+        try {
+            $read->read(3);
+            $read->startedReading(10);
+            $throttle->unread(1);
+            $throttle->beatNow();
+        } finally {
+            restore_error_handler();
+        }
+
+        static::assertSame([[], 2, []], [
+            $warnings->getArrayCopy(),
+            $recording->pulses()[0]->rowsRead,
+            $recording->pulses()[0]->stages,
+        ]);
     }
 
     public function test_a_heartbeat_that_reports_progress_is_not_called_again_inside_its_own_beat(): void
