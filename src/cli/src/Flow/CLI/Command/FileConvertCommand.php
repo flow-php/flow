@@ -19,7 +19,8 @@ use Flow\CLI\Options\ParquetInputOptions;
 use Flow\CLI\Options\SchemaInferenceOptions;
 use Flow\CLI\Options\XMLInputOptions;
 use Flow\CLI\Options\XMLOutputOptions;
-use Flow\ETL\Runtime\Config;
+use Flow\ETL\API\Config\ConfigBuilder;
+use Flow\ETL\Runtime\Heartbeat\HeartbeatFailure;
 use Flow\Filesystem\Path;
 use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -27,9 +28,11 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function Flow\Bridge\Symfony\Console\DSL\console_heartbeat;
 use function Flow\CLI\option_bool;
 use function Flow\CLI\option_int;
 use function Flow\CLI\option_int_nullable;
@@ -42,7 +45,7 @@ final class FileConvertCommand extends Command
 {
     private const int DEFAULT_BATCH_SIZE = 100;
 
-    private ?Config $flowConfig = null;
+    private ?ConfigBuilder $flowConfig = null;
 
     private ?Path $inputFile = null;
 
@@ -142,6 +145,12 @@ final class FileConvertCommand extends Command
             return Command::FAILURE;
         }
 
+        $progress = $output instanceof ConsoleOutputInterface ? console_heartbeat($output) : null;
+
+        if ($progress !== null) {
+            $this->flowConfig->heartbeat($progress, everySeconds: 0.25, onFailure: HeartbeatFailure::log);
+        }
+
         $df = df($this->flowConfig)->read($extractor);
 
         $batchSize = option_int('input-file-batch-size', $input, self::DEFAULT_BATCH_SIZE);
@@ -172,7 +181,11 @@ final class FileConvertCommand extends Command
             $loader->saveMode(overwrite());
         }
 
-        $report = $df->write($loader)->run(analyze: option_bool('analyze', $input));
+        try {
+            $report = $df->write($loader)->run(analyze: option_bool('analyze', $input));
+        } finally {
+            $progress?->finish();
+        }
 
         $style->success('File has been converted.');
         $style->note('File has been saved to: ' . $this->outputFile->uri());

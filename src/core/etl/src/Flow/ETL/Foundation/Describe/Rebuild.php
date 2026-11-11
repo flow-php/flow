@@ -5,15 +5,29 @@ declare(strict_types=1);
 namespace Flow\ETL\Foundation\Describe;
 
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Foundation\ProgressStages;
+use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
+use Flow\ETL\Foundation\VoidProgress;
+use Flow\Types\Exception\InvalidTypeException;
 use ReflectionClass;
 
 use function class_exists;
 use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_null;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
 use function interface_exists;
 use function is_a;
 
 final readonly class Rebuild
 {
+    public function __construct(
+        private ProgressStages $progress = new VoidProgress(),
+    ) {}
+
     /**
      * Every entry of $normalized rebuilt with of(), keys kept.
      *
@@ -89,5 +103,28 @@ final readonly class Rebuild
         }
 
         return $built;
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     * @throws InvalidTypeException
+     */
+    public function progress(StageName $stage, mixed $described = null): Progress
+    {
+        if ($described === null) {
+            return $this->progress->stage($stage);
+        }
+
+        $description = Description::fromArray(type_array()->assert($described));
+
+        // Foundation does not know the runtime's stage class: every description but VoidProgress's is a stage
+        return $description->class === VoidProgress::class
+            ? $this->progress->stage($stage)
+            : $this->progress->stage(
+                StageName::from(type_string()->assert($description->data['name'] ?? null)),
+                ProgressUnit::rows,
+                type_integer()->assert($description->data['id'] ?? null),
+                type_union(type_string(), type_null())->assert($description->data['subject'] ?? null),
+            );
     }
 }

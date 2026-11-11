@@ -444,4 +444,36 @@ final class PathTest extends TestCase
 
         Path::fromArray(['uri' => 'file:///a.csv', 'options' => [], 'partitions' => [['name' => 1]]]);
     }
+
+    public function test_location_drops_user_password_and_port(): void
+    {
+        static::assertSame('sftp://host/in/orders.csv', path('sftp://user:secret@host:22/in/orders.csv')->location());
+    }
+
+    #[TestWith([
+        'aws-s3://bucket/a/orders.csv?X-Amz-Signature=abc&X-Amz-Credential=key',
+        'aws-s3://bucket/a/orders.csv',
+    ])]
+    #[TestWith(['https://u:p@example.com/x.csv?token=t#frag', 'https://example.com/x.csv'])]
+    public function test_location_drops_the_query_and_the_fragment(string $uri, string $location): void
+    {
+        static::assertSame($location, path($uri)->location());
+    }
+
+    #[TestWith(['file:///data/in/*.csv'])]
+    #[TestWith(['memory://warehouse/orders/part-{part}.floe'])]
+    public function test_location_keeps_a_glob_and_a_placeholder(string $uri): void
+    {
+        static::assertSame($uri, path($uri)->location());
+    }
+
+    public function test_location_of_a_local_path(): void
+    {
+        static::assertSame('file:///data/orders.csv', path('/data/orders.csv')->location());
+    }
+
+    public function test_location_of_an_unparsable_uri_is_its_scheme(): void
+    {
+        static::assertSame('memory://', path('memory://host:abc/x.csv')->location());
+    }
 }

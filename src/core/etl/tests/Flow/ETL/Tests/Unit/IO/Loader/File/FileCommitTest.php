@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\IO\Loader\File;
 
+use ArrayObject;
 use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Filesystem\SaveMode;
 use Flow\ETL\IO\Loader\File\FileCommit;
 use Flow\ETL\Tests\Context\ReaderRoundTrip;
 use Flow\ETL\Tests\Context\WrittenFiles;
+use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\Double\RecordingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Exception\RuntimeException as FilesystemRuntimeException;
@@ -18,6 +23,7 @@ use Flow\Filesystem\Path;
 use Flow\Filesystem\Testing\FilesystemOperation;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 
 use function array_search;
 use function Flow\ETL\DSL\append;
@@ -35,12 +41,28 @@ use function sprintf;
 
 final class FileCommitTest extends FlowTestCase
 {
+    /** @var ArrayObject<int, array{string, int|'busy'|'done'|ProgressUnit}> */
+    public ArrayObject $log;
+
+    public Filesystem $memory;
+
     public Path $out;
+
+    public Filesystem $recording;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->out = ReaderRoundTrip::scratch('file-commit');
+        $this->log = new ArrayObject();
+        $this->memory = memory_filesystem();
+        $log = $this->log;
+        $this->recording = intercepted_filesystem($this->memory)->onCall(static function (
+            FilesystemOperation $operation,
+            Path $path,
+        ) use ($log): void {
+            $log->append([$operation->name, 0]);
+        });
     }
 
     protected function tearDown(): void
@@ -100,6 +122,132 @@ final class FileCommitTest extends FlowTestCase
         static::assertLessThan(
             array_search('rm', $filesystem->calls, true),
             array_search('close', $filesystem->calls, true),
+        );
+    }
+
+    public function test_commit_reports_after_every_file_operation(): void
+    {
+        $commit = new FileCommit($this->recording, path('memory://out/part-{part}.csv'), overwrite(), 'r1');
+        $commit->admit(true);
+        $commit->open([new Partition('dept', 'a')])->append('a');
+        $commit->open([new Partition('dept', 'b')])->append('b');
+        $this->log->exchangeArray([]);
+
+        $commit->commit([0], new ProgressSpy(StageName::commit, advancedLog: $this->log));
+
+        static::assertSame(
+            [
+                ['commit', 'busy'],
+                ['commit', 'busy'],
+                ['List', 0],
+                ['commit', 'busy'],
+                ['Mv', 0],
+                ['commit', 1],
+                ['Mv', 0],
+                ['commit', 1],
+                ['List', 0],
+                ['commit', 'busy'],
+                ['List', 0],
+                ['commit', 'busy'],
+                ['Rm', 0],
+                ['commit', 'busy'],
+            ],
+            $this->log->getArrayCopy(),
+        );
+    }
+
+    #[TestWith(['memory://out/rows.csv', 'memory://out/'])]
+    #[TestWith(['memory://warehouse/orders/part-{part}.csv', 'memory://warehouse/orders/'])]
+    #[TestWith(['sftp://user:secret@host:22/out/rows.csv#frag', 'sftp://host/out/'])]
+    public function test_location_is_the_directory_the_files_land_in(string $destination, string $location): void
+    {
+        static::assertSame([$location, $location], [
+            (new FileCommit($this->memory, path($destination), overwrite(), 'r1'))->location(),
+            FileCommit::locationOf(path($destination)),
+        ]);
+    }
+
+    public function test_a_destination_with_a_query_is_refused_before_it_has_a_location(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage("Destination path can't be pattern");
+
+        new FileCommit($this->memory, path('sftp://user:secret@host/out/rows.csv?token=t'), overwrite(), 'r1');
+    }
+
+    public function test_a_write_in_place_counts_each_file_at_its_close(): void
+    {
+        $commit = new FileCommit($this->recording, path('memory://out/part-{part}.csv'), append(), 'r1');
+        $commit->admit(true);
+        $commit->open([new Partition('dept', 'a')])->append('a');
+        $commit->open([new Partition('dept', 'b')])->append('b');
+        $this->log->exchangeArray([]);
+
+        $commit->commit([0], new ProgressSpy(StageName::commit, advancedLog: $this->log));
+
+        static::assertSame([['commit', 1], ['commit', 1]], $this->log->getArrayCopy());
+    }
+
+    public function test_commit_reports_every_stale_file_it_removes(): void
+    {
+        $this->memory->writeTo(path('memory://out/dept=a/part-00007.csv'))->append('old')->close();
+        $commit = new FileCommit($this->recording, path('memory://out/part-{part}.csv'), overwrite(), 'r1');
+        $commit->admit(true);
+        $commit->open([new Partition('dept', 'a')])->append('a');
+        $this->log->exchangeArray([]);
+
+        $commit->commit([0], new ProgressSpy(StageName::commit, advancedLog: $this->log));
+
+        static::assertSame(
+            [
+                ['commit', 'busy'],
+                ['List', 0],
+                ['commit', 'busy'],
+                ['Mv', 0],
+                ['commit', 1],
+                ['List', 0],
+                ['commit', 'busy'],
+                ['Rm', 0],
+                ['commit', 'busy'],
+                ['Rm', 0],
+                ['commit', 'busy'],
+            ],
+            $this->log->getArrayCopy(),
+        );
+    }
+
+    public function test_commit_without_staged_files_reports_the_temporary_output_check(): void
+    {
+        $commit = new FileCommit($this->recording, path('memory://out/part-{part}.csv'), overwrite(), 'r1');
+        $commit->admit(true);
+        $this->log->exchangeArray([]);
+
+        $commit->commit([0], new ProgressSpy(StageName::commit, advancedLog: $this->log));
+
+        static::assertSame(
+            [['List', 0], ['commit', 'busy'], ['List', 0], ['commit', 'busy']],
+            $this->log->getArrayCopy(),
+        );
+    }
+
+    public function test_commit_reports_removing_what_a_task_without_a_result_staged(): void
+    {
+        $job = new FileCommit($this->recording, path('memory://out/part-{part}.csv'), overwrite(), 'r1', 2);
+        $job->admit(true);
+        (new FileCommit(
+            $this->memory,
+            path('memory://out/part-{part}.csv'),
+            overwrite(),
+            'r1',
+            2,
+            $job->task(0),
+        ))->open([new Partition('dept', 'a')])->append('a');
+
+        $job->commit([1], new ProgressSpy(StageName::commit, advancedLog: $this->log));
+
+        static::assertSame(
+            [['List', 0], ['commit', 'busy'], ['List', 0], ['commit', 'busy'], ['Rm', 0], ['commit', 'busy']],
+            $this->log->getArrayCopy(),
         );
     }
 
@@ -329,7 +477,7 @@ final class FileCommitTest extends FlowTestCase
 
         $commit = new FileCommit($filesystem, $this->out->suffix('/part-{part}.csv'), overwrite(), 'r1');
         $commit->open()->append('fresh');
-        $commit->commit([0]);
+        $commit->commit([0], new VoidProgress());
 
         static::assertSame(['part-00000.csv'], WrittenFiles::under($this->out));
         static::assertSame('fresh', $filesystem->readFrom($this->out->suffix('/part-00000.csv'))->content());
@@ -348,7 +496,7 @@ final class FileCommitTest extends FlowTestCase
 
         $commit = new FileCommit($filesystem, $this->out->suffix('/orders.csv'), overwrite(), 'r1');
         $commit->open()->append('fresh');
-        $commit->commit([0]);
+        $commit->commit([0], new VoidProgress());
 
         static::assertSame(['orders.csv', 'orders_backup.csv'], WrittenFiles::under($this->out));
         static::assertSame('fresh', $filesystem->readFrom($this->out->suffix('/orders.csv'))->content());
@@ -375,7 +523,7 @@ final class FileCommitTest extends FlowTestCase
                 ->close();
         }
 
-        $job->commit([0, 1, 2]);
+        $job->commit([0, 1, 2], new VoidProgress());
 
         static::assertSame(['part-00000.csv', 'part-00001.csv', 'part-00002.csv'], WrittenFiles::under($this->out));
         static::assertSame([], WrittenFiles::temporaryOutputs($this->out));
@@ -398,7 +546,7 @@ final class FileCommitTest extends FlowTestCase
             ->open([new Partition('dept', 'a')])
             ->append('fresh')
             ->close();
-        $job->commit([1]);
+        $job->commit([1], new VoidProgress());
 
         static::assertSame(
             ['dept=a/part-00001.csv', 'dept=b/part-00000.csv', 'dept=b/part-00001.csv'],
@@ -421,7 +569,7 @@ final class FileCommitTest extends FlowTestCase
             ->open([new Partition('dept', 'a')])
             ->append('fresh')
             ->close();
-        $job->commit([1]);
+        $job->commit([1], new VoidProgress());
 
         static::assertSame(['a/part-00001.csv', 'b/part-00000.csv'], WrittenFiles::under($this->out));
     }
@@ -446,7 +594,7 @@ final class FileCommitTest extends FlowTestCase
             ->open([new Partition('dept', 'a')])
             ->append('fresh')
             ->close();
-        $commit->commit([0]);
+        $commit->commit([0], new VoidProgress());
 
         static::assertSame(
             ['dept=a/orders.csv', 'dept=a/orders_backup.csv', 'dept=a/other.csv', 'dept=b/orders.csv'],
@@ -468,7 +616,7 @@ final class FileCommitTest extends FlowTestCase
 
         $commit = new FileCommit($filesystem, $this->out->suffix('/part-{part}.csv'), overwrite(), 'r1');
         $commit->admit(false);
-        $commit->commit([0]);
+        $commit->commit([0], new VoidProgress());
 
         static::assertSame(['other.csv'], WrittenFiles::under($this->out));
     }
@@ -480,7 +628,7 @@ final class FileCommitTest extends FlowTestCase
 
         $commit = new FileCommit($filesystem, $this->out->suffix('/orders.csv'), overwrite(), 'r1');
         $commit->admit(false);
-        $commit->commit([0]);
+        $commit->commit([0], new VoidProgress());
 
         static::assertSame([], WrittenFiles::under($this->out));
     }
@@ -495,7 +643,7 @@ final class FileCommitTest extends FlowTestCase
 
         $commit = new FileCommit($filesystem, $this->out->suffix('/part-{part}.csv'), overwrite(), 'r1');
         $commit->admit(true);
-        $commit->commit([0]);
+        $commit->commit([0], new VoidProgress());
 
         static::assertSame(['dept=a/part-00000.csv', 'dept=b/part-00000.csv'], WrittenFiles::under($this->out));
     }
@@ -530,7 +678,7 @@ final class FileCommitTest extends FlowTestCase
         }
 
         try {
-            $job->commit([0, 1]);
+            $job->commit([0, 1], new VoidProgress());
             static::fail('commit() was expected to throw');
         } catch (FilesystemRuntimeException) {
         }
@@ -549,7 +697,10 @@ final class FileCommitTest extends FlowTestCase
         $filesystem = memory_filesystem();
         $filesystem->writeTo(path('memory://out/part-00003.csv'))->append('stale')->close();
 
-        (new FileCommit($filesystem, path('memory://out/part-{part}.csv'), $mode, 'r1'))->commit([0]);
+        (new FileCommit($filesystem, path('memory://out/part-{part}.csv'), $mode, 'r1'))->commit(
+            [0],
+            new VoidProgress(),
+        );
 
         static::assertSame(['memory://out/part-00003.csv'], self::written($filesystem, 'memory://out/**/*'));
     }
@@ -573,7 +724,7 @@ final class FileCommitTest extends FlowTestCase
             ->append('3')
             ->close();
 
-        $job->commit([1, 0]);
+        $job->commit([1, 0], new VoidProgress());
 
         static::assertSame(
             ['name=a/part-00000-r1.csv', 'name=b/part-00000-r1.csv', 'name=b/part-00001-r1.csv'],
@@ -601,7 +752,7 @@ final class FileCommitTest extends FlowTestCase
                 ->close();
         }
 
-        $job->commit([0, 2]);
+        $job->commit([0, 2], new VoidProgress());
 
         static::assertSame(['part-00000.csv', 'part-00002.csv'], WrittenFiles::under($this->out));
         static::assertSame([], WrittenFiles::temporaryOutputs($this->out));
@@ -635,7 +786,7 @@ final class FileCommitTest extends FlowTestCase
             }
         }
 
-        $commits['/part-{part}.csv']->commit([0, 1]);
+        $commits['/part-{part}.csv']->commit([0, 1], new VoidProgress());
 
         static::assertSame(
             [$this->out->path() . '/part-00000.csv', $this->out->path() . '/part-00001.csv'],
@@ -686,7 +837,7 @@ final class FileCommitTest extends FlowTestCase
         $tasks[0]->abort();
         $tasks[0] = new FileCommit(native_local_filesystem(), $destination, overwrite(), 'r1', 2, $job->task(0));
         $tasks[0]->open()->append('x')->close();
-        $job->commit([0, 1]);
+        $job->commit([0, 1], new VoidProgress());
 
         static::assertSame(['part-00000.csv'], WrittenFiles::under($this->out));
     }

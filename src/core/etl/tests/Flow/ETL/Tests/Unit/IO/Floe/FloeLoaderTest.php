@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\IO\Floe;
 
 use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Filesystem\SaveMode;
 use Flow\ETL\IO\Floe\FloeLoader;
@@ -49,7 +50,7 @@ final class FloeLoaderTest extends TestCase
 
         $loader = to_floe($path, filesystem: $memory);
         $loader->load(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))), $context->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         $ids = [];
 
@@ -73,9 +74,9 @@ final class FloeLoaderTest extends TestCase
         $loader = to_floe(path('memory://runs/data.floe'), filesystem: $memory)->saveMode(SaveMode::Append);
 
         $loader->load(array_to_rows([['id' => 1]], schema(int_schema('id'))), $context->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
         $loader->load(array_to_rows([['name' => 'a']], schema(str_schema('name'))), $context->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         $schemas = [];
 
@@ -94,7 +95,7 @@ final class FloeLoaderTest extends TestCase
         $loader = to_floe(path('memory://out.floe'), filesystem: $memory);
 
         $loader->load(array_to_rows([], schema(int_schema('id'))), flow_context(config())->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         static::assertNull($memory->status(path('memory://out.floe')));
     }
@@ -121,7 +122,7 @@ final class FloeLoaderTest extends TestCase
             ),
             $context->backend(),
         );
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         $schema = from_floe($path, filesystem: $memory)->schema();
 
@@ -151,7 +152,7 @@ final class FloeLoaderTest extends TestCase
             ),
             $context->backend(),
         );
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         static::assertNotNull($memory->status(path('memory://parts/country=PL/data.floe')));
         static::assertNotNull($memory->status(path('memory://parts/country=US/data.floe')));
@@ -182,7 +183,7 @@ final class FloeLoaderTest extends TestCase
         $loader = to_floe($path, filesystem: $memory);
         $loader->load(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))), $context->backend());
         $loader->load(array_to_rows([['id' => 3]], schema(int_schema('id'))), $context->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         $ids = [];
 

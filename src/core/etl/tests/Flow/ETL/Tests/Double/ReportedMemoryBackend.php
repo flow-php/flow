@@ -27,6 +27,8 @@ final class ReportedMemoryBackend implements Backend
     public function __construct(
         public int $reported = 0,
         public readonly PhpBackend $php = new PhpBackend(),
+        public readonly ?int $sortWorkingBytes = null,
+        public int $reportedPeak = 0,
     ) {}
 
     public function adopt(Definition $definition, Column $column): Column
@@ -37,6 +39,16 @@ final class ReportedMemoryBackend implements Backend
     public function allocatedBytes(): int
     {
         return $this->reported;
+    }
+
+    public function allocatedPeakBytes(): int
+    {
+        return $this->reportedPeak;
+    }
+
+    public function resetAllocatedPeak(): void
+    {
+        $this->reportedPeak = $this->reported;
     }
 
     public function builder(Definition $definition): ColumnBuilder
@@ -90,6 +102,14 @@ final class ReportedMemoryBackend implements Backend
     public function sort(Rows $rows, array $columns): Rows
     {
         return $this->php->sort($rows, $columns);
+    }
+
+    /**
+     * @param list<SortColumn> $columns
+     */
+    public function sortWorkingBytes(Rows $rows, array $columns): int
+    {
+        return $this->sortWorkingBytes ?? $this->php->sortWorkingBytes($rows, $columns);
     }
 
     public function groupedTotals(): GroupedTotals

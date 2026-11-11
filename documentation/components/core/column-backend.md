@@ -65,5 +65,5 @@ $rows = array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')), new 
 ## Memory
 
 `RustBackend` keeps column buffers outside PHP's memory manager, where `memory_get_usage()` and `memory_limit` do not
-see them. `Backend::allocatedBytes()` reports them, and Flow adds them to the process memory its spilling steps
-(sort, join, group-by) compare with their memory limit.
+see them. `Backend::allocatedBytes()` reports them, and Flow adds them to the memory its spilling steps
+(sort, join, group-by) measure.

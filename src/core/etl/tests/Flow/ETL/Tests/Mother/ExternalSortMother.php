@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Mother;
 
 use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
+use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Kernels\Bucketing\Buckets;
 use Flow\ETL\Kernels\Sort\ExternalSort;
 use Flow\ETL\Kernels\Sort\ExternalSortConfig;
@@ -18,61 +20,31 @@ use Flow\ETL\Values\Sort\SortColumn;
 final class ExternalSortMother
 {
     /**
-     * A limit no test dataset reaches - everything sorts in memory.
-     *
-     * @param list<SortColumn> $columns
-     * @param int<1, max> $batchSize
-     */
-    public static function inMemory(
-        array $columns,
-        RowsStorage $storage = new MemoryRowsStorage(),
-        int $batchSize = 1000,
-    ): ExternalSort {
-        return self::with($columns, $storage, Unit::fromGb(1), batchSize: $batchSize);
-    }
-
-    /**
-     * A one byte limit - every non-empty batch is spilled as its own sorted run.
-     *
-     * @param list<SortColumn> $columns
-     * @param int<1, max> $mergeFanIn
-     * @param int<1, max> $batchSize
-     */
-    public static function spilling(
-        array $columns,
-        RowsStorage $storage = new MemoryRowsStorage(),
-        int $mergeFanIn = 10,
-        int $batchSize = 1000,
-    ): ExternalSort {
-        return self::with($columns, $storage, Unit::fromBytes(1), $mergeFanIn, $batchSize);
-    }
-
-    /**
      * @param list<SortColumn> $columns
      * @param int<1, max> $mergeFanIn
      * @param int<1, max> $batchSize
      */
     public static function with(
         array $columns,
-        RowsStorage $storage,
-        Unit $memoryLimit,
+        RowsStorage $storage = new MemoryRowsStorage(),
         int $mergeFanIn = 10,
         int $batchSize = 1000,
         ?RowsStorage $mergeStorage = null,
+        Progress $progress = new VoidProgress(),
     ): ExternalSort {
         return new ExternalSort(
             $columns,
             new Buckets($storage),
             new Buckets($mergeStorage ?? $storage),
             new NativePHPRandomValueGenerator(),
-            $memoryLimit,
             $mergeFanIn,
             new BatchSize($batchSize),
+            $progress,
         );
     }
 
     /**
-     * The config inMemory() sorts under, for the processors built from a config.
+     * A limit no test dataset reaches - everything sorts in memory.
      *
      * @param int<1, max> $batchSize
      */
@@ -84,7 +56,7 @@ final class ExternalSortMother
     }
 
     /**
-     * The config spilling() sorts under, for the processors built from a config.
+     * A one byte limit - every non-empty batch is spilled as its own sorted run.
      *
      * @param int<1, max> $mergeFanIn
      * @param int<1, max> $batchSize
@@ -98,7 +70,7 @@ final class ExternalSortMother
     }
 
     /**
-     * The config with() sorts under: the merge fan-in is the config's bucket count.
+     * The merge fan-in is the config's bucket count.
      *
      * @param int<1, max> $mergeFanIn
      * @param int<1, max> $batchSize

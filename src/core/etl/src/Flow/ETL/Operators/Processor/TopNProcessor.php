@@ -8,7 +8,10 @@ use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\Foundation\RandomValueGenerator;
+use Flow\ETL\Foundation\StageName;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Kernels\Sort\ExternalSort;
 use Flow\ETL\Kernels\Sort\ExternalSortConfig;
 use Flow\ETL\Kernels\Sort\MemorySortConfig;
@@ -48,8 +51,11 @@ final readonly class TopNProcessor implements Distributable
         public MemorySortConfig|ExternalSortConfig $config,
         private RandomValueGenerator $random,
         private ?Schema $declared = null,
+        private Progress $progress = new VoidProgress(),
     ) {
-        $this->fallback = $config instanceof ExternalSortConfig ? ExternalSort::of($columns, $config, $random) : null;
+        $this->fallback = $config instanceof ExternalSortConfig
+            ? ExternalSort::of($columns, $config, $random, $progress)
+            : null;
 
         if ($this->limit < 1) {
             throw new InvalidArgumentException('TopN limit must be greater than 0, given: ' . $this->limit);
@@ -74,6 +80,7 @@ final readonly class TopNProcessor implements Distributable
                 Describable::class,
             )),
             ($data['declared'] ?? null) === null ? null : Schema::fromArray(type_array()->assert($data['declared'])),
+            $rebuild->progress(StageName::sort, $data['progress'] ?? null),
         );
     }
 
@@ -90,6 +97,7 @@ final readonly class TopNProcessor implements Distributable
                     'config' => $this->config,
                     'random' => $this->random,
                     'declared' => $this->declared?->normalize(),
+                    'progress' => $this->progress instanceof Describable ? $this->progress : new VoidProgress(),
                 ])
                 : null
         );
@@ -100,12 +108,15 @@ final readonly class TopNProcessor implements Distributable
      */
     public function distribution(): ?Distribution
     {
-        return $this->describe() === null ? null : Distribution::single($this);
+        return $this->describe() === null ? null : Distribution::single($this, progress: $this->progress);
     }
 
     public function bind(Schema $input): BoundStep
     {
-        return new BoundStep(new self($this->columns, $this->limit, $this->config, $this->random, $input), $input);
+        return new BoundStep(
+            new self($this->columns, $this->limit, $this->config, $this->random, $input, $this->progress),
+            $input,
+        );
     }
 
     public function breaks(): bool
@@ -118,7 +129,11 @@ final readonly class TopNProcessor implements Distributable
         $kept = null;
         $maxSize = 1;
         $schema = null;
-        $budget = $this->fallback === null ? null : new MemoryBudget($backend, $this->fallback->memoryLimit);
+        // pulled before the budget starts: what a lazy upstream allocates on its first pull (a join build) is not ours
+        $rows->valid();
+        $budget = $this->config instanceof ExternalSortConfig
+            ? MemoryBudget::of($backend, $this->config->bucketing->memoryLimit)
+            : null;
 
         while ($rows->valid()) {
             $batch = $rows->current();
@@ -130,6 +145,7 @@ final readonly class TopNProcessor implements Distributable
             }
 
             $maxSize = max($batch->count(), $maxSize);
+            $this->progress->advanced($batch->count());
             $conformed = $batch->matchTo($this->declared ?? $schema, $backend);
             $kept = $kept === null ? $conformed : Rows::concat($kept->schema(), $backend, $kept, $conformed);
 
@@ -140,8 +156,15 @@ final readonly class TopNProcessor implements Distributable
 
             // past the memory limit the kept rows and the rest of the stream go to the spilling sort; a trimmed row
             // cannot be in the top $limit, so the result is the same
-            if ($this->fallback !== null && $budget?->exceeded()) {
-                yield from $this->fallback->sort(BoundedRead::followedBy([$kept], $rows), $backend, $this->limit);
+            if ($this->fallback !== null && $budget !== null && $budget->exceeded()) {
+                // the kept rows were counted when top-n took them, the rest is counted as the sort takes it
+                yield from $this->fallback->sort(
+                    BoundedRead::followedBy([$kept], $this->fallback->counted($rows)),
+                    $backend,
+                    $budget,
+                    $this->limit,
+                );
+                $this->progress->done();
 
                 return;
             }
@@ -149,11 +172,18 @@ final readonly class TopNProcessor implements Distributable
 
         if ($kept === null) {
             yield from Rows::empty($this->declared ?? $schema ?? new Schema(), $backend)->chunks($maxSize);
+            $this->progress->done();
 
             return;
         }
 
-        yield from $this->top($kept, $backend)->chunks($maxSize);
+        foreach ($this->top($kept, $backend)->chunks($maxSize) as $chunk) {
+            $this->progress->busy();
+
+            yield $chunk;
+        }
+
+        $this->progress->done();
     }
 
     public function top(Rows $rows, Backend $backend): Rows

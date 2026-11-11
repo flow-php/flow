@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Context;
 
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Inference\SchemaInference;
 use Flow\ETL\IO\Inference\SchemaInferrer;
 use Flow\ETL\IO\Inference\Sniffer;
@@ -20,13 +21,14 @@ final class ReversedSniffing
         $samples = [];
 
         for ($unit = $sniffer->units() - 1; $unit >= 0; $unit--) {
-            $samples[$unit] = $sniffer->sniff($unit, null);
+            $samples[$unit] = $sniffer->sniff($unit, null, new VoidProgress());
         }
 
         ksort($samples);
 
         return (new SchemaInferrer($inference))->infer(
             new PresniffedSniffer($sniffer->names(), array_values($samples)),
+            new VoidProgress(),
         )->schema;
     }
 }

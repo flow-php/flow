@@ -196,6 +196,16 @@ final class AdaptiveBackendTest extends TestCase
         );
     }
 
+    public function test_sort_working_bytes_are_what_the_php_backend_needs(): void
+    {
+        $rows = array_to_rows([['a' => 2], ['a' => 1]], schema(int_schema('a')));
+
+        static::assertSame(
+            (new PhpBackend())->sortWorkingBytes($rows, [new SortColumn('a')]),
+            (new AdaptiveBackend())->sortWorkingBytes($rows, [new SortColumn('a')]),
+        );
+    }
+
     public function test_grouped_totals_counts_and_table_are_the_php_backends(): void
     {
         static::assertInstanceOf(PhpGroupedTotals::class, (new AdaptiveBackend())->groupedTotals());

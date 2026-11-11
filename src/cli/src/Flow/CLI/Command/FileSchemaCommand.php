@@ -15,9 +15,10 @@ use Flow\CLI\Options\JSONInputOptions;
 use Flow\CLI\Options\ParquetInputOptions;
 use Flow\CLI\Options\SchemaInferenceOptions;
 use Flow\CLI\Options\XMLInputOptions;
+use Flow\ETL\API\Config\ConfigBuilder;
 use Flow\ETL\IO\Formatter\Row\ASCIISchemaFormatter;
 use Flow\ETL\IO\Formatter\Schema\PHPSchemaFormatter;
-use Flow\ETL\Runtime\Config;
+use Flow\ETL\Runtime\Heartbeat\HeartbeatFailure;
 use Flow\Filesystem\Path;
 use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -25,9 +26,11 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function Flow\Bridge\Symfony\Console\DSL\console_heartbeat;
 use function Flow\CLI\option_bool;
 use function Flow\CLI\option_int_nullable;
 use function Flow\ETL\DSL\df;
@@ -42,7 +45,7 @@ final class FileSchemaCommand extends Command
 {
     private ?FileFormat $fileFormat = null;
 
-    private ?Config $flowConfig = null;
+    private ?ConfigBuilder $flowConfig = null;
 
     private ?Path $sourcePath = null;
 
@@ -103,6 +106,12 @@ final class FileSchemaCommand extends Command
             return Command::FAILURE;
         }
 
+        $progress = $output instanceof ConsoleOutputInterface ? console_heartbeat($output) : null;
+
+        if ($progress !== null) {
+            $this->flowConfig->heartbeat($progress, everySeconds: 0.25, onFailure: HeartbeatFailure::log);
+        }
+
         $df = df($this->flowConfig)->read($extractor);
 
         $limit = option_int_nullable('input-file-limit', $input);
@@ -117,7 +126,11 @@ final class FileSchemaCommand extends Command
             $df = $df->offset($offset);
         }
 
-        $schema = $df->schema();
+        try {
+            $schema = $df->schema();
+        } finally {
+            $progress?->finish();
+        }
 
         if (option_bool('output-ascii', $input)) {
             $style->write((new ASCIISchemaFormatter())->format($schema));

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Planning\Physical;
 
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\IO\Loader;
 use Flow\ETL\Operators\Processor;
 use Flow\ETL\Operators\Transformer;
+use SplObjectStorage;
 
 use function array_search;
 use function array_slice;
@@ -19,10 +21,14 @@ final readonly class PipelineSteps
      *                                                                                         processor or cross join
      *                                                                                         among them streams
      * @param null|JoinStep|Processor $breaker the step that needs every row before it emits, ending the pipeline
+     * @param null|SplObjectStorage<Loader|Transformer, Progress> $stages the stage of each join_each and each file commit
+     * @param null|SplObjectStorage<Loader, Progress> $writes the write stage of each loader
      */
     public function __construct(
         public array $steps = [],
         public JoinStep|Processor|null $breaker = null,
+        public ?SplObjectStorage $stages = null,
+        public ?SplObjectStorage $writes = null,
     ) {}
 
     /**
@@ -36,7 +42,12 @@ final readonly class PipelineSteps
 
         $at = array_search($step, $this->steps, true);
 
-        return new self($at === false ? [] : array_values(array_slice($this->steps, $at)), $this->breaker);
+        return new self(
+            $at === false ? [] : array_values(array_slice($this->steps, $at)),
+            $this->breaker,
+            $this->stages,
+            $this->writes,
+        );
     }
 
     public function isEmpty(): bool

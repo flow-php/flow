@@ -9,6 +9,7 @@ use Flow\ETL\Adapter\JSON\IO\JsonFraming;
 use Flow\ETL\Adapter\JSON\IO\Loader\JsonLoader;
 use Flow\ETL\Foundation\Exception\RuntimeException;
 use Flow\ETL\Foundation\FlowPhpExtension;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Filesystem\SaveMode;
 use Flow\ETL\IO\Loader\File\FileCommit;
 use Flow\ETL\IO\Loader\File\Part;
@@ -77,7 +78,7 @@ final class JsonLoaderTest extends FlowTestCase
             ['id' => 2, 'price' => 2.0, 'days' => []],
             ['id' => 3, 'price' => 3.5, 'days' => []],
         ], $schema), flow_context()->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         static::assertSame(
             '[{"id":1,"price":0.30000000000000004,"days":["2026-01-02"]},{"id":2,"price":2,"days":[]},{"id":3,"price":3.5,"days":[]}]',
@@ -92,7 +93,7 @@ final class JsonLoaderTest extends FlowTestCase
         $loader = to_json(path('memory://out.json'), filesystem: $filesystem);
 
         $loader->load(array_to_rows([], schema(int_schema('id'))), flow_context()->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         static::assertNull($filesystem->status(path('memory://out.json')));
     }
@@ -115,7 +116,7 @@ final class JsonLoaderTest extends FlowTestCase
             ),
             flow_context()->backend(),
         );
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         static::assertSame(
             "[\n{\"price\":2.0,\"on\":\"02\\/01\\/2026\"},\n{\"price\":3.5,\"on\":\"03\\/01\\/2026\"}\n]",
@@ -134,7 +135,7 @@ final class JsonLoaderTest extends FlowTestCase
             ['id' => 2, 'group' => 'b'],
         ], $schema), flow_context()->backend());
         $loader->load(array_to_rows([['id' => 3, 'group' => 'a']], $schema), flow_context()->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         static::assertSame(
             '[{"id":1},{"id":3}]',
@@ -151,7 +152,7 @@ final class JsonLoaderTest extends FlowTestCase
         $loader->load(array_to_rows([['id' => 1]], schema(int_schema('id'))), flow_context()->backend());
         $loader->discard();
         $loader->load(array_to_rows([['id' => 2]], schema(int_schema('id'))), flow_context()->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         static::assertSame('[{"id":2}]', $filesystem->readFrom(path('memory://out.json'))->content());
     }
@@ -173,7 +174,7 @@ final class JsonLoaderTest extends FlowTestCase
                 ),
                 flow_context()->backend(),
             );
-            $loader->closure();
+            $loader->closure(new VoidProgress());
             $read[] = $filesystem->readFrom(path('memory://group=' . $group . '/out.json'))->content();
         }
 

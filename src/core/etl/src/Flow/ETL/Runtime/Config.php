@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Runtime;
 
 use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
+use Flow\ETL\Foundation\ProgressStages;
 use Flow\ETL\Foundation\RandomValueGenerator;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Kernels\Sort\ExternalSortConfig;
 use Flow\ETL\Kernels\Sort\MemorySortConfig;
 use Flow\ETL\Operators\Join\HashJoinConfig;
@@ -14,6 +16,7 @@ use Flow\ETL\Planning\Optimizer\Rule;
 use Flow\ETL\Planning\Physical\NodeTranslator;
 use Flow\ETL\Planning\Physical\Planner;
 use Flow\ETL\Runtime\Executor\Executor;
+use Flow\ETL\Runtime\Heartbeat\HeartbeatThrottle;
 use Flow\ETL\Runtime\Launcher\Launcher;
 use Flow\ETL\Runtime\Telemetry\TelemetryConfig;
 use Flow\ETL\Storage\BucketingConfig;
@@ -45,6 +48,7 @@ final readonly class Config
         private Backend $backend,
         private RandomValueGenerator $randomValueGenerator = new NativePHPRandomValueGenerator(),
         private ?Launcher $launcher = null,
+        private ?HeartbeatThrottle $heartbeat = null,
     ) {
         $this->planner = new Planner(
             $optimizer,
@@ -58,6 +62,7 @@ final readonly class Config
                 $grouping,
                 $join,
                 $repartition,
+                $this->progress(),
             ),
             $backend,
         );
@@ -71,6 +76,11 @@ final readonly class Config
     public function backend(): Backend
     {
         return $this->backend;
+    }
+
+    public function heartbeat(): ?HeartbeatThrottle
+    {
+        return $this->heartbeat;
     }
 
     /**
@@ -110,6 +120,11 @@ final readonly class Config
     public function planner(): Planner
     {
         return $this->planner;
+    }
+
+    public function progress(): ProgressStages
+    {
+        return $this->heartbeat ?? new VoidProgress();
     }
 
     public function randomValueGenerator(): RandomValueGenerator

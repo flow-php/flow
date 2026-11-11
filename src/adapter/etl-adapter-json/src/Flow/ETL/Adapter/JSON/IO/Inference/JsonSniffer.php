@@ -9,6 +9,7 @@ use Flow\ETL\Adapter\JSON\IO\JsonFraming;
 use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\IO\Extractor\File\FileSplit;
 use Flow\ETL\IO\Extractor\File\SourceFile;
 use Flow\ETL\IO\Inference\ColumnTypes;
@@ -83,10 +84,10 @@ final readonly class JsonSniffer implements Describable, Sniffer
         return [];
     }
 
-    public function sniff(int $unit, ?int $rowBudget): Sample
+    public function sniff(int $unit, ?int $rowBudget, Progress $progress): Sample
     {
         $sample = new JsonFileSample($this->reader, $this->sources[$unit], $this->window);
-        $columnTypes = ColumnTypes::sniff([], $sample, $rowBudget, new InstanceOfTypeNarrower());
+        $columnTypes = ColumnTypes::sniff([], $sample, $rowBudget, new InstanceOfTypeNarrower(), $progress);
 
         return new Sample($columnTypes->folded(), max(0, $sample->bytes()), $sample->complete());
     }

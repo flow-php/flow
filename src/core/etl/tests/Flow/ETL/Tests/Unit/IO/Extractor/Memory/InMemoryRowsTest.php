@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\IO\Extractor\Memory;
 
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Extractor\Memory\InMemoryRows;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -36,10 +37,16 @@ final class InMemoryRowsTest extends FlowTestCase
 
     public function test_sniff_folds_at_most_its_budget(): void
     {
-        static::assertSame(1, (new InMemoryRows([['id' => 1], ['id' => 2], ['id' => 3]]))->sniff(0, 1)->columns->rows);
+        static::assertSame(
+            1,
+            (new InMemoryRows([['id' => 1], ['id' => 2], ['id' => 3]]))->sniff(0, 1, new VoidProgress())->columns->rows,
+        );
         static::assertSame(
             3,
-            (new InMemoryRows([['id' => 1], ['id' => 2], ['id' => 3]]))->sniff(0, null)->columns->rows,
+            (new InMemoryRows([['id' => 1], ['id' => 2], ['id' => 3]]))
+                ->sniff(0, null, new VoidProgress())
+                ->columns
+                ->rows,
         );
     }
 }

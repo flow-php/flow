@@ -8,7 +8,10 @@ use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\Foundation\RandomValueGenerator;
+use Flow\ETL\Foundation\StageName;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Kernels\Bucketing\Buckets;
 use Flow\ETL\Kernels\Bucketing\HashBucketing;
 use Flow\ETL\Operators\BoundStep;
@@ -37,6 +40,8 @@ use function range;
  */
 final readonly class GroupByAggregationProcessor implements Distributable
 {
+    private bool $merges;
+
     /**
      * @param BucketingConfig $config the effective grouping config: the operation's own or the frame's
      */
@@ -45,7 +50,16 @@ final readonly class GroupByAggregationProcessor implements Distributable
         public BucketingConfig $config,
         private RandomValueGenerator $random,
         private ?GroupByShape $shape = null,
-    ) {}
+        private Progress $progress = new VoidProgress(),
+    ) {
+        $merges = false;
+
+        foreach ($groupBy->aggregations() as $aggregation) {
+            $merges = $merges || $aggregation instanceof MergedAggregate;
+        }
+
+        $this->merges = $merges;
+    }
 
     /**
      * @throws SchemaDefinitionNotFoundException
@@ -64,6 +78,7 @@ final readonly class GroupByAggregationProcessor implements Distributable
             ($data['input'] ?? null) === null
                 ? null
                 : GroupByShape::of($groupBy, Schema::fromArray(type_array()->assert($data['input']))),
+            $rebuild->progress(StageName::group_by, $data['progress'] ?? null),
         );
     }
 
@@ -79,6 +94,7 @@ final readonly class GroupByAggregationProcessor implements Distributable
                     'config' => $this->config,
                     'random' => $this->random,
                     'input' => $this->shape?->input->normalize(),
+                    'progress' => $this->progress instanceof Describable ? $this->progress : new VoidProgress(),
                 ])
                 : null
         );
@@ -113,18 +129,24 @@ final readonly class GroupByAggregationProcessor implements Distributable
             $this->shape->input,
             $partial->aggregations()->resolved($this->shape->input),
         );
-        $partialStep = (new self($partial, $this->config, $this->random))->bind($this->shape->input)->step;
+        $partialStep = (new self(
+            $partial,
+            $this->config,
+            $this->random,
+            progress: $this->progress,
+        ))->bind($this->shape->input)->step;
         $finalStep = (new self(
             new GroupBy($this->groupBy->refs(), new Aggregators(...$merged)),
             $this->config,
             $this->random,
+            progress: $this->progress,
         ))->bind($partialSchema)->step;
 
         $keys = $this->groupBy->refs()->names();
 
         return $keys === []
-            ? Distribution::single($partialStep, $finalStep)
-            : Distribution::clustered($keys, $partialStep, $finalStep);
+            ? Distribution::single($partialStep, $finalStep, $this->progress)
+            : Distribution::clustered($keys, $partialStep, $finalStep, $this->progress);
     }
 
     /**
@@ -142,7 +164,10 @@ final readonly class GroupByAggregationProcessor implements Distributable
     {
         $shape = GroupByShape::of($this->groupBy, $input);
 
-        return new BoundStep(new self($this->groupBy, $this->config, $this->random, $shape), $shape->output);
+        return new BoundStep(
+            new self($this->groupBy, $this->config, $this->random, $shape, $this->progress),
+            $shape->output,
+        );
     }
 
     public function breaks(): bool
@@ -159,9 +184,11 @@ final readonly class GroupByAggregationProcessor implements Distributable
     {
         $shape = $this->shape;
         $groups = null;
-        $budget = new MemoryBudget($backend, $this->config->memoryLimit);
+        // pulled before the budget starts: what a lazy upstream allocates on its first pull (a join build) is not ours
+        $rows->valid();
+        $budget = MemoryBudget::of($backend, $this->config->memoryLimit);
         $spilling = false;
-        $buckets = new Buckets($this->config->spilling($backend));
+        $buckets = new Buckets($this->config->spilling($backend, $budget));
 
         try {
             while ($rows->valid()) {
@@ -174,8 +201,9 @@ final readonly class GroupByAggregationProcessor implements Distributable
                 }
 
                 $shape ??= GroupByShape::of($this->groupBy, $batch->schema());
-                $groups ??= new AggregatedGroups($this->groupBy, $shape, $backend);
+                $groups ??= new AggregatedGroups($this->groupBy, $shape, $backend, $this->progress);
                 $groups->accumulate($batch, $backend);
+                $this->took($batch);
 
                 if ($budget->exceeded()) {
                     $spilling = true;
@@ -186,20 +214,24 @@ final readonly class GroupByAggregationProcessor implements Distributable
 
             if ($spilling && $groups !== null && $shape !== null) {
                 yield from $this->spilled($groups, $shape, $rows, $buckets, $backend);
+                $this->progress->done();
 
                 return;
             }
 
             if ($groups !== null) {
                 yield from $groups->flush($this->config->batchSize, $backend);
+                $this->progress->done();
 
                 return;
             }
 
             // SQL scalar aggregate: no input still yields one row
             if ($shape !== null && $this->groupBy->isGlobal()) {
-                yield (new AggregatedGroups($this->groupBy, $shape, $backend))->noInputRow($backend);
+                yield (new AggregatedGroups($this->groupBy, $shape, $backend, $this->progress))->noInputRow($backend);
             }
+
+            $this->progress->done();
         } finally {
             $buckets->clear();
         }
@@ -224,7 +256,10 @@ final readonly class GroupByAggregationProcessor implements Distributable
             'group-by',
         );
 
-        foreach ($bucketing->bucketize(BoundedRead::followedBy([], $rest), $buckets->storage()) as $bucket) {
+        foreach ($bucketing->bucketize(
+            BoundedRead::followedBy([], $this->taken($rest)),
+            $buckets->storage(),
+        ) as $bucket) {
             $buckets->add($bucket);
         }
 
@@ -240,7 +275,7 @@ final readonly class GroupByAggregationProcessor implements Distributable
         }
 
         foreach ($buckets->all() as $bucket) {
-            $groups = new AggregatedGroups($this->groupBy, $shape, $backend);
+            $groups = new AggregatedGroups($this->groupBy, $shape, $backend, $this->progress);
 
             foreach ($buckets->rows($bucket->id) as $batch) {
                 $groups->accumulate($batch, $backend);
@@ -253,12 +288,35 @@ final readonly class GroupByAggregationProcessor implements Distributable
         }
 
         // groups whose bucket received no row after the limit
-        $remaining = new AggregatedGroups($this->groupBy, $shape, $backend);
+        $remaining = new AggregatedGroups($this->groupBy, $shape, $backend, $this->progress);
 
         foreach ($earlierOf as $groups) {
             $remaining->absorbEarlier($earlier, $groups, $backend);
         }
 
         yield from $remaining->flush($this->config->batchSize, $backend);
+    }
+
+    /**
+     * @param Generator<Rows> $rows
+     *
+     * @return Generator<Rows>
+     */
+    private function taken(Generator $rows): Generator
+    {
+        // valid()/next(), never a rewind: the stream was read up to the batch that passed the limit
+        for (; $rows->valid(); $rows->next()) {
+            /** @var Rows $batch valid() holds, so current() is a batch */
+            $batch = $rows->current();
+            $this->took($batch);
+
+            yield $batch;
+        }
+    }
+
+    private function took(Rows $batch): void
+    {
+        // the step that merges takes partials, which are not rows of the input
+        $this->merges ? $this->progress->busy() : $this->progress->advanced($batch->count());
     }
 }

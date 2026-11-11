@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\API\Config\Join;
 
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
-use Flow\ETL\Runtime\MemoryLimit;
 use Flow\ETL\Storage\FilesystemRowsStorage;
 use Flow\ETL\Storage\MemoryRowsStorage;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Values\Memory\MemoryLimit;
 use Flow\ETL\Values\Memory\Unit;
 use Flow\Filesystem\Path;
 
@@ -21,7 +21,7 @@ final class HashJoinBuilderTest extends FlowTestCase
     public function test_broadcast_limit_defaults_to_10_mb(): void
     {
         static::assertSame(
-            10 * 1000 * 1000,
+            10 * 1024 * 1024,
             hash_join()->build(path('memory://spill'), new PhpBackend())->broadcastLimit->inBytes(),
         );
         static::assertSame(

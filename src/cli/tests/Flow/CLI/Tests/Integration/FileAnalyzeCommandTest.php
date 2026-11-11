@@ -7,11 +7,43 @@ namespace Flow\CLI\Tests\Integration;
 use Flow\CLI\Command\FileAnalyzeCommand;
 use Flow\ETL\Tests\Context\CommandOutputNormalizer;
 use Flow\ETL\Tests\FlowTestCase;
+use RuntimeException;
 use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Tester\CommandTester;
 
 final class FileAnalyzeCommandTest extends FlowTestCase
 {
+    public function test_a_failing_run_clears_the_status_line(): void
+    {
+        $tester = new CommandTester(new FileAnalyzeCommand('analyze'));
+
+        try {
+            $tester->execute([
+                'input-file' => __DIR__ . '/Fixtures/orders.csv',
+                '--config' => __DIR__ . '/Fixtures/failing-heartbeat-config.php',
+            ], ['capture_stderr_separately' => true, 'decorated' => true]);
+            static::fail('The run must fail.');
+        } catch (RuntimeException $e) {
+            static::assertSame('lease lost', $e->getMessage());
+        }
+
+        static::assertStringEndsWith("\x1B[1A\x1B[0J", $tester->getErrorOutput());
+    }
+
+    public function test_a_plain_output_gets_no_progress(): void
+    {
+        $output = new BufferedOutput();
+
+        (new FileAnalyzeCommand('analyze'))->run(new ArrayInput([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            '--config' => __DIR__ . '/Fixtures/stepping-clock-config.php',
+        ]), $output);
+
+        static::assertStringNotContainsString(' read: ', $output->fetch());
+    }
+
     public function test_an_offset_skips_rows_inside_the_limit(): void
     {
         $tester = new CommandTester(new FileAnalyzeCommand('file:analyze'));
@@ -20,7 +52,7 @@ final class FileAnalyzeCommandTest extends FlowTestCase
             'input-file' => __DIR__ . '/Fixtures/orders.csv',
             '--input-file-limit' => 5,
             '--input-file-offset' => 3,
-        ]);
+        ], ['capture_stderr_separately' => true]);
 
         $tester->assertCommandIsSuccessful();
         CommandOutputNormalizer::assertCommandOutputContains('Analyzed Rows    2', $tester->getDisplay());
@@ -35,7 +67,7 @@ final class FileAnalyzeCommandTest extends FlowTestCase
             '--input-file-limit' => 5,
             '--stats-schema' => true,
             '--stats-columns' => true,
-        ]);
+        ], ['capture_stderr_separately' => true]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -89,7 +121,7 @@ final class FileAnalyzeCommandTest extends FlowTestCase
             '--input-file-limit' => 5,
             '--stats-schema' => true,
             '--schema-all-strings' => true,
-        ]);
+        ], ['capture_stderr_separately' => true]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -116,7 +148,7 @@ final class FileAnalyzeCommandTest extends FlowTestCase
             'input-file' => __DIR__ . '/Fixtures/orders.csv',
             '--input-file-limit' => 5,
             '--stats-columns' => true,
-        ]);
+        ], ['capture_stderr_separately' => true]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -156,7 +188,7 @@ final class FileAnalyzeCommandTest extends FlowTestCase
         $tester->execute([
             'input-file' => __DIR__ . '/Fixtures/orders.csv',
             '--stats-sources' => true,
-        ]);
+        ], ['capture_stderr_separately' => true]);
 
         $tester->assertCommandIsSuccessful();
 

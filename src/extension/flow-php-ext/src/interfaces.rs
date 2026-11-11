@@ -29,6 +29,7 @@ const ITERATOR: DataType = DataType::object("Iterator");
 const READ_PLAN: DataType = DataType::object("Flow\\Parquet\\Reader\\ReadPlan");
 const COLUMN_TYPES: DataType = DataType::object("Flow\\ETL\\IO\\Inference\\ColumnTypes");
 const TYPE_NARROWER: DataType = DataType::object("Flow\\Types\\Type\\TypeNarrower");
+const PROGRESS: DataType = DataType::object("Flow\\ETL\\Foundation\\Progress");
 const OPERATOR: DataType = DataType::object("Flow\\Types\\Type\\Comparison\\Operator");
 const REBUILD: DataType = DataType::object("Flow\\ETL\\Foundation\\Describe\\Rebuild");
 
@@ -386,6 +387,11 @@ pub fn register() -> Result<()> {
                 vec![Arg::new("rows", ROWS), Arg::new("columns", DataType::Array)],
                 ROWS,
             ),
+            method(
+                "sortWorkingBytes",
+                vec![Arg::new("rows", ROWS), Arg::new("columns", DataType::Array)],
+                DataType::Long,
+            ),
             method("groupedTotals", vec![], GROUPED_TOTALS),
             method("groupedCounts", vec![], GROUPED_COUNTS),
             method(
@@ -399,6 +405,8 @@ pub fn register() -> Result<()> {
                 COLUMN,
             ),
             method("allocatedBytes", vec![], DataType::Long),
+            method("allocatedPeakBytes", vec![], DataType::Long),
+            method("resetAllocatedPeak", vec![], DataType::Void),
         ],
     )?;
     interface(
@@ -457,6 +465,7 @@ pub fn register() -> Result<()> {
                     Arg::new("names", DataType::Array),
                     Arg::new("rowBudget", DataType::Long).allow_null(),
                     Arg::new("typer", TYPE_NARROWER),
+                    Arg::new("progress", PROGRESS),
                 ],
                 COLUMN_TYPES,
             ),

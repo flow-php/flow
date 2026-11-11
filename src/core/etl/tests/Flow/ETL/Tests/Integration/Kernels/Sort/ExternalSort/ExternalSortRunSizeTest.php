@@ -9,6 +9,7 @@ use Flow\ETL\Tests\Double\RecordingRowsStorage;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\ETL\Tests\Mother\ExternalSortMother;
 use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Values\Memory\MemoryBudget;
 use Flow\ETL\Values\Memory\Unit;
 use Generator;
 
@@ -27,7 +28,6 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\path;
 use function iterator_to_array;
-use function memory_get_usage;
 use function str_repeat;
 use function str_starts_with;
 
@@ -51,12 +51,13 @@ final class ExternalSortRunSizeTest extends FlowIntegrationTestCase
             }
         })();
 
+        $backend = config()->backend();
         $sorted = iterator_to_array(
-            ExternalSortMother::with(
-                [ref('id')->asc()],
-                $storage,
-                Unit::fromBytes(memory_get_usage(false) + 4_500_000),
-            )->sort($input, config()->backend()),
+            ExternalSortMother::with([ref('id')->asc()], $storage)->sort(
+                $input,
+                $backend,
+                new MemoryBudget($backend, Unit::fromBytes(4_500_000), null),
+            ),
             false,
         );
 

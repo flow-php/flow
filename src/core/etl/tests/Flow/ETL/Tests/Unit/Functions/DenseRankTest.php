@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Functions;
 
+use Flow\ETL\Foundation\StageName;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Tests\Context\AggregatorRoundTrip;
 use Flow\ETL\Tests\Context\RankingContext;
+use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\RowsMother;
 
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\dense_rank;
@@ -33,7 +37,7 @@ final class DenseRankTest extends FlowTestCase
             [1, 2, 3, 3, 3],
             dense_rank()
                 ->over(window()->orderBy(ref('salary')))
-                ->values(RankingContext::salariesAscending(), flow_context()->backend()),
+                ->values(RankingContext::salariesAscending(), flow_context()->backend(), new VoidProgress()),
         );
     }
 
@@ -46,7 +50,7 @@ final class DenseRankTest extends FlowTestCase
             [1, 1, 1, 2, 3],
             dense_rank()
                 ->over(window()->orderBy(ref('salary')->desc()))
-                ->values(RankingContext::salariesDescending(), flow_context()->backend()),
+                ->values(RankingContext::salariesDescending(), flow_context()->backend(), new VoidProgress()),
         );
     }
 
@@ -56,7 +60,7 @@ final class DenseRankTest extends FlowTestCase
             [1, 2, 3, 4, 5],
             dense_rank()
                 ->over(window()->orderBy(ref('salary')->desc(), ref('id')))
-                ->values(RankingContext::salariesDescending(), flow_context()->backend()),
+                ->values(RankingContext::salariesDescending(), flow_context()->backend(), new VoidProgress()),
         );
     }
 
@@ -66,14 +70,18 @@ final class DenseRankTest extends FlowTestCase
 
         dense_rank()
             ->over(window())
-            ->values(array_to_rows([['salary' => 6000]], schema(int_schema('salary'))), flow_context()->backend());
+            ->values(
+                array_to_rows([['salary' => 6000]], schema(int_schema('salary'))),
+                flow_context()->backend(),
+                new VoidProgress(),
+            );
     }
 
     public function test_dense_rank_without_over_clause(): void
     {
         $this->expectExceptionMessage('Window function "dens_rank()" requires an OVER clause.');
 
-        dense_rank()->values(RankingContext::salariesDescending(), flow_context()->backend());
+        dense_rank()->values(RankingContext::salariesDescending(), flow_context()->backend(), new VoidProgress());
     }
 
     public function test_with_children_returns_the_same_leaf(): void
@@ -82,5 +90,16 @@ final class DenseRankTest extends FlowTestCase
 
         static::assertSame([], $function->children());
         static::assertSame($function, $function->withChildren([]));
+    }
+
+    public function test_reports_a_long_partition_to_the_progress(): void
+    {
+        $progress = new ProgressSpy();
+
+        dense_rank()
+            ->over(window()->orderBy(ref('id')))
+            ->values(RowsMother::sequentialIds(2500), flow_context()->backend(), $progress->stage(StageName::window));
+
+        static::assertSame([['window', 1000], ['window', 1000], ['window', 500]], $progress->advancedCalls());
     }
 }

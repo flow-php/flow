@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Functions;
 
+use Flow\ETL\Foundation\StageName;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Functions\Window;
 use Flow\ETL\Tests\Context\AggregatorRoundTrip;
 use Flow\ETL\Tests\Double\CountingWindowFrame;
+use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\RowsMother;
 
@@ -47,6 +50,7 @@ final class RowNumberTest extends FlowTestCase
                         schema(int_schema('id'), int_schema('value')),
                     ),
                     flow_context()->backend(),
+                    new VoidProgress(),
                 )[4],
         );
     }
@@ -56,8 +60,8 @@ final class RowNumberTest extends FlowTestCase
         $rows = array_to_rows([['id' => 3], ['id' => 3], ['id' => 1]], schema(int_schema('id')));
         $rowNumber = row_number()->over(window()->orderBy(ref('id')->desc()));
 
-        static::assertSame([1, 2, 3], $rowNumber->values($rows, flow_context()->backend()));
-        static::assertSame([], $rowNumber->values($rows->slice(0, 0), flow_context()->backend()));
+        static::assertSame([1, 2, 3], $rowNumber->values($rows, flow_context()->backend(), new VoidProgress()));
+        static::assertSame([], $rowNumber->values($rows->slice(0, 0), flow_context()->backend(), new VoidProgress()));
     }
 
     public function test_row_number_numbers_duplicated_rows_separately(): void
@@ -69,8 +73,8 @@ final class RowNumberTest extends FlowTestCase
 
         $rowNumber = row_number()->over(window()->orderBy(ref('value')));
 
-        static::assertSame(1, $rowNumber->values($rows, flow_context()->backend())[0]);
-        static::assertSame(2, $rowNumber->values($rows, flow_context()->backend())[1]);
+        static::assertSame(1, $rowNumber->values($rows, flow_context()->backend(), new VoidProgress())[0]);
+        static::assertSame(2, $rowNumber->values($rows, flow_context()->backend(), new VoidProgress())[1]);
     }
 
     public function test_ranking_never_resolves_a_frame(): void
@@ -81,7 +85,7 @@ final class RowNumberTest extends FlowTestCase
             [1, 2, 3],
             row_number()
                 ->over(new Window([], [ref('id')->asc()], $frame))
-                ->values(RowsMother::sequentialIds(3), flow_context()->backend()),
+                ->values(RowsMother::sequentialIds(3), flow_context()->backend(), new VoidProgress()),
         );
         static::assertSame(0, $frame->calls);
     }
@@ -92,5 +96,16 @@ final class RowNumberTest extends FlowTestCase
 
         static::assertSame([], $function->children());
         static::assertSame($function, $function->withChildren([]));
+    }
+
+    public function test_reports_a_long_partition_to_the_progress(): void
+    {
+        $progress = new ProgressSpy();
+
+        row_number()
+            ->over(window()->orderBy(ref('id')))
+            ->values(RowsMother::sequentialIds(2500), flow_context()->backend(), $progress->stage(StageName::window));
+
+        static::assertSame([['window', 2500]], $progress->advancedCalls());
     }
 }

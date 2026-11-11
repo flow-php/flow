@@ -17,6 +17,7 @@ use Flow\ETL\Adapter\CSV\IO\Inference\CSVSniffer;
 use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\SchemaMismatchException;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Extractor\File\SourceFile;
 use Flow\ETL\IO\Inference\ColumnTypes;
 use Flow\ETL\IO\Inference\SchemaInference;
@@ -312,7 +313,10 @@ final class CSVFixtureContext
      */
     public static function infer(SchemaInference $inference, string ...$fixtures): Schema
     {
-        return (new SchemaInferrer($inference))->infer(self::sniffer(array_values($fixtures), $inference))->schema;
+        return (new SchemaInferrer($inference))->infer(
+            self::sniffer(array_values($fixtures), $inference),
+            new VoidProgress(),
+        )->schema;
     }
 
     /**
@@ -340,6 +344,7 @@ final class CSVFixtureContext
 
         return (new SchemaInferrer($inference))->infer(
             new FakeSniffer($units, new StringTypeNarrower($inference->candidates()->toArray()), $names),
+            new VoidProgress(),
         )->schema;
     }
 
@@ -476,8 +481,9 @@ final class CSVFixtureContext
                 self::phpRecords($fixture),
                 $rowBudget,
                 new StringTypeNarrower($inference->candidates()->toArray()),
+                new VoidProgress(),
             )->folded(),
-            self::sniffer([$fixture], $inference)->sniff(0, $rowBudget)->columns,
+            self::sniffer([$fixture], $inference)->sniff(0, $rowBudget, new VoidProgress())->columns,
         ];
     }
 

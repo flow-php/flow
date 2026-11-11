@@ -92,7 +92,7 @@ flowPHP.buildEnv {
       )
     + "\n"
     + (
-        if with-php-benchmark
+        if with-php-benchmark || with-blackfire
         then
             (
                 if builtins.pathExists ./../../php/lib/benchmark.ini

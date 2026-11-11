@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Runtime\Executor;
 
 use DomainException;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Operators\Transformer\LimitTransformer;
 use Flow\ETL\Runtime\ErrorHandler\LoadingError;
 use Flow\ETL\Runtime\ErrorHandler\ThrowError;
@@ -34,7 +35,7 @@ final class BranchLoaderTest extends FlowTestCase
             $second,
         );
 
-        $branch->closure();
+        $branch->closure(new VoidProgress());
         $branch->discard();
 
         static::assertSame(['closure', 'discard'], $first->log);
@@ -68,7 +69,7 @@ final class BranchLoaderTest extends FlowTestCase
         $branch = BranchLoaderMother::branchLoader(new OfferedFailure(new ThrowError()), $loader);
 
         $branch->load(BranchLoaderMother::batch());
-        $branch->closure();
+        $branch->closure(new VoidProgress());
 
         static::assertSame(['load#1(1)', 'closure'], $loader->log);
     }
@@ -77,7 +78,7 @@ final class BranchLoaderTest extends FlowTestCase
     {
         $loader = new RecordingLoader();
 
-        BranchLoaderMother::branchLoader(new OfferedFailure(new ThrowError()), $loader)->closure();
+        BranchLoaderMother::branchLoader(new OfferedFailure(new ThrowError()), $loader)->closure(new VoidProgress());
 
         static::assertSame(['closure'], $loader->log);
     }
@@ -153,7 +154,7 @@ final class BranchLoaderTest extends FlowTestCase
 
         $this->expectExceptionObject($drain);
 
-        $branch->closure();
+        $branch->closure(new VoidProgress());
     }
 
     public function test_discard_after_a_terminated_and_dropped_failed_run_does_not_discard_again(): void
@@ -177,7 +178,7 @@ final class BranchLoaderTest extends FlowTestCase
         $loader = new RecordingLoader();
         $branch = BranchLoaderMother::branchLoader(new OfferedFailure(new ThrowError()), $loader);
 
-        $branch->closure();
+        $branch->closure(new VoidProgress());
         $branch->discard();
 
         static::assertSame(['closure', 'discard'], $loader->log);
@@ -188,7 +189,7 @@ final class BranchLoaderTest extends FlowTestCase
         $loader = new SpyLoader();
         $branch = BranchLoaderMother::branchLoader(new OfferedFailure(new ThrowError()), $loader);
 
-        $branch->closure();
+        $branch->closure(new VoidProgress());
         $branch->discard();
 
         static::assertSame(1, $loader->closureCount);
@@ -204,7 +205,7 @@ final class BranchLoaderTest extends FlowTestCase
         $branch = new BranchLoader($feed, $run, $offers, $loader);
 
         try {
-            $branch->closure();
+            $branch->closure(new VoidProgress());
         } catch (RuntimeException $failure) {
             static::assertSame($drain, $failure);
         }

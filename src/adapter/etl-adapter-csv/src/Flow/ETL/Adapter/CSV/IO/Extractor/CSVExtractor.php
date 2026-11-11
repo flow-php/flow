@@ -8,6 +8,8 @@ use Flow\ETL\Adapter\CSV\IO\Inference\CSVSniffer;
 use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Functions\ScalarFunction;
 use Flow\ETL\IO\CorruptedRecordsRouter;
 use Flow\ETL\IO\Extractor;
@@ -63,6 +65,8 @@ final class CSVExtractor implements
 
     private SchemaInference $inference;
 
+    private Progress $inferenceProgress;
+
     private CSVReadOptions $readOptions;
 
     /**
@@ -92,6 +96,7 @@ final class CSVExtractor implements
 
         $this->filesystem = $filesystem;
         $this->inference = new SchemaInference();
+        $this->inferenceProgress = new VoidProgress();
         $this->readOptions = new CSVReadOptions();
         $this->dialects = new CSVDialects();
         $this->derived = new DerivedFromFiles();
@@ -159,6 +164,11 @@ final class CSVExtractor implements
         return $this;
     }
 
+    public function reportInferenceTo(Progress $progress): void
+    {
+        $this->inferenceProgress = $progress;
+    }
+
     public function schema(): Schema
     {
         $schema = $this->describe();
@@ -191,7 +201,7 @@ final class CSVExtractor implements
                 $this->inference->candidates(),
             );
 
-            $inferred = (new SchemaInferrer($this->inference))->infer($sniffer);
+            $inferred = (new SchemaInferrer($this->inference))->infer($sniffer, $this->inferenceProgress);
             $derived = $this->derived->learn($inferred->schema, $sniffer->header()->source ?? '');
             $this->sampled = $inferred->units;
         }

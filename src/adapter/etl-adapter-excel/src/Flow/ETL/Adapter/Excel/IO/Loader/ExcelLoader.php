@@ -11,8 +11,9 @@ use Flow\ETL\Foundation\Describe\ConfiguredFilesystem;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Filesystem\SaveMode;
-use Flow\ETL\IO\Loader;
 use Flow\ETL\IO\Loader\Closure;
 use Flow\ETL\IO\Loader\Discardable;
 use Flow\ETL\IO\Loader\File\FileCommit;
@@ -45,7 +46,7 @@ use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function is_string;
 
-final class ExcelLoader implements Closure, Discardable, FileLoader, Loader
+final class ExcelLoader implements Closure, Discardable, FileLoader
 {
     /**
      * OpenSpout calls mb_* functions but requires neither mbstring nor its polyfill.
@@ -191,14 +192,14 @@ final class ExcelLoader implements Closure, Discardable, FileLoader, Loader
         return $this;
     }
 
-    public function closure(): void
+    public function closure(Progress $progress): void
     {
-        $this->workbook?->close();
+        $this->workbook?->close($progress);
         $this->workbook = null;
 
         // the commit stays reachable until it succeeds: discard() after a failed commit still aborts it
         if ($this->task === null) {
-            $this->files()->commit([0]);
+            $this->files()->commit([0], $progress);
         }
 
         $this->files = null;
@@ -206,7 +207,7 @@ final class ExcelLoader implements Closure, Discardable, FileLoader, Loader
 
     public function discard(): void
     {
-        $this->workbook?->close();
+        $this->workbook?->close(new VoidProgress());
         $this->workbook = null;
 
         $this->files?->abort();

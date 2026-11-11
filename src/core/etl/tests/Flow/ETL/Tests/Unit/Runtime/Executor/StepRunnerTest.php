@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Runtime\Executor;
 
+use ArrayObject;
+use Flow\ETL\Foundation\Clock\FakeClock;
 use Flow\ETL\Foundation\Exception\CorruptedRecordException;
+use Flow\ETL\Foundation\StageName;
+use Flow\ETL\Foundation\StageProgress;
 use Flow\ETL\IO\Extractor\Criteria;
+use Flow\ETL\IO\Extractor\Signal;
 use Flow\ETL\Operators\Join\CrossJoin;
 use Flow\ETL\Operators\Processor\BatchingProcessor;
 use Flow\ETL\Operators\Processor\CollectingProcessor;
@@ -23,14 +28,21 @@ use Flow\ETL\Runtime\ErrorHandler\SkipRows;
 use Flow\ETL\Runtime\ErrorHandler\ThrowError;
 use Flow\ETL\Runtime\ErrorHandler\TransformationError;
 use Flow\ETL\Runtime\Executor\StepRunner;
+use Flow\ETL\Runtime\Executor\StepTelemetry;
+use Flow\ETL\Runtime\Telemetry\TelemetryOptions;
+use Flow\ETL\Tests\Context\HeartbeatContext;
 use Flow\ETL\Tests\Context\MemoryTelemetryContext;
+use Flow\ETL\Tests\Double\ClosureThrowingLoader;
 use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\Double\RecordingErrorHandler;
+use Flow\ETL\Tests\Double\RecordingHeartbeat;
 use Flow\ETL\Tests\Double\RecordingLoader;
+use Flow\ETL\Tests\Double\RecordingProcessor;
 use Flow\ETL\Tests\Double\SpyLoader;
 use Flow\ETL\Tests\Double\ThrowingLoader;
 use Flow\ETL\Tests\Double\ThrowingTransformer;
 use Flow\ETL\Tests\Double\ThrowWhenRowMatches;
+use Flow\ETL\Tests\Double\TracedFailureTransformer;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\PhysicalPlanMother;
 use Flow\ETL\Tests\Mother\RowsMother;
@@ -38,14 +50,18 @@ use Flow\ETL\Values\BatchSize;
 use Flow\ETL\Values\Rows;
 use Flow\Telemetry\Logger\LogEntry;
 use Generator;
+use LogicException;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 use RuntimeException;
 
 use function array_map;
 use function array_merge;
 use function array_slice;
+use function count;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
@@ -55,10 +71,243 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function Flow\Filesystem\DSL\memory_filesystem;
+use function Flow\Filesystem\DSL\path;
+use function Flow\Floe\DSL\to_floe;
 use function iterator_to_array;
 
 final class StepRunnerTest extends FlowTestCase
 {
+    public function test_unwinding_an_input_that_rethrows_surfaces_the_same_failure(): void
+    {
+        $telemetry = new MemoryTelemetryContext();
+        $ended = new ArrayObject();
+        /** @var Generator<int, Rows, null|Signal, void> $input */
+        $input = (static function () use ($ended): Generator {
+            try {
+                yield array_to_rows([['id' => 1]], schema(int_schema('id')));
+            } catch (RuntimeException $failure) {
+                throw $failure;
+            } finally {
+                $ended->append('finally');
+            }
+        })();
+        $input->current();
+
+        (new StepRunner())->unwind($input, new RuntimeException('failed'), $telemetry->flowContext);
+
+        static::assertSame([['finally'], 0], [
+            $ended->getArrayCopy(),
+            count($telemetry->logs->entriesContaining('The input of a failed run failed to end')),
+        ]);
+    }
+
+    public function test_unwinding_an_input_that_swallows_the_failure_logs_nothing(): void
+    {
+        $telemetry = new MemoryTelemetryContext();
+        /** @var Generator<int, Rows, null|Signal, void> $input */
+        $input = (static function (): Generator {
+            try {
+                yield array_to_rows([['id' => 1]], schema(int_schema('id')));
+            } catch (RuntimeException) {
+                yield array_to_rows([['id' => 1]], schema(int_schema('id')));
+            }
+        })();
+        $input->current();
+
+        (new StepRunner())->unwind($input, new RuntimeException('failed'), $telemetry->flowContext);
+
+        static::assertSame([], $telemetry->logs->entriesContaining('The input of a failed run failed to end'));
+    }
+
+    public function test_unwinding_an_input_that_replaces_the_failure_logs_the_replacement(): void
+    {
+        $telemetry = new MemoryTelemetryContext();
+        /** @var Generator<int, Rows, null|Signal, void> $input */
+        $input = (static function (): Generator {
+            try {
+                yield array_to_rows([['id' => 1]], schema(int_schema('id')));
+            } catch (RuntimeException) {
+                throw new LogicException('cleanup failed');
+            }
+        })();
+        $input->current();
+
+        (new StepRunner())->unwind($input, new RuntimeException('failed'), $telemetry->flowContext);
+
+        static::assertCount(1, $telemetry->logs->entriesContaining('The input of a failed run failed to end'));
+    }
+
+    public function test_unwinding_a_finished_input_leaves_the_failure_as_it_is(): void
+    {
+        $telemetry = new MemoryTelemetryContext();
+        /** @var Generator<int, Rows, null|Signal, void> $input */
+        $input = (static function (): Generator {
+            yield array_to_rows([['id' => 1]], schema(int_schema('id')));
+        })();
+        iterator_to_array($input);
+        $failure = new RuntimeException('failed');
+
+        (new StepRunner())->unwind($input, $failure, $telemetry->flowContext);
+
+        static::assertSame([null, []], [
+            $failure->getPrevious(),
+            $telemetry->logs->entriesContaining('The input of a failed run failed to end'),
+        ]);
+    }
+
+    public function test_unwinding_an_aborted_input_leaves_the_failure_as_it_is(): void
+    {
+        $telemetry = new MemoryTelemetryContext();
+        /** @var Generator<int, Rows, null|Signal, void> $input */
+        $input = (static function (): Generator {
+            yield array_to_rows([['id' => 1]], schema(int_schema('id')));
+
+            throw new LogicException('source aborted');
+        })();
+        $input->current();
+
+        try {
+            $input->next();
+        } catch (LogicException) {
+        }
+
+        $failure = new RuntimeException('failed');
+
+        (new StepRunner())->unwind($input, $failure, $telemetry->flowContext);
+
+        static::assertSame([null, []], [
+            $failure->getPrevious(),
+            $telemetry->logs->entriesContaining('The input of a failed run failed to end'),
+        ]);
+    }
+
+    public function test_unwinding_a_traced_operator_ends_the_processor_it_holds(): void
+    {
+        $telemetry = new MemoryTelemetryContext(new TelemetryOptions(traceTransformations: true));
+        $ended = new ArrayObject();
+        /** @var Generator<int, Rows, null|Signal, void> $processor */
+        $processor = (static function () use ($ended): Generator {
+            try {
+                yield array_to_rows([['id' => 1]], schema(int_schema('id')));
+                yield array_to_rows([['id' => 1]], schema(int_schema('id')));
+            } finally {
+                $ended->append('processor finally');
+            }
+        })();
+        $operator = (new StepTelemetry())->operator(VoidProcessor::class, $processor, $telemetry->flowContext);
+        unset($processor);
+        $operator->current();
+        (new StepRunner())->unwind($operator, new RuntimeException('failed'), $telemetry->flowContext);
+
+        static::assertSame(['processor finally'], $ended->getArrayCopy());
+    }
+
+    #[TestWith([true])]
+    #[TestWith([false])]
+    public function test_a_failed_run_throws_its_failure_into_a_processor_before_it_ends_the_source(bool $traced): void
+    {
+        $log = new ArrayObject();
+        $steps = (new StepRunner())->steps(
+            new PipelineSteps([new RecordingProcessor($log), new TracedFailureTransformer()]),
+            (static function () use ($log): Generator {
+                try {
+                    yield RowsMother::sequentialIds(1);
+                    yield RowsMother::sequentialIds(1);
+                } finally {
+                    $log->append('source finally');
+                }
+            })(),
+            (new MemoryTelemetryContext(new TelemetryOptions(traceTransformations: $traced)))->flowContext,
+        );
+
+        try {
+            iterator_to_array($steps);
+
+            static::fail('Expected the failure to surface.');
+        } catch (RuntimeException $e) {
+            static::assertSame('step exploded', $e->getMessage());
+            static::assertSame(
+                ['processor caught step exploded', 'processor finally', 'source finally'],
+                $log->getArrayCopy(),
+            );
+        }
+    }
+
+    public function test_unwinding_an_operator_ends_the_chain_it_holds_in_a_local(): void
+    {
+        $ended = new ArrayObject();
+        /** @var Generator<int, Rows, null|Signal, void> $operator */
+        $operator = (static function () use ($ended): Generator {
+            try {
+                $joined = (
+                    /**
+                     * @param Generator<int, Rows> $left
+                     *
+                     * @return Generator<int, Rows>
+                     */
+                    static function (Generator $left): Generator {
+                        foreach ($left as $rows) {
+                            yield $rows;
+                        }
+                    }
+                )(
+                    (static function () use ($ended): Generator {
+                        try {
+                            yield array_to_rows([['id' => 1]], schema(int_schema('id')));
+                            yield array_to_rows([['id' => 1]], schema(int_schema('id')));
+                        } finally {
+                            $ended->append('reader closed');
+                        }
+                    })(),
+                );
+
+                foreach ($joined as $rows) {
+                    yield $rows;
+                }
+            } catch (LogicException $other) {
+                throw new RuntimeException('wrapped', 0, $other);
+            } finally {
+                $ended->append('buckets cleared');
+            }
+        })();
+        $operator->current();
+        (new StepRunner())->unwind($operator, new RuntimeException('failed'), flow_context());
+
+        static::assertSame(['buckets cleared', 'reader closed'], $ended->getArrayCopy());
+    }
+
+    public function test_unwinding_a_processor_ends_the_input_it_owns(): void
+    {
+        $ended = new ArrayObject();
+        /** @var Generator<int, Rows, null|Signal, void> $processor */
+        $processor = (
+            /**
+             * @param Generator<int, Rows> $rows
+             *
+             * @return Generator<int, Rows>
+             */
+            static function (Generator $rows): Generator {
+                foreach ($rows as $batch) {
+                    yield $batch;
+                }
+            }
+        )(
+            (static function () use ($ended): Generator {
+                try {
+                    yield array_to_rows([['id' => 1]], schema(int_schema('id')));
+                    yield array_to_rows([['id' => 1]], schema(int_schema('id')));
+                } finally {
+                    $ended->append('input finally');
+                }
+            })(),
+        );
+        $processor->current();
+        (new StepRunner())->unwind($processor, new RuntimeException('failed'), flow_context());
+
+        static::assertSame(['input finally'], $ended->getArrayCopy());
+    }
+
     public function test_a_run_drops_empty_batches_and_closes_its_loaders_when_it_completes(): void
     {
         $loader = new RecordingLoader();
@@ -98,6 +347,46 @@ final class StepRunnerTest extends FlowTestCase
 
         static::assertSame([$failure], (new StepRunner())->endLoaders([$loader], flow_context(config()), true));
         static::assertSame(['closure THROW', 'discard'], $loader->log);
+    }
+
+    public function test_a_failing_closure_still_closes_the_loaders_after_it(): void
+    {
+        $failure = new RuntimeException('closure failed');
+        $failing = new ClosureThrowingLoader($failure);
+        $next = new RecordingLoader();
+
+        static::assertSame([$failure], (new StepRunner())->endLoaders([$failing, $next], flow_context(config()), true));
+        static::assertSame(1, $failing->discarded);
+        static::assertSame(['closure'], $next->log);
+    }
+
+    public function test_a_commit_entry_has_the_location_of_its_write(): void
+    {
+        $recording = new RecordingHeartbeat();
+        $context = flow_context(
+            config_builder()->clock(new FakeClock())->heartbeat($recording, everySeconds: 60)->build(),
+        );
+        $memory = memory_filesystem();
+        $loaders = [
+            to_floe(path('memory://a/part-{part}.floe'), filesystem: $memory),
+            to_floe(path('memory://b/rows.floe'), filesystem: $memory),
+        ];
+        $context->config->heartbeat()?->started();
+
+        foreach ($loaders as $loader) {
+            $loader->load(RowsMother::sequentialIds(2), $context->backend());
+        }
+
+        (new StepRunner())->endLoaders($loaders, $context, true);
+        $context->config->heartbeat()?->completed();
+
+        static::assertSame(
+            ['memory://a/', 'memory://b/'],
+            array_map(
+                static fn(StageProgress $commit): ?string => $commit->subject,
+                HeartbeatContext::entries($recording, StageName::commit)[0],
+            ),
+        );
     }
 
     public function test_steps_without_a_source_rethrow_their_input_error_untouched(): void
@@ -630,6 +919,35 @@ final class StepRunnerTest extends FlowTestCase
         static::assertCount(
             1,
             $telemetry->logs->entriesContaining('Routed 2 corrupted records to ' . SpyLoader::class . '.'),
+        );
+    }
+
+    public function test_end_loaders_is_done_after_every_loader(): void
+    {
+        $recording = new RecordingHeartbeat();
+        $context = flow_context(
+            config_builder()->clock(new FakeClock())->heartbeat($recording, everySeconds: 60)->build(),
+        );
+        $memory = memory_filesystem();
+        $loaders = [
+            to_floe(path('memory://a/part-{part}.floe'), filesystem: $memory),
+            to_floe(path('memory://b/rows.floe'), filesystem: $memory),
+        ];
+        $context->config->heartbeat()?->started();
+
+        foreach ($loaders as $loader) {
+            $loader->load(RowsMother::sequentialIds(2), $context->backend());
+        }
+
+        (new StepRunner())->endLoaders($loaders, $context, true);
+        $context->config->heartbeat()?->beatNow();
+
+        static::assertSame(
+            [true, true],
+            array_map(
+                static fn(StageProgress $commit): bool => $commit->endedAtSeconds !== null,
+                HeartbeatContext::entries($recording, StageName::commit)[0],
+            ),
         );
     }
 }

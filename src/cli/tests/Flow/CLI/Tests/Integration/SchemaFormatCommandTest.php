@@ -8,10 +8,22 @@ use Flow\CLI\Command\SchemaFormatCommand;
 use Flow\ETL\Tests\Context\CommandOutputNormalizer;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Exception\InvalidOptionException;
 use Symfony\Component\Console\Tester\CommandTester;
 
 final class SchemaFormatCommandTest extends TestCase
 {
+    public function test_config_option_is_not_accepted(): void
+    {
+        $this->expectException(InvalidOptionException::class);
+        $this->expectExceptionMessage('The "--config" option does not exist.');
+
+        (new CommandTester(new SchemaFormatCommand('schema:format')))->execute([
+            'input-schema-file' => __DIR__ . '/Fixtures/schema.json',
+            '--config' => 'x.php',
+        ]);
+    }
+
     public function test_run_schema_format(): void
     {
         $tester = new CommandTester(new SchemaFormatCommand('schema:format'));

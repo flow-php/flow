@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Context;
 
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Functions\AggregatingFunction;
 use Flow\ETL\Functions\ReferenceResolver;
 use Flow\ETL\Functions\Window\WindowFrame;
@@ -81,8 +82,12 @@ final class AggregatorRoundTrip
     public static function windowed(WindowFunction $function): array
     {
         return [
-            $function->values(self::partition(), flow_context()->backend()),
-            DescribeRoundTrip::rebuilt($function)->values(self::partition(), flow_context()->backend()),
+            $function->values(self::partition(), flow_context()->backend(), new VoidProgress()),
+            DescribeRoundTrip::rebuilt($function)->values(
+                self::partition(),
+                flow_context()->backend(),
+                new VoidProgress(),
+            ),
         ];
     }
 }

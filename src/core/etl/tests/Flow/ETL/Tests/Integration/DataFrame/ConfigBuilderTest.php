@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
+use ArrayObject;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Kernels\Sort\ExternalSortConfig;
 use Flow\ETL\Kernels\Sort\MemorySortConfig;
 use Flow\ETL\Planning\Optimizer\Optimizer;
@@ -11,23 +14,31 @@ use Flow\ETL\Planning\Optimizer\Rule\PushLimitIntoSource;
 use Flow\ETL\Planning\Physical\Planner;
 use Flow\ETL\Runtime\CacheConfig;
 use Flow\ETL\Runtime\Executor\Executor;
+use Flow\ETL\Runtime\Heartbeat\HeartbeatThrottle;
+use Flow\ETL\Runtime\Heartbeat\Pulse;
 use Flow\ETL\Storage\FilesystemRowsStorage;
 use Flow\ETL\Storage\MemoryRowsStorage;
+use Flow\ETL\Tests\Double\RecordingHeartbeat;
 use Flow\ETL\Tests\Double\RecordingLauncher;
 use Flow\ETL\Tests\Double\SpyBackend;
+use Flow\ETL\Tests\Double\SteppingClock;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\ETL\Tests\Mother\NodeTranslatorMother;
 use Flow\ETL\Values\Column\Php\ScalarColumn;
 use Flow\ETL\Values\Column\PhpBackend;
 use Flow\ETL\Values\Rows;
 use Override;
+use RuntimeException;
 
 use function array_map;
 use function array_merge;
+use function array_slice;
 use function Flow\ETL\DSL\analyze;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config_builder;
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\external_sort;
+use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\memory_sort;
 use function Flow\ETL\DSL\schema;
@@ -45,6 +56,52 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         putenv(CacheConfig::CACHE_DIR_ENV . '=' . $this->cacheDir->path());
 
         parent::tearDown();
+    }
+
+    public function test_heartbeat_builds_a_throttle(): void
+    {
+        static::assertInstanceOf(
+            HeartbeatThrottle::class,
+            config_builder()->heartbeat(new RecordingHeartbeat(), everySeconds: 5)->build()->heartbeat(),
+        );
+    }
+
+    public function test_heartbeats_append_in_registration_order(): void
+    {
+        $calls = new ArrayObject();
+
+        df(
+            config_builder()
+                ->clock(new SteppingClock())
+                ->heartbeat(new RecordingHeartbeat('lease', calls: $calls), everySeconds: 1)
+                ->heartbeat(new RecordingHeartbeat('console', calls: $calls), everySeconds: 1),
+        )
+            ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4]])->withBatchSize(1))
+            ->fetch();
+
+        static::assertSame([['lease', 1], ['console', 1]], array_slice($calls->getArrayCopy(), 0, 2));
+    }
+
+    public function test_heartbeat_refuses_an_interval_below_a_tenth_of_a_second(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Heartbeat interval must be at least 0.1 seconds, got 0.05');
+
+        config_builder()->heartbeat(new RecordingHeartbeat(), everySeconds: 0.05);
+    }
+
+    public function test_each_build_schedules_its_own_beats(): void
+    {
+        $recording = new RecordingHeartbeat();
+        $builder = config_builder()->clock(new SteppingClock())->heartbeat($recording, everySeconds: 1);
+        $sort = $builder->build()->heartbeat()?->stage(StageName::sort);
+
+        $sort?->advanced(1);
+        $sort?->advanced(1);
+        $builder->build();
+        $sort?->advanced(1);
+
+        static::assertSame([1, 2, 3], array_map(static fn(Pulse $pulse): int => $pulse->beat, $recording->pulses()));
     }
 
     public function test_there_is_no_launcher_unless_one_is_set(): void
@@ -225,5 +282,46 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         ]], schema(int_schema('id')))));
 
         static::assertSame(1, $backend->decodeFrames());
+    }
+
+    public function test_a_heartbeat_to_the_parent_assigns_no_id_and_logs_its_failures(): void
+    {
+        $recording = new RecordingHeartbeat(throws: new RuntimeException('the parent stopped listening'));
+        $throttle = config_builder()
+            ->clock(new SteppingClock())
+            ->heartbeatToParent($recording, everySeconds: 1)
+            ->build()
+            ->heartbeat();
+
+        $throttle?->started();
+        $throttle?->stage(StageName::sort)->advanced(1);
+        $throttle?->stage(StageName::sort)->advanced(1);
+
+        static::assertNotSame([], $recording->pulses());
+        static::assertNull($recording->pulses()[0]->stages[0]->id);
+    }
+
+    public function test_a_heartbeat_after_a_heartbeat_to_the_parent_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'heartbeat() and heartbeatToParent() cannot be mixed on one ConfigBuilder. A worker reports to its parent through heartbeatToParent() only. Register every other heartbeat in the parent.',
+        );
+
+        config_builder()
+            ->heartbeatToParent(new RecordingHeartbeat(), everySeconds: 1)
+            ->heartbeat(new RecordingHeartbeat(), everySeconds: 1);
+    }
+
+    public function test_a_heartbeat_to_the_parent_after_a_heartbeat_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'heartbeat() and heartbeatToParent() cannot be mixed on one ConfigBuilder. A worker reports to its parent through heartbeatToParent() only. Register every other heartbeat in the parent.',
+        );
+
+        config_builder()
+            ->heartbeat(new RecordingHeartbeat(), everySeconds: 1)
+            ->heartbeatToParent(new RecordingHeartbeat(), everySeconds: 1);
     }
 }

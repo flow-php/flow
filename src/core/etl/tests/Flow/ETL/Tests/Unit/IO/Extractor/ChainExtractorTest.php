@@ -25,6 +25,7 @@ use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_all;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\infer_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
@@ -33,6 +34,56 @@ use function iterator_to_array;
 
 final class ChainExtractorTest extends FlowTestCase
 {
+    public function test_infer_schema_reaches_every_source_that_infers(): void
+    {
+        $first = from_array([['id' => 1]]);
+        $second = from_array([['id' => 2]]);
+
+        from_all($first, $second)->inferSchema(infer_schema()->allStrings());
+
+        static::assertEquals([schema(str_schema('id', nullable: true)), schema(str_schema('id', nullable: true))], [
+            $first->schema(),
+            $second->schema(),
+        ]);
+    }
+
+    public function test_infer_schema_skips_a_source_that_does_not_infer(): void
+    {
+        $inferring = from_array([['id' => 1]]);
+
+        from_all($inferring, from_rows(array_to_rows([['id' => 2]], schema(int_schema('id')))))->inferSchema(
+            infer_schema()->allStrings(),
+        );
+
+        static::assertEquals(schema(str_schema('id', nullable: true)), $inferring->schema());
+    }
+
+    public function test_the_schema_is_derived_again_after_infer_schema(): void
+    {
+        $chain = from_all(from_array([['id' => 1]]));
+        $before = $chain->schema();
+
+        $chain->inferSchema(infer_schema()->allStrings());
+
+        static::assertEquals([schema(int_schema('id', nullable: true)), schema(str_schema('id', nullable: true))], [
+            $before,
+            $chain->schema(),
+        ]);
+    }
+
+    public function test_a_declared_schema_wins_over_infer_schema(): void
+    {
+        $declared = schema(int_schema('id'));
+
+        static::assertSame(
+            $declared,
+            from_all(from_array([['id' => 1]]))
+                ->withSchema($declared)
+                ->inferSchema(infer_schema()->allStrings())
+                ->schema(),
+        );
+    }
+
     public function test_a_chain_without_extractors_refuses_to_infer_a_schema(): void
     {
         $this->expectException(InferredSchemaException::class);

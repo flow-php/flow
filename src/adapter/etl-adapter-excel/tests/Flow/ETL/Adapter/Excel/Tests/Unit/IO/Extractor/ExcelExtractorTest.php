@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\Excel\Tests\Unit\IO\Extractor;
 
 use Flow\ETL\Adapter\Excel\Tests\Context\ExcelFixtureContext;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\Adapter\Excel\DSL\from_excel;
@@ -79,5 +80,16 @@ final class ExcelExtractorTest extends FlowTestCase
     public function test_is_repeatable(): void
     {
         static::assertTrue(from_excel(ExcelFixtureContext::file('fixture.xlsx'))->isRepeatable());
+    }
+
+    public function test_schema_reports_the_sampled_rows_to_the_inference_progress(): void
+    {
+        $progress = new ProgressSpy();
+        $extractor = from_excel(ExcelFixtureContext::path('sniff/a'));
+        $extractor->reportInferenceTo($progress);
+
+        $extractor->schema();
+
+        static::assertSame(10, $progress->countOf(null));
     }
 }

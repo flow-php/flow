@@ -9,6 +9,7 @@ use Flow\ETL\Adapter\Excel\IO\Extractor\WorkbookSheet;
 use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\IO\Extractor\File\SourceFile;
 use Flow\ETL\IO\Extractor\Grid\GridHeader;
 use Flow\ETL\IO\Inference\ColumnTypes;
@@ -127,13 +128,13 @@ final class ExcelSniffer implements Describable, Sniffer
      * A bounded sample keeps what it parsed for take(); an unbounded one parses every row, so it streams and closes
      * as it goes. Either way the fold stops advancing a sheet once its budget is spent.
      */
-    public function sniff(int $unit, ?int $rowBudget): Sample
+    public function sniff(int $unit, ?int $rowBudget, Progress $progress): Sample
     {
         $sheet = $this->sheets[$unit] ??= $this->workbook->sheet($this->files[$unit]);
         $sample = new WorkbookSheetSample($sheet, $rowBudget === null ? $sheet->rows() : $sheet->sample());
 
         return new Sample(
-            ColumnTypes::sniff($this->names(), $sample, $rowBudget, $this->typer)->folded(),
+            ColumnTypes::sniff($this->names(), $sample, $rowBudget, $this->typer, $progress)->folded(),
             0,
             $sample->wholeSheet(),
         );

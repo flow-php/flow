@@ -11,8 +11,8 @@ use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\FlowPhpExtension;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\IO\Filesystem\SaveMode;
-use Flow\ETL\IO\Loader;
 use Flow\ETL\IO\Loader\Closure;
 use Flow\ETL\IO\Loader\Discardable;
 use Flow\ETL\IO\Loader\File\FileCommit;
@@ -39,7 +39,7 @@ use function Flow\Types\DSL\type_enum;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 
-final class JsonLoader implements Closure, Discardable, FileLoader, FileWriterFactory, Loader
+final class JsonLoader implements Closure, Discardable, FileLoader, FileWriterFactory
 {
     private ?FileWrite $frame = null;
 
@@ -131,9 +131,9 @@ final class JsonLoader implements Closure, Discardable, FileLoader, FileWriterFa
         return $this;
     }
 
-    public function closure(): void
+    public function closure(Progress $progress): void
     {
-        $this->frame()->closure();
+        $this->frame()->closure($progress);
         $this->frame = null;
     }
 

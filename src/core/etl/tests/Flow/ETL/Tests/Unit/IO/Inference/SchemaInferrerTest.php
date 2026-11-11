@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\IO\Inference;
 
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Inference\ColumnTypes;
 use Flow\ETL\IO\Inference\InferredTypes;
 use Flow\ETL\IO\Inference\SchemaInference;
@@ -11,6 +12,7 @@ use Flow\ETL\IO\Inference\SchemaInferrer;
 use Flow\ETL\Tests\Context\ReversedSniffing;
 use Flow\ETL\Tests\Double\FakeSniffer;
 use Flow\ETL\Tests\Double\PresniffedSniffer;
+use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\Double\RecordingLauncher;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\ColumnTypesMother;
@@ -101,7 +103,10 @@ final class SchemaInferrerTest extends FlowTestCase
             ['a'],
         );
 
-        $schema = (new SchemaInferrer(new SchemaInference(sampleSize: 10, unionByName: true)))->infer($sniffer)->schema;
+        $schema = (new SchemaInferrer(new SchemaInference(sampleSize: 10, unionByName: true)))->infer(
+            $sniffer,
+            new VoidProgress(),
+        )->schema;
 
         static::assertSame([[0, 10], [1, 6]], $sniffer->sniffed);
         static::assertEquals(
@@ -123,7 +128,7 @@ final class SchemaInferrerTest extends FlowTestCase
 
         $sniffer = new FakeSniffer([$tenIntegers, $tenIntegers], new StringTypeNarrower(), ['a']);
 
-        (new SchemaInferrer(new SchemaInference(sampleSize: 10)))->infer($sniffer);
+        (new SchemaInferrer(new SchemaInference(sampleSize: 10)))->infer($sniffer, new VoidProgress());
 
         static::assertSame([[0, 10]], $sniffer->sniffed);
     }
@@ -141,12 +146,15 @@ final class SchemaInferrerTest extends FlowTestCase
                 definition_from_type('id', type_integer(), nullable: true),
                 definition_from_type('v', type_string(), nullable: true),
             ),
-            (new SchemaInferrer(new SchemaInference()))->infer(new FakeSniffer($fixture, $typer, ['id', 'v']))->schema,
+            (new SchemaInferrer(new SchemaInference()))->infer(
+                new FakeSniffer($fixture, $typer, ['id', 'v']),
+                new VoidProgress(),
+            )->schema,
         );
         static::assertEquals(
             definition_from_type('v', type_integer(), nullable: true),
             (new FakeSniffer($fixture, $typer, ['id', 'v']))
-                ->sniff(1, null)
+                ->sniff(1, null, new VoidProgress())
                 ->columns
                 ->schema(ColumnTypesMother::floor())
                 ->get('v'),
@@ -161,7 +169,7 @@ final class SchemaInferrerTest extends FlowTestCase
             [['c' => '1']],
         ], new StringTypeNarrower(InferredTypes::default()->toArray()));
 
-        $schema = (new SchemaInferrer(new SchemaInference(100, 1)))->infer($sniffer)->schema;
+        $schema = (new SchemaInferrer(new SchemaInference(100, 1)))->infer($sniffer, new VoidProgress())->schema;
 
         static::assertSame([0, 1], $sniffer->sources->started);
         static::assertSame(['a', 'b'], array_keys($schema->definitions()));
@@ -175,7 +183,10 @@ final class SchemaInferrerTest extends FlowTestCase
             [['c' => '1']],
         ], new StringTypeNarrower(InferredTypes::default()->toArray()));
 
-        $schema = (new SchemaInferrer((new SchemaInference(filesToSniff: 2))->everyRow()))->infer($sniffer)->schema;
+        $schema = (new SchemaInferrer((new SchemaInference(filesToSniff: 2))->everyRow()))->infer(
+            $sniffer,
+            new VoidProgress(),
+        )->schema;
 
         static::assertSame([0, 1], $sniffer->sources->started);
         static::assertSame(['a', 'b'], array_keys($schema->definitions()));
@@ -188,7 +199,7 @@ final class SchemaInferrerTest extends FlowTestCase
             new StringTypeNarrower(InferredTypes::default()->toArray()),
         );
 
-        (new SchemaInferrer((new SchemaInference())->everyRow()->everySource()))->infer($sniffer);
+        (new SchemaInferrer((new SchemaInference())->everyRow()->everySource()))->infer($sniffer, new VoidProgress());
 
         static::assertSame([[0, null], [1, null], [2, null]], $sniffer->sniffed);
     }
@@ -201,6 +212,7 @@ final class SchemaInferrerTest extends FlowTestCase
         foreach ([[], ['z', 'a']] as $names) {
             $inferred = (new SchemaInferrer($inference))->infer(
                 new FakeSniffer(self::threeSourcesOfTenRows(), $typer, $names),
+                new VoidProgress(),
             )->schema;
             $reversed = ReversedSniffing::schema(
                 new FakeSniffer(self::threeSourcesOfTenRows(), $typer, $names),
@@ -218,7 +230,7 @@ final class SchemaInferrerTest extends FlowTestCase
             new Schema(definition_from_type('a', type_integer(), nullable: true)),
             (new SchemaInferrer(new SchemaInference()))->infer(new FakeSniffer([[[
                 'a' => '1',
-            ]]], new StringTypeNarrower(InferredTypes::default()->toArray())))->schema,
+            ]]], new StringTypeNarrower(InferredTypes::default()->toArray())), new VoidProgress())->schema,
         );
     }
 
@@ -232,9 +244,12 @@ final class SchemaInferrerTest extends FlowTestCase
                 definition_from_type('a', type_string(), nullable: true),
                 definition_from_type('b', type_string(), nullable: true),
             ),
-            $inferrer->infer(new FakeSniffer([], $typer, ['a', 'b']))->schema,
+            $inferrer->infer(new FakeSniffer([], $typer, ['a', 'b']), new VoidProgress())->schema,
         );
-        static::assertCount(0, $inferrer->infer(new FakeSniffer([], $typer))->schema->definitions());
+        static::assertCount(
+            0,
+            $inferrer->infer(new FakeSniffer([], $typer), new VoidProgress())->schema->definitions(),
+        );
     }
 
     /**
@@ -253,7 +268,10 @@ final class SchemaInferrerTest extends FlowTestCase
             new StringTypeNarrower(InferredTypes::default()->toArray()),
         );
 
-        $schema = (new SchemaInferrer(new SchemaInference($sampleSize, unionByName: true)))->infer($sniffer)->schema;
+        $schema = (new SchemaInferrer(new SchemaInference($sampleSize, unionByName: true)))->infer(
+            $sniffer,
+            new VoidProgress(),
+        )->schema;
 
         static::assertSame($rowsRead, $sniffer->sources->rowsRead);
         static::assertSame(array_keys($expected), array_keys($schema->definitions()));
@@ -274,11 +292,15 @@ final class SchemaInferrerTest extends FlowTestCase
                 $merged = ColumnTypesMother::fromStrings($names)->folded();
 
                 foreach (array_slice($fixture, 0, $count) as $rows) {
-                    $merged = $merged->merge(ColumnTypes::sniff($names, $rows, null, $typer)->folded(), true);
+                    $merged = $merged->merge(
+                        ColumnTypes::sniff($names, $rows, null, $typer, new VoidProgress())->folded(),
+                        true,
+                    );
                 }
 
                 $sequential = $inferrer->infer(
                     new FakeSniffer(array_slice($fixture, 0, $count), $typer, $names),
+                    new VoidProgress(),
                 )->schema;
 
                 static::assertEquals($merged->schema(ColumnTypesMother::floor()), $sequential);
@@ -297,7 +319,7 @@ final class SchemaInferrerTest extends FlowTestCase
             new StringTypeNarrower(InferredTypes::default()->toArray()),
         );
 
-        (new SchemaInferrer((new SchemaInference(filesToSniff: 1))->everyRow()))->infer($sniffer);
+        (new SchemaInferrer((new SchemaInference(filesToSniff: 1))->everyRow()))->infer($sniffer, new VoidProgress());
 
         static::assertSame([0], $sniffer->sources->started);
         static::assertSame([0 => 10], $sniffer->sources->rowsRead);
@@ -308,7 +330,10 @@ final class SchemaInferrerTest extends FlowTestCase
         $schema = (new SchemaInferrer(new SchemaInference(
             types: new InferredTypes(type_string()),
             unionByName: true,
-        )))->infer(new FakeSniffer(self::threeSourcesOfTenRows(), new StringTypeNarrower([type_string()])))->schema;
+        )))->infer(
+            new FakeSniffer(self::threeSourcesOfTenRows(), new StringTypeNarrower([type_string()])),
+            new VoidProgress(),
+        )->schema;
 
         foreach (['a', 'b', 'c'] as $name) {
             static::assertSame('string', $schema->get($name)->type()->toString(), 'column ' . $name);
@@ -321,9 +346,11 @@ final class SchemaInferrerTest extends FlowTestCase
 
         $unioned = (new SchemaInferrer(new SchemaInference(unionByName: true)))->infer(
             new FakeSniffer(self::threeSourcesOfTenRows(), $typer),
+            new VoidProgress(),
         )->schema;
         $firstSourceWins = (new SchemaInferrer(new SchemaInference()))->infer(
             new FakeSniffer(self::threeSourcesOfTenRows(), $typer),
+            new VoidProgress(),
         )->schema;
 
         static::assertSame(['a', 'b', 'c'], array_keys($unioned->definitions()));
@@ -344,6 +371,7 @@ final class SchemaInferrerTest extends FlowTestCase
                     'f' => '1.5',
                     'd' => '2024-01-01',
                 ]]], new StringTypeNarrower([type_integer(), type_string()])),
+                new VoidProgress(),
             )->schema,
         );
     }
@@ -359,7 +387,7 @@ final class SchemaInferrerTest extends FlowTestCase
             (new SchemaInferrer(new SchemaInference(unionByName: true)))->infer(new FakeSniffer([
                 [['id' => '1', 'v' => 'free text']],
                 [['id' => '2', 'v' => '42', 'w' => '2024-01-01']],
-            ], new StringTypeNarrower(InferredTypes::default()->toArray())))->schema,
+            ], new StringTypeNarrower(InferredTypes::default()->toArray())), new VoidProgress())->schema,
         );
     }
 
@@ -370,7 +398,7 @@ final class SchemaInferrerTest extends FlowTestCase
             new StringTypeNarrower(InferredTypes::default()->toArray()),
         );
 
-        (new SchemaInferrer((new SchemaInference())->everyRow()->everySource()))->infer($sniffer);
+        (new SchemaInferrer((new SchemaInference())->everyRow()->everySource()))->infer($sniffer, new VoidProgress());
 
         static::assertSame([0, 1, 2], $sniffer->sources->started);
         static::assertSame([0 => 10, 1 => 10, 2 => 10], $sniffer->sources->rowsRead);
@@ -387,13 +415,17 @@ final class SchemaInferrerTest extends FlowTestCase
 
         $inferred = (new SchemaInferrer((new SchemaInference(sniffs: $launcher))->everyRow()->everySource()))->infer(
             $sniffer,
+            new VoidProgress(),
         );
 
         static::assertCount(1, $launcher->sniffs);
         static::assertSame(3, $launcher->sniffs[0][1]);
         static::assertCount(3, $inferred->units->samples);
         static::assertEquals(
-            (new SchemaInferrer((new SchemaInference())->everyRow()->everySource()))->infer($sniffer)->schema,
+            (new SchemaInferrer((new SchemaInference())->everyRow()->everySource()))->infer(
+                $sniffer,
+                new VoidProgress(),
+            )->schema,
             $inferred->schema,
         );
     }
@@ -406,6 +438,7 @@ final class SchemaInferrerTest extends FlowTestCase
 
         (new SchemaInferrer((new SchemaInference(filesToSniff: 2, sniffs: $launcher))->everyRow()))->infer(
             new FakeSniffer($units, new StringTypeNarrower(InferredTypes::default()->toArray()), ['id']),
+            new VoidProgress(),
         );
 
         static::assertSame(2, $launcher->sniffs[0][1]);
@@ -421,6 +454,7 @@ final class SchemaInferrerTest extends FlowTestCase
                 new StringTypeNarrower(InferredTypes::default()->toArray()),
                 ['id'],
             ),
+            new VoidProgress(),
         );
 
         static::assertSame([], $launcher->sniffs);
@@ -438,9 +472,40 @@ final class SchemaInferrerTest extends FlowTestCase
             ['b', 'a'],
             array_keys(
                 (new SchemaInferrer((new SchemaInference(unionByName: true))->everyRow()))
-                    ->infer(new PresniffedSniffer([], [$sniffer->sniff(1, null), $sniffer->sniff(0, null)]))
+                    ->infer(
+                        new PresniffedSniffer([], [
+                            $sniffer->sniff(1, null, new VoidProgress()),
+                            $sniffer->sniff(0, null, new VoidProgress()),
+                        ]),
+                        new VoidProgress(),
+                    )
                     ->schema->definitions(),
             ),
         );
+    }
+
+    public function test_every_row_reports_the_rows_of_every_unit_to_one_progress(): void
+    {
+        $progress = new ProgressSpy();
+
+        (new SchemaInferrer((new SchemaInference())->everyRow()->everySource()))->infer(new FakeSniffer([
+            [['a' => '1'], ['a' => '2'], ['a' => '3']],
+            [['a' => '4'], ['a' => '5']],
+        ], new StringTypeNarrower(InferredTypes::default()->toArray())), $progress);
+
+        static::assertSame([['', 3], ['', 2]], $progress->advancedCalls());
+    }
+
+    public function test_every_row_hands_its_progress_to_the_launcher(): void
+    {
+        $launcher = new RecordingLauncher();
+        $progress = new ProgressSpy();
+
+        (new SchemaInferrer((new SchemaInference(sniffs: $launcher))->everyRow()))->infer(
+            new FakeSniffer(self::threeSourcesOfTenRows(), new StringTypeNarrower(InferredTypes::default()->toArray())),
+            $progress,
+        );
+
+        static::assertSame($progress, $launcher->sniffs[0][2]);
     }
 }

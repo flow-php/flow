@@ -191,6 +191,16 @@
             }
         },
         {
+            "name": "flow-php/symfony-console-bridge",
+            "path": "src/bridge/symfony/console",
+            "type": "bridge",
+            "links": {
+                "documentation": "/documentation/components/bridges/symfony-console-bridge",
+                "api": "/documentation/api/bridge/symfony/console",
+                "files": "/documentation/api/bridge/symfony/console/indices/files.html"
+            }
+        },
+        {
             "name": "flow-php/openapi-specification-bridge",
             "path": "src/bridge/openapi/specification",
             "type": "bridge",

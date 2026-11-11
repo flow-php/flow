@@ -9,6 +9,7 @@ use Flow\ETL\Adapter\CSV\Tests\Context\CSVFixtureContext;
 use Flow\ETL\Adapter\CSV\Tests\Double\LengthCapturingSourceStream;
 use Flow\ETL\Foundation\Exception\ColumnMismatchException;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Inference\ColumnTypes;
 use Flow\ETL\IO\Inference\InferredTypes;
 use Flow\ETL\IO\Inference\SchemaInference;
@@ -328,6 +329,7 @@ final class RustCSVOpenSourceTest extends FlowTestCase
                     ['id', 'name'],
                     $rowBudget,
                     new StringTypeNarrower(InferredTypes::default()->toArray()),
+                    new VoidProgress(),
                 )->rows(),
             );
         } finally {
@@ -348,7 +350,12 @@ final class RustCSVOpenSourceTest extends FlowTestCase
 
         try {
             // @mago-expect analysis:invalid-argument
-            $open->sniff(['id', 'name'], -1, new StringTypeNarrower(InferredTypes::default()->toArray()));
+            $open->sniff(
+                ['id', 'name'],
+                -1,
+                new StringTypeNarrower(InferredTypes::default()->toArray()),
+                new VoidProgress(),
+            );
         } finally {
             $open->close();
         }
@@ -371,10 +378,11 @@ final class RustCSVOpenSourceTest extends FlowTestCase
             )->records(),
             null,
             $typer,
+            new VoidProgress(),
         );
         $sniffed = CSVFixtureContext::openNativeStream(
             new LengthCapturingSourceStream($contents, path('s3://bucket/a.csv')),
-        )->sniff($names, null, $typer);
+        )->sniff($names, null, $typer, new VoidProgress());
 
         static::assertEquals(
             $observed->folded()->schema(new TypeFloor($inference->candidates())),
@@ -437,8 +445,8 @@ final class RustCSVOpenSourceTest extends FlowTestCase
         $typer = new StringTypeNarrower(infer_schema()->build()->candidates()->toArray());
 
         try {
-            $php->sniff($names, 2, $typer);
-            $native->sniff($names, 2, $typer);
+            $php->sniff($names, 2, $typer, new VoidProgress());
+            $native->sniff($names, 2, $typer, new VoidProgress());
 
             static::assertSame($php->producedRows(), $native->producedRows());
             static::assertSame($php->producedBytes(), $native->producedBytes());

@@ -78,7 +78,7 @@ final readonly class StepDetails
             $step instanceof JoinStep => $this->node->crossJoin($step->join->prefix),
             $step instanceof MergeSortProcessor => [
                 'Sort by: ' . $this->node->sort($step->columns),
-                'Memory: ' . $step->sort->memoryLimit->inMb() . ' MB',
+                'Memory: ' . $step->config->bucketing->memoryLimit->inMb() . ' MiB',
                 'Spill: ' . ObjectExtractor::shortName($step->sort->spill->storage()),
                 'Merge: ' . $step->sort->mergeFanIn . ' ways',
                 'Batch: ' . $step->sort->batchSize->size,
@@ -88,7 +88,7 @@ final readonly class StepDetails
             $step instanceof GroupByAggregationProcessor => [
                 'Group by: ' . $this->node->columns($step->groupBy->refs()->all()),
                 'Aggregations: ' . $this->aggregations($step),
-                'Memory: ' . $step->config->memoryLimit->inMb() . ' MB',
+                'Memory: ' . $step->config->memoryLimit->inMb() . ' MiB',
                 'Storage: ' . $this->storageName($step->config->storage),
                 'Batch: ' . $step->config->batchSize,
             ],
@@ -96,7 +96,7 @@ final readonly class StepDetails
             $step instanceof WindowProcessor => $this->window($step),
             $step instanceof RepartitionProcessor => [
                 'By: ' . $this->node->columns($step->by->all()),
-                'Memory: ' . $step->config->memoryLimit->inMb() . ' MB',
+                'Memory: ' . $step->config->memoryLimit->inMb() . ' MiB',
                 'Storage: ' . $this->storageName($step->config->storage),
             ],
             $step instanceof BatchingProcessor => ['Batch: ' . $step->size->size],
@@ -211,7 +211,7 @@ final readonly class StepDetails
                 ? ['Storage: ' . $this->storageName($bucketing->storage)]
                 : [
                     'Storage: ' . $this->storageName($bucketing->storage),
-                    'Memory: ' . $bucketing->memoryLimit->inMb() . ' MB',
+                    'Memory: ' . $bucketing->memoryLimit->inMb() . ' MiB',
                 ]
         );
     }

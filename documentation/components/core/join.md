@@ -47,7 +47,7 @@ Inner joins drop rows with `null` keys. Outer joins pad them with nulls (or keep
 
 ## Buckets Storage
 
-While the process stays under the memory limit, `join()` holds the right DataFrame in memory. It streams the left
+While it stays under its memory limit, `join()` holds the right DataFrame in memory. It streams the left
 DataFrame through its hash table, so left rows keep their order. After the limit, both sides are partitioned by join
 key into buckets of a `RowsStorage`. External sort uses the same abstraction. Then the join runs bucket pair by bucket
 pair:
@@ -68,9 +68,8 @@ pair:
 also built again for each batch.
 
 Configure the join algorithm through `config_builder()->join(hash_join())`. All its options are on the
-`hash_join()` builder. The default of `memoryLimit()` is `FLOW_MAX_MEMORY`. Without it, the limit is 70% of the
-`memory_limit` of PHP, or 1 GB for `-1`. The limit applies to the full process, so a join and a sort in one pipeline
-stay under it together:
+`hash_join()` builder. `memoryLimit()` counts only the memory the join adds after it starts.
+[Memory limit](/documentation/components/core/sort.md#memory-limit) lists the defaults and the process cap:
 
 ```php
 <?php
@@ -79,7 +78,7 @@ data_frame(
     config_builder()
         ->join(
             hash_join()
-                ->memoryLimit(Unit::fromMb(512))  // process memory past which rows go to the storage
+                ->memoryLimit(Unit::fromMb(512))  // memory the join adds before rows go to the storage
                 ->bucketsCount(64)                // number of buckets
                 ->batchSize(1000)                 // rows per bucket frame and per batch read back
                 ->broadcastLimit(Unit::fromMb(10)) // a right side under it is broadcast instead of hashed

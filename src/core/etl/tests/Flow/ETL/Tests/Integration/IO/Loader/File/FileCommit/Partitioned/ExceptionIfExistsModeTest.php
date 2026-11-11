@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\IO\Loader\File\FileCommit\Partitioned;
 
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Tests\Context\FileCommitContext;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Filesystem\Partition;
@@ -51,7 +52,7 @@ final class ExceptionIfExistsModeTest extends FlowIntegrationTestCase
         $files = $this->context->commit($file, exception_if_exists());
 
         $files->open([new Partition('partition', 'value')])->append('file content');
-        $files->commit([0]);
+        $files->commit([0], new VoidProgress());
 
         $files = iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/**/*.txt')));
 
@@ -70,7 +71,7 @@ final class ExceptionIfExistsModeTest extends FlowIntegrationTestCase
         $files = $this->context->commit($file, exception_if_exists());
 
         $files->open([new Partition('partition', 'value')])->append('file content');
-        $files->commit([0]);
+        $files->commit([0], new VoidProgress());
 
         $files = iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/partition=value/*')));
 

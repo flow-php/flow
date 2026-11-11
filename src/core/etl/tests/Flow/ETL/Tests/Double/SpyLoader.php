@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Double;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\IO\Loader;
 use Flow\ETL\IO\Loader\Closure;
 use Flow\ETL\Values\Column\Backend;
@@ -30,6 +31,8 @@ final class SpyLoader implements Closure, Loader
 
     public int $closureCount = 0;
 
+    public ?Progress $closedWith = null;
+
     /**
      * @var list<Backend>
      */
@@ -42,9 +45,10 @@ final class SpyLoader implements Closure, Loader
 
     public int $loadsCount = 0;
 
-    public function closure(): void
+    public function closure(Progress $progress): void
     {
         $this->closureCount++;
+        $this->closedWith = $progress;
     }
 
     /**

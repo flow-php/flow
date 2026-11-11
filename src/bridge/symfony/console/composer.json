@@ -1,0 +1,39 @@
+{
+    "name": "flow-php/symfony-console-bridge",
+    "type": "library",
+    "description": "Flow PHP - Symfony Console bridge",
+    "keywords": [
+        "symfony",
+        "console",
+        "heartbeat",
+        "progress",
+        "bridge"
+    ],
+    "require": {
+        "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+        "symfony/console": "^6.4.34 || ^7.4.6 || ^8.0.6",
+        "flow-php/etl": "self.version"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "license": "MIT",
+    "autoload": {
+        "files": [
+            "src/Flow/Bridge/Symfony/Console/DSL/functions.php"
+        ],
+        "psr-4": {
+            "Flow\\": [
+                "src/Flow"
+            ]
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": "tests/Flow"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

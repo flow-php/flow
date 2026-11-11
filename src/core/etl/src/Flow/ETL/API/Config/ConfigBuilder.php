@@ -9,6 +9,7 @@ use Flow\ETL\API\Config\Cache\CacheConfigBuilder;
 use Flow\ETL\API\Config\Join\HashJoinBuilder;
 use Flow\ETL\API\Config\Sort\ExternalSortBuilder;
 use Flow\ETL\Foundation\Clock\SystemClock;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
 use Flow\ETL\Foundation\RandomValueGenerator;
 use Flow\ETL\Planning\Logical\Node\BucketingAlgorithmBuilder;
@@ -18,6 +19,10 @@ use Flow\ETL\Planning\Optimizer\Optimizer;
 use Flow\ETL\Runtime\Analyze;
 use Flow\ETL\Runtime\Config;
 use Flow\ETL\Runtime\Executor\Executor;
+use Flow\ETL\Runtime\Heartbeat\Heartbeat;
+use Flow\ETL\Runtime\Heartbeat\HeartbeatFailure;
+use Flow\ETL\Runtime\Heartbeat\HeartbeatThrottle;
+use Flow\ETL\Runtime\Heartbeat\ScheduledHeartbeat;
 use Flow\ETL\Runtime\Launcher\Launcher;
 use Flow\ETL\Runtime\Telemetry\TelemetryConfig;
 use Flow\ETL\Runtime\Telemetry\TelemetryOptions;
@@ -30,6 +35,8 @@ use Flow\Filesystem\Path;
 use Flow\Telemetry\PackageVersion;
 use Flow\Telemetry\Telemetry;
 use Psr\Clock\ClockInterface;
+
+use function array_map;
 
 final class ConfigBuilder
 {
@@ -46,6 +53,13 @@ final class ConfigBuilder
     private ?JoinAlgorithmBuilder $join;
 
     private ?BucketingAlgorithmBuilder $repartition;
+
+    /**
+     * @var list<ScheduledHeartbeat>
+     */
+    private array $heartbeats = [];
+
+    private bool $heartbeatsToParent = false;
 
     private ?string $id;
 
@@ -118,6 +132,16 @@ final class ConfigBuilder
         $dataframeName = $this->name ?? 'flow_dataframe';
 
         $cacheConfig = $this->cache->build($backend, $this->telemetryConfig, $dataframeName);
+        $telemetryConfig = $this->telemetryConfig ?? TelemetryConfig::default($this->getClock());
+        // fresh schedules per build, so two configs never share beat state
+        $heartbeats = array_map(
+            static fn(ScheduledHeartbeat $scheduled): ScheduledHeartbeat => new ScheduledHeartbeat(
+                $scheduled->heartbeat,
+                $scheduled->everySeconds,
+                $scheduled->onFailure,
+            ),
+            $this->heartbeats,
+        );
 
         return new Config(
             $id,
@@ -130,7 +154,7 @@ final class ConfigBuilder
             $cacheConfig,
             ($this->sort ?? new ExternalSortBuilder())->build($cacheConfig->localFilesystemCacheDir, $backend),
             $this->analyze,
-            $this->telemetryConfig ?? TelemetryConfig::default($this->getClock()),
+            $telemetryConfig,
             ($this->groupBy ?? BucketingConfigBuilder::groupBy())->build(
                 $cacheConfig->localFilesystemCacheDir,
                 $backend,
@@ -143,6 +167,21 @@ final class ConfigBuilder
             randomValueGenerator: $this->randomValueGenerator,
             backend: $backend,
             launcher: $this->launcher,
+            heartbeat: match (true) {
+                $heartbeats === [] => null,
+                $this->heartbeatsToParent => HeartbeatThrottle::reportingToParent(
+                    $this->getClock(),
+                    $backend,
+                    $telemetryConfig->telemetry->logger('flow_php_dataframe', $this->version),
+                    $heartbeats,
+                ),
+                default => new HeartbeatThrottle(
+                    $this->getClock(),
+                    $backend,
+                    $telemetryConfig->telemetry->logger('flow_php_dataframe', $this->version),
+                    $heartbeats,
+                ),
+            },
         );
     }
 
@@ -177,6 +216,46 @@ final class ConfigBuilder
     public function launcher(Launcher $launcher): self
     {
         $this->launcher = $launcher;
+
+        return $this;
+    }
+
+    /**
+     * Calls $heartbeat every $everySeconds while the run is busy; each call appends one more heartbeat.
+     *
+     * @throws InvalidArgumentException when $everySeconds is below 0.1, or after heartbeatToParent()
+     */
+    public function heartbeat(
+        Heartbeat $heartbeat,
+        float $everySeconds,
+        HeartbeatFailure $onFailure = HeartbeatFailure::stop,
+    ): self {
+        if ($this->heartbeatsToParent) {
+            throw new InvalidArgumentException(
+                'heartbeat() and heartbeatToParent() cannot be mixed on one ConfigBuilder. A worker reports to its parent through heartbeatToParent() only. Register every other heartbeat in the parent.',
+            );
+        }
+
+        $this->heartbeats[] = new ScheduledHeartbeat($heartbeat, $everySeconds, $onFailure);
+
+        return $this;
+    }
+
+    /**
+     * A failing report is logged, never thrown, because the parent ends a worker it stopped listening to.
+     *
+     * @throws InvalidArgumentException when $everySeconds is below 0.1, or after heartbeat()
+     */
+    public function heartbeatToParent(Heartbeat $heartbeat, float $everySeconds): self
+    {
+        if (!$this->heartbeatsToParent && $this->heartbeats !== []) {
+            throw new InvalidArgumentException(
+                'heartbeat() and heartbeatToParent() cannot be mixed on one ConfigBuilder. A worker reports to its parent through heartbeatToParent() only. Register every other heartbeat in the parent.',
+            );
+        }
+
+        $this->heartbeats[] = new ScheduledHeartbeat($heartbeat, $everySeconds, HeartbeatFailure::log);
+        $this->heartbeatsToParent = true;
 
         return $this;
     }

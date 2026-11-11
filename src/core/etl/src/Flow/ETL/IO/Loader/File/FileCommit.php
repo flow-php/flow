@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\IO\Loader\File;
 
 use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Filesystem\SaveMode;
 use Flow\ETL\IO\Filesystem\VisibleFiles;
 use Flow\Filesystem\DestinationStream;
@@ -78,7 +80,7 @@ final class FileCommit
             throw new RuntimeException("Destination path can't be pattern, given: " . $destination->uri());
         }
 
-        $this->root = $destination->isPattern() ? $destination->staticPart() : $destination->parentDirectory();
+        $this->root = self::root($destination);
         // the destination tells apart two loaders of one job writing under the same root
         $this->temporary = $this->root->suffix(
             '/' . self::TEMPORARY_OUTPUT_PREFIX . $run . '-' . hash('xxh32', $destination->uri()),
@@ -108,6 +110,19 @@ final class FileCommit
     }
 
     /**
+     * The directory the files of $destination land in: the static part of a pattern, the parent of a plain file.
+     */
+    public static function locationOf(Path $destination): string
+    {
+        return self::root($destination)->location() . '/';
+    }
+
+    private static function root(Path $destination): Path
+    {
+        return $destination->isPattern() ? $destination->staticPart() : $destination->parentDirectory();
+    }
+
+    /**
      * The save mode's decision over the whole destination; a write that is not admitted writes nothing.
      *
      * @param bool $partitioned the files sit in partition directories under the static root
@@ -129,12 +144,12 @@ final class FileCommit
      */
     public function abort(): void
     {
-        $failure = $this->closeStreams();
+        $failure = $this->closeStreams(new VoidProgress());
         $created = $this->created;
         $this->created = [];
 
         if ($this->task !== null) {
-            $this->removeDirectory($this->temporary->suffix('/' . $this->task->name()));
+            $this->removeDirectory($this->temporary->suffix('/' . $this->task->name()), new VoidProgress());
         } else {
             foreach ($created as $path) {
                 if ($this->filesystem->status($path) !== null) {
@@ -142,7 +157,7 @@ final class FileCommit
                 }
             }
 
-            $this->removeDirectory($this->temporary);
+            $this->removeDirectory($this->temporary, new VoidProgress());
         }
 
         if ($failure !== null) {
@@ -155,13 +170,15 @@ final class FileCommit
      * the stale files the moved ones replace, and the temporary output goes. A move that fails leaves the old files
      * in place: a failed commit duplicates, it never loses. A task whose result never arrived commits nothing.
      *
+     * $progress counts each moved file and is busy after every other file operation.
+     *
      * @param list<int> $tasks the indices of the tasks whose results arrived
      *
      * @throws Throwable
      */
-    public function commit(array $tasks): void
+    public function commit(array $tasks, Progress $progress): void
     {
-        $failure = $this->closeStreams();
+        $failure = $this->closeStreams($progress);
 
         if ($failure !== null) {
             throw $failure;
@@ -174,14 +191,15 @@ final class FileCommit
             return;
         }
 
-        $staged = $this->staged($tasks);
+        $staged = $this->staged($tasks, $progress);
 
         foreach ($staged as $target => $file) {
             $this->filesystem->mv($file, Path::from($target, $this->root->options()));
+            $progress->advanced(1);
         }
 
         if ($this->saveMode->replaces()) {
-            $this->removeStale($staged);
+            $this->removeStale($staged, $progress);
         }
 
         $this->created = [];
@@ -189,9 +207,15 @@ final class FileCommit
         // the moves left the directories behind, which a listing no longer sees
         if ($staged !== []) {
             $this->filesystem->rm($this->temporary);
+            $progress->busy();
         } else {
-            $this->removeDirectory($this->temporary);
+            $this->removeDirectory($this->temporary, $progress);
         }
+    }
+
+    public function location(): string
+    {
+        return self::locationOf($this->destination);
     }
 
     /**
@@ -237,7 +261,7 @@ final class FileCommit
     /**
      * @return null|Throwable the first close failure, every stream closed
      */
-    private function closeStreams(): ?Throwable
+    private function closeStreams(Progress $progress): ?Throwable
     {
         $streams = $this->streams;
         $this->streams = [];
@@ -245,13 +269,22 @@ final class FileCommit
 
         // every handle closes first: a format writer flushes its footer on close, and a file is moved or removed
         // after that, not before
-        foreach ($streams as $stream) {
-            if ($stream->isOpen()) {
+        foreach ($streams as $uri => $stream) {
+            $closing = $stream->isOpen();
+
+            if ($closing) {
                 try {
                     $stream->close();
                 } catch (Throwable $closeFailure) {
                     $failure ??= $closeFailure;
                 }
+            }
+
+            // a serial write in place is visible at its target once its stream closed, here or by its format writer
+            if (array_key_exists($uri, $this->created)) {
+                $progress->advanced(1);
+            } elseif ($closing) {
+                $progress->busy();
             }
         }
 
@@ -281,12 +314,14 @@ final class FileCommit
     /**
      * Listed, not status()-checked: a memory filesystem has no status for a directory.
      */
-    private function removeDirectory(Path $directory): void
+    private function removeDirectory(Path $directory, Progress $progress): void
     {
-        foreach ($this->filesystem->list($directory->suffix('/**/*')) as $_) {
-            $this->filesystem->rm($directory);
+        $holdsFiles = $this->filesystem->list($directory->suffix('/**/*'))->valid();
+        $progress->busy();
 
-            return;
+        if ($holdsFiles) {
+            $this->filesystem->rm($directory);
+            $progress->busy();
         }
     }
 
@@ -295,7 +330,7 @@ final class FileCommit
      *
      * @param array<string, Path> $moved by target URI
      */
-    private function removeStale(array $moved): void
+    private function removeStale(array $moved, Progress $progress): void
     {
         $written = [];
         $kept = [];
@@ -321,10 +356,14 @@ final class FileCommit
         }
 
         foreach ($globs as $glob) {
-            foreach ($this->parts($glob) as $stale) {
+            $parts = $this->parts($glob);
+            $progress->busy();
+
+            foreach ($parts as $stale) {
                 // by path: a filesystem may list under another scheme than it was given
                 if (!array_key_exists($stale->path->path(), $kept)) {
                     $this->filesystem->rm($stale->path);
+                    $progress->busy();
                 }
             }
         }
@@ -337,7 +376,7 @@ final class FileCommit
      *
      * @return array<string, Path>
      */
-    private function staged(array $tasks): array
+    private function staged(array $tasks, Progress $progress): array
     {
         sort($tasks);
         $files = [];
@@ -352,6 +391,8 @@ final class FileCommit
                     $files[$this->root->suffix($relative)->uri()] = $directory->suffix($relative);
                 }
             }
+
+            $progress->busy();
         }
 
         return $files;

@@ -62,6 +62,7 @@ jobs:
         src/bridge/psr3/telemetry psr3-telemetry-bridge
         src/bridge/psr7/telemetry psr7-telemetry-bridge
         src/bridge/psr18/telemetry psr18-telemetry-bridge
+        src/bridge/symfony/console symfony-console-bridge
         src/bridge/symfony/filesystem-bundle symfony-filesystem-bundle
         src/bridge/symfony/filesystem-cache symfony-filesystem-cache-bridge
         src/bridge/symfony/http-foundation symfony-http-foundation-bridge

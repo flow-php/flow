@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\IO\Loader\File\FileCommit\NotPartitioned;
 
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Tests\Context\FileCommitContext;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
@@ -33,7 +34,7 @@ final class AppendModeTest extends FlowIntegrationTestCase
 
         $files = $this->context->commit($file, append());
         $files->open()->append('new content');
-        $files->commit([0]);
+        $files->commit([0], new VoidProgress());
 
         $files = iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/*')));
 
@@ -55,7 +56,7 @@ final class AppendModeTest extends FlowIntegrationTestCase
 
         $files = $this->context->commit($file, append());
         $files->open()->append('new content');
-        $files->commit([0]);
+        $files->commit([0], new VoidProgress());
 
         $files = iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/*')));
 

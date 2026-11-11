@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Kernels\HashJoin;
 
+use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Kernels\Join\JoinSchema;
 use Flow\ETL\Values\BatchSize;
 use Flow\ETL\Values\Column\Backend;
@@ -31,6 +33,7 @@ final readonly class Joiner
         private PairPredicate $condition,
         private Backend $backend,
         private BatchSize $batchSize = new BatchSize(1000),
+        private Progress $progress = new VoidProgress(),
     ) {}
 
     /**
@@ -67,6 +70,7 @@ final readonly class Joiner
         // valid()/next(), not foreach: reading the probe schema above may have run an empty side to its end
         for ($probe = $probeSide->rows; $probe->valid(); $probe->next()) {
             $batch = $probe->current();
+            $this->progress->advanced($batch->count());
             $probeSchema ??= $batch->schema();
             [$leftSchema, $rightSchema] = $buildLeft ? [$buildSchema, $probeSchema] : [$probeSchema, $buildSchema];
             $output ??= $this->joinSchema->output($leftSchema, $rightSchema);
@@ -137,6 +141,8 @@ final readonly class Joiner
             : null;
 
         foreach (array_chunk($table->unmatched(), $this->batchSize->size) as $unmatched) {
+            $this->progress->busy();
+
             yield $nullProbe === null
                 ? $build->gather($unmatched)->project($output, $this->backend)
                 : $role->merge(
@@ -157,6 +163,8 @@ final readonly class Joiner
 
         foreach ($side->rows as $batch) {
             $schema ??= $batch->schema();
+            // the build side's rows stand on that side's read line; the join counts the stream it probes
+            $this->progress->busy();
 
             if (!$batch->isEmpty()) {
                 $parts[] = $batch->project($schema, $this->backend);
@@ -199,10 +207,18 @@ final readonly class Joiner
     private function table(Rows $build, KeyEncoder $keys, bool $trackUnmatched): HashTable
     {
         $table = new HashTable(trackUnmatched: $trackUnmatched);
+        $unreported = 0;
 
         foreach ($keys->of($build) as $index => $key) {
             $table->add($key, $index);
+
+            if (++$unreported === Progress::ROWS_PER_CALL) {
+                $this->progress->busy();
+                $unreported = 0;
+            }
         }
+
+        $this->progress->busy();
 
         return $table;
     }

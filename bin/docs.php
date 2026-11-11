@@ -77,6 +77,7 @@ $dslPaths = [
     __DIR__ . '/../src/bridge/filesystem/async-aws/src/Flow/Filesystem/Bridge/AsyncAWS/DSL/functions.php',
     __DIR__ . '/../src/bridge/filesystem/sftp/src/Flow/Filesystem/Bridge/SFTP/DSL/functions.php',
     __DIR__ . '/../src/bridge/monolog/telemetry/src/Flow/Bridge/Monolog/Telemetry/DSL/functions.php',
+    __DIR__ . '/../src/bridge/symfony/console/src/Flow/Bridge/Symfony/Console/DSL/functions.php',
     __DIR__
         . '/../src/bridge/symfony/http-foundation-telemetry/src/Flow/Bridge/Symfony/HttpFoundationTelemetry/DSL/functions.php',
     __DIR__ . '/../src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/DSL/functions.php',

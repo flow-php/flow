@@ -62,6 +62,12 @@ final class FileFormatContractTest extends FlowIntegrationTestCase
     }
 
     #[DataProvider('formats')]
+    public function test_a_write_that_ends_reports_its_file_operations(FileFormat $format): void
+    {
+        (new FileFormatContract($this->cacheDir))->aWriteThatEndsReportsItsFileOperations($format);
+    }
+
+    #[DataProvider('formats')]
     public function test_a_partitioned_write_reads_back_every_partition(FileFormat $format): void
     {
         (new FileFormatContract($this->cacheDir))->aPartitionedWriteReadsBackEveryPartition($format);

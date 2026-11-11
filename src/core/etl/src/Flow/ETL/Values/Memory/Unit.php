@@ -8,12 +8,11 @@ use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\RuntimeException;
 
 use function abs;
-use function ctype_digit;
 use function getrusage;
+use function preg_match;
 use function round;
 use function str_replace;
 use function strtoupper;
-use function substr;
 
 final readonly class Unit
 {
@@ -28,17 +27,17 @@ final readonly class Unit
 
     public static function fromGb(int $gb): self
     {
-        return new self($gb * 1000 * 1000 * 1000);
+        return new self($gb * 1024 * 1024 * 1024);
     }
 
     public static function fromKb(int $kb): self
     {
-        return new self($kb * 1000);
+        return new self($kb * 1024);
     }
 
     public static function fromMb(int $mb): self
     {
-        return new self($mb * 1000 * 1000);
+        return new self($mb * 1024 * 1024);
     }
 
     /**
@@ -47,16 +46,17 @@ final readonly class Unit
     public static function fromString(string $memoryString): self
     {
         $limit = str_replace(' ', '', $memoryString);
+        $matches = [];
 
-        return match (strtoupper(substr($limit, -1))) {
-            'K', 'B' => self::fromKb((int) substr($limit, 0, -1)),
-            'M', 'MB' => self::fromMb((int) substr($limit, 0, -1)),
-            'G', 'GB' => self::fromGb((int) substr($limit, 0, -1)),
-            default => ctype_digit($limit)
-                ? self::fromBytes((int) $limit)
-                : throw new InvalidArgumentException(
-                    "Can't extract memory limit in bytes from php ini value: {$limit}",
-                ),
+        if (preg_match('/^(\d+)(B|KB?|MB?|GB?)?$/i', $limit, $matches) !== 1) {
+            throw new InvalidArgumentException("Can't extract memory limit in bytes from php ini value: {$limit}");
+        }
+
+        return match (strtoupper($matches[2] ?? 'B')[0]) {
+            'K' => self::fromKb((int) $matches[1]),
+            'M' => self::fromMb((int) $matches[1]),
+            'G' => self::fromGb((int) $matches[1]),
+            default => self::fromBytes((int) $matches[1]),
         };
     }
 
@@ -88,17 +88,17 @@ final readonly class Unit
 
     public function inGb(int $precision = 2): float
     {
-        return round($this->inMb($precision) / 1000, $precision);
+        return round($this->bytes / (1024 * 1024 * 1024), $precision);
     }
 
     public function inKb(int $precision = 2): float
     {
-        return round($this->bytes / 1000, $precision);
+        return round($this->bytes / 1024, $precision);
     }
 
     public function inMb(int $precision = 2): float
     {
-        return round($this->inKb($precision) / 1000, $precision);
+        return round($this->bytes / (1024 * 1024), $precision);
     }
 
     public function isGreaterThan(self $unit): bool

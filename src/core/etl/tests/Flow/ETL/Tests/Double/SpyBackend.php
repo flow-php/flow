@@ -57,6 +57,13 @@ final class SpyBackend implements Backend
         return $this->allocatedBytes;
     }
 
+    public function allocatedPeakBytes(): int
+    {
+        return 0;
+    }
+
+    public function resetAllocatedPeak(): void {}
+
     public function builder(Definition $definition): ColumnBuilder
     {
         $this->builders++;
@@ -132,6 +139,14 @@ final class SpyBackend implements Backend
     public function sort(Rows $rows, array $columns): Rows
     {
         return $this->php->sort($rows, $columns);
+    }
+
+    /**
+     * @param list<SortColumn> $columns
+     */
+    public function sortWorkingBytes(Rows $rows, array $columns): int
+    {
+        return $this->php->sortWorkingBytes($rows, $columns);
     }
 
     public function groupedTotals(): GroupedTotals

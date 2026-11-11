@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Operators\Processor;
 
+use Flow\ETL\Foundation\StageName;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Kernels\HashJoin\JoinKeys;
 use Flow\ETL\Operators\Processor\CountingProcessor;
 use Flow\ETL\Operators\Processor\Distribution;
 use Flow\ETL\Tests\Double\PassThroughProcessor;
+use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\ref;
@@ -42,7 +45,10 @@ final class DistributionTest extends FlowTestCase
     {
         $order = [ref('id')->desc(), ref('name')->asc()];
 
-        static::assertSame([[], null, $order, null, null], self::fields(Distribution::ordered($order)));
+        static::assertSame(
+            [[], null, $order, null, null],
+            self::fields(Distribution::ordered($order, new VoidProgress())),
+        );
     }
 
     public function test_single_keeps_its_partial_and_final(): void
@@ -65,5 +71,25 @@ final class DistributionTest extends FlowTestCase
             $distribution->partial,
             $distribution->final,
         ];
+    }
+
+    public function test_a_distribution_built_without_a_stage_holds_a_void_progress(): void
+    {
+        static::assertInstanceOf(VoidProgress::class, Distribution::clustered(['country'])->progress);
+        static::assertInstanceOf(VoidProgress::class, Distribution::single()->progress);
+        static::assertInstanceOf(
+            VoidProgress::class,
+            Distribution::coPartitioned(new JoinKeys(['id'], ['user_id']))->progress,
+        );
+    }
+
+    public function test_a_distribution_holds_the_stage_it_is_given(): void
+    {
+        $stage = new ProgressSpy(StageName::sort);
+
+        static::assertSame($stage, Distribution::ordered([ref('id')->asc()], $stage)->progress);
+        static::assertSame($stage, Distribution::clustered(['country'], progress: $stage)->progress);
+        static::assertSame($stage, Distribution::single(progress: $stage)->progress);
+        static::assertSame($stage, Distribution::coPartitioned(new JoinKeys(['id'], ['user_id']), $stage)->progress);
     }
 }

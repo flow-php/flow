@@ -10,6 +10,7 @@ use Flow\ETL\Foundation\Calculator\RunningSum;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\Functions\Reference\Reference;
 use Flow\ETL\Functions\Window\FrameAccumulation;
 use Flow\ETL\Values\Column\Backend;
@@ -21,6 +22,8 @@ use Flow\Types\Type;
 use Flow\Types\Type\Logical\StructureType;
 use SensitiveParameter;
 
+use function array_fill;
+use function count;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_enum;
 use function Flow\Types\DSL\type_float;
@@ -140,14 +143,30 @@ final class Average implements AggregatesNumericTotal, FrameAccumulating, Window
         return $this->exact;
     }
 
-    public function accumulator(): self
+    public function frameValues(Rows $partition, array $bounds, Backend $backend, Progress $progress): array
     {
-        return new self($this->ref, $this->scale, $this->rounding, $this->exact);
+        $column = $this->column->of($partition);
+
+        if ($column === null) {
+            return array_fill(0, count($bounds), null);
+        }
+
+        $calculator = new Calculator();
+        $frames = NumericTotal::frames($column->values(), $bounds, $this->exact, $progress);
+        $values = [];
+
+        foreach ($frames['sums'] as $i => $sum) {
+            $values[] = $sum === null
+                ? null
+                : $calculator->divide($sum, $frames['counts'][$i], $this->scale, $this->rounding);
+        }
+
+        return $values;
     }
 
-    public function values(Rows $partition, Backend $backend): array
+    public function values(Rows $partition, Backend $backend, Progress $progress): array
     {
-        return (new FrameAccumulation($this->window()->frame()))->values($this, $partition, $backend);
+        return (new FrameAccumulation($this->window()->frame()))->values($this, $partition, $backend, $progress);
     }
 
     public function over(Window $window): static

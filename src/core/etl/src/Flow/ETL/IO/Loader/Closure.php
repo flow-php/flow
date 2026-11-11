@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\IO\Loader;
 
-/**
- * Loaders implementing this adapter will be additionally notified
- * by the pipeline about the last set of Rows processed by the pipeline.
- */
+use Flow\ETL\Foundation\Progress;
+
 interface Closure
 {
-    public function closure(): void;
+    public function closure(Progress $progress): void;
 }

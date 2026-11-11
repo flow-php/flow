@@ -84,6 +84,9 @@ To install the blackfire extension, start the nix shell with the `--arg with-bla
 nix-shell --arg with-blackfire true
 ```
 
+The flag also appends `./.nix/php/lib/benchmark.ini.dist` to `php.ini`, as `--arg with-php-benchmark true` does. A
+profile then runs with the same OPcache, JIT and `zend.assertions` configuration as a timed run.
+
 To configure blackfire, create a file `./.nix/php/lib/blackfire.ini` with your blackfire configuration.
 
 ## 1Password

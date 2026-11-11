@@ -6,11 +6,11 @@ namespace Flow\ETL\Tests\Unit\API\Config\Bucketing;
 
 use Flow\ETL\API\Config\Bucketing\BucketingConfigBuilder;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
-use Flow\ETL\Runtime\MemoryLimit;
 use Flow\ETL\Storage\FilesystemRowsStorage;
 use Flow\ETL\Storage\MemoryRowsStorage;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Values\Memory\MemoryLimit;
 use Flow\ETL\Values\Memory\Unit;
 use Flow\Filesystem\Path;
 

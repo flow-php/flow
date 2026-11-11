@@ -7,7 +7,10 @@ namespace Flow\ETL\Operators\Processor;
 use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\Foundation\RandomValueGenerator;
+use Flow\ETL\Foundation\StageName;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Functions\Reference\References;
 use Flow\ETL\Kernels\Bucketing\Buckets;
 use Flow\ETL\Kernels\Bucketing\HashBucketing;
@@ -17,12 +20,14 @@ use Flow\ETL\Storage\BucketingConfig;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Grouping\KeyEncoder;
 use Flow\ETL\Values\Memory\BoundedRead;
+use Flow\ETL\Values\Memory\MemoryBudget;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
 use Generator;
 use SensitiveParameter;
 
 use function Flow\Types\DSL\type_instance_of;
+use function Flow\Types\DSL\type_string;
 
 /**
  * One batch per key; past the memory limit, input is bucketed and grouped per bucket.
@@ -33,10 +38,14 @@ final readonly class RepartitionProcessor implements Distributable
         public References $by,
         public BucketingConfig $config,
         private RandomValueGenerator $random,
+        private Progress $progress = new VoidProgress(),
+        private StageName $stage = StageName::repartition,
     ) {}
 
     public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
     {
+        $stage = StageName::from(type_string()->assert($data['stage'] ?? StageName::repartition->value));
+
         return new self(
             $rebuild->of($data['by'] ?? null, References::class),
             $rebuild->of($data['config'] ?? null, BucketingConfig::class),
@@ -44,6 +53,8 @@ final readonly class RepartitionProcessor implements Distributable
                 $data['random'] ?? null,
                 Describable::class,
             )),
+            $rebuild->progress($stage, $data['progress'] ?? null),
+            $stage,
         );
     }
 
@@ -58,6 +69,8 @@ final readonly class RepartitionProcessor implements Distributable
                     'by' => $this->by,
                     'config' => $this->config,
                     'random' => $this->random,
+                    'stage' => $this->stage->value,
+                    'progress' => $this->progress instanceof Describable ? $this->progress : new VoidProgress(),
                 ])
                 : null
         );
@@ -76,12 +89,21 @@ final readonly class RepartitionProcessor implements Distributable
     public function process(Generator $rows, Backend $backend): Generator
     {
         $grouping = new KeyGrouping(new KeyEncoder($this->by->names()), $backend);
-        [$read, $fits] = (new BoundedRead($this->config->memoryLimit, $backend))->read($rows);
-        $buckets = new Buckets($this->config->spilling($backend));
+        // pulled before the budget starts: what a lazy upstream allocates on its first pull (a join build) is not ours
+        $rows->valid();
+        $budget = MemoryBudget::of($backend, $this->config->memoryLimit);
+        $buckets = new Buckets($this->config->spilling($backend, $budget));
+        [$read, $fits] = (new BoundedRead($budget))->read($rows);
 
         try {
             if ($fits) {
-                yield from $grouping->group($this->concatenated($read, $backend));
+                foreach ($grouping->group($this->concatenated($read, $backend)) as $group) {
+                    $this->progress->advanced($group->count());
+
+                    yield $group;
+                }
+
+                $this->progress->done();
 
                 return;
             }
@@ -98,9 +120,13 @@ final readonly class RepartitionProcessor implements Distributable
             foreach ($buckets->all() as $bucket) {
                 // re-key batches, yield from would restart keys at 0 for every bucket
                 foreach ($grouping->group($buckets->rows($bucket->id)) as $group) {
+                    $this->progress->advanced($group->count());
+
                     yield $group;
                 }
             }
+
+            $this->progress->done();
         } finally {
             $buckets->clear();
         }
@@ -113,7 +139,9 @@ final readonly class RepartitionProcessor implements Distributable
     {
         $names = $this->by->names();
 
-        return $names === [] || $this->describe() === null ? null : Distribution::clustered($names);
+        return $names === [] || $this->describe() === null
+            ? null
+            : Distribution::clustered($names, progress: $this->progress);
     }
 
     public function bind(Schema $input): BoundStep

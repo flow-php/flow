@@ -8,6 +8,8 @@ use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\Types\Type\Logical\StructureType;
 
 use function abs;
+use function array_values;
+use function count;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_optional;
@@ -15,6 +17,7 @@ use function Flow\Types\DSL\type_structure;
 use function is_finite;
 use function is_float;
 use function is_int;
+use function is_numeric;
 use function is_string;
 
 /**
@@ -133,21 +136,48 @@ final class RunningSum
      */
     public function addAll(array $values, bool $exact): void
     {
+        $this->addNumeric(array_values($values), 0, count($values) - 1, $exact);
+    }
+
+    /**
+     * add() over the int, float and numeric-string values of $values[$from..$to], skipping every other value.
+     *
+     * @param list<mixed> $values
+     *
+     * @return int the count of values added
+     */
+    public function addNumeric(array $values, int $from, int $to, bool $exact): int
+    {
+        $added = 0;
+
         if ($exact) {
-            foreach ($values as $value) {
-                $this->add($value, true);
+            for ($i = $from; $i <= $to; $i++) {
+                // @mago-ignore analysis:mixed-assignment
+                $value = $values[$i];
+
+                if (is_int($value) || is_float($value) || is_string($value) && is_numeric($value)) {
+                    $this->add($value, true);
+                    $added++;
+                }
             }
 
-            return;
+            return $added;
         }
 
         $sum = $this->sum;
         $compensation = $this->compensation;
 
-        foreach ($values as $value) {
-            if (is_string($value)) {
+        for ($i = $from; $i <= $to; $i++) {
+            // @mago-ignore analysis:mixed-assignment
+            $value = $values[$i];
+
+            if (is_string($value) && is_numeric($value)) {
                 $value = (float) $value;
+            } elseif (!is_int($value) && !is_float($value)) {
+                continue;
             }
+
+            $added++;
 
             if (is_int($sum) && is_int($value)) {
                 // an int overflow promotes to float, as PHP's + does
@@ -168,6 +198,8 @@ final class RunningSum
 
         $this->sum = $sum;
         $this->compensation = $compensation;
+
+        return $added;
     }
 
     public function merge(self $other, bool $exact): void
@@ -184,6 +216,10 @@ final class RunningSum
 
     public function value(): float|int
     {
-        return self::valueOf($this->partial());
+        if (is_int($this->sum)) {
+            return $this->sum;
+        }
+
+        return is_finite($this->sum) ? $this->sum + $this->compensation : $this->sum;
     }
 }

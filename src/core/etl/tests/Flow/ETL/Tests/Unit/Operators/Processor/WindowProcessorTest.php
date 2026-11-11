@@ -4,13 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Operators\Processor;
 
+use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
+use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Functions\AggregatingFunction;
 use Flow\ETL\Functions\WindowFunction;
 use Flow\ETL\Operators\Processor\WindowProcessor;
+use Flow\ETL\Tests\Context\DescribeRoundTrip;
+use Flow\ETL\Tests\Context\HeartbeatContext;
 use Flow\ETL\Tests\Context\WindowProcessorContext;
 use Flow\ETL\Tests\Double\CountingFrameAccumulating;
+use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\Double\WindowFunctionOverOperand;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\ListColumnsMother;
@@ -18,6 +24,7 @@ use Flow\ETL\Values\Rows;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function array_fill;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\average;
 use function Flow\ETL\DSL\count;
@@ -92,15 +99,10 @@ final class WindowProcessorTest extends FlowTestCase
                 ),
             ),
         );
-        static::assertSame(1, $function->accumulatorCalls);
-        static::assertSame(4, $function->fedRows);
+        static::assertSame([array_fill(0, 4, [0, 3])], $function->bounds);
     }
 
-    /**
-     * A peer frame grows by one row per row, so the accumulator carries forward and the whole partition
-     * feeds n rows instead of n(n+1)/2.
-     */
-    public function test_growing_frame_accumulates_each_row_once(): void
+    public function test_growing_frame_hands_each_row_its_grown_bounds(): void
     {
         $function = new CountingFrameAccumulating(ref('value'));
 
@@ -117,14 +119,10 @@ final class WindowProcessorTest extends FlowTestCase
                 ], schema(int_schema('value'))),
             ),
         );
-        static::assertSame(1, $function->accumulatorCalls);
-        static::assertSame(4, $function->fedRows);
+        static::assertSame([[[0, 0], [0, 1], [0, 2], [0, 3]]], $function->bounds);
     }
 
-    /**
-     * Rows tied on the ordering column share frame bounds, so they share one computed value.
-     */
-    public function test_peer_group_reuses_the_value_within_a_group(): void
+    public function test_peer_group_shares_its_bounds_and_value(): void
     {
         $function = new CountingFrameAccumulating(ref('value'));
 
@@ -141,14 +139,10 @@ final class WindowProcessorTest extends FlowTestCase
                 ], schema(int_schema('value'))),
             ),
         );
-        static::assertSame(1, $function->accumulatorCalls);
-        static::assertSame(4, $function->fedRows);
+        static::assertSame([[[0, 1], [0, 1], [0, 2], [0, 3]]], $function->bounds);
     }
 
-    /**
-     * A sliding frame moves its start, so the accumulator cannot be carried and must be rebuilt.
-     */
-    public function test_sliding_frame_recomputes_per_row(): void
+    public function test_sliding_frame_moves_its_start_per_row(): void
     {
         $function = new CountingFrameAccumulating(ref('value'));
 
@@ -165,8 +159,7 @@ final class WindowProcessorTest extends FlowTestCase
                 ], schema(int_schema('value'))),
             ),
         );
-        static::assertSame(3, $function->accumulatorCalls);
-        static::assertSame(6, $function->fedRows);
+        static::assertSame([[[0, 0], [0, 1], [1, 2], [2, 3]]], $function->bounds);
     }
 
     /**
@@ -556,5 +549,88 @@ final class WindowProcessorTest extends FlowTestCase
                 'n',
             ))),
         ))->bind(ListColumnsMother::numberAndFlagsSchema());
+    }
+
+    public function test_rebuilds_with_the_rebuild_progress(): void
+    {
+        $spy = new ProgressSpy();
+
+        iterator_to_array(
+            DescribeRoundTrip::rebuilt(
+                new WindowProcessor('rank', rank()->over(window()->orderBy(ref('n')))),
+                new Rebuild($spy),
+            )->process(
+                (static function (): Generator {
+                    yield array_to_rows([['n' => 2], ['n' => 1]], schema(int_schema('n')));
+                })(),
+                flow_context()->backend(),
+            ),
+            false,
+        );
+
+        static::assertSame(['window'], $spy->stages());
+        static::assertGreaterThan(0, $spy->countOf(StageName::window));
+    }
+
+    public function test_a_bound_window_counts_with_its_progress(): void
+    {
+        $progress = new ProgressSpy();
+
+        iterator_to_array(
+            (new WindowProcessor(
+                'rank',
+                rank()->over(window()->orderBy(ref('n'))),
+                progress: $progress->stage(StageName::window),
+            ))
+                ->bind(schema(int_schema('n')))
+                ->step->process(
+                    (static function (): Generator {
+                        yield array_to_rows([['n' => 2], ['n' => 1]], schema(int_schema('n')));
+                    })(),
+                    flow_context()->backend(),
+                ),
+            false,
+        );
+
+        static::assertGreaterThan(0, $progress->countOf(StageName::window));
+    }
+
+    public function test_window_processor_describes_its_progress(): void
+    {
+        $spy = new ProgressSpy();
+
+        DescribeRoundTrip::rebuilt(
+            new WindowProcessor(
+                'rank',
+                rank()->over(window()->orderBy(ref('n'))),
+                progress: HeartbeatContext::stageWithId(StageName::window, 7),
+            ),
+            new Rebuild($spy),
+        );
+
+        static::assertSame([['window', ProgressUnit::rows, 7, null]], $spy->built());
+    }
+
+    public function test_window_processor_is_done_after_its_last_batch(): void
+    {
+        $progress = new ProgressSpy();
+        $output = (new WindowProcessor(
+            'rank',
+            rank()->over(window()->orderBy(ref('n'))),
+            progress: $progress->stage(StageName::window),
+        ))->process(
+            (static function (): Generator {
+                yield array_to_rows([['n' => 2], ['n' => 1]], schema(int_schema('n')));
+            })(),
+            flow_context()->backend(),
+        );
+
+        $output->current();
+
+        static::assertSame(0, $progress->doneCalls(StageName::window));
+
+        iterator_to_array($output, false);
+
+        static::assertSame(1, $progress->doneCalls(StageName::window));
     }
 }

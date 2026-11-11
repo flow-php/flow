@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Operators\GroupBy;
 
 use ArrayObject;
+use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Functions\AggregatingFunction;
 use Flow\ETL\Operators\GroupBy;
 use Flow\ETL\Operators\GroupBy\AggregatedGroups;
 use Flow\ETL\Operators\GroupBy\Aggregators;
 use Flow\ETL\Operators\GroupBy\GroupByShape;
 use Flow\ETL\Operators\GroupBy\PartialAggregate;
+use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\Double\SpyColumn;
 use Flow\ETL\Tests\FlowTestCase;
@@ -134,6 +137,74 @@ final class AggregatedGroupsTest extends FlowTestCase
 
         static::assertEquals($shape->output, $batches[0]->schema());
         static::assertEquals(schema(str_schema('country'), float_schema('amount_sum', nullable: true)), $shape->output);
+    }
+
+    public function test_counts_every_flushed_group_in_groups_and_leaves_the_rows_to_its_processor(): void
+    {
+        $groupBy = new GroupBy(refs('country'), new Aggregators(sum(ref('amount'))));
+        $input = schema(str_schema('country'), int_schema('amount'));
+        $progress = new ProgressSpy();
+        $groups = new AggregatedGroups(
+            $groupBy,
+            GroupByShape::of($groupBy, $input),
+            flow_context(config())->backend(),
+            $progress->stage(StageName::group_by),
+        );
+
+        $groups->accumulate(array_to_rows([
+            ['country' => 'PL', 'amount' => 10],
+            ['country' => 'DE', 'amount' => 20],
+        ], $input), flow_context(config())->backend());
+        $groups->accumulate(array_to_rows([
+            ['country' => 'PL', 'amount' => 30],
+        ], $input), flow_context(config())->backend());
+        iterator_to_array($groups->flush(1, flow_context(config())->backend()), false);
+
+        static::assertSame([0, 2, [ProgressUnit::groups]], [
+            $progress->countIn(StageName::group_by, ProgressUnit::rows),
+            $progress->countIn(StageName::group_by, ProgressUnit::groups),
+            $progress->unitsOf(StageName::group_by),
+        ]);
+    }
+
+    public function test_no_input_counts_one_group(): void
+    {
+        $groupBy = new GroupBy(refs(), new Aggregators(sum(ref('amount'))));
+        $progress = new ProgressSpy();
+
+        (new AggregatedGroups(
+            $groupBy,
+            GroupByShape::of($groupBy, schema(int_schema('amount'))),
+            flow_context(config())->backend(),
+            $progress->stage(StageName::group_by),
+        ))->noInputRow(flow_context(config())->backend());
+
+        static::assertSame(1, $progress->countIn(StageName::group_by, ProgressUnit::groups));
+    }
+
+    public function test_a_flush_of_partials_is_busy_and_keeps_counting_in_rows(): void
+    {
+        $groupBy = new GroupBy(refs('country'), new Aggregators(new PartialAggregate(sum(ref('amount')))));
+        $input = schema(str_schema('country'), int_schema('amount'));
+        $progress = new ProgressSpy();
+        $groups = new AggregatedGroups(
+            $groupBy,
+            GroupByShape::of($groupBy, $input),
+            flow_context(config())->backend(),
+            $progress->stage(StageName::group_by),
+        );
+        $groups->accumulate(array_to_rows([
+            ['country' => 'PL', 'amount' => 10],
+            ['country' => 'DE', 'amount' => 20],
+        ], $input), flow_context(config())->backend());
+
+        iterator_to_array($groups->flush(1, flow_context(config())->backend()), false);
+
+        static::assertSame([[], 0, 2], [
+            $progress->unitsOf(StageName::group_by),
+            $progress->countOf(StageName::group_by),
+            $progress->busyCalls(StageName::group_by),
+        ]);
     }
 
     public function test_it_splits_the_flushed_groups_into_batches_of_the_requested_size(): void

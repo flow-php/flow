@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Mother;
 
 use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
+use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Operators\GroupBy;
 use Flow\ETL\Operators\Processor\GroupByAggregationProcessor;
 use Flow\ETL\Storage\BucketingConfig;
@@ -34,11 +36,13 @@ final class GroupByAggregationProcessorMother
         Unit $memoryLimit,
         int $bucketsCount = 4,
         int $batchSize = 1000,
+        Progress $progress = new VoidProgress(),
     ): GroupByAggregationProcessor {
         return new GroupByAggregationProcessor(
             $groupBy,
             new BucketingConfig($storage, $bucketsCount, $batchSize, $memoryLimit),
             new NativePHPRandomValueGenerator(),
+            progress: $progress,
         );
     }
 }

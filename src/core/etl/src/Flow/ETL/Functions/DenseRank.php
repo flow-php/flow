@@ -7,6 +7,7 @@ namespace Flow\ETL\Functions;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Sort\RowOrder;
@@ -62,7 +63,7 @@ final class DenseRank implements WindowFunction
     /**
      * @return list<int>
      */
-    public function values(Rows $partition, Backend $backend): array
+    public function values(Rows $partition, Backend $backend, Progress $progress): array
     {
         $orderBy = $this->window()->order();
 
@@ -72,6 +73,7 @@ final class DenseRank implements WindowFunction
 
         $ranks = [];
         $rank = 1;
+        $unreported = 0;
 
         foreach ((new RowOrder($orderBy))->ties($partition) as $index => $peer) {
             if ($index > 0 && !$peer) {
@@ -79,7 +81,14 @@ final class DenseRank implements WindowFunction
             }
 
             $ranks[] = $rank;
+
+            if (++$unreported === Progress::ROWS_PER_CALL) {
+                $progress->advanced($unreported);
+                $unreported = 0;
+            }
         }
+
+        $progress->advanced($unreported);
 
         return $ranks;
     }

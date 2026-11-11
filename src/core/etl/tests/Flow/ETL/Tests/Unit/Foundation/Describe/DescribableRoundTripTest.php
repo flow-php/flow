@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Foundation\Describe;
 
 use Flow\ETL\Foundation\Describe\Describable;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\RequiredPHPVersionException;
 use Flow\ETL\Foundation\Exception\RuntimeException;
 use Flow\ETL\Tests\Context\DescribableFixtures;
@@ -65,6 +66,11 @@ final class DescribableRoundTripTest extends FlowTestCase
             static::assertNull($describable->describe());
 
             return;
+        }
+
+        if (in_array($class, DescribableFixtures::rebuiltByProgress(), true)) {
+            $this->expectException(InvalidArgumentException::class);
+            $this->expectExceptionMessage($class . ' is rebuilt by Rebuild::progress()');
         }
 
         static::assertEquals($describable, DescribeRoundTrip::rebuilt($describable));

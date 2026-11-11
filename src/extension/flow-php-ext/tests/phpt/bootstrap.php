@@ -674,7 +674,7 @@ function rust_sniff_column(array $values, Flow\Types\Type\TypeNarrower $typer, b
         true,
         $emptyToNull,
         false,
-    ))->sniff([], null, $typer);
+    ))->sniff([], null, $typer, new Flow\ETL\Foundation\VoidProgress());
 }
 
 /**

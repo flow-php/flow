@@ -13,6 +13,7 @@ use Flow\ETL\Adapter\JSON\IO\JsonFraming;
 use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\SchemaMismatchException;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Extractor\File\SourceFile;
 use Flow\ETL\IO\Inference\SchemaInference;
 use Flow\ETL\IO\Inference\SchemaInferrer;
@@ -98,7 +99,7 @@ final class JsonFixtureContext
     {
         return (new SchemaInferrer($inference))->infer(self::sniffer(self::format($fixture), [self::source(
             $fixture,
-        )]))->schema;
+        )]), new VoidProgress())->schema;
     }
 
     /**

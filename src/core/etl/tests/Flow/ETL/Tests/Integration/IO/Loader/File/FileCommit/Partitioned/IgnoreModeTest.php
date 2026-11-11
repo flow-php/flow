@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\IO\Loader\File\FileCommit\Partitioned;
 
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Tests\Context\FileCommitContext;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Filesystem\Partition;
@@ -37,7 +38,7 @@ final class IgnoreModeTest extends FlowIntegrationTestCase
 
         static::assertFalse($files->admit(true));
 
-        $files->commit([0]);
+        $files->commit([0], new VoidProgress());
 
         $files = iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/**/*.txt')));
 
@@ -58,7 +59,7 @@ final class IgnoreModeTest extends FlowIntegrationTestCase
         $files = $this->context->commit($file, ignore());
 
         $files->open([new Partition('partition', 'value')])->append('appended content');
-        $files->commit([0]);
+        $files->commit([0], new VoidProgress());
 
         $files = iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/**/*.txt')));
 
@@ -77,7 +78,7 @@ final class IgnoreModeTest extends FlowIntegrationTestCase
         $files = $this->context->commit($file, ignore());
 
         $files->open([new Partition('partition', 'value')])->append('appended content');
-        $files->commit([0]);
+        $files->commit([0], new VoidProgress());
 
         $files = iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/partition=value/*')));
 

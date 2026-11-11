@@ -15,6 +15,7 @@ use Flow\ETL\Values\Rows;
 use Flow\Filesystem\Path\Filter\KeepAll;
 
 use function array_column;
+use function array_map;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\count as count_agg;
@@ -34,6 +35,7 @@ use function Flow\ETL\DSL\sum;
 use function Flow\ETL\DSL\to_array;
 use function Flow\Filesystem\DSL\path;
 use function iterator_to_array;
+use function range;
 
 final class AlgorithmOverrideTest extends FlowIntegrationTestCase
 {
@@ -156,7 +158,10 @@ final class AlgorithmOverrideTest extends FlowIntegrationTestCase
         )
             ->read(from_array([['id' => 1], ['id' => 2]]))
             ->join(
-                df()->read(from_array([['id' => 1, 'n' => 'a']])),
+                df()->read(from_array(array_map(
+                    static fn(int $id): array => ['id' => $id, 'n' => "n{$id}"],
+                    range(1, 100),
+                ))),
                 join_on(['id' => 'id'], 'joined_'),
                 JoinType::left,
                 hash_join()->storage($pinned)->memoryLimit(Unit::fromBytes(1))->batchSize(1),

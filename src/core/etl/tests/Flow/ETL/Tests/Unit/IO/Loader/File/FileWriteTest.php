@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\IO\Loader\File;
 
 use Flow\ETL\Foundation\Exception\RuntimeException as FlowRuntimeException;
+use Flow\ETL\Foundation\StageName;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Filesystem\SaveMode;
 use Flow\ETL\IO\Loader\File\FileWrite;
 use Flow\ETL\IO\Loader\File\Part;
@@ -12,6 +14,7 @@ use Flow\ETL\IO\Loader\File\PartitionRouter;
 use Flow\ETL\IO\Loader\Partitioning;
 use Flow\ETL\Tests\Context\ReaderRoundTrip;
 use Flow\ETL\Tests\Context\WrittenFiles;
+use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\Double\SpyFileWriterFactory;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\TestWith;
@@ -42,7 +45,7 @@ final class FileWriteTest extends FlowTestCase
         );
 
         $frame->write(array_to_rows([['id' => 1]], schema(int_schema('id'))), flow_context()->backend());
-        $frame->closure();
+        $frame->closure(new VoidProgress());
 
         static::assertMatchesRegularExpression(
             '#^\.flow-tmp-r1-[0-9a-f]{8}/00001/part-00001\.txt$#',
@@ -71,7 +74,7 @@ final class FileWriteTest extends FlowTestCase
         }
 
         $frames[1]->discard();
-        $frames[0]->closure();
+        $frames[0]->closure(new VoidProgress());
 
         static::assertMatchesRegularExpression(
             '#^\.flow-tmp-r1-[0-9a-f]{8}/00000/part-00000\.txt$#',
@@ -93,7 +96,7 @@ final class FileWriteTest extends FlowTestCase
             SaveMode::Overwrite,
             new PartitionRouter(Partitioning::none()),
             new SpyFileWriterFactory(),
-        ))->closure();
+        ))->closure(new VoidProgress());
 
         static::assertSame([], WrittenFiles::under($out));
 
@@ -111,7 +114,7 @@ final class FileWriteTest extends FlowTestCase
             SaveMode::Overwrite,
             new PartitionRouter(partition_by('group')),
             new SpyFileWriterFactory(),
-        ))->closure();
+        ))->closure(new VoidProgress());
 
         static::assertSame(['group=a/part-00007.txt'], WrittenFiles::under($out));
 
@@ -131,7 +134,7 @@ final class FileWriteTest extends FlowTestCase
             $mode,
             new PartitionRouter(Partitioning::none()),
             new SpyFileWriterFactory(),
-        ))->closure();
+        ))->closure(new VoidProgress());
 
         static::assertSame(['part-00007.txt'], WrittenFiles::under($out));
 
@@ -155,6 +158,55 @@ final class FileWriteTest extends FlowTestCase
         );
     }
 
+    public function test_closure_reports_every_writer_close_and_every_commit_operation(): void
+    {
+        $frame = new FileWrite(
+            memory_filesystem(),
+            path('memory://out/part-{part}.txt'),
+            SaveMode::Overwrite,
+            new PartitionRouter(partition_by('group')),
+            new SpyFileWriterFactory(),
+        );
+        $frame->write(
+            array_to_rows(
+                [['id' => 1, 'group' => 'a'], ['id' => 2, 'group' => 'b']],
+                schema(int_schema('id'), str_schema('group')),
+            ),
+            flow_context()->backend(),
+        );
+        $spy = new ProgressSpy(StageName::commit);
+
+        $frame->closure($spy);
+
+        static::assertSame([2, 2 + 6], [$spy->countOf(StageName::commit), $spy->busyCalls(StageName::commit)]);
+    }
+
+    public function test_closure_reports_a_writer_whose_close_failed(): void
+    {
+        $frame = new FileWrite(
+            memory_filesystem(),
+            path('memory://out/part-{part}.txt'),
+            SaveMode::Overwrite,
+            new PartitionRouter(partition_by('group')),
+            new SpyFileWriterFactory(failingClose: true),
+        );
+        $frame->write(
+            array_to_rows(
+                [['id' => 1, 'group' => 'a'], ['id' => 2, 'group' => 'b']],
+                schema(int_schema('id'), str_schema('group')),
+            ),
+            flow_context()->backend(),
+        );
+        $spy = new ProgressSpy(StageName::commit);
+
+        try {
+            $frame->closure($spy);
+            static::fail('Expected the writer close failure to surface.');
+        } catch (RuntimeException) {
+            static::assertSame([0, 2], [$spy->countOf(StageName::commit), $spy->busyCalls(StageName::commit)]);
+        }
+    }
+
     public function test_one_writer_per_partition_uri(): void
     {
         $filesystem = memory_filesystem();
@@ -173,7 +225,7 @@ final class FileWriteTest extends FlowTestCase
             ['id' => 2, 'group' => 'b'],
         ], $schema), flow_context()->backend());
         $frame->write(array_to_rows([['id' => 3, 'group' => 'a']], $schema), flow_context()->backend());
-        $frame->closure();
+        $frame->closure(new VoidProgress());
 
         static::assertSame(['memory://out/group=a/file.txt', 'memory://out/group=b/file.txt'], $writers->opened);
         static::assertSame(
@@ -196,7 +248,7 @@ final class FileWriteTest extends FlowTestCase
         );
 
         $frame->write(array_to_rows([], schema(int_schema('id'), str_schema('group'))), flow_context()->backend());
-        $frame->closure();
+        $frame->closure(new VoidProgress());
 
         static::assertSame([], $writers->opened);
         static::assertSame([], iterator_to_array($filesystem->list(path('memory://out/**/*'))));
@@ -214,7 +266,7 @@ final class FileWriteTest extends FlowTestCase
         );
 
         $frame->write(array_to_rows([['id' => 1]], schema(int_schema('id'))), flow_context()->backend());
-        $frame->closure();
+        $frame->closure(new VoidProgress());
 
         static::assertSame('rows:1;closed;', $filesystem->readFrom(path('memory://out/file.txt'))->content());
     }
@@ -258,7 +310,7 @@ final class FileWriteTest extends FlowTestCase
         );
 
         try {
-            $frame->closure();
+            $frame->closure(new VoidProgress());
             static::fail('a failing close must reach the caller');
         } catch (RuntimeException $e) {
             static::assertSame('close of memory://out/group=a/file.txt failed', $e->getMessage());

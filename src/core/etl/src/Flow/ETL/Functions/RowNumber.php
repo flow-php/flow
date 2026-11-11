@@ -7,6 +7,7 @@ namespace Flow\ETL\Functions;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
 use Flow\Types\Type;
@@ -22,9 +23,10 @@ final class RowNumber implements WindowFunction
         private readonly ?Window $window = null,
     ) {}
 
-    public function values(Rows $partition, Backend $backend): array
+    public function values(Rows $partition, Backend $backend, Progress $progress): array
     {
         $count = $partition->count();
+        $progress->advanced($count);
 
         return $count < 1 ? [] : array_keys(array_fill(1, $count, true));
     }

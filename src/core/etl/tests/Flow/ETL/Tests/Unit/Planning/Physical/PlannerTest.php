@@ -7,6 +7,8 @@ namespace Flow\ETL\Tests\Unit\Planning\Physical;
 use ArrayObject;
 use Flow\ETL\Foundation\Exception\DataDependentSchemaException;
 use Flow\ETL\Foundation\Exception\InvalidLogicException;
+use Flow\ETL\Foundation\StageName;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Floe\FloeLoader;
 use Flow\ETL\IO\Loader\ArrayLoader;
 use Flow\ETL\IO\Loader\MemoryLoader;
@@ -45,7 +47,6 @@ use Flow\ETL\Planning\Optimizer\Rule\CombineSortAndLimit;
 use Flow\ETL\Planning\Physical\BranchPipeline;
 use Flow\ETL\Planning\Physical\JoinStep;
 use Flow\ETL\Planning\Physical\Pipeline;
-use Flow\ETL\Planning\Physical\PipelineSteps;
 use Flow\ETL\Planning\Physical\PlannedNode;
 use Flow\ETL\Planning\Physical\PlannedNodes;
 use Flow\ETL\Planning\Physical\Planner;
@@ -60,11 +61,14 @@ use Flow\ETL\Tests\Context\PipelineStepList;
 use Flow\ETL\Tests\Double\BackendRecordingTransformer;
 use Flow\ETL\Tests\Double\ChildlessNode;
 use Flow\ETL\Tests\Double\CountingExtractor;
+use Flow\ETL\Tests\Double\InferenceRecordingExtractor;
+use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\Double\RecordingRule;
 use Flow\ETL\Tests\Double\RecordingTransaction;
 use Flow\ETL\Tests\Double\SpineCopyingRule;
 use Flow\ETL\Tests\Double\SpyTransformer;
 use Flow\ETL\Tests\Double\StaticExtractorFactory;
+use Flow\ETL\Tests\Double\ThrowingRule;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\HashJoinMother;
 use Flow\ETL\Tests\Mother\NodeMother;
@@ -73,6 +77,7 @@ use Flow\ETL\Tests\Mother\PipelinesMother;
 use Flow\ETL\Tests\Mother\RowsMother;
 use Flow\ETL\Values\BatchSize;
 use Flow\ETL\Values\Join\JoinType;
+use RuntimeException;
 
 use function array_map;
 use function Flow\ETL\DSL\array_to_rows;
@@ -80,6 +85,7 @@ use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\count;
 use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\from_all;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\hash_group_by;
@@ -1261,10 +1267,10 @@ final class PlannerTest extends FlowTestCase
         $offset = new OffsetProcessor(1);
 
         static::assertEquals(
-            [new PipelineSteps([$offset, $limit])],
+            [[[$offset, $limit], null]],
             array_map(
-                static fn(Pipeline $pipeline): PipelineSteps => $pipeline->steps,
-                Planner::cut(null, [$offset, $limit], 0),
+                static fn(Pipeline $pipeline): array => [$pipeline->steps->steps, $pipeline->steps->breaker],
+                Planner::cut(null, [$offset, $limit], 0, new PlannedNodes()),
             ),
         );
     }
@@ -1276,10 +1282,10 @@ final class PlannerTest extends FlowTestCase
         $count = new CountingProcessor();
 
         static::assertEquals(
-            [new PipelineSteps([$limit], $collect), new PipelineSteps([], $count)],
+            [[[$limit], $collect], [[], $count]],
             array_map(
-                static fn(Pipeline $pipeline): PipelineSteps => $pipeline->steps,
-                Planner::cut(null, [$limit, $collect, $count], 0),
+                static fn(Pipeline $pipeline): array => [$pipeline->steps->steps, $pipeline->steps->breaker],
+                Planner::cut(null, [$limit, $collect, $count], 0, new PlannedNodes()),
             ),
         );
     }
@@ -1290,10 +1296,10 @@ final class PlannerTest extends FlowTestCase
         $limit = new LimitTransformer(1);
 
         static::assertEquals(
-            [new PipelineSteps([], $collect), new PipelineSteps([$limit])],
+            [[[], $collect], [[$limit], null]],
             array_map(
-                static fn(Pipeline $pipeline): PipelineSteps => $pipeline->steps,
-                Planner::cut(null, [$collect, $limit], 0),
+                static fn(Pipeline $pipeline): array => [$pipeline->steps->steps, $pipeline->steps->breaker],
+                Planner::cut(null, [$collect, $limit], 0, new PlannedNodes()),
             ),
         );
     }
@@ -1306,10 +1312,10 @@ final class PlannerTest extends FlowTestCase
         $limit = new LimitTransformer(1);
 
         static::assertEquals(
-            [new PipelineSteps([$cross], $hash), new PipelineSteps([$limit])],
+            [[[$cross], $hash], [[$limit], null]],
             array_map(
-                static fn(Pipeline $pipeline): PipelineSteps => $pipeline->steps,
-                Planner::cut(null, [$cross, $hash, $limit], 0),
+                static fn(Pipeline $pipeline): array => [$pipeline->steps->steps, $pipeline->steps->breaker],
+                Planner::cut(null, [$cross, $hash, $limit], 0, new PlannedNodes()),
             ),
         );
     }
@@ -1320,7 +1326,7 @@ final class PlannerTest extends FlowTestCase
         $collect = new CollectingProcessor();
         $limit = new LimitTransformer(1);
 
-        $pipelines = Planner::cut($read, [$collect, $limit], 4);
+        $pipelines = Planner::cut($read, [$collect, $limit], 4, new PlannedNodes());
 
         static::assertCount(2, $pipelines);
         static::assertSame([4, 5], [$pipelines[0]->id, $pipelines[1]->id]);
@@ -1332,6 +1338,62 @@ final class PlannerTest extends FlowTestCase
 
     public function test_cut_of_a_fed_branch_starts_without_input(): void
     {
-        static::assertNull(Planner::cut(null, [new LimitTransformer(1)], 0)[0]->input);
+        static::assertNull(Planner::cut(null, [new LimitTransformer(1)], 0, new PlannedNodes())[0]->input);
+    }
+
+    public function test_a_read_that_infers_reports_to_the_infer_stage_only_while_planning(): void
+    {
+        $extractor = new InferenceRecordingExtractor();
+        $progress = new ProgressSpy();
+
+        config()->planner()->plan(NodeMother::plan(NodeMother::read($extractor)), $progress);
+
+        static::assertSame(['infer', 'read'], $progress->stages());
+        static::assertGreaterThan(0, $progress->countOf(StageName::infer));
+        static::assertCount(2, $extractor->reportedTo);
+        static::assertNotInstanceOf(VoidProgress::class, $extractor->reportedTo[0]);
+        static::assertInstanceOf(VoidProgress::class, $extractor->reportedTo[1]);
+    }
+
+    public function test_a_chain_hands_the_infer_stage_to_every_extractor_it_chains(): void
+    {
+        $first = new InferenceRecordingExtractor();
+        $second = new InferenceRecordingExtractor();
+        $progress = new ProgressSpy();
+
+        config()->planner()->plan(NodeMother::plan(NodeMother::read(from_all($first, $second))), $progress);
+
+        static::assertCount(2, $first->reportedTo);
+        static::assertCount(2, $second->reportedTo);
+        static::assertSame($first->reportedTo[0], $second->reportedTo[0]);
+    }
+
+    public function test_a_failing_plan_still_unbinds_the_infer_stage(): void
+    {
+        $extractor = new InferenceRecordingExtractor();
+        $failure = new RuntimeException('rule failed');
+
+        try {
+            config_builder()
+                ->optimizer(new Optimizer(new ThrowingRule($failure)))
+                ->build()
+                ->planner()
+                ->plan(NodeMother::plan(NodeMother::read($extractor)), new ProgressSpy());
+            static::fail('The rule failure did not stop the plan');
+        } catch (RuntimeException $e) {
+            static::assertSame($failure, $e);
+        }
+
+        static::assertCount(2, $extractor->reportedTo);
+        static::assertInstanceOf(VoidProgress::class, $extractor->reportedTo[1]);
+    }
+
+    public function test_inference_is_done_after_planning(): void
+    {
+        $progress = new ProgressSpy();
+
+        config()->planner()->plan(NodeMother::plan(NodeMother::read(new InferenceRecordingExtractor())), $progress);
+
+        static::assertSame(1, $progress->doneCalls(StageName::infer));
     }
 }

@@ -7,12 +7,15 @@ namespace Flow\ETL\Tests\Context;
 use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Foundation\StageName;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Functions\ScalarFunction;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\File\FileSplit;
 use Flow\ETL\IO\Loader\File\Part;
 use Flow\ETL\Planning\Optimizer\Optimizer;
 use Flow\ETL\Planning\Optimizer\Rule\PushFilterIntoSource;
+use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\Double\ThrowWhenRowMatches;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Rows;
@@ -128,12 +131,23 @@ final readonly class FileFormatContract
         $loader = $format->loader($this->cacheDir->suffix('/out/data.' . $format->extension()));
 
         $loader->load(array_to_rows([], schema(str_schema('text'))), flow_context()->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         Assert::assertSame(
             [],
             iterator_to_array(native_local_filesystem()->list($this->cacheDir->suffix('/out/**/*')), false),
         );
+    }
+
+    public function aWriteThatEndsReportsItsFileOperations(FileFormat $format): void
+    {
+        $loader = $format->loader($this->cacheDir->suffix('/out/data.' . $format->extension()));
+        $loader->load(array_to_rows([['text' => 'a']], schema(str_schema('text'))), flow_context()->backend());
+        $progress = new ProgressSpy(StageName::commit);
+
+        $loader->closure($progress);
+
+        Assert::assertGreaterThan(0, $progress->countOf(StageName::commit));
     }
 
     public function aPartitionedWriteReadsBackEveryPartition(FileFormat $format): void

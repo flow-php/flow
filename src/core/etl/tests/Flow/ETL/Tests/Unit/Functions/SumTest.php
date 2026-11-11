@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Functions;
 
+use Flow\ETL\Foundation\StageName;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Tests\Context\AggregatorRoundTrip;
+use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\RowsMother;
 
 use function array_map;
 use function Flow\ETL\DSL\array_to_rows;
@@ -176,6 +180,7 @@ final class SumTest extends FlowTestCase
                         schema(int_schema('id'), float_schema('value')),
                     ),
                     flow_context()->backend(),
+                    new VoidProgress(),
                 )[0],
         );
     }
@@ -264,6 +269,7 @@ final class SumTest extends FlowTestCase
                         schema(int_schema('id'), int_schema('value')),
                     ),
                     flow_context()->backend(),
+                    new VoidProgress(),
                 )[0],
         );
     }
@@ -286,6 +292,7 @@ final class SumTest extends FlowTestCase
                         schema(int_schema('id'), float_schema('value')),
                     ),
                     flow_context()->backend(),
+                    new VoidProgress(),
                 )[0],
         );
     }
@@ -296,10 +303,14 @@ final class SumTest extends FlowTestCase
             [null, null],
             sum(ref('missing_column'))
                 ->over(window())
-                ->values(array_to_rows([
-                    ['id' => 1],
-                    ['id' => 2],
-                ], schema(int_schema('id'))), flow_context()->backend()),
+                ->values(
+                    array_to_rows([
+                        ['id' => 1],
+                        ['id' => 2],
+                    ], schema(int_schema('id'))),
+                    flow_context()->backend(),
+                    new VoidProgress(),
+                ),
         );
     }
 
@@ -387,5 +398,19 @@ final class SumTest extends FlowTestCase
         $left->merge($right->partial(), flow_context()->backend());
 
         static::assertSame(0.3, $left->value());
+    }
+
+    public function test_reports_a_long_partition_to_the_progress(): void
+    {
+        $progress = new ProgressSpy();
+
+        sum(ref('id'))
+            ->over(window())
+            ->values(RowsMother::sequentialIds(2500), flow_context()->backend(), $progress->stage(StageName::window));
+
+        static::assertSame(
+            [['window', 1000], ['window', 1000], ['window', 500], ['window', 1000], ['window', 1000], ['window', 500]],
+            $progress->advancedCalls(),
+        );
     }
 }

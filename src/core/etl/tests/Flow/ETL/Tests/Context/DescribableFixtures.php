@@ -8,6 +8,9 @@ use Closure;
 use Flow\ETL\Foundation\Describe\ConfiguredFilesystem;
 use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
+use Flow\ETL\Foundation\ProgressUnit;
+use Flow\ETL\Foundation\StageName;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Functions\DenseRank;
 use Flow\ETL\Functions\Evaluation\Filter;
 use Flow\ETL\Functions\Join\Condition\All;
@@ -96,6 +99,8 @@ use Flow\ETL\Runtime\ErrorHandler\IgnoreError;
 use Flow\ETL\Runtime\ErrorHandler\SkipRows;
 use Flow\ETL\Runtime\ErrorHandler\ThrowError;
 use Flow\ETL\Runtime\Executor\OfferedFailure;
+use Flow\ETL\Runtime\Heartbeat\HeartbeatStage;
+use Flow\ETL\Runtime\Heartbeat\ScheduledHeartbeat;
 use Flow\ETL\Storage\BucketingConfig;
 use Flow\ETL\Storage\FilesystemRowsStorage;
 use Flow\ETL\Storage\Floe\FloeSerializer;
@@ -103,6 +108,7 @@ use Flow\ETL\Storage\Floe\Options;
 use Flow\ETL\Storage\Memory\ArrayMemory;
 use Flow\ETL\Storage\MemoryRowsStorage;
 use Flow\ETL\Storage\Serializer\CompressingSerializer;
+use Flow\ETL\Tests\Double\RecordingHeartbeat;
 use Flow\ETL\Tests\Double\StaticExtractorFactory;
 use Flow\ETL\Values\BatchSize;
 use Flow\ETL\Values\Column\AdaptiveBackend;
@@ -175,6 +181,16 @@ final class DescribableFixtures
             OfferedFailure::class,
             StreamLoader::class,
         ];
+    }
+
+    /**
+     * The classes a step rebuilds with Rebuild::progress(), so their fromDescription() refuses.
+     *
+     * @return list<class-string<Describable>>
+     */
+    public static function rebuiltByProgress(): array
+    {
+        return [HeartbeatStage::class, VoidProgress::class];
     }
 
     /**
@@ -304,6 +320,14 @@ final class DescribableFixtures
                 new Aggregators(sum(ref('amount'))),
             ),
             HashJoinConfig::class => static fn(): Describable => new HashJoinConfig(self::bucketing(), Unit::fromKb(9)),
+            HeartbeatStage::class => static fn(): Describable => new HeartbeatStage(
+                StageName::sort,
+                ProgressUnit::rows,
+                7,
+                'memory://in/orders.floe',
+                (new HeartbeatContext())->throttle(new ScheduledHeartbeat(new RecordingHeartbeat(), 1)),
+                0,
+            ),
             IgnoreError::class => static fn(): Describable => new IgnoreError(),
             JoinEachRowsTransformer::class => static fn(): Describable => JoinEachRowsTransformer::left(
                 new StaticExtractorFactory(from_array([['id' => 1]])),
@@ -451,6 +475,7 @@ final class DescribableFixtures
                 schema(int_schema('id')),
             ),
             VoidProcessor::class => static fn(): Describable => new VoidProcessor(schema(int_schema('id'))),
+            VoidProgress::class => static fn(): Describable => new VoidProgress(),
             WindowProcessor::class => static fn(): Describable => type_instance_of(
                 WindowProcessor::class,
             )->assert((new WindowProcessor('rank', new Rank(self::window())))->bind(schema(

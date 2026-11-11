@@ -8,6 +8,7 @@ use Flow\ETL\IO\Extractor\FeedExtractor;
 use Flow\ETL\IO\Loader;
 use Flow\ETL\Operators\Processor;
 use Flow\ETL\Operators\Transformer;
+use Flow\ETL\Planning\Physical\PlannedNodes;
 use Flow\ETL\Planning\Physical\Planner;
 use Flow\ETL\Runtime\Executor\BranchFiber;
 use Flow\ETL\Runtime\Executor\BranchLoader;
@@ -43,7 +44,7 @@ final class BranchLoaderMother
         FlowContext $context,
         Transformer|Loader|Processor ...$steps,
     ): BranchFiber {
-        $pipelines = Planner::cut(null, array_values($steps), 0);
+        $pipelines = Planner::cut(null, array_values($steps), 0, new PlannedNodes());
 
         return new BranchFiber($pipelines[count($pipelines) - 1], new Executor(), $context, $feed, new StepRunner());
     }

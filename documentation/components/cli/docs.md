@@ -14,9 +14,13 @@ For the installation instructions, read the [installation page](/documentation/i
 
 ## Commands
 
+`file:analyze`, `file:convert` and `file:rows:count` show the run's progress on stderr. The
+[Symfony Console Bridge](/documentation/components/bridges/symfony-console-bridge.md#styles) page shows the styles and
+how to hide them.
+
 ### Config 
 
-You can configure all Flow CLI commands with the `--config` option. The option takes the path to a php configuration file that returns a `Config` or `ConfigBuilder` instance.
+You can configure the `file:*` commands with the `--config` option. The option takes the path to a php configuration file that returns a `ConfigBuilder` instance.
 
 `.flow.php`
 
@@ -110,7 +114,7 @@ Options:
       --output-file-format=OUTPUT-FILE-FORMAT                        File format. When not set file format is guessed from output file path extension
       --output-overwrite[=OUTPUT-OVERWRITE]                          When set output file will be overwritten if exists
       --analyze[=ANALYZE]                                            Collect processing statistics and print them. [default: false]
-      --config=CONFIG                                                Path to a local php file that MUST return instance of: Flow\ETL\Runtime\Config
+      --config=CONFIG                                                Path to a local php file that MUST return instance of: Flow\ETL\API\Config\ConfigBuilder
       --input-json-pointer=INPUT-JSON-POINTER                        JSON Pointer to a subtree from which schema should be extracted
       --input-json-pointer-column-name                               When set, JSON Pointer will be used as a column name in the schema
       --output-json-date-time-format=OUTPUT-JSON-DATE-TIME-FORMAT    Date time format used in JSON output
@@ -170,7 +174,7 @@ Options:
       --output-php                                         Print schema as PHP code
       --output-table                                       Print schema as ascii table
       --output-ascii                                       Print schema as ascii list
-      --config=CONFIG                                      Path to a local php file that MUST return instance of: Flow\ETL\Runtime\Config
+      --config=CONFIG                                      Path to a local php file that MUST return instance of: Flow\ETL\API\Config\ConfigBuilder
       --input-json-pointer=INPUT-JSON-POINTER              JSON Pointer to a subtree from which schema should be extracted
       --input-json-pointer-column-name                     When set, JSON Pointer will be used as a column name in the schema
       --input-csv-header[=INPUT-CSV-HEADER]                When set, CSV header will be used as a schema
@@ -237,7 +241,7 @@ Options:
       --input-file-batch-size=INPUT-FILE-BATCH-SIZE        Number of rows processed in one batch after reading, when set to -1 whole dataset will be displayed at once [default: 1000]
       --input-file-limit=INPUT-FILE-LIMIT                  Limit number of rows read from the file.
       --input-file-offset=INPUT-FILE-OFFSET                Number of rows to skip before starting to read data
-      --config=CONFIG                                      Path to a local php file that MUST return instance of: Flow\ETL\Runtime\Config
+      --config=CONFIG                                      Path to a local php file that MUST return instance of: Flow\ETL\API\Config\ConfigBuilder
       --input-json-pointer=INPUT-JSON-POINTER              JSON Pointer to a subtree from which schema should be extracted
       --input-json-pointer-column-name                     When set, JSON Pointer will be used as a column name in the schema
       --input-csv-header[=INPUT-CSV-HEADER]                When set, CSV header will be used as a schema
@@ -287,7 +291,7 @@ Options:
       --input-file-offset=INPUT-FILE-OFFSET                Number of rows to skip before starting to read data
       --output-truncate=OUTPUT-TRUNCATE                    Truncate output to given number of characters, when set to -1 output is not truncated at all [default: 20]
       --output-columns=OUTPUT-COLUMNS                      Columns to include in output, when not set all columns are displayed (multiple values allowed)
-      --config=CONFIG                                      Path to a local php file that MUST return instance of: Flow\ETL\Runtime\Config
+      --config=CONFIG                                      Path to a local php file that MUST return instance of: Flow\ETL\API\Config\ConfigBuilder
       --input-json-pointer=INPUT-JSON-POINTER              JSON Pointer to a subtree from which schema should be extracted
       --input-json-pointer-column-name                     When set, JSON Pointer will be used as a column name in the schema
       --input-csv-header[=INPUT-CSV-HEADER]                When set, CSV header will be used as a schema
@@ -331,7 +335,7 @@ Options:
       --input-file-format=INPUT-FILE-FORMAT                Source file format. When not set file format is guessed from source file path extension
       --input-file-limit=INPUT-FILE-LIMIT                  Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed
       --input-file-offset=INPUT-FILE-OFFSET                Number of rows to skip before starting to read data
-      --config=CONFIG                                      Path to a local php file that MUST return instance of: Flow\ETL\Runtime\Config
+      --config=CONFIG                                      Path to a local php file that MUST return instance of: Flow\ETL\API\Config\ConfigBuilder
       --input-json-pointer=INPUT-JSON-POINTER              JSON Pointer to a subtree from which schema should be extracted
       --input-json-pointer-column-name                     When set, JSON Pointer will be used as a column name in the schema
       --input-excel-header[=INPUT-EXCEL-HEADER]            When set, Excel header will be used as a schema
@@ -397,7 +401,6 @@ Arguments:
 
 Options:
       --analyze[=ANALYZE]              Collect processing statistics and print them. [default: false]
-      --config=CONFIG                  Path to a local php file that MUST return instance of: Flow\ETL\Runtime\Config
       --stats-schema[=STATS-SCHEMA]    Prints schema of executed data transformation pipeline. [default: false]
       --stats-columns[=STATS-COLUMNS]  Prints number of rows in dataset. [default: false]
       --stats-sources[=STATS-SOURCES]  Prints the rows every source declared next to the rows it yielded. [default: false]
@@ -448,7 +451,6 @@ Options:
       --output-table                           Print schema as ascii table
       --output-ascii                           Print schema as ascii list
       --db-column[=DB-COLUMN]                  Filter schema by column name(s) (multiple values allowed)
-      --config=CONFIG                          Path to a local php file that MUST return instance of: Flow\ETL\Runtime\Config
   -c, --db-connection-file=DB-CONNECTION-FILE  Path to file that returns and instance of \Doctrine\DBAL\Connection
   -h, --help                                   Display help for the given command. When no command is given display help for the list command
       --silent                                 Do not output any message
@@ -475,7 +477,6 @@ Usage:
 
 Options:
       --db-namespace=DB-NAMESPACE              List of namespaces for which this command will list tables, multiple values allowed. When not set, all tables from all namespaces are listed. (multiple values allowed)
-      --config=CONFIG                          Path to a local php file that MUST return instance of: Flow\ETL\Runtime\Config
   -c, --db-connection-file=DB-CONNECTION-FILE  Path to file that returns and instance of \Doctrine\DBAL\Connection
   -h, --help                                   Display help for the given command. When no command is given display help for the list command
       --silent                                 Do not output any message
@@ -511,7 +512,6 @@ Options:
       --output-php      Print schema as PHP code
       --output-table    Print schema as ascii table
       --output-ascii    Print schema as ascii list
-      --config=CONFIG   Path to a local php file that MUST return instance of: Flow\ETL\Runtime\Config
   -h, --help            Display help for the given command. When no command is given display help for the list command
       --silent          Do not output any message
   -q, --quiet           Only errors are displayed. All other output is suppressed

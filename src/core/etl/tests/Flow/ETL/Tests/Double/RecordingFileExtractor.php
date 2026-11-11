@@ -35,12 +35,15 @@ final class RecordingFileExtractor implements FileExtractor
 
     private bool $prunes = false;
 
+    private Path $source;
+
     public function __construct(
         private readonly Schema $schema,
         Rows ...$batches,
     ) {
         $this->batches = array_values($batches);
         $this->partitions = new Schema();
+        $this->source = path('/dev/null');
     }
 
     public function extract(Backend $backend, Criteria $criteria): Generator
@@ -78,7 +81,7 @@ final class RecordingFileExtractor implements FileExtractor
 
     public function source(): Path
     {
-        return path('/dev/null');
+        return $this->source;
     }
 
     public function withPartitionSchema(Schema $partitions): self
@@ -86,6 +89,7 @@ final class RecordingFileExtractor implements FileExtractor
         $self = new self($this->schema, ...$this->batches);
         $self->partitions = $partitions;
         $self->prunes = $this->prunes;
+        $self->source = $this->source;
 
         return $self;
     }
@@ -95,6 +99,17 @@ final class RecordingFileExtractor implements FileExtractor
         $self = new self($this->schema, ...$this->batches);
         $self->partitions = $this->partitions;
         $self->prunes = true;
+        $self->source = $this->source;
+
+        return $self;
+    }
+
+    public function withSource(Path $source): self
+    {
+        $self = new self($this->schema, ...$this->batches);
+        $self->partitions = $this->partitions;
+        $self->prunes = $this->prunes;
+        $self->source = $source;
 
         return $self;
     }

@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\PostgreSql\Tests\Double;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\IO\Loader;
 use Flow\ETL\IO\Loader\Closure;
 use Flow\ETL\Values\Column\Backend;
@@ -26,7 +27,7 @@ final class TransactionSpyLoader implements Closure, Loader
         private readonly Client $client,
     ) {}
 
-    public function closure(): void
+    public function closure(Progress $progress): void
     {
         $this->closureNestingLevels[] = $this->client->getTransactionNestingLevel();
     }

@@ -7,7 +7,6 @@ namespace Flow\CLI\Command;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
-use Flow\CLI\Options\ConfigOption;
 use Flow\CLI\Options\DbConnectionOptions;
 use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -39,7 +38,6 @@ final class DatabaseTableListCommand extends Command
             [],
         );
 
-        (new ConfigOption('config'))->configure($this);
         (new DbConnectionOptions())->configure($this);
     }
 

@@ -9,6 +9,8 @@ use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\SchemaValidationException;
+use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\CorruptedRecordsRouter;
 use Flow\ETL\IO\Extractor;
 use Flow\ETL\IO\Extractor\BatchableExtractor;
@@ -60,6 +62,8 @@ final class GoogleSheetExtractor implements
 
     private SchemaInference $inference;
 
+    private Progress $inferenceProgress;
+
     private GoogleSheetReadOptions $readOptions;
 
     private int $rowsPerPage = 1000;
@@ -79,6 +83,7 @@ final class GoogleSheetExtractor implements
         private readonly Columns $columnRange,
     ) {
         $this->inference = new SchemaInference(sampleSize: self::SAMPLE_ROWS);
+        $this->inferenceProgress = new VoidProgress();
         $this->readOptions = new GoogleSheetReadOptions();
         $this->batchSize = new BatchSize();
     }
@@ -116,6 +121,7 @@ final class GoogleSheetExtractor implements
         $sampledNow = $this->schema === null && $this->derivedSchema === null;
         $base = $this->schema ?? ($this->derivedSchema ??= (new SchemaInferrer($this->inference))->infer(
             $sniffer,
+            $this->inferenceProgress,
         )->schema);
 
         if ($sampledNow) {
@@ -161,6 +167,11 @@ final class GoogleSheetExtractor implements
         return $this;
     }
 
+    public function reportInferenceTo(Progress $progress): void
+    {
+        $this->inferenceProgress = $progress;
+    }
+
     public function schema(): Schema
     {
         $sniffer = new GoogleSheetSniffer(
@@ -171,6 +182,7 @@ final class GoogleSheetExtractor implements
         $sampledNow = $this->schema === null && $this->derivedSchema === null;
         $base = $this->schema ?? ($this->derivedSchema ??= (new SchemaInferrer($this->inference))->infer(
             $sniffer,
+            $this->inferenceProgress,
         )->schema);
 
         if ($sampledNow) {

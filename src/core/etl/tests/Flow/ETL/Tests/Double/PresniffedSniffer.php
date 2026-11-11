@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\IO\Inference\Sample;
 use Flow\ETL\IO\Inference\Sniffer;
 
@@ -32,7 +33,7 @@ final readonly class PresniffedSniffer implements Sniffer
         return $this->names;
     }
 
-    public function sniff(int $unit, ?int $rowBudget): Sample
+    public function sniff(int $unit, ?int $rowBudget, Progress $progress): Sample
     {
         return $this->samples[$unit];
     }

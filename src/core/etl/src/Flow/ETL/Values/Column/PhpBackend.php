@@ -37,10 +37,12 @@ use Flow\ETL\Values\Schema\Definition\NullDefinition;
 use Flow\ETL\Values\Schema\Definitions;
 use Flow\ETL\Values\Sort\RowOrder;
 use Flow\Types\Type\Comparison\Operator;
+use Flow\Types\Type\Native\FloatType;
 use Flow\Types\Type\Native\IntegerType;
 use SensitiveParameter;
 
 use function array_keys;
+use function array_map;
 use function array_sum;
 use function array_values;
 use function count;
@@ -58,6 +60,9 @@ use function str_repeat;
 use function strlen;
 use function substr;
 use function unpack;
+
+use const SORT_NUMERIC;
+use const SORT_STRING;
 
 final readonly class PhpBackend implements Backend, Describable
 {
@@ -533,6 +538,78 @@ final readonly class PhpBackend implements Backend, Describable
         return $rows->gather($order->permutation($order->keys($rows), $rows->count()));
     }
 
+    public function sortWorkingBytes(Rows $rows, array $columns): int
+    {
+        $bytes = 0;
+
+        foreach ($rows->columns() as $column) {
+            $bytes += $this->gatheredBytes($column);
+        }
+
+        foreach ($columns as $sortColumn) {
+            $bytes += $this->orderedBytes($rows->column($sortColumn->name));
+        }
+
+        return $bytes;
+    }
+
+    /**
+     * Bytes take() allocates for a copy of $column, at its peak.
+     */
+    public function gatheredBytes(Column $column): int
+    {
+        // measured per slot, doubled as arrays grow in powers of two; nested columns copy their children too
+        return match (true) {
+            $column instanceof ConstantColumn => 0,
+            $column instanceof ListColumn => (48 * $column->count())
+                + (48 * $column->element->count())
+                + $this->gatheredBytes($column->element),
+            $column instanceof MapColumn => (48 * $column->count())
+                + (48 * $column->keys->count())
+                + $this->gatheredBytes($column->keys)
+                + $this->gatheredBytes($column->values),
+            $column instanceof StructColumn => (16 * $column->count())
+                + array_sum(array_map($this->gatheredBytes(...), $column->children)),
+            default => ($column->nullCount() === 0 ? 40 : 48) * $column->count(),
+        };
+    }
+
+    /**
+     * Bytes RowOrder allocates to sort by $column: its key and its share of the permutation, at their peak.
+     */
+    public function orderedBytes(Column $column): int
+    {
+        $flag = RowOrder::flag($column->type());
+        $nested = static fn(Column $child): bool => (
+            $child instanceof ListColumn
+            || $child instanceof MapColumn
+            || $child instanceof StructColumn
+        );
+        // RowOrder's fast path builds no rank array; a float may hold a NaN, which takes the rank path
+        $perRow =
+            $column->nullCount() === 0
+            && ($flag === SORT_STRING || $flag === SORT_NUMERIC && !type_bare($column->type()) instanceof FloatType)
+                ? 224
+                : 320;
+
+        return ($perRow * $column->count())
+        + match (true) {
+            (new ComparableValues())->equalByPhysical($column->type()) => 0,
+            // values() builds a PHP array per row: packed (8 slots at least) for a list, hashed for a map or a structure
+            $column instanceof ListColumn => (192 * $column->count())
+                + (32 * $column->element->count())
+                + ($nested($column->element) ? $this->orderedBytes($column->element) : 0),
+            $column instanceof MapColumn => (448 * $column->count())
+                + (64 * $column->keys->count())
+                + ($nested($column->values) ? $this->orderedBytes($column->values) : 0),
+            $column instanceof StructColumn => ((448 + (64 * count($column->children))) * $column->count())
+                + array_sum(array_map(fn(Column $child): int => $nested($child)
+                    ? $this->orderedBytes($child)
+                    : 0, $column->children)),
+            default => 448 * $column->count(),
+        };
+    }
+
     public function groupedTotals(): GroupedTotals
     {
         return new PhpGroupedTotals();
@@ -577,6 +654,13 @@ final readonly class PhpBackend implements Backend, Describable
     {
         return 0;
     }
+
+    public function allocatedPeakBytes(): int
+    {
+        return 0;
+    }
+
+    public function resetAllocatedPeak(): void {}
 
     /**
      * @param list<mixed> $results

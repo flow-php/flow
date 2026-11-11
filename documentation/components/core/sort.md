@@ -38,13 +38,10 @@ data_frame()
 
 Configure the sort algorithm through `config_builder()->sort()`. All options are on the builder of the algorithm:
 
-- `external_sort()`: the default. It sorts in memory while the buffered rows stay under its memory limit. After the
-  limit, it spills each sorted run as a bucket through a `RowsStorage`.
-  [Join](/documentation/components/core/join.md) and
-  [group by](/documentation/components/core/group-by.md) use the same abstraction. Then it k-way merges the runs back
-  into one sorted stream. The default memory limit is `FLOW_MAX_MEMORY`. Without it, the limit is 70% of the
-  `memory_limit` of PHP, or 1 GB for a `memory_limit` of `-1`. The limit applies to the full process, so a sort and a
-  join in one pipeline stay under it together.
+- `external_sort()`: the default. It sorts in memory while it stays under its [memory limit](#memory-limit). After the
+  limit, it spills each sorted run as a bucket through a `RowsStorage`. [Join](/documentation/components/core/join.md)
+  and [group by](/documentation/components/core/group-by.md) use the same abstraction. Then it k-way merges the runs
+  back into one sorted stream.
 - `memory_sort()`: buffers the full dataset and sorts it in one pass. It is the fastest, but everything must fit in
   RAM. It has no options.
 
@@ -74,8 +71,8 @@ data_frame(
     config_builder()
         ->sort(
             external_sort()
-                ->memoryLimit(Unit::fromMb(256))  // process memory past which sorted runs are spilled
-                ->bucketsCount(100)               // how many runs are merged at once (merge fan-in)
+                ->memoryLimit(Unit::fromMb(256))  // memory the sort adds before sorted runs are spilled
+                ->bucketsCount(100)               // the most runs merged at once (at least 2); under a tight memory limit the merge opens fewer
                 ->batchSize(1000)                 // rows per output batch
         )
 )
@@ -90,6 +87,21 @@ the sorted runs and the runs that the merge writes.
 `sortBy()` followed by `limit(n)` keeps only the top `n` rows while it reads. After the same memory limit, it gives
 the rows that it kept and the rest of the stream to the external sort. The merge of the external sort stops after `n`
 rows.
+
+## Memory limit
+
+`memoryLimit()` counts only the memory an operation adds after it starts: a sort, group by or repartition after its
+first input batch, a join when it begins. Each live operation gets its own limit. The limit and the process cap
+compare live memory, `memory_get_usage()` plus native backend bytes.
+
+- The default is `FLOW_MAX_MEMORY`, else 70% of the `memory_limit` of PHP, or 1 GiB for a `memory_limit` of `-1`.
+- With a finite `memory_limit`, the process cap is 70% of it, or `FLOW_MAX_MEMORY`. A `FLOW_MAX_MEMORY` above
+  `memory_limit` throws when the config is built.
+- A process over its cap also makes the operation spill once it added `min(128 MiB, cap / 16)`, and each sorted run
+  then takes up to that floor instead of one batch. Close to `memory_limit`, that floor can still pass it.
+- A sort that would take the process past the cap spills in smaller runs.
+- With `memory_limit = -1` there is no process cap, so k operations running at once can use k x the limit. Set a finite
+  `memory_limit`, or a lower `memoryLimit()`, to bound it.
 
 ## Overriding the algorithm for one sort
 

@@ -11,6 +11,7 @@ use Flow\ETL\Adapter\GoogleSheet\IO\Extractor\GoogleSheetReadOptions;
 use Flow\ETL\Adapter\GoogleSheet\IO\Inference\GoogleSheetSniffer;
 use Flow\ETL\Adapter\GoogleSheet\Tests\Double\SpySpreadsheetsValuesResource;
 use Flow\ETL\Adapter\GoogleSheet\Tests\Mother\SheetsServiceMother;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Inference\SchemaInference;
 use Flow\ETL\IO\Inference\SchemaInferrer;
 use Flow\ETL\Values\Schema;
@@ -43,6 +44,7 @@ final class GoogleSheetFixtureContext
     ): Schema {
         return (new SchemaInferrer($inference))->infer(
             new GoogleSheetSniffer($reader, $inference->sampleSize, $options->typer($inference->candidates())),
+            new VoidProgress(),
         )->schema;
     }
 

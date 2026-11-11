@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Mother;
 
+use Flow\ETL\Foundation\ProgressStages;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Planning\Physical\NodeTranslator;
 use Flow\ETL\Runtime\Config;
 
@@ -12,7 +14,7 @@ final class NodeTranslatorMother
     /**
      * The translator $config builds into its planner.
      */
-    public static function of(Config $config): NodeTranslator
+    public static function of(Config $config, ProgressStages $progress = new VoidProgress()): NodeTranslator
     {
         return new NodeTranslator(
             $config->backend(),
@@ -24,6 +26,7 @@ final class NodeTranslatorMother
             $config->grouping,
             $config->join,
             $config->repartition,
+            $progress,
         );
     }
 }

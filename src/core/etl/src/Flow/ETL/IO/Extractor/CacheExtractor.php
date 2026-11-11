@@ -8,7 +8,9 @@ use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\InvalidLogicException;
 use Flow\ETL\Foundation\Exception\SchemaNotDerivableException;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\IO\Extractor;
+use Flow\ETL\IO\Inference\SchemaInferenceBuilder;
 use Flow\ETL\Storage\RowsStorage;
 use Flow\ETL\Values\Cardinality;
 use Flow\ETL\Values\Column\Backend;
@@ -18,7 +20,7 @@ use Generator;
 
 use function sprintf;
 
-final class CacheExtractor implements Extractor, Refreshable
+final class CacheExtractor implements Extractor, Refreshable, InfersSchema
 {
     private ?Schema $schema = null;
 
@@ -129,6 +131,22 @@ final class CacheExtractor implements Extractor, Refreshable
 
         if ($this->fallbackExtractor instanceof Refreshable) {
             $this->fallbackExtractor->refresh();
+        }
+    }
+
+    public function inferSchema(SchemaInferenceBuilder $builder): static
+    {
+        if ($this->fallbackExtractor instanceof InfersSchema) {
+            $this->fallbackExtractor = $this->fallbackExtractor->inferSchema($builder);
+        }
+
+        return $this;
+    }
+
+    public function reportInferenceTo(Progress $progress): void
+    {
+        if ($this->fallbackExtractor instanceof InfersSchema) {
+            $this->fallbackExtractor->reportInferenceTo($progress);
         }
     }
 

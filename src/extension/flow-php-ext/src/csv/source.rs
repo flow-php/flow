@@ -31,6 +31,8 @@ use crate::source::{self, reading, window_start, Fed, Fetched, CHUNK, RANGE_SOUR
 
 const CLASS: &str = "RustCSVOpenSource";
 const RECORDS_BATCH: usize = 1000;
+/// `Flow\ETL\Foundation\Progress::ROWS_PER_CALL`.
+const ROWS_PER_CALL: u64 = 1000;
 const NATIVE_LOCAL_SOURCE_STREAM: &str = "Flow\\Filesystem\\Stream\\NativeLocalSourceStream";
 /// One pread of a local file, about 512 per GiB; `CHUNK` stays the PHP arm's.
 const NATIVE_CHUNK: usize = 2 << 20;
@@ -410,7 +412,13 @@ impl RustCSVOpenSource {
     }
 
     /// `ColumnTypes::sniff()` over `records()`; a `StringTypeNarrower` without its HTML and XML rungs folds natively.
-    pub fn sniff(&self, names: &ZendHashTable, rowBudget: Option<i64>, typer: &Zval) -> PhpResult<ColumnTypesValue> {
+    pub fn sniff(
+        &self,
+        names: &ZendHashTable,
+        rowBudget: Option<i64>,
+        typer: &Zval,
+        progress: &Zval,
+    ) -> PhpResult<ColumnTypesValue> {
         if rowBudget.is_some_and(|budget| budget < 0) {
             return Err(invalid_argument(
                 "Row budget must be 0 or more. Use null for every row.".to_string(),
@@ -431,6 +439,7 @@ impl RustCSVOpenSource {
                     records,
                     rowBudget.map_or_else(null_zval, zval_long),
                     typer.shallow_clone(),
+                    progress.shallow_clone(),
                 ],
             )
             .map(ColumnTypesValue);
@@ -458,10 +467,12 @@ impl RustCSVOpenSource {
         let mut fold = Fold::new(string_values(names), &candidates)?;
         let remaining = |fold: &Fold| rowBudget.map(|budget| (budget as u64).saturating_sub(fold.rows()));
         let chunks = self.shared.chunks()?;
+        let mut reported = 0;
 
         while self.shared.feed(&chunks)? {
             let limit = remaining(&fold);
             self.shared.with(|reading| reading.reader.fold(&mut fold, limit))?;
+            reported = report_full_calls(progress, fold.rows(), reported)?;
 
             if rowBudget.is_some_and(|budget| fold.rows() >= budget as u64) {
                 break;
@@ -472,6 +483,11 @@ impl RustCSVOpenSource {
             self.shared.finish()?;
             let limit = remaining(&fold);
             self.shared.with(|reading| reading.reader.fold(&mut fold, limit))?;
+            reported = report_full_calls(progress, fold.rows(), reported)?;
+        }
+
+        if fold.rows() > reported {
+            call_method(progress, "advanced", &mut [zval_long((fold.rows() - reported) as i64)])?;
         }
 
         let mut types = ZendHashTable::new();
@@ -498,6 +514,16 @@ impl RustCSVOpenSource {
         )
         .map(ColumnTypesValue)
     }
+}
+
+/// `ColumnTypes::sniff()`'s chunking: one `advanced(1000)` per full thousand folded rows not yet reported.
+fn report_full_calls(progress: &Zval, folded: u64, mut reported: u64) -> PhpResult<u64> {
+    while folded - reported >= ROWS_PER_CALL {
+        call_method(progress, "advanced", &mut [zval_long(ROWS_PER_CALL as i64)])?;
+        reported += ROWS_PER_CALL;
+    }
+
+    Ok(reported)
 }
 
 /// The Rust fold is `StringTypeNarrower` without its HTML and XML rungs - a DOMDocument per cell is not worth porting.

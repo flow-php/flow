@@ -24,6 +24,13 @@ final class SortOrdersBench
         (new SortOrdersScenario((int) $params['rows']))->run();
     }
 
+    #[Bench\ParamProviders('rows')]
+    #[Bench\Groups(['sorting'])]
+    public function bench_sort_orders_spilling(array $params): void
+    {
+        (new SortOrdersSpillingScenario((int) $params['rows']))->run();
+    }
+
     public function rows(): Generator
     {
         $rows = BenchmarkRows::count();

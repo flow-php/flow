@@ -6,7 +6,6 @@ namespace Flow\CLI\Command;
 
 use Flow\CLI\Arguments\FilePathArgument;
 use Flow\CLI\Formatter\PipelineReportFormatter;
-use Flow\CLI\Options\ConfigOption;
 use Flow\CLI\Options\StatisticsOptions;
 use Flow\CLI\PipelineFactory;
 use Flow\ETL\Foundation\Exception\Exception;
@@ -57,7 +56,6 @@ final class PipelineRunCommand extends Command
                 false,
             );
 
-        (new ConfigOption('config'))->configure($this);
         (new StatisticsOptions())->configure($this);
     }
 

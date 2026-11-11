@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\IO\Loader\File\FileCommit\NotPartitioned;
 
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Tests\Context\FileCommitContext;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
@@ -38,7 +39,7 @@ final class OverwriteModeTest extends FlowIntegrationTestCase
         $fileStream->append('some other content');
         static::assertSame('some content', file_get_contents($path->path()));
 
-        $files->commit([0]);
+        $files->commit([0], new VoidProgress());
 
         static::assertSame('some other content', file_get_contents($path->path()));
 
@@ -56,7 +57,7 @@ final class OverwriteModeTest extends FlowIntegrationTestCase
 
         $files = $this->context->commit($path, overwrite());
         $files->open()->append('some content');
-        $files->commit([0]);
+        $files->commit([0], new VoidProgress());
 
         static::assertFileExists($path->path());
         static::assertSame('some content', file_get_contents($path->path()));

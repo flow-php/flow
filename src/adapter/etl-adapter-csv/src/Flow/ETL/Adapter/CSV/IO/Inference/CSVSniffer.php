@@ -8,6 +8,7 @@ use Flow\ETL\Adapter\CSV\IO\Extractor\CSVSourceOpener;
 use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\IO\Extractor\File\FileSplit;
 use Flow\ETL\IO\Extractor\File\SourceFile;
 use Flow\ETL\IO\Extractor\Grid\GridHeader;
@@ -144,14 +145,14 @@ final class CSVSniffer implements Describable, Sniffer
         return $parts;
     }
 
-    public function sniff(int $unit, ?int $rowBudget): Sample
+    public function sniff(int $unit, ?int $rowBudget, Progress $progress): Sample
     {
         $open = $this->window === null
             ? $this->opener->open($this->sources[$unit])
             : $this->opener->openSplit($this->sources[$unit], $this->window);
 
         try {
-            $columnTypes = $open->sniff($this->names(), $rowBudget, $this->typer);
+            $columnTypes = $open->sniff($this->names(), $rowBudget, $this->typer, $progress);
 
             return new Sample(
                 $columnTypes->folded(),

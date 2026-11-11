@@ -8,6 +8,7 @@ use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\IO\Loader;
 use Flow\ETL\IO\Loader\Closure;
 use Flow\ETL\Values\Column\Backend;
@@ -54,7 +55,7 @@ final class ChartJSLoader implements Closure, Loader
         return null;
     }
 
-    public function closure(): void
+    public function closure(Progress $progress): void
     {
         if ($this->output === null && $this->outputVar === null) {
             return;
@@ -63,6 +64,7 @@ final class ChartJSLoader implements Closure, Loader
         if ($this->output !== null && $this->outputFilesystem !== null) {
             if ($this->outputFilesystem->status($this->output) !== null) {
                 $this->outputFilesystem->rm($this->output);
+                $progress->busy();
             }
 
             $output = $this->outputFilesystem->writeTo($this->output);
@@ -71,6 +73,7 @@ final class ChartJSLoader implements Closure, Loader
 
             $template = implode('', iterator_to_array($templateStream->readLines()));
             $templateStream->close();
+            $progress->busy();
 
             $output->append(str_replace(
                 '%_CHART_DATA_%',
@@ -79,6 +82,7 @@ final class ChartJSLoader implements Closure, Loader
             ));
 
             $output->close();
+            $progress->advanced(1);
         }
 
         if ($this->outputVar !== null) {

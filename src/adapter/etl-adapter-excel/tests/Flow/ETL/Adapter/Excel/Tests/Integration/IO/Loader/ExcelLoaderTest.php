@@ -11,11 +11,13 @@ use Flow\ETL\Adapter\Excel\IO\Loader\ExcelWriter;
 use Flow\ETL\Adapter\Excel\Tests\Double\RecordingCellStyler;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Foundation\StageName;
 use Flow\ETL\IO\Filesystem\SaveMode;
 use Flow\ETL\IO\Loader\File\FileCommit;
 use Flow\ETL\IO\Loader\File\Part;
 use Flow\ETL\IO\Loader\Partitioning;
 use Flow\ETL\Tests\Context\ReaderRoundTrip;
+use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Schema\Definition;
 use Flow\Filesystem\Exception\RuntimeException as FilesystemRuntimeException;
@@ -34,6 +36,7 @@ use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\float_schema;
+use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\from_sequence_number;
@@ -616,6 +619,50 @@ final class ExcelLoaderTest extends FlowTestCase
             [],
             iterator_to_array(native_local_filesystem()->list(path(__DIR__ . '/var/staged/**/*')), false),
         );
+    }
+
+    public function test_closure_reports_the_workbook_close_and_the_stream_close(): void
+    {
+        $scratch = ReaderRoundTrip::scratch('excel-progress');
+        $loader = to_excel($scratch->suffix('/rows.xlsx'));
+        $loader->load(array_to_rows([['id' => 1]], schema(int_schema('id'))), flow_context()->backend());
+        $progress = new ProgressSpy(StageName::commit);
+
+        try {
+            $loader->closure($progress);
+
+            static::assertSame([1, 1], [
+                $progress->countOf(StageName::commit),
+                $progress->busyCalls(StageName::commit),
+            ]);
+        } finally {
+            native_local_filesystem()->rm($scratch);
+        }
+    }
+
+    public function test_closure_reports_each_partition_writer_close_and_stream_close(): void
+    {
+        $scratch = ReaderRoundTrip::scratch('excel-progress-partitions');
+        $loader = to_excel($scratch->suffix('/rows.xlsx'))->partitionBy(partition_by('p'));
+        $loader->load(
+            array_to_rows(
+                [['p' => 'a', 'id' => 1], ['p' => 'b', 'id' => 2]],
+                schema(string_schema('p'), int_schema('id')),
+            ),
+            flow_context()->backend(),
+        );
+        $progress = new ProgressSpy(StageName::commit);
+
+        try {
+            $loader->closure($progress);
+
+            static::assertSame([2, 2], [
+                $progress->countOf(StageName::commit),
+                $progress->busyCalls(StageName::commit),
+            ]);
+        } finally {
+            native_local_filesystem()->rm($scratch);
+        }
     }
 
     public function test_ignore_keeps_an_existing_workbook(): void

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Functions;
 
 use Flow\ETL\Foundation\Describe\Describable;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
 use Flow\Types\Type;
@@ -16,7 +17,7 @@ interface WindowFunction extends FunctionTree, Describable
      *
      * @return list<mixed>
      */
-    public function values(Rows $partition, Backend $backend): array;
+    public function values(Rows $partition, Backend $backend, Progress $progress): array;
 
     /**
      * Returns a copy bound to $window. Never mutates $this.

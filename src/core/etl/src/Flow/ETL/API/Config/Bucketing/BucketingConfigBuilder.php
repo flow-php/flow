@@ -6,11 +6,11 @@ namespace Flow\ETL\API\Config\Bucketing;
 
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Planning\Logical\Node\BucketingAlgorithmBuilder;
-use Flow\ETL\Runtime\MemoryLimit;
 use Flow\ETL\Storage\BucketingConfig;
 use Flow\ETL\Storage\FilesystemRowsStorage;
 use Flow\ETL\Storage\RowsStorage;
 use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Memory\MemoryLimit;
 use Flow\ETL\Values\Memory\Unit;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
@@ -102,7 +102,7 @@ final class BucketingConfigBuilder implements BucketingAlgorithmBuilder
     }
 
     /**
-     * The process memory past which rows move to the storage; defaults to MemoryLimit::default().
+     * The memory the operation may add before rows move to the storage; defaults to MemoryLimit::default().
      */
     public function memoryLimit(Unit $memoryLimit): self
     {

@@ -39,7 +39,7 @@ use crate::grouped_totals::RustGroupedTotals;
 use crate::interfaces::{backend_ce, describable_ce};
 use crate::plan::{physical_for_definition, type_plan, TypePlan};
 use crate::render::{decode_exception, encode_exception, floe_exception, frame_exception, invalid_argument};
-use crate::sort::native_sort;
+use crate::sort::{handed_off_native_bytes, native_sort, native_sort_working_bytes};
 
 const COLUMN_MISMATCH: &str = "Flow\\ETL\\Foundation\\Exception\\ColumnMismatchException";
 const DESCRIPTION: &str = "Flow\\ETL\\Foundation\\Describe\\Description";
@@ -234,6 +234,21 @@ impl RustBackend {
         }
     }
 
+    #[php(name = "sortWorkingBytes")]
+    pub fn sort_working_bytes(&self, rows: &Zval, columns: &Zval) -> PhpResult<i64> {
+        match native_sort_working_bytes(rows, columns)? {
+            Some(bytes) => Ok(bytes),
+            None => Ok(handed_off_native_bytes(rows, columns)?
+                + call_method(
+                    &instance(PHP_BACKEND)?,
+                    "sortWorkingBytes",
+                    &mut [rows.shallow_clone(), columns.shallow_clone()],
+                )?
+                .long()
+                .ok_or_else(|| ext_exception("flow_php expected PhpBackend::sortWorkingBytes() to return an int"))?),
+        }
+    }
+
     #[php(name = "groupedTotals")]
     pub fn grouped_totals(&self) -> RustGroupedTotals {
         RustGroupedTotals::default()
@@ -421,6 +436,16 @@ impl RustBackend {
     #[php(name = "allocatedBytes")]
     pub fn allocated_bytes(&self) -> i64 {
         crate::alloc::allocated_bytes()
+    }
+
+    #[php(name = "allocatedPeakBytes")]
+    pub fn allocated_peak_bytes(&self) -> i64 {
+        crate::alloc::allocated_peak_bytes()
+    }
+
+    #[php(name = "resetAllocatedPeak")]
+    pub fn reset_allocated_peak(&self) {
+        crate::alloc::reset_peak();
     }
 }
 

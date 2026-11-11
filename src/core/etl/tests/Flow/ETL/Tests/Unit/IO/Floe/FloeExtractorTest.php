@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\IO\Floe;
 
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\File\FileSplit;
 use Flow\ETL\IO\Extractor\Signal;
@@ -147,7 +148,7 @@ final class FloeExtractorTest extends FlowTestCase
 
         $loader = to_floe($path, filesystem: $memory);
         $loader->load(array_to_rows([['id' => 1]], schema(int_schema('id'))), $context->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         $batches = iterator_to_array(FlowTestCase::extracted(
             from_floe($path, filesystem: $memory)->withMetadataColumns(true),
@@ -170,7 +171,7 @@ final class FloeExtractorTest extends FlowTestCase
             ['id' => 2],
             ['id' => 3],
         ], schema(int_schema('id'))), $context->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         $ids = [];
 
@@ -199,7 +200,7 @@ final class FloeExtractorTest extends FlowTestCase
             ['id' => 2],
             ['id' => 3],
         ], schema(int_schema('id'))), $context->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         $extractor = from_floe($path, filesystem: $memory);
 
@@ -222,7 +223,7 @@ final class FloeExtractorTest extends FlowTestCase
 
         $loader = to_floe($path, filesystem: $memory);
         $loader->load(array_to_rows([['id' => 1]], schema(int_schema('id'))), $context->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         static::assertSame(
             ['id'],
@@ -242,7 +243,7 @@ final class FloeExtractorTest extends FlowTestCase
 
         $loader = to_floe($path, filesystem: $memory);
         $loader->load(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))), $context->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         $ids = [];
 
@@ -270,7 +271,7 @@ final class FloeExtractorTest extends FlowTestCase
                 ['id' => $values[0]],
                 ['id' => $values[1]],
             ], schema(int_schema('id'))), $context->backend());
-            $loader->closure();
+            $loader->closure(new VoidProgress());
         }
 
         $ids = [];
@@ -296,7 +297,7 @@ final class FloeExtractorTest extends FlowTestCase
 
         $loader = to_floe($path, filesystem: $memory);
         $loader->load(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))), $context->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         $generator = FlowTestCase::extracted(
             from_floe($path, filesystem: $memory),
@@ -321,7 +322,7 @@ final class FloeExtractorTest extends FlowTestCase
 
         $loader = to_floe($path, filesystem: $memory);
         $loader->load(array_to_rows([['id' => 1]], schema(int_schema('id'))), $context->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         $extractor = from_floe($path, filesystem: $memory)->withMetadataColumns(true);
 
@@ -349,7 +350,7 @@ final class FloeExtractorTest extends FlowTestCase
 
         $loader = to_floe($path, filesystem: $memory);
         $loader->load(array_to_rows([['id' => 1]], schema(int_schema('id'))), $context->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         $backend = new SpyBackend();
 
@@ -370,7 +371,7 @@ final class FloeExtractorTest extends FlowTestCase
 
         $loader = to_floe($path, filesystem: $memory);
         $loader->load(array_to_rows([['id' => 1]], schema(int_schema('id'))), $context->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         static::assertNotNull(from_floe($path, filesystem: $memory)->schema()->findDefinition('id'));
     }
@@ -567,7 +568,7 @@ final class FloeExtractorTest extends FlowTestCase
 
         $loader = to_floe($path, filesystem: $memory);
         $loader->load(RowsMother::sequentialIds(7), $context->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         self::assertExtractorHonoursBatchContract(
             static fn(): FloeExtractor => from_floe($path, filesystem: $memory),
@@ -583,7 +584,7 @@ final class FloeExtractorTest extends FlowTestCase
 
         $loader = to_floe($path, filesystem: $memory);
         $loader->load(RowsMother::sequentialIds(20), $context->backend());
-        $loader->closure();
+        $loader->closure(new VoidProgress());
 
         $sizes = [];
 

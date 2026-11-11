@@ -6,6 +6,7 @@ namespace Flow\ETL\Functions;
 
 use Flow\ETL\Foundation\Calculator\Calculator;
 use Flow\ETL\Foundation\Calculator\RunningSum;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\Values\Column\Column;
 use Flow\Types\Type\Logical\StructureType;
 
@@ -37,6 +38,54 @@ final class NumericTotal
             'count' => type_integer(),
             'sum' => RunningSum::partialType(),
         ]);
+    }
+
+    /**
+     * Per frame, the total aggregate() builds from that frame's rows.
+     *
+     * @param list<mixed> $values
+     * @param list<array{0: int, 1: int}> $bounds inclusive indexes into $values; [1, 0] is an empty frame
+     *
+     * @return array{sums: list<null|float|int>, counts: list<int>} one sum and one count per bound
+     */
+    public static function frames(array $values, array $bounds, bool $exact, Progress $progress): array
+    {
+        $calculator = new Calculator();
+        $runningSum = new RunningSum($calculator);
+        $sums = [];
+        $counts = [];
+        $previous = null;
+        $sum = null;
+        $count = 0;
+        $unreported = 0;
+
+        foreach ($bounds as $bound) {
+            if ($bound !== $previous) {
+                [$start, $end] = $bound;
+
+                if ($previous !== null && $start === $previous[0] && $end > $previous[1]) {
+                    $count += $runningSum->addNumeric($values, $previous[1] + 1, $end, $exact);
+                } else {
+                    $runningSum = new RunningSum($calculator);
+                    $count = $runningSum->addNumeric($values, $start, $end, $exact);
+                }
+
+                $sum = $count === 0 ? null : $runningSum->value();
+                $previous = $bound;
+            }
+
+            $sums[] = $sum;
+            $counts[] = $count;
+
+            if (++$unreported === Progress::ROWS_PER_CALL) {
+                $progress->advanced($unreported);
+                $unreported = 0;
+            }
+        }
+
+        $progress->advanced($unreported);
+
+        return ['sums' => $sums, 'counts' => $counts];
     }
 
     /**

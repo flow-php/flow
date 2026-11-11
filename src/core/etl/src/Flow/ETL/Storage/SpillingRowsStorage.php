@@ -8,7 +8,6 @@ use Flow\ETL\Values\BatchSize;
 use Flow\ETL\Values\Cardinality;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Memory\MemoryBudget;
-use Flow\ETL\Values\Memory\Unit;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
 use Generator;
@@ -32,8 +31,6 @@ final class SpillingRowsStorage implements RowsStorage
      */
     private array $buffered = [];
 
-    private readonly MemoryBudget $budget;
-
     /**
      * @var array<string, true>
      */
@@ -43,12 +40,10 @@ final class SpillingRowsStorage implements RowsStorage
 
     public function __construct(
         public readonly RowsStorage $disk,
-        public readonly Unit $memoryLimit,
+        private readonly MemoryBudget $budget,
         private readonly Backend $backend,
         private readonly BatchSize $batchSize = new BatchSize(1000),
-    ) {
-        $this->budget = new MemoryBudget($this->backend, $this->memoryLimit);
-    }
+    ) {}
 
     public function append(string $key, Rows $rows): void
     {
@@ -150,7 +145,6 @@ final class SpillingRowsStorage implements RowsStorage
         }
 
         $this->onDisk[$key] = true;
-        $this->budget->released();
 
         if ($written === $count) {
             unset($this->buffers[$key], $this->buffered[$key]);

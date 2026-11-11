@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\IO\Loader\File;
 
 use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Filesystem\SaveMode;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
@@ -53,16 +55,16 @@ final class FileWrite
      *
      * @throws Throwable
      */
-    public function closure(): void
+    public function closure(Progress $progress): void
     {
-        $failure = $this->closeWriters();
+        $failure = $this->closeWriters($progress);
 
         if ($failure !== null) {
             throw $failure;
         }
 
         if ($this->task === null) {
-            $this->commit->commit([0]);
+            $this->commit->commit([0], $progress);
         }
     }
 
@@ -73,7 +75,7 @@ final class FileWrite
      */
     public function discard(): void
     {
-        $failure = $this->closeWriters();
+        $failure = $this->closeWriters(new VoidProgress());
         $this->commit->abort();
 
         if ($failure !== null) {
@@ -103,7 +105,7 @@ final class FileWrite
      *
      * @return null|Throwable the first close failure
      */
-    private function closeWriters(): ?Throwable
+    private function closeWriters(Progress $progress): ?Throwable
     {
         $failure = null;
 
@@ -115,6 +117,8 @@ final class FileWrite
             } catch (Throwable $e) {
                 $failure ??= $e;
             }
+
+            $progress->busy();
         }
 
         return $failure;

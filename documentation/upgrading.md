@@ -45,6 +45,152 @@ Upgrading from older versions: [0.41.x to 0.43.x](/documentation/upgrading-0.41-
 | `Flow\PostgreSql\Schema\Diff\DependentView`                                                                                      | removed. `DependentViews::$toDrop` and `$toCreate` hold `View\|MaterializedView`                                 |
 | `TableDiff::__construct(...)`, `TableComparator::compare($source, $target)`                                                      | trailing `bool $dropIfExists = false`                                                                            |
 
+### 4) `flow-php/etl` - memory units are binary (1024)
+
+| Before                                                                       | After                                                                          |
+|------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
+| `Unit::fromKb()`, `fromMb()`, `fromGb()` multiply by 1000                    | multiply by 1024. `Unit::fromMb(64)` is 67 108 864 bytes                       |
+| `Unit::inKb()`, `inMb()`, `inGb()` divide by 1000                            | divide by 1024                                                                 |
+| `Unit::fromString('128M')` is 128 000 000 bytes                              | 134 217 728 bytes                                                              |
+| `Unit::fromString('1GB')` is 1 000 bytes, `'500B'` is 500 000 bytes          | 1 073 741 824 bytes and 500 bytes. `K/KB`, `M/MB`, `G/GB` are read in any case |
+| `Unit::fromString('10TB')`, `'1.5G'` or `'M'` return a value                 | throw `InvalidArgumentException`                                               |
+| `hash_join()` broadcast limit defaults to 10 000 000 bytes                   | 10 485 760 bytes                                                               |
+| `MemoryLimit::default()` is 1 000 000 000 bytes for a `memory_limit` of `-1` | 1 073 741 824 bytes                                                            |
+| `explain()` prints `Memory: 64 MB`                                           | `Memory: 64 MiB`, the same number                                              |
+
+### 5) `flow-php/etl` - `FrameAccumulating` computes every frame of a partition in one call
+
+| Before                                                                 | After                                                                                                         |
+|------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
+| `FrameAccumulating::accumulator(): AggregatingFunction`                | `FrameAccumulating::frameValues(Rows $partition, array $bounds, Backend $backend, Progress $progress): array` |
+| `Sum::accumulator()`, `Average::accumulator()`, `Count::accumulator()` | removed                                                                                                       |
+
+A custom `FrameAccumulating` gets one `[start, end]` pair per row of the sorted partition, `[1, 0]` for an empty frame,
+and returns one value per pair.
+
+### 6) `flow-php/etl` - window functions take a `Progress`
+
+| Before                                                                                             | After                                                                                                                  |
+|----------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| `WindowFunction::values(Rows $partition, Backend $backend): array`                                 | `WindowFunction::values(Rows $partition, Backend $backend, Progress $progress): array`                                 |
+| `FrameAccumulation::values(FrameAccumulating $function, Rows $partition, Backend $backend): array` | `FrameAccumulation::values(FrameAccumulating $function, Rows $partition, Backend $backend, Progress $progress): array` |
+| -                                                                                                  | `NumericTotal::frames(array $values, array $bounds, bool $exact, Progress $progress): array`                           |
+
+A custom window function can call `$progress->advanced($rows)` once per partition. The call is optional.
+
+### 7) `flow-php/cli` - `--config` returns a `ConfigBuilder`
+
+| Before                                                              | After                                                                                  |
+|---------------------------------------------------------------------|----------------------------------------------------------------------------------------|
+| `return config_builder()->id('x')->build();`                        | `return config_builder()->id('x');`                                                    |
+| `ConfigOption::get(): Config`                                       | `ConfigOption::get(): ConfigBuilder`                                                   |
+| `Flow\CLI\Loader\ProgressBarLoader`                                 | removed, the commands use `console_heartbeat()` from `flow-php/symfony-console-bridge` |
+| `Flow\CLI\Style\FlowStyle::clear()`                                 | removed                                                                                |
+| `file:analyze` progress bar on stdout                               | `tasks` on stderr, `log` lines off a terminal, also `file:convert`, `file:rows:count`  |
+| `Heap Peak 40.9 MB` in the `file:analyze` and `pipeline:run` report | `Heap Peak 40.9 MiB`, the same for every memory row                                    |
+| `flow pipeline:run --config .flow.php pipeline.php`                 | `flow pipeline:run pipeline.php`, the pipeline file configures its own frame           |
+| `--config` on `db:table:list`, `db:table:schema`, `schema:format`   | removed, these commands never used it                                                  |
+
+### 8) `flow-php/cli`, `flow-php/symfony-telemetry-bundle`, `flow-php/symfony-postgresql-bundle`, `flow-php/parquet-viewer` - `symfony/console` lower bound raised
+
+| Before                                          | After                                                  |
+|-------------------------------------------------|--------------------------------------------------------|
+| `"symfony/console": "^6.4 \|\| ^7.4 \|\| ^8.0"` | `"symfony/console": "^6.4.34 \|\| ^7.4.6 \|\| ^8.0.6"` |
+
+### 9) `flow-php/etl` - inference takes a `Progress`
+
+| Before                                                                                         | After                                                                                                              |
+|------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
+| `interface InfersSchema`                                                                       | `interface InfersSchema` with `reportInferenceTo(Progress $progress): void`                                        |
+| `SchemaInferrer::infer(Sniffer $sniffer): Inferred`                                            | `SchemaInferrer::infer(Sniffer $sniffer, Progress $progress): Inferred`                                            |
+| `Sniffer::sniff(int $unit, ?int $rowBudget): Sample`                                           | `Sniffer::sniff(int $unit, ?int $rowBudget, Progress $progress): Sample`                                           |
+| `Sniffs::sniff(Sniffer $sniffer, int $units): ?array`                                          | `Sniffs::sniff(Sniffer $sniffer, int $units, Progress $progress): ?array`                                          |
+| `ColumnTypes::sniff(array $names, iterable $rows, ?int $rowBudget, TypeNarrower $typer): self` | `ColumnTypes::sniff(array $names, iterable $rows, ?int $rowBudget, TypeNarrower $typer, Progress $progress): self` |
+| `CSVOpenSource::sniff(array $names, ?int $rowBudget, TypeNarrower $typer): ColumnTypes`        | `CSVOpenSource::sniff(array $names, ?int $rowBudget, TypeNarrower $typer, Progress $progress): ColumnTypes`        |
+| `flow_php` built for `FLOW_PHP_ABI` 2                                                          | rebuild `flow_php`: `FLOW_PHP_ABI` / `FlowPhpExtension::ABI` 3, an older build is refused                          |
+
+A custom `InfersSchema` extractor adds `reportInferenceTo()`, keeps the `Progress` it gets (a `VoidProgress` until then)
+and passes it to `SchemaInferrer::infer()`. A custom `Sniffer` or `CSVOpenSource` passes `$progress` to
+`ColumnTypes::sniff()`, or calls `advanced()` every `Progress::ROWS_PER_CALL` observed rows. A custom `Sniffs` hands
+`$progress` to the sniffs it runs.
+
+### 10) `flow-php/etl` - memory limits count the memory an operation adds
+
+| Before                                                                                                      | After                                                                                                                                           |
+|-------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
+| `memoryLimit()` compared with the process memory                                                            | compared with the memory the operation itself added; each live operation gets its own limit                                                     |
+| `FLOW_MAX_MEMORY`: the default limit, compared with the process memory                                      | the default per-operation limit and, with a finite `memory_limit`, the process cap                                                              |
+| -                                                                                                           | with a finite `memory_limit`, the process over 70% of it (or `FLOW_MAX_MEMORY`) also spills, after the operation added `min(128 MiB, cap / 16)` |
+| `MemoryBudget::exceeded()` / `exceededWith()` compare the process memory with the limit                     | compare the memory added since the budget started or since `released()` with the limit, and the process with the cap                            |
+| `MemoryBudget::released()` calls `gc_mem_caches()`                                                          | only moves the baseline                                                                                                                         |
+| `Flow\ETL\Runtime\MemoryLimit`                                                                              | `Flow\ETL\Values\Memory\MemoryLimit`, plus `processCap(): ?Unit`                                                                                |
+| `MemoryLimit::default()` takes any `FLOW_MAX_MEMORY`                                                        | throws `InvalidArgumentException` for a value above a finite `memory_limit`, so the config build fails                                          |
+| `new MemoryBudget(Backend, Unit)`                                                                           | `new MemoryBudget(Backend, Unit $limit, ?Unit $processCap)` or `MemoryBudget::of(Backend, Unit)`                                                |
+| `BucketingConfig::spilling(Backend)`                                                                        | `spilling(Backend, MemoryBudget)`                                                                                                               |
+| `new SpillingRowsStorage(RowsStorage, Unit, Backend, BatchSize)`, `::$memoryLimit`                          | `(RowsStorage, MemoryBudget, Backend, BatchSize)`, no `$memoryLimit`                                                                            |
+| `new BoundedRead(Unit, Backend)`                                                                            | `new BoundedRead(MemoryBudget)`                                                                                                                 |
+| `new ExternalSort(array, Buckets, Buckets, RandomValueGenerator, Unit $memoryLimit, ...)`, `::$memoryLimit` | no `$memoryLimit`: the limit comes from the `MemoryBudget` passed to `sort()`                                                                   |
+| `ExternalSort::sort(Generator, Backend, ?int)`                                                              | `sort(Generator, Backend, MemoryBudget, ?int)`                                                                                                  |
+| -                                                                                                           | with a finite `memory_limit`, a sort whose working memory would pass the cap sorts and spills in runs that fit                                  |
+| `Backend` implementations                                                                                   | implement `sortWorkingBytes(Rows $rows, array $columns): int`                                                                                   |
+
+### 11) `flow-php/etl` - a failed run ends its sources first
+
+| Before                                                                 | After                                              |
+|------------------------------------------------------------------------|----------------------------------------------------|
+| a failed run destroyed the generator of a source                       | the failure is thrown at the `yield` of the source |
+| a `finally` around the `yield` ran late, after the caller's `catch`    | it runs before the failure gets to the caller      |
+| a `catch (Throwable)` around the `yield` saw only the source's failure | it also gets the failures of later steps           |
+
+### 12) `flow-php/etl` and the file adapters - a write that ends reports the files it writes
+
+| Before                                   | After                                            |
+|------------------------------------------|--------------------------------------------------|
+| `Closure::closure(): void`               | `closure(Progress $progress): void`              |
+| `FileWrite::closure(): void`             | `closure(Progress $progress): void`              |
+| `FileCommit::commit(array $tasks): void` | `commit(array $tasks, Progress $progress): void` |
+| `WorkbookManager::close(): void`         | `close(Progress $progress): void`                |
+
+A custom `Closure` loader:
+
+Before:
+
+```php
+public function closure(): void
+{
+    $this->client->flush();
+}
+```
+
+After:
+
+```php
+use Flow\ETL\Foundation\Progress;
+
+public function closure(Progress $progress): void
+{
+    $this->client->flush();
+    $progress->busy();
+}
+```
+
+`advanced(1)` counts a file that became visible at its target, `busy()` reports any other blocking call.
+
+Code that calls `FileCommit::commit()` outside a run passes `new VoidProgress()`.
+
+### 13) `flow-php/etl` - `Distribution::ordered()` takes the stage of the step it splits
+
+| Before                                | After                                                     |
+|---------------------------------------|-----------------------------------------------------------|
+| `Distribution::ordered(array $order)` | `Distribution::ordered(array $order, Progress $progress)` |
+
+### 14) `flow-php/etl` - `DataFrame::schema()` runs the heartbeat
+
+| Before                                      | After                                                                                      |
+|---------------------------------------------|--------------------------------------------------------------------------------------------|
+| `DataFrame::schema()` never beats            | it beats during schema inference and once at its end                                      |
+| a heartbeat failure never leaves `schema()` | a heartbeat that fails with `HeartbeatFailure::stop` throws its exception out of `schema()` |
+
 ---
 
 ## Upgrading from 0.46.x to 0.47.x

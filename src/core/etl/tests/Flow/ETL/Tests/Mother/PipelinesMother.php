@@ -14,6 +14,7 @@ use Flow\ETL\Planning\Physical\BranchPipeline;
 use Flow\ETL\Planning\Physical\JoinStep;
 use Flow\ETL\Planning\Physical\PhysicalPlan;
 use Flow\ETL\Planning\Physical\Pipeline;
+use Flow\ETL\Planning\Physical\PlannedNodes;
 use Flow\ETL\Planning\Physical\Planner;
 use Flow\ETL\Planning\Physical\TransactionGroup;
 use Flow\ETL\Tests\Double\RecordingSplittableExtractor;
@@ -33,7 +34,7 @@ final class PipelinesMother
      */
     public static function chain(array $steps, ?Extractor $source = null): array
     {
-        return Planner::cut(new Read($source ?? self::source()), $steps, 0);
+        return Planner::cut(new Read($source ?? self::source()), $steps, 0, new PlannedNodes());
     }
 
     /**

@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Runtime\Executor;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\IO\Loader;
 use Flow\ETL\IO\Loader\Closure;
 use Flow\ETL\Tests\Double\FakeExtractor;
@@ -48,7 +49,7 @@ final class ClosureTest extends FlowTestCase
                         $this->rowsLoaded++;
                     }
 
-                    public function closure(): void
+                    public function closure(Progress $progress): void
                     {
                         $this->closureCalled = true;
                     }

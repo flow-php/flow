@@ -8,7 +8,6 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Schema\Name\OptionallyQualifiedName;
 use Doctrine\DBAL\Tools\DsnParser;
-use Flow\CLI\Options\ConfigOption;
 use Flow\CLI\Options\DbConnectionOptions;
 use Flow\ETL\IO\Formatter\Row\ASCIISchemaFormatter;
 use Flow\ETL\IO\Formatter\Schema\PHPSchemaFormatter;
@@ -54,7 +53,6 @@ final class DatabaseTableSchemaCommand extends Command
                 'Filter schema by column name(s)',
             );
 
-        (new ConfigOption('config'))->configure($this);
         (new DbConnectionOptions())->configure($this);
     }
 

@@ -12,6 +12,7 @@ use Flow\ETL\Adapter\Excel\IO\Extractor\Sheet\SheetsManager;
 use Flow\ETL\Adapter\Excel\IO\Extractor\WorkbookReader;
 use Flow\ETL\Adapter\Excel\IO\Extractor\WorkbookSheet;
 use Flow\ETL\Adapter\Excel\IO\Inference\ExcelSniffer;
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Extractor\File\SourceFile;
 use Flow\ETL\IO\Inference\SchemaInference;
 use Flow\ETL\IO\Inference\SchemaInferrer;
@@ -36,7 +37,7 @@ final class ExcelFixtureContext
 {
     public static function infer(ExcelSniffer $sniffer, SchemaInference $inference = new SchemaInference()): Schema
     {
-        return (new SchemaInferrer($inference))->infer($sniffer)->schema;
+        return (new SchemaInferrer($inference))->infer($sniffer, new VoidProgress())->schema;
     }
 
     /**

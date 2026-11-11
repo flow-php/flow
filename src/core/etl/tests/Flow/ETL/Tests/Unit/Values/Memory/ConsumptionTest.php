@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Values\Memory;
 
+use Flow\ETL\Tests\Double\FixedProcessMemoryBackend;
 use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Column\PhpBackend;
@@ -23,11 +24,10 @@ final class ConsumptionTest extends FlowTestCase
 
     public function test_consumption_adds_the_backend_allocations(): void
     {
-        $php = new Consumption(new PhpBackend());
-        $native = new Consumption(new SpyBackend(1_048_576));
+        $consumption = new Consumption(new FixedProcessMemoryBackend(1_048_576_000), realMemory: false);
 
-        static::assertSame(1_048_576, $native->initial()->inBytes() - $php->initial()->inBytes());
-        static::assertSame(1_048_576, $native->capture()->inBytes() - $php->capture()->inBytes());
+        static::assertSame(1_048_576_000, $consumption->initial()->inBytes());
+        static::assertSame(1_048_576_000, $consumption->capture()->inBytes());
     }
 
     public function test_normalize_gives_every_figure_in_bytes(): void

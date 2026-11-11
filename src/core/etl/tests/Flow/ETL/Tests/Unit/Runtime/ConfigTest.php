@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Runtime;
 
+use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Kernels\Sort\MemorySortConfig;
 use Flow\ETL\Planning\Optimizer\Rule\CombineLimits;
 use Flow\ETL\Planning\Optimizer\Rule\CombineSortAndLimit;
@@ -15,6 +16,7 @@ use Flow\ETL\Planning\Optimizer\Rule\PushProjectionIntoExpand;
 use Flow\ETL\Planning\Optimizer\Rule\PushProjectionIntoSource;
 use Flow\ETL\Storage\FilesystemRowsStorage;
 use Flow\ETL\Storage\Floe\FloeSerializer;
+use Flow\ETL\Tests\Double\RecordingHeartbeat;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\config;
@@ -26,6 +28,18 @@ use function Flow\Telemetry\DSL\telemetry;
 
 final class ConfigTest extends FlowTestCase
 {
+    public function test_progress_is_the_heartbeat_when_one_is_registered(): void
+    {
+        $config = config_builder()->heartbeat(new RecordingHeartbeat(), everySeconds: 1)->build();
+
+        static::assertSame($config->heartbeat(), $config->progress());
+    }
+
+    public function test_progress_without_a_heartbeat_reports_nowhere(): void
+    {
+        static::assertInstanceOf(VoidProgress::class, config()->progress());
+    }
+
     public function test_telemetry_attributes_of_the_default_config(): void
     {
         static::assertSame(
@@ -70,5 +84,10 @@ final class ConfigTest extends FlowTestCase
             $attributes['telemetry'],
         );
         static::assertSame(MemorySortConfig::class, $attributes['spill']['sort']);
+    }
+
+    public function test_heartbeat_is_null_by_default(): void
+    {
+        static::assertNull(config_builder()->build()->heartbeat());
     }
 }

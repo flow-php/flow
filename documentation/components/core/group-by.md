@@ -34,7 +34,7 @@ data_frame()
 
 ## Buckets Storage
 
-While the process stays under the memory limit, `groupBy()` aggregates in one pass and writes nothing. After the
+While it stays under its memory limit, `groupBy()` aggregates in one pass and writes nothing. After the
 limit, it partitions the rest of the stream by the hashed grouping key into buckets of a `RowsStorage`.
 [External sort](/documentation/components/core/sort.md) and [join](/documentation/components/core/join.md) use the
 same abstraction. It aggregates each bucket separately, and merges the groups from before the limit into them. The
@@ -48,8 +48,9 @@ the configured algorithm:
 ->groupBy([ref('country')], hash_group_by()->storage(new MemoryRowsStorage()))
 ```
 
-The algorithm is configured through `config_builder()->groupBy(hash_group_by())`. `memoryLimit()` defaults to the
-same limit as the join and the sort (`FLOW_MAX_MEMORY`, otherwise 70% of `memory_limit`):
+The algorithm is configured through `config_builder()->groupBy(hash_group_by())`. `memoryLimit()` counts only the
+memory the group by adds after its first input batch arrives.
+[Memory limit](/documentation/components/core/sort.md#memory-limit) lists the defaults and the process cap:
 
 ```php
 <?php
@@ -58,7 +59,7 @@ data_frame(
     config_builder()
         ->groupBy(
             hash_group_by()
-                ->memoryLimit(Unit::fromMb(512))  // process memory past which buckets go to the storage
+                ->memoryLimit(Unit::fromMb(512))  // memory the group by adds before buckets go to the storage
                 ->bucketsCount(64)                // number of buckets (default 64)
                 ->batchSize(1000)                 // rows per bucket frame and per batch read back (default 1000)
         )

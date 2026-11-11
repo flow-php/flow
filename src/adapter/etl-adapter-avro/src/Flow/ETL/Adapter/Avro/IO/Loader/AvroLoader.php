@@ -8,6 +8,7 @@ use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\IO\Loader;
 use Flow\ETL\IO\Loader\Closure;
 use Flow\ETL\Values\Column\Backend;
@@ -40,7 +41,7 @@ final readonly class AvroLoader implements Closure, Loader
         return null;
     }
 
-    public function closure(): void {}
+    public function closure(Progress $progress): void {}
 
     public function load(Rows $rows, Backend $backend): void {}
 }

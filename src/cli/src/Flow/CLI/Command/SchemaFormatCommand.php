@@ -5,10 +5,8 @@ declare(strict_types=1);
 namespace Flow\CLI\Command;
 
 use Flow\CLI\Arguments\FilePathArgument;
-use Flow\CLI\Options\ConfigOption;
 use Flow\ETL\IO\Formatter\Row\ASCIISchemaFormatter;
 use Flow\ETL\IO\Formatter\Schema\PHPSchemaFormatter;
-use Flow\ETL\Runtime\Config;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use RuntimeException;
@@ -31,8 +29,6 @@ use function Flow\ETL\DSL\schema_to_json;
 )]
 final class SchemaFormatCommand extends Command
 {
-    private ?Config $flowConfig = null;
-
     private ?Path $schemaPath = null;
 
     public function configure(): void
@@ -42,13 +38,11 @@ final class SchemaFormatCommand extends Command
             ->addOption('output-php', null, InputOption::VALUE_NONE, 'Print schema as PHP code')
             ->addOption('output-table', null, InputOption::VALUE_NONE, 'Print schema as ascii table')
             ->addOption('output-ascii', null, InputOption::VALUE_NONE, 'Print schema as ascii list');
-
-        (new ConfigOption('config'))->configure($this);
     }
 
     public function execute(InputInterface $input, OutputInterface $output): int
     {
-        if ($this->flowConfig === null || $this->schemaPath === null) {
+        if ($this->schemaPath === null) {
             throw new RuntimeException('Command not properly initialized.');
         }
 
@@ -85,7 +79,6 @@ final class SchemaFormatCommand extends Command
 
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
-        $this->flowConfig = (new ConfigOption('config'))->get($input);
         $this->schemaPath = (new FilePathArgument('input-schema-file'))->getExisting($input);
     }
 }

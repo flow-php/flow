@@ -10,8 +10,12 @@ use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
 use function array_fill;
+use function array_fill_keys;
+use function array_keys;
 use function array_slice;
 use function bin2hex;
+use function count;
+use function range;
 
 final class ValidityTest extends TestCase
 {
@@ -20,6 +24,49 @@ final class ValidityTest extends TestCase
         static::assertSame('', (new Validity())->fromValues([1, 2, 3]));
         static::assertSame('', (new Validity())->fromValues([]));
         static::assertSame('', (new Validity())->fromNulls([], 3));
+    }
+
+    /**
+     * @param non-negative-int $length
+     */
+    #[TestWith([0])]
+    #[TestWith([1])]
+    #[TestWith([7])]
+    #[TestWith([8])]
+    #[TestWith([9])]
+    #[TestWith([1003])]
+    public function test_values_without_a_null_have_no_bitmap_for_every_length(int $length): void
+    {
+        static::assertSame('', (new Validity())->fromValues(array_fill(0, $length, 1)));
+    }
+
+    public function test_values_with_nulls_match_the_bitmap_from_null_positions(): void
+    {
+        $values = array_fill(0, 1003, 1);
+
+        foreach ([0, 7, 8, 500, 1002] as $null) {
+            $values[$null] = null;
+        }
+
+        static::assertSame(
+            (new Validity())->fromNulls(array_fill_keys(array_keys($values, null, true), true), count($values)),
+            (new Validity())->fromValues($values),
+        );
+    }
+
+    /**
+     * @param positive-int $length
+     */
+    #[TestWith([1])]
+    #[TestWith([8])]
+    #[TestWith([9])]
+    #[TestWith([1003])]
+    public function test_values_that_are_all_null_match_the_bitmap_from_null_positions(int $length): void
+    {
+        static::assertSame(
+            (new Validity())->fromNulls(array_fill_keys(range(0, $length - 1), true), $length),
+            (new Validity())->fromValues(array_fill(0, $length, null)),
+        );
     }
 
     #[TestWith([7, '3f'])]

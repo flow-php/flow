@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\CSV\IO\Extractor;
 use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\SchemaMismatchException;
+use Flow\ETL\Foundation\Progress;
 use Flow\ETL\IO\Inference\ColumnTypes;
 use Flow\ETL\IO\Inference\SchemaInference;
 use Flow\ETL\Values\Column\Backend;
@@ -84,5 +85,5 @@ interface CSVOpenSource
      * @param list<string> $names
      * @param null|int<0, max> $rowBudget - null for every row
      */
-    public function sniff(array $names, ?int $rowBudget, TypeNarrower $typer): ColumnTypes;
+    public function sniff(array $names, ?int $rowBudget, TypeNarrower $typer, Progress $progress): ColumnTypes;
 }

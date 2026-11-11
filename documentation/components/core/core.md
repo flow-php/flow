@@ -206,7 +206,7 @@ Physical plan
          │     On: id = id
          │     Prefix: joined_
          │     Storage: FilesystemRowsStorage
-         │     Memory: 1000 MB
+         │     Memory: 1024 MiB
          │     Buckets: 64
          │     Batch: 1000
          └─ Right side: Pipeline #0
@@ -214,8 +214,8 @@ Physical plan
                   Statistics: rows exact 1 · size unknown
 ```
 
-`Memory: 1000 MB` is the default limit under `memory_limit = -1`. If `memory_limit` has a value, the limit is 70% of
-it, or `FLOW_MAX_MEMORY`.
+`Memory: 1024 MiB` is the default limit under `memory_limit = -1`: the memory the join may add after it starts.
+[Memory limit](/documentation/components/core/sort.md#memory-limit) lists the other defaults and the process cap.
 
 The planner plans a joined frame separately, so its pipelines have their own numbers. `Right side:` tells which
 plan they belong to. Before it reads a row, every source lists what it declares about itself. The values are
@@ -351,6 +351,7 @@ For more information about each DataFrame operation, see this component document
 
 ### Observability
 - [Telemetry](/documentation/components/core/telemetry.md): integration of distributed tracing, metrics and logging
+- [Heartbeat](/documentation/components/core/heartbeat.md): a callback every N seconds while a run is busy
 
 ### Output & Display
 - [Display](/documentation/components/core/display.md): data visualization and output

@@ -39,6 +39,24 @@ final readonly class Executor
     }
 
     /**
+     * @throws Throwable what a heartbeat failing with HeartbeatFailure::stop threw
+     */
+    public function plan(LogicalPlan $logical, FlowContext $context): PhysicalPlan
+    {
+        $heartbeat = $context->config->heartbeat();
+        $heartbeat?->started();
+
+        try {
+            $plan = $context->config->planner()->plan($logical, $context->config->progress());
+            $heartbeat?->completed();
+
+            return $plan;
+        } finally {
+            $heartbeat?->finished();
+        }
+    }
+
+    /**
      * Plans and runs a whole plan inside one DataFrame span of $context: a planning failure closes the span as failed.
      *
      * @param null|RunCounts $counts counts the rows every source yields, a joined frame's included, and the peak of
@@ -56,10 +74,12 @@ final readonly class Executor
 
         $this->advancing[$context] = true;
         $context->telemetry()->dataFrameStarted($context->config->telemetryAttributes());
+        $context->config->heartbeat()?->started();
         $plan = null;
 
         try {
-            $plan = $context->config->planner()->plan($logical);
+            $plan = $context->config->planner()->plan($logical, $context->config->progress());
+            $context->config->heartbeat()?->planned();
 
             foreach ($this->executePlan($plan, $context, $counts) as $rows) {
                 // disarmed across our own yield: while parked we are not advancing, so a second read
@@ -70,11 +90,14 @@ final readonly class Executor
 
                 $this->advancing[$context] = true;
             }
+
+            $context->config->heartbeat()?->completed();
         } catch (Throwable $e) {
             $context->telemetry()->dataFrameFailed($e);
 
             throw $e;
         } finally {
+            $context->config->heartbeat()?->finished();
             $this->advancing->offsetUnset($context);
             // drained, abandoned, or destroyed because the consumer's body threw - PHP runs this finally in
             // every case, and it is a no-op once dataFrameFailed() closed the span
@@ -190,14 +213,31 @@ final readonly class Executor
                 : null;
         // the launch ran the pipelines before the last one it consumed, and that one up to the launch's rest
         $last = $launch === null ? -1 : $launch->consumed - 1;
-        $generator = $launch->rows ?? (new AdoptedBatches($context->backend()))->of($source->extract(
-            $context->backend(),
-            $criteria,
-        ));
+        $started = false;
+        // the root of the source's `yield from` chain: a throw() into a delegate inside the chain is lost
+        $batches = $runner->started(
+            $launch->rows ?? (new AdoptedBatches($context->backend()))->of($source->extract(
+                $context->backend(),
+                $criteria,
+            )),
+            $started,
+        );
+        $generator = $batches;
 
         // the launcher counts its own source
         if ($counted !== null && $launch === null) {
             $generator = $counted->count($source, $generator, $criteria->narrows());
+        }
+
+        $heartbeat = $context->config->heartbeat();
+
+        // a launch reports its totals through Progress::reported(), a fed branch was counted at its source
+        if ($heartbeat !== null && $launch === null && $read instanceof Read) {
+            $generator = $heartbeat->reading($generator, $heartbeat->readStage(
+                $chain[0]->read,
+                $source,
+                $criteria->narrows() ? null : $source->statistics()->rows->exactly(),
+            ));
         }
 
         foreach ($chain as $position => $stage) {
@@ -211,10 +251,19 @@ final readonly class Executor
                     : $runner->steps($stage->steps, $generator, $context, $position === 0 ? $source : null, $counts);
         }
 
-        // a foreach, never `yield from`: the re-yield must not forward the consumer's sent signal; every stage routes
-        // or refuses a corrupted record, so one left here had no stage to meet
-        foreach ($generator as $rows) {
-            yield $rows instanceof Rows ? $rows : throw $rows;
+        try {
+            // a foreach, never `yield from`: the re-yield must not forward the consumer's sent signal; every stage
+            // routes or refuses a corrupted record, so one left here had no stage to meet
+            foreach ($generator as $rows) {
+                yield $rows instanceof Rows ? $rows : throw $rows;
+            }
+        } catch (Throwable $failure) {
+            // the failure's trace arguments keep a suspended source alive; a stop would end it as completed and commit
+            if ($started) {
+                $runner->unwind($batches, $failure, $context);
+            }
+
+            throw $failure;
         }
     }
 }
