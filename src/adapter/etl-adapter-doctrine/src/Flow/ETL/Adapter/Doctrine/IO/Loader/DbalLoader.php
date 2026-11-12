@@ -14,7 +14,7 @@ use Flow\ETL\Adapter\Doctrine\Values\Schema\TypesMap;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
-use Flow\ETL\IO\Loader;
+use Flow\ETL\IO\Loader\Datastore\DatastoreLoader;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
 use SensitiveParameter;
@@ -28,7 +28,7 @@ use function strtolower;
 /**
  * @import-type Params from DriverManager
  */
-final class DbalLoader implements Loader
+final class DbalLoader implements DatastoreLoader
 {
     private ?Bulk $bulk = null;
 
@@ -83,6 +83,11 @@ final class DbalLoader implements Loader
             type_string()->assert($data['table_name'] ?? null),
             type_map(type_string(), type_mixed())->assert($data['connection_params'] ?? null),
         ))->withOperation(type_string()->assert($data['operation'] ?? null));
+    }
+
+    public function collection(): string
+    {
+        return $this->tableName;
     }
 
     public function describe(): ?Description

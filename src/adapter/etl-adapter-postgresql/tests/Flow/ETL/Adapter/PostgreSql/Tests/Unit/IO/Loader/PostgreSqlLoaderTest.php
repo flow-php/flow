@@ -25,6 +25,11 @@ use function Flow\ETL\DSL\schema;
 
 final class PostgreSqlLoaderTest extends TestCase
 {
+    public function test_its_collection_is_the_table(): void
+    {
+        static::assertSame('contacts', (new PostgreSqlLoader(new SpyClient(), 'contacts'))->collection());
+    }
+
     public function test_load_delete_requires_delete_options(): void
     {
         $client = $this->createMockClient();

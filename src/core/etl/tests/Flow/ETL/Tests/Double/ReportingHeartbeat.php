@@ -17,6 +17,10 @@ final class ReportingHeartbeat implements Heartbeat
     public function beat(Pulse $pulse): void
     {
         $this->beats++;
-        $this->reportsTo?->advanced(1);
+
+        // only the first beat reports, so a throttle that beats again inside a beat ends instead of recursing
+        if ($this->beats === 1) {
+            $this->reportsTo?->advanced(1);
+        }
     }
 }

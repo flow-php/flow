@@ -10,6 +10,11 @@ use PHPUnit\Framework\TestCase;
 
 final class DbalLoaderTest extends TestCase
 {
+    public function test_its_collection_is_the_table(): void
+    {
+        static::assertSame('contacts', (new DbalLoader('contacts', ['host' => 'localhost']))->collection());
+    }
+
     /**
      * @param list<string> $expected
      */

@@ -63,6 +63,28 @@ final class LogHeartbeatTest extends FlowTestCase
         static::assertStringContainsString('[00:00] write     done 20,000 rows in 0.2s', $output->fetch());
     }
 
+    public function test_a_write_line_shows_its_directory(): void
+    {
+        $output = new BufferedOutput();
+
+        (new LogHeartbeat($output))->beat(PulseMother::pulse(elapsedSeconds: 1.0, stages: [
+            StageProgressMother::done(StageName::write, 1_000, 0.3, 0.5, subject: 'file:///out/customer_totals/'),
+        ]));
+
+        static::assertStringContainsString('write     out/customer_totals/  done', $output->fetch());
+    }
+
+    public function test_a_write_line_shows_its_collection(): void
+    {
+        $output = new BufferedOutput();
+
+        (new LogHeartbeat($output))->beat(PulseMother::pulse(elapsedSeconds: 1.0, stages: [
+            StageProgressMother::done(StageName::write, 1_000, 0.3, 0.5, subject: 'heartbeat_demo_customer_totals'),
+        ]));
+
+        static::assertStringContainsString('write     heartbeat_demo_customer_totals  done', $output->fetch());
+    }
+
     public function test_a_done_line_has_its_own_stamp_and_is_printed_once(): void
     {
         $output = new BufferedOutput();

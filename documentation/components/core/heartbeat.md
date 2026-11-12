@@ -125,16 +125,16 @@ an earlier run's peak, and a spike of Arrow buffers imported from another extens
 
 Each entry of `stages` is a `StageProgress`:
 
-| Field              | Value                                                                                                              |
-|--------------------|--------------------------------------------------------------------------------------------------------------------|
-| `id`               | the same in every beat, use it to follow one stage over beats, null for a stage that a worker builds itself        |
-| `name`             | a `StageName` case from the table under Stages, for example `StageName::sort`                                      |
-| `unit`             | `rows`, or `files` for `commit`. `group_by` starts in `rows`, then counts `groups`                                 |
-| `subject`          | a read's file or glob, a write's directory, else null, never a user, password, port, query or fragment             |
-| `count`            | what the stage processed, in its unit                                                                              |
-| `total`            | exact only for a read that nothing pushed narrows (`limit()`, `offset()`, a filter, a partition filter), else null |
-| `startedAtSeconds` | seconds since the run started, null for a stage that is planned and has not started yet                            |
-| `endedAtSeconds`   | seconds since the run started, null while the stage is open                                                        |
+| Field              | Value                                                                                                                                          |
+|--------------------|------------------------------------------------------------------------------------------------------------------------------------------------|
+| `id`               | the same in every beat, use it to follow one stage over beats, null for a stage that a worker builds itself                                    |
+| `name`             | a `StageName` case from the table under Stages, for example `StageName::sort`                                                                  |
+| `unit`             | `rows`, or `files` for `commit`. `group_by` starts in `rows`, then counts `groups`                                                             |
+| `subject`          | a read's file or glob, a write's directory or the collection of a datastore loader, else null, never a user, password, port, query or fragment |
+| `count`            | what the stage processed, in its unit                                                                                                          |
+| `total`            | exact only for a read that nothing pushed narrows (`limit()`, `offset()`, a filter, a partition filter), else null                             |
+| `startedAtSeconds` | seconds since the run started, null for a stage that is planned and has not started yet                                                        |
+| `endedAtSeconds`   | seconds since the run started, null while the stage is open                                                                                    |
 
 Every stage of the plan is in the list from the first beat after planning, with `startedAtSeconds` null until it
 starts. A stage that never starts, for example a sort after a filter that drops every row, ends with the run: its

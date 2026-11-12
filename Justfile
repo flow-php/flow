@@ -18,20 +18,24 @@ update:
 build: lint analyze test test-mutation
 
 # Run PHPUnit. Extra arguments are forwarded (e.g. `just test --filter=foo`).
+[positional-arguments]
 test *args:
-    tools/phpunit/vendor/bin/phpunit {{args}}
+    tools/phpunit/vendor/bin/phpunit "$@"
 
 # Run mutation testing with Infection.
+[positional-arguments]
 test-mutation *args:
-    tools/infection/vendor/bin/infection --threads=max {{args}}
+    tools/infection/vendor/bin/infection --threads=max "$@"
 
 # Run tests for the landing site, without the published examples.
+[positional-arguments]
 test-website *args:
-    tools/phpunit/vendor/bin/phpunit -c web/landing/phpunit.xml --testsuite=unit,integration,functional {{args}}
+    tools/phpunit/vendor/bin/phpunit -c web/landing/phpunit.xml --testsuite=unit,integration,functional "$@"
 
 # Run every published example through the real playground. Minutes, on demand.
+[positional-arguments]
 test-examples *args:
-    tools/phpunit/vendor/bin/phpunit -c web/landing/phpunit.xml --testsuite=examples {{args}}
+    tools/phpunit/vendor/bin/phpunit -c web/landing/phpunit.xml --testsuite=examples "$@"
 
 # Run phpbench benchmarks (local only; MUST be inside nix-shell). Args are forwarded to `phpbench run`.
 # Defaults to `--report=flow-report`; pass your own `--report=...` to override it.
@@ -40,13 +44,14 @@ test-examples *args:
 #   just benchmark --group=format-parquet
 #   just benchmark --store --tag=before   # store a baseline
 #   just benchmark --ref=before           # run current code, compare to baseline
+[positional-arguments]
 benchmark *args:
     #!/usr/bin/env bash
     set -euo pipefail
-    if [[ "{{args}}" == *"--report"* ]]; then
-        tools/phpbench/vendor/bin/phpbench run {{args}}
+    if [[ "$*" == *"--report"* ]]; then
+        tools/phpbench/vendor/bin/phpbench run "$@"
     else
-        tools/phpbench/vendor/bin/phpbench run --report=flow-report {{args}}
+        tools/phpbench/vendor/bin/phpbench run --report=flow-report "$@"
     fi
 
 # Run all linters: Mago format-check + Mago lint + monorepo validation + GitHub Actions audit.
@@ -89,10 +94,11 @@ lint-actions:
 
 # Run static analysis (Mago). The monorepo and web/landing are analyzed in separate runs because
 # web/landing is a standalone Composer sub-project with its own vendor (see web/landing/mago.toml).
+[positional-arguments]
 analyze *args:
     tools/mago/vendor/bin/mago guard
-    tools/mago/vendor/bin/mago analyze {{args}}
-    tools/mago/vendor/bin/mago --workspace web/landing analyze {{args}}
+    tools/mago/vendor/bin/mago analyze "$@"
+    tools/mago/vendor/bin/mago --workspace web/landing analyze "$@"
 
 # Auto-fix code style (Mago format + lint --fix) and GitHub Actions findings (zizmor --fix).
 fix:

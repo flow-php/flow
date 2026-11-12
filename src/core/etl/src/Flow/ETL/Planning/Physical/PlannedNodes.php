@@ -13,6 +13,7 @@ use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Extractor\File\FileExtractor;
 use Flow\ETL\IO\Loader;
+use Flow\ETL\IO\Loader\Datastore\DatastoreLoader;
 use Flow\ETL\IO\Loader\File\FileCommit;
 use Flow\ETL\IO\Loader\File\FileLoader;
 use Flow\ETL\Operators\Processor;
@@ -97,9 +98,12 @@ final class PlannedNodes
         }
 
         // with no heartbeat, nothing is built for a stage: no root, no location
-        $subject = $loader instanceof FileLoader && !$this->stages instanceof VoidProgress
-            ? FileCommit::locationOf($loader->destination())
-            : null;
+        $subject = match (true) {
+            $this->stages instanceof VoidProgress => null,
+            $loader instanceof FileLoader => FileCommit::locationOf($loader->destination()),
+            $loader instanceof DatastoreLoader => $loader->collection(),
+            default => null,
+        };
         $this->writeStages->offsetSet($loader, $this->stages->stage(StageName::write, subject: $subject));
 
         // only a write to files always reports; any other write gets its stage when it ends, listed once it reports

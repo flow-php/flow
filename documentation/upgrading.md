@@ -188,8 +188,25 @@ Code that calls `FileCommit::commit()` outside a run passes `new VoidProgress()`
 
 | Before                                      | After                                                                                      |
 |---------------------------------------------|--------------------------------------------------------------------------------------------|
-| `DataFrame::schema()` never beats            | it beats during schema inference and once at its end                                      |
+| `DataFrame::schema()` never beats           | it beats during schema inference and once at its end                                       |
 | a heartbeat failure never leaves `schema()` | a heartbeat that fails with `HeartbeatFailure::stop` throws its exception out of `schema()` |
+
+### 15) `flow-php/etl` - an extractor is ended on a stop and no longer receives `Signal::STOP`
+
+When a limit or the consumer stops a read, Flow ends the extractor's generator instead of sending it `Signal::STOP`.
+The generator runs its `finally`, and the code in its STOP branch does not run.
+
+| Before                                                                  | After                                       |
+|-------------------------------------------------------------------------|---------------------------------------------|
+| `if ($signal === Signal::STOP) { $reader->close(); return; }`           | `try { ... } finally { $reader->close(); }` |
+| `if ($signal === Signal::STOP) { $inner->send(Signal::STOP); return; }` | `if ($signal === Signal::STOP) { return; }` |
+
+A wrapping extractor delegates with `yield from` as its whole body, or returns on `Signal::STOP` without sending it on.
+
+### 16) `flow-php/etl` - `Processor::process()` returns a generator that has not run past its first yield
+
+Flow iterates a processor's generator with `foreach`. A `process()` that advances its generator past the first yield
+before it returns it fails with PHP's `Cannot rewind a generator that was already run`. Return the generator unstarted.
 
 ---
 
