@@ -14,6 +14,7 @@ use Flow\ETL\Planning\Physical\PlannedNodes;
 use Flow\ETL\Storage\Memory\ArrayMemory;
 use Flow\ETL\Tests\Double\CountingFileLoader;
 use Flow\ETL\Tests\Double\ProgressSpy;
+use Flow\ETL\Tests\Double\RecordingDatastoreLoader;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\NodeMother;
 
@@ -100,6 +101,24 @@ final class PlannedNodesTest extends FlowTestCase
         $planned->planWrite(to_floe(path('memory://out/part-{part}.floe'), filesystem: memory_filesystem()));
 
         static::assertSame(['write', 'write', 'commit'], $spy->stages());
+    }
+
+    public function test_a_datastore_loaders_collection_is_the_subject_of_its_write_stage(): void
+    {
+        $spy = new ProgressSpy();
+
+        (new PlannedNodes($spy))->planWrite(new RecordingDatastoreLoader());
+
+        static::assertSame([['write', ProgressUnit::rows, null, 'crm.contacts']], $spy->built());
+    }
+
+    public function test_a_datastore_loader_has_no_subject_without_a_heartbeat(): void
+    {
+        $loader = new RecordingDatastoreLoader();
+
+        (new PlannedNodes())->planWrite($loader);
+
+        static::assertSame(0, $loader->collectionCalls);
     }
 
     public function test_with_nobody_listening_a_commit_stage_asks_its_write_for_nothing(): void

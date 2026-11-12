@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Runtime\Executor;
 
-use ArrayObject;
 use Flow\ETL\Foundation\Telemetry\TelemetryAttributes;
-use Flow\ETL\IO\Extractor\Signal;
 use Flow\ETL\Operators\Processor\DistinctProcessor;
 use Flow\ETL\Operators\Transformer\LimitTransformer;
 use Flow\ETL\Operators\Transformer\ScalarFunctionTransformer;
 use Flow\ETL\Runtime\Executor\StepTelemetry;
 use Flow\ETL\Tests\Context\GroupByContext;
 use Flow\ETL\Tests\Context\MemoryTelemetryContext;
+use Flow\ETL\Tests\Double\RecordingDatastoreLoader;
 use Flow\ETL\Tests\Double\ThrowingLoader;
 use Flow\ETL\Tests\Double\ThrowingTransformer;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Telemetry\SemConvAttributes;
 use Flow\Telemetry\Tracer\Span;
 use RuntimeException;
 
@@ -99,6 +99,23 @@ final class StepTelemetryTest extends FlowTestCase
         $attributes = $telemetry->spans->endedSpans()[0]->attributes();
         static::assertSame('memory://out/file.floe', $attributes[TelemetryAttributes::ATTR_LOADER_DESTINATION_URI]);
         static::assertSame(1, $attributes[TelemetryAttributes::ATTR_LOADING_ROWS]);
+    }
+
+    public function test_a_loading_span_carries_the_collection_of_a_datastore_loader(): void
+    {
+        $telemetry = new MemoryTelemetryContext(telemetry_options(trace_loading: true));
+        $telemetry->flowContext->telemetry()->dataFrameStarted([]);
+
+        (new StepTelemetry())->load(
+            new RecordingDatastoreLoader(),
+            array_to_rows([['a' => 1]], schema(int_schema('a'))),
+            $telemetry->flowContext,
+        );
+
+        static::assertSame(
+            'crm.contacts',
+            $telemetry->spans->endedSpans()[0]->attributes()[SemConvAttributes::DB_COLLECTION_NAME],
+        );
     }
 
     public function test_a_loading_span_carries_the_loader_attributes(): void
@@ -190,25 +207,6 @@ final class StepTelemetryTest extends FlowTestCase
             array_map(static fn(Span $span): string => $span->name(), $telemetry->spans->endedSpans()),
         );
         static::assertNull($telemetry->spans->endedSpans()[0]->status());
-    }
-
-    public function test_a_traced_operator_forwards_a_stop_to_the_operator(): void
-    {
-        $telemetry = new MemoryTelemetryContext(telemetry_options(trace_transformations: true));
-        $telemetry->flowContext->telemetry()->dataFrameStarted([]);
-        $received = new ArrayObject();
-
-        $traced = (new StepTelemetry())->operator(
-            DistinctProcessor::class,
-            (static function () use ($received) {
-                $received[] = yield array_to_rows([['a' => 1]], schema(int_schema('a')));
-            })(),
-            $telemetry->flowContext,
-        );
-        $traced->current();
-        $traced->send(Signal::STOP);
-
-        static::assertSame([Signal::STOP], $received->getArrayCopy());
     }
 
     public function test_a_failing_operator_ends_its_span_as_an_error_and_reaches_the_caller(): void

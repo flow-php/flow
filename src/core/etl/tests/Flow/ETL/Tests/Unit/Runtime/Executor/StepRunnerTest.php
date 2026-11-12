@@ -5,13 +5,19 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Runtime\Executor;
 
 use ArrayObject;
+use Exception;
 use Flow\ETL\Foundation\Clock\FakeClock;
+use Flow\ETL\Foundation\Describe\Description;
+use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\CorruptedRecordException;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\StageName;
 use Flow\ETL\Foundation\StageProgress;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\Signal;
+use Flow\ETL\Operators\BoundStep;
 use Flow\ETL\Operators\Join\CrossJoin;
+use Flow\ETL\Operators\Processor;
 use Flow\ETL\Operators\Processor\BatchingProcessor;
 use Flow\ETL\Operators\Processor\CollectingProcessor;
 use Flow\ETL\Operators\Processor\OffsetProcessor;
@@ -32,13 +38,17 @@ use Flow\ETL\Runtime\Executor\StepTelemetry;
 use Flow\ETL\Runtime\Telemetry\TelemetryOptions;
 use Flow\ETL\Tests\Context\HeartbeatContext;
 use Flow\ETL\Tests\Context\MemoryTelemetryContext;
+use Flow\ETL\Tests\Context\VmStackContext;
 use Flow\ETL\Tests\Double\ClosureThrowingLoader;
 use Flow\ETL\Tests\Double\CountingExtractor;
+use Flow\ETL\Tests\Double\FailsWhen;
+use Flow\ETL\Tests\Double\FrameRecordingProcessor;
 use Flow\ETL\Tests\Double\RecordingErrorHandler;
 use Flow\ETL\Tests\Double\RecordingHeartbeat;
 use Flow\ETL\Tests\Double\RecordingLoader;
 use Flow\ETL\Tests\Double\RecordingProcessor;
 use Flow\ETL\Tests\Double\SpyLoader;
+use Flow\ETL\Tests\Double\SwallowingProcessor;
 use Flow\ETL\Tests\Double\ThrowingLoader;
 use Flow\ETL\Tests\Double\ThrowingTransformer;
 use Flow\ETL\Tests\Double\ThrowWhenRowMatches;
@@ -47,13 +57,17 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\PhysicalPlanMother;
 use Flow\ETL\Tests\Mother\RowsMother;
 use Flow\ETL\Values\BatchSize;
+use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Schema;
 use Flow\Telemetry\Logger\LogEntry;
 use Generator;
 use LogicException;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\Attributes\TestWith;
 use RuntimeException;
+use SensitiveParameter;
 
 use function array_map;
 use function array_merge;
@@ -71,9 +85,11 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\telemetry_options;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Floe\DSL\to_floe;
+use function ini_set;
 use function iterator_to_array;
 
 final class StepRunnerTest extends FlowTestCase
@@ -949,5 +965,238 @@ final class StepRunnerTest extends FlowTestCase
                 HeartbeatContext::entries($recording, StageName::commit)[0],
             ),
         );
+    }
+
+    #[RunInSeparateProcess]
+    #[TestWith(['0'])]
+    #[TestWith(['1'])]
+    public function test_a_processor_that_fails_in_its_own_body_fails_the_run_under_user_code(string $ignoreArgs): void
+    {
+        ini_set('zend.exception_ignore_args', $ignoreArgs);
+        $processor = new FrameRecordingProcessor(FailsWhen::secondBatch);
+        $steps = (new StepRunner())->steps(
+            new PipelineSteps([$processor]),
+            (new CountingExtractor(schema(int_schema('id')), RowsMother::sequentialIds(3)))
+                ->withBatchSize(1)
+                ->extract(flow_context()->backend(), new Criteria()),
+            flow_context(config()),
+        );
+        VmStackContext::fillWithInts();
+
+        try {
+            iterator_to_array($steps, false);
+
+            static::fail('Expected the processor failure to surface.');
+        } catch (RuntimeException $e) {
+            static::assertSame('processor failed', $e->getMessage());
+        }
+
+        static::assertSame([true, true], [$processor->failedUnderUserCode, $processor->heldEnded]);
+    }
+
+    #[RunInSeparateProcess]
+    #[TestWith(['0'])]
+    #[TestWith(['1'])]
+    public function test_a_traced_processor_that_fails_in_its_own_body_fails_the_run_under_user_code(string $ignoreArgs): void
+    {
+        ini_set('zend.exception_ignore_args', $ignoreArgs);
+        $processor = new FrameRecordingProcessor(FailsWhen::secondBatch);
+        $steps = (new StepRunner())->steps(
+            new PipelineSteps([$processor]),
+            (new CountingExtractor(schema(int_schema('id')), RowsMother::sequentialIds(3)))
+                ->withBatchSize(1)
+                ->extract(flow_context()->backend(), new Criteria()),
+            (new MemoryTelemetryContext(telemetry_options(trace_transformations: true)))->flowContext,
+        );
+        VmStackContext::fillWithInts();
+
+        try {
+            iterator_to_array($steps, false);
+
+            static::fail('Expected the processor failure to surface.');
+        } catch (RuntimeException $e) {
+            static::assertSame('processor failed', $e->getMessage());
+        }
+
+        static::assertSame([true, true], [$processor->failedUnderUserCode, $processor->heldEnded]);
+    }
+
+    #[RunInSeparateProcess]
+    #[TestWith(['0'])]
+    #[TestWith(['1'])]
+    public function test_a_processor_that_fails_on_stop_fails_the_run_under_user_code(string $ignoreArgs): void
+    {
+        ini_set('zend.exception_ignore_args', $ignoreArgs);
+        $processor = new FrameRecordingProcessor(FailsWhen::stop);
+        $steps = (new StepRunner())->steps(
+            new PipelineSteps([$processor, new LimitTransformer(1)]),
+            (new CountingExtractor(schema(int_schema('id')), RowsMother::sequentialIds(3)))
+                ->withBatchSize(1)
+                ->extract(flow_context()->backend(), new Criteria()),
+            flow_context(config()),
+        );
+        VmStackContext::fillWithInts();
+
+        try {
+            iterator_to_array($steps, false);
+
+            static::fail('Expected the processor failure to surface.');
+        } catch (RuntimeException $e) {
+            static::assertSame('processor failed on stop', $e->getMessage());
+        }
+
+        static::assertSame([true, true], [$processor->failedUnderUserCode, $processor->heldEnded]);
+    }
+
+    #[RunInSeparateProcess]
+    #[TestWith(['0'])]
+    #[TestWith(['1'])]
+    public function test_a_processor_that_swallows_the_failure_is_logged(string $ignoreArgs): void
+    {
+        ini_set('zend.exception_ignore_args', $ignoreArgs);
+        $telemetry = new MemoryTelemetryContext();
+        $steps = (new StepRunner())->steps(
+            new PipelineSteps([new SwallowingProcessor(), new ThrowingLoader(new RuntimeException('write failed'))]),
+            (new CountingExtractor(schema(int_schema('id')), RowsMother::sequentialIds(3)))
+                ->withBatchSize(1)
+                ->extract(flow_context()->backend(), new Criteria()),
+            $telemetry->flowContext,
+        );
+        VmStackContext::fillWithInts();
+
+        try {
+            iterator_to_array($steps, false);
+
+            static::fail('Expected the loader failure to surface.');
+        } catch (RuntimeException $e) {
+            static::assertSame('write failed', $e->getMessage());
+        }
+
+        $warnings = $telemetry->logs->entriesContaining('kept running after the failure');
+        static::assertCount(1, $warnings);
+        static::assertStringContainsString(SwallowingProcessor::class . '::process()', $warnings[0]->record->body);
+    }
+
+    #[RunInSeparateProcess]
+    #[TestWith(['0'])]
+    #[TestWith(['1'])]
+    public function test_a_process_that_returns_a_generator_past_its_first_yield_fails_with_a_rewind_error(string $ignoreArgs): void
+    {
+        ini_set('zend.exception_ignore_args', $ignoreArgs);
+        $steps = (new StepRunner())->steps(
+            new PipelineSteps([new class() implements Processor {
+                public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
+                {
+                    throw InvalidArgumentException::because('%s holds live state and is never described', self::class);
+                }
+
+                public function describe(): ?Description
+                {
+                    return null;
+                }
+
+                public function bind(Schema $input): BoundStep
+                {
+                    return new BoundStep($this, $input);
+                }
+
+                public function breaks(): bool
+                {
+                    return false;
+                }
+
+                public function process(Generator $rows, Backend $backend): Generator
+                {
+                    $batches = (static function () use ($rows): Generator {
+                        yield from $rows;
+                    })();
+                    $batches->current();
+                    $batches->next();
+
+                    return $batches;
+                }
+            }]),
+            (new CountingExtractor(schema(int_schema('id')), RowsMother::sequentialIds(3)))
+                ->withBatchSize(1)
+                ->extract(flow_context()->backend(), new Criteria()),
+            flow_context(config()),
+        );
+        VmStackContext::fillWithInts();
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Cannot rewind a generator that was already run');
+
+        iterator_to_array($steps, false);
+    }
+
+    public function test_a_stop_reaches_a_traced_operator(): void
+    {
+        $received = new ArrayObject();
+
+        iterator_to_array(
+            (new StepRunner())->steps(
+                new PipelineSteps([
+                    new class($received) implements Processor {
+                        /**
+                         * @param ArrayObject<int, mixed> $received
+                         */
+                        public function __construct(
+                            private readonly ArrayObject $received,
+                        ) {}
+
+                        public static function fromDescription(
+                            #[SensitiveParameter]
+                            array $data,
+                            Rebuild $rebuild,
+                        ): static {
+                            throw InvalidArgumentException::because(
+                                '%s holds live state and is never described',
+                                self::class,
+                            );
+                        }
+
+                        public function describe(): ?Description
+                        {
+                            return null;
+                        }
+
+                        public function bind(Schema $input): BoundStep
+                        {
+                            return new BoundStep($this, $input);
+                        }
+
+                        public function breaks(): bool
+                        {
+                            return false;
+                        }
+
+                        /**
+                         * @param Generator<Rows> $rows
+                         *
+                         * @return Generator<int, Rows, null|Signal, void>
+                         */
+                        public function process(Generator $rows, Backend $backend): Generator
+                        {
+                            foreach ($rows as $batch) {
+                                $signal = yield $batch;
+                                $this->received[] = $signal;
+
+                                if ($signal === Signal::STOP) {
+                                    return;
+                                }
+                            }
+                        }
+                    },
+                    new LimitTransformer(1),
+                ]),
+                (new CountingExtractor(schema(int_schema('id')), RowsMother::sequentialIds(3)))
+                    ->withBatchSize(1)
+                    ->extract(flow_context()->backend(), new Criteria()),
+                (new MemoryTelemetryContext(telemetry_options(trace_transformations: true)))->flowContext,
+            ),
+            false,
+        );
+
+        static::assertSame([Signal::STOP], $received->getArrayCopy());
     }
 }

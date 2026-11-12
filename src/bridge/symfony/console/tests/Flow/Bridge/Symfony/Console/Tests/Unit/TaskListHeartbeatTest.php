@@ -692,6 +692,44 @@ final class TaskListHeartbeatTest extends FlowTestCase
         static::assertSame(99, Helper::width(rtrim($this->terminal->text($output), "\n")));
     }
 
+    public function test_a_subject_that_fits_is_not_cut(): void
+    {
+        $this->terminal->columns(96);
+        $output = $this->terminal->stream();
+
+        (new TaskListHeartbeat($output))->beat(PulseMother::pulse(elapsedSeconds: 2.0, stages: [
+            StageProgressMother::done(
+                StageName::read,
+                1_000_000,
+                endedAtSeconds: 1.0,
+                subject: 'file:///in/orders-1000000-20000.parquet',
+            ),
+        ]));
+
+        $text = $this->terminal->text($output);
+        static::assertStringContainsString('orders-1000000-20000.parquet', $text);
+        static::assertStringNotContainsString('…', $text);
+    }
+
+    public function test_a_long_subject_is_cut_to_the_room_of_the_line(): void
+    {
+        $this->terminal->columns(96);
+        $output = $this->terminal->stream();
+
+        (new TaskListHeartbeat($output))->beat(PulseMother::pulse(elapsedSeconds: 2.0, stages: [
+            StageProgressMother::done(
+                StageName::read,
+                1_000_000,
+                endedAtSeconds: 1.0,
+                subject: 'file:///in/orders-1000000-20000-named-to-run-past-the-room-a-line-has-xy.parquet',
+            ),
+        ]));
+
+        $line = rtrim($this->terminal->text($output), "\n");
+        static::assertSame(95, Helper::width($line));
+        static::assertSame(1, preg_match('/^  ✔ read      …\S+  1,000,000 rows \.{3} /u', $line));
+    }
+
     public function test_memory_drops_before_the_rate(): void
     {
         $this->terminal->columns(56);

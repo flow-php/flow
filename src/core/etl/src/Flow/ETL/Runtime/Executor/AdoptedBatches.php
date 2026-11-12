@@ -17,7 +17,7 @@ final readonly class AdoptedBatches
     ) {}
 
     /**
-     * Every batch of $batches in the backend's storage, a corrupted record as it is, a stop forwarded to $batches.
+     * Every batch of $batches in the backend's storage, a corrupted record as it is; a stop ends $batches.
      *
      * @template T of CorruptedRecordException|Rows
      *
@@ -33,8 +33,6 @@ final readonly class AdoptedBatches
             $signal = yield $adopted;
 
             if ($signal === Signal::STOP) {
-                $batches->send(Signal::STOP);
-
                 return;
             }
         }

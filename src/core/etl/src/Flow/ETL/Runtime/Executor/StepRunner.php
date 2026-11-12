@@ -36,6 +36,8 @@ use Flow\ETL\Values\Schema\Definition\IntegerDefinition;
 use Flow\ETL\Values\Schema\Definition\ListDefinition;
 use Flow\ETL\Values\Schema\Definition\StringDefinition;
 use Generator;
+use ReflectionGenerator;
+use ReflectionMethod;
 use SplObjectStorage;
 use Throwable;
 
@@ -511,6 +513,19 @@ final readonly class StepRunner
                     ->warn('The input of a failed run failed to end.', ['exception' => $endFailure]);
             }
         }
+
+        if ($input->valid()) {
+            $function = (new ReflectionGenerator(
+                (new ReflectionGenerator($input))->getExecutingGenerator(),
+            ))->getFunction();
+            $context
+                ->telemetry()
+                ->logger()
+                ->warn(sprintf(
+                    '%s kept running after the failure: rethrow it or return',
+                    ($function instanceof ReflectionMethod ? $function->class . '::' : '') . $function->name . '()',
+                ));
+        }
     }
 
     /**
@@ -583,11 +598,19 @@ final readonly class StepRunner
         bool &$rightStarted = false,
     ): Generator {
         try {
-            // send() resumes like next() and forwards the consumer's stop to the operator
-            while ($output->valid()) {
-                /** @var Rows $batch valid() holds, so current() is a batch */
-                $batch = $output->current();
-                $output->send(yield $batch);
+            // foreach resumes the operator from this frame: a generator closing under an internal call can crash PHP
+            foreach ($output as $batch) {
+                $signal = yield $batch;
+
+                if ($signal === Signal::STOP) {
+                    $rooted = false;
+                    // a stop through a yield-from root resumes the operator under a user frame as well
+                    $root = $this->started($operator, $rooted);
+                    $root->current();
+                    $root->send(Signal::STOP);
+
+                    return;
+                }
             }
         } catch (Throwable $failure) {
             $this->unwind($output, $failure, $context);

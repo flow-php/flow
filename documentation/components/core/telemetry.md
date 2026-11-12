@@ -207,6 +207,8 @@ Each run of a DataFrame creates a root span with these attributes:
 When `trace_loading` is enabled, Flow creates a child span for each loader:
 
 - Span name: short loader class name, for example `StreamLoader`. The full name is in `flow.etl.loader.class`.
+- Destination: a file loader's URI is in `flow.etl.destination.uri`. A datastore loader's table or index is in
+  `db.collection.name`.
 - Parent: DataFrame span
 - Status: OK on success, ERROR on failure
 

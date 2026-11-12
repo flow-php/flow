@@ -54,7 +54,8 @@ final readonly class Joiner
             $buildLeft ? $buildSchema : $probeSchema,
             $buildLeft ? $probeSchema : $buildSchema,
         ) ?? [new KeyEncoder([]), new KeyEncoder([])];
-        $table = $this->table($build, $buildLeft ? $leftKeys : $rightKeys, $role->tracksUnmatched());
+        $tracksUnmatched = $role->tracksUnmatched();
+        $table = $this->table($build, $buildLeft ? $leftKeys : $rightKeys, $tracksUnmatched);
         $probeKeys = $buildLeft ? $rightKeys : $leftKeys;
         $padsProbe = $this->type->padsWithNullRow($buildLeft ? Side::right : Side::left);
         // a left anti join keeps the left rows alone, so only a left probe yields them while it streams
@@ -95,7 +96,7 @@ final readonly class Joiner
 
                     $matched = true;
 
-                    if ($role->tracksUnmatched()) {
+                    if ($tracksUnmatched) {
                         $table->matched($candidatesBuild[$pair]);
                     }
 
@@ -128,7 +129,7 @@ final readonly class Joiner
                 );
         }
 
-        if (!$role->tracksUnmatched()) {
+        if (!$tracksUnmatched) {
             return;
         }
 

@@ -15,7 +15,7 @@ use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\RuntimeException;
-use Flow\ETL\IO\Loader;
+use Flow\ETL\IO\Loader\Datastore\DatastoreLoader;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
 use Flow\PostgreSql\Client\Client;
@@ -28,7 +28,7 @@ use function max;
 /**
  * Only INSERT is chunked: UPDATE/DELETE issue one statement per row and never reach the bind cap.
  */
-final class PostgreSqlLoader implements Loader
+final class PostgreSqlLoader implements DatastoreLoader
 {
     private ?DeleteOptions $deleteOptions = null;
 
@@ -52,6 +52,11 @@ final class PostgreSqlLoader implements Loader
     public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
     {
         throw InvalidArgumentException::because('%s holds live state and is never described', self::class);
+    }
+
+    public function collection(): string
+    {
+        return $this->table;
     }
 
     public function describe(): ?Description

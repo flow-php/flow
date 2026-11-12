@@ -22,6 +22,17 @@ use function Flow\Types\DSL\type_string;
 
 final class SealLoaderTest extends SealTestCase
 {
+    public function test_its_collection_is_the_index(): void
+    {
+        static::assertSame(
+            'users',
+            to_seal_upsert(
+                $this->sealContext()->engine(to_seal_schema(schema(str_schema('id')), 'users', 'id')),
+                'users',
+            )->collection(),
+        );
+    }
+
     public function test_deleting_with_a_non_scalar_identifier_entry_throws(): void
     {
         $engine = $this->sealContext()->engine(to_seal_schema(schema(str_schema('id')), 'users', 'id'));

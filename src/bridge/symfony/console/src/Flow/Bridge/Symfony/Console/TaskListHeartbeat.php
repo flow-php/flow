@@ -201,9 +201,11 @@ final class TaskListHeartbeat implements ConsoleHeartbeat
      */
     private function exactLine(string $icon, StageLine $line, int $width, array $right): ?string
     {
+        $label = $this->label($icon, $line);
+        $count = $line->exactCount() . $this->percent($line);
+
         return $this->fittedDroppingColumns(
-            $this->label($icon, $line) . $this->subject($line->subject(self::SUBJECT_WIDTH)) . $line->exactCount()
-                . $this->percent($line),
+            $label . $this->subject($line->subject($this->subjectRoom($label, $count, $right, $width))) . $count,
             $right,
             $width,
         );
@@ -215,8 +217,8 @@ final class TaskListHeartbeat implements ConsoleHeartbeat
     private function shortLine(string $icon, StageLine $line, int $width, array $right): string
     {
         $label = $this->label($icon, $line);
-        $subject = $line->subject(self::SUBJECT_WIDTH);
         $count = $line->shortCount() . $this->percent($line);
+        $subject = $line->subject($this->subjectRoom($label, $count, $right, $width));
         $drawn = $this->fittedDroppingColumns($label . $this->subject($subject) . $count, $right, $width);
 
         if ($drawn !== null) {
@@ -262,8 +264,8 @@ final class TaskListHeartbeat implements ConsoleHeartbeat
     {
         // no count follows, so the label is padded only to align a subject, and one space leads to the dots
         $name = '  ' . $icon . ' <options=bold>' . OutputFormatter::escape($line->label()) . '</>';
-        $subject = $line->subject(self::SUBJECT_WIDTH);
         $columns = ['time' => $state];
+        $subject = $line->subject($this->subjectRoom($this->label($icon, $line), '', $columns, $width));
 
         return (
             (
@@ -344,13 +346,32 @@ final class TaskListHeartbeat implements ConsoleHeartbeat
      */
     private function fitted(string $left, array $columns, int $width): ?string
     {
-        $right = implode('<fg=gray> · </>', array_filter(
-            $columns,
-            static fn(?string $column): bool => $column !== null && $column !== '',
-        ));
+        $right = $this->joined($columns);
         $dots = $width - $this->visible($left) - $this->visible($right) - 2;
 
         return $dots >= self::MIN_DOTS ? $left . ' <fg=gray>' . str_repeat('.', $dots) . '</> ' . $right : null;
+    }
+
+    /**
+     * @param array<string, ?string> $columns
+     */
+    private function joined(array $columns): string
+    {
+        return implode('<fg=gray> · </>', array_filter(
+            $columns,
+            static fn(?string $column): bool => $column !== null && $column !== '',
+        ));
+    }
+
+    /**
+     * @param array<string, ?string> $columns
+     */
+    private function subjectRoom(string $label, string $count, array $columns, int $width): int
+    {
+        return max(
+            self::SUBJECT_WIDTH,
+            $width - $this->visible($label . $count) - $this->visible($this->joined($columns)) - 2 - self::MIN_DOTS - 2,
+        );
     }
 
     /**

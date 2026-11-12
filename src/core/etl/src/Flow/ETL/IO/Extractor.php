@@ -22,9 +22,9 @@ interface Extractor
      * extractor's own batchSize() rows; the size is chosen by the extractor and MAY vary between
      * batches. Consumers must not assume a minimum size, a constant size, or a non-empty batch.
      *
-     * `yield from` is allowed only as the whole body: it routes send() into the delegate, so the delegate sees
-     * Signal::STOP and this generator ends with it. A generator that does anything after delegating forwards with
-     * foreach + send().
+     * A generator that wraps another either delegates with `yield from` as its whole body, or returns on Signal::STOP
+     * without sending it on: the inner generator ends with it and runs its finally. Work that must happen when the
+     * read ends belongs in finally.
      *
      * $criteria is what the plan pushed into this read. A source returns only rows matching every one of
      * $criteria->conjuncts; only a FileExtractor ever receives any. The limit and the path filter are hints: the plan

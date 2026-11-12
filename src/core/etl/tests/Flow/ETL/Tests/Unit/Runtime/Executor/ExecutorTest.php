@@ -52,6 +52,7 @@ use Flow\ETL\Tests\Double\DelegatingLauncher;
 use Flow\ETL\Tests\Double\EagerFailureProcessor;
 use Flow\ETL\Tests\Double\PassThroughProcessor;
 use Flow\ETL\Tests\Double\PlanDrainingTransformer;
+use Flow\ETL\Tests\Double\RecordingDatastoreLoader;
 use Flow\ETL\Tests\Double\RecordingExtractor;
 use Flow\ETL\Tests\Double\RecordingFileExtractor;
 use Flow\ETL\Tests\Double\RecordingHeartbeat;
@@ -667,6 +668,22 @@ final class ExecutorTest extends FlowTestCase
                 ],
                 array_pop($pulses) ?? [],
             ),
+        );
+    }
+
+    public function test_a_write_to_a_datastore_has_its_collection_as_the_subject_of_its_write_entry(): void
+    {
+        $recording = new RecordingHeartbeat();
+
+        df(config_builder()->clock(new SteppingClock())->heartbeat($recording, everySeconds: 1))
+            ->read(from_array([['id' => 1], ['id' => 2]], schema(int_schema('id'))))
+            ->write(new RecordingDatastoreLoader())
+            ->run();
+
+        $pulses = HeartbeatContext::entries($recording, StageName::write);
+        static::assertSame(
+            ['crm.contacts'],
+            array_map(static fn(StageProgress $write): ?string => $write->subject, array_pop($pulses) ?? []),
         );
     }
 

@@ -7,11 +7,13 @@ namespace Flow\ETL\Runtime\Executor;
 use Flow\ETL\Foundation\Telemetry\SpanAttributes;
 use Flow\ETL\Foundation\Telemetry\TelemetryAttributes;
 use Flow\ETL\IO\Loader;
+use Flow\ETL\IO\Loader\Datastore\DatastoreLoader;
 use Flow\ETL\IO\Loader\File\FileLoader;
 use Flow\ETL\Operators\Transformer;
 use Flow\ETL\Runtime\FlowContext;
 use Flow\ETL\Runtime\Telemetry\StepKind;
 use Flow\ETL\Values\Rows;
+use Flow\Telemetry\SemConvAttributes;
 use Generator;
 use Throwable;
 
@@ -29,6 +31,11 @@ final readonly class StepTelemetry
             ...(
                 $loader instanceof FileLoader
                     ? [TelemetryAttributes::ATTR_LOADER_DESTINATION_URI => $loader->destination()->uri()]
+                    : []
+            ),
+            ...(
+                $loader instanceof DatastoreLoader
+                    ? [SemConvAttributes::DB_COLLECTION_NAME => $loader->collection()]
                     : []
             ),
             ...($loader instanceof SpanAttributes ? $loader->spanAttributes() : []),
@@ -103,11 +110,8 @@ final readonly class StepTelemetry
         $step = $context->telemetry()->stepStarted(StepKind::operator, $class);
 
         try {
-            // send() resumes like next() and forwards the consumer's stop to the operator
-            while ($batches->valid()) {
-                /** @var Rows $batch valid() holds, so current() is a batch */
-                $batch = $batches->current();
-                $batches->send(yield $batch);
+            foreach ($batches as $batch) {
+                yield $batch;
             }
 
             return $batches->getReturn();
