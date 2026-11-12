@@ -1,6 +1,12 @@
-## [Unreleased] - 2026-11-11
+## [Unreleased] - 2026-11-12
 
 ### Added
+- [#2736](https://github.com/flow-php/flow/pull/2736) - **flow-php/etl - DatastoreLoader contract, a loader names the table or index it writes to** - [@norberttech](https://github.com/norberttech)
+- [#2736](https://github.com/flow-php/flow/pull/2736) - **flow-php/etl - datastore collection as the write stage subject and as db.collection.name on the loader span** - [@norberttech](https://github.com/norberttech)
+- [#2736](https://github.com/flow-php/flow/pull/2736) - **flow-php/etl - warning log when a processor keeps running after a failure** - [@norberttech](https://github.com/norberttech)
+- [#2736](https://github.com/flow-php/flow/pull/2736) - **flow-php/etl-adapter-postgresql - PostgreSqlLoader names its table** - [@norberttech](https://github.com/norberttech)
+- [#2736](https://github.com/flow-php/flow/pull/2736) - **flow-php/etl-adapter-doctrine - DbalLoader names its table** - [@norberttech](https://github.com/norberttech)
+- [#2736](https://github.com/flow-php/flow/pull/2736) - **flow-php/etl-adapter-seal - SealLoader names its index** - [@norberttech](https://github.com/norberttech)
 - [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl - heartbeat callbacks during long-running operations, through config_builder()->heartbeat()** - [@norberttech](https://github.com/norberttech)
 - [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl - Pulse lists every stage of a run, planned stages included** - [@norberttech](https://github.com/norberttech)
 - [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl - heartbeat during schema inference, file commits and DataFrame::schema()** - [@norberttech](https://github.com/norberttech)
@@ -24,6 +30,9 @@
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - Pipe operator documentation page** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2736](https://github.com/flow-php/flow/pull/2736) - **flow-php/etl - an extractor ends on a stop instead of receiving Signal::STOP** - [@norberttech](https://github.com/norberttech)
+- [#2736](https://github.com/flow-php/flow/pull/2736) - **flow-php/etl - Processor::process() must return an unstarted generator** - [@norberttech](https://github.com/norberttech)
+- [#2736](https://github.com/flow-php/flow/pull/2736) - **flow-php/etl - Joiner reads tracksUnmatched() once per join** - [@norberttech](https://github.com/norberttech)
 - [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl - sliding window frames are computed in one call per partition** - [@norberttech](https://github.com/norberttech)
 - [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl - window functions, schema inference and Closure::closure() take a Progress** - [@norberttech](https://github.com/norberttech)
 - [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl - memory limits count the memory an operation adds** - [@norberttech](https://github.com/norberttech)
@@ -63,6 +72,8 @@
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - print_rows(Rows) renamed to format_rows()** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2736](https://github.com/flow-php/flow/pull/2736) - **flow-php/etl - PHP engine crash when a processor or join fails in its own body** - [@norberttech](https://github.com/norberttech)
+- [#2736](https://github.com/flow-php/flow/pull/2736) - **flow-php/symfony-console-bridge - tasks style no longer cuts a long subject at 24 columns** - [@norberttech](https://github.com/norberttech)
 - [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl - memory units are binary and the external sort merge stays within its memory budget** - [@norberttech](https://github.com/norberttech)
 - [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl - spill reader yields a full batch before it decodes the next frame** - [@norberttech](https://github.com/norberttech)
 - [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl - a failed run ends its sources and upstream steps before the error reaches the caller** - [@norberttech](https://github.com/norberttech)
