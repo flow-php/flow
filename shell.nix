@@ -109,18 +109,19 @@ let
 
     polars-python = pkgs.python3.withPackages (ps: [ ps.polars ps.pyarrow ]);
     spark = pkgs.spark.override { RSupport = false; };
-    op-wrappers = pkgs.callPackage ./.nix/1password/wrappers.nix { composer = php.packages.composer; };
+    fnox = pkgs.callPackage ./.nix/pkgs/fnox/package.nix { };
+    fnox-wrappers = pkgs.callPackage ./.nix/fnox/wrappers.nix { inherit fnox; composer = php.packages.composer; };
 in
 pkgs.mkShell {
     buildInputs = [
         php
-        op-wrappers.composer
+        fnox-wrappers.composer
         pkgs.starship
         pkgs.figlet
         pkgs.symfony-cli
         pkgs.act
-        pkgs._1password-cli
-        op-wrappers.gh
+        fnox
+        fnox-wrappers.gh
         pkgs.hyperfine
         pkgs.actionlint
         pkgs.zizmor
@@ -130,7 +131,7 @@ pkgs.mkShell {
         pkgs.thrift
         pkgs.nodejs_24
     ]
-        ++ pkgs.lib.optional with-blackfire op-wrappers.blackfire
+        ++ pkgs.lib.optional with-blackfire fnox-wrappers.blackfire
         ++ pkgs.lib.optionals with-wasm [
             # WASM build tools
             pkgs.emscripten
@@ -200,8 +201,6 @@ pkgs.mkShell {
     if [ -f "$PWD/.nix/blackfire/blackfire.env" ]; then
         set -a; . "$PWD/.nix/blackfire/blackfire.env"; set +a
     fi
-
-    export FLOW_OP_ENV_FILE="$PWD/.nix/1password/op.env"
 
     eval "$(${pkgs.starship}/bin/starship init bash)"
 

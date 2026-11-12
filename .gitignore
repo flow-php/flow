@@ -9,3 +9,4 @@ benchmarks/datasets/
 benchmarks/var/
 .env
 /.github/tools/azurite/node_modules/
+/fnox.local.toml

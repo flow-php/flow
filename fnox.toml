@@ -1,0 +1,7 @@
+root = true
+if_missing = "ignore"
+
+[secrets]
+GH_TOKEN = { description = "GitHub token for gh and composer" }
+BLACKFIRE_CLIENT_ID = { description = "Blackfire client ID" }
+BLACKFIRE_CLIENT_TOKEN = { description = "Blackfire client token" }

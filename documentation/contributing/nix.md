@@ -89,48 +89,45 @@ profile then runs with the same OPcache, JIT and `zend.assertions` configuration
 
 To configure blackfire, create a file `./.nix/php/lib/blackfire.ini` with your blackfire configuration.
 
-## 1Password
+## Secrets
 
-`gh`, `composer` and `blackfire` in the nix shell read their credentials from 1Password, once per call.
+`gh`, `composer` and `blackfire` in the nix shell run through [fnox](https://fnox.jdx.dev).
 
-```shell
-cp .nix/1password/op.env.dist .nix/1password/op.env
+fnox reads the secrets below from the provider that you choose. It gives them to the tool only. Nothing is exported
+to the shell.
+
+| Secret                   | Used by          | Becomes                     |
+|--------------------------|------------------|-----------------------------|
+| `GH_TOKEN`               | `gh`, `composer` | `GH_TOKEN`, `COMPOSER_AUTH` |
+| `BLACKFIRE_CLIENT_ID`    | `blackfire`      | `BLACKFIRE_CLIENT_ID`       |
+| `BLACKFIRE_CLIENT_TOKEN` | `blackfire`      | `BLACKFIRE_CLIENT_TOKEN`    |
+
+`fnox.toml` names the secrets. Your provider goes into `fnox.local.toml`, which git ignores. Without that file, the
+tools run without secrets.
+
+To use them, add a `[providers]` section and the three secrets to `fnox.local.toml`. The
+[fnox providers](https://fnox.jdx.dev/providers/overview) page shows the configuration of each provider.
+
+An example for 1Password, where each value is `item/field` in the vault:
+
+```toml
+if_missing = "error"
+
+[providers.op]
+type = "1password"
+vault = "my-vault"
+
+[secrets]
+GH_TOKEN = { provider = "op", value = "github-token/credential" }
+BLACKFIRE_CLIENT_ID = { provider = "op", value = "blackfire/client-id" }
+BLACKFIRE_CLIENT_TOKEN = { provider = "op", value = "blackfire/credential" }
 ```
 
-```shell
-OP_ACCOUNT=my-team.1password.com
-OP_VAULT="My vault"
-```
+fnox runs the `op` CLI from your `PATH`. With `if_missing = "error"`, a secret that fnox cannot read stops the tool
+with the reason.
 
-| Variable     | Value                                                       | Empty                               |
-|--------------|-------------------------------------------------------------|-------------------------------------|
-| `OP_ACCOUNT` | 1Password sign-in address                                   | op's default account                |
-| `OP_VAULT`   | vault that holds the items below (quote a name with spaces) | plain `gh`, `composer`, `blackfire` |
-
-| Item               | Field        | Used by          | Becomes                     |
-|--------------------|--------------|------------------|-----------------------------|
-| `github-gh-cli`    | `credential` | `gh`, `composer` | `GH_TOKEN`, `COMPOSER_AUTH` |
-| `blackfire-client` | `client-id`  | `blackfire`      | `BLACKFIRE_CLIENT_ID`       |
-| `blackfire-client` | `credential` | `blackfire`      | `BLACKFIRE_CLIENT_TOKEN`    |
-
-Nothing is exported to the shell. A `COMPOSER_AUTH` you set yourself is kept. The wrappers run `op run --no-masking`,
-so a command that prints its own secret, such as `gh auth token`, shows it.
-
-Each wrapped call reads from 1Password. A call takes about 0.8 s, the first call about 3 s. 1Password asks for one
-approval per terminal session.
-
-To run a tool without 1Password:
-
-```shell
-FLOW_OP_ENV_FILE= gh pr list
-```
-
-The wrappers set `OP_BIOMETRIC_UNLOCK_ENABLED=true`. macOS 27 can block `op` from the configuration of the 1Password
-app, and `op` then reports "No accounts configured". To keep your own value, export it:
-
-```shell
-export OP_BIOMETRIC_UNLOCK_ENABLED=false
-```
+A `COMPOSER_AUTH` that you set yourself is kept. A command that prints its own secret, such as `gh auth token`, shows
+it.
 
 ## Benchmarking PHP
 
