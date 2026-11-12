@@ -30,6 +30,7 @@
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - Pipe operator documentation page** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [decfd5](https://github.com/flow-php/flow/commit/decfd56ff79a7c8c2277e56fbb9e7f381236b1b9) - **chore(flow-php/flow): nix shell secrets through fnox** - [@norberttech](https://github.com/norberttech)
 - [#2736](https://github.com/flow-php/flow/pull/2736) - **flow-php/etl - an extractor ends on a stop instead of receiving Signal::STOP** - [@norberttech](https://github.com/norberttech)
 - [#2736](https://github.com/flow-php/flow/pull/2736) - **flow-php/etl - Processor::process() must return an unstarted generator** - [@norberttech](https://github.com/norberttech)
 - [#2736](https://github.com/flow-php/flow/pull/2736) - **flow-php/etl - Joiner reads tracksUnmatched() once per join** - [@norberttech](https://github.com/norberttech)
