@@ -50,10 +50,10 @@ final class RequestOption
             InjectInto::QueryParam => $this->applyQueryParam($base, $value),
             InjectInto::Header => $base->withHeader($this->name, (string) $value),
             InjectInto::BodyPath => $this->applyBodyPath($base, $value),
-            InjectInto::ReplaceUri => $this->removeSensitiveHeaders(
-                $base,
-                (new RelativeUriResolver())->resolve($base->getUri(), (string) $value),
-            ),
+            InjectInto::ReplaceUri => $this->removeSensitiveHeaders($base, (new RelativeUriResolver())->resolve(
+                $base->getUri(),
+                (string) $value,
+            )),
         };
     }
 
@@ -70,7 +70,10 @@ final class RequestOption
     {
         $oldUri = $base->getUri();
 
-        if ($oldUri->getHost() !== $newUri->getHost() || ($oldUri->getScheme() === 'https' && $newUri->getScheme() === 'http')) {
+        if (
+            $oldUri->getHost() !== $newUri->getHost()
+            || $oldUri->getScheme() === 'https' && $newUri->getScheme() === 'http'
+        ) {
             $base = $base->withoutHeader('authorization')->withoutHeader('cookie');
         }
 
