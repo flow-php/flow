@@ -8,6 +8,7 @@ use Flow\ETL\Foundation\Exception\RuntimeException;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\UriInterface;
+
 use function Flow\ArrayDot\array_dot_set;
 use function Flow\Types\DSL\type_array;
 use function http_build_query;
