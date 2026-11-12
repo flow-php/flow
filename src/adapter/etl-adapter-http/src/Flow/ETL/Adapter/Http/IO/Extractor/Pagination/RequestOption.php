@@ -7,7 +7,7 @@ namespace Flow\ETL\Adapter\Http\IO\Extractor\Pagination;
 use Flow\ETL\Foundation\Exception\RuntimeException;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamFactoryInterface;
-
+use Psr\Http\Message\UriInterface;
 use function Flow\ArrayDot\array_dot_set;
 use function Flow\Types\DSL\type_array;
 use function http_build_query;
@@ -49,10 +49,10 @@ final class RequestOption
             InjectInto::QueryParam => $this->applyQueryParam($base, $value),
             InjectInto::Header => $base->withHeader($this->name, (string) $value),
             InjectInto::BodyPath => $this->applyBodyPath($base, $value),
-            InjectInto::ReplaceUri => $base->withUri((new RelativeUriResolver())->resolve(
-                $base->getUri(),
-                (string) $value,
-            )),
+            InjectInto::ReplaceUri => $this->removeSensitiveHeaders(
+                $base,
+                (new RelativeUriResolver())->resolve($base->getUri(), (string) $value),
+            ),
         };
     }
 
@@ -63,6 +63,17 @@ final class RequestOption
         $query[$this->name] = (string) $value;
 
         return $base->withUri($base->getUri()->withQuery(http_build_query($query)));
+    }
+
+    private function removeSensitiveHeaders(RequestInterface $base, UriInterface $newUri): RequestInterface
+    {
+        $oldUri = $base->getUri();
+
+        if ($oldUri->getHost() !== $newUri->getHost() || ($oldUri->getScheme() === 'https' && $newUri->getScheme() === 'http')) {
+            $base = $base->withoutHeader('authorization')->withoutHeader('cookie');
+        }
+
+        return $base->withUri($newUri);
     }
 
     private function applyBodyPath(RequestInterface $base, mixed $value): RequestInterface
