@@ -97,6 +97,14 @@ final class DsnParserTest extends TestCase
         static::assertStringContainsString('connect_timeout=10', $params->toString());
     }
 
+    public function test_parse_drops_unknown_option_key(): void
+    {
+        static::assertSame(
+            ['connect_timeout' => '5'],
+            $this->parser->parse('postgresql://u:p@h/app?connect_timeout=5&typo_key=1')->options(),
+        );
+    }
+
     public function test_parse_dsn_with_user_only(): void
     {
         $params = $this->parser->parse('postgres://admin@localhost/testdb');
@@ -111,6 +119,18 @@ final class DsnParserTest extends TestCase
 
         static::assertStringNotContainsString('user=', $params->toString());
         static::assertStringNotContainsString('password=', $params->toString());
+    }
+
+    public function test_parse_keeps_option_keys_added_in_postgresql_16_to_18(): void
+    {
+        static::assertSame(
+            ['load_balance_hosts' => 'random', 'sslnegotiation' => 'direct', 'min_protocol_version' => '3.0'],
+            $this->parser
+                ->parse(
+                    'postgresql://u:p@h/app?load_balance_hosts=random&sslnegotiation=direct&min_protocol_version=3.0',
+                )
+                ->options(),
+        );
     }
 
     public function test_parse_pgsql_scheme(): void

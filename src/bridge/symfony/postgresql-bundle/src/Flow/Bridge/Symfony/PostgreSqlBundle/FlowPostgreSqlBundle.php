@@ -66,6 +66,7 @@ use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 
+use function array_diff;
 use function array_key_exists;
 use function array_keys;
 use function class_exists;
@@ -154,6 +155,20 @@ final class FlowPostgreSqlBundle extends AbstractBundle
             ->scalarNode('dbname_suffix')
             ->defaultValue('')
             ->info('Adds the given suffix to the configured database name.')
+            ->end()
+            ->arrayNode('options')
+            ->info(
+                'libpq connection options applied over the DSN, for example connect_timeout or keepalives_idle. Values are strings or integers.',
+            )
+            ->useAttributeAsKey('name')
+            ->scalarPrototype()->end()
+            ->end()
+            ->arrayNode('session_settings')
+            ->info(
+                'Server settings sent at connection start as "-c name=value" in the libpq "options" key, for example statement_timeout.',
+            )
+            ->useAttributeAsKey('name')
+            ->scalarPrototype()->end()
             ->end()
             ->booleanNode('test_transaction_rollback')
             ->defaultFalse()
@@ -513,7 +528,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
     }
 
     /**
-     * @param array{connections: array<string, array{dsn: string, dbname: ?string, host: ?string, port: ?int, user: ?string, password: ?string, dbname_suffix: string, test_transaction_rollback: bool, lazy: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, transaction_spans: 'grouped'|'per_operation'|'off', collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}, profiler?: bool}>, messenger: array{enabled: bool, table_name: string, schema: string}, cache: array{pools?: array<string, array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string, share_connection: bool}>}, session: array{enabled: bool, connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, lock_mode: string, ttl: ?int, share_connection: bool}, migrations: array{enabled: bool, connection: ?string, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool, drop_if_exists: bool, context?: array<string, mixed>, exclude?: list<array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string}>}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>, profiler?: array{enabled?: bool|null, include_parameters?: bool, max_queries?: int, max_retained_parameters?: int, max_query_length?: int, migrations?: bool}} $config
+     * @param array{connections: array<string, array{dsn: string, dbname: ?string, host: ?string, port: ?int, user: ?string, password: ?string, dbname_suffix: string, options: array<string, bool|float|int|string|null>, session_settings: array<string, bool|float|int|string|null>, test_transaction_rollback: bool, lazy: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, transaction_spans: 'grouped'|'per_operation'|'off', collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}, profiler?: bool}>, messenger: array{enabled: bool, table_name: string, schema: string}, cache: array{pools?: array<string, array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string, share_connection: bool}>}, session: array{enabled: bool, connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, lock_mode: string, ttl: ?int, share_connection: bool}, migrations: array{enabled: bool, connection: ?string, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool, drop_if_exists: bool, context?: array<string, mixed>, exclude?: list<array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string}>}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>, profiler?: array{enabled?: bool|null, include_parameters?: bool, max_queries?: int, max_retained_parameters?: int, max_query_length?: int, migrations?: bool}} $config
      */
     #[Override]
     public function loadExtension(array $config, ContainerConfigurator $configurator, ContainerBuilder $container): void
@@ -784,7 +799,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
     }
 
     /**
-     * @param array{dsn: string, dbname: ?string, host: ?string, port: ?int, user: ?string, password: ?string, dbname_suffix: string, test_transaction_rollback: bool, lazy: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, transaction_spans: 'grouped'|'per_operation'|'off', collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}, profiler?: bool} $connectionConfig
+     * @param array{dsn: string, dbname: ?string, host: ?string, port: ?int, user: ?string, password: ?string, dbname_suffix: string, options: array<string, bool|float|int|string|null>, session_settings: array<string, bool|float|int|string|null>, test_transaction_rollback: bool, lazy: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, transaction_spans: 'grouped'|'per_operation'|'off', collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}, profiler?: bool} $connectionConfig
      */
     private function registerConnection(
         string $name,
@@ -792,6 +807,17 @@ final class FlowPostgreSqlBundle extends AbstractBundle
         ContainerBuilder $container,
         bool $isFirst,
     ): void {
+        $unknownOptions = array_diff(array_keys($connectionConfig['options']), ConnectionParameters::OPTION_KEYS);
+
+        if ($unknownOptions !== []) {
+            throw new LogicException(sprintf(
+                'Connection "%s" has unknown libpq keys under "options": %s. Allowed keys: %s.',
+                $name,
+                implode(', ', $unknownOptions),
+                implode(', ', ConnectionParameters::OPTION_KEYS),
+            ));
+        }
+
         $parserDef = new Definition(DsnParser::class);
         $container->setDefinition("flow.postgresql.{$name}.dsn_parser", $parserDef);
 
@@ -807,6 +833,8 @@ final class FlowPostgreSqlBundle extends AbstractBundle
                 'user' => $connectionConfig['user'] ?? null,
                 'password' => $connectionConfig['password'] ?? null,
                 'dbname_suffix' => $connectionConfig['dbname_suffix'] ?? '',
+                'options' => $connectionConfig['options'],
+                'session_settings' => $connectionConfig['session_settings'],
             ],
         ]);
         $container->setDefinition("flow.postgresql.{$name}.connection_parameters", $paramsDef);

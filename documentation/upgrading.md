@@ -240,6 +240,28 @@ before it returns it fails with PHP's `Cannot rewind a generator that was alread
 | `mv()` of a missing source throws `AzureException` (404)           | throws `Flow\Filesystem\Exception\RuntimeException`                                                           |
 | `Options::fromArray()` takes options without `copy_part_size`      | the options must hold `copy_part_size` (int)                                                                  |
 
+### 20) `flow-php/postgresql` - connection string values are quoted
+
+`ConnectionParameters::toString()` quotes a value that is empty or holds whitespace, `'` or `\`. A libpq
+`options` value that escapes spaces with a backslash no longer works. `ConnectionParameters::fromString()` and
+`pgsql_connection()` now read the string by the libpq rules: a backslash escapes the next character, and a keyword
+without `=` or an unterminated quote throws `InvalidArgumentException`.
+
+Before:
+
+```
+postgresql://user:pass@localhost/app?options=-cstatement_timeout%3D30s%5C%20-clock_timeout%3D10s
+```
+
+After:
+
+```
+postgresql://user:pass@localhost/app?options=-c%20statement_timeout%3D30s%20-c%20lock_timeout%3D10s
+```
+
+Or `withSessionSettings(['statement_timeout' => '30s', 'lock_timeout' => '10s'])`, or `session_settings` in the
+Symfony bundle.
+
 ---
 
 ## Upgrading from 0.46.x to 0.47.x

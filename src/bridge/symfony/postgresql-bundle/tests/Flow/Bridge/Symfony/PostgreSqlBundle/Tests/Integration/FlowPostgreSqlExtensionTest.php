@@ -51,6 +51,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 
+use function Flow\PostgreSql\DSL\func;
+use function Flow\PostgreSql\DSL\literal;
+use function Flow\PostgreSql\DSL\select;
+use function getenv;
+
 #[CoversClass(FlowPostgreSqlBundle::class)]
 final class FlowPostgreSqlExtensionTest extends KernelTestCase
 {
@@ -794,6 +799,111 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
         static::assertSame(5544, $params->port());
         static::assertSame('svc', $params->user());
         static::assertSame('pw', $params->password());
+    }
+
+    public function test_connection_parameters_apply_options_and_session_settings(): void
+    {
+        $previousTcpUserTimeout = $_ENV['FLOW_TEST_TCP_USER_TIMEOUT'] ?? null;
+        $_ENV['FLOW_TEST_TCP_USER_TIMEOUT'] = '30000';
+
+        try {
+            $this->bootKernel([
+                'config' => static function (TestKernel $kernel): void {
+                    $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                        $container->setParameter('app.database.connect_timeout', 5);
+                        $container->setParameter('app.database.statement_timeout', '30s');
+                    });
+                    $kernel->addTestExtensionConfig('flow_postgresql', [
+                        'connections' => [
+                            'default' => [
+                                'dsn' => 'postgresql://postgres:postgres@localhost:5432/app?sslmode=prefer',
+                                'options' => [
+                                    'connect_timeout' => '%app.database.connect_timeout%',
+                                    'tcp_user_timeout' => '%env(int:FLOW_TEST_TCP_USER_TIMEOUT)%',
+                                ],
+                                'session_settings' => ['statement_timeout' => '%app.database.statement_timeout%'],
+                            ],
+                        ],
+                    ]);
+                },
+            ]);
+
+            static::assertSame(
+                [
+                    'sslmode' => 'prefer',
+                    'connect_timeout' => '5',
+                    'tcp_user_timeout' => '30000',
+                    'options' => '-c statement_timeout=30s',
+                ],
+                $this->getContainer()->get('flow.postgresql.default.connection_parameters')->options(),
+            );
+        } finally {
+            if ($previousTcpUserTimeout === null) {
+                unset($_ENV['FLOW_TEST_TCP_USER_TIMEOUT']);
+            } else {
+                $_ENV['FLOW_TEST_TCP_USER_TIMEOUT'] = $previousTcpUserTimeout;
+            }
+        }
+    }
+
+    public function test_connection_rejects_unknown_libpq_option(): void
+    {
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage(
+            'Connection "default" has unknown libpq keys under "options": conect_timeout. Allowed keys: application_name,',
+        );
+
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'default' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/app',
+                            'options' => ['conect_timeout' => 5],
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+    }
+
+    public function test_connection_session_settings_reach_the_server(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'default' => [
+                            'dsn' => getenv('PGSQL_DATABASE_URL')
+                                ?: 'postgresql://postgres:postgres@127.0.0.1:5452/postgres',
+                            'options' => ['connect_timeout' => 5],
+                            'session_settings' => [
+                                'statement_timeout' => '30s',
+                                'lock_timeout' => '10s',
+                                'idle_in_transaction_session_timeout' => '60s',
+                            ],
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $client = $this->getContainer()->get('flow.postgresql.default.client');
+
+        static::assertSame(
+            '30s',
+            $client->fetchScalarString(select(func('current_setting', [literal('statement_timeout')]))),
+        );
+        static::assertSame(
+            '10s',
+            $client->fetchScalarString(select(func('current_setting', [literal('lock_timeout')]))),
+        );
+        static::assertSame(
+            '1min',
+            $client->fetchScalarString(select(func('current_setting', [literal(
+                'idle_in_transaction_session_timeout',
+            )]))),
+        );
     }
 
     public function test_connection_parameters_apply_dbname_suffix(): void

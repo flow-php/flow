@@ -98,6 +98,33 @@ when@test:
         dbname_suffix: '_test%env(default::TEST_TOKEN)%'
 ```
 
+### Connection Options and Session Settings
+
+```yaml
+flow_postgresql:
+  connections:
+    default:
+      dsn: '%env(DATABASE_URL)%'
+      options:
+        connect_timeout: '%app.timings.database.connect_timeout%'
+        keepalives_idle: 10
+        tcp_user_timeout: 30000
+      session_settings:
+        statement_timeout: 30s
+        lock_timeout: 10s
+        idle_in_transaction_session_timeout: 60s
+```
+
+`options` takes the keys of `ConnectionParameters::OPTION_KEYS`. Another key fails at container compilation:
+
+```
+Connection "default" has unknown libpq keys under "options": conect_timeout. Allowed keys: application_name, ...
+```
+
+Values are strings or integers, and `%env()%` works. A key in `options` wins over the same key in the DSN, and the
+other DSN options stay. `session_settings` go through `withSessionSettings()`, after a value of `options.options`.
+Behind PgBouncer, read the [PgBouncer note](/documentation/components/libs/postgresql/client-connection.md#pgbouncer).
+
 ### Telemetry
 
 To get distributed tracing, query logging, and metrics for a connection, enable telemetry on that connection.

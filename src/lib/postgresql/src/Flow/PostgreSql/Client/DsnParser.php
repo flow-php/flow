@@ -100,44 +100,10 @@ final readonly class DsnParser
         $parsed = [];
         parse_str($parts['query'], $parsed);
 
-        $validOptions = [
-            'application_name',
-            'channel_binding',
-            'client_encoding',
-            'connect_timeout',
-            'fallback_application_name',
-            'gssencmode',
-            'gsslib',
-            'hostaddr',
-            'keepalives',
-            'keepalives_count',
-            'keepalives_idle',
-            'keepalives_interval',
-            'krbsrvname',
-            'options',
-            'passfile',
-            'replication',
-            'requirepeer',
-            'requiressl',
-            'service',
-            'ssl_max_protocol_version',
-            'ssl_min_protocol_version',
-            'sslcert',
-            'sslcompression',
-            'sslcrl',
-            'sslcrldir',
-            'sslkey',
-            'sslmode',
-            'sslrootcert',
-            'sslsni',
-            'target_session_attrs',
-            'tcp_user_timeout',
-        ];
-
         $options = [];
 
         foreach ($parsed as $key => $value) {
-            if (in_array($key, $validOptions, true) && is_string($value)) {
+            if (in_array($key, ConnectionParameters::OPTION_KEYS, true) && is_string($value)) {
                 $options[$key] = $value;
             }
         }
