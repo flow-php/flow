@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\Http\IO\Extractor\Pagination;
 use Flow\ETL\Foundation\Exception\RuntimeException;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamFactoryInterface;
+use Psr\Http\Message\UriInterface;
 
 use function Flow\ArrayDot\array_dot_set;
 use function Flow\Types\DSL\type_array;
@@ -17,10 +18,14 @@ use function parse_str;
 
 final class RequestOption
 {
+    /**
+     * @param array<string> $sensitiveHeaders
+     */
     private function __construct(
         public readonly InjectInto $into,
         public readonly string $name,
         private readonly ?StreamFactoryInterface $streamFactory = null,
+        private readonly array $sensitiveHeaders = [],
     ) {}
 
     public static function bodyPath(string $path, StreamFactoryInterface $streamFactory): self
@@ -38,9 +43,12 @@ final class RequestOption
         return new self(InjectInto::QueryParam, $name);
     }
 
-    public static function replaceUri(): self
+    /**
+     * @param array<string> $sensitiveHeaders
+     */
+    public static function replaceUri(array $sensitiveHeaders = []): self
     {
-        return new self(InjectInto::ReplaceUri, '');
+        return new self(InjectInto::ReplaceUri, '', sensitiveHeaders: $sensitiveHeaders);
     }
 
     public function apply(RequestInterface $base, mixed $value): RequestInterface
@@ -49,7 +57,7 @@ final class RequestOption
             InjectInto::QueryParam => $this->applyQueryParam($base, $value),
             InjectInto::Header => $base->withHeader($this->name, (string) $value),
             InjectInto::BodyPath => $this->applyBodyPath($base, $value),
-            InjectInto::ReplaceUri => $base->withUri((new RelativeUriResolver())->resolve(
+            InjectInto::ReplaceUri => $this->removeSensitiveHeaders($base, (new RelativeUriResolver())->resolve(
                 $base->getUri(),
                 (string) $value,
             )),
@@ -63,6 +71,22 @@ final class RequestOption
         $query[$this->name] = (string) $value;
 
         return $base->withUri($base->getUri()->withQuery(http_build_query($query)));
+    }
+
+    private function removeSensitiveHeaders(RequestInterface $base, UriInterface $newUri): RequestInterface
+    {
+        $oldUri = $base->getUri();
+
+        if (
+            $oldUri->getHost() !== $newUri->getHost()
+            || $oldUri->getScheme() === 'https' && $newUri->getScheme() === 'http'
+        ) {
+            foreach ([...SensitiveHeaders::toArray(), ...$this->sensitiveHeaders] as $sensitiveHeader) {
+                $base = $base->withoutHeader($sensitiveHeader);
+            }
+        }
+
+        return $base->withUri($newUri);
     }
 
     private function applyBodyPath(RequestInterface $base, mixed $value): RequestInterface
