@@ -16,9 +16,11 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use function array_map;
 use function file_get_contents;
 use function Flow\Filesystem\Bridge\AsyncAWS\DSL\aws_s3_filesystem;
+use function Flow\Filesystem\Bridge\AsyncAWS\DSL\aws_s3_filesystem_options;
 use function Flow\Filesystem\DSL\path;
 use function fopen;
 use function iterator_to_array;
+use function random_bytes;
 use function sort;
 use function str_repeat;
 use function strlen;
@@ -235,6 +237,53 @@ final class AsyncAWSS3FilesystemTest extends AsyncAWSS3TestCase
 
         static::assertNull($fs->status(path('aws-s3://var/file.txt')));
         static::assertSame('Hello, World!', $fs->readFrom(path('aws-s3://var/file_mv.txt'))->content());
+    }
+
+    public function test_mv_of_an_object_above_copy_part_size(): void
+    {
+        $fs = aws_s3_filesystem(
+            $this->bucket(),
+            $this->s3Client(),
+            aws_s3_filesystem_options()->withCopyPartSize(5 * 1024 * 1024),
+        );
+        $content = random_bytes(12 * 1024 * 1024);
+        $fs->writeTo(path('aws-s3://var/large.bin'))->append($content)->close();
+
+        $fs->mv(path('aws-s3://var/large.bin'), path('aws-s3://var/large_mv.bin'));
+
+        static::assertNull($fs->status(path('aws-s3://var/large.bin')));
+        static::assertSame($content, $fs->readFrom(path('aws-s3://var/large_mv.bin'))->content());
+    }
+
+    public function test_append_to_an_object_above_copy_part_size(): void
+    {
+        $fs = aws_s3_filesystem(
+            $this->bucket(),
+            $this->s3Client(),
+            aws_s3_filesystem_options()->withCopyPartSize(5 * 1024 * 1024),
+        );
+        $content = random_bytes(12 * 1024 * 1024);
+        $fs->writeTo(path('aws-s3://var/large.bin'))->append($content)->close();
+
+        $fs->appendTo(path('aws-s3://var/large.bin'))->append('tail')->close();
+
+        static::assertSame($content . 'tail', $fs->readFrom(path('aws-s3://var/large.bin'))->content());
+        static::assertNull($fs->status(path('aws-s3://var/large.bin/_flow_php_append_')));
+    }
+
+    public function test_append_without_bytes_keeps_the_content(): void
+    {
+        $fs = aws_s3_filesystem(
+            $this->bucket(),
+            $this->s3Client(),
+            aws_s3_filesystem_options()->withCopyPartSize(5 * 1024 * 1024),
+        );
+        $content = random_bytes(12 * 1024 * 1024);
+        $fs->writeTo(path('aws-s3://var/large.bin'))->append($content)->close();
+
+        $fs->appendTo(path('aws-s3://var/large.bin'))->close();
+
+        static::assertSame($content, $fs->readFrom(path('aws-s3://var/large.bin'))->content());
     }
 
     public function test_not_removing_a_content_when_its_not_a_full_folder_path_pattern(): void

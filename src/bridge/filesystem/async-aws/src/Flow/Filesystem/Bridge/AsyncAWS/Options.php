@@ -16,14 +16,17 @@ use function is_array;
 use function is_bool;
 use function is_int;
 use function is_string;
+use function sprintf;
 
 /**
- * @type S3Options = array{block_location: string, block_permissions: null|PermissionsShape, file_fast_path: bool, part_size: int}
+ * @type S3Options = array{block_location: string, block_permissions: null|PermissionsShape, copy_part_size: int, file_fast_path: bool, part_size: int}
  * @import-type PermissionsShape from Permissions
  */
 final class Options
 {
     private BlockFactory $blockFactory;
+
+    private int $copyPartSize = 256 * 1024 * 1024;
 
     private bool $fileFastPath = true;
 
@@ -41,6 +44,11 @@ final class Options
     public function blockFactory(): BlockFactory
     {
         return $this->blockFactory;
+    }
+
+    public function copyPartSize(): int
+    {
+        return $this->copyPartSize;
     }
 
     public function fileFastPath(): bool
@@ -67,11 +75,12 @@ final class Options
             !is_string($data['block_location'] ?? null)
             || !array_key_exists('block_permissions', $data)
             || $data['block_permissions'] !== null && !is_array($data['block_permissions'])
+            || !is_int($data['copy_part_size'] ?? null)
             || !is_bool($data['file_fast_path'] ?? null)
             || !is_int($data['part_size'] ?? null)
         ) {
             throw new InvalidArgumentException(
-                'AsyncAWS options must hold block_location (string), block_permissions (null or array), file_fast_path (bool) and part_size (int)',
+                'AsyncAWS options must hold block_location (string), block_permissions (null or array), copy_part_size (int), file_fast_path (bool) and part_size (int)',
             );
         }
 
@@ -82,6 +91,7 @@ final class Options
                     $data['block_permissions'] === null ? null : Permissions::fromArray($data['block_permissions']),
                 ),
             )
+            ->withCopyPartSize($data['copy_part_size'])
             ->withFileFastPath($data['file_fast_path'])
             ->withBlockSize($data['part_size']);
     }
@@ -98,6 +108,7 @@ final class Options
         return [
             'block_location' => $this->blockFactory->blockLocation(),
             'block_permissions' => $this->blockFactory->permissions()?->normalize(),
+            'copy_part_size' => $this->copyPartSize,
             'file_fast_path' => $this->fileFastPath,
             'part_size' => $this->partSize,
         ];
@@ -122,6 +133,20 @@ final class Options
         }
 
         $this->partSize = $bytes;
+
+        return $this;
+    }
+
+    public function withCopyPartSize(int $bytes): self
+    {
+        if ($bytes < (5 * 1024 * 1024) || $bytes > 5_000_000_000) {
+            throw new InvalidArgumentException(sprintf(
+                'Copy part size must be between 5 MiB and 5 GB, got %d bytes',
+                $bytes,
+            ));
+        }
+
+        $this->copyPartSize = $bytes;
 
         return $this;
     }

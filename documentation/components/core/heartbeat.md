@@ -282,6 +282,9 @@ A beat can be late by the interval plus the longest call that cannot report prog
 | 1M   | 0.9 s       | 0.2 s        |
 | 5M   | 5.7 s       | 1.5 s        |
 
+One S3 or Azure call ends after `max_duration` of the filesystem's `http` limits at most, its retries and their
+backoff included. A `mv()` on S3 above `copy_part_size` copies in `ceil(size / copy_part_size)` such calls.
+
 In a parallel run the callback runs in the parent process. The pulse adds the rows and memory that the workers
 report, at most once per second. The workers' stages add to the entries of the steps they run. A worker reports
 through `heartbeatToParent()`: its stages carry only the ids the parent gave them, and a DataFrame that a worker step

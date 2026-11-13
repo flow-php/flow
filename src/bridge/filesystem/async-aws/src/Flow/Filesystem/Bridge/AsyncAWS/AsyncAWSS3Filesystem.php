@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\AsyncAWS;
 
-use AsyncAws\Core\Configuration;
 use AsyncAws\S3\Exception\NoSuchKeyException;
 use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\Exception\InvalidArgumentException;
@@ -24,12 +23,14 @@ use function Flow\Filesystem\DSL\path;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_string;
 use function ltrim;
+use function sprintf;
 use function str_ends_with;
 use function trim;
 
 /**
- * @type S3Configuration = array{protocol: string, bucket: string, client: array<Configuration::OPTION_*, null|string>, options: S3Options}
+ * @type S3Configuration = array{protocol: string, bucket: string, client: S3ClientConfiguration, options: S3Options}
  * @import-type S3Options from Options
+ * @import-type S3ClientConfiguration from ConfiguredS3Client
  *
  */
 final readonly class AsyncAWSS3Filesystem implements Filesystem
@@ -47,7 +48,7 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
 
     public static function fromArray(#[SensitiveParameter] array $configuration): static
     {
-        /** @var array<Configuration::OPTION_*, null|string> $client */
+        /** @var S3ClientConfiguration $client */
         $client = type_array()->assert($configuration['client'] ?? null);
 
         return new self(
@@ -72,6 +73,7 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
             $path,
             $this->options->blockFactory(),
             $this->options->partSize(),
+            $this->options->copyPartSize(),
         );
     }
 
@@ -209,13 +211,44 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
         $this->mount->supports($from) || throw new InvalidSchemeException($from->protocol(), $this->mount->protocol);
         $this->mount->supports($to) || throw new InvalidSchemeException($to->protocol(), $this->mount->protocol);
 
-        $this->client
+        if ($from->isEqual($to)) {
+            return true;
+        }
+
+        $head = $this->client
             ->client()
-            ->copyObject([
+            ->headObject([
                 'Bucket' => $this->bucket,
-                'Key' => ltrim($to->path(), '/'),
-                'CopySource' => $this->bucket . '/' . ltrim($from->path(), '/'),
+                'Key' => ltrim($from->path(), '/'),
             ]);
+
+        if (($head->getContentLength() ?? 0) <= $this->options->copyPartSize()) {
+            $this->client
+                ->client()
+                ->copyObject([
+                    'Bucket' => $this->bucket,
+                    'Key' => ltrim($to->path(), '/'),
+                    'CopySource' => $this->bucket . '/' . ltrim($from->path(), '/'),
+                ])
+                ->getCopyObjectResult()
+                ?->getEtag() ?? throw new RuntimeException(sprintf(
+                'S3 CopyObject of "%s" to "%s" returned no ETag, the copy failed and "%s" is kept',
+                $from->uri(),
+                $to->uri(),
+                $from->uri(),
+            ));
+        } else {
+            AsyncAWSS3DestinationStream::openCopy(
+                $this->client->client(),
+                $this->bucket,
+                $from,
+                $head,
+                $to,
+                $this->options->copyPartSize(),
+                $this->options->blockFactory(),
+                $this->options->partSize(),
+            )->close();
+        }
 
         $this->client
             ->client()

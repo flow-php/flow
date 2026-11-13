@@ -24,8 +24,14 @@ function aws_s3_client(array $configuration): S3Client
     return new S3Client($configuration);
 }
 
+#[DocumentationDSL(module: Module::S3_FILESYSTEM, type: Type::HELPER)]
+function aws_s3_filesystem_options(): Options
+{
+    return new Options();
+}
+
 /**
- * @param array<Configuration::OPTION_*, null|string>|S3Client $s3Client a configuration array builds a client that can be described for another process; a live client stays in-process
+ * @param array<Configuration::OPTION_*|'http', null|string|array<array-key, mixed>>|S3Client $s3Client a configuration array ("http" holds timeout, max_duration and max_retries) builds a client that can be described for another process; a live client stays in-process
  */
 #[DocumentationDSL(module: Module::S3_FILESYSTEM, type: Type::HELPER)]
 function aws_s3_filesystem(

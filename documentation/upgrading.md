@@ -208,6 +208,26 @@ A wrapping extractor delegates with `yield from` as its whole body, or returns o
 Flow iterates a processor's generator with `foreach`. A `process()` that advances its generator past the first yield
 before it returns it fails with PHP's `Cannot rewind a generator that was already run`. Return the generator unstarted.
 
+### 17) `flow-php/filesystem-async-aws-bridge` - the client has HTTP limits, `mv()` and appends copy in ranged parts
+
+| Before                                                                                          | After                                                                                                      |
+|-------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
+| idle timeout `default_socket_timeout` (60 s by default)                                         | 30 s, set `http.timeout` in the client configuration                                                       |
+| no limit for one call                                                                           | 300 s for one call with its retries; a `content()` of a large object can hit it, raise `http.max_duration` |
+| an object moved by `mv()` gets a single-part ETag                                               | an object above `copy_part_size` gets a multipart ETag `<md5>-<parts>`                                     |
+| an append writes a `<path>/_flow_php_append_` object                                            | no `_flow_php_append_` object                                                                              |
+| `AsyncAWSS3DestinationStream::openAppend($s3Client, $bucket, $path, $blockFactory, $blockSize)` | `openAppend(..., $blockSize, int $copyPartSize = 256 * 1024 * 1024)`                                       |
+| `Options::fromArray()` takes a description without `copy_part_size`                             | the description must hold `copy_part_size` (int)                                                           |
+| `openBlank()`, `openExclusive()`, `openAppend()` default `$blockSize` 4 MiB                     | 5 MiB, the S3 minimum part size                                                                            |
+
+### 18) `flow-php/filesystem-azure-bridge` - the blob service has HTTP limits and retries
+
+| Before                                                | After                                                                                |
+|-------------------------------------------------------|--------------------------------------------------------------------------------------|
+| no retries                                            | 3 retries, set `http.max_retries: 0` for the old behaviour                           |
+| idle timeout `default_socket_timeout`, no total limit | 30 s idle, 300 s for one call with its retries (`http.timeout`, `http.max_duration`) |
+| `ConfiguredBlobService::normalize()` without `http`   | it always holds `http` with the filled limits                                        |
+
 ---
 
 ## Upgrading from 0.46.x to 0.47.x

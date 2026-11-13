@@ -322,9 +322,16 @@ flow_filesystem:
             debug: false
             http_client_service_id: ~
             logger_service_id: ~
+            http:                      # optional, defaults 30 / 300 / 3
+              timeout: 30
+              max_duration: 120
+              max_retries: 1
           options:
             block_size: 6291456
+            copy_part_size: 268435456  # mv() above this size copies in ranged parts
 ```
+
+`client.http` cannot be combined with `http_client_service_id` or `logger_service_id`.
 
 If a `client.*` key is null, the bundle omits it from the AsyncAws resolution chain. Thus credential
 discovery from the environment still works.
@@ -372,10 +379,17 @@ flow_filesystem:
             request_factory_service: ~    # optional PSR-17 request factory
             stream_factory_service: ~     # optional PSR-17 stream factory
             logger_service_id: ~          # optional PSR-3 logger
+            http:                         # optional, defaults 30 / 300 / 3
+              timeout: 30
+              max_duration: 120
+              max_retries: 1
           options:
             block_size: 4194304
             list_blob_max_results: 100
 ```
+
+`client.http` cannot be combined with `http_client_service`, `request_factory_service`, `stream_factory_service` or
+`logger_service_id`.
 
 SAS token auth is not supported yet.
 

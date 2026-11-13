@@ -19,6 +19,7 @@ use function file_get_contents;
 use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem;
 use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem_options;
 use function Flow\Filesystem\DSL\path;
+use function Flow\Types\DSL\type_string;
 use function fopen;
 use function iterator_to_array;
 use function random_bytes;
@@ -56,6 +57,27 @@ final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
         sort($listed);
 
         static::assertSame($expected, $listed);
+    }
+
+    public function test_configured_service_with_http_limits_writes_and_reads(): void
+    {
+        $this->blobService('flow-php');
+        $fs = azure_filesystem([
+            'account_name' => type_string()->assert($_ENV['AZURITE_ACCOUNT_NAME']),
+            'container' => 'flow-php',
+            'shared_key' => type_string()->assert($_ENV['AZURITE_ACCOUNT_KEY']),
+            'url' => ['azurite' => [
+                'host' => type_string()->assert($_ENV['AZURITE_HOST']),
+                'port' => type_string()->assert($_ENV['AZURITE_BLOB_PORT']),
+                'https' => false,
+            ]],
+            'http' => ['timeout' => 5, 'max_duration' => 30, 'max_retries' => 1],
+        ]);
+        $content = random_bytes(6 * 1024 * 1024);
+
+        $fs->writeTo(path('azure-blob://limits.bin'))->append($content)->close();
+
+        static::assertSame($content, $fs->readFrom(path('azure-blob://limits.bin'))->content());
     }
 
     public function test_appending_to_existing_blob(): void
