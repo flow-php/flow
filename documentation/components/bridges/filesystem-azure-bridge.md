@@ -78,14 +78,37 @@ use function Flow\Azure\SDK\DSL\azure_shared_key_authorization_factory;
 use function Flow\Azure\SDK\DSL\azure_url_factory;
 
 $sdk = azure_blob_service(
-    $config = azure_blob_service_config($account, $container),
+    azure_blob_service_config($account, $container),
+    azure_shared_key_authorization_factory($account, $accountKey),
     Psr18ClientDiscovery::find(),
     azure_http_factory(Psr17FactoryDiscovery::findRequestFactory(), Psr17FactoryDiscovery::findStreamFactory()),
     azure_url_factory(),
-    azure_shared_key_authorization_factory($config, $accountKey),
-    $logger
+    $logger,
 );
 ```
+
+### mv()
+
+```php
+<?php
+
+use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem;
+use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem_options;
+
+$azure = azure_filesystem(
+    [
+        'account_name' => $_ENV['AZURE_ACCOUNT'],
+        'container' => $_ENV['AZURE_CONTAINER'],
+        'shared_key' => $_ENV['AZURE_SHARED_KEY'],
+    ],
+    azure_filesystem_options()->withCopyPartSize(64 * 1024 * 1024),
+);
+```
+
+`mv()` sends one synchronous Copy Blob up to `copy_part_size` (default 256 MiB, 1 byte to 256 MiB). Above it, `mv()`
+copies ranged blocks with Put Block From URL and commits them with one Put Block List. The commit carries the content
+headers and the metadata of the source. The source is deleted only after the copy succeeded. Blob tags are not
+carried. The source is signed with a SAS, so the service must use Shared Key authorization.
 
 ## Usage with Flow
 

@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Azure\SDK\AuthorizationFactory;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use Flow\Azure\SDK\AuthorizationFactory;
+use Flow\Azure\SDK\BlobService;
 use Psr\Http\Message\RequestInterface;
 use SensitiveParameter;
 
 use function count;
+use function http_build_query;
 use function implode;
 use function ksort;
 use function ltrim;
@@ -17,6 +21,9 @@ use function str_replace;
 use function str_starts_with;
 use function strtolower;
 use function strtoupper;
+use function trim;
+
+use const PHP_QUERY_RFC3986;
 
 final readonly class SharedKeyFactory implements AuthorizationFactory
 {
@@ -41,6 +48,53 @@ final readonly class SharedKeyFactory implements AuthorizationFactory
             . $this->account
             . ':'
             . base64_encode(hash_hmac('sha256', $signature, (string) base64_decode($this->accountKey, true), true))
+        );
+    }
+
+    public function readOnlySourceUrl(
+        string $url,
+        string $container,
+        string $blob,
+        DateTimeImmutable $expiresAt,
+    ): string {
+        $expiry = $expiresAt->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d\TH:i:s\Z');
+        $stringToSign = implode("\n", [
+            'r',
+            '',
+            $expiry,
+            '/blob/' . $this->account . '/' . $container . '/' . trim($blob, '/'),
+            '',
+            '',
+            '',
+            BlobService::VERSION,
+            'b',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+        ]);
+
+        return $url
+        . '?'
+        . http_build_query(
+            [
+                'sv' => BlobService::VERSION,
+                'sr' => 'b',
+                'sp' => 'r',
+                'se' => $expiry,
+                'sig' => base64_encode(hash_hmac(
+                    'sha256',
+                    $stringToSign,
+                    (string) base64_decode($this->accountKey, true),
+                    true,
+                )),
+            ],
+            '',
+            '&',
+            PHP_QUERY_RFC3986,
         );
     }
 

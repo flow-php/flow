@@ -385,6 +385,7 @@ flow_filesystem:
               max_retries: 1
           options:
             block_size: 4194304
+            copy_part_size: 268435456  # mv() above this size copies in ranged blocks
             list_blob_max_results: 100
 ```
 

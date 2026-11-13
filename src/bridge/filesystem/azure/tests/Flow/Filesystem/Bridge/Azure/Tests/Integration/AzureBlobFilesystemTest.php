@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\Azure\Tests\Integration;
 
+use Flow\Azure\SDK\BlobService\BlockBlob\Block;
+use Flow\Azure\SDK\BlobService\BlockBlob\BlockList;
+use Flow\Azure\SDK\BlobService\BlockBlob\BlockState;
+use Flow\Azure\SDK\BlobService\PutBlockBlobBlockList\PutBlockBlobBlockListOptions;
 use Flow\Filesystem\Bridge\Azure\Options;
 use Flow\Filesystem\Exception\FileExistsException;
 use Flow\Filesystem\Exception\RuntimeException;
@@ -12,6 +16,7 @@ use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Flow\Filesystem\Tests\Context\GlobMatrixContext;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 
 use function array_map;
 use function bin2hex;
@@ -262,6 +267,64 @@ final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
 
         static::assertNull($fs->status(path('azure-blob://file.txt')));
         static::assertSame('Hello, World!', $fs->readFrom(path('azure-blob://file_mv.txt'))->content());
+    }
+
+    public function test_mv_above_copy_part_size_moves_the_content(): void
+    {
+        $fs = azure_filesystem(
+            $this->blobService('flow-php'),
+            azure_filesystem_options()->withCopyPartSize(5 * 1024 * 1024),
+        );
+        $content = random_bytes(12 * 1024 * 1024);
+        $fs->writeTo(path('azure-blob://mv_source.bin'))->append($content)->close();
+
+        $fs->mv(path('azure-blob://mv_source.bin'), path('azure-blob://mv_target.bin'));
+
+        static::assertSame($content, $fs->readFrom(path('azure-blob://mv_target.bin'))->content());
+        static::assertNull($fs->status(path('azure-blob://mv_source.bin')));
+    }
+
+    #[TestWith([6 * 1024 * 1024])]
+    #[TestWith([1024])]
+    public function test_mv_of_a_partition_path_with_an_equals_sign_and_spaces(int $size): void
+    {
+        $fs = azure_filesystem(
+            $this->blobService('flow-php'),
+            azure_filesystem_options()->withCopyPartSize(5 * 1024 * 1024),
+        );
+        $content = random_bytes($size);
+        $fs->writeTo(path('azure-blob://group=a b/part 1.csv'))->append($content)->close();
+
+        $fs->mv(path('azure-blob://group=a b/part 1.csv'), path('azure-blob://group=b c/part 2.csv'));
+
+        static::assertSame($content, $fs->readFrom(path('azure-blob://group=b c/part 2.csv'))->content());
+        static::assertNull($fs->status(path('azure-blob://group=a b/part 1.csv')));
+    }
+
+    #[TestWith([6 * 1024 * 1024])]
+    #[TestWith([1024])]
+    public function test_mv_keeps_content_type_and_metadata(int $size): void
+    {
+        $service = $this->blobService('flow-php');
+        $blockId = bin2hex(random_bytes(16));
+        $service->putBlockBlobBlock('mv_properties_source.csv', $blockId, random_bytes($size), $size);
+        $service->putBlockBlobBlockList(
+            'mv_properties_source.csv',
+            new BlockList(new Block($blockId, BlockState::UNCOMMITTED)),
+            (new PutBlockBlobBlockListOptions())
+                ->withContentType('text/csv')
+                ->withMetadata(['origin' => 'probe']),
+        );
+
+        azure_filesystem($service, azure_filesystem_options()->withCopyPartSize(5 * 1024 * 1024))->mv(
+            path('azure-blob://mv_properties_source.csv'),
+            path('azure-blob://mv_properties_target.csv'),
+        );
+
+        $properties = $service->getBlobProperties('mv_properties_target.csv');
+        static::assertNotNull($properties);
+        static::assertSame('text/csv', $properties->contentType());
+        static::assertSame(['origin' => 'probe'], $properties->metadata());
     }
 
     public function test_not_removing_a_content_when_its_not_a_full_folder_path_pattern(): void

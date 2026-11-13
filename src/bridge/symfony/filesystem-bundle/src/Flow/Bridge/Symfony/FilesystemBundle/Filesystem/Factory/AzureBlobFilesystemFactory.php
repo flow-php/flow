@@ -238,7 +238,7 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
             );
         }
 
-        $allowed = ['block_size', 'list_blob_max_results'];
+        $allowed = ['block_size', 'copy_part_size', 'list_blob_max_results'];
         $unknown = array_diff(array_keys($optionsConfig), $allowed);
 
         if ($unknown !== []) {
@@ -254,6 +254,13 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
                 throw new InvalidArgumentException('`options.block_size` must be an integer.');
             }
             $options = $options->withBlockSize($optionsConfig['block_size']);
+        }
+
+        if (array_key_exists('copy_part_size', $optionsConfig) && $optionsConfig['copy_part_size'] !== null) {
+            if (!is_int($optionsConfig['copy_part_size'])) {
+                throw new InvalidArgumentException('`options.copy_part_size` must be an integer.');
+            }
+            $options = $options->withCopyPartSize($optionsConfig['copy_part_size']);
         }
 
         if (

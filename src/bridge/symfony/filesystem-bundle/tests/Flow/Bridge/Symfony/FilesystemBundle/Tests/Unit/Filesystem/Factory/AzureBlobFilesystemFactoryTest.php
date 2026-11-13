@@ -31,6 +31,30 @@ final class AzureBlobFilesystemFactoryTest extends TestCase
         static::assertInstanceOf(AzureBlobFilesystem::class, $filesystem);
     }
 
+    public function test_applies_copy_part_size_option(): void
+    {
+        $filesystem = (new AzureBlobFilesystemFactory())->create('azure-blob', [
+            'container' => 'c',
+            'client' => ['account_name' => 'a', 'auth' => ['shared_key' => base64_encode('k')]],
+            'options' => ['copy_part_size' => 5 * 1024 * 1024],
+        ]);
+
+        static::assertInstanceOf(AzureBlobFilesystem::class, $filesystem);
+        static::assertSame(5 * 1024 * 1024, $filesystem->normalize()['options']['copy_part_size'] ?? null);
+    }
+
+    public function test_throws_on_invalid_copy_part_size_type(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('`options.copy_part_size` must be an integer.');
+
+        (new AzureBlobFilesystemFactory())->create('azure-blob', [
+            'container' => 'c',
+            'client' => ['account_name' => 'a', 'auth' => ['shared_key' => 'k']],
+            'options' => ['copy_part_size' => 'nope'],
+        ]);
+    }
+
     public function test_mode_a_builds_filesystem_from_resolved_client(): void
     {
         $filesystem = (new AzureBlobFilesystemFactory())->create('azure-blob', [

@@ -72,6 +72,15 @@ interface BlobServiceInterface
         PutBlockBlobBlockOptions $options = new PutBlockBlobBlockOptions(),
     ): void;
 
+    public function putBlockBlobBlockFromBlob(
+        string $path,
+        string $blockId,
+        string $sourceBlob,
+        int $first,
+        int $last,
+        PutBlockBlobBlockOptions $options = new PutBlockBlobBlockOptions(),
+    ): void;
+
     public function putBlockBlobBlockList(
         string $path,
         BlockList $blockList,

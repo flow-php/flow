@@ -39,4 +39,18 @@ final class BlobServiceContext
             ->createResponse($status)
             ->withBody(Psr17FactoryDiscovery::findStreamFactory()->createStream($body));
     }
+
+    /**
+     * @param array<string, string> $headers
+     */
+    public static function responseWithHeaders(int $status, array $headers, string $body = ''): ResponseInterface
+    {
+        $response = self::response($status, $body);
+
+        foreach ($headers as $name => $value) {
+            $response = $response->withHeader($name, $value);
+        }
+
+        return $response;
+    }
 }

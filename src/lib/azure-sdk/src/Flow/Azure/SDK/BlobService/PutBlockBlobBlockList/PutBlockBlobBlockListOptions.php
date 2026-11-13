@@ -11,7 +11,17 @@ final class PutBlockBlobBlockListOptions implements EndpointOptions
 {
     private string $userAgentHeader = 'flow-php/azure-sdk';
 
+    private ?string $cacheControl = null;
+
+    private ?string $contentDisposition = null;
+
+    private ?string $contentEncoding = null;
+
+    private ?string $contentLanguage = null;
+
     private ?int $contentLength = null;
+
+    private ?string $contentType = null;
 
     private ?string $encryptionAlgorithm = null;
 
@@ -20,6 +30,9 @@ final class PutBlockBlobBlockListOptions implements EndpointOptions
     private ?string $encryptionKeySha256 = null;
 
     private ?string $ifNoneMatch = null;
+
+    /** @var array<string, string> */
+    private array $metadata = [];
 
     private ?string $requestId = null;
 
@@ -62,6 +75,30 @@ final class PutBlockBlobBlockListOptions implements EndpointOptions
             $headers['Content-Length'] = (string) $this->contentLength;
         }
 
+        if ($this->contentType !== null) {
+            $headers['x-ms-blob-content-type'] = $this->contentType;
+        }
+
+        if ($this->contentEncoding !== null) {
+            $headers['x-ms-blob-content-encoding'] = $this->contentEncoding;
+        }
+
+        if ($this->contentLanguage !== null) {
+            $headers['x-ms-blob-content-language'] = $this->contentLanguage;
+        }
+
+        if ($this->cacheControl !== null) {
+            $headers['x-ms-blob-cache-control'] = $this->cacheControl;
+        }
+
+        if ($this->contentDisposition !== null) {
+            $headers['x-ms-blob-content-disposition'] = $this->contentDisposition;
+        }
+
+        foreach ($this->metadata as $name => $value) {
+            $headers['x-ms-meta-' . $name] = $value;
+        }
+
         return $headers;
     }
 
@@ -79,9 +116,44 @@ final class PutBlockBlobBlockListOptions implements EndpointOptions
         return $uriParameters;
     }
 
+    public function withCacheControl(?string $cacheControl): self
+    {
+        $this->cacheControl = $cacheControl;
+
+        return $this;
+    }
+
+    public function withContentDisposition(?string $contentDisposition): self
+    {
+        $this->contentDisposition = $contentDisposition;
+
+        return $this;
+    }
+
+    public function withContentEncoding(?string $contentEncoding): self
+    {
+        $this->contentEncoding = $contentEncoding;
+
+        return $this;
+    }
+
+    public function withContentLanguage(?string $contentLanguage): self
+    {
+        $this->contentLanguage = $contentLanguage;
+
+        return $this;
+    }
+
     public function withContentLength(int $contentLength): self
     {
         $this->contentLength = $contentLength;
+
+        return $this;
+    }
+
+    public function withContentType(?string $contentType): self
+    {
+        $this->contentType = $contentType;
 
         return $this;
     }
@@ -101,6 +173,16 @@ final class PutBlockBlobBlockListOptions implements EndpointOptions
     public function withIfNoneMatch(string $ifNoneMatch): self
     {
         $this->ifNoneMatch = $ifNoneMatch;
+
+        return $this;
+    }
+
+    /**
+     * @param array<string, string> $metadata
+     */
+    public function withMetadata(array $metadata): self
+    {
+        $this->metadata = $metadata;
 
         return $this;
     }

@@ -22,9 +22,10 @@ use function is_array;
 use function is_bool;
 use function is_int;
 use function is_string;
+use function sprintf;
 
 /**
- * @type AzureOptions = array{block_location: string, block_permissions: null|PermissionsShape, block_size: int, file_fast_path: bool, list_blob_include: null|list<string>, list_blob_max_results: null|int, list_blob_show_only: null|string, tmp_dir: PathData}
+ * @type AzureOptions = array{block_location: string, block_permissions: null|PermissionsShape, block_size: int, copy_part_size: int, file_fast_path: bool, list_blob_include: null|list<string>, list_blob_max_results: null|int, list_blob_show_only: null|string, tmp_dir: PathData}
  * @import-type PathData from Path
  * @import-type PermissionsShape from Permissions
  */
@@ -34,6 +35,9 @@ final class Options
 
     /** @var int<1, max> */
     private int $blockSize = 1024 * 1024 * 4;
+
+    /** @var int<1, 268435456> */
+    private int $copyPartSize = 256 * 1024 * 1024;
 
     private bool $fileFastPath = true;
 
@@ -65,6 +69,14 @@ final class Options
     public function blockSize(): int
     {
         return $this->blockSize;
+    }
+
+    /**
+     * @return int<1, 268435456>
+     */
+    public function copyPartSize(): int
+    {
+        return $this->copyPartSize;
     }
 
     public function fileFastPath(): bool
@@ -103,6 +115,7 @@ final class Options
             || !array_key_exists('block_permissions', $data)
             || $data['block_permissions'] !== null && !is_array($data['block_permissions'])
             || !is_int($data['block_size'] ?? null)
+            || !is_int($data['copy_part_size'] ?? null)
             || !is_bool($data['file_fast_path'] ?? null)
             || !is_array($data['tmp_dir'] ?? null)
             || !array_key_exists('list_blob_include', $data)
@@ -110,7 +123,7 @@ final class Options
             || !array_key_exists('list_blob_show_only', $data)
         ) {
             throw new InvalidArgumentException(
-                'Azure options must hold block_location, block_permissions, block_size, file_fast_path, list_blob_include, list_blob_max_results, list_blob_show_only and tmp_dir',
+                'Azure options must hold block_location, block_permissions, block_size, copy_part_size, file_fast_path, list_blob_include, list_blob_max_results, list_blob_show_only and tmp_dir',
             );
         }
 
@@ -122,6 +135,7 @@ final class Options
                 ),
             )
             ->withBlockSize($data['block_size'])
+            ->withCopyPartSize($data['copy_part_size'])
             ->withFileFastPath($data['file_fast_path'])
             ->withTmpDir(Path::fromArray($data['tmp_dir']));
 
@@ -170,6 +184,7 @@ final class Options
             'block_location' => $this->blockFactory->blockLocation(),
             'block_permissions' => $this->blockFactory->permissions()?->normalize(),
             'block_size' => $this->blockSize,
+            'copy_part_size' => $this->copyPartSize,
             'file_fast_path' => $this->fileFastPath,
             'list_blob_include' => $this->listBlobInclude === null
                 ? null
@@ -202,6 +217,20 @@ final class Options
         }
 
         $this->blockSize = $blockSize;
+
+        return $this;
+    }
+
+    public function withCopyPartSize(int $bytes): self
+    {
+        if ($bytes < 1 || $bytes > (256 * 1024 * 1024)) {
+            throw new InvalidArgumentException(sprintf(
+                'Copy part size must be between 1 byte and 256 MiB, got %d bytes',
+                $bytes,
+            ));
+        }
+
+        $this->copyPartSize = $bytes;
 
         return $this;
     }

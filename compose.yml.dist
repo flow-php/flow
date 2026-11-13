@@ -40,7 +40,7 @@ services:
         networks:
             - flow-php
     azurite:
-        image: mcr.microsoft.com/azure-storage/azurite
+        image: mcr.microsoft.com/azure-storage/azurite:3.37.0
         container_name: flow-php-azurite
         hostname: azurite
         restart: always
