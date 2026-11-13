@@ -74,3 +74,17 @@ $sdk = azure_blob_service(
     new NullLogger(),
 );
 ```
+
+## Copy from another blob
+
+```php
+<?php
+
+$sdk->copyBlob('staging/a.parquet', 'final/a.parquet');
+
+$sdk->putBlockBlobBlockFromBlob('final/big.parquet', $blockId, 'staging/big.parquet', 0, 268435455);
+```
+
+Both calls sign the source with a read-only SAS for that one blob, valid for 15 minutes. `copyBlob()` is synchronous.
+It throws for a copy that is not finished and for a source above 256 MiB. For a larger source, copy ranges with
+`putBlockBlobBlockFromBlob()` and commit them with `putBlockBlobBlockList()`.

@@ -108,6 +108,17 @@ final class RecordingBlobService implements BlobServiceInterface
         $this->delegate->putBlockBlobBlock($path, $blockId, $content, $size, $options);
     }
 
+    public function putBlockBlobBlockFromBlob(
+        string $path,
+        string $blockId,
+        string $sourceBlob,
+        int $first,
+        int $last,
+        PutBlockBlobBlockOptions $options = new PutBlockBlobBlockOptions(),
+    ): void {
+        $this->delegate->putBlockBlobBlockFromBlob($path, $blockId, $sourceBlob, $first, $last, $options);
+    }
+
     public function putBlockBlobBlockList(
         string $path,
         BlockList $blockList,

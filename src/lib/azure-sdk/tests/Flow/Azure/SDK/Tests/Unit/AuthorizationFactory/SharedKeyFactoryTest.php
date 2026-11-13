@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Azure\SDK\Tests\Unit\AuthorizationFactory;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use Flow\Azure\SDK\AuthorizationFactory\SharedKeyFactory;
 use Http\Discovery\Psr17FactoryDiscovery;
 use PHPUnit\Framework\TestCase;
@@ -140,5 +142,31 @@ final class SharedKeyFactoryTest extends TestCase
         $withoutContentType = $requestFactory->createRequest('PUT', $url);
 
         static::assertNotSame($factory->for($withContentType), $factory->for($withoutContentType));
+    }
+
+    public function test_read_only_source_url_signs_a_service_sas_for_one_blob(): void
+    {
+        static::assertSame(
+            'http://localhost:10000/flowphpaccount01/container/source/a.parquet?sv=2024-08-04&sr=b&sp=r&se=2026-11-13T12%3A00%3A00Z&sig=%2BSQtHD8x1t%2FiPtJZk5oiYlfbGWUnQsl7zXuCa8OqF3s%3D',
+            (new SharedKeyFactory('flowphpaccount01', 'flowphpkey01'))->readOnlySourceUrl(
+                'http://localhost:10000/flowphpaccount01/container/source/a.parquet',
+                'container',
+                'source/a.parquet',
+                new DateTimeImmutable('2026-11-13 12:00:00', new DateTimeZone('UTC')),
+            ),
+        );
+    }
+
+    public function test_read_only_source_url_signs_the_expiry_in_utc(): void
+    {
+        static::assertSame(
+            'http://localhost:10000/flowphpaccount01/container/source/a.parquet?sv=2024-08-04&sr=b&sp=r&se=2026-11-13T12%3A00%3A00Z&sig=%2BSQtHD8x1t%2FiPtJZk5oiYlfbGWUnQsl7zXuCa8OqF3s%3D',
+            (new SharedKeyFactory('flowphpaccount01', 'flowphpkey01'))->readOnlySourceUrl(
+                'http://localhost:10000/flowphpaccount01/container/source/a.parquet',
+                'container',
+                'source/a.parquet',
+                new DateTimeImmutable('2026-11-13 14:00:00', new DateTimeZone('+02:00')),
+            ),
+        );
     }
 }

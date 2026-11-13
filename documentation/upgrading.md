@@ -228,6 +228,18 @@ before it returns it fails with PHP's `Cannot rewind a generator that was alread
 | idle timeout `default_socket_timeout`, no total limit | 30 s idle, 300 s for one call with its retries (`http.timeout`, `http.max_duration`) |
 | `ConfiguredBlobService::normalize()` without `http`   | it always holds `http` with the filled limits                                        |
 
+### 19) `flow-php/azure-sdk` and `flow-php/filesystem-azure-bridge` - `mv()` copies synchronously from a signed source
+
+| Before                                                             | After                                                                                                         |
+|--------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
+| `AuthorizationFactory` has `for()`                                 | also `readOnlySourceUrl(string $url, string $container, string $blob, DateTimeImmutable $expiresAt)`          |
+| `BlobServiceInterface`                                             | also `putBlockBlobBlockFromBlob()`                                                                            |
+| `copyBlob()` starts an asynchronous copy and accepts a pending one | synchronous, throws on a pending copy, the asynchronous Copy Blob is removed                                  |
+| `getBlobProperties()` sends GET and downloads the blob             | sends HEAD, `BlobProperties::content()` is removed                                                            |
+| `mv()`: Copy Blob, then Delete Blob                                | Get Blob Properties, synchronous Copy Blob or ranged Put Block From URL with Put Block List, then Delete Blob |
+| `mv()` of a missing source throws `AzureException` (404)           | throws `Flow\Filesystem\Exception\RuntimeException`                                                           |
+| `Options::fromArray()` takes options without `copy_part_size`      | the options must hold `copy_part_size` (int)                                                                  |
+
 ---
 
 ## Upgrading from 0.46.x to 0.47.x

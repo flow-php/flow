@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Azure\SDK;
 
+use DateTimeImmutable;
 use Flow\Azure\SDK\BlobService\BlockBlob\Block;
 use Flow\Azure\SDK\BlobService\BlockBlob\BlockList;
 use Flow\Azure\SDK\BlobService\BlockBlob\BlockState;
@@ -71,26 +72,31 @@ final readonly class BlobService implements BlobServiceInterface
             $options->toURIParameters(),
         ));
 
-        $request = $request->withHeader('date', gmdate(
-            'D, d M Y H:i:s T',
-            time(),
-        ))->withHeader('x-ms-copy-source', $this->urlFactory->create($this->configuration, $fromBlob));
+        $request = $request->withHeader('date', gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
             $request = $request->withHeader($header, $value);
         }
 
-        $this->logger->info('Azure - Blob Service - Copy Blob', ['request' => $request]);
+        $request = $request->withHeader('x-ms-requires-sync', 'true');
 
+        $this->logger->info('Azure - Blob Service - Copy Blob From URL', ['request' => $request]);
+
+        $request = $request->withHeader('x-ms-copy-source', $this->authorizationFactory->readOnlySourceUrl(
+            $this->urlFactory->create($this->configuration, $fromBlob),
+            $this->configuration->container,
+            $fromBlob,
+            new DateTimeImmutable('+15 minutes'),
+        ));
         $request = $request->withHeader('authorization', $this->authorizationFactory->for($request));
         $request = $request->withHeader('content-length', '0');
 
         $response = $this->httpClient->sendRequest($request);
 
-        $this->logger->info('Azure - Blob Service - Copy Blob', ['response' => $response]);
+        $this->logger->info('Azure - Blob Service - Copy Blob From URL', ['response' => $response]);
 
-        if ($response->getStatusCode() !== 202) {
-            $this->logger->critical('Azure - Blob Service - Copy Blob', ['response' => $response]);
+        if ($response->getStatusCode() !== 202 || $response->getHeaderLine('x-ms-copy-status') !== 'success') {
+            $this->logger->critical('Azure - Blob Service - Copy Blob From URL', ['response' => $response]);
 
             throw new AzureException(__METHOD__, $request, $response);
         }
@@ -206,7 +212,7 @@ final readonly class BlobService implements BlobServiceInterface
         string $blob,
         GetBlobPropertiesOptions $options = new GetBlobPropertiesOptions(),
     ): ?BlobProperties {
-        $request = $this->httpFactory->get($this->urlFactory->create(
+        $request = $this->httpFactory->head($this->urlFactory->create(
             $this->configuration,
             $blob,
             $options->toURIParameters(),
@@ -522,6 +528,54 @@ final readonly class BlobService implements BlobServiceInterface
 
         if ($response->getStatusCode() !== 201) {
             $this->logger->critical('Azure - Blob Service - Put Block Blob Block', ['response' => $response]);
+
+            throw new AzureException(__METHOD__, $request, $response);
+        }
+    }
+
+    /**
+     * @throws AzureException
+     * @throws ClientExceptionInterface
+     */
+    public function putBlockBlobBlockFromBlob(
+        string $path,
+        string $blockId,
+        string $sourceBlob,
+        int $first,
+        int $last,
+        PutBlockBlobBlockOptions $options = new PutBlockBlobBlockOptions(),
+    ): void {
+        $request = $this->httpFactory->put($this->urlFactory->create(
+            $this->configuration,
+            $path,
+            array_merge($options->toURIParameters(), ['comp' => 'block', 'blockid' => $blockId]),
+        ));
+
+        $request = $request->withHeader('date', gmdate('D, d M Y H:i:s T', time()));
+
+        foreach ($options->toHeaders() as $header => $value) {
+            $request = $request->withHeader($header, $value);
+        }
+
+        $request = $request->withHeader('x-ms-source-range', 'bytes=' . $first . '-' . $last);
+
+        $this->logger->info('Azure - Blob Service - Put Block Blob Block From URL', ['request' => $request]);
+
+        $request = $request->withHeader('x-ms-copy-source', $this->authorizationFactory->readOnlySourceUrl(
+            $this->urlFactory->create($this->configuration, $sourceBlob),
+            $this->configuration->container,
+            $sourceBlob,
+            new DateTimeImmutable('+15 minutes'),
+        ));
+        $request = $request->withHeader('authorization', $this->authorizationFactory->for($request));
+        $request = $request->withHeader('content-length', '0');
+
+        $response = $this->httpClient->sendRequest($request);
+
+        $this->logger->info('Azure - Blob Service - Put Block Blob Block From URL', ['response' => $response]);
+
+        if ($response->getStatusCode() !== 201) {
+            $this->logger->critical('Azure - Blob Service - Put Block Blob Block From URL', ['response' => $response]);
 
             throw new AzureException(__METHOD__, $request, $response);
         }

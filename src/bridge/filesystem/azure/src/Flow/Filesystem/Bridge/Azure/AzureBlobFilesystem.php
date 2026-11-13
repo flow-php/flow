@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Bridge\Azure;
 
 use Exception;
+use Flow\Azure\SDK\BlobService\BlockBlob\Block;
+use Flow\Azure\SDK\BlobService\BlockBlob\BlockList;
+use Flow\Azure\SDK\BlobService\BlockBlob\BlockState;
+use Flow\Azure\SDK\BlobService\PutBlockBlobBlockList\PutBlockBlobBlockListOptions;
 use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\Exception\InvalidSchemeException;
 use Flow\Filesystem\Exception\RuntimeException;
@@ -18,10 +22,16 @@ use Flow\Filesystem\SourceStream;
 use Generator;
 use SensitiveParameter;
 
+use function bin2hex;
+use function ceil;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_string;
 use function ltrim;
+use function max;
+use function min;
+use function random_bytes;
+use function sprintf;
 use function str_ends_with;
 use function trim;
 
@@ -33,6 +43,10 @@ use function trim;
  */
 final readonly class AzureBlobFilesystem implements Filesystem
 {
+    private const int AZURE_MAX_BLOCK_SIZE = 4000 * 1024 * 1024;
+
+    private const int AZURE_MAX_BLOCKS = 50_000;
+
     public function __construct(
         private Mount $mount,
         private BlobServiceSource $blobService,
@@ -172,8 +186,50 @@ final readonly class AzureBlobFilesystem implements Filesystem
         $this->mount->supports($from) || throw new InvalidSchemeException($from->protocol(), $this->mount->protocol);
         $this->mount->supports($to) || throw new InvalidSchemeException($to->protocol(), $this->mount->protocol);
 
-        $this->blobService->blobService()->copyBlob($from->path(), $to->path());
-        $this->blobService->blobService()->deleteBlob($from->path());
+        if ($from->isEqual($to)) {
+            return true;
+        }
+
+        $service = $this->blobService->blobService();
+        $source = ltrim($from->path(), DIRECTORY_SEPARATOR);
+        $target = ltrim($to->path(), DIRECTORY_SEPARATOR);
+        $properties = $service->getBlobProperties($source) ?? throw new RuntimeException(sprintf(
+            'Cannot move "%s" to "%s", because "%s" does not exist',
+            $from->uri(),
+            $to->uri(),
+            $from->uri(),
+        ));
+        $size = $properties->size();
+
+        if ($size <= $this->options->copyPartSize()) {
+            $service->copyBlob($source, $target);
+        } else {
+            $part = min(
+                max($this->options->copyPartSize(), (int) ceil($size / self::AZURE_MAX_BLOCKS)),
+                self::AZURE_MAX_BLOCK_SIZE,
+            );
+            $blocks = [];
+
+            for ($first = 0; $first < $size; $first += $part) {
+                $blockId = bin2hex(random_bytes(16));
+                $service->putBlockBlobBlockFromBlob($target, $blockId, $source, $first, min($first + $part, $size) - 1);
+                $blocks[] = new Block($blockId, BlockState::UNCOMMITTED);
+            }
+
+            $service->putBlockBlobBlockList(
+                $target,
+                new BlockList(...$blocks),
+                (new PutBlockBlobBlockListOptions())
+                    ->withContentType($properties->contentType())
+                    ->withContentEncoding($properties->contentEncoding())
+                    ->withContentLanguage($properties->contentLanguage())
+                    ->withCacheControl($properties->cacheControl())
+                    ->withContentDisposition($properties->contentDisposition())
+                    ->withMetadata($properties->metadata()),
+            );
+        }
+
+        $service->deleteBlob($source);
 
         return true;
     }

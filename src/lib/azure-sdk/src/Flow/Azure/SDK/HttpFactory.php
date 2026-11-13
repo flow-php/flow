@@ -31,6 +31,11 @@ final readonly class HttpFactory
         return $this->requestFactory->createRequest('GET', $url);
     }
 
+    public function head(string $url): RequestInterface
+    {
+        return $this->requestFactory->createRequest('HEAD', $url);
+    }
+
     public function post(string $url): RequestInterface
     {
         return $this->requestFactory->createRequest('POST', $url);

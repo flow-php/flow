@@ -6,6 +6,7 @@ namespace Flow\Azure\SDK\Tests\Unit;
 
 use Flow\Azure\SDK\BlobService\BlockBlob\BlockState;
 use Flow\Azure\SDK\BlobService\ListBlobs\Blob;
+use Flow\Azure\SDK\Exception\AzureException;
 use Flow\Azure\SDK\Tests\Context\BlobServiceContext;
 use Flow\Azure\SDK\Tests\Double\FixedResponseClient;
 use PHPUnit\Framework\TestCase;
@@ -256,5 +257,81 @@ final class BlobServiceTest extends TestCase
         static::assertCount(2, $sentRequests);
         static::assertStringNotContainsString('marker=', $sentRequests[0]->getUri()->getQuery());
         static::assertStringContainsString('marker=next-token', $sentRequests[1]->getUri()->getQuery());
+    }
+
+    public function test_copy_blob_throws_when_the_copy_is_not_finished(): void
+    {
+        $this->expectException(AzureException::class);
+
+        BlobServiceContext::service(BlobServiceContext::responseWithHeaders(202, [
+            'x-ms-copy-status' => 'pending',
+        ]))->copyBlob('a', 'b');
+    }
+
+    public function test_get_blob_properties_sends_head(): void
+    {
+        $client = new FixedResponseClient(BlobServiceContext::response(200, ''));
+
+        BlobServiceContext::serviceWithClient($client)->getBlobProperties('a');
+
+        static::assertSame('HEAD', $client->requests()[0]->getMethod());
+    }
+
+    public function test_copy_blob_sends_a_synchronous_copy_from_a_signed_source(): void
+    {
+        $client = new FixedResponseClient(BlobServiceContext::responseWithHeaders(202, [
+            'x-ms-copy-status' => 'success',
+        ]));
+
+        BlobServiceContext::serviceWithClient($client)->copyBlob('a', 'b');
+
+        $request = $client->requests()[0];
+        static::assertSame('PUT', $request->getMethod());
+        static::assertSame('https://account.blob.core.windows.net/container/b', (string) $request->getUri());
+        static::assertSame('true', $request->getHeaderLine('x-ms-requires-sync'));
+        static::assertStringStartsWith(
+            'https://account.blob.core.windows.net/container/a?sv=2024-08-04&sr=b&sp=r&se=',
+            $request->getHeaderLine('x-ms-copy-source'),
+        );
+        static::assertStringContainsString('&sig=', $request->getHeaderLine('x-ms-copy-source'));
+        static::assertSame('0', $request->getHeaderLine('content-length'));
+    }
+
+    public function test_copy_blob_throws_on_a_status_other_than_202(): void
+    {
+        $this->expectException(AzureException::class);
+
+        BlobServiceContext::service(BlobServiceContext::response(409, ''))->copyBlob('a', 'b');
+    }
+
+    public function test_put_block_blob_block_from_blob_copies_a_range(): void
+    {
+        $client = new FixedResponseClient(BlobServiceContext::response(201, ''));
+
+        BlobServiceContext::serviceWithClient($client)->putBlockBlobBlockFromBlob('b', 'block-1', 'a', 5, 9);
+
+        $request = $client->requests()[0];
+        static::assertSame('PUT', $request->getMethod());
+        static::assertSame('comp=block&blockid=block-1', $request->getUri()->getQuery());
+        static::assertSame('bytes=5-9', $request->getHeaderLine('x-ms-source-range'));
+        static::assertStringStartsWith(
+            'https://account.blob.core.windows.net/container/a?sv=2024-08-04&sr=b&sp=r&se=',
+            $request->getHeaderLine('x-ms-copy-source'),
+        );
+        static::assertStringContainsString('&sig=', $request->getHeaderLine('x-ms-copy-source'));
+        static::assertSame('0', $request->getHeaderLine('content-length'));
+    }
+
+    public function test_put_block_blob_block_from_blob_throws_on_a_status_other_than_201(): void
+    {
+        $this->expectException(AzureException::class);
+
+        BlobServiceContext::service(BlobServiceContext::response(403, ''))->putBlockBlobBlockFromBlob(
+            'b',
+            'block-1',
+            'a',
+            5,
+            9,
+        );
     }
 }
