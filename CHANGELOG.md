@@ -1,6 +1,13 @@
-## [Unreleased] - 2026-11-12
+## [Unreleased] - 2026-11-13
 
 ### Added
+- [#2738](https://github.com/flow-php/flow/pull/2738) - **flow-php/filesystem-async-aws-bridge - http limits (timeout, max_duration, max_retries) in the client configuration** - [@norberttech](https://github.com/norberttech)
+- [#2738](https://github.com/flow-php/flow/pull/2738) - **flow-php/filesystem-async-aws-bridge - Options::withCopyPartSize() and aws_s3_filesystem_options()** - [@norberttech](https://github.com/norberttech)
+- [#2738](https://github.com/flow-php/flow/pull/2738) - **flow-php/filesystem-azure-bridge - http limits (timeout, max_duration, max_retries) in the blob service configuration** - [@norberttech](https://github.com/norberttech)
+- [#2738](https://github.com/flow-php/flow/pull/2738) - **flow-php/filesystem-azure-bridge - Options::withCopyPartSize()** - [@norberttech](https://github.com/norberttech)
+- [#2738](https://github.com/flow-php/flow/pull/2738) - **flow-php/azure-sdk - putBlockBlobBlockFromBlob() and AuthorizationFactory::readOnlySourceUrl()** - [@norberttech](https://github.com/norberttech)
+- [#2738](https://github.com/flow-php/flow/pull/2738) - **flow-php/azure-sdk - content headers and metadata on BlobProperties and PutBlockBlobBlockListOptions** - [@norberttech](https://github.com/norberttech)
+- [#2738](https://github.com/flow-php/flow/pull/2738) - **flow-php/symfony-filesystem-bundle - client.http and options.copy_part_size for aws_s3 and azure_blob** - [@norberttech](https://github.com/norberttech)
 - [#2736](https://github.com/flow-php/flow/pull/2736) - **flow-php/etl - DatastoreLoader contract, a loader names the table or index it writes to** - [@norberttech](https://github.com/norberttech)
 - [#2736](https://github.com/flow-php/flow/pull/2736) - **flow-php/etl - datastore collection as the write stage subject and as db.collection.name on the loader span** - [@norberttech](https://github.com/norberttech)
 - [#2736](https://github.com/flow-php/flow/pull/2736) - **flow-php/etl - warning log when a processor keeps running after a failure** - [@norberttech](https://github.com/norberttech)
@@ -30,6 +37,10 @@
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - Pipe operator documentation page** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2738](https://github.com/flow-php/flow/pull/2738) - **flow-php/filesystem-async-aws-bridge - S3 calls default to a 30 s idle timeout and a 300 s total limit** - [@norberttech](https://github.com/norberttech)
+- [#2738](https://github.com/flow-php/flow/pull/2738) - **flow-php/filesystem-async-aws-bridge - append builds its upload on the target key, without the flow_php_append object** - [@norberttech](https://github.com/norberttech)
+- [#2738](https://github.com/flow-php/flow/pull/2738) - **flow-php/filesystem-azure-bridge - requests default to a 30 s idle timeout, a 300 s total limit and 3 retries** - [@norberttech](https://github.com/norberttech)
+- [#2738](https://github.com/flow-php/flow/pull/2738) - **flow-php/azure-sdk - copyBlob() is synchronous, signs the source and throws on a pending copy** - [@norberttech](https://github.com/norberttech)
 - [decfd5](https://github.com/flow-php/flow/commit/decfd56ff79a7c8c2277e56fbb9e7f381236b1b9) - **chore(flow-php/flow): nix shell secrets through fnox** - [@norberttech](https://github.com/norberttech)
 - [#2736](https://github.com/flow-php/flow/pull/2736) - **flow-php/etl - an extractor ends on a stop instead of receiving Signal::STOP** - [@norberttech](https://github.com/norberttech)
 - [#2736](https://github.com/flow-php/flow/pull/2736) - **flow-php/etl - Processor::process() must return an unstarted generator** - [@norberttech](https://github.com/norberttech)
@@ -73,6 +84,12 @@
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - print_rows(Rows) renamed to format_rows()** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2738](https://github.com/flow-php/flow/pull/2738) - **flow-php/filesystem-async-aws-bridge - mv() of an object above 5 GB, now a multipart copy in ranged parts** - [@norberttech](https://github.com/norberttech)
+- [#2738](https://github.com/flow-php/flow/pull/2738) - **flow-php/filesystem-async-aws-bridge - append no longer deletes the original before its replacement exists** - [@norberttech](https://github.com/norberttech)
+- [#2738](https://github.com/flow-php/flow/pull/2738) - **flow-php/filesystem-async-aws-bridge - append without bytes no longer empties the object** - [@norberttech](https://github.com/norberttech)
+- [#2738](https://github.com/flow-php/flow/pull/2738) - **flow-php/filesystem-async-aws-bridge - a 200 response with error XML no longer deletes the source of a move** - [@norberttech](https://github.com/norberttech)
+- [#2738](https://github.com/flow-php/flow/pull/2738) - **flow-php/filesystem-azure-bridge - mv() no longer deletes the source of a pending copy** - [@norberttech](https://github.com/norberttech)
+- [#2738](https://github.com/flow-php/flow/pull/2738) - **flow-php/azure-sdk - getBlobProperties() sends HEAD and no longer downloads the blob** - [@norberttech](https://github.com/norberttech)
 - [#2736](https://github.com/flow-php/flow/pull/2736) - **flow-php/etl - PHP engine crash when a processor or join fails in its own body** - [@norberttech](https://github.com/norberttech)
 - [#2736](https://github.com/flow-php/flow/pull/2736) - **flow-php/symfony-console-bridge - tasks style no longer cuts a long subject at 24 columns** - [@norberttech](https://github.com/norberttech)
 - [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl - memory units are binary and the external sort merge stays within its memory budget** - [@norberttech](https://github.com/norberttech)
@@ -99,6 +116,7 @@
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - explain() default trigger in the documentation** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2738](https://github.com/flow-php/flow/pull/2738) - **flow-php/azure-sdk - BlobProperties::content()** - [@norberttech](https://github.com/norberttech)
 - [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/cli - ProgressBarLoader** - [@norberttech](https://github.com/norberttech)
 - [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/cli - --config option from commands that never used it** - [@norberttech](https://github.com/norberttech)
 - [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/etl - ExternalSort::$memoryLimit** - [@norberttech](https://github.com/norberttech)
