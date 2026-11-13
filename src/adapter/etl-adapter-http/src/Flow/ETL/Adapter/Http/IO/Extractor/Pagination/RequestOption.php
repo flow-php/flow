@@ -18,6 +18,9 @@ use function parse_str;
 
 final class RequestOption
 {
+    /**
+     * @param array<string> $sensitiveHeaders
+     */
     private function __construct(
         public readonly InjectInto $into,
         public readonly string $name,
@@ -40,6 +43,9 @@ final class RequestOption
         return new self(InjectInto::QueryParam, $name);
     }
 
+    /**
+     * @param array<string> $sensitiveHeaders
+     */
     public static function replaceUri(array $sensitiveHeaders = []): self
     {
         return new self(InjectInto::ReplaceUri, '', sensitiveHeaders: $sensitiveHeaders);
