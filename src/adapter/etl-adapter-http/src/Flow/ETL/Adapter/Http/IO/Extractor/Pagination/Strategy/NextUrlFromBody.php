@@ -16,6 +16,9 @@ use function is_string;
 
 final class NextUrlFromBody implements PaginationStrategy
 {
+    /**
+     * @param array<string> $sensitiveHeaders
+     */
     public function __construct(
         private readonly string $path,
         private readonly array $sensitiveHeaders = [],
