@@ -18,6 +18,7 @@ final class NextUrlFromBody implements PaginationStrategy
 {
     public function __construct(
         private readonly string $path,
+        private readonly array $sensitiveHeaders = [],
     ) {}
 
     public function initialRequest(RequestInterface $base): RequestInterface
@@ -40,6 +41,6 @@ final class NextUrlFromBody implements PaginationStrategy
             return null;
         }
 
-        return RequestOption::replaceUri()->apply($base, $url);
+        return RequestOption::replaceUri($this->sensitiveHeaders)->apply($base, $url);
     }
 }
