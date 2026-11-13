@@ -15,6 +15,9 @@ final class LinkHeader implements PaginationStrategy
 {
     private LinkHeaderParser $parser;
 
+    /**
+     * @param array<string> $sensitiveHeaders
+     */
     public function __construct(
         private readonly string $rel = 'next',
         private readonly array $sensitiveHeaders = [],
