@@ -38,4 +38,22 @@ final class LinkHeaderTest extends FlowTestCase
                 ->__toString(),
         );
     }
+
+    public function test_next_request_removes_custom_sensitive_headers_on_cross_host(): void
+    {
+        $result = (new LinkHeader('next', ['X-Api-Key']))->nextRequest(
+            PaginationMother::request('GET', 'https://api.example.com/items')
+                ->withHeader('Authorization', 'Bearer secret')
+                ->withHeader('X-Api-Key', 'key'),
+            PaginationMother::decoded(['data' => [1]], [
+                'Link' => '<https://other.example.org/items?page=2>; rel="next"',
+            ]),
+            new PageState(pagesFetched: 1),
+        );
+
+        static::assertNotNull($result);
+        static::assertSame('other.example.org', $result->getUri()->getHost());
+        static::assertFalse($result->hasHeader('Authorization'));
+        static::assertFalse($result->hasHeader('X-Api-Key'));
+    }
 }

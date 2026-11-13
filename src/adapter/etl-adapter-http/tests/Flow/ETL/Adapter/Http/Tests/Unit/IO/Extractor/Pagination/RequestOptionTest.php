@@ -76,6 +76,7 @@ final class RequestOptionTest extends FlowTestCase
         $request = (new Psr17Factory())
             ->createRequest('GET', 'https://api.example.com/items?page=1')
             ->withHeader('Authorization', 'Bearer secret')
+            ->withHeader('Proxy-Authorization', 'Basic secret')
             ->withHeader('Cookie', 'session=abc')
             ->withHeader('Accept', 'application/json');
 
@@ -83,6 +84,7 @@ final class RequestOptionTest extends FlowTestCase
 
         static::assertSame('evil.example.org', $result->getUri()->getHost());
         static::assertFalse($result->hasHeader('Authorization'));
+        static::assertFalse($result->hasHeader('Proxy-Authorization'));
         static::assertFalse($result->hasHeader('Cookie'));
         static::assertSame(['application/json'], $result->getHeader('Accept'));
     }
@@ -96,6 +98,32 @@ final class RequestOptionTest extends FlowTestCase
         static::assertSame('https://other.example.org/items?page=2', (string) $result->getUri());
         static::assertFalse($result->hasHeader('Authorization'));
         static::assertFalse($result->hasHeader('Cookie'));
+    }
+
+    public function test_replace_uri_removes_custom_sensitive_headers_on_cross_host(): void
+    {
+        $request = (new Psr17Factory())
+            ->createRequest('GET', 'https://api.example.com/items?page=1')
+            ->withHeader('Authorization', 'Bearer secret')
+            ->withHeader('X-Api-Key', 'key')
+            ->withHeader('Accept', 'application/json');
+
+        $result = RequestOption::replaceUri(['x-api-key'])->apply($request, 'https://evil.example.org/items?page=2');
+
+        static::assertFalse($result->hasHeader('Authorization'));
+        static::assertFalse($result->hasHeader('X-Api-Key'));
+        static::assertSame(['application/json'], $result->getHeader('Accept'));
+    }
+
+    public function test_replace_uri_keeps_custom_sensitive_headers_on_same_host(): void
+    {
+        $request = (new Psr17Factory())
+            ->createRequest('GET', 'https://api.example.com/items?page=1')
+            ->withHeader('X-Api-Key', 'key');
+
+        $result = RequestOption::replaceUri(['X-Api-Key'])->apply($request, '/items?page=2');
+
+        static::assertSame(['key'], $result->getHeader('X-Api-Key'));
     }
 
     public function test_replace_uri_removes_sensitive_headers_on_scheme_downgrade(): void

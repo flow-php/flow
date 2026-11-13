@@ -141,28 +141,36 @@ function http_pagination_cursor(
     );
 }
 
+/**
+ * @param array<string> $sensitiveHeaders
+ */
 #[DocumentationDSL(module: Module::HTTP, type: Type::HELPER)]
 function http_pagination_next_url(
     string $path,
     bool $stop_on_client_error = true,
     ?StopWhen $stop_when = null,
+    array $sensitiveHeaders = [],
 ): Paginator {
     $default = new PathMissing($path);
 
     return new Paginator(
-        new NextUrlFromBody($path),
+        new NextUrlFromBody($path, $sensitiveHeaders),
         $stop_when === null ? $default : new AnyOf($default, $stop_when),
         $stop_on_client_error,
     );
 }
 
+/**
+ * @param array<string> $sensitiveHeaders
+ */
 #[DocumentationDSL(module: Module::HTTP, type: Type::HELPER)]
 function http_pagination_link_header(
     string $rel = 'next',
     bool $stop_on_client_error = true,
     ?StopWhen $stop_when = null,
+    array $sensitiveHeaders = [],
 ): Paginator {
-    return new Paginator(new LinkHeader($rel), $stop_when ?? new NeverStop(), $stop_on_client_error);
+    return new Paginator(new LinkHeader($rel, $sensitiveHeaders), $stop_when ?? new NeverStop(), $stop_on_client_error);
 }
 
 #[DocumentationDSL(module: Module::HTTP, type: Type::HELPER)]
