@@ -17,6 +17,7 @@ final class LinkHeader implements PaginationStrategy
 
     public function __construct(
         private readonly string $rel = 'next',
+        private readonly array $sensitiveHeaders = [],
     ) {
         $this->parser = new LinkHeaderParser();
     }
@@ -34,6 +35,6 @@ final class LinkHeader implements PaginationStrategy
             return null;
         }
 
-        return RequestOption::replaceUri()->apply($base, $url);
+        return RequestOption::replaceUri($this->sensitiveHeaders)->apply($base, $url);
     }
 }

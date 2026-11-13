@@ -22,6 +22,7 @@ final class RequestOption
         public readonly InjectInto $into,
         public readonly string $name,
         private readonly ?StreamFactoryInterface $streamFactory = null,
+        private readonly array $sensitiveHeaders = [],
     ) {}
 
     public static function bodyPath(string $path, StreamFactoryInterface $streamFactory): self
@@ -39,9 +40,9 @@ final class RequestOption
         return new self(InjectInto::QueryParam, $name);
     }
 
-    public static function replaceUri(): self
+    public static function replaceUri(array $sensitiveHeaders = []): self
     {
-        return new self(InjectInto::ReplaceUri, '');
+        return new self(InjectInto::ReplaceUri, '', sensitiveHeaders: $sensitiveHeaders);
     }
 
     public function apply(RequestInterface $base, mixed $value): RequestInterface
@@ -74,7 +75,9 @@ final class RequestOption
             $oldUri->getHost() !== $newUri->getHost()
             || $oldUri->getScheme() === 'https' && $newUri->getScheme() === 'http'
         ) {
-            $base = $base->withoutHeader('authorization')->withoutHeader('cookie');
+            foreach ([...SensitiveHeaders::toArray(), ...$this->sensitiveHeaders] as $sensitiveHeader) {
+                $base = $base->withoutHeader($sensitiveHeader);
+            }
         }
 
         return $base->withUri($newUri);
