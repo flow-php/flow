@@ -270,6 +270,34 @@ final class ConfigurationTest extends TestCase
         static::assertSame('pw', $connection['password']);
     }
 
+    public function test_connection_options_and_session_settings_default_to_empty_maps(): void
+    {
+        $connection = $this->context->processConfig([
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+        ])['connections']['default'];
+
+        static::assertSame([], $connection['options']);
+        static::assertSame([], $connection['session_settings']);
+    }
+
+    public function test_connection_options_and_session_settings_keep_scalar_types(): void
+    {
+        $connection = $this->context->processConfig([
+            'connections' => [
+                'default' => [
+                    'dsn' => 'postgresql://user:pass@localhost:5432/db',
+                    'options' => ['connect_timeout' => 5, 'sslmode' => 'require'],
+                    'session_settings' => ['statement_timeout' => '30s'],
+                ],
+            ],
+        ])['connections']['default'];
+
+        static::assertSame(['connect_timeout' => 5, 'sslmode' => 'require'], $connection['options']);
+        static::assertSame(['statement_timeout' => '30s'], $connection['session_settings']);
+    }
+
     public function test_connection_overrides_default_to_no_override(): void
     {
         $config = $this->context->processConfig([

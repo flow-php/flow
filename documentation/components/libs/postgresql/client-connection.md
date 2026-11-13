@@ -32,6 +32,16 @@ $client = pgsql_client(
 );
 ```
 
+Put a value with spaces, quotes or backslashes in single quotes:
+
+```php
+<?php
+
+use function Flow\PostgreSql\DSL\pgsql_connection;
+
+$params = pgsql_connection("host=localhost dbname=mydb password='my secret'");
+```
+
 ## DSN URL
 
 Parse the standard PostgreSQL DSN format that environment variables often use:
@@ -135,6 +145,33 @@ $params = (new DsnParser())->parse('postgresql://user:pass@localhost:5432/mydb')
 With `withDatabase()`, apply the override first. The suffix is then appended to the overridden name
 (`withDatabase('other')->withDatabaseSuffix('_test')` ⇒ `other_test`).
 
+## Session Settings
+
+```php
+<?php
+
+use function Flow\PostgreSql\DSL\{pgsql_client, pgsql_connection_dsn};
+
+$client = pgsql_client(
+    pgsql_connection_dsn('postgresql://user:pass@localhost:5432/mydb')
+        ->withSessionSettings([
+            'statement_timeout' => '30s',
+            'lock_timeout' => '10s',
+            'idle_in_transaction_session_timeout' => '60s',
+        ])
+);
+```
+
+Each pair goes to the server as `-c name=value` in the libpq `options` key, after a value that is already there. A
+name holds letters, digits, `_` and `.`. The client escapes spaces and backslashes in the value.
+
+### PgBouncer
+
+PgBouncer rejects a connection that sends startup parameters that it does not track. With
+[`ignore_startup_parameters`](https://www.pgbouncer.org/config.html#ignore_startup_parameters) it drops them, so the
+server does not apply the settings. Behind PgBouncer, set them with `SET` after you connect, or on the role with
+`ALTER ROLE ... SET`.
+
 ## Connection Lifecycle
 
 ### Checking Connection Status
@@ -171,6 +208,8 @@ For long-running applications, think about connection pooling at the infrastruct
 | `sslmode`             | SSL mode (disable, allow, prefer, require, verify-ca, verify-full) | `prefer`         |
 | `connect_timeout`     | Connection timeout in seconds                                      | (system default) |
 | `application_name`    | Application name for pg_stat_activity                              | (none)           |
+
+`ConnectionParameters::OPTION_KEYS` lists the libpq keys that a DSN query string and the Symfony bundle accept.
 
 For the full list of libpq connection parameters, read
 the [PostgreSQL documentation](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-PARAMKEYWORDS).

@@ -9,15 +9,67 @@ use SensitiveParameter;
 
 use function array_diff_key;
 use function array_flip;
+use function array_key_exists;
 use function array_merge;
+use function ctype_space;
 use function implode;
-use function preg_match_all;
+use function preg_match;
+use function preg_replace;
 use function sprintf;
-
-use const PREG_SET_ORDER;
+use function str_replace;
+use function strlen;
 
 final readonly class ConnectionParameters
 {
+    public const array OPTION_KEYS = [
+        'application_name',
+        'channel_binding',
+        'client_encoding',
+        'connect_timeout',
+        'fallback_application_name',
+        'gssdelegation',
+        'gssencmode',
+        'gsslib',
+        'hostaddr',
+        'keepalives',
+        'keepalives_count',
+        'keepalives_idle',
+        'keepalives_interval',
+        'krbsrvname',
+        'load_balance_hosts',
+        'max_protocol_version',
+        'min_protocol_version',
+        'oauth_client_id',
+        'oauth_client_secret',
+        'oauth_issuer',
+        'oauth_scope',
+        'options',
+        'passfile',
+        'replication',
+        'require_auth',
+        'requirepeer',
+        'requiressl',
+        'scram_client_key',
+        'scram_server_key',
+        'service',
+        'ssl_max_protocol_version',
+        'ssl_min_protocol_version',
+        'sslcert',
+        'sslcertmode',
+        'sslcompression',
+        'sslcrl',
+        'sslcrldir',
+        'sslkey',
+        'sslkeylogfile',
+        'sslmode',
+        'sslnegotiation',
+        'sslpassword',
+        'sslrootcert',
+        'sslsni',
+        'target_session_attrs',
+        'tcp_user_timeout',
+    ];
+
     /**
      * @param array<string, string> $options
      */
@@ -56,35 +108,21 @@ final readonly class ConnectionParameters
     }
 
     /**
-     * Create from a PostgreSQL libpq connection string.
+     * Parses a libpq keyword/value connection string.
      *
-     * Parses connection strings in libpq format: key=value pairs separated by spaces.
-     * Supports quoted values for values containing spaces (e.g., password='my secret').
-     *
-     * @throws \InvalidArgumentException if dbname is missing
+     * @throws \InvalidArgumentException
      */
     public static function fromString(#[SensitiveParameter] string $connectionString): self
     {
-        $parts = [];
-        $matches = [];
-        $pattern = '/(\w+)=(?:\'([^\']*)\'|([^\s]*))/';
-        preg_match_all($pattern, $connectionString, $matches, PREG_SET_ORDER);
+        $parts = self::parseConnectionString($connectionString);
 
-        foreach ($matches as $match) {
-            $key = $match[1];
-            $quotedValue = $match[2] ?? '';
-            $unquotedValue = $match[3] ?? '';
-            $value = $quotedValue !== '' ? $quotedValue : $unquotedValue;
-            $parts[$key] = $value;
-        }
-
-        if (!isset($parts['dbname'])) {
+        if (!array_key_exists('dbname', $parts)) {
             throw new InvalidArgumentException('Missing dbname in connection string');
         }
 
         return new self(
             host: $parts['host'] ?? 'localhost',
-            port: isset($parts['port']) ? (int) $parts['port'] : 5432,
+            port: array_key_exists('port', $parts) ? (int) $parts['port'] : 5432,
             database: $parts['dbname'],
             user: $parts['user'] ?? null,
             password: $parts['password'] ?? null,
@@ -143,21 +181,21 @@ final readonly class ConnectionParameters
     public function toString(): string
     {
         $parts = [
-            sprintf('host=%s', $this->host),
+            sprintf('host=%s', self::connectionStringValue($this->host)),
             sprintf('port=%d', $this->port),
-            sprintf('dbname=%s', $this->database),
+            sprintf('dbname=%s', self::connectionStringValue($this->database)),
         ];
 
         if ($this->user !== null) {
-            $parts[] = sprintf('user=%s', $this->user);
+            $parts[] = sprintf('user=%s', self::connectionStringValue($this->user));
         }
 
         if ($this->password !== null) {
-            $parts[] = sprintf('password=%s', $this->password);
+            $parts[] = sprintf('password=%s', self::connectionStringValue($this->password));
         }
 
         foreach ($this->options as $key => $value) {
-            $parts[] = sprintf('%s=%s', $key, $value);
+            $parts[] = sprintf('%s=%s', $key, self::connectionStringValue($value));
         }
 
         return implode(' ', $parts);
@@ -252,6 +290,38 @@ final readonly class ConnectionParameters
         );
     }
 
+    /**
+     * @param array<string, string> $settings
+     */
+    public function withSessionSettings(array $settings): self
+    {
+        if ($settings === []) {
+            return $this;
+        }
+
+        $pairs = [];
+
+        if (array_key_exists('options', $this->options) && $this->options['options'] !== '') {
+            $pairs[] = $this->options['options'];
+        }
+
+        foreach ($settings as $name => $value) {
+            // @mago-expect analysis:redundant-cast -- PHP stores a numeric string key as an int
+            $name = (string) $name;
+
+            if (preg_match('/^[A-Za-z_][A-Za-z0-9_.]*$/', $name) !== 1) {
+                throw new InvalidArgumentException(sprintf(
+                    'Session setting name "%s" is invalid. A name starts with a letter or "_" and holds only letters, digits, "_" and ".".',
+                    $name,
+                ));
+            }
+
+            $pairs[] = sprintf('-c %s=%s', $name, preg_replace('/(\\\\|\s)/', '\\\\$1', $value));
+        }
+
+        return $this->withOption('options', implode(' ', $pairs));
+    }
+
     public function withUser(?string $user): self
     {
         return new self(
@@ -262,5 +332,98 @@ final readonly class ConnectionParameters
             password: $this->password,
             options: $this->options,
         );
+    }
+
+    private static function connectionStringValue(string $value): string
+    {
+        if ($value !== '' && preg_match('/[\s\'\\\\]/', $value) !== 1) {
+            return $value;
+        }
+
+        return "'" . str_replace(['\\', "'"], ['\\\\', "\\'"], $value) . "'";
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private static function parseConnectionString(#[SensitiveParameter] string $connectionString): array
+    {
+        $parts = [];
+        $length = strlen($connectionString);
+        $position = 0;
+
+        while ($position < $length) {
+            if (ctype_space($connectionString[$position])) {
+                $position++;
+
+                continue;
+            }
+
+            $key = '';
+
+            while (
+                $position < $length
+                && $connectionString[$position] !== '='
+                && !ctype_space($connectionString[$position])
+            ) {
+                $key .= $connectionString[$position++];
+            }
+
+            while ($position < $length && ctype_space($connectionString[$position])) {
+                $position++;
+            }
+
+            if ($position >= $length || $connectionString[$position] !== '=') {
+                throw new InvalidArgumentException(sprintf('Missing "=" after "%s" in connection string', $key));
+            }
+
+            $position++;
+
+            while ($position < $length && ctype_space($connectionString[$position])) {
+                $position++;
+            }
+
+            $value = '';
+
+            if ($position < $length && $connectionString[$position] === "'") {
+                $position++;
+
+                while (true) {
+                    if ($position >= $length) {
+                        throw new InvalidArgumentException('Unterminated quoted value in connection string');
+                    }
+
+                    if ($connectionString[$position] === "'") {
+                        $position++;
+
+                        break;
+                    }
+
+                    if ($connectionString[$position] === '\\' && ($position + 1) < $length) {
+                        $position++;
+                    }
+
+                    $value .= $connectionString[$position++];
+                }
+            } else {
+                while ($position < $length && !ctype_space($connectionString[$position])) {
+                    if ($connectionString[$position] === '\\') {
+                        $position++;
+
+                        if ($position < $length) {
+                            $value .= $connectionString[$position++];
+                        }
+
+                        continue;
+                    }
+
+                    $value .= $connectionString[$position++];
+                }
+            }
+
+            $parts[$key] = $value;
+        }
+
+        return $parts;
     }
 }

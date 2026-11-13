@@ -6,11 +6,33 @@ namespace Flow\PostgreSql\Tests\Unit\Client;
 
 use Flow\PostgreSql\Client\ConnectionParameters;
 use Flow\PostgreSql\Client\DsnParser;
+use Generator;
 use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
+
+use function Flow\PostgreSql\DSL\pgsql_connection;
+use function Flow\PostgreSql\DSL\pgsql_connection_params;
+use function sprintf;
 
 final class ConnectionParametersTest extends TestCase
 {
+    /**
+     * @return Generator<string, array{string, string}>
+     */
+    public static function libpq_values(): Generator
+    {
+        yield 'empty' => ['', "''"];
+        yield 'space' => ['a b', "'a b'"];
+        yield 'single quote' => ["a'b", "'a\\'b'"];
+        yield 'backslash' => ['a\\b', "'a\\\\b'"];
+        yield 'trailing backslash' => ['ab\\', "'ab\\\\'"];
+        yield 'equal sign' => ['a=b', 'a=b'];
+        yield 'tab' => ["a\tb", "'a\tb'"];
+        yield 'newline' => ["a\nb", "'a\nb'"];
+    }
+
     public function test_debug_info_masks_password(): void
     {
         $params = ConnectionParameters::fromParams(database: 'testdb', user: 'admin', password: 'supersecret');
@@ -110,12 +132,99 @@ final class ConnectionParametersTest extends TestCase
         static::assertSame('secret', $params->password());
     }
 
+    public function test_from_string_allows_blanks_around_equal_sign(): void
+    {
+        $params = pgsql_connection('dbname = app  host =  db');
+
+        static::assertSame('app', $params->database());
+        static::assertSame('db', $params->host());
+    }
+
+    public function test_from_string_keeps_single_quote_inside_unquoted_value(): void
+    {
+        static::assertSame("a'b", pgsql_connection("dbname=a'b")->database());
+    }
+
+    public function test_from_string_drops_backslash_that_ends_unquoted_value(): void
+    {
+        static::assertSame('app', pgsql_connection('dbname=app\\')->database());
+    }
+
+    public function test_from_string_reads_empty_unquoted_value(): void
+    {
+        static::assertSame(['application_name' => ''], pgsql_connection('dbname=app application_name=')->options());
+    }
+
+    public function test_from_string_reads_key_directly_after_closing_quote(): void
+    {
+        $params = pgsql_connection("dbname='app'host=db");
+
+        static::assertSame('app', $params->database());
+        static::assertSame('db', $params->host());
+    }
+
+    #[DataProvider('libpq_values')]
+    public function test_from_string_reads_what_to_string_writes(string $value, string $written): void
+    {
+        $original = pgsql_connection_params(database: $value, user: $value, password: $value, options: [
+            'application_name' => $value,
+            'options' => $value,
+        ]);
+
+        $parsed = pgsql_connection($original->toString());
+
+        static::assertSame($original->database(), $parsed->database());
+        static::assertSame($original->user(), $parsed->user());
+        static::assertSame($original->password(), $parsed->password());
+        static::assertSame($original->options(), $parsed->options());
+        static::assertSame($original->host(), $parsed->host());
+        static::assertSame($original->port(), $parsed->port());
+    }
+
+    public function test_from_string_reads_tab_and_newline_as_separators(): void
+    {
+        $params = pgsql_connection("dbname=app\thost=db\nport=5433");
+
+        static::assertSame('app', $params->database());
+        static::assertSame('db', $params->host());
+        static::assertSame(5433, $params->port());
+    }
+
+    public function test_from_string_removes_backslash_escapes_from_unquoted_value(): void
+    {
+        static::assertSame('a b', pgsql_connection('dbname=a\\ b')->database());
+    }
+
     public function test_from_string_throws_exception_when_dbname_missing(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Missing dbname in connection string');
 
         ConnectionParameters::fromString('host=localhost port=5432');
+    }
+
+    public function test_from_string_throws_when_equal_sign_is_missing(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Missing "=" after "port" in connection string');
+
+        pgsql_connection('dbname=app port');
+    }
+
+    public function test_from_string_throws_when_quoted_value_ends_with_backslash(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Unterminated quoted value in connection string');
+
+        pgsql_connection("dbname='app\\");
+    }
+
+    public function test_from_string_throws_when_quoted_value_is_not_terminated(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Unterminated quoted value in connection string');
+
+        pgsql_connection("dbname='app");
     }
 
     public function test_from_string_with_defaults(): void
@@ -145,6 +254,42 @@ final class ConnectionParametersTest extends TestCase
         $params = ConnectionParameters::fromString($connectionString);
 
         static::assertSame('my secret pass', $params->password());
+    }
+
+    #[DataProvider('libpq_values')]
+    public function test_to_string_quotes_application_name_option(string $value, string $written): void
+    {
+        static::assertSame(
+            "host=localhost port=5432 dbname=app application_name={$written}",
+            pgsql_connection_params(database: 'app', options: ['application_name' => $value])->toString(),
+        );
+    }
+
+    #[DataProvider('libpq_values')]
+    public function test_to_string_quotes_database(string $value, string $written): void
+    {
+        static::assertSame(
+            "host=localhost port=5432 dbname={$written}",
+            pgsql_connection_params(database: $value)->toString(),
+        );
+    }
+
+    #[DataProvider('libpq_values')]
+    public function test_to_string_quotes_options_option(string $value, string $written): void
+    {
+        static::assertSame(
+            "host=localhost port=5432 dbname=app options={$written}",
+            pgsql_connection_params(database: 'app', options: ['options' => $value])->toString(),
+        );
+    }
+
+    #[DataProvider('libpq_values')]
+    public function test_to_string_quotes_password(string $value, string $written): void
+    {
+        static::assertSame(
+            "host=localhost port=5432 dbname=app password={$written}",
+            pgsql_connection_params(database: 'app', password: $value)->toString(),
+        );
     }
 
     public function test_to_string_roundtrip(): void
@@ -289,6 +434,89 @@ final class ConnectionParametersTest extends TestCase
 
         static::assertSame(5432, $params->port());
         static::assertSame(5433, $modified->port());
+    }
+
+    public function test_with_session_settings_appends_after_existing_options_value(): void
+    {
+        static::assertSame(
+            ['options' => '-c search_path=public -c statement_timeout=30s'],
+            pgsql_connection_params(database: 'app', options: [
+                'options' => '-c search_path=public',
+            ])->withSessionSettings(['statement_timeout' => '30s'])->options(),
+        );
+    }
+
+    public function test_with_session_settings_escapes_whitespace_and_backslash(): void
+    {
+        static::assertSame(
+            ['options' => "-c flow.probe=a\\ b\\\\c\\\td"],
+            pgsql_connection_params(database: 'app')->withSessionSettings(['flow.probe' => "a b\\c\td"])->options(),
+        );
+    }
+
+    public function test_with_session_settings_keeps_other_options(): void
+    {
+        static::assertSame(
+            ['sslmode' => 'require', 'options' => '-c statement_timeout=30s'],
+            pgsql_connection_params(database: 'app', options: ['sslmode' => 'require'])->withSessionSettings([
+                'statement_timeout' => '30s',
+            ])->options(),
+        );
+    }
+
+    #[TestWith(['statement timeout'])]
+    #[TestWith(['1st'])]
+    #[TestWith(['a-b'])]
+    #[TestWith([''])]
+    #[TestWith(['123'])]
+    public function test_with_session_settings_rejects_invalid_name(string $name): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(sprintf('Session setting name "%s" is invalid.', $name));
+
+        pgsql_connection_params(database: 'app')->withSessionSettings([$name => '1']);
+    }
+
+    public function test_with_session_settings_survives_to_string_round_trip(): void
+    {
+        $params = pgsql_connection_params(database: 'app')->withSessionSettings([
+            'statement_timeout' => '30s',
+            'flow.x' => 'a b',
+        ]);
+
+        static::assertSame(
+            "host=localhost port=5432 dbname=app options='-c statement_timeout=30s -c flow.x=a\\\\ b'",
+            $params->toString(),
+        );
+        static::assertSame($params->options(), pgsql_connection($params->toString())->options());
+    }
+
+    public function test_with_session_settings_treats_empty_options_value_as_absent(): void
+    {
+        static::assertSame(
+            ['options' => '-c statement_timeout=30s'],
+            pgsql_connection_params(database: 'app', options: ['options' => ''])->withSessionSettings([
+                'statement_timeout' => '30s',
+            ])->options(),
+        );
+    }
+
+    public function test_with_session_settings_without_settings_returns_same_instance(): void
+    {
+        $params = pgsql_connection_params(database: 'app');
+
+        static::assertSame($params, $params->withSessionSettings([]));
+    }
+
+    public function test_with_session_settings_writes_c_pairs_into_options(): void
+    {
+        static::assertSame(
+            ['options' => '-c statement_timeout=30s -c lock_timeout=10s'],
+            pgsql_connection_params(database: 'app')->withSessionSettings([
+                'statement_timeout' => '30s',
+                'lock_timeout' => '10s',
+            ])->options(),
+        );
     }
 
     public function test_with_user(): void

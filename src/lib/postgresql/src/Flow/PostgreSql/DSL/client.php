@@ -36,11 +36,11 @@ use SensitiveParameter;
  *
  * Accepts libpq-style connection strings:
  * - Key-value format: "host=localhost port=5432 dbname=mydb user=myuser password=secret"
- * - URI format: "postgresql://user:password@localhost:5432/dbname"
+ *
+ * For a postgres:// or postgresql:// URL, use pgsql_connection_dsn().
  *
  * @example
  * $params = pgsql_connection('host=localhost dbname=mydb');
- * $params = pgsql_connection('postgresql://user:pass@localhost/mydb');
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function pgsql_connection(#[SensitiveParameter] string $connectionString): ConnectionParameters
