@@ -61,3 +61,33 @@ and `lastModifiedAt` (from `LastModified`). Both come directly from the S3 respo
 `create()` commits the multipart upload with `If-None-Match: *`. For an existing key, it therefore throws
 `FileExistsException`. A conflicting write can abort the upload. `create()` then throws `RuntimeException`, and you
 call `create()` again. S3-compatible stores that ignore conditional writes do not enforce it.
+
+## HTTP limits and copies
+
+```php
+use function Flow\Filesystem\Bridge\AsyncAWS\DSL\aws_s3_filesystem;
+use function Flow\Filesystem\Bridge\AsyncAWS\DSL\aws_s3_filesystem_options;
+
+$s3 = aws_s3_filesystem(
+    $_ENV['AWS_S3_BUCKET'],
+    [
+        'region' => $_ENV['AWS_S3_REGION'],
+        'accessKeyId' => $_ENV['AWS_S3_KEY'],
+        'accessKeySecret' => $_ENV['AWS_S3_SECRET'],
+        'http' => ['timeout' => 30, 'max_duration' => 120, 'max_retries' => 1],
+    ],
+    aws_s3_filesystem_options()->withCopyPartSize(256 * 1024 * 1024),
+);
+```
+
+| Key            | Default | Meaning                                                                         |
+|----------------|---------|---------------------------------------------------------------------------------|
+| `timeout`      | `30`    | Seconds that a connection can stay idle.                                        |
+| `max_duration` | `300`   | Seconds for one call, its retries and their backoff included. 0 means no limit. |
+| `max_retries`  | `3`     | Retries of a call that failed with a transport error or a retryable status.     |
+
+The limits are part of the filesystem description, so a worker process builds the same client.
+
+`mv()` sends one `CopyObject` up to `copy_part_size` (default 256 MiB, 5 MiB to 5 GB). Above it, `mv()` copies the
+object in ranged parts of that size. The source is deleted only after the copy succeeded. A move above
+`copy_part_size` does not carry object tags.

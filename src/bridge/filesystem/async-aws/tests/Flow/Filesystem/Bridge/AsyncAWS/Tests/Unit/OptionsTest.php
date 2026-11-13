@@ -9,6 +9,7 @@ use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Local\Permissions;
 use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
 use Flow\Filesystem\Stream\BlockFactory;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
 use function sys_get_temp_dir;
@@ -31,7 +32,8 @@ final class OptionsTest extends TestCase
     {
         $options = (new Options())
             ->withFileFastPath(false)
-            ->withBlockSize(6 * 1024 * 1024);
+            ->withBlockSize(6 * 1024 * 1024)
+            ->withCopyPartSize(6 * 1024 * 1024);
 
         $normalized = $options->normalize();
 
@@ -39,6 +41,7 @@ final class OptionsTest extends TestCase
             [
                 'block_location' => sys_get_temp_dir(),
                 'block_permissions' => null,
+                'copy_part_size' => 6 * 1024 * 1024,
                 'file_fast_path' => false,
                 'part_size' => 6 * 1024 * 1024,
             ],
@@ -82,5 +85,32 @@ final class OptionsTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
 
         Options::fromArray(['block_location' => sys_get_temp_dir()]);
+    }
+
+    #[TestWith([5242879])]
+    #[TestWith([5000000001])]
+    public function test_copy_part_size_outside_5_mib_and_5_gb_is_rejected(int $bytes): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Copy part size must be between 5 MiB and 5 GB, got {$bytes} bytes");
+
+        (new Options())->withCopyPartSize($bytes);
+    }
+
+    #[TestWith([5242880])]
+    #[TestWith([5000000000])]
+    public function test_copy_part_size_at_5_mib_and_5_gb_is_accepted(int $bytes): void
+    {
+        static::assertSame(
+            $bytes,
+            (new Options())
+                ->withCopyPartSize($bytes)
+                ->copyPartSize(),
+        );
+    }
+
+    public function test_copy_part_size_defaults_to_256_mib(): void
+    {
+        static::assertSame(268435456, (new Options())->normalize()['copy_part_size'] ?? null);
     }
 }

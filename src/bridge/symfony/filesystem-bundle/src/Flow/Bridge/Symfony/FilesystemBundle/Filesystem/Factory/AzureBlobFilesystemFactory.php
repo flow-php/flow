@@ -99,6 +99,7 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
             'request_factory',
             'stream_factory',
             'logger',
+            'http',
         ];
         $unknown = array_diff(array_keys($clientConfig), $allowed);
 
@@ -139,20 +140,15 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
             ));
         }
 
-        // @mago-expect analysis:mixed-assignment
-        $urlFactoryConfig = $clientConfig['url_factory'] ?? null;
+        $urlFactoryConfig = is_array($clientConfig['url_factory'] ?? null) ? $clientConfig['url_factory'] : [];
         $azurite = null;
 
-        if (
-            is_array($urlFactoryConfig)
-            && is_string($urlFactoryConfig['host'] ?? null)
-            && $urlFactoryConfig['host'] !== ''
-        ) {
-            // @mago-expect analysis:mixed-assignment
-            $portRaw = $urlFactoryConfig['port'] ?? '10000';
+        if (is_string($urlFactoryConfig['host'] ?? null) && $urlFactoryConfig['host'] !== '') {
             $azurite = [
                 'host' => $urlFactoryConfig['host'],
-                'port' => is_string($portRaw) ? $portRaw : (string) (is_int($portRaw) ? $portRaw : '10000'),
+                'port' => is_string($urlFactoryConfig['port'] ?? null)
+                    ? $urlFactoryConfig['port']
+                    : (is_int($urlFactoryConfig['port'] ?? null) ? (string) $urlFactoryConfig['port'] : '10000'),
                 'https' => ($urlFactoryConfig['https'] ?? false) === true,
             ];
         }
@@ -165,13 +161,31 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
             }
         }
 
+        if (array_key_exists('http', $clientConfig) && !is_array($clientConfig['http'])) {
+            throw new InvalidArgumentException(
+                'Filesystem factory for backend "azure_blob" `client.http` must be an array.',
+            );
+        }
+
+        if (($clientConfig['http'] ?? null) !== null && $injected) {
+            throw new InvalidArgumentException(
+                'Filesystem factory for backend "azure_blob": client.http cannot be used together with client.http_client_service, client.request_factory_service, client.stream_factory_service or client.logger_service_id, because the limits apply only to the client the bundle builds.',
+            );
+        }
+
         if (!$injected) {
-            return [
+            $configuration = [
                 'account_name' => $accountName,
                 'container' => $containerName,
                 'shared_key' => $clientConfig['auth']['shared_key'],
                 'url' => $azurite === null ? ['azure' => ['host' => 'blob.core.windows.net']] : ['azurite' => $azurite],
             ];
+
+            return (
+                is_array($clientConfig['http'] ?? null)
+                    ? [...$configuration, 'http' => $clientConfig['http']]
+                    : $configuration
+            );
         }
 
         $authFactory = azure_shared_key_authorization_factory($accountName, $clientConfig['auth']['shared_key']);

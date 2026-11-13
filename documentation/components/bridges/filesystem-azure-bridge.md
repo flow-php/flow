@@ -31,6 +31,29 @@ $azure = azure_filesystem([
 ]);
 ```
 
+### HTTP limits
+
+```php
+<?php
+
+use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem;
+
+$azure = azure_filesystem([
+    'account_name' => $_ENV['AZURE_ACCOUNT'],
+    'container' => $_ENV['AZURE_CONTAINER'],
+    'shared_key' => $_ENV['AZURE_SHARED_KEY'],
+    'http' => ['timeout' => 30, 'max_duration' => 120, 'max_retries' => 1],
+]);
+```
+
+| Key            | Default | Meaning                                                                         |
+|----------------|---------|---------------------------------------------------------------------------------|
+| `timeout`      | `30`    | Seconds that a connection can stay idle.                                        |
+| `max_duration` | `300`   | Seconds for one call, its retries and their backoff included. 0 means no limit. |
+| `max_retries`  | `3`     | Retries of a call that failed with a transport error or a retryable status.     |
+
+The limits are part of the filesystem description, so a worker process builds the same service.
+
 You can also build a filesystem from your own `BlobServiceInterface`, with your own HTTP client, factories or
 logger. Such a filesystem stays in this process and reads serially.
 

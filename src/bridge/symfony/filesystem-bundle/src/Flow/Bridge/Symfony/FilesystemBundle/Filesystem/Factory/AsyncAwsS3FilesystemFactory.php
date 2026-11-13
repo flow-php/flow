@@ -8,6 +8,7 @@ use AsyncAws\Core\Configuration;
 use AsyncAws\S3\S3Client;
 use Flow\Bridge\Symfony\FilesystemBundle\Exception\InvalidArgumentException;
 use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\FilesystemFactory;
+use Flow\Filesystem\Bridge\AsyncAWS\ConfiguredS3Client;
 use Flow\Filesystem\Bridge\AsyncAWS\Options;
 use Flow\Filesystem\Filesystem;
 use Psr\Log\LoggerInterface;
@@ -25,6 +26,9 @@ use function is_scalar;
 use function is_string;
 use function sprintf;
 
+/**
+ * @import-type S3ClientConfiguration from ConfiguredS3Client
+ */
 final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
 {
     public function create(string $protocol, array $config): Filesystem
@@ -79,7 +83,7 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
     /**
      * @param array<array-key, mixed> $clientConfig
      *
-     * @return array<Configuration::OPTION_*, string>|S3Client the mapped configuration when no service is injected (describable for another process), a built client otherwise
+     * @return S3ClientConfiguration|S3Client the mapped configuration when no service is injected (describable for another process), a built client otherwise
      */
     private function buildClient(array $clientConfig): S3Client|array
     {
@@ -96,6 +100,7 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
             'debug',
             'http_client',
             'logger',
+            'http',
         ];
         $unknown = array_diff(array_keys($clientConfig), $allowed);
 
@@ -105,6 +110,21 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
                 implode(', ', $unknown),
                 implode(', ', $allowed),
             ));
+        }
+
+        if (array_key_exists('http', $clientConfig) && !is_array($clientConfig['http'])) {
+            throw new InvalidArgumentException(
+                'Filesystem factory for backend "aws_s3" `client.http` must be an array.',
+            );
+        }
+
+        if (
+            ($clientConfig['http'] ?? null) !== null
+            && (($clientConfig['http_client'] ?? null) !== null || ($clientConfig['logger'] ?? null) !== null)
+        ) {
+            throw new InvalidArgumentException(
+                'Filesystem factory for backend "aws_s3": client.http cannot be used together with client.http_client_service_id or client.logger_service_id, because the limits apply only to the client the bundle builds.',
+            );
         }
 
         $httpClient = null;
@@ -159,7 +179,9 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
             return new S3Client($asyncConfig, null, $httpClient, $logger);
         }
 
-        return $asyncConfig;
+        return (
+            is_array($clientConfig['http'] ?? null) ? [...$asyncConfig, 'http' => $clientConfig['http']] : $asyncConfig
+        );
     }
 
     private function buildOptions(mixed $optionsConfig): Options
@@ -174,7 +196,7 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
             throw new InvalidArgumentException('Filesystem factory for backend "aws_s3" `options` must be an array.');
         }
 
-        $allowed = ['block_size'];
+        $allowed = ['block_size', 'copy_part_size'];
         $unknown = array_diff(array_keys($optionsConfig), $allowed);
 
         if ($unknown !== []) {
@@ -190,6 +212,13 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
                 throw new InvalidArgumentException('`options.block_size` must be an integer.');
             }
             $options = $options->withBlockSize($optionsConfig['block_size']);
+        }
+
+        if (array_key_exists('copy_part_size', $optionsConfig) && $optionsConfig['copy_part_size'] !== null) {
+            if (!is_int($optionsConfig['copy_part_size'])) {
+                throw new InvalidArgumentException('`options.copy_part_size` must be an integer.');
+            }
+            $options = $options->withCopyPartSize($optionsConfig['copy_part_size']);
         }
 
         return $options;

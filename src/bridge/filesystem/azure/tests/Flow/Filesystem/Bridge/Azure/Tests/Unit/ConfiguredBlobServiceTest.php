@@ -7,7 +7,18 @@ namespace Flow\Filesystem\Bridge\Azure\Tests\Unit;
 use Flow\Azure\SDK\BlobServiceInterface;
 use Flow\Filesystem\Bridge\Azure\ConfiguredBlobService;
 use Flow\Filesystem\Exception\InvalidArgumentException;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Client\ClientExceptionInterface;
+
+use function Flow\Types\DSL\type_string;
+use function microtime;
+use function parse_url;
+use function stream_socket_get_name;
+use function stream_socket_server;
+
+use const PHP_URL_PORT;
 
 final class ConfiguredBlobServiceTest extends TestCase
 {
@@ -21,6 +32,7 @@ final class ConfiguredBlobServiceTest extends TestCase
                 'container' => 'container',
                 'shared_key' => 'c2VjcmV0',
                 'url' => ['azure' => ['host' => 'blob.core.windows.net']],
+                'http' => ['timeout' => 30, 'max_duration' => 300, 'max_retries' => 3],
             ],
             $source->normalize(),
         );
@@ -97,5 +109,116 @@ final class ConfiguredBlobServiceTest extends TestCase
         $this->expectExceptionMessage('Azure account name can not be empty');
 
         new ConfiguredBlobService('', 'c', 'k');
+    }
+
+    public function test_http_limits_round_trip(): void
+    {
+        static::assertSame(
+            ['timeout' => 1, 'max_duration' => 2, 'max_retries' => 0],
+            ConfiguredBlobService::fromArray([
+                'account_name' => 'a',
+                'container' => 'c',
+                'shared_key' => 'k',
+                'http' => ['timeout' => 1, 'max_duration' => 2, 'max_retries' => 0],
+            ])->normalize()['http'],
+        );
+    }
+
+    public function test_http_defaults_are_filled(): void
+    {
+        static::assertSame(
+            ['timeout' => 30, 'max_duration' => 300, 'max_retries' => 3],
+            ConfiguredBlobService::fromArray([
+                'account_name' => 'a',
+                'container' => 'c',
+                'shared_key' => 'k',
+            ])->normalize()['http'],
+        );
+    }
+
+    public function test_timeout_ends_a_call_to_a_silent_server(): void
+    {
+        $server = stream_socket_server('tcp://127.0.0.1:0');
+        static::assertNotFalse($server);
+        $blobService = ConfiguredBlobService::fromArray([
+            'account_name' => 'a',
+            'container' => 'c',
+            'shared_key' => 'c2VjcmV0',
+            'url' => ['azurite' => [
+                'host' => '127.0.0.1',
+                'port' => (string) parse_url(
+                    'tcp://' . type_string()->assert(stream_socket_get_name($server, false)),
+                    PHP_URL_PORT,
+                ),
+                'https' => false,
+            ]],
+            'http' => ['timeout' => 0.2, 'max_duration' => 0, 'max_retries' => 0],
+        ])->blobService();
+        $start = microtime(true);
+
+        try {
+            $blobService->getBlobProperties('a.txt');
+            static::fail('Expected the silent server to time out');
+        } catch (ClientExceptionInterface) {
+        }
+
+        static::assertLessThan(1.0, microtime(true) - $start);
+    }
+
+    public function test_unknown_http_key_is_rejected(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'Azure blob service "http" holds unknown keys: timeouts. Allowed: timeout, max_duration, max_retries',
+        );
+
+        ConfiguredBlobService::fromArray([
+            'account_name' => 'a',
+            'container' => 'c',
+            'shared_key' => 'k',
+            'http' => ['timeouts' => 1],
+        ]);
+    }
+
+    public static function invalid_http_limits(): Generator
+    {
+        yield 'zero timeout' => [['timeout' => 0], 'Azure blob service "http.timeout" must be a number above 0, got 0'];
+        yield 'string timeout' => [
+            ['timeout' => '1'],
+            'Azure blob service "http.timeout" must be a number above 0, got \'1\'',
+        ];
+        yield 'negative max_duration' => [
+            ['max_duration' => -1],
+            'Azure blob service "http.max_duration" must be 0 (no limit) or a number above 0, got -1',
+        ];
+        yield 'string max_duration' => [
+            ['max_duration' => '1'],
+            'Azure blob service "http.max_duration" must be 0 (no limit) or a number above 0, got \'1\'',
+        ];
+        yield 'negative max_retries' => [
+            ['max_retries' => -1],
+            'Azure blob service "http.max_retries" must be an integer of 0 or more, got -1',
+        ];
+        yield 'float max_retries' => [
+            ['max_retries' => 1.5],
+            'Azure blob service "http.max_retries" must be an integer of 0 or more, got 1.5',
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $http
+     */
+    #[DataProvider('invalid_http_limits')]
+    public function test_invalid_http_limit_is_rejected(array $http, string $message): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage($message);
+
+        ConfiguredBlobService::fromArray([
+            'account_name' => 'a',
+            'container' => 'c',
+            'shared_key' => 'k',
+            'http' => $http,
+        ]);
     }
 }
