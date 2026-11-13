@@ -1,6 +1,9 @@
 ## [Unreleased] - 2026-11-13
 
 ### Added
+- [#2739](https://github.com/flow-php/flow/pull/2739) - **flow-php/postgresql - ConnectionParameters::withSessionSettings() for server settings like statement_timeout** - [@norberttech](https://github.com/norberttech)
+- [#2739](https://github.com/flow-php/flow/pull/2739) - **flow-php/postgresql - ConnectionParameters::OPTION_KEYS with the libpq keys of PostgreSQL 16 to 18** - [@norberttech](https://github.com/norberttech)
+- [#2739](https://github.com/flow-php/flow/pull/2739) - **flow-php/symfony-postgresql-bundle - options and session_settings for each connection** - [@norberttech](https://github.com/norberttech)
 - [#2738](https://github.com/flow-php/flow/pull/2738) - **flow-php/filesystem-async-aws-bridge - http limits (timeout, max_duration, max_retries) in the client configuration** - [@norberttech](https://github.com/norberttech)
 - [#2738](https://github.com/flow-php/flow/pull/2738) - **flow-php/filesystem-async-aws-bridge - Options::withCopyPartSize() and aws_s3_filesystem_options()** - [@norberttech](https://github.com/norberttech)
 - [#2738](https://github.com/flow-php/flow/pull/2738) - **flow-php/filesystem-azure-bridge - http limits (timeout, max_duration, max_retries) in the blob service configuration** - [@norberttech](https://github.com/norberttech)
@@ -37,6 +40,8 @@
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - Pipe operator documentation page** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2739](https://github.com/flow-php/flow/pull/2739) - **flow-php/postgresql - ConnectionParameters::fromString() throws on a keyword without = and on an unterminated quote** - [@norberttech](https://github.com/norberttech)
+- [#2739](https://github.com/flow-php/flow/pull/2739) - **flow-php/postgresql - an options value that escapes spaces with a backslash no longer works** - [@norberttech](https://github.com/norberttech)
 - [#2738](https://github.com/flow-php/flow/pull/2738) - **flow-php/filesystem-async-aws-bridge - S3 calls default to a 30 s idle timeout and a 300 s total limit** - [@norberttech](https://github.com/norberttech)
 - [#2738](https://github.com/flow-php/flow/pull/2738) - **flow-php/filesystem-async-aws-bridge - append builds its upload on the target key, without the flow_php_append object** - [@norberttech](https://github.com/norberttech)
 - [#2738](https://github.com/flow-php/flow/pull/2738) - **flow-php/filesystem-azure-bridge - requests default to a 30 s idle timeout, a 300 s total limit and 3 retries** - [@norberttech](https://github.com/norberttech)
@@ -84,6 +89,9 @@
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - print_rows(Rows) renamed to format_rows()** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2739](https://github.com/flow-php/flow/pull/2739) - **flow-php/postgresql - ConnectionParameters::toString() quotes values with whitespace, quotes or backslashes** - [@norberttech](https://github.com/norberttech)
+- [#2739](https://github.com/flow-php/flow/pull/2739) - **flow-php/postgresql - ConnectionParameters::fromString() reads escaped and quoted values by the libpq rules** - [@norberttech](https://github.com/norberttech)
+- [#2739](https://github.com/flow-php/flow/pull/2739) - **flow-php/postgresql - pgsql_connection() docblock no longer claims URL support** - [@norberttech](https://github.com/norberttech)
 - [#2738](https://github.com/flow-php/flow/pull/2738) - **flow-php/filesystem-async-aws-bridge - mv() of an object above 5 GB, now a multipart copy in ranged parts** - [@norberttech](https://github.com/norberttech)
 - [#2738](https://github.com/flow-php/flow/pull/2738) - **flow-php/filesystem-async-aws-bridge - append no longer deletes the original before its replacement exists** - [@norberttech](https://github.com/norberttech)
 - [#2738](https://github.com/flow-php/flow/pull/2738) - **flow-php/filesystem-async-aws-bridge - append without bytes no longer empties the object** - [@norberttech](https://github.com/norberttech)
