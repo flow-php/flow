@@ -208,10 +208,11 @@ final class TableDefinitionTest extends TestCase
                 'name_0' => Types::STRING,
                 'age_0' => Types::INTEGER,
                 'active_0' => Types::BOOLEAN,
-                'created_at_0' => Types::DATETIME_MUTABLE,
             ],
-            $types,
+            array_diff_key($types, ['created_at_0' => true]),
         );
+        // doctrine/dbal 4.6 reads datetime columns back as datetime_immutable
+        static::assertContains($types['created_at_0'], [Types::DATETIME_MUTABLE, Types::DATETIME_IMMUTABLE]);
     }
 
     public function test_dbal_types_with_empty_bulk_data_throws_exception(): void

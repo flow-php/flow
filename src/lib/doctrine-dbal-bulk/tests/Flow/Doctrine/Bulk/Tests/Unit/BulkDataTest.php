@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Tests\Unit;
 
+use DateTime;
+use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Schema\Column;
@@ -17,6 +19,7 @@ use Flow\Doctrine\Bulk\SQLParametersStyle;
 use Flow\Doctrine\Bulk\TableDefinition;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
 final class BulkDataTest extends TestCase
@@ -575,6 +578,34 @@ final class BulkDataTest extends TestCase
 
         static::assertArrayHasKey('id_0', $result);
         static::assertArrayHasKey('name_0', $result);
+    }
+
+    #[TestWith([SQLParametersStyle::NAMED])]
+    #[TestWith([SQLParametersStyle::POSITIONAL])]
+    public function test_to_sql_parameters_accepts_immutable_datetime_for_mutable_type(SQLParametersStyle $style): void
+    {
+        static::assertSame(
+            ['2026-01-02 03:04:05'],
+            array_values((new BulkData(
+                [['name' => new DateTimeImmutable('2026-01-02 03:04:05')]],
+                ['name' => Type::getType(Types::DATETIME_MUTABLE)],
+                $style,
+            ))->toSqlParameters(new TableDefinition('test_table', $this->createConnectionWithTable('test_table')))),
+        );
+    }
+
+    #[TestWith([SQLParametersStyle::NAMED])]
+    #[TestWith([SQLParametersStyle::POSITIONAL])]
+    public function test_to_sql_parameters_accepts_mutable_datetime_for_immutable_type(SQLParametersStyle $style): void
+    {
+        static::assertSame(
+            ['2026-01-02 03:04:05'],
+            array_values((new BulkData(
+                [['name' => new DateTime('2026-01-02 03:04:05')]],
+                ['name' => Type::getType(Types::DATETIME_IMMUTABLE)],
+                $style,
+            ))->toSqlParameters(new TableDefinition('test_table', $this->createConnectionWithTable('test_table')))),
+        );
     }
 
     #[DataProvider('provide_parameter_style_combinations')]

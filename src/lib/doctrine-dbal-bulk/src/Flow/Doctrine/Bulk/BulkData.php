@@ -4,6 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk;
 
+use DateTime;
+use DateTimeImmutable;
+use Doctrine\DBAL\Types\DateImmutableType;
+use Doctrine\DBAL\Types\DateTimeImmutableType;
+use Doctrine\DBAL\Types\DateTimeType;
+use Doctrine\DBAL\Types\DateTimeTzImmutableType;
+use Doctrine\DBAL\Types\DateTimeTzType;
+use Doctrine\DBAL\Types\DateTimeUtcImmutableType;
+use Doctrine\DBAL\Types\DateTimeUtcType;
+use Doctrine\DBAL\Types\DateType;
+use Doctrine\DBAL\Types\TimeImmutableType;
+use Doctrine\DBAL\Types\TimeType;
 use Doctrine\DBAL\Types\Type;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 use Flow\Types\Exception\InvalidTypeException;
@@ -227,7 +239,10 @@ final readonly class BulkData
                     $types[$column] ??= array_key_exists($column, $this->types)
                         ? $this->types[$column]
                         : Type::getType($table->dbalColumn($column)->getTypeName());
-                $rows[$index][$column . '_' . $index] = $type->convertToDatabaseValue($entry, $platform);
+                $rows[$index][$column . '_' . $index] = $type->convertToDatabaseValue(
+                    self::acceptedBy($type, $entry),
+                    $platform,
+                );
             }
         }
 
@@ -318,7 +333,7 @@ final readonly class BulkData
                     $types[$column] ??= array_key_exists($column, $this->types)
                         ? $this->types[$column]
                         : Type::getType($table->dbalColumn($column)->getTypeName());
-                $parameters[] = $type->convertToDatabaseValue($entry, $platform);
+                $parameters[] = $type->convertToDatabaseValue(self::acceptedBy($type, $entry), $platform);
             }
         }
 
@@ -345,5 +360,34 @@ final readonly class BulkData
     public function types(): array
     {
         return $this->types;
+    }
+
+    private static function acceptedBy(Type $type, mixed $value): mixed
+    {
+        if ($value instanceof DateTime) {
+            return match (true) {
+                $type instanceof DateTimeImmutableType,
+                $type instanceof DateTimeTzImmutableType,
+                $type instanceof DateTimeUtcImmutableType,
+                $type instanceof DateImmutableType,
+                $type instanceof TimeImmutableType,
+                    => DateTimeImmutable::createFromMutable($value),
+                default => $value,
+            };
+        }
+
+        if ($value instanceof DateTimeImmutable) {
+            return match (true) {
+                $type instanceof DateTimeType,
+                $type instanceof DateTimeTzType,
+                $type instanceof DateTimeUtcType,
+                $type instanceof DateType,
+                $type instanceof TimeType,
+                    => DateTime::createFromImmutable($value),
+                default => $value,
+            };
+        }
+
+        return $value;
     }
 }
