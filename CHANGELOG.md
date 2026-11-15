@@ -1,6 +1,10 @@
-## [Unreleased] - 2026-11-13
+## [Unreleased] - 2026-11-15
 
 ### Added
+- [#2740](https://github.com/flow-php/flow/pull/2740) - **flow-php/etl - Backend::partition() routes rows to hash buckets in one pass** - [@norberttech](https://github.com/norberttech)
+- [#2740](https://github.com/flow-php/flow/pull/2740) - **flow-php/etl - GroupTable::lookup() finds the group of a key without inserting it** - [@norberttech](https://github.com/norberttech)
+- [#2740](https://github.com/flow-php/flow/pull/2740) - **flow-php/flow-php-ext - native partition() and lookup() kernels** - [@norberttech](https://github.com/norberttech)
+- [#2740](https://github.com/flow-php/flow/pull/2740) - **flow-php/flow-php-ext - naive ISO datetimes parse natively for UTC and fixed offset zones** - [@norberttech](https://github.com/norberttech)
 - [#2739](https://github.com/flow-php/flow/pull/2739) - **flow-php/postgresql - ConnectionParameters::withSessionSettings() for server settings like statement_timeout** - [@norberttech](https://github.com/norberttech)
 - [#2739](https://github.com/flow-php/flow/pull/2739) - **flow-php/postgresql - ConnectionParameters::OPTION_KEYS with the libpq keys of PostgreSQL 16 to 18** - [@norberttech](https://github.com/norberttech)
 - [#2739](https://github.com/flow-php/flow/pull/2739) - **flow-php/symfony-postgresql-bundle - options and session_settings for each connection** - [@norberttech](https://github.com/norberttech)
@@ -40,6 +44,9 @@
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - Pipe operator documentation page** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2740](https://github.com/flow-php/flow/pull/2740) - **flow-php/etl - hash join matches keys through the group table** - [@norberttech](https://github.com/norberttech)
+- [#2740](https://github.com/flow-php/flow/pull/2740) - **flow-php/etl - hash join skips the pair check when equal keys decide the condition** - [@norberttech](https://github.com/norberttech)
+- [#2740](https://github.com/flow-php/flow/pull/2740) - **flow-php/etl - HashBucketing::bucketize() takes the backend** - [@norberttech](https://github.com/norberttech)
 - [#2739](https://github.com/flow-php/flow/pull/2739) - **flow-php/postgresql - ConnectionParameters::fromString() throws on a keyword without = and on an unterminated quote** - [@norberttech](https://github.com/norberttech)
 - [#2739](https://github.com/flow-php/flow/pull/2739) - **flow-php/postgresql - an options value that escapes spaces with a backslash no longer works** - [@norberttech](https://github.com/norberttech)
 - [#2738](https://github.com/flow-php/flow/pull/2738) - **flow-php/filesystem-async-aws-bridge - S3 calls default to a 30 s idle timeout and a 300 s total limit** - [@norberttech](https://github.com/norberttech)
