@@ -130,6 +130,7 @@ disallowed-functions = { enabled = true, level = "error", functions = [{ name = 
 
 [formatter]
 excludes = ["web/landing/content/examples/**"]
+preserve-redundant-logical-binary-expression-parentheses = true
 
 [guard]
 excludes = ["src/**/tests/**", "web/landing/content/examples/**"]

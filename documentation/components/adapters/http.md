@@ -112,6 +112,24 @@ http_pagination_last_record_cursor('data.*.id', http_request_option_query('since
     stop_when: http_stop_when_flag_false('has_more'));
 ```
 
+### Sensitive headers
+
+`http_pagination_next_url` and `http_pagination_link_header` follow a URL from the response. When that URL changes
+the host, or goes from `https` to `http`, the headers of `SensitiveHeaders` are removed from the next request.
+
+```php
+use Flow\ETL\Adapter\Http\IO\Extractor\Pagination\SensitiveHeaders;
+
+// add a header to the defaults
+http_pagination_next_url('next', sensitive_headers: [...SensitiveHeaders::toArray(), 'X-Tenant-Secret']);
+
+// keep one of the defaults
+http_pagination_link_header('next', sensitive_headers: array_diff(
+    SensitiveHeaders::toArray(),
+    [SensitiveHeaders::Cookie->value],
+));
+```
+
 ### Injection - where the token goes (`http_request_option_*`)
 
 ```php
