@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Values\Grouping;
 
+use Flow\ETL\Values\Column\Column;
 use Flow\ETL\Values\Column\Php\ScalarColumn;
 use Flow\ETL\Values\Column\Physical\PhysicalFor;
 use Flow\ETL\Values\Rows;
@@ -53,6 +54,23 @@ final class PhpGroupTable implements GroupTable
             new ScalarColumn(type_integer(), (new PhysicalFor())->physical(type_integer()), $byRow, 0),
             $firstRows,
         );
+    }
+
+    public function lookup(Rows $rows): Column
+    {
+        $byRow = [];
+        $nullCount = 0;
+
+        foreach ($this->keys->of($rows) as $key) {
+            if (array_key_exists($key, $this->ids)) {
+                $byRow[] = $this->ids[$key];
+            } else {
+                $byRow[] = null;
+                $nullCount++;
+            }
+        }
+
+        return new ScalarColumn(type_integer(), (new PhysicalFor())->physical(type_integer()), $byRow, $nullCount);
     }
 
     public function count(): int

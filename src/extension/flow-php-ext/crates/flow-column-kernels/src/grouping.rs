@@ -4,6 +4,7 @@ use arrow_array::cast::AsArray;
 use arrow_array::types::{Date32Type, DurationMicrosecondType, Float64Type, Int64Type, TimestampMicrosecondType};
 use arrow_array::Array;
 use arrow_schema::{DataType, TimeUnit};
+use xxhash_rust::xxh3::xxh3_128;
 
 const DAY_MICROSECONDS: i64 = 86_400_000_000;
 
@@ -81,6 +82,39 @@ fn append_bytes(key: &mut Vec<u8>, bytes: &[u8]) {
     key.extend_from_slice(b"\0s");
     key.extend_from_slice(&(bytes.len() as u64).to_le_bytes());
     key.extend_from_slice(bytes);
+}
+
+/// KeyEncoder's text key of one Null, Boolean, Int64 or LargeBinary value; `false` for every other kind.
+pub fn append_text_key(key: &mut Vec<u8>, array: &dyn Array, row: usize) -> bool {
+    match array.data_type() {
+        DataType::Null => key.extend_from_slice(b"\0n"),
+        DataType::Boolean | DataType::Int64 | DataType::LargeBinary if array.is_null(row) => {
+            key.extend_from_slice(b"\0n");
+        }
+        DataType::Boolean => key.extend_from_slice(if array.as_boolean().value(row) { b"\0t" } else { b"\0f" }),
+        DataType::Int64 => {
+            key.extend_from_slice(b"\0i");
+            key.extend_from_slice(array.as_primitive::<Int64Type>().value(row).to_string().as_bytes());
+        }
+        DataType::LargeBinary => {
+            let bytes = array.as_binary::<i64>().value(row);
+
+            key.extend_from_slice(b"\0s");
+            key.extend_from_slice(bytes.len().to_string().as_bytes());
+            key.push(b':');
+            key.extend_from_slice(bytes);
+        }
+        _ => return false,
+    }
+
+    true
+}
+
+/// `(int) hexdec(substr(hash('xxh128', $key), $offset, 8)) % $buckets`
+pub fn bucket_of(key: &[u8], hash_offset: u32, buckets: u64) -> u64 {
+    let digits = (xxh3_128(key) >> (128 - 4 * (hash_offset + 8))) & 0xFFFF_FFFF;
+
+    digits as u64 % buckets
 }
 
 #[cfg(test)]
@@ -230,5 +264,82 @@ mod tests {
         let list = ListArray::from_iter_primitive::<Int64Type, _, _>(vec![Some(vec![Some(1)])]);
 
         assert!(!append_native_key(&mut Vec::new(), &list, 0));
+    }
+
+    #[test]
+    fn text_keys_are_the_key_encoder_strings() {
+        let text = |column: ArrayRef, row: usize| {
+            let mut key = Vec::new();
+            assert!(append_text_key(&mut key, column.as_ref(), row));
+
+            key
+        };
+
+        assert_eq!(text(Arc::new(NullArray::new(1)), 0), b"\0n");
+        assert_eq!(text(Arc::new(BooleanArray::from(vec![true, false])), 0), b"\0t");
+        assert_eq!(text(Arc::new(BooleanArray::from(vec![true, false])), 1), b"\0f");
+        assert_eq!(text(Arc::new(BooleanArray::from(vec![None, Some(true)])), 0), b"\0n");
+        assert_eq!(text(Arc::new(Int64Array::from(vec![-42, i64::MAX])), 0), b"\0i-42");
+        assert_eq!(
+            text(Arc::new(Int64Array::from(vec![-42, i64::MAX])), 1),
+            b"\0i9223372036854775807"
+        );
+        assert_eq!(text(Arc::new(Int64Array::from(vec![None, Some(1)])), 0), b"\0n");
+        assert_eq!(
+            text(Arc::new(LargeBinaryArray::from(vec![&b"abc"[..], b""])), 0),
+            b"\0s3:abc"
+        );
+        assert_eq!(
+            text(Arc::new(LargeBinaryArray::from(vec![&b"abc"[..], b""])), 1),
+            b"\0s0:"
+        );
+        assert_eq!(
+            text(
+                Arc::new(LargeBinaryArray::from(vec![Some("zażółć".as_bytes()), None])),
+                0
+            ),
+            "\0s10:zażółć".as_bytes()
+        );
+        assert_eq!(
+            text(Arc::new(LargeBinaryArray::from(vec![Some(&b"x"[..]), None])), 1),
+            b"\0n"
+        );
+    }
+
+    #[test]
+    fn a_kind_without_an_exact_text_has_no_text_key() {
+        let mut key = Vec::new();
+
+        assert!(!append_text_key(&mut key, &Float64Array::from(vec![1.5]), 0));
+        assert!(!append_text_key(&mut key, &Date32Array::from(vec![1]), 0));
+        assert!(!append_text_key(
+            &mut key,
+            &FixedSizeBinaryArray::try_from_iter(vec![[0u8; 16]].into_iter()).unwrap(),
+            0
+        ));
+        assert!(key.is_empty());
+    }
+
+    #[test]
+    fn buckets_are_the_digits_php_reads_from_the_xxh128_hex() {
+        let cases: [(&[u8], u32, u64, u64); 12] = [
+            (b"\0i1", 0, 2_087_460_912, 5),
+            (b"\0i1", 8, 2_047_681_825, 0),
+            (b"\0i1", 24, 653_081_150, 1),
+            (b"\0s3:abc", 0, 3_864_089_514, 5),
+            (b"\0s3:abc", 8, 2_786_302_190, 0),
+            (b"\0s3:abc", 24, 1_493_301_728, 2),
+            (b"\0n\0t", 0, 3_378_568_137, 0),
+            (b"\0n\0t", 8, 1_143_071_435, 2),
+            (b"\0n\0t", 24, 2_309_287_573, 5),
+            (b"", 0, 2_578_056_915, 0),
+            (b"", 8, 21_469_400, 1),
+            (b"", 24, 1_183_664_511, 1),
+        ];
+
+        for (key, offset, digits, of_seven) in cases {
+            assert_eq!(bucket_of(key, offset, 1 << 32), digits, "{key:?} at {offset}");
+            assert_eq!(bucket_of(key, offset, 7), of_seven, "{key:?} at {offset} of 7");
+        }
     }
 }

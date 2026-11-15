@@ -233,7 +233,7 @@ final readonly class HashJoin implements Describable
             [$leftKeys, $rightKeys] = $equalityKeys?->encoders($leftSchema, $rightSchema) ?? [null, null];
 
             if ($held === null) {
-                $this->bucketize($rightRows, $rightBuckets, $resident ? null : $rightKeys, 'join-right');
+                $this->bucketize($rightRows, $rightBuckets, $resident ? null : $rightKeys, 'join-right', $backend);
             }
 
             $leftRows = $this->tap($left, $leftSchema);
@@ -255,7 +255,7 @@ final readonly class HashJoin implements Describable
                 return;
             }
 
-            $this->bucketize($leftRows, $leftBuckets, $leftKeys, 'join-left');
+            $this->bucketize($leftRows, $leftBuckets, $leftKeys, 'join-left', $backend);
 
             foreach ($this->bucketPairs($leftBuckets, $rightBuckets) as [$leftBucket, $rightBucket]) {
                 // a bucket pair is a slice of each side; the output shape is the whole side's
@@ -290,8 +290,13 @@ final readonly class HashJoin implements Describable
      * @param Generator<Rows> $rows
      * @param null|KeyEncoder $keys - null puts every row in a single bucket (non-equality join / resident side)
      */
-    private function bucketize(Generator $rows, Buckets $buckets, ?KeyEncoder $keys, string $namespace): void
-    {
+    private function bucketize(
+        Generator $rows,
+        Buckets $buckets,
+        ?KeyEncoder $keys,
+        string $namespace,
+        Backend $backend,
+    ): void {
         $strategy = new HashBucketing(
             $keys ?? new KeyEncoder([]),
             $keys === null ? 1 : $this->config->bucketing->bucketsCount,
@@ -299,7 +304,7 @@ final readonly class HashJoin implements Describable
             $namespace,
         );
 
-        foreach ($strategy->bucketize($rows, $buckets->storage()) as $bucket) {
+        foreach ($strategy->bucketize($rows, $buckets->storage(), $backend) as $bucket) {
             $buckets->add($bucket);
         }
     }

@@ -29,6 +29,7 @@ use Flow\ETL\Values\Column\Php\ScalarColumn;
 use Flow\ETL\Values\Column\Php\StructColumn;
 use Flow\ETL\Values\Column\Physical\PhysicalFor;
 use Flow\ETL\Values\Grouping\GroupTable;
+use Flow\ETL\Values\Grouping\KeyEncoder;
 use Flow\ETL\Values\Grouping\PhpGroupTable;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
@@ -41,6 +42,7 @@ use Flow\Types\Type\Native\FloatType;
 use Flow\Types\Type\Native\IntegerType;
 use SensitiveParameter;
 
+use function array_key_exists;
 use function array_keys;
 use function array_map;
 use function array_sum;
@@ -623,6 +625,47 @@ final readonly class PhpBackend implements Backend, Describable
     public function groupTable(array $columns, Schema $declared): GroupTable
     {
         return new PhpGroupTable($columns, $declared);
+    }
+
+    public function partition(Rows $rows, array $keys, int $buckets, int $hashOffset): array
+    {
+        // @mago-ignore analysis:invalid-operand
+        // @mago-ignore analysis:impossible-condition,redundant-comparison
+        if ($buckets < 1) {
+            throw new InvalidArgumentException('Buckets count must be greater than 0, given: ' . $buckets);
+        }
+
+        // @mago-ignore analysis:invalid-operand,impossible-condition,impossible-type-comparison,redundant-type-comparison,redundant-comparison,redundant-comparison,redundant-logical-operation
+        if ($hashOffset < 0 || $hashOffset > 24) {
+            throw new InvalidArgumentException('Hash offset must be between 0 and 24, given: ' . $hashOffset);
+        }
+
+        if ($rows->isEmpty()) {
+            return [];
+        }
+
+        if ($buckets === 1) {
+            return [0 => $rows];
+        }
+
+        $bucketOfKey = [];
+        $indices = [];
+
+        foreach (KeyEncoder::ofColumns($keys, $rows->count()) as $row => $key) {
+            if (!array_key_exists($key, $bucketOfKey)) {
+                $bucketOfKey[$key] = KeyEncoder::bucketOf($key, $buckets, $hashOffset);
+            }
+
+            $indices[$bucketOfKey[$key]][] = $row;
+        }
+
+        $parts = [];
+
+        foreach ($indices as $bucket => $rowsOfBucket) {
+            $parts[$bucket] = $rows->gather($rowsOfBucket);
+        }
+
+        return $parts;
     }
 
     public function adopt(Definition $definition, Column $column): Column

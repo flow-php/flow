@@ -14,6 +14,8 @@ use Flow\ETL\Foundation\Exception\ColumnMismatchException;
 use Flow\ETL\Foundation\Exception\EvaluationException;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\SchemaMismatchException;
+use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
+use Flow\ETL\Kernels\Bucketing\HashBucketing;
 use Flow\ETL\Tests\Context\FrameContext;
 use Flow\ETL\Tests\Double\ForeignColumnStub;
 use Flow\ETL\Tests\Double\ForeignTypeDefinition;
@@ -32,6 +34,7 @@ use Flow\ETL\Values\Column\PhpBackend;
 use Flow\ETL\Values\Column\Physical\HtmlDocumentPhysical;
 use Flow\ETL\Values\Column\Physical\HtmlElementPhysical;
 use Flow\ETL\Values\Column\ValueColumn;
+use Flow\ETL\Values\Grouping\KeyEncoder;
 use Flow\ETL\Values\NullsOrder;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
@@ -1278,5 +1281,123 @@ final class PhpBackendTest extends TestCase
                 )
                 ->reduceToArray('k'),
         );
+    }
+
+    /**
+     * @return Generator<string, array{list<array<string, mixed>>, Schema, list<string>, list<string>, int<1, max>, int<0, 24>}>
+     */
+    public static function partitions(): Generator
+    {
+        yield 'one key' => [
+            [
+                ['k' => 1, 'v' => 'a'],
+                ['k' => 2, 'v' => 'b'],
+                ['k' => 1, 'v' => 'c'],
+                ['k' => 3, 'v' => 'd'],
+                ['k' => 2, 'v' => 'e'],
+            ],
+            schema(int_schema('k'), str_schema('v')),
+            ['k'],
+            ["\0i1", "\0i2", "\0i1", "\0i3", "\0i2"],
+            4,
+            0,
+        ];
+        yield 'a composite key' => [
+            [
+                ['k' => 1, 's' => 'a', 'v' => 'a'],
+                ['k' => 1, 's' => 'b', 'v' => 'b'],
+                ['k' => 1, 's' => 'a', 'v' => 'c'],
+            ],
+            schema(int_schema('k'), str_schema('s'), str_schema('v')),
+            ['k', 's'],
+            ["\0i1\0s1:a", "\0i1\0s1:b", "\0i1\0s1:a"],
+            16,
+            8,
+        ];
+        yield 'null keys' => [
+            [['k' => null, 'v' => 'a'], ['k' => 7, 'v' => 'b'], ['k' => null, 'v' => 'c']],
+            schema(int_schema('k', nullable: true), str_schema('v')),
+            ['k'],
+            ["\0n", "\0i7", "\0n"],
+            4,
+            24,
+        ];
+    }
+
+    /**
+     * @param list<array<string, mixed>> $data
+     * @param list<string> $keyColumns
+     * @param list<string> $keys the KeyEncoder key of each row
+     * @param int<1, max> $buckets
+     * @param int<0, 24> $hashOffset
+     */
+    #[DataProvider('partitions')]
+    public function test_partition_puts_each_row_in_the_bucket_of_its_key_in_row_order(
+        array $data,
+        Schema $schema,
+        array $keyColumns,
+        array $keys,
+        int $buckets,
+        int $hashOffset,
+    ): void {
+        $rows = array_to_rows($data, $schema, new PhpBackend());
+        $routing = new HashBucketing(
+            new KeyEncoder([]),
+            $buckets,
+            new NativePHPRandomValueGenerator(),
+            'bucket',
+            $hashOffset,
+        );
+        $expected = [];
+
+        foreach ($keys as $row => $key) {
+            $expected[$routing->indexOf($key)][] = $data[$row]['v'];
+        }
+
+        static::assertSame($expected, array_map(
+            static fn(Rows $part): array => $part->reduceToArray('v'),
+            (new PhpBackend())->partition(
+                $rows,
+                array_map(static fn(string $name) => $rows->column($name), $keyColumns),
+                $buckets,
+                $hashOffset,
+            ),
+        ));
+    }
+
+    public function test_partition_into_one_bucket_is_the_batch_itself(): void
+    {
+        $rows = array_to_rows([['k' => 1], ['k' => 2]], schema(int_schema('k')), new PhpBackend());
+
+        static::assertSame([0 => $rows], (new PhpBackend())->partition($rows, [$rows->column('k')], 1, 0));
+    }
+
+    public function test_partition_of_an_empty_batch_has_no_bucket(): void
+    {
+        $rows = Rows::empty(schema(int_schema('k')), new PhpBackend());
+
+        static::assertSame([], (new PhpBackend())->partition($rows, [$rows->column('k')], 4, 0));
+    }
+
+    public function test_partition_refuses_a_bucket_count_below_one_even_for_an_empty_batch(): void
+    {
+        $rows = Rows::empty(schema(int_schema('k')), new PhpBackend());
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Buckets count must be greater than 0, given: 0');
+
+        // @mago-ignore analysis:invalid-argument
+        (new PhpBackend())->partition($rows, [$rows->column('k')], 0, 0);
+    }
+
+    public function test_partition_refuses_a_hash_offset_outside_zero_to_twenty_four_even_for_an_empty_batch(): void
+    {
+        $rows = Rows::empty(schema(int_schema('k')), new PhpBackend());
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Hash offset must be between 0 and 24, given: 25');
+
+        // @mago-ignore analysis:invalid-argument
+        (new PhpBackend())->partition($rows, [$rows->column('k')], 4, 25);
     }
 }

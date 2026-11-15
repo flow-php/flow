@@ -259,6 +259,7 @@ final readonly class GroupByAggregationProcessor implements Distributable
         foreach ($bucketing->bucketize(
             BoundedRead::followedBy([], $this->taken($rest)),
             $buckets->storage(),
+            $backend,
         ) as $bucket) {
             $buckets->add($bucket);
         }

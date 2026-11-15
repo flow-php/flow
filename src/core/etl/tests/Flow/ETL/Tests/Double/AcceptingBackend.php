@@ -102,6 +102,11 @@ final readonly class AcceptingBackend implements Backend
         return (new PhpBackend())->groupTable($columns, $declared);
     }
 
+    public function partition(Rows $rows, array $keys, int $buckets, int $hashOffset): array
+    {
+        return (new PhpBackend())->partition($rows, $keys, $buckets, $hashOffset);
+    }
+
     public function constant(Definition $definition, mixed $value, int $count): Column
     {
         return (new PhpBackend())->constant($definition, $value, $count);

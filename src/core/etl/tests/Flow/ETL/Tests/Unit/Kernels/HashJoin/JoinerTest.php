@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Kernels\HashJoin;
 
+use DateTimeImmutable;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\SchemaDefinitionNotUniqueException;
 use Flow\ETL\Foundation\StageName;
@@ -13,26 +14,171 @@ use Flow\ETL\Functions\Join\Condition\Equal;
 use Flow\ETL\Functions\Join\Condition\Identical;
 use Flow\ETL\Functions\Join\Expression;
 use Flow\ETL\Kernels\HashJoin\JoinSide;
+use Flow\ETL\Tests\Context\BackendsContext;
 use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\JoinerMother;
 use Flow\ETL\Values\BatchSize;
 use Flow\ETL\Values\Column\AdaptiveBackend;
+use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Join\JoinType;
 use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Schema;
 use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 use function array_map;
 use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
+use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_list;
 use function iterator_to_array;
 use function range;
 
 final class JoinerTest extends FlowTestCase
 {
+    /**
+     * @return Generator<string, list<mixed>>
+     */
+    public static function key_matching_cases(): Generator
+    {
+        $nullableLeft = schema(int_schema('id', nullable: true), str_schema('l'));
+        $nullableRight = schema(int_schema('uid', nullable: true), str_schema('r'));
+        $nullLeft = [['id' => 1, 'l' => 'a'], ['id' => null, 'l' => 'b'], ['id' => 2, 'l' => 'c']];
+        $nullRight = [['uid' => null, 'r' => 'x'], ['uid' => 1, 'r' => 'y'], ['uid' => 2, 'r' => 'z']];
+        $ay = ['id' => 1, 'l' => 'a', 'uid' => 1, 'r' => 'y'];
+        $cz = ['id' => 2, 'l' => 'c', 'uid' => 2, 'r' => 'z'];
+        $bPadded = ['id' => null, 'l' => 'b', 'uid' => null, 'r' => null];
+        $xPadded = ['id' => null, 'l' => null, 'uid' => null, 'r' => 'x'];
+        $equal = Expression::on(new Equal('id', 'uid'));
+        $cases = [];
+
+        foreach ([false => 'probe left', true => 'probe right'] as $buildLeft => $label) {
+            $cases["null keys on each side, equal, inner join, {$label}"] = [
+                $equal,
+                JoinType::inner,
+                $nullLeft,
+                $nullableLeft,
+                $nullRight,
+                $nullableRight,
+                (bool) $buildLeft,
+                [$ay, $cz],
+            ];
+            $cases["null keys on each side, equal, left join, {$label}"] = [
+                $equal,
+                JoinType::left,
+                $nullLeft,
+                $nullableLeft,
+                $nullRight,
+                $nullableRight,
+                (bool) $buildLeft,
+                $buildLeft ? [$ay, $cz, $bPadded] : [$ay, $bPadded, $cz],
+            ];
+            $cases["null keys on each side, equal, right join, {$label}"] = [
+                $equal,
+                JoinType::right,
+                $nullLeft,
+                $nullableLeft,
+                $nullRight,
+                $nullableRight,
+                (bool) $buildLeft,
+                $buildLeft ? [$xPadded, $ay, $cz] : [$ay, $cz, $xPadded],
+            ];
+            $cases["identical never matches null to null, {$label}"] = [
+                Expression::on(new Identical('id', 'uid')),
+                JoinType::inner,
+                $nullLeft,
+                $nullableLeft,
+                $nullRight,
+                $nullableRight,
+                (bool) $buildLeft,
+                [$ay, $cz],
+            ];
+            $cases["integer keys against float keys, {$label}"] = [
+                $equal,
+                JoinType::inner,
+                [['id' => 1], ['id' => 2], ['id' => 3]],
+                schema(int_schema('id')),
+                [['uid' => 1.0, 'r' => 'one'], ['uid' => 2.5, 'r' => 'two and a half'], ['uid' => 3.0, 'r' => 'three']],
+                schema(float_schema('uid'), str_schema('r')),
+                (bool) $buildLeft,
+                [['id' => 1, 'uid' => 1.0, 'r' => 'one'], ['id' => 3, 'uid' => 3.0, 'r' => 'three']],
+            ];
+            $cases["a string key against an integer key, {$label}"] = [
+                Expression::on(new Equal('code', 'uid')),
+                JoinType::inner,
+                [['code' => '1'], ['code' => '01'], ['code' => '2']],
+                schema(str_schema('code')),
+                [['uid' => 1, 'r' => 'one'], ['uid' => 2, 'r' => 'two']],
+                schema(int_schema('uid'), str_schema('r')),
+                (bool) $buildLeft,
+                [
+                    ['code' => '1', 'uid' => 1, 'r' => 'one'],
+                    ['code' => '01', 'uid' => 1, 'r' => 'one'],
+                    ['code' => '2', 'uid' => 2, 'r' => 'two'],
+                ],
+            ];
+            $cases["a composite key, {$label}"] = [
+                Expression::on(new All(new Equal('a', 'x'), new Equal('b', 'y'))),
+                JoinType::inner,
+                [['a' => 1, 'b' => 'p'], ['a' => 1, 'b' => 'q'], ['a' => 2, 'b' => 'p']],
+                schema(int_schema('a'), str_schema('b')),
+                [
+                    ['x' => 1, 'y' => 'q', 'r' => 'r1'],
+                    ['x' => 2, 'y' => 'p', 'r' => 'r2'],
+                    ['x' => 1, 'y' => 'p', 'r' => 'r3'],
+                ],
+                schema(int_schema('x'), str_schema('y'), str_schema('r')),
+                (bool) $buildLeft,
+                $buildLeft
+                    ? [
+                        ['a' => 1, 'b' => 'q', 'x' => 1, 'y' => 'q', 'r' => 'r1'],
+                        ['a' => 2, 'b' => 'p', 'x' => 2, 'y' => 'p', 'r' => 'r2'],
+                        ['a' => 1, 'b' => 'p', 'x' => 1, 'y' => 'p', 'r' => 'r3'],
+                    ]
+                    : [
+                        ['a' => 1, 'b' => 'p', 'x' => 1, 'y' => 'p', 'r' => 'r3'],
+                        ['a' => 1, 'b' => 'q', 'x' => 1, 'y' => 'q', 'r' => 'r1'],
+                        ['a' => 2, 'b' => 'p', 'x' => 2, 'y' => 'p', 'r' => 'r2'],
+                    ],
+            ];
+            $cases["equal mixed with identical, {$label}"] = [
+                Expression::on(new All(new Equal('id', 'uid'), new Identical('kind', 'rkind'))),
+                JoinType::inner,
+                [['id' => 1, 'kind' => null], ['id' => 1, 'kind' => 'a'], ['id' => 2, 'kind' => 'b']],
+                schema(int_schema('id'), str_schema('kind', nullable: true)),
+                [
+                    ['uid' => 1, 'rkind' => null, 'r' => 'n'],
+                    ['uid' => 1, 'rkind' => 'a', 'r' => 'm'],
+                    ['uid' => 2, 'rkind' => 'c', 'r' => 'o'],
+                ],
+                schema(int_schema('uid'), str_schema('rkind', nullable: true), str_schema('r')),
+                (bool) $buildLeft,
+                [['id' => 1, 'kind' => 'a', 'uid' => 1, 'rkind' => 'a', 'r' => 'm']],
+            ];
+            $cases["a list of datetimes key meets equal as the condition compares it, {$label}"] = [
+                Expression::on(new Equal('days', 'rdays')),
+                JoinType::inner,
+                [
+                    ['id' => 1, 'days' => [new DateTimeImmutable('2024-01-01 00:00:00 UTC')]],
+                    ['id' => 2, 'days' => [new DateTimeImmutable('2024-01-02 00:00:00 UTC')]],
+                ],
+                schema(int_schema('id'), list_schema('days', type_list(type_datetime()))),
+                [['rdays' => [new DateTimeImmutable('2024-01-01 00:00:00 UTC')], 'r' => 'a']],
+                schema(list_schema('rdays', type_list(type_datetime())), str_schema('r')),
+                (bool) $buildLeft,
+                [],
+            ];
+        }
+
+        yield from BackendsContext::perBackend($cases);
+    }
+
     public function test_any_comparison_falls_back_to_verifying_every_pair(): void
     {
         $batches = static function (Rows $rows): Generator {
@@ -914,5 +1060,41 @@ final class JoinerTest extends FlowTestCase
             [['join', 'busy'], ['join', 'busy'], ['join', 1], ['join', 'busy']],
             $progress->advancedCalls(),
         );
+    }
+
+    /**
+     * @param list<array<string, mixed>> $left
+     * @param list<array<string, mixed>> $right
+     * @param list<array<string, mixed>> $expected
+     */
+    #[DataProvider('key_matching_cases')]
+    public function test_keys_match_as_the_condition_compares_them(
+        Backend $backend,
+        Expression $expression,
+        JoinType $type,
+        array $left,
+        Schema $leftSchema,
+        array $right,
+        Schema $rightSchema,
+        bool $buildLeft,
+        array $expected,
+    ): void {
+        $batches = static function (Rows $rows): Generator {
+            yield $rows;
+        };
+
+        $joined = [];
+
+        foreach (JoinerMother::of($expression, $type, $backend)->join(
+            JoinSide::of($batches(array_to_rows($left, $leftSchema, $backend))),
+            JoinSide::of($batches(array_to_rows($right, $rightSchema, $backend))),
+            $buildLeft,
+        ) as $batch) {
+            foreach ($batch->toArray() as $rowData) {
+                $joined[] = $rowData;
+            }
+        }
+
+        static::assertSame($expected, $joined);
     }
 }

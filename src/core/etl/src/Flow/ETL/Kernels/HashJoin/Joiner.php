@@ -9,7 +9,6 @@ use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Kernels\Join\JoinSchema;
 use Flow\ETL\Values\BatchSize;
 use Flow\ETL\Values\Column\Backend;
-use Flow\ETL\Values\Grouping\KeyEncoder;
 use Flow\ETL\Values\Join\JoinType;
 use Flow\ETL\Values\Join\Side;
 use Flow\ETL\Values\Rows;
@@ -19,6 +18,7 @@ use Generator;
 use function array_chunk;
 use function array_fill;
 use function count;
+use function is_int;
 
 final readonly class Joiner
 {
@@ -50,13 +50,22 @@ final readonly class Joiner
         [$build, $buildSchema] = $this->build($builtSide);
         // the first probe batch names the probe types, when the side declares none
         $probeSchema = $probeSide->schema ?? ($probeSide->rows->valid() ? $probeSide->rows->current()->schema() : null);
-        [$leftKeys, $rightKeys] = $this->keys?->encoders(
-            $buildLeft ? $buildSchema : $probeSchema,
-            $buildLeft ? $probeSchema : $buildSchema,
-        ) ?? [new KeyEncoder([]), new KeyEncoder([])];
+        $types = $this->keys?->types($buildLeft ? $buildSchema : $probeSchema, $buildLeft ? $probeSchema : $buildSchema)
+        ?? [];
         $tracksUnmatched = $role->tracksUnmatched();
-        $table = $this->table($build, $buildLeft ? $leftKeys : $rightKeys, $tracksUnmatched);
-        $probeKeys = $buildLeft ? $rightKeys : $leftKeys;
+        $table = new HashTable(trackUnmatched: $tracksUnmatched);
+        $groups = null;
+        $buildDecides = false;
+
+        if ($this->keys === null || $build->isEmpty()) {
+            $this->fill($table, array_fill(0, count($build), 0));
+        } else {
+            $buildKeys = $buildLeft ? $this->keys->leftKeys($build, $types) : $this->keys->rightKeys($build, $types);
+            $groups = $this->backend->groupTable($buildKeys->schema()->names(), $buildKeys->schema());
+            $this->fill($table, $groups->assign($buildKeys)->ids->physicals());
+            $buildDecides = $this->keys->decides($buildKeys);
+        }
+
         $padsProbe = $this->type->padsWithNullRow($buildLeft ? Side::right : Side::left);
         // a left anti join keeps the left rows alone, so only a left probe yields them while it streams
         $keepsProbeAlone = $this->type === JoinType::left_anti && !$buildLeft;
@@ -76,10 +85,29 @@ final readonly class Joiner
             [$leftSchema, $rightSchema] = $buildLeft ? [$buildSchema, $probeSchema] : [$probeSchema, $buildSchema];
             $output ??= $this->joinSchema->output($leftSchema, $rightSchema);
             $merger ??= $this->joinSchema->merger($leftSchema, $rightSchema);
-            [$candidatesProbe, $candidatesBuild] = $this->candidates($table, $probeKeys->of($batch));
-            $met = $buildLeft
-                ? $this->condition->meet($build, $candidatesBuild, $batch, $candidatesProbe)
-                : $this->condition->meet($batch, $candidatesProbe, $build, $candidatesBuild);
+            $skipsPairCheck = false;
+
+            if ($this->keys === null) {
+                $probeGroups = array_fill(0, count($batch), 0);
+            } elseif ($batch->isEmpty()) {
+                $probeGroups = [];
+            } else {
+                $probeKeys = $buildLeft
+                    ? $this->keys->rightKeys($batch, $types)
+                    : $this->keys->leftKeys($batch, $types);
+                $probeGroups = $groups?->lookup($probeKeys)->physicals() ?? [];
+                $skipsPairCheck = $buildDecides && $this->keys->decides($probeKeys);
+            }
+
+            [$candidatesProbe, $candidatesBuild] = $this->candidates($table, $probeGroups);
+            // keys that decide the condition make its pair check confirm every candidate
+            $met = $skipsPairCheck
+                ? null
+                : (
+                    $buildLeft
+                        ? $this->condition->meet($build, $candidatesBuild, $batch, $candidatesProbe)
+                        : $this->condition->meet($batch, $candidatesProbe, $build, $candidatesBuild)
+                );
 
             $outputProbe = [];
             $outputBuild = [];
@@ -90,7 +118,7 @@ final readonly class Joiner
                 $matched = false;
 
                 for (; $pair < $pairs && $candidatesProbe[$pair] === $i; $pair++) {
-                    if (!$met[$pair]) {
+                    if ($met !== null && !$met[$pair]) {
                         continue;
                     }
 
@@ -181,17 +209,22 @@ final readonly class Joiner
     }
 
     /**
-     * @param list<string> $keys
+     * @param array<int, mixed> $groups the group of each probe row, null for a key the build side lacks
      *
      * @return array{list<int>, list<int>}
      */
-    private function candidates(HashTable $table, array $keys): array
+    private function candidates(HashTable $table, array $groups): array
     {
         $left = [];
         $right = [];
 
-        foreach ($keys as $i => $key) {
-            foreach ($table->candidatesFor($key) as $j) {
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($groups as $i => $group) {
+            if (!is_int($group)) {
+                continue;
+            }
+
+            foreach ($table->candidatesFor($group) as $j) {
                 $left[] = $i;
                 $right[] = $j;
             }
@@ -205,13 +238,16 @@ final readonly class Joiner
         return Rows::concat($nullRow->schema(), $this->backend, $build->withSchema($nullRow->schema()), $nullRow);
     }
 
-    private function table(Rows $build, KeyEncoder $keys, bool $trackUnmatched): HashTable
+    /**
+     * @param array<int, mixed> $groups the group of each build row
+     */
+    private function fill(HashTable $table, array $groups): void
     {
-        $table = new HashTable(trackUnmatched: $trackUnmatched);
         $unreported = 0;
 
-        foreach ($keys->of($build) as $index => $key) {
-            $table->add($key, $index);
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($groups as $index => $group) {
+            $table->add((int) $group, $index);
 
             if (++$unreported === Progress::ROWS_PER_CALL) {
                 $this->progress->busy();
@@ -220,7 +256,5 @@ final readonly class Joiner
         }
 
         $this->progress->busy();
-
-        return $table;
     }
 }

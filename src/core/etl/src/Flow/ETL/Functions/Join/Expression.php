@@ -124,7 +124,27 @@ final readonly class Expression implements Describable, PairPredicate
             : new JoinKeys(
                 array_map(static fn(array $pair): string => $pair[0], array_values($pairs)),
                 array_map(static fn(array $pair): string => $pair[1], array_values($pairs)),
+                $this->onlyEqual($this->comparison),
             );
+    }
+
+    private function onlyEqual(Condition $comparison): bool
+    {
+        if ($comparison instanceof Equal) {
+            return true;
+        }
+
+        if (!$comparison instanceof All) {
+            return false;
+        }
+
+        foreach ($comparison->comparisons() as $child) {
+            if (!$this->onlyEqual($child)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

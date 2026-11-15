@@ -10,14 +10,18 @@ use Flow\ETL\Kernels\Bucketing\HashBucketing;
 use Flow\ETL\Storage\MemoryRowsStorage;
 use Flow\ETL\Tests\Context\RowsStorageContext;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Values\Column\AdaptiveBackend;
 use Flow\ETL\Values\Grouping\KeyEncoder;
 
+use function array_map;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
 use function hash;
 use function hexdec;
 use function iterator_to_array;
+use function ksort;
+use function range;
 use function sort;
 use function substr;
 
@@ -58,7 +62,7 @@ final class HashBucketingTest extends FlowTestCase
                 yield array_to_rows([['id' => 1], ['id' => 2], ['id' => 3]], schema(int_schema('id')));
             })();
 
-            foreach ($strategy->bucketize($generator, new MemoryRowsStorage(), '7') as $bucket) {
+            foreach ($strategy->bucketize($generator, new MemoryRowsStorage(), new AdaptiveBackend(), '7') as $bucket) {
                 $ids[] = $bucket->id;
             }
 
@@ -77,7 +81,7 @@ final class HashBucketingTest extends FlowTestCase
             yield array_to_rows([['id' => 1]], schema(int_schema('id')));
         })();
 
-        foreach ($strategy->bucketize($generator, new MemoryRowsStorage()) as $bucket) {
+        foreach ($strategy->bucketize($generator, new MemoryRowsStorage(), new AdaptiveBackend()) as $bucket) {
             static::assertMatchesRegularExpression('/^group-by-[0-9a-f]{16}-\d$/', $bucket->id);
         }
     }
@@ -94,7 +98,7 @@ final class HashBucketingTest extends FlowTestCase
 
         $totalRows = 0;
 
-        foreach ($strategy->bucketize($generator, $storage) as $bucket) {
+        foreach ($strategy->bucketize($generator, $storage, new AdaptiveBackend()) as $bucket) {
             static::assertCount($bucket->totalRows, RowsStorageContext::rows($storage->get($bucket->id)));
             $totalRows += $bucket->totalRows;
         }
@@ -113,6 +117,7 @@ final class HashBucketingTest extends FlowTestCase
                 yield array_to_rows([['id' => 1], ['id' => 2], ['id' => 3]], schema(int_schema('id')));
             })(),
             new MemoryRowsStorage(),
+            new AdaptiveBackend(),
         ));
 
         static::assertCount(1, $buckets);
@@ -135,7 +140,7 @@ final class HashBucketingTest extends FlowTestCase
 
         $total = 0;
 
-        foreach ($strategy->bucketize($generator, new MemoryRowsStorage()) as $bucket) {
+        foreach ($strategy->bucketize($generator, new MemoryRowsStorage(), new AdaptiveBackend()) as $bucket) {
             static::assertMatchesRegularExpression('/-[0-3]$/', $bucket->id);
             $total += $bucket->totalRows;
         }
@@ -159,7 +164,7 @@ final class HashBucketingTest extends FlowTestCase
 
         $indexes = [];
 
-        foreach ($strategy->bucketize($generator, new MemoryRowsStorage()) as $bucket) {
+        foreach ($strategy->bucketize($generator, new MemoryRowsStorage(), new AdaptiveBackend()) as $bucket) {
             static::assertStringEndsWith('-' . $bucket->index, $bucket->id);
             $indexes[] = $bucket->index;
         }
@@ -179,6 +184,7 @@ final class HashBucketingTest extends FlowTestCase
                 yield array_to_rows([['id' => 1]], schema(int_schema('id')));
             })(),
             $storage,
+            new AdaptiveBackend(),
         ));
 
         static::assertCount(1, $buckets);
@@ -200,6 +206,7 @@ final class HashBucketingTest extends FlowTestCase
                 );
             })(),
             new MemoryRowsStorage(),
+            new AdaptiveBackend(),
         ));
 
         static::assertCount(1, $buckets);
@@ -220,6 +227,7 @@ final class HashBucketingTest extends FlowTestCase
                 yield array_to_rows([['other' => 1]], schema(int_schema('other')));
             })(),
             new MemoryRowsStorage(),
+            new AdaptiveBackend(),
         ));
     }
 
@@ -246,6 +254,7 @@ final class HashBucketingTest extends FlowTestCase
                 yield array_to_rows([['k' => 1, 'v' => 4]], schema(int_schema('k'), int_schema('v')));
             })(),
             $storage,
+            new AdaptiveBackend(),
         ));
         $values = [];
 
@@ -254,5 +263,66 @@ final class HashBucketingTest extends FlowTestCase
         }
 
         static::assertSame([1, 2, 3, 4], $values);
+    }
+
+    public function test_every_row_of_a_unique_key_lands_in_its_key_bucket_in_row_order(): void
+    {
+        $strategy = new HashBucketing(new KeyEncoder(['id']), 4, new NativePHPRandomValueGenerator());
+        $storage = new MemoryRowsStorage();
+        $expected = [];
+
+        foreach (range(0, 99) as $id) {
+            $expected[$strategy->indexOf("\0i{$id}")][] = $id;
+        }
+
+        $actual = [];
+
+        foreach ($strategy->bucketize(
+            (static function () {
+                yield array_to_rows(
+                    array_map(static fn(int $id): array => ['id' => $id], range(0, 99)),
+                    schema(int_schema('id')),
+                );
+            })(),
+            $storage,
+            new AdaptiveBackend(),
+        ) as $bucket) {
+            foreach ($storage->get($bucket->id) as $batch) {
+                $actual[$bucket->index] = [...($actual[$bucket->index] ?? []), ...$batch->column('id')->values()];
+            }
+        }
+
+        ksort($expected);
+        ksort($actual);
+        static::assertSame($expected, $actual);
+    }
+
+    public function test_a_batch_without_a_nullable_declared_key_column_lands_with_the_null_keys(): void
+    {
+        $declared = schema(int_schema('k', nullable: true), int_schema('v'));
+        $strategy = new HashBucketing(
+            new KeyEncoder(['k'], declared: $declared),
+            4,
+            new NativePHPRandomValueGenerator(),
+        );
+        $storage = new MemoryRowsStorage();
+
+        $buckets = iterator_to_array($strategy->bucketize(
+            (static function () use ($declared) {
+                yield array_to_rows([['k' => null, 'v' => 1]], $declared);
+                yield array_to_rows([['v' => 2], ['v' => 3]], schema(int_schema('v')));
+            })(),
+            $storage,
+            new AdaptiveBackend(),
+        ));
+        $values = [];
+
+        foreach ($storage->get($buckets[0]->id) as $batch) {
+            $values = [...$values, ...$batch->column('v')->values()];
+        }
+
+        static::assertCount(1, $buckets);
+        static::assertSame($strategy->indexOf("\0n"), $buckets[0]->index);
+        static::assertSame([1, 2, 3], $values);
     }
 }

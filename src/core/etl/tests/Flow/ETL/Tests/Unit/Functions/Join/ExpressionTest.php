@@ -126,6 +126,33 @@ final class ExpressionTest extends FlowTestCase
         );
     }
 
+    public function test_an_equal_comparison_is_an_exact_key(): void
+    {
+        static::assertTrue(Expression::on(new Equal('id', 'user_id'))->keys()?->exact);
+    }
+
+    public function test_all_of_equal_comparisons_is_an_exact_key(): void
+    {
+        static::assertTrue(Expression::on(
+            new All(new Equal('id', 'user_id'), new All(new Equal('a', 'b'))),
+        )->keys()?->exact);
+    }
+
+    public function test_an_identical_comparison_is_not_an_exact_key(): void
+    {
+        static::assertFalse(Expression::on(new Identical('id', 'user_id'))->keys()?->exact);
+    }
+
+    public function test_all_with_a_comparison_other_than_equal_is_not_an_exact_key(): void
+    {
+        static::assertFalse(Expression::on(
+            new All(new Equal('id', 'user_id'), new Any(new Equal('a', 'a'), new Equal('b', 'b'))),
+        )->keys()?->exact);
+        static::assertFalse(Expression::on(
+            new All(new Equal('id', 'user_id'), new Identical('a', 'b')),
+        )->keys()?->exact);
+    }
+
     public function test_a_duplicated_pair_is_one_key(): void
     {
         $keys = Expression::on(new All(new Equal('id', 'user_id'), new Equal('id', 'user_id')))->keys();

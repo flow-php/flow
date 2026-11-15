@@ -53,7 +53,7 @@ impl IntoZval for GroupIdsValue {
     }
 }
 
-enum KeyColumn {
+pub(crate) enum KeyColumn {
     Native(ArrayRef),
     Encoded(Vec<Vec<u8>>),
 }
@@ -157,56 +157,79 @@ impl RustGroupTable {
                 .collect::<PhpResult<Vec<_>>>()?,
         ))
     }
+
+    fn each_key(
+        &self,
+        rows: &Zval,
+        count: usize,
+        mut visit: impl FnMut(usize, &[u8]) -> PhpResult<()>,
+    ) -> PhpResult<()> {
+        if count == 0 {
+            return Ok(());
+        }
+
+        let schema = call_method(rows, "schema", &mut [])?;
+        let columns = self
+            .columns
+            .iter()
+            .map(|name| self.key_column(rows, &schema, name, count))
+            .collect::<PhpResult<Vec<_>>>()?;
+        let mut key = Vec::new();
+
+        for row in 0..count {
+            key.clear();
+
+            for column in &columns {
+                match column {
+                    KeyColumn::Native(array) => {
+                        if !append_native_key(&mut key, array.as_ref(), row) {
+                            return Err(ext_exception(format!(
+                                "flow_php has no group key for {} values",
+                                array.data_type()
+                            )));
+                        }
+                    }
+                    KeyColumn::Encoded(keys) => append_encoded(&mut key, &keys[row]),
+                }
+            }
+
+            visit(row, &key)?;
+        }
+
+        Ok(())
+    }
+}
+
+fn row_count(rows: &Zval) -> PhpResult<usize> {
+    call_method(rows, "count", &mut [])?
+        .long()
+        .and_then(|count| usize::try_from(count).ok())
+        .ok_or_else(|| ext_exception("flow_php expected Rows::count() to return an int"))
 }
 
 #[php_impl]
 impl RustGroupTable {
     pub fn assign(&mut self, rows: &Zval) -> PhpResult<GroupIdsValue> {
-        let count = call_method(rows, "count", &mut [])?
-            .long()
-            .and_then(|count| usize::try_from(count).ok())
-            .ok_or_else(|| ext_exception("flow_php expected Rows::count() to return an int"))?;
+        let count = row_count(rows)?;
         let mut ids = Vec::with_capacity(count);
         let mut first_rows = ZendHashTable::new();
+        let mut table = std::mem::take(&mut self.ids);
+        let visited = self.each_key(rows, count, |row, key| {
+            ids.push(match table.get(key) {
+                Some(&id) => id,
+                None => {
+                    let id = table.len() as i64;
+                    table.insert(key.into(), id);
+                    first_rows.push(zval_long(row as i64))?;
 
-        if count > 0 {
-            let schema = call_method(rows, "schema", &mut [])?;
-            let columns = self
-                .columns
-                .iter()
-                .map(|name| self.key_column(rows, &schema, name, count))
-                .collect::<PhpResult<Vec<_>>>()?;
-            let mut key = Vec::new();
-
-            for row in 0..count {
-                key.clear();
-
-                for column in &columns {
-                    match column {
-                        KeyColumn::Native(array) => {
-                            if !append_native_key(&mut key, array.as_ref(), row) {
-                                return Err(ext_exception(format!(
-                                    "flow_php has no group key for {} values",
-                                    array.data_type()
-                                )));
-                            }
-                        }
-                        KeyColumn::Encoded(keys) => append_encoded(&mut key, &keys[row]),
-                    }
+                    id
                 }
+            });
 
-                ids.push(match self.ids.get(key.as_slice()) {
-                    Some(&id) => id,
-                    None => {
-                        let id = self.ids.len() as i64;
-                        self.ids.insert(key.as_slice().into(), id);
-                        first_rows.push(zval_long(row as i64))?;
-
-                        id
-                    }
-                });
-            }
-        }
+            Ok(())
+        });
+        self.ids = table;
+        visited?;
 
         let ids = RustColumn::of_type(Arc::new(Int64Array::from(ids)), INTEGER_TYPE)?.into_zval(false)?;
         let mut first_rows_zv = Zval::new();
@@ -215,6 +238,19 @@ impl RustGroupTable {
         Ok(GroupIdsValue(
             construct(find_class(GROUP_IDS)?, &mut [ids, first_rows_zv])?.into_zval(false)?,
         ))
+    }
+
+    pub fn lookup(&self, rows: &Zval) -> PhpResult<RustColumn> {
+        let count = row_count(rows)?;
+        let mut ids = Vec::with_capacity(count);
+
+        self.each_key(rows, count, |_, key| {
+            ids.push(self.ids.get(key).copied());
+
+            Ok(())
+        })?;
+
+        RustColumn::of_type(Arc::new(Int64Array::from(ids)), INTEGER_TYPE)
     }
 
     pub fn count(&self) -> i64 {
