@@ -127,6 +127,19 @@ final class CSVExtractorTest extends FlowTestCase
         static::assertSame([1, 4], $rows->reduceToArray('a'));
     }
 
+    public function test_a_space_and_a_t_separated_naive_datetime_read_as_the_same_value(): void
+    {
+        $rows = ExtractedRows::of(from_csv(
+            'memory://source.csv',
+            filesystem: CSVFixtureContext::memory("at\n2023-11-14 22:13:20\n2023-11-14T22:13:20\n"),
+        )->withSchema(schema(datetime_schema('at'))));
+
+        static::assertEquals(
+            [new DateTimeImmutable('2023-11-14 22:13:20 UTC'), new DateTimeImmutable('2023-11-14 22:13:20 UTC')],
+            $rows->reduceToArray('at'),
+        );
+    }
+
     public function test_a_value_that_does_not_cast_to_the_declared_type_is_a_corrupted_record(): void
     {
         try {

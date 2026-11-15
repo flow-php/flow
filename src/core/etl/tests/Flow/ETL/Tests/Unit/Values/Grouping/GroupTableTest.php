@@ -291,4 +291,44 @@ final class GroupTableTest extends FlowTestCase
         static::assertSame([], $assigned->ids->values());
         static::assertSame([], $assigned->firstRows);
     }
+
+    #[DataProviderExternal(BackendsContext::class, 'backends')]
+    public function test_lookup_returns_the_id_of_a_known_key_and_null_for_an_unknown_one(Backend $backend): void
+    {
+        $schema = schema(str_schema('k'));
+        $table = $backend->groupTable(['k'], $schema);
+        $table->assign(array_to_rows([['k' => 'x'], ['k' => 'y']], $schema, $backend));
+
+        $groups = $table->lookup(array_to_rows(
+            [['k' => 'y'], ['k' => 'z'], ['k' => 'x'], ['k' => 'z']],
+            $schema,
+            $backend,
+        ));
+
+        static::assertSame([1, null, 0, null], $groups->physicals());
+        static::assertSame(2, $groups->nullCount());
+    }
+
+    #[DataProviderExternal(BackendsContext::class, 'backends')]
+    public function test_lookup_never_adds_a_group(Backend $backend): void
+    {
+        $schema = schema(int_schema('k'));
+        $table = $backend->groupTable(['k'], $schema);
+        $table->assign(array_to_rows([['k' => 1]], $schema, $backend));
+        $table->lookup(array_to_rows([['k' => 2], ['k' => 3]], $schema, $backend));
+
+        static::assertSame(1, $table->count());
+        static::assertSame([1], $table->assign(array_to_rows([['k' => 2]], $schema, $backend))->ids->values());
+    }
+
+    #[DataProviderExternal(BackendsContext::class, 'backends')]
+    public function test_lookup_of_an_empty_batch_is_an_empty_column(Backend $backend): void
+    {
+        $groups = $backend
+            ->groupTable(['k'], schema(int_schema('k')))
+            ->lookup(Rows::empty(schema(int_schema('k')), $backend));
+
+        static::assertSame([], $groups->physicals());
+        static::assertSame(0, $groups->count());
+    }
 }

@@ -18,10 +18,12 @@ use Flow\ETL\Values\Column\Php\PhpGroupedTotals;
 use Flow\ETL\Values\Column\PhpBackend;
 use Flow\ETL\Values\Column\ValueColumn;
 use Flow\ETL\Values\Grouping\PhpGroupTable;
+use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Sort\SortColumn;
 use Flow\Types\Type\Comparison\Operator;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
 use function extension_loaded;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
@@ -214,6 +216,22 @@ final class AdaptiveBackendTest extends TestCase
             ['a'],
             schema(int_schema('a')),
         ));
+    }
+
+    public function test_partition_is_what_the_php_backend_partitions(): void
+    {
+        $rows = array_to_rows([['a' => 1], ['a' => 2], ['a' => 1], ['a' => 3]], schema(int_schema('a')));
+
+        static::assertSame(
+            array_map(
+                static fn(Rows $part): array => $part->toArray(),
+                (new PhpBackend())->partition($rows, [$rows->column('a')], 4, 0),
+            ),
+            array_map(
+                static fn(Rows $part): array => $part->toArray(),
+                (new AdaptiveBackend())->partition($rows, [$rows->column('a')], 4, 0),
+            ),
+        );
     }
 
     public function test_a_flow_php_of_another_abi_is_refused(): void

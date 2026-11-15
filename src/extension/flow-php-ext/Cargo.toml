@@ -47,3 +47,4 @@ arrow-schema = { version = "59", features = ["canonical_extension_types"] }
 memchr = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["raw_value", "unbounded_depth"] }
+xxhash-rust = { version = "0.8", features = ["xxh3"] }

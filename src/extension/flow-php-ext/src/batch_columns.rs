@@ -15,7 +15,7 @@ use crate::cast::{
 };
 use crate::column::RustColumn;
 use crate::ctx::{self, call_method, ht_for_each, ht_insert, ht_insert_long};
-use crate::date_check::iso_instant_micros;
+use crate::date_check::{fixed_zone_offset, iso_instant_micros};
 use crate::exception::ext_exception;
 use crate::json_check::json_valid;
 use crate::plan::{type_plan, TypePlan};
@@ -210,7 +210,7 @@ pub fn native_text(values: &mut KindBuilder, kind: &Kind, cast: &CastKind, bytes
         (Kind::Uuid, CastKind::Uuid) if is_uuid(bytes) => {
             Ok(uuid_bytes(bytes).map(|uuid| values.append_fixed(&uuid)).is_some())
         }
-        (Kind::Timestamp, CastKind::DateTime(zone)) => Ok(match iso_instant_micros(bytes) {
+        (Kind::Timestamp, CastKind::DateTime(zone)) => Ok(match iso_instant_micros(bytes, fixed_zone_offset(zone)) {
             Some(micros) => Some(micros),
             None => {
                 parse_iso_datetime(bytes, zone)?.and_then(|(_, instant)| instant.object().and_then(datetime_micros))

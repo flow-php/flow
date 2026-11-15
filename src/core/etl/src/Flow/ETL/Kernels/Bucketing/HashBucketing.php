@@ -7,17 +7,12 @@ namespace Flow\ETL\Kernels\Bucketing;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\RandomValueGenerator;
 use Flow\ETL\Storage\RowsStorage;
+use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Grouping\KeyEncoder;
 use Flow\ETL\Values\Rows;
 use Generator;
 
-use function array_merge;
-use function count;
-use function hash;
-use function hexdec;
-use function sort;
 use function sprintf;
-use function substr;
 
 final class HashBucketing
 {
@@ -41,15 +36,13 @@ final class HashBucketing
     }
 
     /**
-     * Distinct keys only: KeyGrouping groups a batch's rows by key first, so xxh128 runs once per distinct key.
-     *
      * @param Generator<Rows> $rows
      * @param null|non-empty-string $runId null = random; given = the ids are "{namespace}-{runId}-{index}", the same
      *                                     in every process
      *
      * @return Generator<Bucket>
      */
-    public function bucketize(Generator $rows, RowsStorage $storage, ?string $runId = null): Generator
+    public function bucketize(Generator $rows, RowsStorage $storage, Backend $backend, ?string $runId = null): Generator
     {
         $runId ??= $this->random->string(16);
 
@@ -57,20 +50,15 @@ final class HashBucketing
         $totals = [];
 
         foreach ($rows as $batch) {
-            /** @var array<int, list<list<int>>> $groups */
-            $groups = [];
-
-            foreach (KeyGrouping::indices($this->keys->of($batch)) as $key => $rowsOfKey) {
-                $groups[$this->indexOf($key)][] = $rowsOfKey;
-            }
-
             // a bucket is a subset of a batch that already passed the gate, under the same schema
-            foreach ($groups as $index => $parts) {
-                $indices = array_merge(...$parts);
-                // in row order, as the batch held them
-                sort($indices);
-                $storage->append(self::id($this->namespace, $runId, $index), $batch->gather($indices));
-                $totals[$index] = ($totals[$index] ?? 0) + count($indices);
+            foreach ($backend->partition(
+                $batch,
+                $this->keys->columns($batch, $backend),
+                $this->bucketsCount,
+                $this->hashOffset,
+            ) as $index => $part) {
+                $storage->append(self::id($this->namespace, $runId, $index), $part);
+                $totals[$index] = ($totals[$index] ?? 0) + $part->count();
             }
         }
 
@@ -86,8 +74,6 @@ final class HashBucketing
 
     public function indexOf(string $key): int
     {
-        return $this->bucketsCount === 1
-            ? 0
-            : (int) hexdec(substr(hash('xxh128', $key), $this->hashOffset, 8)) % $this->bucketsCount;
+        return $this->bucketsCount === 1 ? 0 : KeyEncoder::bucketOf($key, $this->bucketsCount, $this->hashOffset);
     }
 }

@@ -113,7 +113,7 @@ final readonly class RepartitionProcessor implements Distributable
                 $this->config->bucketsCount,
                 $this->random,
                 'repartition',
-            ))->bucketize(BoundedRead::followedBy($read, $rows), $buckets->storage()) as $bucket) {
+            ))->bucketize(BoundedRead::followedBy($read, $rows), $buckets->storage(), $backend) as $bucket) {
                 $buckets->add($bucket);
             }
 

@@ -10,7 +10,7 @@ use function array_keys;
 final class HashTable
 {
     /**
-     * @var array<string, list<int>>
+     * @var array<int, list<int>>
      */
     private array $buckets = [];
 
@@ -25,9 +25,9 @@ final class HashTable
         private readonly bool $trackUnmatched = false,
     ) {}
 
-    public function add(string $key, int $index): void
+    public function add(int $group, int $index): void
     {
-        $this->buckets[$key][] = $index;
+        $this->buckets[$group][] = $index;
         $this->count++;
 
         if ($this->trackUnmatched) {
@@ -36,11 +36,11 @@ final class HashTable
     }
 
     /**
-     * @return list<int> the build-side rows under $key, in the order they were added
+     * @return list<int> the build-side rows of $group, in the order they were added
      */
-    public function candidatesFor(string $key): array
+    public function candidatesFor(int $group): array
     {
-        return array_key_exists($key, $this->buckets) ? $this->buckets[$key] : [];
+        return array_key_exists($group, $this->buckets) ? $this->buckets[$group] : [];
     }
 
     public function count(): int

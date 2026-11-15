@@ -129,6 +129,11 @@ final class RustBackend implements Backend, Describable
         throw new RuntimeException('flow_php extension is not loaded');
     }
 
+    public function partition(Rows $rows, array $keys, int $buckets, int $hashOffset): array
+    {
+        throw new RuntimeException('flow_php extension is not loaded');
+    }
+
     public function constant(Definition $definition, mixed $value, int $count): Column
     {
         throw new RuntimeException('flow_php extension is not loaded');

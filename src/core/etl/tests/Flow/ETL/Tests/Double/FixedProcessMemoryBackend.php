@@ -126,6 +126,11 @@ final readonly class FixedProcessMemoryBackend implements Backend
         return $this->php->groupTable($columns, $declared);
     }
 
+    public function partition(Rows $rows, array $keys, int $buckets, int $hashOffset): array
+    {
+        return $this->php->partition($rows, $keys, $buckets, $hashOffset);
+    }
+
     public function constant(Definition $definition, mixed $value, int $count): Column
     {
         return $this->php->constant($definition, $value, $count);

@@ -115,8 +115,8 @@ pub fn checkdate(month: i64, day: i64, year: i64) -> bool {
     day <= days
 }
 
-/// Epoch microseconds of an ISO-8601 instant with `Z` or `±HH:MM`; `None` leaves the string to timelib.
-pub fn iso_instant_micros(bytes: &[u8]) -> Option<i64> {
+/// Epoch microseconds of an ISO-8601 instant; a value without a zone takes `naive_offset`, `None` leaves it to timelib.
+pub fn iso_instant_micros(bytes: &[u8], naive_offset: Option<i64>) -> Option<i64> {
     let byte_at = |at: usize| bytes.get(at).copied();
     let number = |at: usize, count: usize| -> Option<i64> {
         bytes.get(at..at + count)?.iter().try_fold(0i64, |value, digit| {
@@ -124,9 +124,10 @@ pub fn iso_instant_micros(bytes: &[u8]) -> Option<i64> {
         })
     };
 
-    if [(4, b'-'), (7, b'-'), (10, b'T'), (13, b':'), (16, b':')]
+    if [(4, b'-'), (7, b'-'), (13, b':'), (16, b':')]
         .iter()
         .any(|(at, separator)| byte_at(*at) != Some(*separator))
+        || !matches!(byte_at(10), Some(b'T' | b' '))
     {
         return None;
     }
@@ -169,6 +170,7 @@ pub fn iso_instant_micros(bytes: &[u8]) -> Option<i64> {
 
             (hours * 3600 + minutes * 60) * if sign == b'-' { -1 } else { 1 }
         }
+        None => naive_offset?,
         _ => return None,
     };
 
@@ -179,6 +181,27 @@ pub fn iso_instant_micros(bytes: &[u8]) -> Option<i64> {
     let seconds = days_from_civil(year, month, day)? * 86_400 + hour * 3600 + minute * 60 + second - offset;
 
     Some(seconds * 1_000_000 + fraction)
+}
+
+/// Seconds east of UTC of a column zone that never changes its offset: `UTC` and `±HH:MM`. `None` for a named zone.
+pub fn fixed_zone_offset(zone: &[u8]) -> Option<i64> {
+    if zone == b"UTC" {
+        return Some(0);
+    }
+
+    let [sign @ (b'+' | b'-'), h1, h2, b':', m1, m2] = *zone else {
+        return None;
+    };
+    let number = |tens: u8, units: u8| {
+        (tens.is_ascii_digit() && units.is_ascii_digit()).then(|| i64::from(tens - b'0') * 10 + i64::from(units - b'0'))
+    };
+    let (hours, minutes) = (number(h1, h2)?, number(m1, m2)?);
+
+    if hours > 23 || minutes > 59 {
+        return None;
+    }
+
+    Some((hours * 3600 + minutes * 60) * if sign == b'-' { -1 } else { 1 })
 }
 
 /// `DaysFromCivil::of()`: days since 1970-01-01 of a proleptic Gregorian date, `None` on i64 overflow.

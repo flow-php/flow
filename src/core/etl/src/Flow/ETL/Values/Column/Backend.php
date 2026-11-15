@@ -124,6 +124,15 @@ interface Backend
     public function groupTable(array $columns, Schema $declared): GroupTable;
 
     /**
+     * @param list<Column> $keys the key columns, already cast to the key types
+     * @param int<1, max> $buckets
+     * @param int<0, 24> $hashOffset
+     *
+     * @return array<int, Rows> the rows of each bucket that got any, by bucket index, in row order
+     */
+    public function partition(Rows $rows, array $keys, int $buckets, int $hashOffset): array;
+
+    /**
      * The same values in this backend's storage: $column itself when this backend owns it, otherwise one copy through
      * builder($definition)->appendTake(). For producers that build columns outside the configured backend.
      *

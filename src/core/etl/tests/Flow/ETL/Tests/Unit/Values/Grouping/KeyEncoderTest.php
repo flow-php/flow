@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Grouping\KeyEncoder;
+use PHPUnit\Framework\Attributes\TestWith;
 
 use function array_merge;
 use function array_unique;
@@ -149,5 +150,29 @@ final class KeyEncoderTest extends FlowTestCase
         $keys = (new KeyEncoder(['k']))->of(array_to_rows([['k' => NAN], ['k' => NAN]], schema(float_schema('k'))));
 
         static::assertSame($keys[0], $keys[1]);
+    }
+
+    #[TestWith(["\0i1", 7, 0, 5])]
+    #[TestWith(["\0i1", 7, 8, 0])]
+    #[TestWith(["\0i1", 7, 24, 1])]
+    #[TestWith(["\0s3:abc", 7, 0, 5])]
+    #[TestWith(["\0s3:abc", 7, 8, 0])]
+    #[TestWith(["\0s3:abc", 7, 24, 2])]
+    #[TestWith(["\0n\0t", 7, 0, 0])]
+    #[TestWith(["\0n\0t", 7, 8, 2])]
+    #[TestWith(["\0n\0t", 7, 24, 5])]
+    #[TestWith(['', 7, 0, 0])]
+    #[TestWith(['', 7, 8, 1])]
+    #[TestWith(['', 7, 24, 1])]
+    #[TestWith(["\0i1", 4294967296, 0, 2087460912])]
+    #[TestWith(["\0s3:abc", 4294967296, 8, 2786302190])]
+    #[TestWith(['', 4294967296, 24, 1183664511])]
+    public function test_the_bucket_of_a_key_is_eight_hex_digits_of_its_xxh128_at_the_offset(
+        string $key,
+        int $buckets,
+        int $hashOffset,
+        int $bucket,
+    ): void {
+        static::assertSame($bucket, KeyEncoder::bucketOf($key, $buckets, $hashOffset));
     }
 }

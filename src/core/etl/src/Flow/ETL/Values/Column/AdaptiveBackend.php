@@ -132,6 +132,11 @@ final readonly class AdaptiveBackend implements Backend, Describable
         return $this->backend->groupTable($columns, $declared);
     }
 
+    public function partition(Rows $rows, array $keys, int $buckets, int $hashOffset): array
+    {
+        return $this->backend->partition($rows, $keys, $buckets, $hashOffset);
+    }
+
     public function adopt(Definition $definition, Column $column): Column
     {
         return $this->backend->adopt($definition, $column);

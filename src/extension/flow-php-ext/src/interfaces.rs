@@ -312,6 +312,7 @@ pub fn register() -> Result<()> {
         store_group_table,
         vec![
             method("assign", vec![Arg::new("rows", ROWS)], GROUP_IDS),
+            method("lookup", vec![Arg::new("rows", ROWS)], COLUMN),
             method("count", vec![], DataType::Long),
         ],
     )?;
@@ -398,6 +399,16 @@ pub fn register() -> Result<()> {
                 "groupTable",
                 vec![Arg::new("columns", DataType::Array), Arg::new("declared", SCHEMA)],
                 GROUP_TABLE,
+            ),
+            method(
+                "partition",
+                vec![
+                    Arg::new("rows", ROWS),
+                    Arg::new("keys", DataType::Array),
+                    Arg::new("buckets", DataType::Long),
+                    Arg::new("hashOffset", DataType::Long),
+                ],
+                DataType::Array,
             ),
             method(
                 "adopt",

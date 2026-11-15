@@ -21,7 +21,7 @@ use crate::ctx::{
     self, call_handle_catching, call_method, call_static, construct, expect_object, find_class, ht_for_each, ht_get,
     null_zval, read_slot, transparent_exception, zval_long,
 };
-use crate::date_check::iso_instant_micros;
+use crate::date_check::{fixed_zone_offset, iso_instant_micros};
 use crate::exception::ext_exception;
 use crate::interfaces::column_builder_ce;
 use crate::physical::{append_physical, overflow};
@@ -78,10 +78,10 @@ pub fn native_lane(plan: &TypePlan, value: &Zval) -> Result<Option<Native>, PhpE
 }
 
 pub(crate) fn native_leaf(kind: &Kind, cast_kind: &CastKind, value: &Zval) -> Result<Option<Native>, PhpException> {
-    if let (Kind::Timestamp, CastKind::DateTime(_)) = (kind, cast_kind) {
+    if let (Kind::Timestamp, CastKind::DateTime(zone)) = (kind, cast_kind) {
         if let Some(micros) = value
             .zend_str()
-            .and_then(|string| iso_instant_micros(string.as_bytes()))
+            .and_then(|string| iso_instant_micros(string.as_bytes(), fixed_zone_offset(zone)))
         {
             return Ok(Some(Native::Fixed(micros.to_le_bytes())));
         }
