@@ -1,6 +1,8 @@
 ## [Unreleased] - 2026-11-15
 
 ### Added
+- [#2741](https://github.com/flow-php/flow/pull/2741) - **flow-php/etl-adapter-http - SensitiveHeaders list of credential headers** - [@norberttech](https://github.com/norberttech)
+- [#2741](https://github.com/flow-php/flow/pull/2741) - **flow-php/etl-adapter-http - sensitive_headers option in http_pagination_next_url and http_pagination_link_header** - [@norberttech](https://github.com/norberttech)
 - [#2740](https://github.com/flow-php/flow/pull/2740) - **flow-php/etl - Backend::partition() routes rows to hash buckets in one pass** - [@norberttech](https://github.com/norberttech)
 - [#2740](https://github.com/flow-php/flow/pull/2740) - **flow-php/etl - GroupTable::lookup() finds the group of a key without inserting it** - [@norberttech](https://github.com/norberttech)
 - [#2740](https://github.com/flow-php/flow/pull/2740) - **flow-php/flow-php-ext - native partition() and lookup() kernels** - [@norberttech](https://github.com/norberttech)
@@ -139,6 +141,9 @@
 - [#2726](https://github.com/flow-php/flow/pull/2726) - **flow-php/symfony-filesystem-bundle - FstabBuilder** - [@norberttech](https://github.com/norberttech)
 - [#2724](https://github.com/flow-php/flow/pull/2724) - **flow-php/web - DSL definitions inlined into every page** - [@norberttech](https://github.com/norberttech)
 - [#2724](https://github.com/flow-php/flow/pull/2724) - **flow-php/flow - Stale psalm, phpstan and php-cs-fixer references** - [@norberttech](https://github.com/norberttech)
+
+### Security
+- [#2741](https://github.com/flow-php/flow/pull/2741) - **flow-php/etl-adapter-http - pagination no longer sends sensitive headers to another host or from https to http** - [@norberttech](https://github.com/norberttech)
 
 ## [0.47.0] - 2026-11-02
 
