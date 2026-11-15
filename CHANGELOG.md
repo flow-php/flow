@@ -46,6 +46,7 @@
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - Pipe operator documentation page** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [25c4f8](https://github.com/flow-php/flow/commit/25c4f8742b0ab6cb54f2cbb344f1e34eff1addbf) - **fix(flow-php/doctrine-dbal-bulk): accept mutable and immutable dates with doctrine/dbal 4.6** - [@norberttech](https://github.com/norberttech)
 - [#2740](https://github.com/flow-php/flow/pull/2740) - **flow-php/etl - hash join matches keys through the group table** - [@norberttech](https://github.com/norberttech)
 - [#2740](https://github.com/flow-php/flow/pull/2740) - **flow-php/etl - hash join skips the pair check when equal keys decide the condition** - [@norberttech](https://github.com/norberttech)
 - [#2740](https://github.com/flow-php/flow/pull/2740) - **flow-php/etl - HashBucketing::bucketize() takes the backend** - [@norberttech](https://github.com/norberttech)
