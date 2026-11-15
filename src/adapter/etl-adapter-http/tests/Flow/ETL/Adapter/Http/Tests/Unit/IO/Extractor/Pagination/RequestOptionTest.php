@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Http\Tests\Unit\IO\Extractor\Pagination;
 
 use Flow\ETL\Adapter\Http\IO\Extractor\Pagination\RequestOption;
+use Flow\ETL\Adapter\Http\IO\Extractor\Pagination\SensitiveHeaders;
 use Flow\ETL\Tests\FlowTestCase;
 use Nyholm\Psr7\Factory\Psr17Factory;
 
@@ -105,14 +106,46 @@ final class RequestOptionTest extends FlowTestCase
         $request = (new Psr17Factory())
             ->createRequest('GET', 'https://api.example.com/items?page=1')
             ->withHeader('Authorization', 'Bearer secret')
-            ->withHeader('X-Api-Key', 'key')
+            ->withHeader('X-Tenant-Secret', 'key')
             ->withHeader('Accept', 'application/json');
 
-        $result = RequestOption::replaceUri(['x-api-key'])->apply($request, 'https://evil.example.org/items?page=2');
+        $result = RequestOption::replaceUri([...SensitiveHeaders::toArray(), 'x-tenant-secret'])->apply(
+            $request,
+            'https://evil.example.org/items?page=2',
+        );
 
         static::assertFalse($result->hasHeader('Authorization'));
-        static::assertFalse($result->hasHeader('X-Api-Key'));
+        static::assertFalse($result->hasHeader('X-Tenant-Secret'));
         static::assertSame(['application/json'], $result->getHeader('Accept'));
+    }
+
+    public function test_replace_uri_keeps_a_header_taken_out_of_the_sensitive_headers_on_cross_host(): void
+    {
+        $request = (new Psr17Factory())
+            ->createRequest('GET', 'https://api.example.com/items?page=1')
+            ->withHeader('Authorization', 'Bearer secret')
+            ->withHeader('Cookie', 'session=abc');
+
+        $result = RequestOption::replaceUri(array_diff(SensitiveHeaders::toArray(), [
+            SensitiveHeaders::Cookie->value,
+        ]))->apply($request, 'https://other.example.org/items?page=2');
+
+        static::assertFalse($result->hasHeader('Authorization'));
+        static::assertSame(['session=abc'], $result->getHeader('Cookie'));
+    }
+
+    public function test_replace_uri_removes_every_default_sensitive_header_on_cross_host(): void
+    {
+        $request = (new Psr17Factory())->createRequest('GET', 'https://api.example.com/items?page=1');
+
+        foreach (SensitiveHeaders::toArray() as $header) {
+            $request = $request->withHeader($header, 'secret');
+        }
+
+        static::assertSame(
+            ['Host' => ['evil.example.org']],
+            RequestOption::replaceUri()->apply($request, 'https://evil.example.org/items?page=2')->getHeaders(),
+        );
     }
 
     public function test_replace_uri_keeps_custom_sensitive_headers_on_same_host(): void

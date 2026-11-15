@@ -17,11 +17,11 @@ use function is_string;
 final class NextUrlFromBody implements PaginationStrategy
 {
     /**
-     * @param array<string> $sensitiveHeaders
+     * @param null|array<string> $sensitiveHeaders
      */
     public function __construct(
         private readonly string $path,
-        private readonly array $sensitiveHeaders = [],
+        private readonly ?array $sensitiveHeaders = null,
     ) {}
 
     public function initialRequest(RequestInterface $base): RequestInterface

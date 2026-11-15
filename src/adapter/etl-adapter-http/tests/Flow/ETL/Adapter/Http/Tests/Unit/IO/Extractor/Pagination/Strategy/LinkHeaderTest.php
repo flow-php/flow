@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Http\Tests\Unit\IO\Extractor\Pagination\Strategy;
 
 use Flow\ETL\Adapter\Http\IO\Extractor\Pagination\PageState;
+use Flow\ETL\Adapter\Http\IO\Extractor\Pagination\SensitiveHeaders;
 use Flow\ETL\Adapter\Http\IO\Extractor\Pagination\Strategy\LinkHeader;
 use Flow\ETL\Adapter\Http\Tests\Mother\PaginationMother;
 use Flow\ETL\Tests\FlowTestCase;
@@ -41,10 +42,10 @@ final class LinkHeaderTest extends FlowTestCase
 
     public function test_next_request_removes_custom_sensitive_headers_on_cross_host(): void
     {
-        $result = (new LinkHeader('next', ['X-Api-Key']))->nextRequest(
+        $result = (new LinkHeader('next', [...SensitiveHeaders::toArray(), 'X-Tenant-Secret']))->nextRequest(
             PaginationMother::request('GET', 'https://api.example.com/items')
                 ->withHeader('Authorization', 'Bearer secret')
-                ->withHeader('X-Api-Key', 'key'),
+                ->withHeader('X-Tenant-Secret', 'key'),
             PaginationMother::decoded(['data' => [1]], [
                 'Link' => '<https://other.example.org/items?page=2>; rel="next"',
             ]),
@@ -54,6 +55,6 @@ final class LinkHeaderTest extends FlowTestCase
         static::assertNotNull($result);
         static::assertSame('other.example.org', $result->getUri()->getHost());
         static::assertFalse($result->hasHeader('Authorization'));
-        static::assertFalse($result->hasHeader('X-Api-Key'));
+        static::assertFalse($result->hasHeader('X-Tenant-Secret'));
     }
 }

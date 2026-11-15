@@ -142,35 +142,39 @@ function http_pagination_cursor(
 }
 
 /**
- * @param array<string> $sensitiveHeaders
+ * @param null|array<string> $sensitive_headers headers removed when the next URL changes the host or goes from https to http, null for SensitiveHeaders::toArray()
  */
 #[DocumentationDSL(module: Module::HTTP, type: Type::HELPER)]
 function http_pagination_next_url(
     string $path,
     bool $stop_on_client_error = true,
     ?StopWhen $stop_when = null,
-    array $sensitiveHeaders = [],
+    ?array $sensitive_headers = null,
 ): Paginator {
     $default = new PathMissing($path);
 
     return new Paginator(
-        new NextUrlFromBody($path, $sensitiveHeaders),
+        new NextUrlFromBody($path, $sensitive_headers),
         $stop_when === null ? $default : new AnyOf($default, $stop_when),
         $stop_on_client_error,
     );
 }
 
 /**
- * @param array<string> $sensitiveHeaders
+ * @param null|array<string> $sensitive_headers headers removed when the next URL changes the host or goes from https to http, null for SensitiveHeaders::toArray()
  */
 #[DocumentationDSL(module: Module::HTTP, type: Type::HELPER)]
 function http_pagination_link_header(
     string $rel = 'next',
     bool $stop_on_client_error = true,
     ?StopWhen $stop_when = null,
-    array $sensitiveHeaders = [],
+    ?array $sensitive_headers = null,
 ): Paginator {
-    return new Paginator(new LinkHeader($rel, $sensitiveHeaders), $stop_when ?? new NeverStop(), $stop_on_client_error);
+    return new Paginator(
+        new LinkHeader($rel, $sensitive_headers),
+        $stop_when ?? new NeverStop(),
+        $stop_on_client_error,
+    );
 }
 
 #[DocumentationDSL(module: Module::HTTP, type: Type::HELPER)]

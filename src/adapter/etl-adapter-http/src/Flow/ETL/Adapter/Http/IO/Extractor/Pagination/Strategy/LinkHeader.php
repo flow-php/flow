@@ -16,11 +16,11 @@ final class LinkHeader implements PaginationStrategy
     private LinkHeaderParser $parser;
 
     /**
-     * @param array<string> $sensitiveHeaders
+     * @param null|array<string> $sensitiveHeaders
      */
     public function __construct(
         private readonly string $rel = 'next',
-        private readonly array $sensitiveHeaders = [],
+        private readonly ?array $sensitiveHeaders = null,
     ) {
         $this->parser = new LinkHeaderParser();
     }

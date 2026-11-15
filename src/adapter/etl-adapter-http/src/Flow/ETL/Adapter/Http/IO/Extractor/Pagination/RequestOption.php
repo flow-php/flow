@@ -19,13 +19,13 @@ use function parse_str;
 final class RequestOption
 {
     /**
-     * @param array<string> $sensitiveHeaders
+     * @param null|array<string> $sensitiveHeaders
      */
     private function __construct(
         public readonly InjectInto $into,
         public readonly string $name,
         private readonly ?StreamFactoryInterface $streamFactory = null,
-        private readonly array $sensitiveHeaders = [],
+        private readonly ?array $sensitiveHeaders = null,
     ) {}
 
     public static function bodyPath(string $path, StreamFactoryInterface $streamFactory): self
@@ -44,9 +44,9 @@ final class RequestOption
     }
 
     /**
-     * @param array<string> $sensitiveHeaders
+     * @param null|array<string> $sensitiveHeaders headers removed when the host changes or https becomes http, null for SensitiveHeaders::toArray()
      */
-    public static function replaceUri(array $sensitiveHeaders = []): self
+    public static function replaceUri(?array $sensitiveHeaders = null): self
     {
         return new self(InjectInto::ReplaceUri, '', sensitiveHeaders: $sensitiveHeaders);
     }
@@ -79,9 +79,9 @@ final class RequestOption
 
         if (
             $oldUri->getHost() !== $newUri->getHost()
-            || $oldUri->getScheme() === 'https' && $newUri->getScheme() === 'http'
+            || ($oldUri->getScheme() === 'https' && $newUri->getScheme() === 'http')
         ) {
-            foreach ([...SensitiveHeaders::toArray(), ...$this->sensitiveHeaders] as $sensitiveHeader) {
+            foreach ($this->sensitiveHeaders ?? SensitiveHeaders::toArray() as $sensitiveHeader) {
                 $base = $base->withoutHeader($sensitiveHeader);
             }
         }
