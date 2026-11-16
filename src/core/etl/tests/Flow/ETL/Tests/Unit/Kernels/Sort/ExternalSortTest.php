@@ -826,10 +826,12 @@ final class ExternalSortTest extends FlowTestCase
 
     public function test_the_runs_a_sort_merges_in_groups_are_numbered_in_the_order_they_are_made(): void
     {
-        $backend = config()->backend();
+        // scripted, so every batch spills as its own run whatever the test process holds
+        $backend = new ReportedMemoryBackend();
+        $yields = 0;
         $sort = ExternalSortMother::with([ref('id')->asc()], mergeFanIn: 2);
         $sorted = $sort->sort(
-            IdRows::batches([8], [7], [6], [5], [4], [3], [2], [1]),
+            IdRows::reportedFrames($backend, $yields, [8], [7], [6], [5], [4], [3], [2], [1]),
             $backend,
             new MemoryBudget($backend, Unit::fromBytes(1), null),
         );
