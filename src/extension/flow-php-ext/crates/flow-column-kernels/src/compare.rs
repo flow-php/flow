@@ -1,7 +1,7 @@
-//! Comparisons and null tests with Flow's PHP semantics: a comparison is null where either side is null.
+//! Comparisons, text matches and null tests with Flow's PHP semantics: a result is null where either side is null.
 
 use arrow_array::types::Float64Type;
-use arrow_array::{Array, ArrayRef, BooleanArray, Datum, Float64Array, Int64Array};
+use arrow_array::{Array, ArrayRef, BooleanArray, Datum, Float64Array, Int64Array, LargeBinaryArray};
 use arrow_buffer::{BooleanBuffer, NullBuffer};
 use arrow_ord::cmp;
 use arrow_schema::ArrowError;
@@ -69,6 +69,32 @@ pub fn is_not_null(array: &dyn Array) -> BooleanArray {
     )
 }
 
+pub fn starts_with(haystacks: &LargeBinaryArray, needles: &LargeBinaryArray) -> BooleanArray {
+    matched(haystacks, needles, |haystack, needle| haystack.starts_with(needle))
+}
+
+pub fn ends_with(haystacks: &LargeBinaryArray, needles: &LargeBinaryArray) -> BooleanArray {
+    matched(haystacks, needles, |haystack, needle| haystack.ends_with(needle))
+}
+
+pub fn contains(haystacks: &LargeBinaryArray, needles: &LargeBinaryArray) -> BooleanArray {
+    matched(haystacks, needles, |haystack, needle| {
+        memchr::memmem::find(haystack, needle).is_some()
+    })
+}
+
+// the caller passes columns of one length
+fn matched(
+    haystacks: &LargeBinaryArray,
+    needles: &LargeBinaryArray,
+    holds: impl Fn(&[u8], &[u8]) -> bool,
+) -> BooleanArray {
+    BooleanArray::new(
+        BooleanBuffer::collect_bool(haystacks.len(), |i| holds(haystacks.value(i), needles.value(i))),
+        NullBuffer::union(haystacks.nulls(), needles.nulls()),
+    )
+}
+
 fn equal(a: f64, b: f64) -> bool {
     a == b || (a.is_nan() && b.is_nan())
 }
@@ -89,7 +115,7 @@ fn less_or_equal(a: f64, b: f64) -> bool {
 mod tests {
     use std::sync::Arc;
 
-    use arrow_array::{FixedSizeBinaryArray, LargeBinaryArray, NullArray};
+    use arrow_array::{FixedSizeBinaryArray, NullArray};
 
     use super::*;
 
@@ -217,5 +243,81 @@ mod tests {
 
         assert_eq!(is_null(&nulls), BooleanArray::from(vec![true, true]));
         assert_eq!(is_not_null(&nulls), BooleanArray::from(vec![false, false]));
+    }
+
+    fn texts(values: &[Option<&[u8]>]) -> LargeBinaryArray {
+        LargeBinaryArray::from(values.to_vec())
+    }
+
+    #[test]
+    fn a_text_match_is_null_where_either_side_is_null() {
+        let haystacks = texts(&[Some(b"abc"), None, Some(b"abc")]);
+        let expected = BooleanArray::from(vec![Some(true), None, None]);
+
+        assert_eq!(
+            starts_with(&haystacks, &texts(&[Some(b"a"), Some(b"a"), None])),
+            expected
+        );
+        assert_eq!(ends_with(&haystacks, &texts(&[Some(b"c"), Some(b"c"), None])), expected);
+        assert_eq!(contains(&haystacks, &texts(&[Some(b"b"), Some(b"b"), None])), expected);
+    }
+
+    #[test]
+    fn an_empty_needle_matches_every_text() {
+        let haystacks = texts(&[Some(b"abc"), Some(b"")]);
+        let needles = texts(&[Some(b""), Some(b"")]);
+        let expected = BooleanArray::from(vec![true, true]);
+
+        assert_eq!(starts_with(&haystacks, &needles), expected);
+        assert_eq!(ends_with(&haystacks, &needles), expected);
+        assert_eq!(contains(&haystacks, &needles), expected);
+    }
+
+    #[test]
+    fn a_needle_longer_than_its_text_matches_nothing() {
+        let haystacks = texts(&[Some(b"x")]);
+        let needles = texts(&[Some(b"xx")]);
+        let expected = BooleanArray::from(vec![false]);
+
+        assert_eq!(starts_with(&haystacks, &needles), expected);
+        assert_eq!(ends_with(&haystacks, &needles), expected);
+        assert_eq!(contains(&haystacks, &needles), expected);
+    }
+
+    #[test]
+    fn a_text_match_compares_bytes_that_are_not_utf8_and_nul_bytes() {
+        let haystacks = texts(&[Some(b"\xffa\x00b\xfe"), Some(b"\xffa\x00b\xfe")]);
+
+        assert_eq!(
+            starts_with(&haystacks, &texts(&[Some(b"\xffa\x00"), Some(b"\xfe")])),
+            BooleanArray::from(vec![true, false])
+        );
+        assert_eq!(
+            ends_with(&haystacks, &texts(&[Some(b"\x00b\xfe"), Some(b"\xff")])),
+            BooleanArray::from(vec![true, false])
+        );
+        assert_eq!(
+            contains(&haystacks, &texts(&[Some(b"a\x00b"), Some(b"\x00\x00")])),
+            BooleanArray::from(vec![true, false])
+        );
+    }
+
+    #[test]
+    fn a_text_match_reads_sliced_columns_from_their_offset() {
+        let haystacks = texts(&[Some(b"zzz"), Some(b"abc"), None, Some(b"cab")]).slice(1, 3);
+        let needles = texts(&[None, Some(b"ab"), Some(b"ab"), Some(b"ab")]).slice(1, 3);
+
+        assert_eq!(
+            starts_with(&haystacks, &needles),
+            BooleanArray::from(vec![Some(true), None, Some(false)])
+        );
+        assert_eq!(
+            ends_with(&haystacks, &needles),
+            BooleanArray::from(vec![Some(false), None, Some(true)])
+        );
+        assert_eq!(
+            contains(&haystacks, &needles),
+            BooleanArray::from(vec![Some(true), None, Some(true)])
+        );
     }
 }

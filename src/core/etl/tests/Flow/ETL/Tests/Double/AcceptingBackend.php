@@ -68,6 +68,21 @@ final readonly class AcceptingBackend implements Backend
         return (new PhpBackend())->modulo($left, $right);
     }
 
+    public function startsWith(Column $haystack, Column $needle): Column
+    {
+        return (new PhpBackend())->startsWith($haystack, $needle);
+    }
+
+    public function endsWith(Column $haystack, Column $needle): Column
+    {
+        return (new PhpBackend())->endsWith($haystack, $needle);
+    }
+
+    public function contains(Column $haystack, Column $needle): Column
+    {
+        return (new PhpBackend())->contains($haystack, $needle);
+    }
+
     /**
      * @param list<SortColumn> $columns
      */

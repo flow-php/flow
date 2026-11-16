@@ -58,7 +58,10 @@ use function is_int;
 use function pack;
 use function range;
 use function sprintf;
+use function str_contains;
+use function str_ends_with;
 use function str_repeat;
+use function str_starts_with;
 use function strlen;
 use function substr;
 use function unpack;
@@ -533,6 +536,48 @@ final readonly class PhpBackend implements Backend, Describable
         return new ScalarColumn($definition->type(), (new PhysicalFor())->definition($definition), $results, 0);
     }
 
+    public function startsWith(Column $haystack, Column $needle): Column
+    {
+        /** @var list<?string> $needles */
+        $needles = $needle->physicals();
+        $results = [];
+
+        /** @var ?string $text */
+        foreach ($haystack->physicals() as $i => $text) {
+            $results[] = $text === null || $needles[$i] === null ? null : str_starts_with($text, $needles[$i]);
+        }
+
+        return $this->booleans($results);
+    }
+
+    public function endsWith(Column $haystack, Column $needle): Column
+    {
+        /** @var list<?string> $needles */
+        $needles = $needle->physicals();
+        $results = [];
+
+        /** @var ?string $text */
+        foreach ($haystack->physicals() as $i => $text) {
+            $results[] = $text === null || $needles[$i] === null ? null : str_ends_with($text, $needles[$i]);
+        }
+
+        return $this->booleans($results);
+    }
+
+    public function contains(Column $haystack, Column $needle): Column
+    {
+        /** @var list<?string> $needles */
+        $needles = $needle->physicals();
+        $results = [];
+
+        /** @var ?string $text */
+        foreach ($haystack->physicals() as $i => $text) {
+            $results[] = $text === null || $needles[$i] === null ? null : str_contains($text, $needles[$i]);
+        }
+
+        return $this->booleans($results);
+    }
+
     public function sort(Rows $rows, array $columns): Rows
     {
         $order = new RowOrder($columns);
@@ -719,6 +764,21 @@ final readonly class PhpBackend implements Backend, Describable
         );
 
         return new ScalarColumn($definition->type(), (new PhysicalFor())->definition($definition), $results, 0);
+    }
+
+    /**
+     * @param list<?bool> $results
+     */
+    private function booleans(array $results): Column
+    {
+        $definition = Definitions::of('value', type_boolean(), true);
+
+        return new ScalarColumn(
+            $definition->type(),
+            (new PhysicalFor())->definition($definition),
+            $results,
+            count(array_keys($results, null, true)),
+        );
     }
 
     private function nullTest(Column $column, bool $isNull): Column

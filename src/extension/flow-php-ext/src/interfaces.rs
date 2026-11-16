@@ -384,6 +384,21 @@ pub fn register() -> Result<()> {
                 COLUMN,
             ),
             method(
+                "startsWith",
+                vec![Arg::new("haystack", COLUMN), Arg::new("needle", COLUMN)],
+                COLUMN,
+            ),
+            method(
+                "endsWith",
+                vec![Arg::new("haystack", COLUMN), Arg::new("needle", COLUMN)],
+                COLUMN,
+            ),
+            method(
+                "contains",
+                vec![Arg::new("haystack", COLUMN), Arg::new("needle", COLUMN)],
+                COLUMN,
+            ),
+            method(
                 "sort",
                 vec![Arg::new("rows", ROWS), Arg::new("columns", DataType::Array)],
                 ROWS,

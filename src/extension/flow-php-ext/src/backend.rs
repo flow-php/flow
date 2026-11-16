@@ -8,7 +8,7 @@ use std::sync::Arc;
 
 use ahash::AHashMap;
 
-use arrow_array::{make_array, ArrayRef, UInt32Array};
+use arrow_array::{make_array, ArrayRef, BooleanArray, LargeBinaryArray, UInt32Array};
 use arrow_select::take::take;
 
 use ext_php_rs::binary::Binary;
@@ -23,14 +23,14 @@ use flow_batch_frame::frame;
 use flow_batch_frame::kind::Kind;
 use flow_batch_frame::layout::buffer_count;
 use flow_column_kernels::arithmetic::Operator;
-use flow_column_kernels::compare::{is_not_null, is_null};
+use flow_column_kernels::compare::{contains, ends_with, is_not_null, is_null, starts_with};
 use flow_column_kernels::grouping::{append_text_key, bucket_of};
 
 use crate::arithmetic::{native_arithmetic, native_modulo};
 use crate::batch_columns::HeldBatch;
 use crate::builder::{throw, RustColumnBuilder};
 use crate::column::RustColumn;
-use crate::compare::{boolean_column, native_comparison};
+use crate::compare::{boolean_column, native_comparison, native_text_match};
 use crate::ctx::{
     call_handle_catching, call_method, call_static, ce_method_ref, column_key, construct, expect_object, find_class,
     ht_for_each, ht_get, ht_insert, ht_insert_long, instance, transparent_exception, zval_long, zval_str,
@@ -237,6 +237,20 @@ impl RustBackend {
                 &mut [left.shallow_clone(), right.shallow_clone()],
             )?),
         }
+    }
+
+    #[php(name = "startsWith")]
+    pub fn starts_with(&self, haystack: &Zval, needle: &Zval) -> PhpResult<ColumnValue> {
+        self.text_match(haystack, needle, starts_with, "startsWith")
+    }
+
+    #[php(name = "endsWith")]
+    pub fn ends_with(&self, haystack: &Zval, needle: &Zval) -> PhpResult<ColumnValue> {
+        self.text_match(haystack, needle, ends_with, "endsWith")
+    }
+
+    pub fn contains(&self, haystack: &Zval, needle: &Zval) -> PhpResult<ColumnValue> {
+        self.text_match(haystack, needle, contains, "contains")
     }
 
     pub fn sort(&self, rows: &Zval, columns: &Zval) -> PhpResult<RowsValue> {
@@ -674,6 +688,23 @@ impl RustBackend {
         )?;
 
         self.adopt(&definition, &column)
+    }
+
+    fn text_match(
+        &self,
+        haystack: &Zval,
+        needle: &Zval,
+        kernel: fn(&LargeBinaryArray, &LargeBinaryArray) -> BooleanArray,
+        method: &str,
+    ) -> PhpResult<ColumnValue> {
+        match native_text_match(haystack, needle, kernel)? {
+            Some(matched) => Ok(ColumnValue(matched.into_zval(false)?)),
+            None => self.adopt_result(call_method(
+                &instance(PHP_BACKEND)?,
+                method,
+                &mut [haystack.shallow_clone(), needle.shallow_clone()],
+            )?),
+        }
     }
 
     fn arithmetic(&self, left: &Zval, operator: Operator, right: &Zval, method: &str) -> PhpResult<ColumnValue> {

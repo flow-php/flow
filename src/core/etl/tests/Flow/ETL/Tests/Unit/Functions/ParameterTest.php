@@ -26,11 +26,13 @@ use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 
 final class ParameterTest extends FlowTestCase
@@ -144,6 +146,49 @@ final class ParameterTest extends FlowTestCase
             $rows,
             flow_context()->backend(),
         );
+    }
+
+    public function test_as_string_column_returns_a_string_column_as_it_is(): void
+    {
+        $rows = array_to_rows([['s' => 'a'], ['s' => 'b']], schema(str_schema('s')));
+
+        static::assertSame(
+            $rows->column('s'),
+            (new Parameter((new ReferenceResolver())->resolve(ref('s'), $rows->schema())))->asStringColumn(
+                $rows,
+                flow_context()->backend(),
+            ),
+        );
+    }
+
+    public function test_as_string_column_builds_a_string_column_from_untyped_strings(): void
+    {
+        $rows = array_to_rows([
+            ['m' => ['k' => 'a']],
+            ['m' => ['k' => 'b']],
+        ], schema(map_schema('m', type_map(type_string(), type_string()))));
+        $strings = (new Parameter((new ReferenceResolver())->resolve(
+            ref('m')->arrayGet('k'),
+            $rows->schema(),
+        )))->asStringColumn($rows, flow_context()->backend());
+
+        static::assertSame([['a', 'b'], 'string'], [$strings->values(), $strings->type()->toString()]);
+    }
+
+    public function test_as_string_column_refuses_an_integer_with_its_row(): void
+    {
+        $rows = array_to_rows([['i' => null], ['i' => 12]], schema(int_schema('i', nullable: true)));
+
+        try {
+            (new Parameter((new ReferenceResolver())->resolve(ref('i'), $rows->schema())))->asStringColumn(
+                $rows,
+                flow_context()->backend(),
+            );
+            static::fail('an integer was read as a string');
+        } catch (EvaluationException $e) {
+            static::assertSame(1, $e->rowIndex);
+            static::assertSame('Expected type "string", got "integer".', $e->getPrevious()?->getMessage());
+        }
     }
 
     public function test_as_number_column_takes_an_integer_or_a_float_column(): void

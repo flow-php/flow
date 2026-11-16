@@ -184,6 +184,45 @@ final class AdaptiveBackendTest extends TestCase
         );
     }
 
+    public function test_starts_with_is_what_the_php_backend_answers(): void
+    {
+        $rows = array_to_rows(
+            [['h' => 'abc', 'n' => 'ab'], ['h' => 'abc', 'n' => 'bc']],
+            schema(str_schema('h'), str_schema('n')),
+        );
+
+        static::assertEquals(
+            (new PhpBackend())->startsWith($rows->column('h'), $rows->column('n')),
+            (new AdaptiveBackend())->startsWith($rows->column('h'), $rows->column('n')),
+        );
+    }
+
+    public function test_ends_with_is_what_the_php_backend_answers(): void
+    {
+        $rows = array_to_rows(
+            [['h' => 'abc', 'n' => 'ab'], ['h' => 'abc', 'n' => 'bc']],
+            schema(str_schema('h'), str_schema('n')),
+        );
+
+        static::assertEquals(
+            (new PhpBackend())->endsWith($rows->column('h'), $rows->column('n')),
+            (new AdaptiveBackend())->endsWith($rows->column('h'), $rows->column('n')),
+        );
+    }
+
+    public function test_contains_is_what_the_php_backend_answers(): void
+    {
+        $rows = array_to_rows(
+            [['h' => 'abc', 'n' => 'b'], ['h' => 'abc', 'n' => 'x']],
+            schema(str_schema('h'), str_schema('n')),
+        );
+
+        static::assertEquals(
+            (new PhpBackend())->contains($rows->column('h'), $rows->column('n')),
+            (new AdaptiveBackend())->contains($rows->column('h'), $rows->column('n')),
+        );
+    }
+
     public function test_sort_is_what_the_php_backend_sorts(): void
     {
         $rows = array_to_rows([['a' => 2], ['a' => 1]], schema(int_schema('a')));

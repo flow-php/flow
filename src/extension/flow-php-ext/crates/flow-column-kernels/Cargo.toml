@@ -12,4 +12,5 @@ arrow-buffer.workspace = true
 arrow-arith = "59"
 arrow-ord = "59"
 arrow-schema.workspace = true
+memchr.workspace = true
 xxhash-rust.workspace = true
