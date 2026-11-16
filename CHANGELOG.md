@@ -1,6 +1,11 @@
-## [Unreleased] - 2026-11-15
+## [Unreleased] - 2026-11-16
 
 ### Added
+- [#2743](https://github.com/flow-php/flow/pull/2743) - **flow-php/etl - Backend::startsWith(), endsWith() and contains() string match kernels** - [@norberttech](https://github.com/norberttech)
+- [#2743](https://github.com/flow-php/flow/pull/2743) - **flow-php/flow-php-ext - native string match kernels** - [@norberttech](https://github.com/norberttech)
+- [#2743](https://github.com/flow-php/flow/pull/2743) - **flow-php/etl - ExternalSort::merge() merges sorted streams under a memory budget** - [@norberttech](https://github.com/norberttech)
+- [#2743](https://github.com/flow-php/flow/pull/2743) - **flow-php/etl - Backend::releaseFreedMemory(), called after every spill of a sort** - [@norberttech](https://github.com/norberttech)
+- [#2743](https://github.com/flow-php/flow/pull/2743) - **flow-php/arrow-ext - Flow\Arrow\allocated_bytes()** - [@norberttech](https://github.com/norberttech)
 - [#2741](https://github.com/flow-php/flow/pull/2741) - **flow-php/etl-adapter-http - SensitiveHeaders list of credential headers** - [@norberttech](https://github.com/norberttech)
 - [#2741](https://github.com/flow-php/flow/pull/2741) - **flow-php/etl-adapter-http - sensitive_headers option in http_pagination_next_url and http_pagination_link_header** - [@norberttech](https://github.com/norberttech)
 - [#2740](https://github.com/flow-php/flow/pull/2740) - **flow-php/etl - Backend::partition() routes rows to hash buckets in one pass** - [@norberttech](https://github.com/norberttech)
@@ -46,6 +51,10 @@
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - Pipe operator documentation page** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2743](https://github.com/flow-php/flow/pull/2743) - **flow-php/etl - a cast to string returns string columns as they are and reads uuid bytes** - [@norberttech](https://github.com/norberttech)
+- [#2743](https://github.com/flow-php/flow/pull/2743) - **flow-php/etl - a memory limit is shared by the workers of a run** - [@norberttech](https://github.com/norberttech)
+- [#2743](https://github.com/flow-php/flow/pull/2743) - **flow-php/etl - default memory limit is 4 GiB without a PHP memory_limit** - [@norberttech](https://github.com/norberttech)
+- [#2743](https://github.com/flow-php/flow/pull/2743) - **flow-php/flow-php-ext - RustBackend::allocatedBytes() counts the arrow extension's bytes** - [@norberttech](https://github.com/norberttech)
 - [25c4f8](https://github.com/flow-php/flow/commit/25c4f8742b0ab6cb54f2cbb344f1e34eff1addbf) - **fix(flow-php/doctrine-dbal-bulk): accept mutable and immutable dates with doctrine/dbal 4.6** - [@norberttech](https://github.com/norberttech)
 - [#2740](https://github.com/flow-php/flow/pull/2740) - **flow-php/etl - hash join matches keys through the group table** - [@norberttech](https://github.com/norberttech)
 - [#2740](https://github.com/flow-php/flow/pull/2740) - **flow-php/etl - hash join skips the pair check when equal keys decide the condition** - [@norberttech](https://github.com/norberttech)
@@ -99,6 +108,9 @@
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - print_rows(Rows) renamed to format_rows()** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2743](https://github.com/flow-php/flow/pull/2743) - **flow-php/etl - a cast to string evaluated its child twice** - [@norberttech](https://github.com/norberttech)
+- [#2743](https://github.com/flow-php/flow/pull/2743) - **flow-php/etl - a spilling group by held 2.5 times its memory limit** - [@norberttech](https://github.com/norberttech)
+- [#2743](https://github.com/flow-php/flow/pull/2743) - **flow-php/etl - merged sort runs all got index 0** - [@norberttech](https://github.com/norberttech)
 - [#2739](https://github.com/flow-php/flow/pull/2739) - **flow-php/postgresql - ConnectionParameters::toString() quotes values with whitespace, quotes or backslashes** - [@norberttech](https://github.com/norberttech)
 - [#2739](https://github.com/flow-php/flow/pull/2739) - **flow-php/postgresql - ConnectionParameters::fromString() reads escaped and quoted values by the libpq rules** - [@norberttech](https://github.com/norberttech)
 - [#2739](https://github.com/flow-php/flow/pull/2739) - **flow-php/postgresql - pgsql_connection() docblock no longer claims URL support** - [@norberttech](https://github.com/norberttech)
