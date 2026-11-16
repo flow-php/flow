@@ -1,6 +1,6 @@
 //! Batches across the Arrow C Data Interface; imported buffers count in [`imported_bytes`] while they live.
 
-use std::ffi::{CStr, CString};
+use std::ffi::{c_char, CStr, CString};
 use std::sync::atomic::{AtomicI64, Ordering};
 
 use arrow_array::ffi::{from_ffi_and_data_type, to_ffi, FFI_ArrowArray, FFI_ArrowSchema};
@@ -48,15 +48,44 @@ pub struct Expected {
     children: Vec<(CString, CString)>,
 }
 
+// The spec's leading C Data Interface fields: arrow-rs 60 hides them, its accessors panic on a null format.
+#[repr(C)]
+struct SchemaHead {
+    format: *const c_char,
+    name: *const c_char,
+    metadata: *const c_char,
+    flags: i64,
+    n_children: i64,
+}
+
+#[repr(C)]
+struct ArrayHead {
+    length: i64,
+    null_count: i64,
+    offset: i64,
+    n_buffers: i64,
+    n_children: i64,
+}
+
+fn schema_head(schema: &FFI_ArrowSchema) -> &SchemaHead {
+    unsafe { &*(schema as *const FFI_ArrowSchema).cast::<SchemaHead>() }
+}
+
+fn array_head(array: &FFI_ArrowArray) -> &ArrayHead {
+    unsafe { &*(array as *const FFI_ArrowArray).cast::<ArrayHead>() }
+}
+
 /// The struct schema `schema`, its children named and typed as `columns` (name, stored type) are.
 pub fn check(schema: &FFI_ArrowSchema, columns: &[(&[u8], DataType)]) -> Result<Expected, Refusal> {
-    if schema.format.is_null() || unsafe { CStr::from_ptr(schema.format) }.to_bytes() != b"+s" {
+    let head = schema_head(schema);
+
+    if head.format.is_null() || unsafe { CStr::from_ptr(head.format) }.to_bytes() != b"+s" {
         return Err(Refusal::NotStruct);
     }
 
-    if schema.n_children != columns.len() as i64 {
+    if head.n_children != columns.len() as i64 {
         return Err(Refusal::Count {
-            children: schema.n_children,
+            children: head.n_children,
             columns: columns.len(),
         });
     }
@@ -78,9 +107,11 @@ pub fn check(schema: &FFI_ArrowSchema, columns: &[(&[u8], DataType)]) -> Result<
             return Err(Refusal::Type { column, child: field });
         }
 
+        let child_head = schema_head(child);
+
         children.push((
-            unsafe { CStr::from_ptr(child.name) }.to_owned(),
-            unsafe { CStr::from_ptr(child.format) }.to_owned(),
+            unsafe { CStr::from_ptr(child_head.name) }.to_owned(),
+            unsafe { CStr::from_ptr(child_head.format) }.to_owned(),
         ));
         fields.push(field);
     }
@@ -94,26 +125,30 @@ pub fn check(schema: &FFI_ArrowSchema, columns: &[(&[u8], DataType)]) -> Result<
 /// Refuses a struct schema whose children are not `expected`'s by count, name or format: the per-batch guard, with no
 /// `Field` built.
 pub fn same_children(schema: &FFI_ArrowSchema, expected: &Expected) -> Result<(), Refusal> {
-    if schema.format.is_null() || unsafe { CStr::from_ptr(schema.format) }.to_bytes() != b"+s" {
+    let head = schema_head(schema);
+
+    if head.format.is_null() || unsafe { CStr::from_ptr(head.format) }.to_bytes() != b"+s" {
         return Err(Refusal::NotStruct);
     }
 
-    if schema.n_children != expected.children.len() as i64 {
+    if head.n_children != expected.children.len() as i64 {
         return Err(Refusal::Count {
-            children: schema.n_children,
+            children: head.n_children,
             columns: expected.children.len(),
         });
     }
 
     for (column, (child, (name, format))) in schema.children().zip(&expected.children).enumerate() {
-        if unsafe { CStr::from_ptr(child.name) } != name.as_c_str() {
+        let child_head = schema_head(child);
+
+        if unsafe { CStr::from_ptr(child_head.name) } != name.as_c_str() {
             return Err(Refusal::Name {
-                child: String::from_utf8_lossy(unsafe { CStr::from_ptr(child.name) }.to_bytes()).into_owned(),
+                child: String::from_utf8_lossy(unsafe { CStr::from_ptr(child_head.name) }.to_bytes()).into_owned(),
                 column,
             });
         }
 
-        if unsafe { CStr::from_ptr(child.format) } != format.as_c_str() {
+        if unsafe { CStr::from_ptr(child_head.format) } != format.as_c_str() {
             return Err(Refusal::Type {
                 column,
                 child: Field::try_from(child).map_err(Refusal::Schema)?,
@@ -136,11 +171,11 @@ unsafe extern "C" fn counted_release(array: *mut FFI_ArrowArray) {
     let Some(array) = (unsafe { array.as_mut() }) else {
         return;
     };
-    let Counted { inner, bytes } = *unsafe { Box::from_raw(array.private_data.cast::<Counted>()) };
+    let Counted { inner, bytes } = *unsafe { Box::from_raw(array.private_data().cast::<Counted>()) };
 
     IMPORTED.fetch_sub(bytes, Ordering::Relaxed);
     drop(inner);
-    array.release = None;
+    unsafe { array.set_release(None) };
 }
 
 /// Moves `source` behind the counting forwarder once `schema` passed [`same_children`]; an early refusal takes nothing.
@@ -151,34 +186,28 @@ pub fn take(
 ) -> Result<(usize, Vec<ArrayRef>), Refusal> {
     same_children(schema, expected)?;
 
-    if source.release.is_none() {
+    if source.is_released() {
         return Err(Refusal::Released);
     }
 
-    if source.n_children != schema.n_children || source.length < 0 {
+    let (source_head, head) = (array_head(source), schema_head(schema));
+
+    if source_head.n_children != head.n_children || source_head.length < 0 {
         return Err(Refusal::Length {
-            children: source.n_children,
-            schema: schema.n_children,
+            children: source_head.n_children,
+            schema: head.n_children,
         });
     }
 
     let moved = unsafe { std::ptr::read(source) };
-    source.release = None;
+    unsafe { source.set_release(None) };
 
     let counted = Box::into_raw(Box::new(Counted { inner: moved, bytes: 0 }));
-    let inner = unsafe { &(*counted).inner };
-    let forward = FFI_ArrowArray {
-        length: inner.length,
-        null_count: inner.null_count,
-        offset: inner.offset,
-        n_buffers: inner.n_buffers,
-        n_children: inner.n_children,
-        buffers: inner.buffers,
-        children: inner.children,
-        dictionary: inner.dictionary,
-        release: Some(counted_release),
-        private_data: counted.cast(),
-    };
+    let mut forward = unsafe { std::ptr::read(&(*counted).inner) };
+    unsafe {
+        forward.set_release(Some(counted_release));
+        forward.set_private_data(counted.cast());
+    }
 
     let data = unsafe { from_ffi_and_data_type(forward, expected.data_type.clone()) }
         .and_then(|data| data.validate().map(|()| data))
@@ -228,8 +257,8 @@ mod tests {
     /// The producer: arrow-rs's export, wrapped so its release counts how often it ran.
     unsafe extern "C" fn counting_release(array: *mut FFI_ArrowArray) {
         let array = unsafe { &mut *array };
-        drop(unsafe { Box::from_raw(array.private_data.cast::<FFI_ArrowArray>()) });
-        array.release = None;
+        drop(unsafe { Box::from_raw(array.private_data().cast::<FFI_ArrowArray>()) });
+        unsafe { array.set_release(None) };
         RELEASES.fetch_add(1, Ordering::SeqCst);
     }
 
@@ -256,19 +285,11 @@ mod tests {
         let batch = StructArray::new(fields, columns().into_iter().map(|(_, array)| array).collect(), None);
         let (inner, schema) = to_ffi(&batch.to_data()).unwrap();
         let inner = Box::into_raw(Box::new(inner));
-        let exported = unsafe { &*inner };
-        let array = FFI_ArrowArray {
-            length: exported.length,
-            null_count: exported.null_count,
-            offset: exported.offset,
-            n_buffers: exported.n_buffers,
-            n_children: exported.n_children,
-            buffers: exported.buffers,
-            children: exported.children,
-            dictionary: exported.dictionary,
-            release: Some(counting_release),
-            private_data: inner.cast::<c_void>(),
-        };
+        let mut array = unsafe { std::ptr::read(inner) };
+        unsafe {
+            array.set_release(Some(counting_release));
+            array.set_private_data(inner.cast::<c_void>());
+        }
 
         (array, schema)
     }
@@ -296,7 +317,7 @@ mod tests {
 
         let (rows, arrays) = take(&schema, &mut array, &expected()).unwrap();
 
-        assert!(array.release.is_none());
+        assert!(array.release().is_none());
         assert_eq!(rows, 1000);
         assert_eq!(arrays.len(), 2);
         assert_eq!(arrays[0].as_ref(), columns()[0].1.as_ref());
@@ -335,7 +356,7 @@ mod tests {
 
         assert!(refusal(&take(&schema, &mut array, &expected).unwrap_err()));
         assert_eq!(imported(), 0);
-        assert!(array.release.is_some());
+        assert!(array.release().is_some());
         assert_eq!(RELEASES.load(Ordering::SeqCst), releases);
 
         drop(array);

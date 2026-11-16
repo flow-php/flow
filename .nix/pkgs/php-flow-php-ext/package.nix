@@ -9,12 +9,15 @@
 }:
 
 let
+  extensions = ../../../src/extension;
   extSrc = builtins.path {
-    path = ../../../src/extension/flow-php-ext;
+    path = extensions;
     name = "flow-php-ext-src";
     filter = path: type:
-      let baseName = baseNameOf path;
-      in !(
+      let
+        baseName = baseNameOf path;
+        folder = builtins.head (lib.splitString "/" (lib.removePrefix "${toString extensions}/" (toString path)));
+      in (folder == "flow-php-ext" || folder == "parquet-engine") && !(
         baseName == "target" ||
         baseName == "vendor" ||
         baseName == "ext" ||
@@ -29,6 +32,7 @@ let
     version = flow-php-ext-version;
 
     src = extSrc;
+    sourceRoot = "flow-php-ext-src/flow-php-ext";
 
     cargoLock.lockFile = ../../../src/extension/flow-php-ext/Cargo.lock;
 

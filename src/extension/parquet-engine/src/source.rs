@@ -16,7 +16,7 @@ use ext_php_rs::zend::ClassEntry;
 use parquet::errors::ParquetError;
 use parquet::file::reader::{ChunkReader, Length};
 
-use crate::parquet::error::Error;
+use crate::error::Error;
 use crate::php::{call_handle_catching, call_method, ce_method_ref, expect_object, zval_long};
 use crate::render::{exception, RUNTIME};
 

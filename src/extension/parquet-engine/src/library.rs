@@ -17,28 +17,28 @@ use parquet::arrow::ArrowSchemaConverter;
 use parquet::basic::Type as PhysicalType;
 use parquet::file::metadata::ParquetMetaData;
 
+use crate::batch;
+use crate::cells::{Checked, Classes, ReadCell, Refusal, Scalar, Times, Validated, WriteColumn};
+use crate::chunks::chunk_spans;
+use crate::error::Error;
+use crate::filter::Raw;
+use crate::footer::Footer;
 use crate::interfaces::{footer_ce, parquet_file_reader_ce, parquet_file_writer_ce};
-use crate::parquet::batch;
-use crate::parquet::cells::{Checked, Classes, ReadCell, Refusal, Scalar, Times, Validated, WriteColumn};
-use crate::parquet::chunks::chunk_spans;
-use crate::parquet::error::Error;
-use crate::parquet::filter::Raw;
-use crate::parquet::footer::Footer;
-use crate::parquet::lib_calls::{
+use crate::lib_calls::{
     call_static, METADATA_FROM_THRIFT, READ_PLAN_TO_EXTENSION, ROW_GROUP_CHUNKS_DECODED, ROW_GROUP_CHUNKS_FROM_THRIFT,
     SCHEMA_FROM_THRIFT,
 };
-use crate::parquet::options;
-use crate::parquet::read::{ParquetReader, ReadPlan};
-use crate::parquet::sink::PhpSink;
-use crate::parquet::source::{PhpSource, PhpStream};
-use crate::parquet::write::ParquetWriter;
+use crate::options;
 use crate::php::{
     call_handle, call_method, ce_method_ref, expect_object, find_class, for_each_value, ht_for_each, ht_get, ht_insert,
     ht_insert_long, read_property, zval_array, zval_long, zval_str, IterableArg,
 };
+use crate::read::{ParquetReader, ReadPlan};
 use crate::render::{exception, parquet_exception, Side};
+use crate::sink::PhpSink;
+use crate::source::{PhpSource, PhpStream};
 use crate::thrift;
+use crate::write::ParquetWriter;
 
 const FILE_META_DATA: &str = "Flow\\Parquet\\ThriftModel\\FileMetaData";
 /// `FileMetaData::$schema`'s field id.
@@ -218,12 +218,17 @@ pub fn batch_size(value: i64) -> PhpResult<usize> {
     })
 }
 
-/// `ParquetFileReader::footer()`'s return, typed `Flow\Parquet\Engine\RustParquetFooter`: the class registers before
-/// the reader, so the covariant return type is checked.
+#[cfg(feature = "arrow-names")]
+const FOOTER_CLASS: &str = "Flow\\Parquet\\Engine\\RustParquetFooter";
+#[cfg(feature = "flow-php-names")]
+const FOOTER_CLASS: &str = "Flow\\ETL\\Adapter\\Parquet\\Engine\\FlowPhpParquetFooter";
+
+/// `ParquetFileReader::footer()`'s return, typed as the footer class of the extension that registers it: the class
+/// registers before the reader, so the covariant return type is checked.
 pub struct FooterObject(Zval);
 
 impl IntoZval for FooterObject {
-    const TYPE: DataType = DataType::object("Flow\\Parquet\\Engine\\RustParquetFooter");
+    const TYPE: DataType = DataType::object(FOOTER_CLASS);
     const NULLABLE: bool = false;
 
     fn set_zval(self, zv: &mut Zval, _persistent: bool) -> ZvalResult<()> {
@@ -234,10 +239,21 @@ impl IntoZval for FooterObject {
 }
 
 #[php_class]
-#[php(
-    name = "Flow\\Parquet\\Engine\\RustParquetFileReader",
-    flags = ClassFlags::Final,
-    implements(ce = parquet_file_reader_ce, stub = "Flow\\Parquet\\ParquetFileReader")
+#[cfg_attr(
+    feature = "arrow-names",
+    php(
+        name = "Flow\\Parquet\\Engine\\RustParquetFileReader",
+        flags = ClassFlags::Final,
+        implements(ce = parquet_file_reader_ce, stub = "Flow\\Parquet\\ParquetFileReader")
+    )
+)]
+#[cfg_attr(
+    feature = "flow-php-names",
+    php(
+        name = "Flow\\ETL\\Adapter\\Parquet\\Engine\\FlowPhpParquetFileReader",
+        flags = ClassFlags::Final,
+        implements(ce = parquet_file_reader_ce, stub = "Flow\\Parquet\\ParquetFileReader")
+    )
 )]
 pub struct RustParquetFileReader {
     stream: Arc<PhpStream>,
@@ -391,10 +407,21 @@ impl RustParquetFileReader {
 }
 
 #[php_class]
-#[php(
-    name = "Flow\\Parquet\\Engine\\RustParquetFooter",
-    flags = ClassFlags::Final,
-    implements(ce = footer_ce, stub = "Flow\\Parquet\\ParquetFile\\Footer")
+#[cfg_attr(
+    feature = "arrow-names",
+    php(
+        name = "Flow\\Parquet\\Engine\\RustParquetFooter",
+        flags = ClassFlags::Final,
+        implements(ce = footer_ce, stub = "Flow\\Parquet\\ParquetFile\\Footer")
+    )
+)]
+#[cfg_attr(
+    feature = "flow-php-names",
+    php(
+        name = "Flow\\ETL\\Adapter\\Parquet\\Engine\\FlowPhpParquetFooter",
+        flags = ClassFlags::Final,
+        implements(ce = footer_ce, stub = "Flow\\Parquet\\ParquetFile\\Footer")
+    )
 )]
 pub struct RustParquetFooter {
     /// The stream the footer was read from, named in refusals.
@@ -600,10 +627,21 @@ impl IntoZval for Chunk {
 }
 
 #[php_class]
-#[php(
-    name = "Flow\\Arrow\\Parquet\\RustColumnsReader",
-    flags = ClassFlags::Final,
-    implements(ce = ce::iterator, stub = "\\Iterator")
+#[cfg_attr(
+    feature = "arrow-names",
+    php(
+        name = "Flow\\Arrow\\Parquet\\RustColumnsReader",
+        flags = ClassFlags::Final,
+        implements(ce = ce::iterator, stub = "\\Iterator")
+    )
+)]
+#[cfg_attr(
+    feature = "flow-php-names",
+    php(
+        name = "Flow\\ETL\\Adapter\\Parquet\\Engine\\FlowPhpColumnsReader",
+        flags = ClassFlags::Final,
+        implements(ce = ce::iterator, stub = "\\Iterator")
+    )
 )]
 pub struct RustColumnsReader {
     reader: Option<ParquetReader>,
@@ -790,7 +828,8 @@ impl RustColumnsReader {
         Ok(self.current.is_some().then_some(self.key))
     }
 
-    pub fn next(&mut self) -> PhpResult<()> {
+    #[php(name = "next")]
+    pub fn advance(&mut self) -> PhpResult<()> {
         self.start()?;
 
         if self.current.is_none() {
@@ -842,10 +881,21 @@ fn codec(compression: &Zval) -> PhpResult<&'static str> {
 }
 
 #[php_class]
-#[php(
-    name = "Flow\\Parquet\\Engine\\RustParquetFileWriter",
-    flags = ClassFlags::Final,
-    implements(ce = parquet_file_writer_ce, stub = "Flow\\Parquet\\ParquetFileWriter")
+#[cfg_attr(
+    feature = "arrow-names",
+    php(
+        name = "Flow\\Parquet\\Engine\\RustParquetFileWriter",
+        flags = ClassFlags::Final,
+        implements(ce = parquet_file_writer_ce, stub = "Flow\\Parquet\\ParquetFileWriter")
+    )
+)]
+#[cfg_attr(
+    feature = "flow-php-names",
+    php(
+        name = "Flow\\ETL\\Adapter\\Parquet\\Engine\\FlowPhpParquetFileWriter",
+        flags = ClassFlags::Final,
+        implements(ce = parquet_file_writer_ce, stub = "Flow\\Parquet\\ParquetFileWriter")
+    )
 )]
 pub struct RustParquetFileWriter {
     writer: Option<ParquetWriter>,

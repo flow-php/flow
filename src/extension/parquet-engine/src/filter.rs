@@ -19,8 +19,8 @@ use parquet::arrow::ProjectionMask;
 use parquet::basic::{ConvertedType, LogicalType, Type};
 use parquet::schema::types::{ColumnDescriptor, SchemaDescriptor};
 
-use crate::parquet::error::Error;
-use crate::parquet::read::{struct_child, struct_field};
+use crate::error::Error;
+use crate::read::{struct_child, struct_field};
 
 /// A PHP value as the converter's array holds it.
 #[derive(Debug, Clone, PartialEq)]
@@ -681,7 +681,7 @@ mod tests {
     use parquet::schema::types::SchemaDescriptor;
 
     use super::{Interval, PlanPredicate, Raw, Scalar};
-    use crate::parquet::error::Error;
+    use crate::error::Error;
 
     const SCHEMA: &str = "message schema {
         optional int64 i;

@@ -18,8 +18,8 @@ use arrow_array::{
 use arrow_buffer::{OffsetBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field, FieldRef, Fields, TimeUnit};
 
-use crate::parquet::cells::{unsigned, UNSIGNED_EXPECTED};
-use crate::parquet::error::{parent_row, Error};
+use crate::cells::{unsigned, UNSIGNED_EXPECTED};
+use crate::error::{parent_row, Error};
 
 const UTC: &str = "UTC";
 
@@ -639,7 +639,7 @@ mod tests {
     use arrow_schema::{DataType, Field, Fields, TimeUnit};
 
     use super::{canonical, canonical_type, to_parquet};
-    use crate::parquet::error::Error;
+    use crate::error::Error;
 
     fn read(array: ArrayRef) -> ArrayRef {
         let field = Field::new("column", array.data_type().clone(), true);

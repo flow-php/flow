@@ -9,8 +9,8 @@ publish = false
 [dependencies]
 arrow-array.workspace = true
 arrow-buffer.workspace = true
-arrow-arith = "59"
-arrow-ord = "59"
+arrow-arith = "60"
+arrow-ord = "60"
 arrow-schema.workspace = true
 memchr.workspace = true
 xxhash-rust.workspace = true

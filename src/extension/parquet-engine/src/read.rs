@@ -22,10 +22,10 @@ use parquet::file::page_index::index_reader::decode_offset_index;
 use parquet::schema::types::{ColumnDescriptor, SchemaDescriptor};
 use parquet::DecodeResult;
 
-use crate::parquet::canonical::{canonical, canonical_type};
-use crate::parquet::error::Error;
-use crate::parquet::filter::{PlanPredicate, Raw};
-use crate::parquet::source::{exact, ReadAt};
+use crate::canonical::{canonical, canonical_type};
+use crate::error::Error;
+use crate::filter::{PlanPredicate, Raw};
+use crate::source::{exact, ReadAt};
 
 /// The row groups holding a selected row, each with its row-group-local selection - `None` when every row of the
 /// group is selected - the row filter evaluated on the selected rows, and the rows returned at most, counted after it.
@@ -328,52 +328,6 @@ impl ParquetReader {
         &self.fields
     }
 
-    pub fn next(&mut self) -> Option<Result<(usize, Vec<ArrayRef>), Error>> {
-        let batch = loop {
-            match self.group.as_mut().and_then(Iterator::next) {
-                Some(Ok(batch)) => break batch,
-                Some(Err(error)) => return Some(Err(error.into())),
-                None => {}
-            }
-
-            let Some(decoder) = self.decoder.as_mut() else {
-                match self.start_run() {
-                    Ok(true) => continue,
-                    Ok(false) => return None,
-                    Err(error) => return Some(Err(error)),
-                }
-            };
-
-            match decoder.try_next_reader() {
-                Ok(DecodeResult::NeedsData(ranges)) => {
-                    if let Err(error) = read_coalesced(self.source.as_ref(), ranges)
-                        .and_then(|(ranges, bytes)| Ok(decoder.push_ranges(ranges, bytes)?))
-                    {
-                        return Some(Err(error));
-                    }
-                }
-                Ok(DecodeResult::Data(reader)) => {
-                    // pushed reads are coalesced, which PushBuffers never releases on its own
-                    decoder.clear_all_ranges();
-                    self.group = Some(reader);
-                }
-                Ok(DecodeResult::Finished) => self.finish_run(),
-                Err(error) => return Some(Err(error.into())),
-            }
-        };
-
-        self.returned += batch.num_rows();
-
-        Some(
-            self.fields
-                .iter()
-                .zip(&self.positions)
-                .map(|(field, (root, children))| canonical(field, &child(batch.column(*root), children)?))
-                .collect::<Result<Vec<_>, _>>()
-                .map(|columns| (batch.num_rows(), columns)),
-        )
-    }
-
     fn start_run(&mut self) -> Result<bool, Error> {
         let remaining_limit = self.limit.map(|limit| limit.saturating_sub(self.returned));
 
@@ -432,6 +386,56 @@ impl ParquetReader {
             let matches = self.matched.load(Ordering::Relaxed) - before;
             self.unskipped -= self.unskipped.min(matches);
         }
+    }
+}
+
+impl Iterator for ParquetReader {
+    type Item = Result<(usize, Vec<ArrayRef>), Error>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let batch = loop {
+            match self.group.as_mut().and_then(Iterator::next) {
+                Some(Ok(batch)) => break batch,
+                Some(Err(error)) => return Some(Err(error.into())),
+                None => {}
+            }
+
+            let Some(decoder) = self.decoder.as_mut() else {
+                match self.start_run() {
+                    Ok(true) => continue,
+                    Ok(false) => return None,
+                    Err(error) => return Some(Err(error)),
+                }
+            };
+
+            match decoder.try_next_reader() {
+                Ok(DecodeResult::NeedsData(ranges)) => {
+                    if let Err(error) = read_coalesced(self.source.as_ref(), ranges)
+                        .and_then(|(ranges, bytes)| Ok(decoder.push_ranges(ranges, bytes)?))
+                    {
+                        return Some(Err(error));
+                    }
+                }
+                Ok(DecodeResult::Data(reader)) => {
+                    // pushed reads are coalesced, which PushBuffers never releases on its own
+                    decoder.clear_all_ranges();
+                    self.group = Some(reader);
+                }
+                Ok(DecodeResult::Finished) => self.finish_run(),
+                Err(error) => return Some(Err(error.into())),
+            }
+        };
+
+        self.returned += batch.num_rows();
+
+        Some(
+            self.fields
+                .iter()
+                .zip(&self.positions)
+                .map(|(field, (root, children))| canonical(field, &child(batch.column(*root), children)?))
+                .collect::<Result<Vec<_>, _>>()
+                .map(|columns| (batch.num_rows(), columns)),
+        )
     }
 }
 
@@ -769,10 +773,10 @@ mod tests {
         canonical_hint, coalesced, groups_with_unmatched_rows, runs, unsupported_codec, ParquetReader, Projected,
         ReadPlan,
     };
-    use crate::parquet::error::Error;
-    use crate::parquet::filter::Raw;
-    use crate::parquet::footer::Footer;
-    use crate::parquet::source::fake::Counting;
+    use crate::error::Error;
+    use crate::filter::Raw;
+    use crate::footer::Footer;
+    use crate::source::fake::Counting;
 
     /// Three row groups of 100 rows.
     fn three_groups() -> ParquetMetaData {
@@ -1385,7 +1389,7 @@ mod tests {
             ParquetReader::open(Arc::clone(&source), footer.meta(), &["b".to_string()], plan, 1_024).unwrap();
         let mut values = Vec::new();
 
-        while let Some(batch) = reader.next() {
+        for batch in reader.by_ref() {
             values.extend(
                 batch.unwrap().1[0]
                     .as_primitive::<arrow_array::types::Int64Type>()
@@ -1502,7 +1506,7 @@ mod tests {
     fn drained(mut reader: ParquetReader) -> usize {
         let mut rows = 0;
 
-        while let Some(batch) = reader.next() {
+        for batch in reader.by_ref() {
             rows += batch.unwrap().0;
         }
 
@@ -1624,7 +1628,7 @@ mod tests {
     fn strings(mut reader: ParquetReader) -> Vec<String> {
         let mut values = Vec::new();
 
-        while let Some(batch) = reader.next() {
+        for batch in reader.by_ref() {
             let (_, arrays) = batch.unwrap();
             values.extend(
                 arrays[0]

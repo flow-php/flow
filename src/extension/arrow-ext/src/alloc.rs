@@ -80,3 +80,60 @@ pub fn allocated_bytes() -> i64 {
 pub fn allocated_bytes() -> i64 {
     ALLOCATED.load(Ordering::Relaxed)
 }
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+
+    use arrow_array::ffi::{from_ffi, to_ffi};
+    use arrow_array::types::Int64Type;
+    use arrow_array::{Array, ArrayRef, Int64Array, ListArray, StructArray};
+    use arrow_schema::{DataType, Field, Fields};
+
+    use crate::alloc::allocated_bytes;
+
+    fn batch() -> StructArray {
+        let ids: ArrayRef = Arc::new(Int64Array::from_iter((0..1000).map(|i| (i % 7 != 0).then_some(i))));
+        let lists: ArrayRef = Arc::new(ListArray::from_iter_primitive::<Int64Type, _, _>(
+            (0..1000).map(|i| Some(vec![Some(i), None, Some(i * 2)])),
+        ));
+
+        StructArray::new(
+            Fields::from(vec![
+                Field::new("id", DataType::Int64, true),
+                Field::new("list", lists.data_type().clone(), true),
+            ]),
+            vec![ids, lists],
+            None,
+        )
+    }
+
+    #[test]
+    fn an_exported_batch_dropped_unimported_frees_everything() {
+        let baseline = allocated_bytes();
+
+        {
+            let exported = to_ffi(&batch().to_data()).unwrap();
+            assert!(allocated_bytes() > baseline);
+            drop(exported);
+        }
+
+        assert_eq!(allocated_bytes(), baseline);
+    }
+
+    #[test]
+    fn an_exported_batch_imported_then_dropped_frees_everything() {
+        let baseline = allocated_bytes();
+
+        {
+            let (array, schema) = to_ffi(&batch().to_data()).unwrap();
+            let imported = StructArray::from(unsafe { from_ffi(array, &schema) }.unwrap());
+            assert_eq!(imported.len(), 1000);
+            assert_eq!(imported, batch());
+            drop(schema);
+            drop(imported);
+        }
+
+        assert_eq!(allocated_bytes(), baseline);
+    }
+}

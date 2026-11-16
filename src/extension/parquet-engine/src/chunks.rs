@@ -3,7 +3,7 @@
 
 use std::ops::Range;
 
-use crate::parquet::error::Error;
+use crate::error::Error;
 use crate::thrift::{elements as list, fields, Field, Malformed};
 
 const FILE_ROW_GROUPS: i16 = 4;
@@ -163,8 +163,8 @@ mod tests {
     use parquet::file::properties::WriterProperties;
 
     use super::{chunk_spans, refuse_encrypted};
-    use crate::parquet::error::Error;
-    use crate::parquet::footer::Footer;
+    use crate::error::Error;
+    use crate::footer::Footer;
     use crate::thrift::{elements, fields};
 
     /// `id` Int64 and `name` Utf8 in two row groups of 2 rows.

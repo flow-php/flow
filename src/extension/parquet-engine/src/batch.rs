@@ -12,12 +12,12 @@ use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendObject, Zval};
 use ext_php_rs::zend::ClassEntry;
 
-use crate::parquet::error::Error;
-use crate::parquet::library::{batch_size, read_plan, RustParquetFileReader, INVALID_ARGUMENT};
-use crate::parquet::read::ParquetReader;
-use crate::parquet::source::PhpStream;
+use crate::error::Error;
+use crate::library::{batch_size, read_plan, RustParquetFileReader, INVALID_ARGUMENT};
 use crate::php::{call_handle_transparent, ce_method_ref};
+use crate::read::ParquetReader;
 use crate::render::{exception, parquet_exception, Side};
+use crate::source::PhpStream;
 
 /// Child field metadata: the arrow type of the file column the canonical child was read from.
 pub const SOURCE_TYPE: &str = "parquet.source_type";
@@ -119,7 +119,8 @@ impl RustBatchReader {
     }
 
     /// At most `$batchSize` rows as one struct batch, null after the last.
-    pub fn next(&mut self) -> PhpResult<Option<RustParquetBatch>> {
+    #[php(name = "next")]
+    pub fn next_batch(&mut self) -> PhpResult<Option<RustParquetBatch>> {
         let Some(reader) = self.reader.as_mut() else {
             return Ok(None);
         };
@@ -260,12 +261,10 @@ unsafe fn check(schema: *const FFI_ArrowSchema, array: *const FFI_ArrowArray) ->
 mod tests {
     use std::sync::Arc;
 
-    use arrow_array::ffi::{from_ffi, to_ffi};
+    use arrow_array::ffi::to_ffi;
     use arrow_array::types::Int64Type;
     use arrow_array::{Array, ArrayRef, Int64Array, ListArray, StructArray};
     use arrow_schema::{DataType, Field, Fields};
-
-    use crate::alloc::allocated_bytes;
 
     fn batch() -> StructArray {
         let ids: ArrayRef = Arc::new(Int64Array::from_iter((0..1000).map(|i| (i % 7 != 0).then_some(i))));
@@ -281,35 +280,6 @@ mod tests {
             vec![ids, lists],
             None,
         )
-    }
-
-    #[test]
-    fn an_exported_batch_dropped_unimported_frees_everything() {
-        let baseline = allocated_bytes();
-
-        {
-            let exported = to_ffi(&batch().to_data()).unwrap();
-            assert!(allocated_bytes() > baseline);
-            drop(exported);
-        }
-
-        assert_eq!(allocated_bytes(), baseline);
-    }
-
-    #[test]
-    fn an_exported_batch_imported_then_dropped_frees_everything() {
-        let baseline = allocated_bytes();
-
-        {
-            let (array, schema) = to_ffi(&batch().to_data()).unwrap();
-            let imported = StructArray::from(unsafe { from_ffi(array, &schema) }.unwrap());
-            assert_eq!(imported.len(), 1000);
-            assert_eq!(imported, batch());
-            drop(schema);
-            drop(imported);
-        }
-
-        assert_eq!(allocated_bytes(), baseline);
     }
 
     fn refusal(mutate: impl FnOnce(*mut super::SchemaHead, *mut super::ArrayHead)) -> Result<(), String> {

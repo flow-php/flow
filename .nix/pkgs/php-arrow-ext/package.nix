@@ -9,12 +9,15 @@
 }:
 
 let
+  extensions = ../../../src/extension;
   extSrc = builtins.path {
-    path = ../../../src/extension/arrow-ext;
+    path = extensions;
     name = "arrow-ext-src";
     filter = path: type:
-      let baseName = baseNameOf path;
-      in !(
+      let
+        baseName = baseNameOf path;
+        folder = builtins.head (lib.splitString "/" (lib.removePrefix "${toString extensions}/" (toString path)));
+      in (folder == "arrow-ext" || folder == "parquet-engine") && !(
         baseName == "target" ||
         baseName == "vendor" ||
         baseName == "ext" ||
@@ -29,6 +32,7 @@ let
     version = arrow-ext-version;
 
     src = extSrc;
+    sourceRoot = "arrow-ext-src/arrow-ext";
 
     cargoLock.lockFile = ../../../src/extension/arrow-ext/Cargo.lock;
 

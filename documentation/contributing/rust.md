@@ -43,16 +43,11 @@ them set to `true`, the `shell.nix` assertion fails, because a prebuilt extensio
 src/extension/arrow-ext/
 ├── Cargo.toml              # Rust dependencies and build config
 ├── Makefile                # Build orchestration
+├── build.rs                # Extension and library versions
+├── crates/flow-parquet-engine -> ../../parquet-engine  # The shared Parquet crate, built with feature arrow-names
 ├── src/                    # Rust source code
-│   ├── lib.rs              # Extension entry point, module registration
-│   ├── interfaces.rs       # Flow\Parquet\{ParquetEngine, ParquetFileReader, ParquetFileWriter}, registered at MINIT
-│   ├── parquet/            # RustParquetEngine, readers, writer, canonical Arrow types, Arrow C Data batches
-│   ├── thrift.rs           # Footer bytes as the PHP ThriftModel objects
-│   ├── render.rs           # Parquet refusals as the Flow\Parquet exceptions
-│   ├── php.rs              # PHP engine helpers (class entries, hashtables, calls)
-│   ├── values.rs           # PHP values through the engine's C date API
-│   ├── alloc.rs            # Counting global allocator
-│   └── exception.rs        # Exception mapping
+│   ├── lib.rs              # Extension entry point: registers the crate's classes, RINIT/RSHUTDOWN
+│   └── alloc.rs            # Counting global allocator
 ├── php/                    # PHP stubs for static analysis (used when extension is not loaded)
 │   └── Flow/
 │       ├── Arrow/
@@ -103,6 +98,7 @@ src/extension/flow-php-ext/
 │   ├── flow-json-records/  # JSON lines / array framing and member-to-column mapping
 │   ├── flow-arrow-c/       # Batches across the Arrow C Data Interface, imported bytes counted
 │   ├── flow-csv-tokenizer/ # CSV records and fields as php_fgetcsv() produces them
+│   ├── flow-parquet-engine -> ../../parquet-engine  # The shared Parquet crate, built with feature flow-php-names
 │   └── flow-numeric-string/ # PHP's is_numeric() grammar
 ├── php/                    # PHP stubs for static analysis
 │   └── Flow/
@@ -110,6 +106,33 @@ src/extension/flow-php-ext/
 │   └── phpt/               # PHPT test files
 └── ext/
     └── config.m4           # PIE compatibility
+
+src/extension/parquet-engine/  # Crate flow-parquet-engine: the Parquet code of both extensions
+├── Cargo.toml              # Features arrow-names and flow-php-names: the PHP class names, exactly one enabled
+├── build.rs                # The php84/php85 cfgs
+└── src/
+    ├── lib.rs              # Module declarations
+    ├── engine.rs           # RustParquetEngine
+    ├── library.rs          # Readers, footer, writer and columns reader as the flow-php/parquet classes
+    ├── batch.rs            # Arrow C Data batches (RustBatchReader, RustParquetBatch, RustArrowSchema)
+    ├── read.rs             # ParquetReader: decodes only the row groups and byte ranges a read plan selects
+    ├── filter.rs           # The row filter the arrow-rs push decoder runs
+    ├── write.rs            # ParquetWriter: canonical arrays cast to the writer schema and written by arrow-rs
+    ├── canonical.rs        # Casts between the arrow-rs Parquet types and the canonical arrays
+    ├── cells.rs            # The flow-php/parquet per-cell values over the canonical arrays
+    ├── chunks.rs           # The column chunks a filter reads, sliced from the footer's thrift bytes
+    ├── footer.rs           # The footer, read and decoded once
+    ├── options.rs          # The arrays of SchemaConverter::toExtension() and OptionsConverter::toExtension()
+    ├── source.rs           # Parquet bytes from a SourceStream
+    ├── sink.rs             # Parquet bytes to a DestinationStream
+    ├── lib_calls.rs        # The flow-php/parquet converters called by name
+    ├── interfaces.rs       # Flow\Parquet\{ParquetEngine, ParquetFileReader, ParquetFileWriter}, found or registered at MINIT
+    ├── thrift.rs           # Footer bytes as the PHP ThriftModel objects
+    ├── error.rs            # Parquet refusals as data
+    ├── render.rs           # Parquet refusals as the Flow\Parquet exceptions
+    ├── php.rs              # PHP engine helpers and the request-scoped cache (thread local)
+    ├── values.rs           # PHP values through the engine's C date API
+    └── exception.rs        # Exception mapping
 ```
 
 ## Commands
