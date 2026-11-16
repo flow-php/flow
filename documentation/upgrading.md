@@ -262,6 +262,13 @@ postgresql://user:pass@localhost/app?options=-c%20statement_timeout%3D30s%20-c%2
 Or `withSessionSettings(['statement_timeout' => '30s', 'lock_timeout' => '10s'])`, or `session_settings` in the
 Symfony bundle.
 
+### 21) `flow-php/etl` - the default memory limit is 4 GiB, `ExternalSort::reduce()` takes streams
+
+| Before                                                                | After                                                                          |
+|-----------------------------------------------------------------------|--------------------------------------------------------------------------------|
+| `MemoryLimit::default()` with `memory_limit = -1`: 1 GiB              | 4 GiB (`MemoryLimit::WITHOUT_MEMORY_LIMIT_GB = 4`)                             |
+| `ExternalSort::reduce(list<BucketRun>, KWayMerge, int, ?int)`         | `reduce(list<Generator<Rows>>, KWayMerge, int, ?int)`, removes no run          |
+
 ---
 
 ## Upgrading from 0.46.x to 0.47.x

@@ -78,7 +78,7 @@ final readonly class MergeSortProcessor implements Distributable
     {
         return $this->columns === [] || $this->describe() === null
             ? null
-            : Distribution::ordered($this->columns, $this->progress);
+            : Distribution::ordered($this->columns, $this->progress, $this->config);
     }
 
     public function bind(Schema $input): BoundStep

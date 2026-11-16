@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Context;
 
 use Flow\ETL\Foundation\Exception\CorruptedRecordException;
+use Flow\ETL\Tests\Double\ReportedMemoryBackend;
 use Flow\ETL\Values\Rows;
 use Generator;
 
@@ -30,6 +31,23 @@ final class IdRows
             yield array_to_rows(array_map(static fn(int $id): array => [
                 'id' => $id,
             ], $batch), schema(int_schema('id')));
+        }
+    }
+
+    /**
+     * Every frame reports 1_000_000 native bytes, the way a decoded frame of a stored run grows a memory budget.
+     *
+     * @param list<int> ...$frames
+     *
+     * @return Generator<int, Rows>
+     */
+    public static function reportedFrames(ReportedMemoryBackend $backend, int &$yields, array ...$frames): Generator
+    {
+        foreach (self::batches(...$frames) as $frame) {
+            $backend->reported += 1_000_000;
+            $yields++;
+
+            yield $frame;
         }
     }
 

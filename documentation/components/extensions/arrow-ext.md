@@ -139,6 +139,16 @@ moves the array out. `RustParquetFileWriter::writeArrowBatch()` takes the same p
 any extension that has both methods. The children of the array match the writer columns by name. Userland code cannot
 make either class: the classes are final, and their constructors throw.
 
+### Native memory
+
+```php ignore
+<?php
+
+\Flow\Arrow\allocated_bytes(); // int, the bytes the extension holds outside PHP's memory manager in this process
+```
+
+`flow_php` adds these bytes to `RustBackend::allocatedBytes()`, so a memory limit counts them.
+
 ## Development
 
 ### Build Commands

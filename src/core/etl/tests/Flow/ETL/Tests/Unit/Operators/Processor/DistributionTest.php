@@ -12,6 +12,7 @@ use Flow\ETL\Operators\Processor\Distribution;
 use Flow\ETL\Tests\Double\PassThroughProcessor;
 use Flow\ETL\Tests\Double\ProgressSpy;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\ExternalSortMother;
 
 use function Flow\ETL\DSL\ref;
 
@@ -49,6 +50,21 @@ final class DistributionTest extends FlowTestCase
             [[], null, $order, null, null],
             self::fields(Distribution::ordered($order, new VoidProgress())),
         );
+    }
+
+    public function test_an_ordered_distribution_carries_the_sort_configuration(): void
+    {
+        $config = ExternalSortMother::inMemoryConfig();
+
+        static::assertSame($config, Distribution::ordered([ref('id')->asc()], new VoidProgress(), $config)->sort);
+    }
+
+    public function test_every_other_distribution_carries_no_sort_configuration(): void
+    {
+        static::assertNull(Distribution::clustered(['country'])->sort);
+        static::assertNull(Distribution::coPartitioned(new JoinKeys(['id'], ['user_id']))->sort);
+        static::assertNull(Distribution::single()->sort);
+        static::assertNull(Distribution::ordered([ref('id')->asc()], new VoidProgress())->sort);
     }
 
     public function test_single_keeps_its_partial_and_final(): void
