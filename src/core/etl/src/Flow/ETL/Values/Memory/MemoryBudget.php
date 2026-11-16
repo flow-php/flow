@@ -20,7 +20,7 @@ final class MemoryBudget
     private int $baseline;
 
     public function __construct(
-        Backend $backend,
+        private readonly Backend $backend,
         public readonly Unit $limit,
         public readonly ?Unit $processCap,
     ) {
@@ -64,6 +64,7 @@ final class MemoryBudget
     /** After a spill freed its buffer: growth is measured from here. */
     public function released(): void
     {
+        $this->backend->releaseFreedMemory();
         $this->baseline = $this->consumption->capture()->inBytes();
     }
 

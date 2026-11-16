@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Values\Memory;
 
 use Flow\ETL\Tests\Double\FixedProcessMemoryBackend;
 use Flow\ETL\Tests\Double\ReportedMemoryBackend;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Memory\MemoryBudget;
 use Flow\ETL\Values\Memory\Unit;
@@ -54,6 +55,22 @@ final class MemoryBudgetTest extends FlowTestCase
         $backend->reported = 940_000_000;
 
         static::assertFalse($budget->exceededWith(2));
+    }
+
+    public function test_released_returns_freed_memory_through_the_backend(): void
+    {
+        $backend = new SpyBackend();
+        (new MemoryBudget($backend, Unit::fromGb(1), null))->released();
+
+        static::assertSame(1, $backend->releases());
+    }
+
+    public function test_a_new_budget_releases_nothing(): void
+    {
+        $backend = new SpyBackend();
+        new MemoryBudget($backend, Unit::fromGb(1), null);
+
+        static::assertSame(0, $backend->releases());
     }
 
     public function test_released_keeps_cached_memory_out_of_the_measure(): void

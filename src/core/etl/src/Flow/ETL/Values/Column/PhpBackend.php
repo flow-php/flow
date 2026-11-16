@@ -750,6 +750,8 @@ final readonly class PhpBackend implements Backend, Describable
 
     public function resetAllocatedPeak(): void {}
 
+    public function releaseFreedMemory(): void {}
+
     /**
      * @param list<mixed> $results
      */

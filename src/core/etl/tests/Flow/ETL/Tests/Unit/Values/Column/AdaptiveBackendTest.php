@@ -184,6 +184,14 @@ final class AdaptiveBackendTest extends TestCase
         );
     }
 
+    public function test_release_freed_memory_is_what_the_backend_does(): void
+    {
+        $backend = new AdaptiveBackend();
+        $backend->releaseFreedMemory();
+
+        static::assertSame((new PhpBackend())->allocatedBytes(), $backend->allocatedBytes());
+    }
+
     public function test_starts_with_is_what_the_php_backend_answers(): void
     {
         $rows = array_to_rows(

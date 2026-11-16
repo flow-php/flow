@@ -31,6 +31,7 @@ use Flow\ETL\Values\Schema;
 use Generator;
 use SensitiveParameter;
 
+use function array_chunk;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_instance_of;
 use function range;
@@ -40,6 +41,9 @@ use function range;
  */
 final readonly class GroupByAggregationProcessor implements Distributable
 {
+    // one array of keys for every earlier group would hold them all next to the groups
+    public const int EARLIER_KEYS_CHUNK = 65_536;
+
     private bool $merges;
 
     /**
@@ -205,7 +209,8 @@ final readonly class GroupByAggregationProcessor implements Distributable
                 $groups->accumulate($batch, $backend);
                 $this->took($batch);
 
-                if ($budget->exceeded()) {
+                // the spilled phase holds the earlier groups, their bucket map and one bucket on top
+                if ($budget->exceededWith(2)) {
                     $spilling = true;
 
                     break;
@@ -238,6 +243,29 @@ final readonly class GroupByAggregationProcessor implements Distributable
     }
 
     /**
+     * @param int<1, max> $chunk
+     *
+     * @return array<int, list<int>> earlier group ids by bucket index
+     */
+    public function earlierByBucket(
+        AggregatedGroups $earlier,
+        HashBucketing $bucketing,
+        KeyEncoder $encoder,
+        Backend $backend,
+        int $chunk = self::EARLIER_KEYS_CHUNK,
+    ): array {
+        $earlierOf = [];
+
+        foreach (array_chunk($earlier->count() === 0 ? [] : range(0, $earlier->count() - 1), $chunk) as $groups) {
+            foreach ($encoder->of($earlier->keyRows($groups, $backend)) as $position => $key) {
+                $earlierOf[$bucketing->indexOf($key)][] = $groups[$position];
+            }
+        }
+
+        return $earlierOf;
+    }
+
+    /**
      * @param Generator<Rows> $rest the stream after the batch that passed the limit
      *
      * @return Generator<Rows>
@@ -264,16 +292,12 @@ final readonly class GroupByAggregationProcessor implements Distributable
             $buckets->add($bucket);
         }
 
-        /** @var array<int, list<int>> $earlierOf earlier group ids by bucket index */
-        $earlierOf = [];
-        $encoder = new KeyEncoder($this->groupBy->refs()->names(), declared: $shape->input);
-
-        foreach ($encoder->of($earlier->keyRows(
-            $earlier->count() === 0 ? [] : range(0, $earlier->count() - 1),
+        $earlierOf = $this->earlierByBucket(
+            $earlier,
+            $bucketing,
+            new KeyEncoder($this->groupBy->refs()->names(), declared: $shape->input),
             $backend,
-        )) as $group => $key) {
-            $earlierOf[$bucketing->indexOf($key)][] = $group;
-        }
+        );
 
         foreach ($buckets->all() as $bucket) {
             $groups = new AggregatedGroups($this->groupBy, $shape, $backend, $this->progress);
