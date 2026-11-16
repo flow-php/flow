@@ -26,6 +26,7 @@ use Flow\ETL\Tests\Mother\ColumnMother;
 use Flow\ETL\Tests\Mother\DateIntervalMother;
 use Flow\ETL\Tests\Mother\RowsMother;
 use Flow\ETL\Tests\Mother\XmlMother;
+use Flow\ETL\Values\Column\Column;
 use Flow\ETL\Values\Column\Frame\Codec;
 use Flow\ETL\Values\Column\Frame\FloeException;
 use Flow\ETL\Values\Column\Frame\NoopCodec;
@@ -1242,6 +1243,103 @@ final class PhpBackendTest extends TestCase
                 ->modulo(ColumnMother::of(int_schema('a'), [-7, 7]), ColumnMother::of(int_schema('b'), [3, 3]))
                 ->values(),
         );
+    }
+
+    /**
+     * @return Generator<string, array{Closure(Column, Column): Column, list<?string>, list<?bool>}>
+     */
+    public static function text_matches(): Generator
+    {
+        yield 'starts with' => [
+            (new PhpBackend())->startsWith(...),
+            ['ab', 'a', null, '', 'xx', 'żó', 'bc'],
+            [true, null, null, true, false, true, false],
+        ];
+        yield 'ends with' => [
+            (new PhpBackend())->endsWith(...),
+            ['bc', 'a', null, '', 'xx', 'łw', 'ab'],
+            [true, null, null, true, false, true, false],
+        ];
+        yield 'contains' => [
+            (new PhpBackend())->contains(...),
+            ['b', 'a', null, '', 'xx', 'ół', 'ca'],
+            [true, null, null, true, false, true, false],
+        ];
+    }
+
+    /**
+     * @param Closure(Column, Column): Column $match
+     * @param list<?string> $needles
+     * @param list<?bool> $expected
+     */
+    #[DataProvider('text_matches')]
+    public function test_a_text_match_is_null_where_either_side_is_null(
+        Closure $match,
+        array $needles,
+        array $expected,
+    ): void {
+        $column = $match(ColumnMother::of(str_schema('h', nullable: true), [
+            'abc',
+            null,
+            'abc',
+            'abc',
+            'x',
+            'żółw',
+            'abc',
+        ]), ColumnMother::of(str_schema('n', nullable: true), $needles));
+
+        static::assertSame([$expected, 2, 'boolean'], [
+            $column->values(),
+            $column->nullCount(),
+            $column->type()->toString(),
+        ]);
+    }
+
+    /**
+     * @return Generator<string, array{Closure(Column, Column): Column, list<?bool>}>
+     */
+    public static function constant_needle_matches(): Generator
+    {
+        yield 'starts with' => [(new PhpBackend())->startsWith(...), [true, false, null]];
+        yield 'ends with' => [(new PhpBackend())->endsWith(...), [false, true, null]];
+        yield 'contains' => [(new PhpBackend())->contains(...), [true, true, null]];
+    }
+
+    /**
+     * @param Closure(Column, Column): Column $match
+     * @param list<?bool> $expected
+     */
+    #[DataProvider('constant_needle_matches')]
+    public function test_a_text_match_takes_a_constant_needle(Closure $match, array $expected): void
+    {
+        static::assertSame(
+            $expected,
+            $match(
+                ColumnMother::of(str_schema('h', nullable: true), ['abc', 'cab', null]),
+                (new PhpBackend())->constant(str_schema('n'), 'ab', 3),
+            )->values(),
+        );
+    }
+
+    /**
+     * @return Generator<string, array{Closure(Column, Column): Column}>
+     */
+    public static function text_match_kernels(): Generator
+    {
+        yield 'starts with' => [(new PhpBackend())->startsWith(...)];
+        yield 'ends with' => [(new PhpBackend())->endsWith(...)];
+        yield 'contains' => [(new PhpBackend())->contains(...)];
+    }
+
+    /**
+     * @param Closure(Column, Column): Column $match
+     */
+    #[DataProvider('text_match_kernels')]
+    public function test_a_text_match_of_an_empty_column_is_an_empty_boolean_column(Closure $match): void
+    {
+        $column = $match(ColumnMother::of(str_schema('h'), []), ColumnMother::of(str_schema('n'), []));
+
+        static::assertSame([[], 0, 'boolean'], [$column->values(), $column->nullCount(), $column->type()->toString()]);
     }
 
     public function test_sort_keeps_rows_with_equal_keys_in_input_order(): void

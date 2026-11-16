@@ -101,6 +101,21 @@ final readonly class AdaptiveBackend implements Backend, Describable
         return $this->backend->modulo($left, $right);
     }
 
+    public function startsWith(Column $haystack, Column $needle): Column
+    {
+        return $this->backend->startsWith($haystack, $needle);
+    }
+
+    public function endsWith(Column $haystack, Column $needle): Column
+    {
+        return $this->backend->endsWith($haystack, $needle);
+    }
+
+    public function contains(Column $haystack, Column $needle): Column
+    {
+        return $this->backend->contains($haystack, $needle);
+    }
+
     /**
      * @param list<SortColumn> $columns
      */

@@ -1,10 +1,11 @@
-//! `RustBackend::compare()`, `isNull()` and `isNotNull()`: native where arrow answers exactly as `PhpBackend` does.
+//! `RustBackend::compare()`, the text matches, `isNull()` and `isNotNull()`: native where arrow answers exactly as
+//! `PhpBackend` does.
 
 use std::sync::Arc;
 
 use arrow_array::cast::AsArray;
 use arrow_array::types::{Float64Type, Int64Type};
-use arrow_array::{ArrayRef, BooleanArray, Float64Array};
+use arrow_array::{ArrayRef, BooleanArray, Float64Array, LargeBinaryArray};
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::types::Zval;
 use flow_column_kernels::compare::{compare_floats, compare_ordered, floats_of_ints, Operator};
@@ -41,6 +42,30 @@ pub fn native_comparison(left: &Zval, operator: &Zval, right: &Zval) -> Result<O
     };
 
     Ok(Some(boolean_column(compared)?))
+}
+
+// None sends the call to PhpBackend, as native_modulo does
+pub fn native_text_match(
+    haystack: &Zval,
+    needle: &Zval,
+    kernel: fn(&LargeBinaryArray, &LargeBinaryArray) -> BooleanArray,
+) -> Result<Option<RustColumn>, PhpException> {
+    let (Some(haystack), Some(needle)) = (haystack.extract::<&RustColumn>(), needle.extract::<&RustColumn>()) else {
+        return Ok(None);
+    };
+
+    if haystack.plan().type_name != "string"
+        || needle.plan().type_name != "string"
+        || haystack.data().len() != needle.data().len()
+    {
+        return Ok(None);
+    }
+
+    boolean_column(kernel(
+        haystack.data().as_binary::<i64>(),
+        needle.data().as_binary::<i64>(),
+    ))
+    .map(Some)
 }
 
 pub fn boolean_column(booleans: BooleanArray) -> Result<RustColumn, PhpException> {

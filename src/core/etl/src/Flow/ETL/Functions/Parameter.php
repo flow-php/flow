@@ -91,6 +91,46 @@ final readonly class Parameter
     }
 
     /**
+     * @template T
+     *
+     * @param Type<T> ...$types
+     *
+     * @return list<?T>
+     */
+    public function typesOf(Column $column, Type ...$types): array
+    {
+        $accepted = [];
+
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($column->values() as $i => $value) {
+            if ($value === null) {
+                $accepted[] = null;
+
+                continue;
+            }
+
+            foreach ($types as $nextType) {
+                if ($nextType->isValid($value)) {
+                    $accepted[] = $value;
+
+                    continue 2;
+                }
+            }
+
+            throw new EvaluationException(
+                $i,
+                new InvalidArgumentException(sprintf(
+                    'Expected one of "%s", got "%s".',
+                    implode('", "', array_map(static fn(Type $type): string => $type->toString(), $types)),
+                    get_debug_type($value),
+                )),
+            );
+        }
+
+        return $accepted;
+    }
+
+    /**
      * @return list<?bool>
      */
     public function asBooleans(Rows $rows, Backend $backend): array
@@ -178,6 +218,20 @@ final readonly class Parameter
 
         $builder = $backend->builder(Definitions::of('value', type_integer(), true));
         $builder->appendMany($this->checked($column->values(), type_integer()));
+
+        return $builder->finish();
+    }
+
+    public function asStringColumn(Rows $rows, Backend $backend): Column
+    {
+        $column = $this->function->eval($rows, $backend);
+
+        if (type_bare($column->type()) instanceof StringType) {
+            return $column;
+        }
+
+        $builder = $backend->builder(Definitions::of('value', type_string(), true));
+        $builder->appendMany($this->checked($column->values(), type_string()));
 
         return $builder->finish();
     }
@@ -314,35 +368,7 @@ final readonly class Parameter
      */
     public function asTypes(Rows $rows, Backend $backend, Type ...$types): array
     {
-        $accepted = [];
-
-        // @mago-ignore analysis:mixed-assignment
-        foreach ($this->values($rows, $backend) as $i => $value) {
-            if ($value === null) {
-                $accepted[] = null;
-
-                continue;
-            }
-
-            foreach ($types as $nextType) {
-                if ($nextType->isValid($value)) {
-                    $accepted[] = $value;
-
-                    continue 2;
-                }
-            }
-
-            throw new EvaluationException(
-                $i,
-                new InvalidArgumentException(sprintf(
-                    'Expected one of "%s", got "%s".',
-                    implode('", "', array_map(static fn(Type $type): string => $type->toString(), $types)),
-                    get_debug_type($value),
-                )),
-            );
-        }
-
-        return $accepted;
+        return $this->typesOf($this->function->eval($rows, $backend), ...$types);
     }
 
     /**

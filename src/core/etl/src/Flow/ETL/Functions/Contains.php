@@ -13,10 +13,12 @@ use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Column\Column;
 use Flow\ETL\Values\Rows;
 use Flow\Types\Type;
+use Flow\Types\Type\Native\StringType;
 use Flow\Types\Type\Nullability;
 use SensitiveParameter;
 
 use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_bare;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_string;
 use function in_array;
@@ -79,7 +81,13 @@ final class Contains implements ScalarFunction
 
     public function eval(Rows $rows, Backend $backend): Column
     {
-        $haystacks = (new Parameter($this->haystack))->asTypes($rows, $backend, type_string(), type_array());
+        $haystack = $this->haystack->eval($rows, $backend);
+
+        if (type_bare($haystack->type()) instanceof StringType) {
+            return $backend->contains($haystack, (new Parameter($this->needle))->asStringColumn($rows, $backend));
+        }
+
+        $haystacks = (new Parameter($this->haystack))->typesOf($haystack, type_string(), type_array());
         $needles = (new Parameter($this->needle))->asStrings($rows, $backend);
         $results = [];
         $i = 0;

@@ -11,9 +11,12 @@ use DOMElement;
 use Flow\ETL\Foundation\Exception\EvaluationException;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Functions\Cast;
+use Flow\ETL\Functions\ReferenceResolver;
 use Flow\ETL\Tests\Context\DescribeRoundTrip;
 use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\Context\ScalarFunctionFixtures;
+use Flow\ETL\Tests\Double\FailingOnValuesFunction;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Column\PhpBackend;
 use Flow\ETL\Values\Schema\Definition;
@@ -24,6 +27,7 @@ use Flow\Types\Value\Uuid;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\cast;
 use function Flow\ETL\DSL\date_schema;
@@ -108,6 +112,113 @@ final class CastTest extends FlowTestCase
             static::assertInstanceOf(InvalidArgumentException::class, $e->getPrevious());
             static::assertSame('Cast function requires non-null value', $e->getPrevious()->getMessage());
         }
+    }
+
+    public function test_casting_a_string_column_to_string_keeps_its_values(): void
+    {
+        static::assertSame(
+            ['a', ''],
+            (new FunctionContext(flow_context()))
+                ->column(cast(ref('s'), 'string'), [['s' => 'a'], ['s' => '']], schema(str_schema('s')))
+                ->values(),
+        );
+    }
+
+    public function test_casting_a_nullable_string_column_to_an_optional_string(): void
+    {
+        static::assertSame(
+            ['a', null],
+            (new FunctionContext(flow_context()))
+                ->column(
+                    cast(ref('s'), type_optional(type_string())),
+                    [['s' => 'a'], ['s' => null]],
+                    schema(str_schema('s', nullable: true)),
+                )
+                ->values(),
+        );
+    }
+
+    public function test_casting_a_null_string_to_string_is_refused_with_its_row_index(): void
+    {
+        try {
+            (new FunctionContext(flow_context()))->column(
+                cast(ref('s'), 'string'),
+                [['s' => 'a'], ['s' => null]],
+                schema(str_schema('s', nullable: true)),
+            );
+            static::fail('a null string was cast to a non-nullable string');
+        } catch (EvaluationException $e) {
+            static::assertSame(1, $e->rowIndex);
+            static::assertInstanceOf(InvalidArgumentException::class, $e->getPrevious());
+            static::assertSame('Cast function requires non-null value', $e->getPrevious()->getMessage());
+        }
+    }
+
+    public function test_casting_a_uuid_column_to_string_equals_casting_each_value(): void
+    {
+        $uuids = [new Uuid('9b9b7c1e-0d4f-4a0b-8f3a-1b2c3d4e5f60'), new Uuid('00000000-0000-4000-8000-000000000001')];
+
+        static::assertSame(
+            [type_string()->cast($uuids[0]), type_string()->cast($uuids[1])],
+            (new FunctionContext(flow_context()))
+                ->column(cast(ref('u'), 'string'), [['u' => $uuids[0]], ['u' => $uuids[1]]], schema(uuid_schema('u')))
+                ->values(),
+        );
+    }
+
+    public function test_casting_a_null_uuid_to_an_optional_string_is_null(): void
+    {
+        static::assertSame(
+            ['9b9b7c1e-0d4f-4a0b-8f3a-1b2c3d4e5f60', null],
+            (new FunctionContext(flow_context()))
+                ->column(
+                    cast(ref('u'), type_optional(type_string())),
+                    [['u' => new Uuid('9b9b7c1e-0d4f-4a0b-8f3a-1b2c3d4e5f60')], ['u' => null]],
+                    schema(uuid_schema('u', nullable: true)),
+                )
+                ->values(),
+        );
+    }
+
+    public function test_casting_a_null_uuid_to_string_is_refused_with_its_row_index(): void
+    {
+        try {
+            (new FunctionContext(flow_context()))->column(
+                cast(ref('u'), 'string'),
+                [['u' => new Uuid('9b9b7c1e-0d4f-4a0b-8f3a-1b2c3d4e5f60')], ['u' => null]],
+                schema(uuid_schema('u', nullable: true)),
+            );
+            static::fail('a null uuid was cast to a non-nullable string');
+        } catch (EvaluationException $e) {
+            static::assertSame(1, $e->rowIndex);
+            static::assertInstanceOf(InvalidArgumentException::class, $e->getPrevious());
+            static::assertSame('Cast function requires non-null value', $e->getPrevious()->getMessage());
+        }
+    }
+
+    public function test_casting_a_string_column_to_string_asks_the_backend_for_no_builder(): void
+    {
+        $schema = schema(str_schema('s'));
+        $backend = new SpyBackend();
+        (new ReferenceResolver())
+            ->resolve(cast(ref('s'), 'string'), $schema)
+            ->eval(array_to_rows([['s' => 'a']], $schema, new PhpBackend()), $backend);
+
+        static::assertSame(0, $backend->builders());
+        static::assertSame(1, $backend->adopts());
+    }
+
+    public function test_a_cast_to_string_evaluates_its_child_once(): void
+    {
+        $spy = new FailingOnValuesFunction(ref('v'));
+
+        static::assertSame(
+            ['1', '2'],
+            (new FunctionContext(flow_context()))
+                ->column(cast($spy, 'string'), [['v' => 1], ['v' => 2]], schema(int_schema('v')))
+                ->values(),
+        );
+        static::assertSame(1, $spy->evals);
     }
 
     public function test_cast_of_a_null_value_to_an_optional_target_is_null(): void

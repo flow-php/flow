@@ -640,6 +640,7 @@ dependencies = [
  "arrow-buffer",
  "arrow-ord",
  "arrow-schema",
+ "memchr",
  "xxhash-rust",
 ]
 

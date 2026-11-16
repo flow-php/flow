@@ -16,7 +16,7 @@ use function Flow\Types\DSL\type_integer;
 final readonly class HashJoinConfig implements Describable
 {
     /**
-     * @param Unit $broadcastLimit the right side's size under which a join read by workers broadcasts it
+     * @param Unit $broadcastLimit the right side's in-memory size under which a join read by workers broadcasts it
      */
     public function __construct(
         public BucketingConfig $bucketing,

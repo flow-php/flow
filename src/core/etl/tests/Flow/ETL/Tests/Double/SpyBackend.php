@@ -133,6 +133,21 @@ final class SpyBackend implements Backend
         return $this->php->modulo($left, $right);
     }
 
+    public function startsWith(Column $haystack, Column $needle): Column
+    {
+        return $this->php->startsWith($haystack, $needle);
+    }
+
+    public function endsWith(Column $haystack, Column $needle): Column
+    {
+        return $this->php->endsWith($haystack, $needle);
+    }
+
+    public function contains(Column $haystack, Column $needle): Column
+    {
+        return $this->php->contains($haystack, $needle);
+    }
+
     /**
      * @param list<SortColumn> $columns
      */

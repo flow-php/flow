@@ -24,6 +24,7 @@ use Flow\Types\Exception\InvalidArgumentException as TypesInvalidArgumentExcepti
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\DateTimeType;
 use Flow\Types\Type\Logical\DateType;
+use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Type\Logical\XMLType;
 use Flow\Types\Type\Native\StringType;
 use Flow\Types\Type\TypeFactory;
@@ -120,17 +121,32 @@ final class Cast implements ScalarFunction
         if (type_bare($this->type) instanceof StringType) {
             $column = $this->value->eval($rows, $backend);
             $type = type_bare($column->type());
+            // an OptionalType column keeps the per-row lane
+            $text = $column->type() instanceof StringType;
 
-            if ($type instanceof DateTimeType || $type instanceof DateType) {
-                /** @var list<?int> $physicals */
-                $physicals = $column->physicals();
-
+            if ($text || $type instanceof UuidType || $type instanceof DateTimeType || $type instanceof DateType) {
                 if ($column->nullCount() > 0 && !type_is_nullable($this->type)) {
                     throw EvaluationException::at(
-                        (int) array_search(null, $physicals, true),
+                        (int) array_search(null, $column->physicals(), true),
                         new InvalidArgumentException('Cast function requires non-null value'),
                     );
                 }
+
+                if ($text) {
+                    return $backend->adopt(Definitions::of('value', type_string(), true), $column);
+                }
+
+                if ($type instanceof UuidType) {
+                    /** @var list<?string> $bytes */
+                    $bytes = $column->physicals();
+                    $builder = $backend->builder(Definitions::of('value', type_string(), true));
+                    $builder->appendPhysicals((new TextValues())->uuids($bytes), $column->nullCount());
+
+                    return $builder->finish();
+                }
+
+                /** @var list<?int> $physicals */
+                $physicals = $column->physicals();
 
                 return (new ResultColumn($backend))->of($this, (new TextValues())->dateTimes(
                     $type,
@@ -142,6 +158,8 @@ final class Cast implements ScalarFunction
             if ($type instanceof XMLType) {
                 $values = $column->physicals();
                 $documents = new XmlDocumentPhysical();
+            } else {
+                $values = $column->values();
             }
         }
 
