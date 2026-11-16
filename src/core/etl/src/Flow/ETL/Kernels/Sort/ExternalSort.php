@@ -17,6 +17,7 @@ use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Memory\MemoryBudget;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
+use Flow\ETL\Values\Sort\RowOrder;
 use Flow\ETL\Values\Sort\SortColumn;
 use Generator;
 
@@ -144,6 +145,7 @@ final readonly class ExternalSort
                 ...$runs,
                 ...$this->runs(array_splice($buffer, 0), $schema, $backend, $budget, $limit, $runId, count($runs)),
             ];
+            $budget->released();
 
             $merger = new KWayMerge($this->columns, $backend, $this->batchSize);
             $mergedIndex = 0;
@@ -152,11 +154,11 @@ final readonly class ExternalSort
             // each pass merges neighbouring runs in place, so equal keys keep the order they arrived in
             while (count($runs) > $fanIn) {
                 $runs = array_map(
-                    function (array $group) use ($merger, $mergedIndex, $limit): BucketRun {
+                    function (array $group) use ($merger, &$mergedIndex, $limit): BucketRun {
                         $merged = $this->reduce(
                             array_map(static fn(BucketRun $run): Generator => $run->rows(), $group),
                             $merger,
-                            $mergedIndex,
+                            $mergedIndex++,
                             $limit,
                         );
 
@@ -264,7 +266,7 @@ final readonly class ExternalSort
     public function merge(array $streams, Backend $backend, MemoryBudget $budget, BatchSize $output): Generator
     {
         try {
-            $remaining = $budget->remaining();
+            $full = max(0, $budget->remaining());
             $first = null;
 
             // only the first stream with rows is started: starting every stream would decode a frame of each
@@ -280,16 +282,24 @@ final readonly class ExternalSort
                 return;
             }
 
-            $perFrame = $remaining - $budget->remaining();
+            // held in a variable, so the keys are still alive when the second measurement runs
+            $keys = (new RowOrder($this->columns))->keys($first);
+            $perFrame = $full - $budget->remaining();
+            // a merge round copies the held rows twice more
+            $remaining = intdiv($full, 2);
             $frames = $perFrame < 1 ? null : intdiv(max(0, $remaining), count($streams) * $perFrame);
 
             if ($frames === 0) {
                 $merger = new KWayMerge($this->columns, $backend, $this->batchSize);
                 $fanIn = max(2, min($this->mergeFanIn, intdiv(max(0, $remaining), $perFrame)));
 
+                $mergedIndex = 0;
+
                 while (count($streams) > $fanIn) {
                     $streams = array_map(
-                        fn(array $group): Generator => $this->reduce($group, $merger, 0, null)->rows(),
+                        function (array $group) use ($merger, &$mergedIndex): Generator {
+                            return $this->reduce($group, $merger, $mergedIndex++, null)->rows();
+                        },
                         array_chunk($streams, $fanIn),
                     );
                 }
@@ -330,14 +340,20 @@ final readonly class ExternalSort
             $count += $batch->count();
 
             if ($count >= $size) {
-                yield Rows::concat($pending[0]->schema(), $backend, ...$pending);
+                // nothing outlives the joined batch
+                $batch = Rows::concat($pending[0]->schema(), $backend, ...$pending);
                 $pending = [];
                 $count = 0;
+
+                yield $batch;
             }
         }
 
         if ($pending !== []) {
-            yield Rows::concat($pending[0]->schema(), $backend, ...$pending);
+            $batch = Rows::concat($pending[0]->schema(), $backend, ...$pending);
+            $pending = [];
+
+            yield $batch;
         }
     }
 

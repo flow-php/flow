@@ -158,4 +158,6 @@ final readonly class AcceptingBackend implements Backend
     }
 
     public function resetAllocatedPeak(): void {}
+
+    public function releaseFreedMemory(): void {}
 }

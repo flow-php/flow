@@ -61,6 +61,19 @@ pub fn own_bytes() -> i64 {
     ALLOCATED.load(Ordering::Relaxed)
 }
 
+#[cfg(all(target_os = "linux", target_env = "gnu"))]
+pub fn release_freed() {
+    extern "C" {
+        fn malloc_trim(pad: usize) -> i32;
+    }
+
+    // SAFETY: malloc_trim takes no pointer and is safe to call at any time
+    unsafe { malloc_trim(0) };
+}
+
+#[cfg(not(all(target_os = "linux", target_env = "gnu")))]
+pub fn release_freed() {}
+
 pub fn own_peak_bytes() -> i64 {
     PEAK.load(Ordering::Relaxed).max(own_bytes())
 }

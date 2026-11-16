@@ -47,6 +47,11 @@ final readonly class FixedProcessMemoryBackend implements Backend
 
     public function resetAllocatedPeak(): void {}
 
+    public function releaseFreedMemory(): void
+    {
+        $this->php->releaseFreedMemory();
+    }
+
     public function builder(Definition $definition): ColumnBuilder
     {
         return $this->php->builder($definition);

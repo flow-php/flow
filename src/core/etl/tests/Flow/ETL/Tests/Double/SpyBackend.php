@@ -34,6 +34,8 @@ final class SpyBackend implements Backend
 
     private readonly PhpBackend $php;
 
+    private int $releases = 0;
+
     public function __construct(
         private readonly int $allocatedBytes = 0,
     ) {
@@ -63,6 +65,16 @@ final class SpyBackend implements Backend
     }
 
     public function resetAllocatedPeak(): void {}
+
+    public function releaseFreedMemory(): void
+    {
+        $this->releases++;
+    }
+
+    public function releases(): int
+    {
+        return $this->releases;
+    }
 
     public function builder(Definition $definition): ColumnBuilder
     {

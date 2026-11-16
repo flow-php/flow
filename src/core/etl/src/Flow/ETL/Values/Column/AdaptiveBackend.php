@@ -171,4 +171,9 @@ final readonly class AdaptiveBackend implements Backend, Describable
     {
         $this->backend->resetAllocatedPeak();
     }
+
+    public function releaseFreedMemory(): void
+    {
+        $this->backend->releaseFreedMemory();
+    }
 }

@@ -50,6 +50,11 @@ final class RustBackend implements Backend, Describable
         throw new RuntimeException('flow_php extension is not loaded');
     }
 
+    public function releaseFreedMemory(): void
+    {
+        throw new RuntimeException('flow_php extension is not loaded');
+    }
+
     public function builder(Definition $definition): ColumnBuilder
     {
         throw new RuntimeException('flow_php extension is not loaded');

@@ -433,6 +433,7 @@ pub fn register() -> Result<()> {
             method("allocatedBytes", vec![], DataType::Long),
             method("allocatedPeakBytes", vec![], DataType::Long),
             method("resetAllocatedPeak", vec![], DataType::Void),
+            method("releaseFreedMemory", vec![], DataType::Void),
         ],
     )?;
     interface(

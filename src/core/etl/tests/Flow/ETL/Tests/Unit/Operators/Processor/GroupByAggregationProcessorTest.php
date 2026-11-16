@@ -10,13 +10,17 @@ use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
 use Flow\ETL\Foundation\ProgressUnit;
 use Flow\ETL\Foundation\StageName;
+use Flow\ETL\Kernels\Bucketing\HashBucketing;
 use Flow\ETL\Operators\GroupBy;
+use Flow\ETL\Operators\GroupBy\AggregatedGroups;
 use Flow\ETL\Operators\GroupBy\Aggregators;
 use Flow\ETL\Operators\GroupBy\DeclaredPivotValues;
+use Flow\ETL\Operators\GroupBy\GroupByShape;
 use Flow\ETL\Operators\GroupBy\MergedAggregate;
 use Flow\ETL\Operators\GroupBy\PartialAggregate;
 use Flow\ETL\Operators\GroupBy\Pivot;
 use Flow\ETL\Operators\Processor\GroupByAggregationProcessor;
+use Flow\ETL\Storage\BucketingConfig;
 use Flow\ETL\Storage\MemoryRowsStorage;
 use Flow\ETL\Tests\Context\DescribeRoundTrip;
 use Flow\ETL\Tests\Context\GroupByContext;
@@ -29,10 +33,15 @@ use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\Double\SpyRowsStorage;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\GroupByAggregationProcessorMother;
+use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Values\Grouping\KeyEncoder;
 use Flow\ETL\Values\Memory\Unit;
+use Flow\ETL\Values\Rows;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 
+use function array_filter;
 use function array_map;
 use function array_merge;
 use function Flow\ETL\DSL\array_to_rows;
@@ -61,6 +70,7 @@ use function iterator_to_array;
 use function memory_get_usage;
 use function mt_rand;
 use function mt_srand;
+use function range;
 use function serialize;
 
 final class GroupByAggregationProcessorTest extends FlowTestCase
@@ -172,9 +182,84 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
         static::assertSame([], $storage->appendedRows());
     }
 
+    public function test_earlier_groups_are_assigned_to_their_buckets_a_chunk_at_a_time(): void
+    {
+        $groupBy = new GroupBy(refs(ref('category')), new Aggregators(sum(ref('amount'))));
+        $schema = schema(str_schema('category'), int_schema('amount'));
+        $shape = GroupByShape::of($groupBy, $schema);
+        $earlier = new AggregatedGroups($groupBy, $shape, new PhpBackend());
+        $earlier->accumulate(
+            array_to_rows(array_map(static fn(string $category): array => ['category' => $category, 'amount' => 1], [
+                'a',
+                'b',
+                'c',
+                'd',
+                'e',
+            ]), $schema),
+            new PhpBackend(),
+        );
+        $bucketing = new HashBucketing(
+            new KeyEncoder(['category'], declared: $shape->input),
+            4,
+            new NativePHPRandomValueGenerator(),
+            'group-by',
+        );
+        $encoder = new KeyEncoder(['category'], declared: $shape->input);
+        $processor = GroupByAggregationProcessorMother::inMemory($groupBy);
+        $whole = new SpyBackend();
+        $chunked = new SpyBackend();
+
+        static::assertSame(
+            $processor->earlierByBucket($earlier, $bucketing, $encoder, $whole, 5),
+            $processor->earlierByBucket($earlier, $bucketing, $encoder, $chunked, 2),
+        );
+        static::assertSame(1, $whole->builders());
+        static::assertSame(3, $chunked->builders());
+    }
+
+    #[TestWith([6_000_000, true])]
+    #[TestWith([4_000_000, false])]
+    public function test_a_group_by_spills_when_twice_its_growth_passes_the_limit(int $growth, bool $spills): void
+    {
+        $schema = schema(str_schema('category'), int_schema('amount'));
+        // resident, so the spilled phase writes its buckets here; the fixed run id names them
+        $storage = new MemoryRowsStorage();
+        $backend = new ReportedMemoryBackend(0);
+        $output = (new GroupByAggregationProcessor(
+            new GroupBy(refs(ref('category')), new Aggregators(sum(ref('amount')))),
+            new BucketingConfig($storage, 4, 1, Unit::fromBytes(10_000_000)),
+            new FixedRandomValueGenerator('run'),
+        ))->process(
+            (static function () use ($backend, $schema, $growth): Generator {
+                yield array_to_rows([['category' => 'a', 'amount' => 10]], $schema);
+
+                // runs when the first batch is taken, so the check after it sees this growth
+                $backend->reported = $growth;
+
+                yield array_to_rows([['category' => 'b', 'amount' => 15]], $schema);
+                yield array_to_rows([['category' => 'a', 'amount' => 20]], $schema);
+            })(),
+            $backend,
+        );
+        $batches = [type_instance_of(Rows::class)->assert($output->current())];
+        $bucketed = array_filter(range(0, 3), static fn(int $index): bool => $storage->has(HashBucketing::id(
+            'group-by',
+            'run',
+            $index,
+        )));
+
+        for ($output->next(); $output->valid(); $output->next()) {
+            $batches[] = type_instance_of(Rows::class)->assert($output->current());
+        }
+
+        static::assertSame($spills, $bucketed !== []);
+        static::assertSame(['a' => 30.0, 'b' => 15.0], GroupedRows::sums($batches));
+    }
+
     public function test_past_the_limit_the_rest_is_partitioned_and_the_result_is_the_same(): void
     {
         $storage = new SpyRowsStorage(new MemoryRowsStorage());
+        $backend = new ReportedMemoryBackend();
 
         static::assertSame(
             ['a' => 30.0, 'b' => 15.0],
@@ -183,7 +268,17 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
                 $storage,
                 Unit::fromBytes(1),
                 batchSize: 1,
-            )->process(GroupedRows::categories(), flow_context()->backend())),
+            )->process(
+                (static function () use ($backend): Generator {
+                    foreach (GroupedRows::categories() as $batch) {
+                        yield $batch;
+
+                        // scripted, so every check passes the limit whatever the test process holds
+                        $backend->reported = 1_000_000_000_000;
+                    }
+                })(),
+                $backend,
+            )),
         );
         static::assertNotSame([], $storage->appendedRows());
         static::assertSame([], $storage->liveBucketIds());
@@ -560,19 +655,32 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
             );
         }
 
-        $result = GroupByContext::aggregate(
-            new GroupBy(refs(ref('id')), new Aggregators(sum(ref('amount')))),
-            flow_context(
-                config_builder()
-                    ->groupBy(
-                        hash_group_by()
-                            ->storage(new MemoryRowsStorage())
-                            ->memoryLimit(Unit::fromBytes(1))
-                            ->bucketsCount(4),
-                    )
-                    ->build(),
+        $backend = new ReportedMemoryBackend();
+        $result = iterator_to_array(
+            GroupByContext::processor(
+                new GroupBy(refs(ref('id')), new Aggregators(sum(ref('amount')))),
+                flow_context(
+                    config_builder()
+                        ->groupBy(
+                            hash_group_by()
+                                ->storage(new MemoryRowsStorage())
+                                ->memoryLimit(Unit::fromBytes(1))
+                                ->bucketsCount(4),
+                        )
+                        ->build(),
+                ),
+            )->process(
+                (static function () use ($backend, $batches): Generator {
+                    foreach ($batches as $batch) {
+                        yield $batch;
+
+                        // scripted, so every check passes the limit whatever the test process holds
+                        $backend->reported = 1_000_000_000_000;
+                    }
+                })(),
+                $backend,
             ),
-            ...$batches,
+            false,
         );
 
         static::assertArrayHasKey(1, $result, 'more than one batch');
@@ -593,16 +701,34 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
     public function test_removes_storage_buckets_after_last_bucket(): void
     {
         $storage = new SpyRowsStorage(new MemoryRowsStorage());
+        $backend = new ReportedMemoryBackend();
 
-        GroupByContext::aggregate(
-            new GroupBy(refs(ref('category')), new Aggregators(sum(ref('amount')))),
-            flow_context(
-                config_builder()
-                    ->groupBy(hash_group_by()->storage($storage)->memoryLimit(Unit::fromBytes(1))->batchSize(1))
-                    ->build(),
+        iterator_to_array(
+            GroupByContext::processor(
+                new GroupBy(refs(ref('category')), new Aggregators(sum(ref('amount')))),
+                flow_context(
+                    config_builder()
+                        ->groupBy(hash_group_by()->storage($storage)->memoryLimit(Unit::fromBytes(1))->batchSize(1))
+                        ->build(),
+                ),
+            )->process(
+                (static function () use ($backend): Generator {
+                    yield array_to_rows(
+                        [['category' => 'a', 'amount' => 10]],
+                        schema(str_schema('category'), int_schema('amount')),
+                    );
+
+                    // scripted, so every check passes the limit whatever the test process holds
+                    $backend->reported = 1_000_000_000_000;
+
+                    yield array_to_rows(
+                        [['category' => 'b', 'amount' => 15]],
+                        schema(str_schema('category'), int_schema('amount')),
+                    );
+                })(),
+                $backend,
             ),
-            array_to_rows([['category' => 'a', 'amount' => 10]], schema(str_schema('category'), int_schema('amount'))),
-            array_to_rows([['category' => 'b', 'amount' => 15]], schema(str_schema('category'), int_schema('amount'))),
+            false,
         );
 
         static::assertNotSame([], $storage->readBucketIds());
@@ -678,6 +804,7 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
     public function test_past_the_limit_counts_every_row_it_takes_then_every_group(): void
     {
         $progress = new ProgressSpy();
+        $backend = new ReportedMemoryBackend();
 
         iterator_to_array(
             GroupByAggregationProcessorMother::with(
@@ -686,7 +813,17 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
                 Unit::fromBytes(1),
                 batchSize: 1,
                 progress: $progress->stage(StageName::group_by),
-            )->process(GroupedRows::categories(), flow_context()->backend()),
+            )->process(
+                (static function () use ($backend): Generator {
+                    foreach (GroupedRows::categories() as $batch) {
+                        yield $batch;
+
+                        // scripted, so every check passes the limit whatever the test process holds
+                        $backend->reported = 1_000_000_000_000;
+                    }
+                })(),
+                $backend,
+            ),
             false,
         );
 

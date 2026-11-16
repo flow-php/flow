@@ -656,6 +656,17 @@ final class PhpBackendTest extends TestCase
         static::assertSame(0, (new PhpBackend())->allocatedBytes());
     }
 
+    public function test_release_freed_memory_changes_nothing(): void
+    {
+        $backend = new PhpBackend();
+
+        static::assertSame(0, $backend->allocatedBytes());
+
+        $backend->releaseFreedMemory();
+
+        static::assertSame(0, $backend->allocatedBytes());
+    }
+
     /**
      * @return Generator<string, array{Schema, Closure(int): array<string, mixed>, list<string>}>
      */

@@ -558,6 +558,11 @@ impl RustBackend {
     pub fn reset_allocated_peak(&self) {
         crate::alloc::reset_peak();
     }
+
+    #[php(name = "releaseFreedMemory")]
+    pub fn release_freed_memory(&self) {
+        crate::alloc::release_freed();
+    }
 }
 
 /// The arrow extension's bytes, else the imported batches alone: an imported batch is arrow's memory, so never both.

@@ -163,4 +163,7 @@ interface Backend
     public function allocatedPeakBytes(): int;
 
     public function resetAllocatedPeak(): void;
+
+    /** Returns memory this backend has freed to the operating system. */
+    public function releaseFreedMemory(): void;
 }

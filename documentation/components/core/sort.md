@@ -97,6 +97,11 @@ compare live memory, `memory_get_usage()` plus native backend bytes.
 - The default is `FLOW_MAX_MEMORY`, else 70% of the `memory_limit` of PHP, or 4 GiB for a `memory_limit` of `-1`.
 - With a launcher of `flow-php/parallel`, each worker process takes the limit divided by the launcher's `slots`, and
   the parent keeps the full limit. `FLOW_MAX_MEMORY=4G` and 8 slots give each worker 512 MiB for each operation.
+- After every spill and after its last run, a sort returns freed memory to the system through the backend. With
+  `flow_php` on Linux (glibc) that is `malloc_trim(0)`. On other systems nothing happens. On macOS the system
+  allocator keeps freed large blocks. If you start PHP with `MallocLargeCache=0` in the environment, the process
+  returns them. In the 10gb sort this lowered the memory of the process tree by about a third and made the sort 14%
+  to 28% slower.
 - With a finite `memory_limit`, the process cap is 70% of it, or `FLOW_MAX_MEMORY`. A `FLOW_MAX_MEMORY` above
   `memory_limit` throws when the config is built.
 - A process over its cap also makes the operation spill once it added `min(128 MiB, cap / 16)`, and each sorted run
