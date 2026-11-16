@@ -23,6 +23,15 @@ use Flow\Types\Exception\InvalidTypeException;
 
 final class RebuildTest extends FlowTestCase
 {
+    public function test_a_memory_share_below_one_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Rebuild memory share must be at least 1, given: 0');
+
+        // @mago-ignore analysis:invalid-argument
+        new Rebuild(memoryShare: 0);
+    }
+
     public function test_an_unknown_class_is_refused(): void
     {
         $this->expectException(InvalidArgumentException::class);

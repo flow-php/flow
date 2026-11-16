@@ -47,6 +47,17 @@ final class MergeSortProcessorTest extends FlowTestCase
         );
     }
 
+    public function test_its_distribution_carries_its_configuration(): void
+    {
+        $processor = new MergeSortProcessor(
+            new ExternalSortConfig(config()->grouping),
+            [ref('id')->asc()],
+            new NativePHPRandomValueGenerator(),
+        );
+
+        static::assertSame($processor->config, $processor->distribution()?->sort);
+    }
+
     public function test_a_sort_that_does_not_describe_has_no_distribution(): void
     {
         static::assertNull(

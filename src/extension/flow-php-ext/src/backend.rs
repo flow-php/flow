@@ -17,7 +17,7 @@ use ext_php_rs::convert::IntoZval;
 use ext_php_rs::error::Result as ZvalResult;
 use ext_php_rs::flags::{ClassFlags, DataType};
 use ext_php_rs::prelude::*;
-use ext_php_rs::types::{ZendHashTable, ZendObject, Zval};
+use ext_php_rs::types::{ZendCallable, ZendHashTable, ZendObject, Zval};
 use flow_batch_frame::column::decode;
 use flow_batch_frame::frame;
 use flow_batch_frame::kind::Kind;
@@ -545,18 +545,28 @@ impl RustBackend {
 
     #[php(name = "allocatedBytes")]
     pub fn allocated_bytes(&self) -> i64 {
-        crate::alloc::allocated_bytes()
+        crate::alloc::own_bytes() + arrow_bytes()
     }
 
+    /// The arrow bytes count as they are now, not at their own peak: they are another allocator's.
     #[php(name = "allocatedPeakBytes")]
     pub fn allocated_peak_bytes(&self) -> i64 {
-        crate::alloc::allocated_peak_bytes()
+        crate::alloc::own_peak_bytes() + arrow_bytes()
     }
 
     #[php(name = "resetAllocatedPeak")]
     pub fn reset_allocated_peak(&self) {
         crate::alloc::reset_peak();
     }
+}
+
+/// The arrow extension's bytes, else the imported batches alone: an imported batch is arrow's memory, so never both.
+fn arrow_bytes() -> i64 {
+    ZendCallable::try_from_name("Flow\\Arrow\\allocated_bytes")
+        .ok()
+        .and_then(|callable| callable.try_call(vec![]).ok())
+        .and_then(|bytes| bytes.long())
+        .unwrap_or_else(flow_arrow_c::imported_bytes)
 }
 
 /// The schema and backend every batch of one source is adopted under.

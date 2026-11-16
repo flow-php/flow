@@ -1,5 +1,4 @@
-//! The global allocator: `System`, counting the bytes it holds for `RustBackend::allocatedBytes()`, plus the bytes
-//! of the Arrow C Data batches imported from another extension's allocator while they live (`flow_arrow_c`).
+//! The global allocator: `System`, counting the bytes it holds for `RustBackend::allocatedBytes()`.
 
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::sync::atomic::{AtomicI64, Ordering};
@@ -58,13 +57,12 @@ unsafe impl GlobalAlloc for Counting {
 static GLOBAL: Counting = Counting;
 
 /// Process-wide: on ZTS every thread's allocations.
-pub fn allocated_bytes() -> i64 {
-    ALLOCATED.load(Ordering::Relaxed) + flow_arrow_c::imported_bytes()
+pub fn own_bytes() -> i64 {
+    ALLOCATED.load(Ordering::Relaxed)
 }
 
-/// Imported Arrow buffers are another allocator's: they count as they are now, not at their own peak.
-pub fn allocated_peak_bytes() -> i64 {
-    PEAK.load(Ordering::Relaxed).max(allocated_bytes())
+pub fn own_peak_bytes() -> i64 {
+    PEAK.load(Ordering::Relaxed).max(own_bytes())
 }
 
 pub fn reset_peak() {

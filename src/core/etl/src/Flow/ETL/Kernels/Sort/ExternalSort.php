@@ -34,6 +34,8 @@ use function sprintf;
  */
 final readonly class ExternalSort
 {
+    public const int MERGE_CURSOR_ROWS = 16_384;
+
     /**
      * @param list<SortColumn> $columns
      * @param int<1, max> $mergeFanIn
@@ -150,7 +152,20 @@ final readonly class ExternalSort
             // each pass merges neighbouring runs in place, so equal keys keep the order they arrived in
             while (count($runs) > $fanIn) {
                 $runs = array_map(
-                    fn(array $group): BucketRun => $this->reduce($group, $merger, $mergedIndex++, $limit),
+                    function (array $group) use ($merger, $mergedIndex, $limit): BucketRun {
+                        $merged = $this->reduce(
+                            array_map(static fn(BucketRun $run): Generator => $run->rows(), $group),
+                            $merger,
+                            $mergedIndex,
+                            $limit,
+                        );
+
+                        foreach ($group as $run) {
+                            $run->remove();
+                        }
+
+                        return $merged;
+                    },
                     array_chunk($runs, $fanIn),
                 );
             }
@@ -242,12 +257,97 @@ final readonly class ExternalSort
     }
 
     /**
-     * @param list<BucketRun> $group
+     * @param list<Generator<Rows>> $streams each sorted by this sort's columns
+     *
+     * @return Generator<Rows>
+     */
+    public function merge(array $streams, Backend $backend, MemoryBudget $budget, BatchSize $output): Generator
+    {
+        try {
+            $remaining = $budget->remaining();
+            $first = null;
+
+            // only the first stream with rows is started: starting every stream would decode a frame of each
+            foreach ($streams as $stream) {
+                if ($stream->valid()) {
+                    $first = $stream->current();
+
+                    break;
+                }
+            }
+
+            if ($first === null) {
+                return;
+            }
+
+            $perFrame = $remaining - $budget->remaining();
+            $frames = $perFrame < 1 ? null : intdiv(max(0, $remaining), count($streams) * $perFrame);
+
+            if ($frames === 0) {
+                $merger = new KWayMerge($this->columns, $backend, $this->batchSize);
+                $fanIn = max(2, min($this->mergeFanIn, intdiv(max(0, $remaining), $perFrame)));
+
+                while (count($streams) > $fanIn) {
+                    $streams = array_map(
+                        fn(array $group): Generator => $this->reduce($group, $merger, 0, null)->rows(),
+                        array_chunk($streams, $fanIn),
+                    );
+                }
+
+                yield from (new KWayMerge($this->columns, $backend, $output))->merge($streams);
+
+                return;
+            }
+
+            $cursorRows = $frames === null
+                ? self::MERGE_CURSOR_ROWS
+                : min(self::MERGE_CURSOR_ROWS, $frames * max(1, $first->count()));
+
+            yield from (new KWayMerge($this->columns, $backend, $output))->merge(array_map(
+                static fn(Generator $stream): Generator => self::coalesced($stream, $cursorRows, $backend),
+                $streams,
+            ));
+        } finally {
+            $this->merge->clear();
+        }
+    }
+
+    /**
+     * @param Generator<Rows> $rows
+     *
+     * @return Generator<Rows>
+     */
+    public static function coalesced(Generator $rows, int $size, Backend $backend): Generator
+    {
+        $pending = [];
+        $count = 0;
+
+        // valid()/next(), never foreach: the first stream arrives started
+        for (; $rows->valid(); $rows->next()) {
+            /** @var Rows $batch valid() holds, so current() is a batch */
+            $batch = $rows->current();
+            $pending[] = $batch;
+            $count += $batch->count();
+
+            if ($count >= $size) {
+                yield Rows::concat($pending[0]->schema(), $backend, ...$pending);
+                $pending = [];
+                $count = 0;
+            }
+        }
+
+        if ($pending !== []) {
+            yield Rows::concat($pending[0]->schema(), $backend, ...$pending);
+        }
+    }
+
+    /**
+     * @param list<Generator<Rows>> $streams
      * @param null|int $limit
      *
      * @return BucketRun the merged run, bound to the merge storage that wrote it
      */
-    public function reduce(array $group, KWayMerge $merger, int $index, ?int $limit): BucketRun
+    public function reduce(array $streams, KWayMerge $merger, int $index, ?int $limit): BucketRun
     {
         $bucketId = 'sort-merge-' . $this->random->string(16);
 
@@ -255,17 +355,10 @@ final readonly class ExternalSort
         $this->merge->add(new Bucket($bucketId, 0, $index));
         $totalRows = 0;
 
-        foreach ($this->firstRows(
-            $merger->merge(array_map(static fn(BucketRun $run): Generator => $run->rows(), $group)),
-            $limit,
-        ) as $batch) {
+        foreach ($this->firstRows($merger->merge($streams), $limit) as $batch) {
             $this->merge->storage()->append($bucketId, $batch);
             $totalRows += $batch->count();
             $this->progress->busy();
-        }
-
-        foreach ($group as $run) {
-            $run->remove();
         }
 
         $this->merge->add(new Bucket($bucketId, $totalRows, $index));

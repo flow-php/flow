@@ -7,6 +7,7 @@ namespace Flow\ETL\Operators\Processor;
 use Flow\ETL\Foundation\Progress;
 use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\Kernels\HashJoin\JoinKeys;
+use Flow\ETL\Kernels\Sort\ExternalSortConfig;
 use Flow\ETL\Operators\Processor;
 use Flow\ETL\Values\Sort\SortColumn;
 
@@ -19,6 +20,7 @@ final readonly class Distribution
      * @param null|Processor $partial runs per split before the exchange
      * @param null|Processor $final runs after the exchange; null when the distributing processor itself finishes
      * @param Progress $progress the step's stage, which the shuffle keeps open while a later wave works
+     * @param null|ExternalSortConfig $sort the limit and storage a range merge keeps to; null unless an external sort
      */
     private function __construct(
         public array $keys,
@@ -27,6 +29,7 @@ final readonly class Distribution
         public ?Processor $partial,
         public ?Processor $final,
         public Progress $progress,
+        public ?ExternalSortConfig $sort,
     ) {}
 
     /**
@@ -38,20 +41,20 @@ final readonly class Distribution
         ?Processor $final = null,
         Progress $progress = new VoidProgress(),
     ): self {
-        return new self($keys, null, [], $partial, $final, $progress);
+        return new self($keys, null, [], $partial, $final, $progress, null);
     }
 
     public static function coPartitioned(JoinKeys $keys, Progress $progress = new VoidProgress()): self
     {
-        return new self($keys->left, $keys->right, [], null, null, $progress);
+        return new self($keys->left, $keys->right, [], null, null, $progress, null);
     }
 
     /**
      * @param non-empty-list<SortColumn> $order
      */
-    public static function ordered(array $order, Progress $progress): self
+    public static function ordered(array $order, Progress $progress, ?ExternalSortConfig $sort = null): self
     {
-        return new self([], null, $order, null, null, $progress);
+        return new self([], null, $order, null, null, $progress, $sort);
     }
 
     public static function single(
@@ -59,6 +62,6 @@ final readonly class Distribution
         ?Processor $final = null,
         Progress $progress = new VoidProgress(),
     ): self {
-        return new self([], null, [], $partial, $final, $progress);
+        return new self([], null, [], $partial, $final, $progress, null);
     }
 }

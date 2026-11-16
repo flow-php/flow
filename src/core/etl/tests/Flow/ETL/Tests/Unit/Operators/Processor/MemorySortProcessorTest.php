@@ -31,6 +31,11 @@ final class MemorySortProcessorTest extends FlowTestCase
         static::assertSame($columns, (new MemorySortProcessor($columns))->distribution()?->order);
     }
 
+    public function test_its_distribution_carries_no_sort_configuration(): void
+    {
+        static::assertNull((new MemorySortProcessor([ref('id')->asc()]))->distribution()?->sort);
+    }
+
     public function test_bind_returns_the_input_schema_and_declares_it_on_the_rebound_step(): void
     {
         $columns = [ref('id')->asc()];

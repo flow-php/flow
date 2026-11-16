@@ -1,16 +1,30 @@
-//! The test global allocator: `System`, counting the bytes each thread holds, so a cargo test pins what arrow's
-//! native heap keeps while the other tests allocate on their own threads.
+//! The global allocator: `System`, counting the bytes it holds. A cargo test counts per thread, so it pins what
+//! arrow's native heap keeps while the other tests allocate on their own threads.
 
 use std::alloc::{GlobalAlloc, Layout, System};
-use std::cell::Cell;
 
+#[cfg(test)]
+use std::cell::Cell;
+#[cfg(not(test))]
+use std::sync::atomic::{AtomicI64, Ordering};
+
+#[cfg(test)]
 thread_local! {
     static ALLOCATED: Cell<i64> = const { Cell::new(0) };
 }
 
+#[cfg(not(test))]
+static ALLOCATED: AtomicI64 = AtomicI64::new(0);
+
+#[cfg(test)]
 fn counted(delta: i64) {
     // a thread being torn down has no counter left: nothing reads it again
     let _ = ALLOCATED.try_with(|allocated| allocated.set(allocated.get() + delta));
+}
+
+#[cfg(not(test))]
+fn counted(delta: i64) {
+    ALLOCATED.fetch_add(delta, Ordering::Relaxed);
 }
 
 struct Counting;
@@ -56,6 +70,13 @@ unsafe impl GlobalAlloc for Counting {
 static GLOBAL: Counting = Counting;
 
 /// What the current thread holds.
+#[cfg(test)]
 pub fn allocated_bytes() -> i64 {
     ALLOCATED.with(Cell::get)
+}
+
+/// What the process holds through this allocator.
+#[cfg(not(test))]
+pub fn allocated_bytes() -> i64 {
+    ALLOCATED.load(Ordering::Relaxed)
 }

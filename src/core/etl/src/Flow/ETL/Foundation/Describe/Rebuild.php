@@ -24,9 +24,19 @@ use function is_a;
 
 final readonly class Rebuild
 {
+    /**
+     * @param int<1, max> $memoryShare how many processes share one memory limit
+     */
     public function __construct(
         private ProgressStages $progress = new VoidProgress(),
-    ) {}
+        public int $memoryShare = 1,
+    ) {
+        // @mago-ignore analysis:impossible-condition,redundant-comparison
+        if ($memoryShare < 1) {
+            // @mago-ignore analysis:no-value
+            throw InvalidArgumentException::because('Rebuild memory share must be at least 1, given: %d', $memoryShare);
+        }
+    }
 
     /**
      * Every entry of $normalized rebuilt with of(), keys kept.

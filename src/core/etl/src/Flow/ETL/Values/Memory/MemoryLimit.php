@@ -18,7 +18,7 @@ final readonly class MemoryLimit
 
     public const string ENV = 'FLOW_MAX_MEMORY';
 
-    public const int WITHOUT_MEMORY_LIMIT_GB = 1;
+    public const int WITHOUT_MEMORY_LIMIT_GB = 4;
 
     /**
      * @throws InvalidArgumentException

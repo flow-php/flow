@@ -94,14 +94,16 @@ rows.
 first input batch, a join when it begins. Each live operation gets its own limit. The limit and the process cap
 compare live memory, `memory_get_usage()` plus native backend bytes.
 
-- The default is `FLOW_MAX_MEMORY`, else 70% of the `memory_limit` of PHP, or 1 GiB for a `memory_limit` of `-1`.
+- The default is `FLOW_MAX_MEMORY`, else 70% of the `memory_limit` of PHP, or 4 GiB for a `memory_limit` of `-1`.
+- With a launcher of `flow-php/parallel`, each worker process takes the limit divided by the launcher's `slots`, and
+  the parent keeps the full limit. `FLOW_MAX_MEMORY=4G` and 8 slots give each worker 512 MiB for each operation.
 - With a finite `memory_limit`, the process cap is 70% of it, or `FLOW_MAX_MEMORY`. A `FLOW_MAX_MEMORY` above
   `memory_limit` throws when the config is built.
 - A process over its cap also makes the operation spill once it added `min(128 MiB, cap / 16)`, and each sorted run
   then takes up to that floor instead of one batch. Close to `memory_limit`, that floor can still pass it.
 - A sort that would take the process past the cap spills in smaller runs.
-- With `memory_limit = -1` there is no process cap, so k operations running at once can use k x the limit. Set a finite
-  `memory_limit`, or a lower `memoryLimit()`, to bound it.
+- With `memory_limit = -1` there is no process cap, so k operations running at once in one process can use k x the
+  limit. Set a finite `memory_limit`, or a lower `memoryLimit()`, to bound it.
 
 ## Overriding the algorithm for one sort
 

@@ -1,4 +1,3 @@
-#[cfg(test)]
 mod alloc;
 mod exception;
 mod interfaces;
@@ -8,16 +7,15 @@ mod render;
 mod thrift;
 mod values;
 
-#[cfg(not(test))]
-use std::alloc::System;
-
 use ext_php_rs::prelude::*;
 use ext_php_rs::zend::ModuleEntry;
 use ext_php_rs::{info_table_end, info_table_row, info_table_start};
 
-#[cfg(not(test))]
-#[global_allocator]
-static GLOBAL: System = System;
+#[php_function]
+#[php(name = "Flow\\Arrow\\allocated_bytes")]
+pub fn allocated_bytes() -> i64 {
+    alloc::allocated_bytes()
+}
 
 pub extern "C" fn php_module_info(_module: *mut ModuleEntry) {
     info_table_start!();
@@ -54,6 +52,7 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .globals(&php::GLOBALS)
         .request_startup_function(php::request_startup)
         .request_shutdown_function(php::request_shutdown)
+        .function(wrap_function!(allocated_bytes))
         .class::<parquet::library::RustColumnsReader>()
         .class::<parquet::library::RustParquetFooter>()
         .class::<parquet::library::RustParquetFileReader>()

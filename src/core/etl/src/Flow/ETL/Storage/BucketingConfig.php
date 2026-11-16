@@ -14,6 +14,7 @@ use Flow\ETL\Values\Memory\Unit;
 use SensitiveParameter;
 
 use function Flow\Types\DSL\type_integer;
+use function intdiv;
 use function max;
 
 final readonly class BucketingConfig implements Describable
@@ -35,7 +36,10 @@ final readonly class BucketingConfig implements Describable
             $rebuild->of($data['storage'] ?? null, RowsStorage::class),
             max(1, type_integer()->assert($data['buckets_count'] ?? null)),
             max(1, type_integer()->assert($data['batch_size'] ?? null)),
-            Unit::fromBytes(type_integer()->assert($data['memory_limit'] ?? null)),
+            Unit::fromBytes(max(1, intdiv(
+                type_integer()->assert($data['memory_limit'] ?? null),
+                $rebuild->memoryShare,
+            ))),
         );
     }
 

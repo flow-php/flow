@@ -27,13 +27,13 @@ final class MemoryLimitTest extends FlowIntegrationTestCase
         }
     }
 
-    public function test_default_is_one_gib_when_the_memory_limit_is_unlimited(): void
+    public function test_default_is_four_gib_when_the_memory_limit_is_unlimited(): void
     {
         $memoryLimit = (string) ini_get('memory_limit');
         ini_set('memory_limit', '-1');
 
         try {
-            static::assertSame(Unit::fromGb(1)->inBytes(), MemoryLimit::default()->inBytes());
+            static::assertSame(Unit::fromGb(4)->inBytes(), MemoryLimit::default()->inBytes());
         } finally {
             ini_set('memory_limit', $memoryLimit);
         }
