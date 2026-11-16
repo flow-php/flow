@@ -14,7 +14,7 @@ use parquet::basic::{BrotliLevel, Compression, Encoding, GzipLevel, Type as Phys
 use parquet::file::properties::{EnabledStatistics, WriterProperties, WriterVersion, DEFAULT_WRITE_BATCH_SIZE};
 use parquet::schema::types::{ColumnPath, SchemaDescriptor};
 
-use crate::parquet::error::Error;
+use crate::error::Error;
 use crate::php::ht_for_each;
 
 /// Field metadata key of a Utf8 field written with the ENUM logical type, which no arrow data type carries.

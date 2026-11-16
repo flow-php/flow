@@ -1,0 +1,20 @@
+[package]
+name = "flow-parquet-engine"
+edition = "2021"
+publish = false
+
+[features]
+# the PHP class names of the extension that builds the crate: exactly one is enabled
+arrow-names = []
+flow-php-names = []
+
+[dependencies]
+ext-php-rs = "0.16"
+arrow-array = { version = "60", features = ["ffi"] }
+arrow-buffer = "60"
+arrow-schema = { version = "60", features = ["canonical_extension_types"] }
+bytes = "1"
+parquet = { version = "60", default-features = false, features = ["arrow", "arrow_canonical_extension_types", "snap", "flate2", "flate2-zlib-rs", "zstd", "lz4", "brotli", "simdutf8"] }
+
+[build-dependencies]
+ext-php-rs-build = "0.1"

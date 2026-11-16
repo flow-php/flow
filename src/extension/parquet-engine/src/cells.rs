@@ -18,8 +18,8 @@ use ext_php_rs::exception::PhpException;
 use ext_php_rs::types::{ZendHashTable, ZendObject, Zval};
 use ext_php_rs::zend::{ClassEntry, Function};
 
+use crate::error::Error;
 use crate::exception::ext_exception;
-use crate::parquet::error::Error;
 use crate::php::{
     call_handle_transparent, ce_method_ref, find_class, ht_for_each, ht_get, ht_insert, ht_insert_long, read_property,
     zval_long, zval_str,

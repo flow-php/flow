@@ -11,10 +11,10 @@ use parquet::errors::ParquetError;
 use parquet::file::properties::WriterProperties;
 use parquet::schema::types::{BasicTypeInfo, SchemaDescriptor, Type};
 
-use crate::parquet::canonical::to_parquet;
-use crate::parquet::error::Error;
-use crate::parquet::options::ENUM_METADATA_KEY;
-use crate::parquet::sink::PhpSink;
+use crate::canonical::to_parquet;
+use crate::error::Error;
+use crate::options::ENUM_METADATA_KEY;
+use crate::sink::PhpSink;
 
 pub struct ParquetWriter {
     writer: ArrowWriter<PhpSink>,

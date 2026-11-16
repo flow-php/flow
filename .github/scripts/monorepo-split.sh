@@ -27,7 +27,7 @@ while true; do
   fi
 
   find "$build" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
-  cp -a "${local_path}/." "$build/"
+  cp -aL "${local_path}/." "$build/"
   git -C "$build" add --all
   changes="$(git -C "$build" status --porcelain)"
 

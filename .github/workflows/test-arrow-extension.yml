@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'src/extension/arrow-ext/**'
+      - 'src/extension/parquet-engine/**'
       - '.github/workflows/test-arrow-extension.yml'
       - '.github/workflows/job-arrow-extension.yml'
       - '.github/actions/setup-php-env/**'

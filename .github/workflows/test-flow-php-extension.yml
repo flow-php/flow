@@ -6,6 +6,7 @@ on:
       - 'src/extension/flow-php-ext/**'
       # the flow-php-ext build and PHPT tests load arrow-ext
       - 'src/extension/arrow-ext/**'
+      - 'src/extension/parquet-engine/**'
       - '.github/workflows/test-flow-php-extension.yml'
       - '.github/workflows/job-flow-php-extension.yml'
       - '.github/actions/setup-php-env/**'

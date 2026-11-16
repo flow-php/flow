@@ -7,8 +7,8 @@ use bytes::{Bytes, BytesMut};
 use parquet::file::metadata::{ParquetMetaData, ParquetMetaDataReader};
 use parquet::file::reader::ChunkReader;
 
-use crate::parquet::chunks::refuse_encrypted;
-use crate::parquet::error::Error;
+use crate::chunks::refuse_encrypted;
+use crate::error::Error;
 
 /// What the first read takes from the end of the file: the whole footer of every file it is shorter than.
 const TAIL: u64 = 64 * 1024;
@@ -101,9 +101,9 @@ mod tests {
     use parquet::file::reader::{ChunkReader, Length};
 
     use super::Footer;
-    use crate::parquet::error::Error;
-    use crate::parquet::source::fake::Counting;
-    use crate::parquet::source::{exact, WindowedRead};
+    use crate::error::Error;
+    use crate::source::fake::Counting;
+    use crate::source::{exact, WindowedRead};
 
     struct Source(Arc<Counting>);
 

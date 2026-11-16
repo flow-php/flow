@@ -72,6 +72,12 @@ jobs:
         env: *rust-env
         run: cargo fmt --all --check && cargo clippy --workspace --locked --all-targets -- -D warnings
 
+      - name: Check both extensions lock the same flow-parquet-engine dependencies
+        working-directory: src/extension
+        run: |
+          tree() { (cd "$1" && cargo tree --locked -p flow-parquet-engine --prefix none -e normal --target all | sed 's/ (.*)//' | sort -u); }
+          diff <(tree arrow-ext) <(tree flow-php-ext)
+
       - name: Install Composer Dependencies
         uses: ./.github/actions/composer-install
         with:
@@ -104,6 +110,26 @@ jobs:
 
       - name: Run CSV Adapter Integration Tests with Flow PHP Extension
         run: just test --testsuite=adapter-csv-integration
+
+      - name: Run Parquet Adapter Unit Tests with Flow PHP Extension
+        run: just test --testsuite=adapter-parquet-unit
+
+      - name: Run Parquet Adapter Integration Tests with Flow PHP Extension
+        run: just test --testsuite=adapter-parquet-integration
+
+      - name: Install arrow extension next to flow_php
+        working-directory: src/extension/arrow-ext
+        run: |
+          EXT_DIR=$(php -r 'echo ini_get("extension_dir");')
+          sudo cp ext/modules/arrow.so "$EXT_DIR/"
+          echo "extension=arrow.so" | sudo tee -a "$(php -r 'echo php_ini_loaded_file();')"
+          php -m | grep -x arrow
+
+      - name: Run Parquet Adapter Unit Tests with both extensions
+        run: just test --testsuite=adapter-parquet-unit
+
+      - name: Run Parquet Adapter Integration Tests with both extensions
+        run: just test --testsuite=adapter-parquet-integration
 
       - name: Upload to Codecov
         if: ${{ !cancelled() && matrix.php == '8.3' && runner.os == 'Linux' }}
@@ -152,7 +178,7 @@ jobs:
       - name: Prepare local package for PIE installation
         run: |
           # git archive applies export-subst like GitHub release archives, so the build resolves its version from .git_archival.txt
-          git archive HEAD src/extension/flow-php-ext | tar -x -C "$RUNNER_TEMP"
+          git archive HEAD src/extension/flow-php-ext src/extension/parquet-engine | tar -x -C "$RUNNER_TEMP"
           cd "$RUNNER_TEMP/src/extension/flow-php-ext"
           jq '. + {"version": "0.0.9999"}' composer.json > composer.tmp.json
           mv composer.tmp.json composer.json

@@ -16,13 +16,14 @@ arrow-array.workspace = true
 arrow-buffer.workspace = true
 arrow-data.workspace = true
 arrow-schema.workspace = true
-arrow-select = "59"
+arrow-select = "60"
 bytes = "1"
 ext-php-rs = "0.16"
 flow-arrow-c = { path = "crates/flow-arrow-c" }
 flow-batch-frame = { path = "crates/flow-batch-frame" }
 flow-column-kernels = { path = "crates/flow-column-kernels" }
 flow-column-text = { path = "crates/flow-column-text" }
+flow-parquet-engine = { path = "crates/flow-parquet-engine", features = ["flow-php-names"] }
 flow-csv-tokenizer = { path = "crates/flow-csv-tokenizer" }
 flow-json-records = { path = "crates/flow-json-records" }
 flow-numeric-string = { path = "crates/flow-numeric-string" }
@@ -40,10 +41,10 @@ strip = true
 members = ["crates/*"]
 
 [workspace.dependencies]
-arrow-array = { version = "59", features = ["ffi"] }
-arrow-buffer = "59"
-arrow-data = "59"
-arrow-schema = { version = "59", features = ["canonical_extension_types"] }
+arrow-array = { version = "60", features = ["ffi"] }
+arrow-buffer = "60"
+arrow-data = "60"
+arrow-schema = { version = "60", features = ["canonical_extension_types"] }
 memchr = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["raw_value", "unbounded_depth"] }

@@ -8,18 +8,29 @@ use ext_php_rs::types::{ZendHashTable, Zval};
 
 use crate::exception::ext_exception;
 use crate::interfaces::parquet_engine_ce;
-use crate::parquet::lib_calls::{
+use crate::lib_calls::{
     call_static, OPTIONS_DEFAULT, OPTIONS_FROM_ARRAY, OPTIONS_TO_ENGINE, OPTIONS_TO_EXTENSION, SCHEMA_TO_EXTENSION,
 };
-use crate::parquet::library::{RustParquetFileReader, RustParquetFileWriter};
+use crate::library::{RustParquetFileReader, RustParquetFileWriter};
 use crate::php::{call_method, ht_get, ht_insert, IterableArg};
 use crate::render::{exception, INVALID_ARGUMENT};
 
 #[php_class]
-#[php(
-    name = "Flow\\Parquet\\Engine\\RustParquetEngine",
-    flags = ClassFlags::Final,
-    implements(ce = parquet_engine_ce, stub = "Flow\\Parquet\\ParquetEngine")
+#[cfg_attr(
+    feature = "arrow-names",
+    php(
+        name = "Flow\\Parquet\\Engine\\RustParquetEngine",
+        flags = ClassFlags::Final,
+        implements(ce = parquet_engine_ce, stub = "Flow\\Parquet\\ParquetEngine")
+    )
+)]
+#[cfg_attr(
+    feature = "flow-php-names",
+    php(
+        name = "Flow\\ETL\\Adapter\\Parquet\\Engine\\FlowPhpParquetEngine",
+        flags = ClassFlags::Final,
+        implements(ce = parquet_engine_ce, stub = "Flow\\Parquet\\ParquetEngine")
+    )
 )]
 pub struct RustParquetEngine {
     int96_as_datetime: bool,

@@ -12,11 +12,14 @@ arrow-validate = ["arrow-array/force_validate"]
 
 [dependencies]
 ext-php-rs = "0.16"
-parquet = { version = "60", default-features = false, features = ["arrow", "arrow_canonical_extension_types", "snap", "flate2", "flate2-zlib-rs", "zstd", "lz4", "brotli", "simdutf8"] }
 arrow-array = { version = "60", features = ["ffi"] }
-arrow-buffer = "60"
-arrow-schema = { version = "60", features = ["canonical_extension_types"] }
-bytes = "1"
+flow-parquet-engine = { path = "crates/flow-parquet-engine", features = ["arrow-names"] }
 
-[build-dependencies]
-ext-php-rs-build = "0.1"
+[dev-dependencies]
+arrow-schema = { version = "60", features = ["canonical_extension_types"] }
+
+[profile.release]
+strip = true
+
+[workspace]
+members = ["crates/*"]

@@ -3,8 +3,8 @@
 use std::io::{self, Write};
 use std::sync::Arc;
 
-use crate::parquet::source::PhpStream;
 use crate::php::zval_str;
+use crate::source::PhpStream;
 
 pub struct PhpSink {
     stream: Arc<PhpStream>,

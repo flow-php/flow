@@ -7,6 +7,7 @@ use std::sync::atomic::{AtomicPtr, Ordering};
 use ext_php_rs::args::{Arg, ArgInfoTables};
 use ext_php_rs::builders::{ClassBuilder, FunctionBuilder};
 use ext_php_rs::error::Result;
+use ext_php_rs::ffi::{ext_php_rs_compiler_globals, zend_hash_str_find_ptr_lc};
 use ext_php_rs::flags::{ClassFlags, DataType, MethodFlags};
 use ext_php_rs::zend::ClassEntry;
 
@@ -75,6 +76,17 @@ pub fn parquet_file_writer_ce() -> &'static ClassEntry {
     load(&PARQUET_FILE_WRITER_CE, "Flow\\Parquet\\ParquetFileWriter")
 }
 
+// MINIT runs before EG(class_table) exists, so the lookup reads CG(class_table), as ensure_class_name_free does
+fn registered(name: &str) -> Option<&'static mut ClassEntry> {
+    let table = unsafe { ext_php_rs_compiler_globals().as_ref() }?.class_table;
+
+    if table.is_null() {
+        return None;
+    }
+
+    unsafe { (zend_hash_str_find_ptr_lc(table, name.as_ptr().cast(), name.len()) as *mut ClassEntry).as_mut() }
+}
+
 fn method(name: &str, args: Vec<Arg<'static>>, returns: DataType) -> FunctionBuilder<'static> {
     args.into_iter()
         .fold(FunctionBuilder::new_abstract(name), FunctionBuilder::arg)
@@ -89,10 +101,17 @@ fn nullable_method(name: &str, args: Vec<Arg<'static>>, returns: DataType) -> Fu
 /// package files declare them in that order, and 051 reflects both sides.
 fn interface(
     name: &str,
+    slot: &AtomicPtr<ClassEntry>,
     store: fn(&'static mut ClassEntry, ArgInfoTables),
     methods: Vec<FunctionBuilder<'static>>,
     static_methods: Vec<FunctionBuilder<'static>>,
 ) -> Result<()> {
+    if let Some(ce) = registered(name) {
+        slot.store(ce, Ordering::Release);
+
+        return Ok(());
+    }
+
     let class = static_methods.into_iter().fold(
         ClassBuilder::new(name).flags(ClassFlags::Interface).registration(store),
         |class, method| {
@@ -114,6 +133,7 @@ fn interface(
 pub fn register() -> Result<()> {
     interface(
         "Flow\\Parquet\\ParquetFile\\Footer",
+        &FOOTER_CE,
         store_footer,
         vec![
             method("metadata", vec![], METADATA),
@@ -130,6 +150,7 @@ pub fn register() -> Result<()> {
     )?;
     interface(
         "Flow\\Parquet\\ParquetFileReader",
+        &PARQUET_FILE_READER_CE,
         store_parquet_file_reader,
         vec![
             method("close", vec![], DataType::Void),
@@ -157,6 +178,7 @@ pub fn register() -> Result<()> {
     )?;
     interface(
         "Flow\\Parquet\\ParquetFileWriter",
+        &PARQUET_FILE_WRITER_CE,
         store_parquet_file_writer,
         vec![
             method("close", vec![], DataType::Void),
@@ -177,6 +199,7 @@ pub fn register() -> Result<()> {
     )?;
     interface(
         "Flow\\Parquet\\ParquetEngine",
+        &PARQUET_ENGINE_CE,
         store_parquet_engine,
         vec![
             nullable_method("normalize", vec![], DataType::Array),

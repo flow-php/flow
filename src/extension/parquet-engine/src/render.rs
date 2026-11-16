@@ -2,9 +2,9 @@
 
 use ext_php_rs::exception::PhpException;
 
-use crate::parquet::error::Error;
-use crate::parquet::source::PhpStream;
+use crate::error::Error;
 use crate::php::{find_class, transparent_exception};
+use crate::source::PhpStream;
 
 pub const RUNTIME: &str = "Flow\\Parquet\\Exception\\RuntimeException";
 const VALIDATION: &str = "Flow\\Parquet\\Exception\\ValidationException";

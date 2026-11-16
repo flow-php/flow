@@ -59,12 +59,12 @@ jobs:
       - name: Test arrow crate
         working-directory: src/extension/arrow-ext
         env: *rust-env
-        run: cargo test --locked --features arrow-validate
+        run: cargo test --workspace --locked --features arrow-validate
 
       - name: Lint arrow crate
         working-directory: src/extension/arrow-ext
         env: *rust-env
-        run: cargo fmt --check && cargo clippy --locked --all-targets -- -D warnings
+        run: cargo fmt --all --check && cargo clippy --workspace --locked --all-targets -- -D warnings
 
       - name: Install Composer Dependencies
         uses: ./.github/actions/composer-install
@@ -89,6 +89,12 @@ jobs:
 
       - name: Run Parquet Integration Tests with Arrow
         run: just test --testsuite=lib-parquet-integration ${{ (matrix.php == '8.3' && runner.os == 'Linux') && '--coverage-clover=./var/phpunit/coverage/clover/coverage.xml' || '' }}
+
+      - name: Run Parquet Adapter Unit Tests with Arrow
+        run: just test --testsuite=adapter-parquet-unit
+
+      - name: Run Parquet Adapter Integration Tests with Arrow
+        run: just test --testsuite=adapter-parquet-integration
 
       - name: Upload to Codecov
         if: ${{ !cancelled() && matrix.php == '8.3' && runner.os == 'Linux' }}
@@ -137,7 +143,7 @@ jobs:
       - name: Prepare local package for PIE installation
         run: |
           # git archive applies export-subst like GitHub release archives, so the build resolves its version from .git_archival.txt
-          git archive HEAD src/extension/arrow-ext | tar -x -C "$RUNNER_TEMP"
+          git archive HEAD src/extension/arrow-ext src/extension/parquet-engine | tar -x -C "$RUNNER_TEMP"
           cd "$RUNNER_TEMP/src/extension/arrow-ext"
           jq '. + {"version": "0.0.9999"}' composer.json > composer.tmp.json
           mv composer.tmp.json composer.json

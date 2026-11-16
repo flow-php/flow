@@ -1,6 +1,7 @@
 //! PHP-engine plumbing: class-entry/slot lookups, hashtable helpers, calls, and the request-scoped cache of datetime
 //! handles, timezones and thrift specs.
 
+use std::cell::UnsafeCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
@@ -14,7 +15,7 @@ use ext_php_rs::ffi::{
 use ext_php_rs::flags::DataType;
 use ext_php_rs::prelude::PhpResult;
 use ext_php_rs::types::{ZendHashTable, ZendObject, ZendStr, Zval};
-use ext_php_rs::zend::{ce, ClassEntry, ExecutorGlobals, Function, ModuleGlobal, ModuleGlobals};
+use ext_php_rs::zend::{ce, ClassEntry, ExecutorGlobals, Function};
 
 use crate::exception::ext_exception;
 use crate::thrift::Specs;
@@ -381,41 +382,43 @@ pub fn timezone(name: &[u8]) -> Result<Zval, PhpException> {
     )
 }
 
-/// Per-request state: the `Ctx` cache lives in module globals (per thread on ZTS), is built lazily and is dropped in
-/// RSHUTDOWN, while the executor still runs; objects freed after RSHUTDOWN never touch it.
+/// Per-request state: the `Ctx` cache lives in a thread local (one per thread, as module globals are on ZTS), is built
+/// lazily and is dropped in RSHUTDOWN, while the executor still runs; objects freed after RSHUTDOWN never touch it.
 #[derive(Default)]
 pub struct ArrowGlobals {
     ctx: Option<Ctx>,
     closed: bool,
 }
 
-impl ModuleGlobal for ArrowGlobals {}
-
-pub static GLOBALS: ModuleGlobals<ArrowGlobals> = ModuleGlobals::new();
-
-pub extern "C" fn request_startup(_type: i32, _module_number: i32) -> i32 {
-    unsafe { GLOBALS.get_mut() }.closed = false;
-
-    0
+thread_local! {
+    static GLOBALS: UnsafeCell<ArrowGlobals> = UnsafeCell::new(ArrowGlobals::default());
 }
 
-pub extern "C" fn request_shutdown(_type: i32, _module_number: i32) -> i32 {
-    let globals = unsafe { GLOBALS.get_mut() };
-    globals.ctx = None;
-    globals.closed = true;
+/// Called from the RINIT of the extension that registers the crate's classes.
+pub fn request_startup() {
+    GLOBALS.with(|globals| unsafe { &mut *globals.get() }.closed = false);
+}
 
-    0
+/// Called from the RSHUTDOWN of the extension that registers the crate's classes.
+pub fn request_shutdown() {
+    GLOBALS.with(|globals| {
+        let globals = unsafe { &mut *globals.get() };
+        globals.ctx = None;
+        globals.closed = true;
+    });
 }
 
 /// The only access to `Ctx`; `f` must not call PHP code, which would alias the `&mut Ctx`.
 pub fn with_ctx<R>(f: impl FnOnce(&mut Ctx) -> PhpResult<R>) -> PhpResult<R> {
-    let globals = unsafe { GLOBALS.get_mut() };
+    GLOBALS.with(|globals| {
+        let globals = unsafe { &mut *globals.get() };
 
-    if globals.closed {
-        return Err(ext_exception("arrow used after request shutdown"));
-    }
+        if globals.closed {
+            return Err(ext_exception("arrow used after request shutdown"));
+        }
 
-    f(globals.ctx.get_or_insert_with(Ctx::default))
+        f(globals.ctx.get_or_insert_with(Ctx::default))
+    })
 }
 
 /// An `iterable` argument kept as its zval. ext-php-rs's `Iterable` opens a `zend_object_iterator` for a `Traversable`
