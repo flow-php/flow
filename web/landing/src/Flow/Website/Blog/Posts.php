@@ -57,6 +57,20 @@ final class Posts
             'slug' => 'performance-optimizations',
             'author' => 'norberttech',
         ],
+        [
+            'title' => 'Flow PHP - Release 0.47.0',
+            'description' => 'Filter and projection pushdown, corrupted records, immutable DataFrame and native sort and group by kernels.',
+            'date' => '2026-11-02',
+            'slug' => 'flow-php-release-0470',
+            'author' => 'norberttech',
+        ],
+        [
+            'title' => 'Flow PHP - Release 0.48.0',
+            'description' => 'Flow Pulse Protocol, Parquet engine in flow_php, memory budgets, pipe operator and a public benchmarks page.',
+            'date' => '2026-11-17',
+            'slug' => 'flow-php-release-0480',
+            'author' => 'norberttech',
+        ],
     ];
 
     /**

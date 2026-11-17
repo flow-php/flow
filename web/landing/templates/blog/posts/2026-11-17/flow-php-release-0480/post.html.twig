@@ -1,0 +1,164 @@
+{% extends 'blog/post.html.twig' %}
+{% block article %}
+    <article id="blog-post">
+        <h1>Flow PHP - Release 0.48.0</h1>
+        <hr/>
+        <p>
+            Flow 0.48.0 is out, and this one is mostly about three things: better visibility into what a pipeline is
+            doing, memory and performance.
+        </p>
+
+        <h2>Flow Pulse Protocol</h2>
+        <hr/>
+        <p>
+            Long running pipelines used to be a black box. You started one, and until it finished there was no good way
+            to tell if it is sorting, joining, writing or just stuck.
+        </p>
+        <p>
+            Now Flow can call you back while it works. A heartbeat is a callback registered through
+            <code>config_builder()->heartbeat()</code>, and Flow calls it every N seconds while a run is busy.
+            Each call gets a <code>Pulse</code> that lists every stage of the run, including the ones that are only
+            planned, with their counters and the memory peak of the run.
+        </p>
+        <p>
+            The most common case is a pipeline that holds a lock or a queue message. The lease on it expires after
+            a few minutes, and a pipeline that runs longer loses it, even though it is perfectly healthy.
+            With a heartbeat the pipeline extends the lease on every beat, so as long as it is alive, the lease stays.
+        </p>
+        <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/heartbeat.php' %}{% endapply %}</code></pre>
+        <p>
+            When the process dies, beats stop, the lease expires and something else can pick up the work.
+            That is exactly how we can tell a slow pipeline from a dead one.
+        </p>
+        <p>
+            You can read more about it in <a href="/documentation/components/core/heartbeat">documentation</a>.
+        </p>
+        <h3>Console progress</h3>
+        <p>
+            There is also a new package,
+            <a href="https://github.com/flow-php/symfony-console-bridge" target="_blank"><code>flow-php/symfony-console-bridge</code></a>,
+            that turns the pulse into a progress output for Symfony Console commands. It comes with four styles.
+        </p>
+        <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/console.php' %}{% endapply %}</code></pre>
+        <p>
+            Flow CLI file commands are already using it.
+        </p>
+
+        <h2>Pipe Operator</h2>
+        <hr/>
+        <p>
+            PHP 8.5 comes with a pipe operator, and Flow supports it. There is a pipeable DSL step for every
+            DataFrame method, so a pipeline can be written without a single <code>-></code>.
+        </p>
+        <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/pipe.php' %}{% endapply %}</code></pre>
+        <p>
+            Both forms give the same result, use the one you like more.
+            More details in <a href="/documentation/components/core/pipe-operator">documentation</a>.
+        </p>
+
+        <h2>Parquet engine in flow_php</h2>
+        <hr/>
+        <p>
+            Until now, reading and writing Parquet through a native code required arrow extension.
+            In 0.48.0 the <code>flow_php</code> extension got its own Parquet engine, so one extension is enough.
+        </p>
+        <p>
+            When <code>flow_php</code> is loaded, Parquet adapter picks <code>FlowPhpParquetEngine</code> by default,
+            without it Flow falls back to the pure PHP engine. Nothing changes in the code of a pipeline.
+        </p>
+        <p>
+            What is even more important, memory used by the engine is now counted by the memory limit of a run.
+        </p>
+
+        <h2>Memory</h2>
+        <hr/>
+        <p>
+            This is where a lot of our efforts were focused on in this release.
+        </p>
+        <ul>
+            <li>Each operation (sort, group by, join) has its own memory budget, and a memory limit is shared by all
+                workers of a run
+            </li>
+            <li>Memory limit counts only the memory an operation adds after it starts</li>
+            <li>Without PHP <code>memory_limit</code> the default limit is 4 GiB</li>
+            <li>A spilling group by was holding 2.5 times its memory limit, this is fixed</li>
+            <li>On Linux, freed large buffers are returned to the system</li>
+        </ul>
+        <p>
+            The results are easy to notice. Sorting 10 GB Parquet file now peaks at 9.3 GiB of memory, in 0.47.0 it was
+            17.9 GiB.
+        </p>
+
+        <h2>Performance</h2>
+        <hr/>
+        <p>
+            Hash join now matches keys through the group table and it got native kernels for partitioning rows into
+            buckets and for looking up keys. It also skips the pair check when equal keys already decide the condition.
+        </p>
+        <p>
+            String functions <code>startsWith()</code>, <code>endsWith()</code> and <code>contains()</code> have native
+            kernels too, and naive ISO datetimes are parsed natively.
+        </p>
+
+        <h2>Benchmarks</h2>
+        <hr/>
+        <p>
+            We have a new page, <a href="https://benchmarks.flow-php.com" target="_blank">benchmarks.flow-php.com</a>,
+            where Flow is compared with DuckDB, Polars and Spark on 1, 5 and 10 GB datasets.
+        </p>
+        <figure>
+            <a href="https://benchmarks.flow-php.com" target="_blank">
+                <img src="{{ asset('images/blog/flow-php-release-0480/benchmarks.png') }}" alt="Flow 0.48.0 total time and peak memory compared with DuckDB, Polars and Spark on 10 GB">
+            </a>
+            <figcaption>Total time and peak memory of 16 benchmarks on 10 GB</figcaption>
+        </figure>
+        <p>
+            Flow is not the fastest engine there, and it does not need to be. DuckDB and Polars are written in C++ and
+            Rust.
+            But the gap is much smaller than most people expect from PHP, and in some cases there is no gap at all.
+        </p>
+        <p>
+            For example, converting 10 GB of CSV to JSON takes Flow 10 seconds, DuckDB and Polars need 12 seconds and
+            Spark 36 seconds.
+            Flow needs 0.5 GiB of memory for it.
+        </p>
+        <p>
+            On that page you can switch between Flow with and without the extension, and between 0.47.0 and 0.48.0.
+            We are going to add each new release there, so the progress will be visible.
+        </p>
+
+        <h2>Other changes</h2>
+        <hr/>
+        <ul>
+            <li>PostgreSQL: session settings (like <code>statement_timeout</code>) per connection, also in Symfony
+                PostgreSQL Bundle
+            </li>
+            <li>PostgreSQL: <code>ALTER EXTENSION ... SET SCHEMA</code> in the query builder, schema diff moves
+                extensions between schemas
+            </li>
+            <li>S3 and Azure filesystems: http timeouts and retries, <code>mv()</code> of objects above 5 GB, safer
+                <code>append</code></li>
+            <li>Loaders name the table or index they write to, visible in telemetry</li>
+            <li>Playground: type-aware autocompletion, hover docs, parameter hints and automatic imports</li>
+        </ul>
+
+        <h2>Heads up</h2>
+        <hr/>
+        <p>
+            There are a few API changes in this release:
+        </p>
+        <ul>
+            <li><code>Transformation::transform()</code> was renamed to <code>__invoke()</code></li>
+            <li><code>print_rows(Rows)</code> was renamed to <code>format_rows()</code></li>
+            <li><code>MemoryLimit</code> moved to <code>Flow\ETL\Values\Memory</code></li>
+            <li><code>DataFrame::with()</code> accepts only <code>Transformer</code> or <code>Transformation</code></li>
+        </ul>
+        <p>
+            Please check the <a href="/documentation/upgrading">upgrade guide</a> before updating.
+        </p>
+        <p>
+            Those are just the most important additions to Flow PHP. For more details, check full at
+            <a href="/changelog">Changelog</a>
+        </p>
+    </article>
+{% endblock %}

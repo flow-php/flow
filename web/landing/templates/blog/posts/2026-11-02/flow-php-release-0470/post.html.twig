@@ -1,0 +1,170 @@
+{% extends 'blog/post.html.twig' %}
+{% block article %}
+    <article id="blog-post">
+        <h1>Flow PHP - Release 0.47.0</h1>
+        <hr/>
+        <p>
+            Flow 0.47.0 is a big one. A lot of it happened under the hood, but there are also a few things that
+            change how pipelines are written, so please read this one carefully before updating.
+        </p>
+
+        <h2>Filter and projection pushdown</h2>
+        <hr/>
+        <p>
+            Until now, a <code>filter()</code> was always evaluated on rows that were already read from the file.
+            It works, but reading rows only to throw most of them away is a waste of time and memory.
+        </p>
+        <p>
+            Now a filter placed directly after a file source moves into the reader. The same happens with columns,
+            Flow reads from the file only those that the pipeline is going to use.
+        </p>
+        <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/pushdown.php' %}{% endapply %}</code></pre>
+        <p>
+            Parquet benefits from it the most. The reader skips whole row groups when their statistics prove that no
+            row matches, it can use page index and bloom filters, and a <code>limit()</code> after the filter stops
+            the read as soon as it has enough matching rows.
+        </p>
+        <p>
+            To check what was pushed into the source, use <code>explain()</code>.
+        </p>
+        <pre><code class="language-text">{% apply escape %}{% include template_folder ~ '/explain.txt' %}{% endapply %}</code></pre>
+        <p>
+            You can read more about it in <a href="/documentation/components/adapters/parquet#filter-pushdown">documentation</a>.
+        </p>
+
+        <h2>Architecture in layers</h2>
+        <hr/>
+        <p>
+            Flow grew a lot over the last releases, and at some point it was not obvious anymore what can depend on what.
+            In 0.47.0 we organized the whole <code>flow-php/etl</code> into layers, where each layer can use only the layers below it.
+        </p>
+        <ul>
+            <li><code>DSL</code> - the functions you call</li>
+            <li><code>API</code> - the user-facing objects, like <code>DataFrame</code></li>
+            <li><code>Runtime</code> - the run: config, context, executor, telemetry</li>
+            <li><code>Planning</code> - plans, the optimizer, <code>explain()</code></li>
+            <li><code>Operators</code> - the steps a pipeline runs</li>
+            <li><code>IO</code> - reading, writing, schema inference</li>
+            <li><code>Functions</code> - expressions over columns</li>
+            <li><code>Kernels</code> - the algorithms: sort, hash join, bucketing</li>
+            <li><code>Storage</code> - where rows wait: cache, spill files</li>
+            <li><code>Values</code> - the data itself: <code>Rows</code>, <code>Schema</code>, <code>Column</code></li>
+            <li><code>Foundation</code> - shared basics</li>
+        </ul>
+        <p>
+            Every namespace sits in exactly one layer, and those rules are not just a convention. They are protected by
+            <a href="https://mago.carthage.software" target="_blank">mago guard</a> that runs in CI,
+            so a class from <code>Values</code> reaching into <code>Runtime</code> simply fails the build.
+        </p>
+        <p>
+            Adapters follow the same layers inside their own namespaces, for example the CSV reader is now
+            <code>Flow\ETL\Adapter\CSV\IO\Extractor\CSVExtractor</code>.
+        </p>
+        <p>
+            There is also a new <a href="/documentation/architecture">Architecture</a> page in the documentation that
+            explains the layers and what happens to the data between <code>read()</code> and <code>run()</code>.
+        </p>
+
+        <h2>Corrupted Records</h2>
+        <hr/>
+        <p>
+            Real life data is rarely clean. A CSV line with one field too many, a value that does not cast to the declared type,
+            a JSON key that shows up after the inference sample.
+        </p>
+        <p>
+            Before 0.47.0 Flow was too forgiving here, extra fields were silently dropped and missing ones became null.
+            That is how data gets lost without anybody noticing.
+        </p>
+        <p>
+            Now a record that cannot become a row without losing or inventing data is a corrupted record.
+            By default the read fails at the first one, but they can also be sent to a dedicated loader, so the pipeline
+            keeps going and nothing is lost.
+        </p>
+        <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/corrupted.php' %}{% endapply %}</code></pre>
+        <p>
+            Rejected records can be later counted, reported or repaired with another pipeline.
+            More details in <a href="/documentation/components/core/corrupted-records">documentation</a>.
+        </p>
+
+        <h2>DataFrame is immutable</h2>
+        <hr/>
+        <p>
+            This is the change that might require the most attention. Every DataFrame method now returns a new frame,
+            the one it was called on stays untouched.
+        </p>
+        <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/immutable.php' %}{% endapply %}</code></pre>
+        <p>
+            It means that one frame can be safely reused for several queries, which was a source of pretty confusing bugs before.
+        </p>
+        <p>
+            It also means that calling a method and ignoring the result does nothing. To make it harder to miss, every DataFrame
+            method is marked with <code>#[NoDiscard]</code>, so PHP 8.5 is going to warn about it.
+        </p>
+
+        <h2>Entry is now Column</h2>
+        <hr/>
+        <p>
+            Flow moved from rows of entries to columns some time ago, but the names stayed. In this release we cleaned it up.
+        </p>
+        <ul>
+            <li><code>with_entry()</code> and <code>WithEntry</code> are now <code>with_column()</code> and <code>WithColumn</code></li>
+            <li><code>entry()</code> DSL function was removed, use <code>ref()</code> or <code>col()</code></li>
+            <li>DataFrame got <code>withColumn()</code> and <code>withColumns()</code></li>
+            <li>Options like <code>withSheetNameFromEntry()</code> or <code>withIdentifierEntry()</code> were renamed to their <code>Column</code> versions</li>
+        </ul>
+
+        <h2>Native kernels</h2>
+        <hr/>
+        <p>
+            The <code>flow_php</code> extension got native kernels for sorting, grouping and for grouped sum, average and count.
+            Nothing changes in the code of a pipeline, when the extension is loaded Flow is using them automatically.
+        </p>
+        <p>
+            Besides that, <code>count()</code> no longer reads any columns, sum and average of the same column share one
+            running total, and external sort releases its buffer after each spill.
+        </p>
+
+        <h2>Safer writes</h2>
+        <hr/>
+        <ul>
+            <li>Overwrite removes only the files Flow wrote, and it never loses data when a commit fails</li>
+            <li>Failed Parquet writes leave no file behind</li>
+            <li>A load of 0 rows writes no file, for every format</li>
+            <li><code>Filesystem::create()</code> creates a file exclusively, also on S3 and Azure</li>
+            <li><code>mv()</code> replaces files atomically instead of delete then rename</li>
+        </ul>
+
+        <h2>Parquet</h2>
+        <hr/>
+        <ul>
+            <li>Reading and writing <code>DELTA_LENGTH_BYTE_ARRAY</code> and <code>DELTA_BYTE_ARRAY</code> encodings</li>
+            <li>Dictionary encoding is on by default</li>
+            <li>Column index, offset index and bloom filters are written</li>
+            <li>Dates, timestamps, times and uuids are exchanged as stored values, without creating PHP objects on the way</li>
+            <li>A few fixes that make files written by Flow readable by arrow-rs and DuckDB in every case</li>
+        </ul>
+
+        <h2>Other changes</h2>
+        <hr/>
+        <ul>
+            <li>Run statistics show heap, process, worker and summed memory peaks</li>
+            <li><code>infer_schema()->everyRow()</code> and <code>->everySource()</code></li>
+            <li>CSV, Excel and Google Sheet readers got <code>withMissingColumnsAsNull()</code></li>
+            <li>Telemetry: <code>UrlSanitizer</code> that hides sensitive query parameters in HTTP client spans</li>
+            <li>HTTP adapter: <code>http_stop_when_any_of()</code> and <code>http_stop_when_all_of()</code></li>
+        </ul>
+
+        <h2>Heads up</h2>
+        <hr/>
+        <p>
+            This release comes with more API changes than usual. Besides immutable DataFrame and the Entry to Column rename,
+            a lot of classes moved to new namespaces because of the layers.
+        </p>
+        <p>
+            All of it is described in the <a href="/documentation/upgrading">upgrade guide</a>, please go through it before updating.
+        </p>
+        <p>
+            Those are just the most important additions to Flow PHP. For more details, check full at <a href="/changelog">Changelog</a>
+        </p>
+    </article>
+{% endblock %}

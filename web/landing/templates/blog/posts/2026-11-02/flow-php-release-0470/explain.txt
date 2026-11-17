@@ -1,0 +1,10 @@
+#3 Result
+│  Rows this plan hands out: to the trigger, or to the node reading it
+└─ #2 Limit
+   │  Limit: 10
+   └─ #1 Read
+         Extractor: ParquetExtractor
+         Source: file:///orders/*.parquet
+         Limit: 10
+         Filter: id > 1000
+         Filter: status = 'paid'
