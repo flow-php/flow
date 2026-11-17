@@ -1,0 +1,203 @@
+{% extends 'blog/post.html.twig' %}
+{% block article %}
+    <article id="blog-post">
+        <h1>Flow PHP - Release 0.45.0</h1>
+        <hr/>
+        <p>
+            Flow 0.45.0 is probably the biggest change in Flow internals so far. Rows are gone, at least the way they
+            used to exist, and Flow got a real query planner.
+        </p>
+        <p>
+            Most of pipelines are going to work exactly as before, just faster and with less memory, but there are
+            a few things to check before updating, so please read this one to the end.
+        </p>
+
+        <h2>Columnar memory layout</h2>
+        <hr/>
+        <p>
+            Since the very first version, Flow was keeping data as rows. Each <code>Row</code> was an object holding
+            a collection of entries, and each entry was another object. It is a simple model, easy to reason about, but
+            it comes with a price. Millions of small objects are expensive to create, to keep in memory and to iterate over.
+        </p>
+        <p>
+            In 0.45.0 the <code>Row</code> is removed. A batch (<code>Rows</code>) now stores one column per schema definition,
+            and every reader, writer, function and processor works on columns.
+        </p>
+        <p>
+            This is how DuckDB, Polars or Apache Arrow keep the data, and there are good reasons for it.
+            A function that adds two columns goes through two arrays of numbers, not through millions of objects.
+        </p>
+        <h3>Column Backend</h3>
+        <p>
+            Where those columns live is decided by a backend, and a data frame has exactly one, set on its config.
+        </p>
+        <ul>
+            <li><code>PhpBackend</code> - columns are PHP arrays, it needs nothing and it is the reference implementation</li>
+            <li><code>RustBackend</code> - columns are Apache Arrow arrays, it comes with the <code>flow_php</code> extension</li>
+            <li><code>AdaptiveBackend</code> - the default one, picks <code>RustBackend</code> when the extension is loaded and <code>PhpBackend</code> when it is not</li>
+        </ul>
+        <p>
+            Both backends give the same values, the extension is just an accelerator. With it, CSV, JSON and Parquet are
+            read and written as native columns, without going through PHP values at all.
+        </p>
+        <p>
+            You can read more about it in <a href="/documentation/components/core/column-backend">documentation</a>.
+        </p>
+
+        <h2>Query planner</h2>
+        <hr/>
+        <p>
+            Before this release, a pipeline was just a list of steps executed one after another, exactly in the order they were written.
+            Whatever was written, was executed, even when there was a much cheaper way to get the same result.
+        </p>
+        <p>
+            Now Flow works like a database does. A pipeline is first described, then optimized, and only then executed:
+        </p>
+        <ul>
+            <li><strong>Logical plan</strong> - each DataFrame method adds a node to a plan, nothing reads the data yet</li>
+            <li><strong>Optimizer</strong> - rewrites the plan into a cheaper one that gives the same result</li>
+            <li><strong>Planner</strong> - turns the plan into pipelines, picks the algorithms and their settings</li>
+            <li><strong>Executor</strong> - pulls batches from the extractor, runs them through the steps and hands them to the loaders</li>
+        </ul>
+        <p>
+            Each node of the plan declares what it does to the data: how many rows it can return, if it changes them,
+            if it needs all of them at once and which columns it redefines. That is what the optimizer reads to decide
+            if a rewrite is safe.
+        </p>
+        <h3>Optimizer</h3>
+        <p>
+            The optimizer is a list of rules, and each rule knows one way to make a plan cheaper.
+            0.45.0 comes with the first five:
+        </p>
+        <ul>
+            <li><code>CombineLimits</code> - two <code>limit()</code> calls one after another become one, with the smaller limit</li>
+            <li><code>CombineSortAndLimit</code> - <code>sortBy()</code> followed by <code>limit()</code> keeps only the top rows instead of sorting everything</li>
+            <li><code>PushLimitIntoSource</code> - the extractor stops reading once the limit is reached</li>
+            <li><code>PushFilterIntoSource</code> - a <code>filter()</code> on partition columns skips whole partition directories</li>
+            <li><code>CountFromStatistics</code> - <code>count()</code> over a source that knows its rows exactly reads that number, and no rows</li>
+        </ul>
+        <p>
+            The second one is a good example of what it gives. Take a pipeline that needs 10 biggest orders:
+        </p>
+        <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/top_n.php' %}{% endapply %}</code></pre>
+        <p>
+            Without the optimizer, Flow would sort the whole file, for a big one spilling to disk on the way, just to throw
+            away everything except 10 rows. With it, the sort and the limit become one top N step that keeps only the 10 best rows.
+            The code of the pipeline stays exactly the same.
+        </p>
+        <p>
+            Rules can be turned off one by one, and the optimizer can be extended with your own rules through
+            <code>config_builder()->optimizer()</code>. It is also possible to run a pipeline with no rewrites at all,
+            which is pretty useful when something needs to be debugged.
+        </p>
+        <p>
+            This is just a beginning. With a plan and an optimizer in place, each next rule is a small addition,
+            not a rewrite of the engine.
+        </p>
+        <h3>Explain</h3>
+        <p>
+            To see what Flow is going to do, use <code>explain()</code>. It answers from the plan, without reading a single row.
+        </p>
+        <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/explain.php' %}{% endapply %}</code></pre>
+        <pre><code class="language-text">{% apply escape %}{% include template_folder ~ '/explain.txt' %}{% endapply %}</code></pre>
+        <p>
+            The plan is a tree read from the bottom up, the source is always <code>#1</code>.
+            In the example above the filter is used by two consumers, so it is printed once and the second one points back at it.
+        </p>
+        <p>
+            It can be printed at three stages: as it was written, after the optimizer, and as a physical plan with pipelines,
+            algorithms and their settings. There are also four formats to pick from: tree, flow, boxes and declarations.
+        </p>
+
+        <h2>Source statistics</h2>
+        <hr/>
+        <p>
+            A planner without any knowledge about the data cannot do much. That is why every extractor now declares what it
+            knows about its source before reading it, how many rows and how many bytes.
+        </p>
+        <p>
+            Parquet and Floe take exact numbers from file footers, CSV and JSON Lines estimate rows from the sampled row size,
+            PostgreSQL and Doctrine adapters ask the database through <code>EXPLAIN</code>.
+        </p>
+        <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/count.php' %}{% endapply %}</code></pre>
+        <p>
+            The first thing that benefits from it is <code>count()</code>. When the statistics are exact, it answers without reading rows.
+        </p>
+        <p>
+            There is also <code>analyze()->withSourceStatistics()</code> that reports declared vs. read rows per source,
+            and <code>--stats-sources</code> option in CLI.
+        </p>
+
+        <h2>Native readers</h2>
+        <hr/>
+        <p>
+            The <code>flow_php</code> extension got a native CSV tokenizer, reader and schema inference. When the extension is loaded,
+            CSV adapter is using them automatically.
+        </p>
+        <p>
+            Floe frames are decoded straight into Rows and encoded straight from Rows in one native pass, and casting ISO datetimes
+            with <code>Z</code> suffix is around 9 times faster in PHP and 14 times faster in the native hydrator.
+        </p>
+
+        <h2>Time zones</h2>
+        <hr/>
+        <p>
+            Datetime handling was pretty loose before. One column could hold values in different time zones, and casting a string
+            without a zone was using whatever <code>date.timezone</code> was set to.
+        </p>
+        <p>
+            Now a datetime column carries exactly one time zone, UTC by default. It can be changed through <code>type_datetime($zone)</code>
+            or <code>datetime_schema(zone:)</code>, and every cast lands in the zone of its column.
+        </p>
+        <ul>
+            <li>naive strings ignore <code>date.timezone</code></li>
+            <li>date casts land at midnight UTC</li>
+            <li>merging datetime columns of different zones widens to UTC</li>
+            <li>date and datetime keys at the same instant join and group together</li>
+        </ul>
+
+        <h2>Transactions</h2>
+        <hr/>
+        <p>
+            Writes got <code>Sink</code> and <code>Transaction</code> contracts, so a write can fan out or commit per batch.
+            On top of it there are <code>DbalTransaction</code> and <code>PostgreSqlTransaction</code>, both with a configurable isolation level.
+        </p>
+
+        <h2>Parquet</h2>
+        <hr/>
+        <ul>
+            <li><code>DECIMAL</code> on <code>INT32</code>, <code>INT64</code>, <code>BYTE_ARRAY</code> and <code>FLBA</code> of any width</li>
+            <li><code>TIMESTAMP</code> and <code>TIME</code> honour <code>MILLIS</code>, <code>MICROS</code> and <code>NANOS</code> units</li>
+            <li><code>DELTA_BINARY_PACKED</code>, unsigned integers and <code>INT96</code> follow the spec</li>
+            <li>arrow-ext exchanges batches with <code>flow_php</code> through the Arrow C Data Interface</li>
+        </ul>
+
+        <h2>Other changes</h2>
+        <hr/>
+        <ul>
+            <li><code>DataFrame::forEach()</code>, <code>addRowIndex()</code>, <code>aggregateBy()</code>, <code>asExtractor()</code> and <code>isRepeatable()</code></li>
+            <li>PostgreSQL: <code>COLLATE</code> support in the query builder, <code>Index::toSql()</code> and <code>Trigger::toSql()</code></li>
+            <li>CLI: <code>ProgressBarLoader</code> advancing a progress bar per batch</li>
+            <li>A mismatched <code>flow_php</code> or arrow extension build is refused with a clear message</li>
+        </ul>
+
+        <h2>Heads up</h2>
+        <hr/>
+        <p>
+            A change that big cannot come without breaking something:
+        </p>
+        <ul>
+            <li><code>Row</code> is removed, custom extractors, loaders and functions need to work on columns</li>
+            <li>Existing <code>.floe</code> files must be rewritten, the footer has a new format</li>
+            <li><code>DataFrame::run()</code> no longer takes a callback, use <code>forEach()</code></li>
+            <li><code>Config::optimizer()</code> was replaced by <code>planner()</code> and <code>executor()</code></li>
+            <li>A union other than <code>null|T</code> inside a column type throws <code>UnsupportedUnionTypeException</code></li>
+        </ul>
+        <p>
+            Please check the <a href="/documentation/upgrading">upgrade guide</a> before updating.
+        </p>
+        <p>
+            Those are just the most important additions to Flow PHP. For more details, check full at <a href="/changelog">Changelog</a>
+        </p>
+    </article>
+{% endblock %}

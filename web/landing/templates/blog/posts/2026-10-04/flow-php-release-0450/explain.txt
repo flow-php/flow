@@ -1,0 +1,13 @@
+Outputs
+├─ #4 Result
+│  │  Rows this plan hands out: to the trigger, or to the node reading it
+│  └─ #3 Select
+│     │  Columns: id, email
+│     └─ #2 Filter
+│        │  Condition: IsNotNull
+│        └─ #1 Read
+│              Extractor: CSVExtractor
+│              Source: file:///data/orders.csv
+└─ #5 Write
+   │  Loader: JsonLoader
+   └─ #2 Filter (shared)

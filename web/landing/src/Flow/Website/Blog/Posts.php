@@ -58,6 +58,13 @@ final class Posts
             'author' => 'norberttech',
         ],
         [
+            'title' => 'Flow PHP - Release 0.45.0',
+            'description' => 'Columnar memory layout with a configurable column backend, a query planner with an optimizer and source statistics.',
+            'date' => '2026-10-04',
+            'slug' => 'flow-php-release-0450',
+            'author' => 'norberttech',
+        ],
+        [
             'title' => 'Flow PHP - Release 0.47.0',
             'description' => 'Filter and projection pushdown, corrupted records, immutable DataFrame and native sort and group by kernels.',
             'date' => '2026-11-02',
