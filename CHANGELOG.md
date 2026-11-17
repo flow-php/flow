@@ -1,6 +1,7 @@
 ## [Unreleased] - 2026-11-17
 
 ### Changed
+- [482137](https://github.com/flow-php/flow/commit/482137dfc32690a56996427bff7eab62a031ccf1) - **docs(flow-php/web): blog post for release 0.45.0** - [@norberttech](https://github.com/norberttech)
 - [bfd25e](https://github.com/flow-php/flow/commit/bfd25e3ee88004638529d03dfc30f86e931c76f2) - **docs(flow-php/web): blog posts for releases 0.47.0 and 0.48.0** - [@norberttech](https://github.com/norberttech)
 
 ## [0.48.0] - 2026-11-17
