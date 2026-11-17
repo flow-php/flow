@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-11-17
+## [0.48.0] - 2026-11-17
 
 ### Added
 - [#2744](https://github.com/flow-php/flow/pull/2744) - **flow-php/flow-php-ext - Parquet engine FlowPhpParquetEngine, counted by the memory limit of a run** - [@norberttech](https://github.com/norberttech)
