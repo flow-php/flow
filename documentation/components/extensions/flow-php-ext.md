@@ -157,3 +157,13 @@ type before the first batch. Read and write refusals are the `Flow\Parquet\Excep
 With `engine: new RustParquetEngine()`, arrow-ext reads the file, the columns are built from PHP values, and a memory
 limit does not count the bytes of arrow-ext.
 
+## Memory returned to the system
+
+When the extension loads on Linux with glibc, it fixes the mmap threshold of the process at 128 KiB. glibc otherwise
+raises the threshold as large blocks are freed, and the freed buffers stay on the heap. With a fixed threshold, a sort
+holds what its memory limit counts. The threshold applies to the whole process. To keep your own value, set it in the
+environment:
+
+```bash
+MALLOC_MMAP_THRESHOLD_=262144 php your_script.php
+```

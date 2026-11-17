@@ -49,6 +49,8 @@ pub extern "C" fn php_module_info(_module: *mut ModuleEntry) {
 ///
 /// Only called by the PHP engine during module startup (MINIT).
 pub unsafe extern "C" fn module_startup(_type: i32, _module_number: i32) -> i32 {
+    alloc::fix_mmap_threshold();
+
     if let Err(e) = interfaces::register() {
         eprintln!("flow_php: failed to register the Flow\\ETL interfaces: {e}");
         return -1;
