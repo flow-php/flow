@@ -9,3 +9,8 @@ public/images/work-shop/social/
 public/pagefind
 public/*.xml
 !public/BingSiteAuth.xml
+resources/api.json
+resources/dsl.json
+resources/php.json
+assets/codemirror/completions/flow-api.js
+assets/wasm/tools/flow.phar

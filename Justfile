@@ -109,6 +109,7 @@ fix:
 # Build the Flow PHAR archive and copy it into the landing site assets.
 phar:
     bin/build-phar.sh
+    mkdir -p web/landing/assets/wasm/tools
     cp ./build/flow.phar ./web/landing/assets/wasm/tools/flow.phar
 
 # Build the WASM artifact (also rebuilds the PHAR).
@@ -136,6 +137,7 @@ docs:
     bin/docs.php dsl:dump web/landing/resources/dsl.json
     bin/docs.php api:dump web/landing/resources/api.json
     bin/docs.php php:dump web/landing/resources/php.json
+    mkdir -p web/landing/assets/codemirror/completions
     web/landing/bin/console app:generate:code-completion
 
 # Generate phpDocumentor API docs for every package config under phpdoc/.
