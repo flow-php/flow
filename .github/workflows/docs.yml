@@ -44,16 +44,6 @@ jobs:
       - name: "Build Docs"
         run: "just docs"
 
-      - name: Check for uncommitted changes
-        run: |
-          if [[ -n "$(git status --porcelain)" ]]; then
-            echo "Uncommitted changes detected, please run \`just docs\` and commit the changes."
-            git status
-            exit 1
-          else
-            echo "No uncommitted changes."
-          fi
-
       - name: "MD Link Linter"
         uses: "docker://norberttech/md-link-linter@sha256:bf17e53dd716dcc2f0a41ed45af3e7bfc06b56b40fe6d8064b29646c1582c54c" # latest as of 2026-09-25
         with:

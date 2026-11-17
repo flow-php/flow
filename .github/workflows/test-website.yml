@@ -51,8 +51,43 @@ jobs:
           path: "web/landing/assets/wasm/tools/flow.phar"
           retention-days: 1
 
+  build-docs:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "8.3"
+          dependencies: "locked"
+          coverage: "none"
+          extensions: ':psr, bcmath, curl, dom, hash, json, mbstring, pdo_sqlite, xml, xmlwriter, xmlreader, zip, zlib'
+          cache-key-suffix: "-locked"
+          extra-working-directory: "web/landing"
+          extra-cache-key-suffix: "-website"
+          extra-composer-file: "web/landing/composer.lock"
+
+      - name: "Build Docs"
+        run: "just docs"
+
+      - name: "Upload generated docs"
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: "website-flow-docs"
+          path: |
+            web/landing/resources/api.json
+            web/landing/resources/dsl.json
+            web/landing/resources/php.json
+            web/landing/assets/codemirror/completions/flow-api.js
+          retention-days: 1
+
   website-tests:
-    needs: build-phar
+    needs: [build-phar, build-docs]
     runs-on: ${{ matrix.operating-system }}
     strategy:
       fail-fast: false
@@ -108,13 +143,17 @@ jobs:
           timeout 30 bash -c 'until curl -s http://localhost:8787 > /dev/null; do sleep 1; done'
         working-directory: "terraform/cloudflare/workers"
 
-      # replaces the committed phar so the playground runs this commit's Flow, not whatever was
-      # last checked in
       - name: "Download Flow PHAR"
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: "website-flow-phar"
           path: "web/landing/assets/wasm/tools"
+
+      - name: "Download generated docs"
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: "website-flow-docs"
+          path: "web/landing"
 
       # the website suite runs on the monorepo phpunit, not a copy of its own
       - name: "Install PHPUnit"

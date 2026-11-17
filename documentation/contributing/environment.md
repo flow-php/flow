@@ -111,7 +111,8 @@ just docs
 just docs-api
 ```
 
-Run `just docs` after each change to a `functions.php` file (DSL).
+Git ignores the files that `just docs` and `just phar` write under `web/landing`. The website needs them. Run both
+commands before you serve the website or run `just test-website`, and again after a change to the DSL or the API.
 
 ## Building PHAR
 
