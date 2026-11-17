@@ -2,13 +2,12 @@
 RustParquetFileWriter writes native and PHP columns that PhpParquetEngine reads back equal, and refuses a string that is not valid UTF-8
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
-<?php extension_loaded('arrow') || die('skip arrow'); ?>
 --FILE--
 <?php
 use Flow\ETL\IO\Extractor\Criteria;
 require __DIR__ . '/bootstrap.php';
 
-use Flow\Parquet\Engine\RustParquetFileWriter as ArrowRustParquetFileWriter;
+use Flow\ETL\Adapter\Parquet\IO\Engine\FlowPhpParquetFileWriter;
 
 use Flow\ETL\Adapter\Parquet\IO\Loader\{ParquetSchemaConformance, RustParquetFileWriter};
 use Flow\ETL\Adapter\Parquet\Values\Schema\SchemaConverter;
@@ -56,7 +55,7 @@ $values = [
 $context = flow_context(config_builder()->backend(new PhpBackend())->build());
 $write = static function (Schema $schema, array $batches): void {
     $writer = new RustParquetFileWriter(
-        new ArrowRustParquetFileWriter(
+        new FlowPhpParquetFileWriter(
             memory_filesystem()->writeTo(path('memory://unused.parquet')),
             ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquetSchema($schema)),
             Compressions::ZSTD,
@@ -76,7 +75,7 @@ $write = static function (Schema $schema, array $batches): void {
 
 $filesystem = memory_filesystem();
 $writer = new RustParquetFileWriter(
-    new ArrowRustParquetFileWriter(
+    new FlowPhpParquetFileWriter(
         $filesystem->writeTo(path('memory://roundtrip.parquet')),
         ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquetSchema($schema)),
         Compressions::ZSTD,
@@ -100,7 +99,7 @@ var_dump(comparable($read) === comparable([...php_rows($schema, $values)->toArra
 
 $partial = memory_filesystem();
 $partialWriter = new RustParquetFileWriter(
-    new ArrowRustParquetFileWriter(
+    new FlowPhpParquetFileWriter(
         $partial->writeTo(path('memory://partial.parquet')),
         ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquetSchema(schema(int_schema('id'), str_schema('name', nullable: true)))),
         Compressions::SNAPPY,

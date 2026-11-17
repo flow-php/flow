@@ -1,5 +1,5 @@
 //! `Flow\ETL\Adapter\Parquet\{RustParquetOpenSource, RustParquetFileWriter}`: `Rows` of `RustColumn`s straight from
-//! arrow-ext's Parquet batches, and any conformed `Rows` straight to its writer, through the Arrow C Data Interface.
+//! the batches of the `flow_php` Parquet engine, and any conformed `Rows` straight to its writer, in process.
 
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -7,13 +7,18 @@ use std::sync::Arc;
 
 use arrow_array::ArrayRef;
 use arrow_select::concat::concat;
-use ext_php_rs::convert::IntoZval;
+use ext_php_rs::convert::{FromZvalMut, IntoZval};
 use ext_php_rs::flags::ClassFlags;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendHashTable, Zval};
-use flow_arrow_c::Expected;
+use flow_batch_frame::kind::data_type;
+use flow_parquet_engine::library::{
+    batch_size, read_plan, RustParquetFileReader as EngineFileReader, RustParquetFileWriter as EngineFileWriter,
+};
+use flow_parquet_engine::read::ParquetReader;
+use flow_parquet_engine::render::{parquet_exception, Side};
+use flow_parquet_engine::source::PhpStream;
 
-use crate::arrow_c;
 use crate::backend::{adopt_batch, native_column, Adoption, Definitions};
 use crate::batch_columns::HeldBatch;
 use crate::column::RustColumn;
@@ -25,18 +30,19 @@ use crate::exception::ext_exception;
 use crate::interfaces::{file_writer_ce, parquet_open_source_ce};
 use crate::iterator::RustIterator;
 use crate::plan::TypePlan;
+use crate::render::invalid_argument;
 
-const FILE_READER: &str = "Flow\\Parquet\\Engine\\RustParquetFileReader";
-const ARROW_FILE_WRITER: &str = "Flow\\Parquet\\Engine\\RustParquetFileWriter";
-const BATCH_READER: &str = "Flow\\Arrow\\Parquet\\RustBatchReader";
 const SKIPPED_ROWS: &str = "Flow\\ETL\\IO\\Extractor\\File\\SkippedRows";
 
 type Imported = (usize, Vec<ArrayRef>);
 
+/// The reader of the last `batches()`: emptied by the next one and by `close()`.
+type SharedReader = Rc<RefCell<Option<ParquetReader>>>;
+
 // PhpParquetOpenSource fills every batch across row groups, so a group's remainder is carried into the next batch
 fn next_full_batch(
-    batches: &Zval,
-    expected: &Expected,
+    reader: &SharedReader,
+    stream: &PhpStream,
     columns: &[(Vec<u8>, Rc<TypePlan>)],
     batch_size: usize,
     carried: &mut Vec<Imported>,
@@ -49,17 +55,18 @@ fn next_full_batch(
             return held(full, columns).map(Some);
         }
 
-        let batch = call_method(batches, "next", &mut [])?;
+        let batch = reader.borrow_mut().as_mut().and_then(Iterator::next);
 
-        if batch.is_null() {
-            return if carried.is_empty() {
-                Ok(None)
-            } else {
-                held(joined(std::mem::take(carried))?, columns).map(Some)
-            };
+        match batch {
+            None => {
+                return if carried.is_empty() {
+                    Ok(None)
+                } else {
+                    held(joined(std::mem::take(carried))?, columns).map(Some)
+                };
+            }
+            Some(batch) => carried.push(batch.map_err(|error| parquet_exception(error, stream, Side::Read))?),
         }
-
-        carried.push(arrow_c::import(&batch, expected, columns)?);
     }
 }
 
@@ -109,24 +116,36 @@ fn held((count, arrays): Imported, columns: &[(Vec<u8>, Rc<TypePlan>)]) -> PhpRe
     Ok(HeldBatch { columns: held, count })
 }
 
-fn skipped_rows(batches: &Zval) -> PhpResult<Zval> {
-    let count = call_method(batches, "skipped", &mut [])?
-        .long()
-        .ok_or_else(|| ext_exception("flow_php expected RustBatchReader::skipped() to return an int"))?;
+fn skipped_rows(reader: &SharedReader) -> PhpResult<Zval> {
+    let count = reader.borrow().as_ref().map_or(0, ParquetReader::skipped);
 
-    Ok(construct(find_class(SKIPPED_ROWS)?, &mut [zval_long(count)])?.into_zval(false)?)
+    Ok(construct(
+        find_class(SKIPPED_ROWS)?,
+        &mut [zval_long(i64::try_from(count).unwrap_or(i64::MAX))],
+    )?
+    .into_zval(false)?)
 }
 
-/// `$object` is arrow-ext's `$class`: the only object whose Arrow state flow_php can read.
-fn expect_arrow(object: &Zval, class: &str) -> PhpResult<()> {
-    if object
-        .object()
-        .is_some_and(|object| find_class(class).is_ok_and(|ce| object.instance_of(ce)))
-    {
-        return Ok(());
+/// Refuses a column whose stored type is not the one its schema type stores, before any batch.
+fn stored_types(reader: &ParquetReader, columns: &[(Vec<u8>, Rc<TypePlan>)]) -> PhpResult<()> {
+    for (((name, plan), canonical), field) in columns.iter().zip(reader.types()).zip(reader.fields()) {
+        if *canonical == data_type(&plan.kind) {
+            continue;
+        }
+
+        let type_name = call_method(&plan.type_zv, "toString", &mut [])?;
+
+        return Err(invalid_argument(format!(
+            "Parquet column \"{}\" ({}) is read as {}, its schema type {} stores {}",
+            String::from_utf8_lossy(name),
+            field.data_type(),
+            canonical,
+            String::from_utf8_lossy(type_name.zend_str().map_or(&b""[..], |name| name.as_bytes())),
+            data_type(&plan.kind),
+        )));
     }
 
-    Err(ext_exception(format!("flow_php expected a {class}")))
+    Ok(())
 }
 
 #[php_class]
@@ -137,15 +156,18 @@ fn expect_arrow(object: &Zval, class: &str) -> PhpResult<()> {
 )]
 pub struct RustParquetOpenSource {
     file: Zval,
-    /// The `RustBatchReader` of the last `batches()`, closed by the next one and by `close()`.
-    batches: RefCell<Option<Zval>>,
+    batches: RefCell<Option<SharedReader>>,
 }
 
 #[php_impl]
 impl RustParquetOpenSource {
-    /// `$file`: arrow-ext's `Flow\Parquet\Engine\RustParquetFileReader`, which owns the stream.
+    /// `$file`: the `flow_php` engine's `FlowPhpParquetFileReader`, which owns the stream.
     pub fn __construct(file: &Zval) -> PhpResult<Self> {
-        expect_arrow(file, FILE_READER)?;
+        if file.extract::<&EngineFileReader>().is_none() {
+            return Err(ext_exception(
+                "flow_php expected a Flow\\ETL\\Adapter\\Parquet\\IO\\Engine\\FlowPhpParquetFileReader",
+            ));
+        }
 
         Ok(Self {
             file: file.shallow_clone(),
@@ -158,30 +180,28 @@ impl RustParquetOpenSource {
     pub fn batches(&self, schema: &Zval, batchSize: i64, plan: &Zval, backend: &Zval) -> PhpResult<RustIterator> {
         let definitions = Definitions::of(schema)?;
         let columns = definitions.plans();
-        let mut names = ZendHashTable::new();
-
-        for (name, _) in &columns {
-            names.push(zval_str(name))?;
-        }
-
-        let mut names_zv = Zval::new();
-        names_zv.set_hashtable(names);
+        let names = columns
+            .iter()
+            .map(|(name, _)| String::from_utf8_lossy(name).into_owned())
+            .collect::<Vec<_>>();
 
         self.close()?;
 
-        let batches = construct(
-            find_class(BATCH_READER)?,
-            &mut [
-                self.file.shallow_clone(),
-                names_zv,
-                zval_long(batchSize),
-                plan.shallow_clone(),
-            ],
-        )?
-        .into_zval(false)?;
-        *self.batches.borrow_mut() = Some(batches.shallow_clone());
+        let file = self
+            .file
+            .extract::<&EngineFileReader>()
+            .ok_or_else(|| ext_exception("flow_php expected its FlowPhpParquetFileReader"))?;
+        let batch_size = batch_size(batchSize)?;
+        let (stream, meta) = file.read()?;
+        let stream = Arc::clone(stream);
+        let read = read_plan(meta, plan, &stream)?;
+        let reader = ParquetReader::open(Arc::clone(&stream), meta, &names, read, batch_size)
+            .map_err(|error| parquet_exception(error, &stream, Side::Read))?;
+        stored_types(&reader, &columns)?;
 
-        let expected = arrow_c::check_schema(&call_method(&batches, "schema", &mut [])?, &columns)?;
+        let reader: SharedReader = Rc::new(RefCell::new(Some(reader)));
+        *self.batches.borrow_mut() = Some(Rc::clone(&reader));
+
         let adoption = Adoption::new(definitions, schema, backend);
         let mut reports_skipped = read_property(expect_object(plan, "a ReadPlan")?, "offset")?
             .long()
@@ -189,15 +209,13 @@ impl RustParquetOpenSource {
             > 0;
         let mut first_rows: Option<Zval> = None;
         let mut carried: Vec<Imported> = Vec::new();
-        // RustBatchReader's constructor refused a batch size below 1
-        let batch_size = batchSize as usize;
 
         Ok(RustIterator::new(Box::new(move || {
             if let Some(rows) = first_rows.take() {
                 return Ok(Some(rows));
             }
 
-            let rows = next_full_batch(&batches, &expected, &columns, batch_size, &mut carried)?
+            let rows = next_full_batch(&reader, &stream, &columns, batch_size, &mut carried)?
                 .map(|batch| adopt_batch(&adoption, batch))
                 .transpose()?;
 
@@ -208,16 +226,13 @@ impl RustParquetOpenSource {
             // the reader's count is final once its first batch, or its end, is reached
             first_rows = rows;
 
-            Ok(Some(skipped_rows(&batches)?))
+            Ok(Some(skipped_rows(&reader)?))
         })))
     }
 
     pub fn close(&self) -> PhpResult<()> {
-        // the borrow ends before close() runs PHP
-        let batches = self.batches.borrow_mut().take();
-
-        if let Some(batches) = batches {
-            call_method(&batches, "close", &mut [])?;
+        if let Some(reader) = self.batches.borrow_mut().take() {
+            reader.borrow_mut().take();
         }
 
         Ok(())
@@ -240,7 +255,11 @@ pub struct RustParquetFileWriter {
 impl RustParquetFileWriter {
     /// `$writer` owns the stream; `$conformance` and `$backend` come from the run.
     pub fn __construct(writer: &Zval, conformance: &Zval, backend: &Zval) -> PhpResult<Self> {
-        expect_arrow(writer, ARROW_FILE_WRITER)?;
+        if writer.extract::<&EngineFileWriter>().is_none() {
+            return Err(ext_exception(
+                "flow_php expected a Flow\\ETL\\Adapter\\Parquet\\IO\\Engine\\FlowPhpParquetFileWriter",
+            ));
+        }
 
         Ok(Self {
             writer: writer.shallow_clone(),
@@ -282,11 +301,9 @@ impl RustParquetFileWriter {
             Ok(())
         })?;
 
-        let mut batch = Zval::new();
-        arrow_c::export(count, arrays)?.set_zval(&mut batch, false)?;
-        call_method(&self.writer, "writeArrowBatch", &mut [batch])?;
-
-        Ok(())
+        <&mut EngineFileWriter>::from_zval_mut(&mut self.writer)
+            .ok_or_else(|| ext_exception("flow_php expected its FlowPhpParquetFileWriter"))?
+            .write_arrow_columns(count, &arrays)
     }
 
     /// The writer's buffered rows, the footer, then the stream closed.

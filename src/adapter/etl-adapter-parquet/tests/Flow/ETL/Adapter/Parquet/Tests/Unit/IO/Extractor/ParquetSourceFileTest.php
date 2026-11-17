@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Unit\IO\Extractor;
 
+use Flow\ETL\Adapter\Parquet\IO\Engine\FlowPhpParquetEngine;
 use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetFilesContext;
 use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetSourceFileContext;
 use Flow\ETL\Foundation\Exception\RuntimeException;
@@ -19,7 +20,6 @@ use Flow\Parquet\Reader\ReadPlan;
 use Generator;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 
-use function extension_loaded;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -94,10 +94,9 @@ final class ParquetSourceFileTest extends FlowTestCase
     }
 
     #[RequiresPhpExtension('flow_php')]
-    #[RequiresPhpExtension('arrow')]
-    public function test_with_flow_php_a_rust_engine_file_opens_the_rust_lane(): void
+    public function test_a_flow_php_engine_file_opens_the_rust_lane(): void
     {
-        $file = ParquetSourceFileContext::over(new NativeLocalFilesystem(), engine: new RustParquetEngine());
+        $file = ParquetSourceFileContext::over(new NativeLocalFilesystem(), engine: new FlowPhpParquetEngine());
         $source = $file->open();
 
         static::assertInstanceOf(RustIterator::class, $source->batches(
@@ -110,12 +109,8 @@ final class ParquetSourceFileTest extends FlowTestCase
     }
 
     #[RequiresPhpExtension('arrow')]
-    public function test_without_flow_php_a_rust_engine_file_opens_the_php_lane(): void
+    public function test_an_arrow_engine_file_opens_the_php_lane(): void
     {
-        if (extension_loaded('flow_php')) {
-            static::markTestSkipped('flow_php is loaded');
-        }
-
         $file = ParquetSourceFileContext::over(new NativeLocalFilesystem(), engine: new RustParquetEngine());
         $source = $file->open();
 

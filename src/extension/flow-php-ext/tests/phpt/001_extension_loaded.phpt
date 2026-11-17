@@ -26,6 +26,11 @@ interface Flow\ETL\Adapter\JSON\IO\Extractor\JsonOpenSource
 class Flow\ETL\Adapter\JSON\IO\Extractor\RustJsonOpenSource implements Flow\ETL\Adapter\JSON\IO\Extractor\JsonOpenSource
 interface Flow\ETL\Adapter\JSON\IO\Loader\JsonEncoder
 class Flow\ETL\Adapter\JSON\IO\Loader\RustJsonEncoder implements Flow\ETL\Adapter\JSON\IO\Loader\JsonEncoder
+class Flow\ETL\Adapter\Parquet\IO\Engine\FlowPhpColumnsReader implements Iterator
+class Flow\ETL\Adapter\Parquet\IO\Engine\FlowPhpParquetEngine implements Flow\Parquet\ParquetEngine
+class Flow\ETL\Adapter\Parquet\IO\Engine\FlowPhpParquetFileReader implements Flow\Parquet\ParquetFileReader
+class Flow\ETL\Adapter\Parquet\IO\Engine\FlowPhpParquetFileWriter implements Flow\Parquet\ParquetFileWriter
+class Flow\ETL\Adapter\Parquet\IO\Engine\FlowPhpParquetFooter implements Flow\Parquet\ParquetFile\Footer
 interface Flow\ETL\Adapter\Parquet\IO\Extractor\ParquetOpenSource
 class Flow\ETL\Adapter\Parquet\IO\Extractor\RustParquetOpenSource implements Flow\ETL\Adapter\Parquet\IO\Extractor\ParquetOpenSource
 class Flow\ETL\Adapter\Parquet\IO\Loader\RustParquetFileWriter implements Flow\ETL\IO\Loader\File\FileWriter
@@ -39,10 +44,13 @@ interface Flow\ETL\Values\Column\GroupedTotals
 class Flow\ETL\Values\Column\RustBackend implements Flow\ETL\Values\Column\Backend, Flow\ETL\Foundation\Describe\Describable
 class Flow\ETL\Values\Column\RustColumn implements Flow\ETL\Values\Column\Column
 class Flow\ETL\Values\Column\RustColumnBuilder implements Flow\ETL\Values\Column\ColumnBuilder
-class Flow\ETL\Values\Column\RustColumnsBatch implements 
 class Flow\ETL\Values\Column\RustGroupedCounts implements Flow\ETL\Values\Column\GroupedCounts
 class Flow\ETL\Values\Column\RustGroupedTotals implements Flow\ETL\Values\Column\GroupedTotals
 interface Flow\ETL\Values\Grouping\GroupTable
 class Flow\ETL\Values\Grouping\RustGroupTable implements Flow\ETL\Values\Grouping\GroupTable
 class Flow\ETL\Values\RustIterator implements Iterator
+interface Flow\Parquet\ParquetEngine
+interface Flow\Parquet\ParquetFileReader
+interface Flow\Parquet\ParquetFileWriter
+interface Flow\Parquet\ParquetFile\Footer
 bool(true)

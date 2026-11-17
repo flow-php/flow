@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\IO\Extractor;
 
+use Flow\ETL\Adapter\Parquet\IO\Engine\FlowPhpParquetFileReader;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\RustIterator;
 use Flow\ETL\Values\Schema;
-use Flow\Parquet\Engine\RustParquetFileReader;
 use Flow\Parquet\Reader\ReadPlan;
 use RuntimeException;
 
@@ -20,7 +20,7 @@ if (extension_loaded('flow_php')) {
 
 final class RustParquetOpenSource implements ParquetOpenSource
 {
-    public function __construct(RustParquetFileReader $file)
+    public function __construct(FlowPhpParquetFileReader $file)
     {
         throw new RuntimeException('flow_php extension is not loaded');
     }

@@ -43,15 +43,6 @@ final class RustParquetFileWriter implements ParquetFileWriter
     }
 
     /**
-     * An Arrow C Data struct batch, exported by an extension: its children by writer column name, a writer column
-     * the batch lacks is nulls, a child the writer lacks is ignored.
-     */
-    public function writeArrowBatch(object $batch): void
-    {
-        throw new RuntimeException('arrow extension is not loaded');
-    }
-
-    /**
      * An array as writeRows() (keys ignored), a Traversable row by row.
      *
      * @param iterable<array<array-key, mixed>> $rows

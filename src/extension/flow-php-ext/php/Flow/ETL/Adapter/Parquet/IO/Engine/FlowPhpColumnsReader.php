@@ -1,0 +1,63 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Adapter\Parquet\IO\Engine;
+
+use Flow\Parquet\Reader\ReadPlan;
+use Flow\Parquet\Reader\SkippedMatches;
+use Iterator;
+use RuntimeException;
+
+use function extension_loaded;
+
+if (extension_loaded('flow_php')) {
+    return;
+}
+
+/**
+ * Streams once: rewind() after next() throws \Flow\Parquet\Exception\RuntimeException('RustColumnsReader cannot rewind').
+ *
+ * @implements Iterator<int, array<string, non-empty-list<mixed>>|SkippedMatches>
+ */
+final class FlowPhpColumnsReader implements Iterator
+{
+    /**
+     * @param list<string> $columns root names or struct paths
+     * @param int<1, max> $batchSize
+     */
+    public function __construct(FlowPhpParquetFileReader $file, array $columns, int $batchSize, ReadPlan $plan)
+    {
+        throw new RuntimeException('flow_php extension is not loaded');
+    }
+
+    /**
+     * At most $batchSize rows, keyed by $columns; a plan with an offset yields one SkippedMatches first, or alone.
+     *
+     * @return null|array<string, non-empty-list<mixed>>|SkippedMatches
+     */
+    public function current(): array|SkippedMatches|null
+    {
+        throw new RuntimeException('flow_php extension is not loaded');
+    }
+
+    public function key(): ?int
+    {
+        throw new RuntimeException('flow_php extension is not loaded');
+    }
+
+    public function next(): void
+    {
+        throw new RuntimeException('flow_php extension is not loaded');
+    }
+
+    public function rewind(): void
+    {
+        throw new RuntimeException('flow_php extension is not loaded');
+    }
+
+    public function valid(): bool
+    {
+        throw new RuntimeException('flow_php extension is not loaded');
+    }
+}

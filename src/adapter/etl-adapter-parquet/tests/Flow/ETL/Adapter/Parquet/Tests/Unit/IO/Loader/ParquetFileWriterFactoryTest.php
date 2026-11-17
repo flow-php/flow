@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Parquet\Tests\Unit\IO\Loader;
 
 use Closure;
+use Flow\ETL\Adapter\Parquet\IO\Engine\FlowPhpParquetEngine;
 use Flow\ETL\Adapter\Parquet\IO\Loader\ParquetFileWriter;
 use Flow\ETL\Adapter\Parquet\IO\Loader\ParquetFileWriterFactory;
 use Flow\ETL\Adapter\Parquet\IO\Loader\RustParquetFileWriter;
@@ -45,27 +46,37 @@ final class ParquetFileWriterFactoryTest extends FlowTestCase
     }
 
     /**
-     * flow_php's native lane writes only into arrow-ext's writer; every other writer takes PHP columns.
+     * flow_php's native lane writes only into its own engine's writer; every other writer takes PHP columns.
      *
      * @return iterable<string, array{Closure(): ?ParquetEngine, class-string<FileWriter>}>
      */
     public static function lanes(): iterable
     {
-        $arrow = extension_loaded('arrow');
-        $rust = $arrow && FlowPhpExtension::detect()->available()
-            ? RustParquetFileWriter::class
-            : ParquetFileWriter::class;
+        $flowPhp = FlowPhpExtension::detect()->available();
 
-        yield 'no engine' => [static fn(): ?ParquetEngine => null, $rust];
-        yield 'little-endian adaptive engine' => [static fn(): ParquetEngine => new AdaptiveParquetEngine(), $rust];
+        yield 'no engine' => [
+            static fn(): ?ParquetEngine => null,
+            $flowPhp ? RustParquetFileWriter::class : ParquetFileWriter::class,
+        ];
+        yield 'little-endian adaptive engine' => [
+            static fn(): ParquetEngine => new AdaptiveParquetEngine(),
+            ParquetFileWriter::class,
+        ];
         yield 'big-endian adaptive engine' => [
             static fn(): ParquetEngine => new AdaptiveParquetEngine(ByteOrder::BIG_ENDIAN),
             ParquetFileWriter::class,
         ];
         yield 'php engine' => [static fn(): ParquetEngine => new PhpParquetEngine(), ParquetFileWriter::class];
 
-        if ($arrow) {
-            yield 'rust engine' => [static fn(): ParquetEngine => new RustParquetEngine(), $rust];
+        if (extension_loaded('arrow')) {
+            yield 'rust engine' => [static fn(): ParquetEngine => new RustParquetEngine(), ParquetFileWriter::class];
+        }
+
+        if ($flowPhp) {
+            yield 'flow_php engine' => [
+                static fn(): ParquetEngine => new FlowPhpParquetEngine(),
+                RustParquetFileWriter::class,
+            ];
         }
     }
 

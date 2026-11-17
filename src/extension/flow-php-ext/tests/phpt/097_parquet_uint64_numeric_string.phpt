@@ -1,8 +1,7 @@
 --TEST--
-A UINT_64 leaf crosses RustBatchReader → RustParquetOpenSource as a numeric_string column (arrow-ext hands it over as LargeBinary decimal text, the Bytes kind flow_php stores numeric_string in); DataFrame rows written through RustParquetFileWriter into an explicit UINT_64 schema take an integer column (negatives refused) and a numeric_string column (non-canonical text refused)
+A UINT_64 leaf crosses the flow_php engine reader → RustParquetOpenSource as a numeric_string column (arrow-ext hands it over as LargeBinary decimal text, the Bytes kind flow_php stores numeric_string in); DataFrame rows written through RustParquetFileWriter into an explicit UINT_64 schema take an integer column (negatives refused) and a numeric_string column (non-canonical text refused)
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
-<?php extension_loaded('arrow') || die('skip arrow'); ?>
 --FILE--
 <?php
 require __DIR__ . '/bootstrap.php';
@@ -10,7 +9,7 @@ require __DIR__ . '/bootstrap.php';
 use Flow\ETL\Adapter\Parquet\IO\Loader\{ParquetSchemaConformance, RustParquetFileWriter};
 use Flow\ETL\Values\Column\PhpBackend;
 use Flow\ETL\Adapter\Parquet\Values\Schema\SchemaConverter;
-use Flow\Parquet\Engine\RustParquetFileWriter as ArrowRustParquetFileWriter;
+use Flow\ETL\Adapter\Parquet\IO\Engine\FlowPhpParquetFileWriter;
 use Flow\Parquet\Engine\Arrow\{OptionsConverter, SchemaConverter as ArrowSchemaConverter};
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
@@ -44,7 +43,7 @@ foreach (rust_parquet_batches($filesystem->readFrom(path('memory://uint64.parque
 $write = static function (Flow\ETL\Values\Schema $schema, array $values) use ($parquet, $filesystem): string {
     return outcome(static function () use ($schema, $values, $parquet, $filesystem): array {
         $fileWriter = new RustParquetFileWriter(
-            new ArrowRustParquetFileWriter(
+            new FlowPhpParquetFileWriter(
                 $filesystem->writeTo(path('memory://uint64_write.parquet')),
                 ArrowSchemaConverter::toExtension($parquet),
                 Compressions::SNAPPY,

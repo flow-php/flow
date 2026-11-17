@@ -27,7 +27,7 @@ use crate::render::{exception, INVALID_ARGUMENT};
 #[cfg_attr(
     feature = "flow-php-names",
     php(
-        name = "Flow\\ETL\\Adapter\\Parquet\\Engine\\FlowPhpParquetEngine",
+        name = "Flow\\ETL\\Adapter\\Parquet\\IO\\Engine\\FlowPhpParquetEngine",
         flags = ClassFlags::Final,
         implements(ce = parquet_engine_ce, stub = "Flow\\Parquet\\ParquetEngine")
     )

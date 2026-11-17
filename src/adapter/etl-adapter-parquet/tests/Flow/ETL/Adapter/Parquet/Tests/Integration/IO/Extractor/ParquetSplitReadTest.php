@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\Parquet\Tests\Integration\IO\Extractor;
 
 use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetFilesContext;
 use Flow\ETL\Adapter\Parquet\Tests\Double\RecordingParquetEngine;
+use Flow\ETL\Foundation\FlowPhpExtension;
 use Flow\ETL\Tests\Context\DescribeRoundTrip;
 use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Context\ReaderRoundTrip;
@@ -69,12 +70,9 @@ final class ParquetSplitReadTest extends FlowTestCase
     public function test_the_reader_declares_its_engines_extensions(): void
     {
         $root = ReaderRoundTrip::scratch('parquet-extensions');
-        $expected = [
-            'bcmath',
-            'json',
-            'zlib',
-            ...array_filter(['brotli', 'lz4', 'snappy', 'zstd'], extension_loaded(...)),
-        ];
+        $expected = FlowPhpExtension::detect()->available()
+            ? ['bcmath', 'flow_php', 'json', 'zlib']
+            : ['bcmath', 'json', 'zlib', ...array_filter(['brotli', 'lz4', 'snappy', 'zstd'], extension_loaded(...))];
         sort($expected);
 
         static::assertSame(

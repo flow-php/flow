@@ -18,6 +18,7 @@ use function extension_loaded;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_string;
 use function is_a;
+use function is_string;
 
 /**
  * A parquet engine as its class plus the configuration it normalizes to.
@@ -30,7 +31,7 @@ final readonly class ConfiguredParquetEngine implements Describable
     public const array EXTENSIONS = ['bcmath', 'json', 'zlib'];
 
     /**
-     * The codec extensions a file may need: a worker loads the ones the parent reads with.
+     * The codec extensions a file may need with a PHP engine: a worker loads the ones the parent reads with.
      */
     public const array CODECS = ['brotli', 'lz4', 'snappy', 'zstd'];
 
@@ -53,6 +54,7 @@ final readonly class ConfiguredParquetEngine implements Describable
     public function describe(): ?Description
     {
         $configuration = $this->engine->normalize();
+        $module = (new ReflectionClass($this->engine))->getExtensionName();
 
         return (
             $configuration === null
@@ -62,7 +64,11 @@ final readonly class ConfiguredParquetEngine implements Describable
                     ['engine' => $this->engine::class, 'configuration' => $configuration],
                     extensions: [
                         ...self::EXTENSIONS,
-                        ...array_values(array_filter(self::CODECS, extension_loaded(...))),
+                        ...(
+                            is_string($module)
+                                ? [$module]
+                                : array_values(array_filter(self::CODECS, extension_loaded(...)))
+                        ),
                     ],
                 )
         );

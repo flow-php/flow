@@ -2,12 +2,11 @@
 RustParquetOpenSource and RustParquetFileWriter leak neither PHP memory nor native allocations, refusals included
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
-<?php extension_loaded('arrow') || die('skip arrow'); ?>
 --FILE--
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\Parquet\Engine\RustParquetFileWriter as ArrowRustParquetFileWriter;
+use Flow\ETL\Adapter\Parquet\IO\Engine\FlowPhpParquetFileWriter;
 
 use Flow\ETL\Adapter\Parquet\IO\Loader\{ParquetSchemaConformance, RustParquetFileWriter};
 use Flow\ETL\Values\Column\PhpBackend;
@@ -33,7 +32,7 @@ $invalid = [['id' => 1, 'name' => "\xff", 'tags' => []]];
 
 $cycle = static function () use ($schema, $values, $extension, $conformance, $options, $mismatched, $invalid): void {
     $filesystem = memory_filesystem();
-    $writer = new RustParquetFileWriter(new ArrowRustParquetFileWriter($filesystem->writeTo(path('memory://leaks.parquet')), $extension, Compressions::SNAPPY, $options, 1_000), $conformance, new PhpBackend());
+    $writer = new RustParquetFileWriter(new FlowPhpParquetFileWriter($filesystem->writeTo(path('memory://leaks.parquet')), $extension, Compressions::SNAPPY, $options, 1_000), $conformance, new PhpBackend());
     $writer->write(native_rows($schema, $values));
     $writer->write(php_rows($schema, $values));
     $writer->close();
@@ -43,7 +42,7 @@ $cycle = static function () use ($schema, $values, $extension, $conformance, $op
     foreach ($reader as $_) {
     }
 
-    $refused = new RustParquetFileWriter(new ArrowRustParquetFileWriter($filesystem->writeTo(path('memory://refused.parquet')), $extension, Compressions::SNAPPY, $options, 1_000), $conformance, new PhpBackend());
+    $refused = new RustParquetFileWriter(new FlowPhpParquetFileWriter($filesystem->writeTo(path('memory://refused.parquet')), $extension, Compressions::SNAPPY, $options, 1_000), $conformance, new PhpBackend());
 
     try {
         $refused->write(native_rows($schema, $invalid));

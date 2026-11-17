@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\IO\Loader;
 
+use Flow\ETL\Adapter\Parquet\IO\Engine\FlowPhpParquetEngine;
+use Flow\ETL\Adapter\Parquet\IO\Engine\FlowPhpParquetFileWriter;
 use Flow\ETL\Adapter\Parquet\Values\Schema\SchemaConverter;
 use Flow\ETL\Foundation\FlowPhpExtension;
 use Flow\ETL\IO\Loader\File\FileWriter;
@@ -12,8 +14,7 @@ use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Schema;
 use Flow\Filesystem\DestinationStream;
 use Flow\Parquet\Binary\ByteOrder;
-use Flow\Parquet\Engine\AdaptiveParquetEngine;
-use Flow\Parquet\Engine\RustParquetFileWriter as ArrowRustParquetFileWriter;
+use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Compressions;
@@ -49,15 +50,15 @@ final class ParquetFileWriterFactory implements FileWriterFactory
         $conformance = $this->conformance ??= new ParquetSchemaConformance($parquetSchema);
         // detected before the engine opens a writer, so a skewed flow_php is refused with nothing opened
         $native = ($this->extension ?? FlowPhpExtension::detect())->available();
-        // the engine decides the lane: a writer it opens on arrow-ext takes the native columns when flow_php is loaded
-        $file = ($this->engine ?? new AdaptiveParquetEngine(ByteOrder::LITTLE_ENDIAN, $this->options))->openForWrite(
-            $stream,
-            $parquetSchema,
-            $this->compressions,
-            $this->options,
-        );
+        // a writer of the flow_php engine takes the native columns
+        $file = ($this->engine
+        ?? (
+            $native
+                ? new FlowPhpParquetEngine($this->options)
+                : new PhpParquetEngine(ByteOrder::LITTLE_ENDIAN, $this->options)
+        ))->openForWrite($stream, $parquetSchema, $this->compressions, $this->options);
 
-        return $native && $file instanceof ArrowRustParquetFileWriter
+        return $file instanceof FlowPhpParquetFileWriter
             ? new RustParquetFileWriter($file, $conformance, $backend)
             : new ParquetFileWriter($file, $conformance, $backend);
     }

@@ -19,6 +19,7 @@ pub static GLOBALS: ModuleGlobals<FlowGlobals> = ModuleGlobals::new();
 
 pub extern "C" fn request_startup(_type: i32, _module_number: i32) -> i32 {
     unsafe { GLOBALS.get_mut() }.closed = false;
+    flow_parquet_engine::php::request_startup();
 
     0
 }
@@ -27,6 +28,7 @@ pub extern "C" fn request_shutdown(_type: i32, _module_number: i32) -> i32 {
     let globals = unsafe { GLOBALS.get_mut() };
     globals.ctx = None;
     globals.closed = true;
+    flow_parquet_engine::php::request_shutdown();
 
     0
 }

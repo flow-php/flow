@@ -1,7 +1,7 @@
 --TEST--
 RustParquetOpenSource fills every batch to the batch size across row groups exactly as PhpParquetOpenSource: batches smaller than a group, larger than a group, larger than the file, a non-divisor, and behind a matched-row offset
 --SKIPIF--
-<?php if (!extension_loaded("flow_php") || !extension_loaded("arrow")) die("skip flow_php and arrow extensions not loaded"); ?>
+<?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 --FILE--
 <?php
 require __DIR__ . '/bootstrap.php';
@@ -11,7 +11,7 @@ use Flow\ETL\Adapter\Parquet\IO\Loader\{ParquetSchemaConformance, RustParquetFil
 use Flow\ETL\Adapter\Parquet\Values\Schema\SchemaConverter;
 use Flow\ETL\IO\Extractor\File\SkippedRows;
 use Flow\ETL\Values\Column\{PhpBackend, RustBackend};
-use Flow\Parquet\Engine\{RustParquetFileReader, RustParquetFileWriter as ArrowRustParquetFileWriter};
+use Flow\ETL\Adapter\Parquet\IO\Engine\{FlowPhpParquetFileReader, FlowPhpParquetFileWriter};
 use Flow\Parquet\Engine\Arrow\{OptionsConverter, SchemaConverter as ArrowSchemaConverter};
 use Flow\Parquet\Filter\Binding\BoundFilter;
 use Flow\Parquet\{Option, Options, Reader};
@@ -25,7 +25,7 @@ use function Flow\Parquet\DSL\parquet_column;
 $filesystem = memory_filesystem();
 $schema = schema(int_schema('id'), str_schema('name', nullable: true));
 $writer = new RustParquetFileWriter(
-    new ArrowRustParquetFileWriter(
+    new FlowPhpParquetFileWriter(
         $filesystem->writeTo(path('memory://groups.parquet')),
         ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquetSchema($schema)),
         Compressions::SNAPPY,
@@ -82,7 +82,7 @@ foreach ($cases as $label => [$batchSize, $filter, $offset, $limit]) {
         ? ReadPlan::forFilter($phpFile->reader()->footer(), $phpFile->indexes(), null)
         : ReadPlan::forFilter($phpFile->reader()->footer(), $phpFile->indexes(), BoundFilter::bind($filter, $phpFile->schema(), new Options()), limit: $limit, offset: $offset);
     $php = batches((new PhpParquetOpenSource($phpFile))->batches($schema, $batchSize, $plan, new PhpBackend()));
-    $rust = batches((new RustParquetOpenSource(new RustParquetFileReader($filesystem->readFrom(path('memory://groups.parquet')))))->batches($schema, $batchSize, $plan, new RustBackend()));
+    $rust = batches((new RustParquetOpenSource(new FlowPhpParquetFileReader($filesystem->readFrom(path('memory://groups.parquet')))))->batches($schema, $batchSize, $plan, new RustBackend()));
     $sizes = substr($rust, 0, (int) strrpos($rust, ' '));
 
     echo $label, ': ', $php === $rust ? (strlen($sizes) > 60 ? substr($sizes, 0, 40) . '... (' . count(explode(',', $sizes)) . ' batches)' : $sizes) : "MISMATCH\n  php:  " . $php . "\n  rust: " . $rust, "\n";

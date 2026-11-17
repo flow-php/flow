@@ -87,7 +87,7 @@ jobs:
       - name: Run PHPT tests
         working-directory: src/extension/flow-php-ext
         env: *rust-env
-        run: make test ARROW_SO=../arrow-ext/ext/modules/arrow.so
+        run: make test
 
       - name: Install extension and verify
         working-directory: src/extension/flow-php-ext

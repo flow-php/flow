@@ -23,8 +23,9 @@ composer require flow-php/etl-adapter-parquet:~--FLOW_PHP_VERSION--
 
 ## Optional Extensions
 
-- [arrow-ext](/documentation/installation/packages/arrow-ext.md): parquet files are decoded and encoded in Rust.
-- [flow_php](/documentation/installation/packages/flow-php-ext.md): if arrow-ext is also loaded, batches go between
-  the extensions without PHP values.
+- [flow_php](/documentation/installation/packages/flow-php-ext.md): Parquet files are read and written in Rust, and the
+  memory limit of a run counts their bytes. No other extension is needed.
+- [arrow-ext](/documentation/installation/packages/arrow-ext.md): for `flow-php/parquet` used directly, or as an explicit
+  `engine: new RustParquetEngine()`. A memory limit does not count its bytes.
 
 The adapter conflicts with `ext-arrow <0.45` and `ext-flow_php <0.45`.

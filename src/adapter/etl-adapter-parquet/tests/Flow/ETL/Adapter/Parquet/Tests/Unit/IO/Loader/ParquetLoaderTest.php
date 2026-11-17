@@ -8,6 +8,7 @@ use Flow\ETL\Adapter\Parquet\IO\Loader\ParquetLoader;
 use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetFilesContext;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Foundation\FlowPhpExtension;
 use Flow\ETL\Foundation\VoidProgress;
 use Flow\ETL\IO\Filesystem\SaveMode;
 use Flow\ETL\IO\Loader\File\FileCommit;
@@ -238,15 +239,22 @@ final class ParquetLoaderTest extends TestCase
      */
     public static function compression_extensions(): Generator
     {
-        yield 'gzip' => [Compressions::GZIP, ['bcmath', 'json', 'zlib']];
-        yield 'uncompressed' => [Compressions::UNCOMPRESSED, ['bcmath', 'json', 'zlib']];
-        yield 'brotli' => [Compressions::BROTLI, ['bcmath', 'brotli', 'json', 'zlib']];
-        yield 'lz4' => [Compressions::LZ4, ['bcmath', 'json', 'lz4', 'zlib']];
-        yield 'lz4 raw' => [Compressions::LZ4_RAW, ['bcmath', 'json', 'lz4', 'zlib']];
-        yield 'zstd' => [Compressions::ZSTD, ['bcmath', 'json', 'zlib', 'zstd']];
+        $flowPhp = FlowPhpExtension::detect()->available();
+        $engine = ['bcmath', 'flow_php', 'json', 'zlib'];
+
+        yield 'gzip' => [Compressions::GZIP, $flowPhp ? $engine : ['bcmath', 'json', 'zlib']];
+        yield 'uncompressed' => [Compressions::UNCOMPRESSED, $flowPhp ? $engine : ['bcmath', 'json', 'zlib']];
+        yield 'brotli' => [Compressions::BROTLI, $flowPhp ? $engine : ['bcmath', 'brotli', 'json', 'zlib']];
+        yield 'lz4' => [Compressions::LZ4, $flowPhp ? $engine : ['bcmath', 'json', 'lz4', 'zlib']];
+        yield 'lz4 raw' => [Compressions::LZ4_RAW, $flowPhp ? $engine : ['bcmath', 'json', 'lz4', 'zlib']];
+        yield 'zstd' => [Compressions::ZSTD, $flowPhp ? $engine : ['bcmath', 'json', 'zlib', 'zstd']];
         yield 'snappy' => [
             Compressions::SNAPPY,
-            extension_loaded('snappy') ? ['bcmath', 'json', 'snappy', 'zlib'] : ['bcmath', 'json', 'zlib'],
+            match (true) {
+                $flowPhp => $engine,
+                extension_loaded('snappy') => ['bcmath', 'json', 'snappy', 'zlib'],
+                default => ['bcmath', 'json', 'zlib'],
+            },
         ];
     }
 

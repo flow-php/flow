@@ -1,6 +1,5 @@
 mod alloc;
 mod arithmetic;
-mod arrow_c;
 mod backend;
 mod batch_columns;
 mod builder;
@@ -55,6 +54,11 @@ pub unsafe extern "C" fn module_startup(_type: i32, _module_number: i32) -> i32 
         return -1;
     }
 
+    if let Err(e) = flow_parquet_engine::interfaces::register() {
+        eprintln!("flow_php: failed to register the Flow\\Parquet interfaces: {e}");
+        return -1;
+    }
+
     0
 }
 
@@ -81,5 +85,9 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .class::<json::write::RustJsonEncoder>()
         .class::<parquet::etl::RustParquetOpenSource>()
         .class::<parquet::etl::RustParquetFileWriter>()
-        .class::<arrow_c::RustColumnsBatch>()
+        .class::<flow_parquet_engine::library::RustColumnsReader>()
+        .class::<flow_parquet_engine::library::RustParquetFooter>()
+        .class::<flow_parquet_engine::library::RustParquetFileReader>()
+        .class::<flow_parquet_engine::library::RustParquetFileWriter>()
+        .class::<flow_parquet_engine::engine::RustParquetEngine>()
 }

@@ -6,7 +6,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use arrow_array::{new_null_array, Array, ArrayRef};
+use arrow_array::{new_null_array, ArrayRef};
 use ext_php_rs::convert::IntoZval;
 use ext_php_rs::error::Result as ZvalResult;
 use ext_php_rs::flags::{ClassFlags, DataType};
@@ -17,7 +17,6 @@ use parquet::arrow::ArrowSchemaConverter;
 use parquet::basic::Type as PhysicalType;
 use parquet::file::metadata::ParquetMetaData;
 
-use crate::batch;
 use crate::cells::{Checked, Classes, ReadCell, Refusal, Scalar, Times, Validated, WriteColumn};
 use crate::chunks::chunk_spans;
 use crate::error::Error;
@@ -221,7 +220,7 @@ pub fn batch_size(value: i64) -> PhpResult<usize> {
 #[cfg(feature = "arrow-names")]
 const FOOTER_CLASS: &str = "Flow\\Parquet\\Engine\\RustParquetFooter";
 #[cfg(feature = "flow-php-names")]
-const FOOTER_CLASS: &str = "Flow\\ETL\\Adapter\\Parquet\\Engine\\FlowPhpParquetFooter";
+const FOOTER_CLASS: &str = "Flow\\ETL\\Adapter\\Parquet\\IO\\Engine\\FlowPhpParquetFooter";
 
 /// `ParquetFileReader::footer()`'s return, typed as the footer class of the extension that registers it: the class
 /// registers before the reader, so the covariant return type is checked.
@@ -250,7 +249,7 @@ impl IntoZval for FooterObject {
 #[cfg_attr(
     feature = "flow-php-names",
     php(
-        name = "Flow\\ETL\\Adapter\\Parquet\\Engine\\FlowPhpParquetFileReader",
+        name = "Flow\\ETL\\Adapter\\Parquet\\IO\\Engine\\FlowPhpParquetFileReader",
         flags = ClassFlags::Final,
         implements(ce = parquet_file_reader_ce, stub = "Flow\\Parquet\\ParquetFileReader")
     )
@@ -418,7 +417,7 @@ impl RustParquetFileReader {
 #[cfg_attr(
     feature = "flow-php-names",
     php(
-        name = "Flow\\ETL\\Adapter\\Parquet\\Engine\\FlowPhpParquetFooter",
+        name = "Flow\\ETL\\Adapter\\Parquet\\IO\\Engine\\FlowPhpParquetFooter",
         flags = ClassFlags::Final,
         implements(ce = footer_ce, stub = "Flow\\Parquet\\ParquetFile\\Footer")
     )
@@ -638,7 +637,7 @@ impl IntoZval for Chunk {
 #[cfg_attr(
     feature = "flow-php-names",
     php(
-        name = "Flow\\ETL\\Adapter\\Parquet\\Engine\\FlowPhpColumnsReader",
+        name = "Flow\\ETL\\Adapter\\Parquet\\IO\\Engine\\FlowPhpColumnsReader",
         flags = ClassFlags::Final,
         implements(ce = ce::iterator, stub = "\\Iterator")
     )
@@ -892,7 +891,7 @@ fn codec(compression: &Zval) -> PhpResult<&'static str> {
 #[cfg_attr(
     feature = "flow-php-names",
     php(
-        name = "Flow\\ETL\\Adapter\\Parquet\\Engine\\FlowPhpParquetFileWriter",
+        name = "Flow\\ETL\\Adapter\\Parquet\\IO\\Engine\\FlowPhpParquetFileWriter",
         flags = ClassFlags::Final,
         implements(ce = parquet_file_writer_ce, stub = "Flow\\Parquet\\ParquetFileWriter")
     )
@@ -915,6 +914,30 @@ impl Drop for RustParquetFileWriter {
 }
 
 impl RustParquetFileWriter {
+    /// `rows` rows of `columns` by name: missing writer columns are nulls, extra columns are ignored.
+    pub fn write_arrow_columns(&mut self, rows: usize, columns: &[(String, ArrayRef)]) -> PhpResult<()> {
+        self.open()?;
+        self.flush()?;
+
+        let writer = self
+            .writer
+            .as_mut()
+            .ok_or_else(|| exception(RUNTIME, "Writer is not open".to_string()))?;
+        let arrays = writer
+            .schema()
+            .fields()
+            .iter()
+            .map(|field| match columns.iter().find(|(name, _)| name == field.name()) {
+                Some((_, column)) => Arc::clone(column),
+                None => new_null_array(field.data_type(), rows),
+            })
+            .collect::<Vec<ArrayRef>>();
+
+        writer
+            .write(rows, &arrays)
+            .map_err(|error| parquet_exception(error, &self.stream, Side::Write))
+    }
+
     fn write_lists(&mut self, columns: &ZendHashTable, stored: bool) -> PhpResult<()> {
         if self.writer.is_none() {
             return Err(exception(RUNTIME, "Writer is not open".to_string()));
@@ -1222,33 +1245,6 @@ impl RustParquetFileWriter {
         }
 
         for_each_value(rows.0, |row| self.write_row(row))
-    }
-
-    /// Moves out another extension's Arrow C Data batch: missing writer columns are nulls, extra children are ignored.
-    #[php(name = "writeArrowBatch")]
-    pub fn write_arrow_batch(&mut self, batch: &Zval) -> PhpResult<()> {
-        self.open()?;
-        self.flush()?;
-
-        let batch = batch::import(batch)?;
-        let rows = batch.len();
-        let writer = self
-            .writer
-            .as_mut()
-            .ok_or_else(|| exception(RUNTIME, "Writer is not open".to_string()))?;
-        let arrays = writer
-            .schema()
-            .fields()
-            .iter()
-            .map(|field| match batch.column_by_name(field.name()) {
-                Some(column) => Arc::clone(column),
-                None => new_null_array(field.data_type(), rows),
-            })
-            .collect::<Vec<ArrayRef>>();
-
-        writer
-            .write(rows, &arrays)
-            .map_err(|error| parquet_exception(error, &self.stream, Side::Write))
     }
 
     /// Buffered rows, the footer, then the stream closed - closed even when a flush or the footer is refused; the

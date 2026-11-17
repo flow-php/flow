@@ -14,33 +14,34 @@ For the installation instructions, read the [installation page](/documentation/i
 
 ## Engines
 
-Without `engine:`, `AdaptiveParquetEngine` opens the file. The loaded extensions, arrow-ext and
-[`flow_php`](/documentation/components/extensions/flow-php-ext.md), decide the lane:
+Without `engine:`, the loaded extension decides the engine:
 
-| arrow-ext | `flow_php` | Engine              | Batches                                                              |
-|-----------|------------|---------------------|----------------------------------------------------------------------|
-| no        | no         | `PhpParquetEngine`  | PHP columns                                                          |
-| yes       | no         | `RustParquetEngine` | PHP columns built from the values of arrow-ext                       |
-| no        | yes        | `PhpParquetEngine`  | native columns built from the values of the PHP engine               |
-| yes       | yes        | `RustParquetEngine` | batches of arrow-ext directly into native columns, and back on write |
+| [`flow_php`](/documentation/components/extensions/flow-php-ext.md) | Engine                 | Batches                                          | Counted by the memory limit |
+|--------------------------------------------------------------------|------------------------|--------------------------------------------------|-----------------------------|
+| yes                                                                | `FlowPhpParquetEngine` | native columns, read and written in `flow_php`   | yes                         |
+| no                                                                 | `PhpParquetEngine`     | PHP columns                                      | yes                         |
 
-`RustParquetEngine` needs little-endian byte order. Native columns come from the
-[column backend](/documentation/components/core/column-backend.md). An explicit engine is always used.
-`PhpParquetEngine` does not use arrow-ext:
+arrow-ext does not change the default. `FlowPhpParquetEngine` needs little-endian byte order, and other files are read
+by `PhpParquetEngine`. Native columns come from the [column backend](/documentation/components/core/column-backend.md).
+An explicit engine is always used:
 
 ```php
 <?php
 
+use Flow\ETL\Adapter\Parquet\IO\Engine\FlowPhpParquetEngine;
 use Flow\Parquet\Engine\PhpParquetEngine;
 
 use function Flow\ETL\Adapter\Parquet\{from_parquet, to_parquet};
 use function Flow\ETL\DSL\df;
 
 df()
-    ->read(from_parquet(__DIR__ . '/orders.parquet', engine: new PhpParquetEngine()))
+    ->read(from_parquet(__DIR__ . '/orders.parquet', engine: new FlowPhpParquetEngine()))
     ->write(to_parquet(__DIR__ . '/copy.parquet', engine: new PhpParquetEngine()))
     ->run();
 ```
+
+`engine: new RustParquetEngine()` selects arrow-ext. ETL then builds its columns from PHP values, and a memory limit
+does not count the bytes that arrow-ext holds.
 
 Flow `float` columns are written as Parquet `DOUBLE`.
 

@@ -1,12 +1,11 @@
 //! Parquet over Flow filesystem streams: one reader, one cast table and one writer, surfaced as the
-//! `flow-php/parquet` lib's values (`library`) and as Arrow C Data struct batches (`batch`).
+//! `flow-php/parquet` lib's values (`library`).
 
 #[cfg(all(feature = "arrow-names", feature = "flow-php-names"))]
 compile_error!("flow-parquet-engine: enable exactly one of the features arrow-names, flow-php-names");
 #[cfg(not(any(feature = "arrow-names", feature = "flow-php-names")))]
 compile_error!("flow-parquet-engine: enable exactly one of the features arrow-names, flow-php-names");
 
-pub mod batch;
 pub mod canonical;
 pub mod cells;
 pub mod chunks;

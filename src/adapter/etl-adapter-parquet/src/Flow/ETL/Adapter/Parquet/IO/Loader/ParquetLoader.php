@@ -10,6 +10,7 @@ use Flow\ETL\Foundation\Describe\ConfiguredFilesystem;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\FlowPhpExtension;
 use Flow\ETL\Foundation\Progress;
 use Flow\ETL\IO\Filesystem\SaveMode;
 use Flow\ETL\IO\Loader\Closure;
@@ -32,12 +33,14 @@ use Flow\Parquet\Option as ParquetOption;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Compressions;
+use ReflectionClass;
 use SensitiveParameter;
 
 use function extension_loaded;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_enum;
 use function Flow\Types\DSL\type_string;
+use function is_string;
 
 final class ParquetLoader implements Closure, Discardable, FileLoader
 {
@@ -112,6 +115,14 @@ final class ParquetLoader implements Closure, Discardable, FileLoader
 
     public function describe(): ?Description
     {
+        $codecs = match ($this->compressions) {
+            Compressions::BROTLI => ['brotli'],
+            Compressions::LZ4, Compressions::LZ4_RAW => ['lz4'],
+            Compressions::ZSTD => ['zstd'],
+            Compressions::SNAPPY => extension_loaded('snappy') ? ['snappy'] : [],
+            default => [],
+        };
+
         return Description::compose(
             self::class,
             [
@@ -127,12 +138,10 @@ final class ParquetLoader implements Closure, Discardable, FileLoader
             ],
             extensions: [
                 ...ConfiguredParquetEngine::EXTENSIONS,
-                ...match ($this->compressions) {
-                    Compressions::BROTLI => ['brotli'],
-                    Compressions::LZ4, Compressions::LZ4_RAW => ['lz4'],
-                    Compressions::ZSTD => ['zstd'],
-                    Compressions::SNAPPY => extension_loaded('snappy') ? ['snappy'] : [],
-                    default => [],
+                ...match (true) {
+                    $this->engine === null => FlowPhpExtension::detect()->available() ? ['flow_php'] : $codecs,
+                    is_string((new ReflectionClass($this->engine))->getExtensionName()) => [],
+                    default => $codecs,
                 },
             ],
         );

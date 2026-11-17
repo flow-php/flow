@@ -269,6 +269,30 @@ Symfony bundle.
 | `MemoryLimit::default()` with `memory_limit = -1`: 1 GiB              | 4 GiB (`MemoryLimit::WITHOUT_MEMORY_LIMIT_GB = 4`)                             |
 | `ExternalSort::reduce(list<BucketRun>, KWayMerge, int, ?int)`         | `reduce(list<Generator<Rows>>, KWayMerge, int, ?int)`, removes no run          |
 
+### 22) `flow-php/etl-adapter-parquet` and `flow-php/flow-php-ext` - with `flow_php`, Parquet has its own engine
+
+With `flow_php`, the memory limit of a run counts the Parquet bytes. With `arrow` alone, ETL reads and writes on the
+PHP engine.
+
+| Before                                                                                                         | After                                                                                                               |
+|----------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
+| no `engine:` is `AdaptiveParquetEngine`: `RustParquetEngine` when `arrow` is loaded                            | `FlowPhpParquetEngine` when `flow_php` is loaded, else `PhpParquetEngine`                                           |
+| `arrow` alone: ETL reads and writes on `RustParquetEngine`                                                     | `PhpParquetEngine`. Pass `engine: new RustParquetEngine()` to keep `arrow`. A memory limit does not count its bytes |
+| both loaded, `engine: new RustParquetEngine()`: batches into native columns through the Arrow C data interface | PHP values from `arrow`, adopted by the backend                                                                     |
+| `RustParquetOpenSource::__construct(RustParquetFileReader $file)`                                              | `__construct(FlowPhpParquetFileReader $file)`                                                                       |
+| `RustParquetFileWriter::__construct(Flow\Parquet\Engine\RustParquetFileWriter $writer, ...)`                   | `__construct(FlowPhpParquetFileWriter $writer, ...)`                                                                |
+| `Flow\ETL\Values\Column\RustColumnsBatch`                                                                      | removed                                                                                                             |
+| a worker of an extension engine needs the codec extensions                                                     | it needs that extension (`flow_php` or `arrow`) and no codec extension                                              |
+
+### 23) `flow-php/arrow-ext` - the Arrow C data classes are removed
+
+| Before                                                                                            | After                                                                                                                                                        |
+|---------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `Flow\Arrow\Parquet\RustBatchReader`, `Flow\Arrow\RustParquetBatch`, `Flow\Arrow\RustArrowSchema` | removed. ETL reads through the `flow_php` engine. `flow-php/parquet` reads with `readColumns()` / `readStoredColumns()`                                      |
+| `RustParquetFileWriter::writeArrowBatch()`                                                        | removed. Use `writeColumns()` / `writeStoredColumns()`                                                                                                       |
+| `RustBackend::allocatedBytes()` adds `Flow\Arrow\allocated_bytes()`                               | it counts the bytes of `flow_php` only, which hold the Parquet bytes of the `flow_php` engine. `Flow\Arrow\allocated_bytes()` stays for the bytes of `arrow` |
+| `FLOW_ARROW_ABI` 2                                                                                | 3: build `arrow` from the release of `flow-php/parquet`                                                                                                      |
+
 ---
 
 ## Upgrading from 0.46.x to 0.47.x

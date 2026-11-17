@@ -9,6 +9,7 @@ use Flow\ETL\Adapter\CSV\IO\Extractor\CSVLineReader;
 use Flow\ETL\Adapter\CSV\IO\Extractor\RustCSVOpenSource;
 use Flow\ETL\Adapter\CSV\IO\Loader\PhpCSVEncoder;
 use Flow\ETL\Adapter\JSON\IO\Loader\PhpJsonEncoder;
+use Flow\ETL\Adapter\Parquet\IO\Engine\FlowPhpParquetFileReader;
 use Flow\ETL\Adapter\Parquet\IO\Extractor\RustParquetOpenSource;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\RuntimeException;
@@ -21,7 +22,6 @@ use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Rows\RowsBuilder;
 use Flow\ETL\Values\Schema;
 use Flow\Filesystem\SourceStream;
-use Flow\Parquet\Engine\RustParquetFileReader;
 use Flow\Parquet\Reader\ReadPlan;
 
 use function Flow\ETL\DSL\bool_schema;
@@ -271,7 +271,7 @@ function rust_parquet_batches(
     int $offset = 0,
     ?int $limit = null,
 ): Iterator {
-    $file = new RustParquetFileReader($stream);
+    $file = new FlowPhpParquetFileReader($stream);
 
     return (new RustParquetOpenSource($file))->batches(
         $schema,

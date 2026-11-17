@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Unit\IO\Loader;
 
+use Flow\ETL\Adapter\Parquet\IO\Engine\FlowPhpParquetEngine;
 use Flow\ETL\Adapter\Parquet\IO\Loader\ParquetSchemaConformance;
 use Flow\ETL\Adapter\Parquet\IO\Loader\RustParquetFileWriter;
 use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetFilesContext;
@@ -12,11 +13,7 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Column\PhpBackend;
 use Flow\Filesystem\Exception\RuntimeException as FilesystemRuntimeException;
 use Flow\Filesystem\Tests\Double\FailingAppendDestinationStream;
-use Flow\Parquet\Engine\Arrow\OptionsConverter;
-use Flow\Parquet\Engine\Arrow\SchemaConverter as ArrowSchemaConverter;
-use Flow\Parquet\Engine\RustParquetFileWriter as ArrowRustParquetFileWriter;
 use Flow\Parquet\Exception\RuntimeException;
-use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
@@ -30,7 +27,6 @@ use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 
 #[RequiresPhpExtension('flow_php')]
-#[RequiresPhpExtension('arrow')]
 final class RustParquetFileWriterTest extends FlowTestCase
 {
     public function test_a_batch_of_php_columns_reads_back_equal(): void
@@ -71,12 +67,11 @@ final class RustParquetFileWriterTest extends FlowTestCase
         $schema = schema(int_schema('id'));
         $parquetSchema = (new SchemaConverter())->toParquetSchema($schema);
         $writer = new RustParquetFileWriter(
-            new ArrowRustParquetFileWriter(
+            (new FlowPhpParquetEngine())->openForWrite(
                 new FailingAppendDestinationStream($filesystem->writeTo(path('memory://out.parquet'))),
-                ArrowSchemaConverter::toExtension($parquetSchema),
+                $parquetSchema,
                 Compressions::SNAPPY,
-                OptionsConverter::toExtension(Options::default()),
-                Options::default()->getInt(Option::ARROW_WRITE_BATCH_SIZE),
+                Options::default(),
             ),
             new ParquetSchemaConformance($parquetSchema),
             new PhpBackend(),

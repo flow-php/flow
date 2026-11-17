@@ -1,13 +1,12 @@
 --TEST--
-arrow-ext's canonical Arrow layout (parquet/canonical.rs) is the layout flow_php's columns store (flow-batch-frame kind::data_type()): every Flow type, nested included, crosses RustBatchReader → RustParquetOpenSource with its values intact
+arrow-ext's canonical Arrow layout (parquet/canonical.rs) is the layout flow_php's columns store (flow-batch-frame kind::data_type()): every Flow type, nested included, crosses the flow_php engine reader → RustParquetOpenSource with its values intact
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
-<?php extension_loaded('arrow') || die('skip arrow'); ?>
 --FILE--
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\Parquet\Engine\RustParquetFileWriter as ArrowRustParquetFileWriter;
+use Flow\ETL\Adapter\Parquet\IO\Engine\FlowPhpParquetFileWriter;
 use Flow\ETL\Adapter\Parquet\IO\Loader\{ParquetSchemaConformance, RustParquetFileWriter};
 use Flow\ETL\Values\Column\PhpBackend;
 use Flow\ETL\Adapter\Parquet\Values\Schema\SchemaConverter;
@@ -50,7 +49,7 @@ $values = [
 
 $filesystem = memory_filesystem();
 $writer = new RustParquetFileWriter(
-    new ArrowRustParquetFileWriter(
+    new FlowPhpParquetFileWriter(
         $filesystem->writeTo(path('memory://layout.parquet')),
         ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquetSchema($schema)),
         Compressions::SNAPPY,

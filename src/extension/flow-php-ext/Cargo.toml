@@ -19,7 +19,6 @@ arrow-schema.workspace = true
 arrow-select = "60"
 bytes = "1"
 ext-php-rs = "0.16"
-flow-arrow-c = { path = "crates/flow-arrow-c" }
 flow-batch-frame = { path = "crates/flow-batch-frame" }
 flow-column-kernels = { path = "crates/flow-column-kernels" }
 flow-column-text = { path = "crates/flow-column-text" }

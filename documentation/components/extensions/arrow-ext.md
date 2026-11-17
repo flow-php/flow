@@ -38,7 +38,6 @@ The Arrow Rust crates have more I/O features. This extension can add them in the
 - Nested types: LIST, STRUCT, MAP (arbitrarily nested)
 - Compression codecs: UNCOMPRESSED, SNAPPY, GZIP, ZSTD, LZ4_RAW, BROTLI
 - Column projection, offset and limit, from one read of the footer
-- Batches that go to other extensions through the [Arrow C Data Interface](https://arrow.apache.org/docs/format/CDataInterface.html)
 
 ## Requirements
 
@@ -87,7 +86,6 @@ $writer = new Writer();
 ```php
 <?php
 
-use Flow\Arrow\Parquet\RustBatchReader;
 use Flow\Parquet\Engine\{RustParquetFileReader, RustParquetFileWriter};
 use Flow\Parquet\Engine\Arrow\{OptionsConverter, SchemaConverter};
 use Flow\Parquet\Options;
@@ -122,22 +120,10 @@ $writer = new RustParquetFileWriter(                      // Flow\Parquet\Parque
 $writer->writeBatch([['id' => 1, 'name' => 'a']]);   // an array or any Traversable of rows
 $writer->writeColumns(['id' => [2, 3], 'name' => ['b', null]]);
 $writer->close();                              // footer, then the stream closed
-
-$batches = new RustBatchReader($file, ['id', 'name'], 1_000, $plan); // batch size, rows to read
-$batches->schema();                            // Flow\Arrow\RustArrowSchema
-$batches->next();                              // Flow\Arrow\RustParquetBatch, null after the last
 ```
 
 Refusals are the same `Flow\Parquet\Exception\*` that the PHP engine throws. An exception from the stream comes out
 unchanged.
-
-### Arrow C Data Interface
-
-`RustParquetBatch` (`RustBatchReader::next()`) carries one struct array: `arrowSchemaAddress()` (`FFI_ArrowSchema*`) and
-`arrowArrayAddress()` (`FFI_ArrowArray*`). The consumer is another extension. It reads the schema by reference and
-moves the array out. `RustParquetFileWriter::writeArrowBatch()` takes the same pair from a final internal class of
-any extension that has both methods. The children of the array match the writer columns by name. Userland code cannot
-make either class: the classes are final, and their constructors throw.
 
 ### Native memory
 
@@ -147,7 +133,8 @@ make either class: the classes are final, and their constructors throw.
 \Flow\Arrow\allocated_bytes(); // int, the bytes the extension holds outside PHP's memory manager in this process
 ```
 
-`flow_php` adds these bytes to `RustBackend::allocatedBytes()`, so a memory limit counts them.
+A memory limit of Flow ETL does not count these bytes. Flow ETL reads and writes Parquet with the engine of
+[`flow_php`](/documentation/components/extensions/flow-php-ext.md), whose bytes the limit counts.
 
 ## Development
 

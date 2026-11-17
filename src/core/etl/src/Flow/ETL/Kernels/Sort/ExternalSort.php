@@ -283,7 +283,7 @@ final readonly class ExternalSort
             }
 
             // held in a variable, so the keys are still alive when the second measurement runs
-            $keys = (new RowOrder($this->columns))->keys($first);
+            $_keys = (new RowOrder($this->columns))->keys($first);
             $perFrame = $full - $budget->remaining();
             // a merge round copies the held rows twice more
             $remaining = intdiv($full, 2);
@@ -351,7 +351,7 @@ final readonly class ExternalSort
 
         if ($pending !== []) {
             $batch = Rows::concat($pending[0]->schema(), $backend, ...$pending);
-            $pending = [];
+            unset($pending);
 
             yield $batch;
         }
