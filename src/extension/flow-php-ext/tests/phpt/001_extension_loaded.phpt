@@ -6,12 +6,19 @@ flow_php extension is loaded and registers the package interfaces and the Rust c
 <?php
 var_dump(extension_loaded("flow_php"));
 
-$classes = (new ReflectionExtension('flow_php'))->getClassNames();
+$parquetInterfaces = ['Flow\Parquet\ParquetEngine', 'Flow\Parquet\ParquetFileReader', 'Flow\Parquet\ParquetFileWriter', 'Flow\Parquet\ParquetFile\Footer'];
+
+// the extension loaded first registers the Flow\Parquet interfaces, so their owner depends on the load order
+$classes = array_diff((new ReflectionExtension('flow_php'))->getClassNames(), $parquetInterfaces);
 sort($classes);
 
 foreach ($classes as $class) {
     $reflection = new ReflectionClass($class);
     echo $reflection->isInterface() ? 'interface ' : 'class ', $class, $reflection->isInterface() ? '' : ' implements ' . implode(', ', array_diff($reflection->getInterfaceNames(), ['Traversable'])), "\n";
+}
+
+foreach ($parquetInterfaces as $interface) {
+    echo $interface, ': ', interface_exists($interface, false) ? 'interface' : 'missing', "\n";
 }
 
 var_dump(class_exists('Flow\Floe\Exception\ExtensionException', false) === false);
@@ -49,8 +56,8 @@ class Flow\ETL\Values\Column\RustGroupedTotals implements Flow\ETL\Values\Column
 interface Flow\ETL\Values\Grouping\GroupTable
 class Flow\ETL\Values\Grouping\RustGroupTable implements Flow\ETL\Values\Grouping\GroupTable
 class Flow\ETL\Values\RustIterator implements Iterator
-interface Flow\Parquet\ParquetEngine
-interface Flow\Parquet\ParquetFileReader
-interface Flow\Parquet\ParquetFileWriter
-interface Flow\Parquet\ParquetFile\Footer
+Flow\Parquet\ParquetEngine: interface
+Flow\Parquet\ParquetFileReader: interface
+Flow\Parquet\ParquetFileWriter: interface
+Flow\Parquet\ParquetFile\Footer: interface
 bool(true)
