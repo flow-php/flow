@@ -43,8 +43,9 @@ final class FileCommitTest extends FlowIntegrationTestCase
     }
 
     #[DataProvider('save_modes')]
-    public function test_a_commit_whose_stream_fails_to_close_commits_nothing_and_abort_removes_every_file(SaveMode $saveMode): void
-    {
+    public function test_a_commit_whose_stream_fails_to_close_commits_nothing_and_abort_removes_every_file(
+        SaveMode $saveMode,
+    ): void {
         $this->context->files([__FUNCTION__ => []]);
 
         $files = new FileCommit(

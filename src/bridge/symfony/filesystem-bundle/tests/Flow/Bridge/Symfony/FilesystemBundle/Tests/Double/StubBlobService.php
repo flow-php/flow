@@ -57,8 +57,9 @@ final class StubBlobService implements BlobServiceInterface
         throw new LogicException('not implemented');
     }
 
-    public function getContainerProperties(GetContainerPropertiesOptions $options = new GetContainerPropertiesOptions()): ?ContainerProperties
-    {
+    public function getContainerProperties(
+        GetContainerPropertiesOptions $options = new GetContainerPropertiesOptions(),
+    ): ?ContainerProperties {
         return null;
     }
 

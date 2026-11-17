@@ -1239,7 +1239,9 @@ class WriterTest extends ParquetIntegrationTestCase
     public function test_the_statistics_level_decides_chunk_statistics_and_the_column_index(): void
     {
         $written =
-            static fn(StatisticsLevel $level): ParquetFile => MemoryParquetFile::read(Reader::php(), MemoryParquetFile::written(
+            static fn(
+                StatisticsLevel $level,
+            ): ParquetFile => MemoryParquetFile::read(Reader::php(), MemoryParquetFile::written(
                 Writer::php(options: (new Options())->set(Option::STATISTICS_LEVEL, $level)),
                 Schema::with(FlatColumn::int64('id')),
                 [['id' => 1], ['id' => 2]],

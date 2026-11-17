@@ -35,8 +35,9 @@ final class SheetsServiceMother
     /**
      * getSheets() answers [], so rowCount() falls through to 0 - the absent-sheet path.
      */
-    public static function withoutSheets(SpySpreadsheetsValuesResource $values = new SpySpreadsheetsValuesResource()): Sheets
-    {
+    public static function withoutSheets(
+        SpySpreadsheetsValuesResource $values = new SpySpreadsheetsValuesResource(),
+    ): Sheets {
         $service = new Sheets();
         $service->spreadsheets = new StubSpreadsheetsResource(new Sheets\Spreadsheet());
         $service->spreadsheets_values = $values;

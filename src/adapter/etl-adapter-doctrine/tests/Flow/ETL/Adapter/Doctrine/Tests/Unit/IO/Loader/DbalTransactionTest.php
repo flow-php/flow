@@ -106,11 +106,12 @@ final class DbalTransactionTest extends TestCase
             $transaction->commit();
             static::fail('commit() must rethrow the commit failure');
         } catch (RuntimeException $failure) {
-            static::assertSame([TransactionIsolationLevel::SERIALIZABLE], $levels);
+            $beforeRollback = $levels;
 
             $transaction->rollback($failure);
         }
 
+        static::assertSame([TransactionIsolationLevel::SERIALIZABLE], $beforeRollback);
         static::assertSame(
             [TransactionIsolationLevel::SERIALIZABLE, TransactionIsolationLevel::READ_COMMITTED],
             $levels,

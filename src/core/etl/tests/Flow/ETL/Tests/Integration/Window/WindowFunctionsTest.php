@@ -85,8 +85,9 @@ final class WindowFunctionsTest extends FlowTestCase
     }
 
     #[DataProvider('frame_aggregates_of_a_missing_column')]
-    public function test_a_window_aggregate_of_a_missing_column_is_rejected_before_it_runs(AggregatingFunction&WindowFunction $function): void
-    {
+    public function test_a_window_aggregate_of_a_missing_column_is_rejected_before_it_runs(
+        AggregatingFunction&WindowFunction $function,
+    ): void {
         $this->expectException(SchemaDefinitionNotFoundException::class);
         $this->expectExceptionMessage('Schema definition for column "missing" not found.');
 

@@ -164,12 +164,10 @@ final class TypeDetector
                 return type_time_zone();
             }
 
-            if (type_date()->isValid($value)) {
-                return type_date();
-            }
-
-            if (type_datetime()->isValid($value)) {
-                return type_datetime();
+            foreach ([type_date(), type_datetime()] as $temporal) {
+                if ($temporal->isValid($value)) {
+                    return $temporal;
+                }
             }
 
             if (type_html()->isValid($value)) {

@@ -852,8 +852,9 @@ final class StepRunnerTest extends FlowTestCase
     }
 
     #[DataProvider('skipping_error_handlers')]
-    public function test_without_a_reject_loader_a_corrupted_record_fails_the_run_whatever_the_error_handler(ErrorHandler $decides): void
-    {
+    public function test_without_a_reject_loader_a_corrupted_record_fails_the_run_whatever_the_error_handler(
+        ErrorHandler $decides,
+    ): void {
         $handler = new RecordingErrorHandler($decides);
         $extractor = from_array([['id' => 'x'], ['id' => 2]], schema(int_schema('id')));
         $thrown = null;
@@ -997,8 +998,9 @@ final class StepRunnerTest extends FlowTestCase
     #[RunInSeparateProcess]
     #[TestWith(['0'])]
     #[TestWith(['1'])]
-    public function test_a_traced_processor_that_fails_in_its_own_body_fails_the_run_under_user_code(string $ignoreArgs): void
-    {
+    public function test_a_traced_processor_that_fails_in_its_own_body_fails_the_run_under_user_code(
+        string $ignoreArgs,
+    ): void {
         ini_set('zend.exception_ignore_args', $ignoreArgs);
         $processor = new FrameRecordingProcessor(FailsWhen::secondBatch);
         $steps = (new StepRunner())->steps(
@@ -1080,8 +1082,9 @@ final class StepRunnerTest extends FlowTestCase
     #[RunInSeparateProcess]
     #[TestWith(['0'])]
     #[TestWith(['1'])]
-    public function test_a_process_that_returns_a_generator_past_its_first_yield_fails_with_a_rewind_error(string $ignoreArgs): void
-    {
+    public function test_a_process_that_returns_a_generator_past_its_first_yield_fails_with_a_rewind_error(
+        string $ignoreArgs,
+    ): void {
         ini_set('zend.exception_ignore_args', $ignoreArgs);
         $steps = (new StepRunner())->steps(
             new PipelineSteps([new class() implements Processor {

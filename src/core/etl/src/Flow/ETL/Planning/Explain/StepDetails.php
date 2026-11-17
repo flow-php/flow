@@ -71,8 +71,9 @@ final readonly class StepDetails
     /**
      * @return list<string>
      */
-    public function settings(Extractor|JoinStep|Loader|Processor|BranchPipeline|TransactionGroup|Transformer $step): array
-    {
+    public function settings(
+        Extractor|JoinStep|Loader|Processor|BranchPipeline|TransactionGroup|Transformer $step,
+    ): array {
         return match (true) {
             $step instanceof JoinStep && $step->join instanceof HashJoin => $this->hashJoin($step->join),
             $step instanceof JoinStep => $this->node->crossJoin($step->join->prefix),

@@ -171,7 +171,6 @@ final class NestedColumn implements Column
             if ($child instanceof self) {
                 $flat = array_merge($flat, $child->childrenFlat());
             } else {
-                // @mago-ignore analysis:redundant-docblock-type
                 /** @var FlatColumn $child */
                 $flat[$child->flatPath()] = $child;
             }

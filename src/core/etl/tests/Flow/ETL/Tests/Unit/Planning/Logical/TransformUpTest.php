@@ -97,8 +97,9 @@ final class TransformUpTest extends FlowTestCase
     }
 
     #[DataProvider('joins_sharing_a_node')]
-    public function test_a_joins_right_side_is_handed_back_untouched_even_when_it_shares_a_node_with_the_left(JoinsFrame $join): void
-    {
+    public function test_a_joins_right_side_is_handed_back_untouched_even_when_it_shares_a_node_with_the_left(
+        JoinsFrame $join,
+    ): void {
         $rewritten = (new TransformUp())->of($join, new RenameSelectRewrite());
 
         static::assertInstanceOf(JoinsFrame::class, $rewritten);

@@ -117,7 +117,6 @@ final class WindowProcessor implements Processor
      */
     private function boundTo(Schema $input): BoundWindow
     {
-        /** @var WindowFunction $resolved a window root is never a reference leaf */
         $resolved = (new ReferenceResolver())->bind($this->function, $input, 'over');
         self::assertWindowReferences($resolved, $input);
 

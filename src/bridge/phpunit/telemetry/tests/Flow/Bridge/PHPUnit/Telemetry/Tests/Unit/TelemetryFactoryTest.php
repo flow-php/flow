@@ -220,8 +220,9 @@ final class TelemetryFactoryTest extends TestCase
         $telemetry->shutdown();
     }
 
-    private function configWithErrorHandler(ErrorLogHandlerConfig|NullErrorHandlerConfig|StreamErrorHandlerConfig|SyslogErrorHandlerConfig|UdpSyslogErrorHandlerConfig $errorHandler): Configuration
-    {
+    private function configWithErrorHandler(
+        ErrorLogHandlerConfig|NullErrorHandlerConfig|StreamErrorHandlerConfig|SyslogErrorHandlerConfig|UdpSyslogErrorHandlerConfig $errorHandler,
+    ): Configuration {
         return new Configuration(
             serviceName: 'phpunit',
             transport: ConfigurationMother::defaultTransport(),

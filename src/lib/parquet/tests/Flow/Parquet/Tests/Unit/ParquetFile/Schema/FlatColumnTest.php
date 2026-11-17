@@ -86,9 +86,9 @@ final class FlatColumnTest extends TestCase
             ?->decimalData();
 
         static::assertSame(TimeUnit::MILLISECONDS, $timestamp?->unit());
-        static::assertTrue($timestamp?->isAdjustedToUTC());
+        static::assertTrue($timestamp->isAdjustedToUTC());
         static::assertSame(2, $decimal?->scale());
-        static::assertSame(9, $decimal?->precision());
+        static::assertSame(9, $decimal->precision());
     }
 
     public function test_from_thrift_keeps_the_logical_type_over_the_converted_type(): void
@@ -109,7 +109,7 @@ final class FlatColumnTest extends TestCase
             ?->timestampData();
 
         static::assertFalse($timestamp?->isAdjustedToUTC());
-        static::assertSame(TimeUnit::MICROSECONDS, $timestamp?->unit());
+        static::assertSame(TimeUnit::MICROSECONDS, $timestamp->unit());
     }
 
     public function test_is_map_on_a_non_map_column(): void

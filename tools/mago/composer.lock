@@ -9,16 +9,16 @@
     "packages-dev": [
         {
             "name": "carthage-software/mago",
-            "version": "1.59.0",
+            "version": "1.60.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/carthage-software/mago.git",
-                "reference": "95a25d686a2b584c387326e466d6ead8c885465d"
+                "reference": "3de548f9607a8d8d071f6e0deb2a0023107b8848"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/carthage-software/mago/zipball/95a25d686a2b584c387326e466d6ead8c885465d",
-                "reference": "95a25d686a2b584c387326e466d6ead8c885465d",
+                "url": "https://api.github.com/repos/carthage-software/mago/zipball/3de548f9607a8d8d071f6e0deb2a0023107b8848",
+                "reference": "3de548f9607a8d8d071f6e0deb2a0023107b8848",
                 "shasum": ""
             },
             "require": {
@@ -26,7 +26,8 @@
                 "revolt/event-loop": "^1.0.9"
             },
             "require-dev": {
-                "phpunit/phpunit": "^10.5"
+                "phpunit/phpunit": "^10.5",
+                "twig/twig": "^3.30"
             },
             "suggest": {
                 "ext-curl": "To show binary download progress"
@@ -60,7 +61,7 @@
             ],
             "support": {
                 "issues": "https://github.com/carthage-software/mago/issues",
-                "source": "https://github.com/carthage-software/mago/tree/1.59.0"
+                "source": "https://github.com/carthage-software/mago/tree/1.60.2"
             },
             "funding": [
                 {
@@ -68,7 +69,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-10-25T00:59:15+00:00"
+            "time": "2026-11-16T02:22:34+00:00"
         },
         {
             "name": "revolt/event-loop",

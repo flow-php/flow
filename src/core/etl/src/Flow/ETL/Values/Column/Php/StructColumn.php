@@ -163,6 +163,7 @@ final readonly class StructColumn implements Column
         $structure = $this->type instanceof OptionalType ? $this->type->base() : $this->type;
         assert($structure instanceof StructureType);
 
+        /** @var StructureType<array<array-key, mixed>> $structure */
         return $structure;
     }
 

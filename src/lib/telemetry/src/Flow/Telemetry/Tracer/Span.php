@@ -562,8 +562,9 @@ final class Span
      *
      * @return TAttributeValue
      */
-    private function truncateValue(string|int|float|bool|DateTimeInterface|Throwable|array $value): string|int|float|bool|DateTimeInterface|Throwable|array
-    {
+    private function truncateValue(
+        string|int|float|bool|DateTimeInterface|Throwable|array $value,
+    ): string|int|float|bool|DateTimeInterface|Throwable|array {
         $limit = $this->limits->attributeValueLengthLimit;
 
         if ($limit === null) {

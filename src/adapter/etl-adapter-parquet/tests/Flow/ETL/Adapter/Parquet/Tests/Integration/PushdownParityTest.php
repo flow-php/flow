@@ -163,8 +163,9 @@ final class PushdownParityTest extends FlowTestCase
     }
 
     #[DataProvider('engines')]
-    public function test_a_date_literal_on_a_timestamp_column_read_in_a_non_utc_zone_returns_what_the_unpushed_one_returns(?ParquetEngine $engine): void
-    {
+    public function test_a_date_literal_on_a_timestamp_column_read_in_a_non_utc_zone_returns_what_the_unpushed_one_returns(
+        ?ParquetEngine $engine,
+    ): void {
         $memory = memory_filesystem();
         $writer = new Writer(engine: new PhpParquetEngine());
         $writer->openForStream(
@@ -237,8 +238,9 @@ final class PushdownParityTest extends FlowTestCase
     }
 
     #[DataProvider('engines')]
-    public function test_a_greater_than_on_a_float_column_without_statistics_keeps_its_nan_rows(?ParquetEngine $engine): void
-    {
+    public function test_a_greater_than_on_a_float_column_without_statistics_keeps_its_nan_rows(
+        ?ParquetEngine $engine,
+    ): void {
         $memory = memory_filesystem();
         ParquetFilesContext::scores(
             $memory,
@@ -382,8 +384,9 @@ final class PushdownParityTest extends FlowTestCase
     }
 
     #[DataProvider('engines')]
-    public function test_an_offset_and_a_limit_beside_a_partition_and_a_body_conjunct_are_pushed_and_return_what_the_unpushed_read_returns(?ParquetEngine $engine): void
-    {
+    public function test_an_offset_and_a_limit_beside_a_partition_and_a_body_conjunct_are_pushed_and_return_what_the_unpushed_read_returns(
+        ?ParquetEngine $engine,
+    ): void {
         $memory = memory_filesystem();
         ParquetFilesContext::rowGroups($memory, 'memory://part/year=2023/a.parquet', 9, 3);
         ParquetFilesContext::rowGroups($memory, 'memory://part/year=2024/b.parquet', 9, 3);
@@ -520,8 +523,9 @@ final class PushdownParityTest extends FlowTestCase
     }
 
     #[DataProvider('engines')]
-    public function test_a_limit_beside_a_pushed_filter_reads_fewer_bytes_than_the_unlimited_read(?ParquetEngine $engine): void
-    {
+    public function test_a_limit_beside_a_pushed_filter_reads_fewer_bytes_than_the_unlimited_read(
+        ?ParquetEngine $engine,
+    ): void {
         $memory = memory_filesystem();
         PushdownParityContext::write($memory);
         $limitedFilesystem = new CountingFilesystem($memory);

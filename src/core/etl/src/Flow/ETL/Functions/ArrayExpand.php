@@ -85,6 +85,7 @@ final class ArrayExpand implements ScalarFunction, ExpandResults
             );
         }
 
+        /** @var ListType<mixed>|MapType<array-key, mixed>|StructureType<array<array-key, mixed>> $array */
         // The unification can refuse, so KEYS must not ask for the value type it does not declare.
         $value = fn(): Type => match (true) {
             $array instanceof ListType => $array->element(),

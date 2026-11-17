@@ -77,8 +77,9 @@ final class RecordingBlobService implements BlobServiceInterface
         return $this->delegate->getBlockBlobBlockList($blob, $options);
     }
 
-    public function getContainerProperties(GetContainerPropertiesOptions $options = new GetContainerPropertiesOptions()): ?ContainerProperties
-    {
+    public function getContainerProperties(
+        GetContainerPropertiesOptions $options = new GetContainerPropertiesOptions(),
+    ): ?ContainerProperties {
         return $this->delegate->getContainerProperties($options);
     }
 

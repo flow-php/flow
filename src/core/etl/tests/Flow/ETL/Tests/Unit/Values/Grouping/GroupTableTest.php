@@ -247,8 +247,9 @@ final class GroupTableTest extends FlowTestCase
     }
 
     #[DataProviderExternal(BackendsContext::class, 'backends')]
-    public function test_a_null_list_key_is_one_group_whether_the_batch_lacks_the_column_or_holds_null(Backend $backend): void
-    {
+    public function test_a_null_list_key_is_one_group_whether_the_batch_lacks_the_column_or_holds_null(
+        Backend $backend,
+    ): void {
         $declared = schema(int_schema('id'), list_schema('k', type_list(type_string()), nullable: true));
         $table = $backend->groupTable(['k'], $declared);
         $table->assign(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')), $backend));

@@ -17,7 +17,7 @@ use function count;
 final readonly class AggregateCall implements Expression
 {
     /**
-     * @param non-empty-list<string> $funcName Function name parts (e.g., ['pg_catalog', 'count'] or ['sum'])
+     * @param list<string> $funcName Function name parts (e.g., ['pg_catalog', 'count'] or ['sum'])
      * @param list<Expression> $args Function arguments (empty for COUNT(*))
      * @param bool $star Whether this is COUNT(*) aggregate
      * @param bool $distinct Whether DISTINCT is applied to arguments
@@ -119,7 +119,7 @@ final readonly class AggregateCall implements Expression
     }
 
     /**
-     * @return non-empty-list<string>
+     * @return list<string>
      */
     public function getFuncName(): array
     {

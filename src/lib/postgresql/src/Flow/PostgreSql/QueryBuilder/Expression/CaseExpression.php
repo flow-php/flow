@@ -16,7 +16,7 @@ final readonly class CaseExpression implements Expression
 {
     /**
      * @param null|Expression $arg Expression for simple CASE (CASE arg WHEN val THEN...), null for searched CASE (CASE WHEN cond THEN...)
-     * @param non-empty-list<WhenClause> $whenClauses WHEN clauses
+     * @param list<WhenClause> $whenClauses WHEN clauses
      * @param null|Expression $elseResult ELSE clause result
      */
     public function __construct(
@@ -78,7 +78,7 @@ final readonly class CaseExpression implements Expression
     }
 
     /**
-     * @return non-empty-list<WhenClause>
+     * @return list<WhenClause>
      */
     public function getWhenClauses(): array
     {

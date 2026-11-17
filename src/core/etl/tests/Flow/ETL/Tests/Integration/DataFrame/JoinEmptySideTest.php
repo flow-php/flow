@@ -97,8 +97,9 @@ final class JoinEmptySideTest extends FlowTestCase
 
     #[TestWith([false])]
     #[TestWith([true])]
-    public function test_an_unbound_left_join_against_an_empty_right_side_keeps_the_right_columns(bool $rightWrites): void
-    {
+    public function test_an_unbound_left_join_against_an_empty_right_side_keeps_the_right_columns(
+        bool $rightWrites,
+    ): void {
         // binds nothing: the left side refuses, so the join runs unbound with the right side's declared columns
         $refusing = new class implements Transformer {
             public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
