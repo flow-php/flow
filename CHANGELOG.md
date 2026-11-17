@@ -1,6 +1,9 @@
-## [Unreleased] - 2026-11-16
+## [Unreleased] - 2026-11-17
 
 ### Added
+- [#2744](https://github.com/flow-php/flow/pull/2744) - **flow-php/flow-php-ext - Parquet engine FlowPhpParquetEngine, counted by the memory limit of a run** - [@norberttech](https://github.com/norberttech)
+- [#2744](https://github.com/flow-php/flow/pull/2744) - **flow-php/flow-php-ext - shared crate flow-parquet-engine with the Parquet Rust code** - [@norberttech](https://github.com/norberttech)
+- [#2744](https://github.com/flow-php/flow/pull/2744) - **flow-php/etl-adapter-parquet - CI runs the adapter suites with each extension and with both** - [@norberttech](https://github.com/norberttech)
 - [#2743](https://github.com/flow-php/flow/pull/2743) - **flow-php/etl - Backend::startsWith(), endsWith() and contains() string match kernels** - [@norberttech](https://github.com/norberttech)
 - [#2743](https://github.com/flow-php/flow/pull/2743) - **flow-php/flow-php-ext - native string match kernels** - [@norberttech](https://github.com/norberttech)
 - [#2743](https://github.com/flow-php/flow/pull/2743) - **flow-php/etl - ExternalSort::merge() merges sorted streams under a memory budget** - [@norberttech](https://github.com/norberttech)
@@ -51,6 +54,12 @@
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - Pipe operator documentation page** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2744](https://github.com/flow-php/flow/pull/2744) - **flow-php/etl-adapter-parquet - default engine is FlowPhpParquetEngine with flow_php, else PhpParquetEngine** - [@norberttech](https://github.com/norberttech)
+- [#2744](https://github.com/flow-php/flow/pull/2744) - **flow-php/flow-php-ext - reads and writes Parquet without arrow** - [@norberttech](https://github.com/norberttech)
+- [#2744](https://github.com/flow-php/flow/pull/2744) - **flow-php/flow-php-ext - arrow-* crates 59 to 60** - [@norberttech](https://github.com/norberttech)
+- [#2744](https://github.com/flow-php/flow/pull/2744) - **flow-php/arrow-ext - Parquet code moved to the shared crate** - [@norberttech](https://github.com/norberttech)
+- [#2744](https://github.com/flow-php/flow/pull/2744) - **flow-php/arrow-ext - FLOW_ARROW_ABI 2 to 3** - [@norberttech](https://github.com/norberttech)
+- [#2744](https://github.com/flow-php/flow/pull/2744) - **flow-php/arrow-ext - release build is stripped** - [@norberttech](https://github.com/norberttech)
 - [#2743](https://github.com/flow-php/flow/pull/2743) - **flow-php/etl - a cast to string returns string columns as they are and reads uuid bytes** - [@norberttech](https://github.com/norberttech)
 - [#2743](https://github.com/flow-php/flow/pull/2743) - **flow-php/etl - a memory limit is shared by the workers of a run** - [@norberttech](https://github.com/norberttech)
 - [#2743](https://github.com/flow-php/flow/pull/2743) - **flow-php/etl - default memory limit is 4 GiB without a PHP memory_limit** - [@norberttech](https://github.com/norberttech)
@@ -108,6 +117,9 @@
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - print_rows(Rows) renamed to format_rows()** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2744](https://github.com/flow-php/flow/pull/2744) - **flow-php/flow-php-ext - freed large buffers return to the system on Linux** - [@norberttech](https://github.com/norberttech)
+- [#2744](https://github.com/flow-php/flow/pull/2744) - **flow-php/etl-adapter-parquet - a worker loads the extension of its engine** - [@norberttech](https://github.com/norberttech)
+- [#2744](https://github.com/flow-php/flow/pull/2744) - **flow-php/etl - redundant variable warnings in ExternalSort** - [@norberttech](https://github.com/norberttech)
 - [#2743](https://github.com/flow-php/flow/pull/2743) - **flow-php/etl - a cast to string evaluated its child twice** - [@norberttech](https://github.com/norberttech)
 - [#2743](https://github.com/flow-php/flow/pull/2743) - **flow-php/etl - a spilling group by held 2.5 times its memory limit** - [@norberttech](https://github.com/norberttech)
 - [#2743](https://github.com/flow-php/flow/pull/2743) - **flow-php/etl - merged sort runs all got index 0** - [@norberttech](https://github.com/norberttech)
@@ -146,6 +158,9 @@
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - explain() default trigger in the documentation** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2744](https://github.com/flow-php/flow/pull/2744) - **flow-php/arrow-ext - RustBatchReader, RustParquetBatch, RustArrowSchema** - [@norberttech](https://github.com/norberttech)
+- [#2744](https://github.com/flow-php/flow/pull/2744) - **flow-php/arrow-ext - RustParquetFileWriter::writeArrowBatch()** - [@norberttech](https://github.com/norberttech)
+- [#2744](https://github.com/flow-php/flow/pull/2744) - **flow-php/flow-php-ext - RustColumnsBatch and the crate flow-arrow-c** - [@norberttech](https://github.com/norberttech)
 - [#2738](https://github.com/flow-php/flow/pull/2738) - **flow-php/azure-sdk - BlobProperties::content()** - [@norberttech](https://github.com/norberttech)
 - [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/cli - ProgressBarLoader** - [@norberttech](https://github.com/norberttech)
 - [#2735](https://github.com/flow-php/flow/pull/2735) - **flow-php/cli - --config option from commands that never used it** - [@norberttech](https://github.com/norberttech)
