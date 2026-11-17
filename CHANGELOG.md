@@ -54,6 +54,14 @@
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - Pipe operator documentation page** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2745](https://github.com/flow-php/flow/pull/2745) - **flow-php/flow - mago updated to 1.60, code fixed and reformatted for it** - [@norberttech](https://github.com/norberttech)
+- [#2745](https://github.com/flow-php/flow/pull/2745) - **flow-php/flow - dependencies and tools updated, doctrine/dbal stays at 4.5.0** - [@norberttech](https://github.com/norberttech)
+- [#2745](https://github.com/flow-php/flow/pull/2745) - **flow-php/flow - docs workflow no longer checks for uncommitted changes** - [@norberttech](https://github.com/norberttech)
+- [#2745](https://github.com/flow-php/flow/pull/2745) - **flow-php/flow - website tests build the generated docs in their own job** - [@norberttech](https://github.com/norberttech)
+- [#2745](https://github.com/flow-php/flow/pull/2745) - **flow-php/postgresql - expression docblocks say list, the empty list guard stays** - [@norberttech](https://github.com/norberttech)
+- [#2745](https://github.com/flow-php/flow/pull/2745) - **flow-php/types - date and datetime detection is one loop** - [@norberttech](https://github.com/norberttech)
+- [#2745](https://github.com/flow-php/flow/pull/2745) - **flow-php/parquet - integer pre-image bounds use bit shifts** - [@norberttech](https://github.com/norberttech)
+- [#2745](https://github.com/flow-php/flow/pull/2745) - **flow-php/symfony-telemetry-bundle - DBAL pass passes its integer parameters without a cast** - [@norberttech](https://github.com/norberttech)
 - [#2744](https://github.com/flow-php/flow/pull/2744) - **flow-php/etl-adapter-parquet - default engine is FlowPhpParquetEngine with flow_php, else PhpParquetEngine** - [@norberttech](https://github.com/norberttech)
 - [#2744](https://github.com/flow-php/flow/pull/2744) - **flow-php/flow-php-ext - reads and writes Parquet without arrow** - [@norberttech](https://github.com/norberttech)
 - [#2744](https://github.com/flow-php/flow/pull/2744) - **flow-php/flow-php-ext - arrow-* crates 59 to 60** - [@norberttech](https://github.com/norberttech)
@@ -158,6 +166,8 @@
 - [#2722](https://github.com/flow-php/flow/pull/2722) - **flow-php/etl - explain() default trigger in the documentation** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2745](https://github.com/flow-php/flow/pull/2745) - **flow-php/flow - generated website files and the playground phar from git** - [@norberttech](https://github.com/norberttech)
+- [#2745](https://github.com/flow-php/flow/pull/2745) - **flow-php/etl - unreachable type check in ModifyDateTime** - [@norberttech](https://github.com/norberttech)
 - [#2744](https://github.com/flow-php/flow/pull/2744) - **flow-php/arrow-ext - RustBatchReader, RustParquetBatch, RustArrowSchema** - [@norberttech](https://github.com/norberttech)
 - [#2744](https://github.com/flow-php/flow/pull/2744) - **flow-php/arrow-ext - RustParquetFileWriter::writeArrowBatch()** - [@norberttech](https://github.com/norberttech)
 - [#2744](https://github.com/flow-php/flow/pull/2744) - **flow-php/flow-php-ext - RustColumnsBatch and the crate flow-arrow-c** - [@norberttech](https://github.com/norberttech)
