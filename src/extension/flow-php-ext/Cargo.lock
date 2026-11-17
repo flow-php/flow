@@ -691,14 +691,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "flow-arrow-c"
-version = "0.1.0"
-dependencies = [
- "arrow-array",
- "arrow-schema",
-]
-
-[[package]]
 name = "flow-batch-frame"
 version = "0.1.0"
 dependencies = [
@@ -780,7 +772,6 @@ dependencies = [
  "bytes",
  "ext-php-rs",
  "ext-php-rs-build",
- "flow-arrow-c",
  "flow-batch-frame",
  "flow-column-kernels",
  "flow-column-text",

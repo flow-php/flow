@@ -84,8 +84,7 @@ src/extension/flow-php-ext/
 │   ├── csv/                # RustCSVOpenSource, RustCSVEncoder, schema-inference fold
 │   ├── json/               # RustJsonOpenSource, RustJsonEncoder, JSON values into columns
 │   ├── text/               # The PHP side of the text writers: Rows batches, DateTimeZone transitions
-│   ├── parquet/            # RustParquetOpenSource, RustParquetFileWriter
-│   ├── arrow_c.rs          # RustColumnsBatch and the PHP side of the Arrow C Data hand-off (arrow-ext)
+│   ├── parquet/            # RustParquetOpenSource, RustParquetFileWriter over the engine crate (etl.rs)
 │   ├── ctx.rs              # Request-scoped context and engine helpers
 │   ├── globals.rs          # Module globals, RINIT/RSHUTDOWN
 │   ├── alloc.rs            # Counting global allocator (allocatedBytes())
@@ -96,7 +95,6 @@ src/extension/flow-php-ext/
 │   ├── flow-column-kernels/ # Compare, arithmetic, sort, grouped totals and group keys, as the PHP backend answers
 │   ├── flow-column-text/   # Column values as the writers render them: floats, dates, JSON strings, uuids
 │   ├── flow-json-records/  # JSON lines / array framing and member-to-column mapping
-│   ├── flow-arrow-c/       # Batches across the Arrow C Data Interface, imported bytes counted
 │   ├── flow-csv-tokenizer/ # CSV records and fields as php_fgetcsv() produces them
 │   ├── flow-parquet-engine -> ../../parquet-engine  # The shared Parquet crate, built with feature flow-php-names
 │   └── flow-numeric-string/ # PHP's is_numeric() grammar
@@ -112,9 +110,8 @@ src/extension/parquet-engine/  # Crate flow-parquet-engine: the Parquet code of 
 ├── build.rs                # The php84/php85 cfgs
 └── src/
     ├── lib.rs              # Module declarations
-    ├── engine.rs           # RustParquetEngine
+    ├── engine.rs           # RustParquetEngine (arrow-names) or FlowPhpParquetEngine (flow-php-names)
     ├── library.rs          # Readers, footer, writer and columns reader as the flow-php/parquet classes
-    ├── batch.rs            # Arrow C Data batches (RustBatchReader, RustParquetBatch, RustArrowSchema)
     ├── read.rs             # ParquetReader: decodes only the row groups and byte ranges a read plan selects
     ├── filter.rs           # The row filter the arrow-rs push decoder runs
     ├── write.rs            # ParquetWriter: canonical arrays cast to the writer schema and written by arrow-rs
@@ -181,9 +178,6 @@ The two PHPT runners use the same shell loop:
   extensions also load.
 - The runner obeys `--SKIPIF--` blocks and reports the number of skipped tests.
 - The runner compares the output exactly. It accepts `--EXPECTF--`, but it does not expand `%s`.
-
-`flow-php-ext` also takes `ARROW_SO=<path>`, which loads arrow-ext first. The Parquet ETL phpts then run and do not
-skip: `make test ARROW_SO=../arrow-ext/ext/modules/arrow.so`.
 
 ## Rebuilding after a source change
 

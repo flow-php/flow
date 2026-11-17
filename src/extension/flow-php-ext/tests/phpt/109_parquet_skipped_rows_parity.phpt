@@ -1,7 +1,7 @@
 --TEST--
 RustParquetOpenSource yields SkippedRows exactly as PhpParquetOpenSource for a matched-row offset inside a file, past every match, beside no match, and not at all without an offset
 --SKIPIF--
-<?php if (!extension_loaded("flow_php") || !extension_loaded("arrow")) die("skip flow_php and arrow extensions not loaded"); ?>
+<?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 --FILE--
 <?php
 require __DIR__ . '/bootstrap.php';
@@ -12,7 +12,7 @@ use Flow\ETL\Adapter\Parquet\Values\Schema\SchemaConverter;
 use Flow\ETL\IO\Extractor\File\SkippedRows;
 use Flow\ETL\Values\Column\{PhpBackend, RustBackend};
 use Flow\ETL\Values\Rows;
-use Flow\Parquet\Engine\{RustParquetFileReader, RustParquetFileWriter as ArrowRustParquetFileWriter};
+use Flow\ETL\Adapter\Parquet\IO\Engine\{FlowPhpParquetFileReader, FlowPhpParquetFileWriter};
 use Flow\Parquet\Engine\Arrow\{OptionsConverter, SchemaConverter as ArrowSchemaConverter};
 use Flow\Parquet\Filter\Binding\BoundFilter;
 use Flow\Parquet\{Option, Options, Reader};
@@ -26,7 +26,7 @@ use function Flow\Parquet\DSL\parquet_column;
 $filesystem = memory_filesystem();
 $schema = schema(int_schema('id'));
 $writer = new RustParquetFileWriter(
-    new ArrowRustParquetFileWriter(
+    new FlowPhpParquetFileWriter(
         $filesystem->writeTo(path('memory://ids.parquet')),
         ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquetSchema($schema)),
         Compressions::SNAPPY,
@@ -84,7 +84,7 @@ foreach ($cases as $label => [$filter, $offset, $limit]) {
         offset: $offset,
     );
     $php = yielded((new PhpParquetOpenSource($phpFile))->batches($schema, 64, $plan, new PhpBackend()));
-    $rust = yielded((new RustParquetOpenSource(new RustParquetFileReader($filesystem->readFrom(path('memory://ids.parquet')))))->batches($schema, 64, $plan, new RustBackend()));
+    $rust = yielded((new RustParquetOpenSource(new FlowPhpParquetFileReader($filesystem->readFrom(path('memory://ids.parquet')))))->batches($schema, 64, $plan, new RustBackend()));
 
     echo $label, ': ', $php === $rust ? $rust : "MISMATCH\n  php:  " . $php . "\n  rust: " . $rust, "\n";
 }

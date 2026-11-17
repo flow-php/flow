@@ -6,18 +6,18 @@ Flow\Arrow\allocated_bytes() grows while a batch read from a Parquet file is hel
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\Arrow\Parquet\RustBatchReader;
 use Flow\Parquet\Engine\RustParquetFileReader;
 
 use function Flow\Filesystem\DSL\{native_local_filesystem, path};
 
 $start = \Flow\Arrow\allocated_bytes();
 $file = new RustParquetFileReader(native_local_filesystem()->readFrom(path(__DIR__ . '/fixtures/arrow_schema_hints.parquet')));
-$batches = new RustBatchReader($file, ['id', 'plain', 'binary'], 10, arrow_read_plan($file));
-$batch = $batches->next();
+$columns = $file->readColumns(['id', 'plain', 'binary'], 10, arrow_read_plan($file));
+$columns->rewind();
+$chunk = $columns->current();
 $held = \Flow\Arrow\allocated_bytes();
 
-unset($batch, $batches, $file);
+unset($chunk, $columns, $file);
 
 var_dump(is_int($start));
 var_dump($held > $start);

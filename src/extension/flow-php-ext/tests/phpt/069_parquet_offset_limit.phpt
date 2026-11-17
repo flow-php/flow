@@ -2,13 +2,12 @@
 RustParquetOpenSource reads the planned windows of an 8-row-group file, and refuses a batch size out of range or a plan over other rows
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
-<?php extension_loaded('arrow') || die('skip arrow'); ?>
 --FILE--
 <?php
 require __DIR__ . '/bootstrap.php';
 
 use Flow\ETL\Values\Column\RustBackend;
-use Flow\Parquet\Engine\{RustParquetFileReader, RustParquetFileWriter as ArrowRustParquetFileWriter};
+use Flow\ETL\Adapter\Parquet\IO\Engine\{FlowPhpParquetFileReader, FlowPhpParquetFileWriter};
 
 use Flow\ETL\Adapter\Parquet\IO\Loader\{ParquetSchemaConformance, RustParquetFileWriter};
 use Flow\ETL\Values\Column\PhpBackend;
@@ -26,7 +25,7 @@ use Flow\Parquet\Tests\Double\InMemoryIndexes;
 $filesystem = memory_filesystem();
 $schema = schema(int_schema('id'));
 $writer = new RustParquetFileWriter(
-    new ArrowRustParquetFileWriter(
+    new FlowPhpParquetFileWriter(
         $filesystem->writeTo(path('memory://groups.parquet')),
         ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquetSchema($schema)),
         Compressions::SNAPPY,
@@ -64,7 +63,7 @@ foreach ([0, -1] as $batchSize) {
     echo outcome(static fn() => rust_parquet_batches($filesystem->readFrom(path('memory://groups.parquet')), $schema, $batchSize)), "\n";
 }
 
-echo outcome(static fn() => (new RustParquetOpenSource(new RustParquetFileReader($filesystem->readFrom(path('memory://groups.parquet')))))->batches($schema, 10, ReadPlan::window(100, new InMemoryIndexes()), new RustBackend())), "\n";
+echo outcome(static fn() => (new RustParquetOpenSource(new FlowPhpParquetFileReader($filesystem->readFrom(path('memory://groups.parquet')))))->batches($schema, 10, ReadPlan::window(100, new InMemoryIndexes()), new RustBackend())), "\n";
 ?>
 --EXPECT--
 row groups: 8192,8192,8192,8192,8192,8192,8192,8192

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Context;
 
+use Flow\ETL\Adapter\Parquet\IO\Engine\FlowPhpParquetEngine;
 use Flow\ETL\Adapter\Parquet\IO\Extractor\ParquetSourceFileOpener;
 use Flow\ETL\Adapter\Parquet\IO\Loader\ParquetFileWriter;
 use Flow\ETL\Adapter\Parquet\IO\Loader\ParquetSchemaConformance;
@@ -20,10 +21,7 @@ use Flow\ETL\Values\Column\PhpBackend;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema as FlowSchema;
 use Flow\Filesystem\Filesystem;
-use Flow\Parquet\Engine\Arrow\OptionsConverter;
-use Flow\Parquet\Engine\Arrow\SchemaConverter as ArrowSchemaConverter;
 use Flow\Parquet\Engine\PhpParquetEngine;
-use Flow\Parquet\Engine\RustParquetFileWriter as ArrowRustParquetFileWriter;
 use Flow\Parquet\Filter\Binding\BoundFilter;
 use Flow\Parquet\Filter\Filter as ParquetFilter;
 use Flow\Parquet\Option;
@@ -275,12 +273,11 @@ final class ParquetFilesContext
         $parquetSchema = (new SchemaConverter())->toParquetSchema($schema);
 
         return new RustParquetFileWriter(
-            new ArrowRustParquetFileWriter(
+            (new FlowPhpParquetEngine())->openForWrite(
                 $filesystem->writeTo(path($uri)),
-                ArrowSchemaConverter::toExtension($parquetSchema),
+                $parquetSchema,
                 Compressions::SNAPPY,
-                OptionsConverter::toExtension(Options::default()),
-                Options::default()->getInt(Option::ARROW_WRITE_BATCH_SIZE),
+                Options::default(),
             ),
             new ParquetSchemaConformance($parquetSchema),
             new PhpBackend(),

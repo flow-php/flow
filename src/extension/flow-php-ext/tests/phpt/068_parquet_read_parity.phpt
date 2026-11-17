@@ -2,7 +2,6 @@
 RustParquetOpenSource reads every lib Parquet fixture as PhpParquetEngine does, both refuse it, or it refuses naming the engine that reads it
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
-<?php extension_loaded('arrow') || die('skip arrow'); ?>
 --FILE--
 <?php
 use Flow\ETL\IO\Extractor\Criteria;

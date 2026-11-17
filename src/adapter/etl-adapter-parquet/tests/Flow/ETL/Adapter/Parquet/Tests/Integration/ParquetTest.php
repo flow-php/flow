@@ -428,7 +428,11 @@ final class ParquetTest extends FlowTestCase
 
         data_frame()
             ->read(from_rows(array_to_rows([['name' => "\xff\xfe"]], schema(str_schema('name')))))
-            ->write(to_parquet(path('memory://var/invalid.parquet'), filesystem: memory_filesystem()))
+            ->write(to_parquet(
+                path('memory://var/invalid.parquet'),
+                filesystem: memory_filesystem(),
+                engine: new RustParquetEngine(),
+            ))
             ->run();
     }
 

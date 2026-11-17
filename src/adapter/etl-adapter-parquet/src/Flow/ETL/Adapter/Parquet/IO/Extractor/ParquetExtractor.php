@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\IO\Extractor;
 
+use Flow\ETL\Adapter\Parquet\IO\Engine\FlowPhpParquetEngine;
 use Flow\ETL\Adapter\Parquet\IO\Extractor\Pushdown\FilterTranslator;
 use Flow\ETL\Adapter\Parquet\Values\Schema\SchemaConverter;
 use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\Foundation\Exception\InferredSchemaException;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\FlowPhpExtension;
 use Flow\ETL\Functions\ReferencedColumns;
 use Flow\ETL\Functions\ScalarFunction;
 use Flow\ETL\IO\Extractor;
@@ -36,7 +38,7 @@ use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Flow\Parquet\Binary\ByteOrder;
-use Flow\Parquet\Engine\AdaptiveParquetEngine;
+use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
 use Generator;
@@ -395,11 +397,18 @@ final class ParquetExtractor implements
     }
 
     /**
-     * The engine every file of this extractor is opened with: the one passed, else an adaptive one built once.
+     * The engine every file of this extractor is opened with: the one passed, else the flow_php engine, else the PHP
+     * engine, built once.
      */
     private function engineInUse(): ParquetEngine
     {
-        return $this->openedWith ??= $this->engine ?? new AdaptiveParquetEngine($this->byteOrder, $this->options);
+        return $this->openedWith ??=
+            $this->engine
+            ?? (
+                FlowPhpExtension::detect()->available() && $this->byteOrder === ByteOrder::LITTLE_ENDIAN
+                    ? new FlowPhpParquetEngine($this->options)
+                    : new PhpParquetEngine($this->byteOrder, $this->options)
+            );
     }
 
     public function withSchema(Schema $schema): static

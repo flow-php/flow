@@ -29,8 +29,7 @@ final readonly class ReadPlanConverter implements FilterVisitor
     ) {}
 
     /**
-     * Called by name from arrow-ext RustBatchReader::__construct() and RustColumnsReader::__construct(), pinned by
-     * phpt 055.
+     * Called by name from arrow-ext RustColumnsReader::__construct(), pinned by phpt 055.
      *
      * @return array{selectors: list<array{0: int, 1: bool}>, matched: list<array{0: int, 1: bool}>, filter?: array<string, mixed>, limit: ?int, offset: int}
      *         file-absolute selectors (row count, skip) of the rows read and of the rows proven to match, the row filter's

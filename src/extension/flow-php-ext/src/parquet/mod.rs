@@ -1,4 +1,4 @@
-//! Parquet in flow_php: the `Flow\ETL\Adapter\Parquet` surface over arrow-ext's Parquet batches.
+//! Parquet in flow_php: the `Flow\ETL\Adapter\Parquet` surface over the `flow_php` Parquet engine.
 
 #[allow(
     non_snake_case,

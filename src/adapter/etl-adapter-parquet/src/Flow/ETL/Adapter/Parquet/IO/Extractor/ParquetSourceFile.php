@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\IO\Extractor;
 
+use Flow\ETL\Adapter\Parquet\IO\Engine\FlowPhpParquetFileReader;
 use Flow\ETL\Adapter\Parquet\Values\Schema\SchemaConverter;
 use Flow\ETL\Foundation\FlowPhpExtension;
 use Flow\ETL\IO\Extractor\File\ByteUnit;
@@ -12,7 +13,6 @@ use Flow\ETL\IO\Extractor\File\SourceFile;
 use Flow\ETL\IO\Extractor\Statistics;
 use Flow\ETL\Values\Cardinality;
 use Flow\ETL\Values\Schema;
-use Flow\Parquet\Engine\RustParquetFileReader;
 use Flow\Parquet\ParquetFile;
 use Flow\Parquet\ParquetFile\Schema as ParquetSchema;
 use Flow\Parquet\ParquetFile\Schema\Column;
@@ -61,7 +61,8 @@ final readonly class ParquetSourceFile implements SelfDescribingFile
     {
         $reader = $this->file->reader();
 
-        return ($this->extension ?? FlowPhpExtension::detect())->available() && $reader instanceof RustParquetFileReader
+        return ($this->extension ?? FlowPhpExtension::detect())->available()
+        && $reader instanceof FlowPhpParquetFileReader
             ? new RustParquetOpenSource($reader)
             : new PhpParquetOpenSource($this->file);
     }

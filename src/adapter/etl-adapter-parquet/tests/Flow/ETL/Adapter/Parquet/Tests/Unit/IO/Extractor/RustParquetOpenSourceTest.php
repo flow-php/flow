@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Unit\IO\Extractor;
 
+use Flow\ETL\Adapter\Parquet\IO\Engine\FlowPhpParquetFileReader;
 use Flow\ETL\Adapter\Parquet\IO\Extractor\RustParquetOpenSource;
 use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetFilesContext;
 use Flow\ETL\Tests\FlowTestCase;
@@ -12,7 +13,6 @@ use Flow\ETL\Values\Column\Php\ScalarColumn;
 use Flow\ETL\Values\Column\PhpBackend;
 use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\Tests\Double\FailingReadSourceStream;
-use Flow\Parquet\Engine\RustParquetFileReader;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\Attributes\TestWith;
 
@@ -26,7 +26,6 @@ use function Flow\Parquet\DSL\parquet_column;
 use function range;
 
 #[RequiresPhpExtension('flow_php')]
-#[RequiresPhpExtension('arrow')]
 final class RustParquetOpenSourceTest extends FlowTestCase
 {
     /**
@@ -43,7 +42,7 @@ final class RustParquetOpenSourceTest extends FlowTestCase
 
         $read = [];
 
-        foreach ((new RustParquetOpenSource(new RustParquetFileReader($filesystem->readFrom(path(
+        foreach ((new RustParquetOpenSource(new FlowPhpParquetFileReader($filesystem->readFrom(path(
             'memory://groups.parquet',
         )))))->batches(
             schema(int_schema('id')),
@@ -67,7 +66,7 @@ final class RustParquetOpenSourceTest extends FlowTestCase
 
         $counted = 0;
 
-        foreach (ParquetFilesContext::rows((new RustParquetOpenSource(new RustParquetFileReader($filesystem->readFrom(path(
+        foreach (ParquetFilesContext::rows((new RustParquetOpenSource(new FlowPhpParquetFileReader($filesystem->readFrom(path(
             'memory://groups.parquet',
         )))))->batches(
             schema(),
@@ -90,7 +89,7 @@ final class RustParquetOpenSourceTest extends FlowTestCase
 
         $counted = 0;
 
-        foreach (ParquetFilesContext::rows((new RustParquetOpenSource(new RustParquetFileReader($filesystem->readFrom(path(
+        foreach (ParquetFilesContext::rows((new RustParquetOpenSource(new FlowPhpParquetFileReader($filesystem->readFrom(path(
             'memory://groups.parquet',
         )))))->batches(
             schema(),
@@ -112,7 +111,7 @@ final class RustParquetOpenSourceTest extends FlowTestCase
     {
         $filesystem = memory_filesystem();
         ParquetFilesContext::rowGroups($filesystem, 'memory://groups.parquet', 10, 4);
-        $source = new RustParquetOpenSource(new RustParquetFileReader($filesystem->readFrom(path(
+        $source = new RustParquetOpenSource(new FlowPhpParquetFileReader($filesystem->readFrom(path(
             'memory://groups.parquet',
         ))));
 
@@ -138,7 +137,7 @@ final class RustParquetOpenSourceTest extends FlowTestCase
     {
         $filesystem = memory_filesystem();
         ParquetFilesContext::rowGroups($filesystem, 'memory://groups.parquet', 10, 4);
-        $source = new RustParquetOpenSource(new RustParquetFileReader($filesystem->readFrom(path(
+        $source = new RustParquetOpenSource(new FlowPhpParquetFileReader($filesystem->readFrom(path(
             'memory://groups.parquet',
         ))));
         $first = $source->batches(
@@ -172,7 +171,7 @@ final class RustParquetOpenSourceTest extends FlowTestCase
         $filesystem = memory_filesystem();
         ParquetFilesContext::rowGroups($filesystem, 'memory://groups.parquet', 10, 4);
 
-        (new RustParquetOpenSource(new RustParquetFileReader($filesystem->readFrom(path(
+        (new RustParquetOpenSource(new FlowPhpParquetFileReader($filesystem->readFrom(path(
             'memory://groups.parquet',
         )))))->close();
 
@@ -187,7 +186,7 @@ final class RustParquetOpenSourceTest extends FlowTestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Reading "memory://groups.parquet" failed');
 
-        new RustParquetOpenSource(new RustParquetFileReader(new FailingReadSourceStream($filesystem->readFrom(path(
+        new RustParquetOpenSource(new FlowPhpParquetFileReader(new FailingReadSourceStream($filesystem->readFrom(path(
             'memory://groups.parquet',
         )))));
     }
