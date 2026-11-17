@@ -38,8 +38,8 @@ final readonly class IntegerPreImage implements PreImage
 
         return match (true) {
             $bits === 64 => new self(PHP_INT_MIN, PHP_INT_MAX),
-            $integer?->isSigned() === false => new self(0, 2 ** $bits - 1),
-            default => new self(-2 ** ($bits - 1), 2 ** ($bits - 1) - 1),
+            $integer?->isSigned() === false => new self(0, (1 << $bits) - 1),
+            default => new self(-(1 << ($bits - 1)), (1 << ($bits - 1)) - 1),
         };
     }
 

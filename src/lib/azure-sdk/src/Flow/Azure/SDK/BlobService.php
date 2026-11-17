@@ -335,8 +335,9 @@ final readonly class BlobService implements BlobServiceInterface
      * @throws AzureException
      * @throws ClientExceptionInterface
      */
-    public function getContainerProperties(GetContainerPropertiesOptions $options = new GetContainerPropertiesOptions()): ?ContainerProperties
-    {
+    public function getContainerProperties(
+        GetContainerPropertiesOptions $options = new GetContainerPropertiesOptions(),
+    ): ?ContainerProperties {
         $request = $this->httpFactory->get($this->urlFactory->create(
             $this->configuration,
             null,

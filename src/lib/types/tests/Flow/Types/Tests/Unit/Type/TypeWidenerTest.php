@@ -392,8 +392,9 @@ final class TypeWidenerTest extends TestCase
      * @param Type<mixed> $candidate
      */
     #[DataProvider('provideNonNullTypes')]
-    public function test_widening_optional_string_with_any_non_null_candidate_type_yields_optional_string(Type $candidate): void
-    {
+    public function test_widening_optional_string_with_any_non_null_candidate_type_yields_optional_string(
+        Type $candidate,
+    ): void {
         static::assertEquals(
             type_optional(type_string()),
             (new TypeWidener())->widen(type_optional(type_string()), $candidate),

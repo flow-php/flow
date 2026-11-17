@@ -75,9 +75,7 @@ final readonly class Aggregators implements Countable, IteratorAggregate
         $resolved = [];
 
         foreach ($this->aggregators as $aggregator) {
-            /** @var AggregatingFunction $bound an aggregate root is never a reference leaf */
-            $bound = $resolver->bind($aggregator, $schema, 'aggregate');
-            $resolved[] = $bound;
+            $resolved[] = $resolver->bind($aggregator, $schema, 'aggregate');
         }
 
         return new self(...$resolved);

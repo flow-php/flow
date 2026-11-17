@@ -34,8 +34,9 @@ final readonly class ExplainBuilder implements ExplainFinalStep
         private ?ExplainFormat $format = null,
     ) {}
 
-    public static function create(SelectFinalStep|InsertFinalStep|UpdateFinalStep|DeleteFinalStep $query): ExplainFinalStep
-    {
+    public static function create(
+        SelectFinalStep|InsertFinalStep|UpdateFinalStep|DeleteFinalStep $query,
+    ): ExplainFinalStep {
         return new self($query);
     }
 

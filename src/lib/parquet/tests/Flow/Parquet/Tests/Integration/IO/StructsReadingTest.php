@@ -325,8 +325,9 @@ class StructsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_struct_nested_with_map_of_string_map_of_string_string_column_with_limit(string $engineClass): void
-    {
+    public function test_reading_struct_nested_with_map_of_string_map_of_string_string_column_with_limit(
+        string $engineClass,
+    ): void {
         $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/structs.parquet');

@@ -131,8 +131,9 @@ final class WriteColumnsTest extends ParquetIntegrationTestCase
      * @param class-string<ParquetEngine> $engineClass
      */
     #[DataProvider('engine_provider')]
-    public function test_a_datetime_outside_the_nanosecond_range_is_refused_as_an_invalid_argument(string $engineClass): void
-    {
+    public function test_a_datetime_outside_the_nanosecond_range_is_refused_as_an_invalid_argument(
+        string $engineClass,
+    ): void {
         $writer = ColumnDoor::open(
             ParquetEngineMother::create($engineClass),
             ColumnDoor::stream(),

@@ -185,8 +185,9 @@ final class FilterTranslatorTest extends FlowTestCase
     }
 
     #[DataProvider('throwingInPhp')]
-    public function test_a_pushed_conjunct_runs_before_the_kept_ones_so_one_that_can_throw_in_php_is_never_translated(ScalarFunction $function): void
-    {
+    public function test_a_pushed_conjunct_runs_before_the_kept_ones_so_one_that_can_throw_in_php_is_never_translated(
+        ScalarFunction $function,
+    ): void {
         static::assertSame([], (new FilterTranslator())->translate([$function], BodySchemaMother::everyLeafType()));
     }
 
@@ -198,8 +199,9 @@ final class FilterTranslatorTest extends FlowTestCase
     }
 
     #[DataProvider('inexact')]
-    public function test_a_conjunct_whose_filter_keeps_more_rows_is_translated_as_inexact(ScalarFunction $function): void
-    {
+    public function test_a_conjunct_whose_filter_keeps_more_rows_is_translated_as_inexact(
+        ScalarFunction $function,
+    ): void {
         static::assertFalse((new FilterTranslator())->translate(
             [$function],
             BodySchemaMother::everyLeafType(),

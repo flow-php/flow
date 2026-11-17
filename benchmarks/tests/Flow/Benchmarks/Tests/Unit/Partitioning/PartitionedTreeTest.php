@@ -46,8 +46,9 @@ final class PartitionedTreeTest extends TestCase
     }
 
     #[DataProvider('cardinalities')]
-    public function test_the_write_scenario_partitions_by_its_cardinality_column(PartitionCardinality $cardinality): void
-    {
+    public function test_the_write_scenario_partitions_by_its_cardinality_column(
+        PartitionCardinality $cardinality,
+    ): void {
         try {
             $root = (new PartitionedWriteScenario($cardinality, self::ROWS))->run();
             $partitions = glob($root . '/*') ?: [];

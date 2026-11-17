@@ -129,6 +129,8 @@ final readonly class Comparator
         }
 
         if ($left instanceof StructureType && $right instanceof StructureType) {
+            /** @var StructureType<array<array-key, mixed>> $left */
+            /** @var StructureType<array<array-key, mixed>> $right */
             return (new StructureComparison())->identical($left, $right, $this);
         }
 

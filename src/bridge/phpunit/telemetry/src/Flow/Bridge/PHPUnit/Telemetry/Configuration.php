@@ -226,8 +226,9 @@ final readonly class Configuration
         );
     }
 
-    private static function buildUdpSyslogErrorHandlerConfig(ParameterCollection $parameters): UdpSyslogErrorHandlerConfig
-    {
+    private static function buildUdpSyslogErrorHandlerConfig(
+        ParameterCollection $parameters,
+    ): UdpSyslogErrorHandlerConfig {
         self::rejectForeignHandlerParams($parameters, self::ERROR_HANDLER_UDP_SYSLOG, self::UDP_SYSLOG_HANDLER_PARAMS);
 
         $host = self::resolve($parameters, 'error_handler_host');
@@ -413,8 +414,9 @@ final readonly class Configuration
         ));
     }
 
-    private static function resolveErrorHandler(ParameterCollection $parameters): ErrorLogHandlerConfig|NullErrorHandlerConfig|StreamErrorHandlerConfig|SyslogErrorHandlerConfig|UdpSyslogErrorHandlerConfig
-    {
+    private static function resolveErrorHandler(
+        ParameterCollection $parameters,
+    ): ErrorLogHandlerConfig|NullErrorHandlerConfig|StreamErrorHandlerConfig|SyslogErrorHandlerConfig|UdpSyslogErrorHandlerConfig {
         $type = self::resolve($parameters, 'error_handler') ?? self::ERROR_HANDLER_LOG;
 
         return match ($type) {

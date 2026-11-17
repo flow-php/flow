@@ -31,7 +31,7 @@ final class DBALTelemetryPass implements CompilerPassInterface
         }
 
         $maxSqlLength = $container->hasParameter('flow.telemetry.dbal.max_sql_length')
-            ? (int) $container->getParameter('flow.telemetry.dbal.max_sql_length')
+            ? $container->getParameter('flow.telemetry.dbal.max_sql_length')
             : 1000;
 
         $collectMetrics = $container->hasParameter('flow.telemetry.dbal.collect_metrics')
@@ -43,11 +43,11 @@ final class DBALTelemetryPass implements CompilerPassInterface
             : false;
 
         $maxParameters = $container->hasParameter('flow.telemetry.dbal.max_parameters')
-            ? (int) $container->getParameter('flow.telemetry.dbal.max_parameters')
+            ? $container->getParameter('flow.telemetry.dbal.max_parameters')
             : 10;
 
         $maxParameterLength = $container->hasParameter('flow.telemetry.dbal.max_parameter_length')
-            ? (int) $container->getParameter('flow.telemetry.dbal.max_parameter_length')
+            ? $container->getParameter('flow.telemetry.dbal.max_parameter_length')
             : 100;
 
         /** @var array<string> $excludeConnections */

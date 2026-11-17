@@ -121,8 +121,9 @@ final class TelemetryFactory
         return otlp_curl_transport($config->endpoint, $serializer, $options);
     }
 
-    private static function buildErrorHandler(ErrorLogHandlerConfig|NullErrorHandlerConfig|StreamErrorHandlerConfig|SyslogErrorHandlerConfig|UdpSyslogErrorHandlerConfig $config): ErrorHandler
-    {
+    private static function buildErrorHandler(
+        ErrorLogHandlerConfig|NullErrorHandlerConfig|StreamErrorHandlerConfig|SyslogErrorHandlerConfig|UdpSyslogErrorHandlerConfig $config,
+    ): ErrorHandler {
         return match (true) {
             $config instanceof ErrorLogHandlerConfig => new ErrorLogHandler(
                 messageType: $config->messageType,
@@ -172,8 +173,9 @@ final class TelemetryFactory
         );
     }
 
-    private static function buildTransport(CurlTransportConfig|GrpcTransportConfig|StreamTransportConfig $config): Transport
-    {
+    private static function buildTransport(
+        CurlTransportConfig|GrpcTransportConfig|StreamTransportConfig $config,
+    ): Transport {
         return match (true) {
             $config instanceof CurlTransportConfig => self::buildCurlTransport($config),
             $config instanceof GrpcTransportConfig => self::buildGrpcTransport($config),

@@ -18,7 +18,7 @@ use function count;
 final readonly class WindowFunction implements Expression
 {
     /**
-     * @param non-empty-list<string> $funcName Function name parts (e.g., ['row_number'] or ['rank'])
+     * @param list<string> $funcName Function name parts (e.g., ['row_number'] or ['rank'])
      * @param list<Expression> $args Function arguments
      * @param list<Expression> $partitionBy PARTITION BY expressions
      * @param list<OrderBy> $orderBy ORDER BY clauses
@@ -109,7 +109,7 @@ final readonly class WindowFunction implements Expression
     }
 
     /**
-     * @return non-empty-list<string>
+     * @return list<string>
      */
     public function getFuncName(): array
     {

@@ -63,10 +63,7 @@ final readonly class EnumType implements Type
             throw new InvalidArgumentException(sprintf('Class %s is not a UnitEnum', $data['class']));
         }
 
-        /** @var class-string<\UnitEnum> $class */
-        $class = $data['class'];
-
-        return new self($class);
+        return new self($data['class']);
     }
 
     /**

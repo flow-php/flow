@@ -76,6 +76,9 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
                 return new CacheItem();
             }
 
+            /**
+             * @return iterable<string, CacheItem>
+             */
             public function getItems(array $keys = []): iterable
             {
                 return [];
@@ -148,6 +151,9 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
                 return new CacheItem();
             }
 
+            /**
+             * @return iterable<string, CacheItem>
+             */
             public function getItems(array $keys = []): iterable
             {
                 return [];
@@ -216,6 +222,9 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
                 return new CacheItem();
             }
 
+            /**
+             * @return iterable<string, CacheItem>
+             */
             public function getItems(array $keys = []): iterable
             {
                 return [];
@@ -281,6 +290,9 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
                 return new CacheItem();
             }
 
+            /**
+             * @return iterable<string, CacheItem>
+             */
             public function getItems(array $keys = []): iterable
             {
                 return [];
@@ -346,6 +358,9 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
                 return new CacheItem();
             }
 
+            /**
+             * @return iterable<string, CacheItem>
+             */
             public function getItems(array $keys = []): iterable
             {
                 return [];
@@ -416,6 +431,9 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
                 return new CacheItem();
             }
 
+            /**
+             * @return iterable<string, CacheItem>
+             */
             public function getItems(array $keys = []): iterable
             {
                 return [];
@@ -493,6 +511,9 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
                 return new CacheItem();
             }
 
+            /**
+             * @return iterable<string, CacheItem>
+             */
             public function getItems(array $keys = []): iterable
             {
                 return [];
@@ -568,6 +589,9 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
                 return new CacheItem();
             }
 
+            /**
+             * @return iterable<string, CacheItem>
+             */
             public function getItems(array $keys = []): iterable
             {
                 return [];
@@ -641,6 +665,9 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
                 return new CacheItem();
             }
 
+            /**
+             * @return iterable<string, CacheItem>
+             */
             public function getItems(array $keys = []): iterable
             {
                 return [];
@@ -708,6 +735,9 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
                 return new CacheItem();
             }
 
+            /**
+             * @return iterable<string, CacheItem>
+             */
             public function getItems(array $keys = []): iterable
             {
                 return [];
@@ -778,6 +808,9 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
                 return new CacheItem();
             }
 
+            /**
+             * @return iterable<string, CacheItem>
+             */
             public function getItems(array $keys = []): iterable
             {
                 return [];

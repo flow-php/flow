@@ -89,8 +89,9 @@ final class InMemoryBlobService implements BlobServiceInterface
         throw new LogicException('unused');
     }
 
-    public function getContainerProperties(GetContainerPropertiesOptions $options = new GetContainerPropertiesOptions()): ?ContainerProperties
-    {
+    public function getContainerProperties(
+        GetContainerPropertiesOptions $options = new GetContainerPropertiesOptions(),
+    ): ?ContainerProperties {
         return null;
     }
 

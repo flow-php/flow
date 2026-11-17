@@ -95,13 +95,10 @@ final class ModifyDateTime implements ScalarFunction
                     throw new InvalidArgumentException('ModifyDateTime function requires non-null values');
                 }
 
-                if (!$value instanceof DateTime && !$value instanceof DateTimeImmutable) {
-                    throw new InvalidArgumentException(
-                        'ModifyDateTime function requires DateTime or DateTimeImmutable object',
-                    );
-                }
-
-                $results[] = $value->modify($modifier);
+                $results[] = match (true) {
+                    $value instanceof DateTime => $value->modify($modifier),
+                    $value instanceof DateTimeImmutable => $value->modify($modifier),
+                };
             }
         } catch (Exception $e) {
             throw EvaluationException::at($i, $e);

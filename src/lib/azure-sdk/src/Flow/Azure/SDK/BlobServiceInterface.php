@@ -44,7 +44,9 @@ interface BlobServiceInterface
         GetBlockBlobBlockListOptions $options = new GetBlockBlobBlockListOptions(),
     ): BlockList;
 
-    public function getContainerProperties(GetContainerPropertiesOptions $options = new GetContainerPropertiesOptions()): ?ContainerProperties;
+    public function getContainerProperties(
+        GetContainerPropertiesOptions $options = new GetContainerPropertiesOptions(),
+    ): ?ContainerProperties;
 
     /**
      * @return \Generator<int, Blob>

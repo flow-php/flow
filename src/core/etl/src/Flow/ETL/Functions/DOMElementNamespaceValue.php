@@ -148,8 +148,6 @@ final class DOMElementNamespaceValue implements ScalarFunction
 
         $xpath = $document instanceof Document ? new XPath($document) : new DOMXPath($document);
 
-        /** @var \DOMNameSpaceNode $nsNode */
-        // @mago-ignore analysis:invalid-iterator
         foreach ($xpath->query('namespace::*') ?: [] as $nsNode) {
             if ($nsNode->nodeName === $attributeName || str_starts_with($nsNode->nodeName, $attributeName . ':')) {
                 return $nsNode->nodeValue;

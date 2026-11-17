@@ -19,7 +19,7 @@ use function count;
 final readonly class FunctionCall implements Expression
 {
     /**
-     * @param non-empty-list<string> $funcName Function name parts (e.g., ['pg_catalog', 'count'] or ['my_func'])
+     * @param list<string> $funcName Function name parts (e.g., ['pg_catalog', 'count'] or ['my_func'])
      * @param list<Expression> $args Function arguments
      */
     public function __construct(
@@ -84,7 +84,7 @@ final readonly class FunctionCall implements Expression
     }
 
     /**
-     * @return non-empty-list<string>
+     * @return list<string>
      */
     public function getFuncName(): array
     {

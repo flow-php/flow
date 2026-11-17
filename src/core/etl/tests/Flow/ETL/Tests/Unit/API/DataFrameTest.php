@@ -1200,9 +1200,9 @@ final class DataFrameTest extends FlowTestCase
             ->read(from_array([['id' => 1], ['id' => 2]]))
             ->onError(new IgnoreError())
             ->write(new TransformedBranch(
-                new CallbackTransformation(static fn(DataFrame $prefix): DataFrame => $prefix->with(new ThrowingTransformer(
-                    new RuntimeException('boom'),
-                ))),
+                new CallbackTransformation(static fn(
+                    DataFrame $prefix,
+                ): DataFrame => $prefix->with(new ThrowingTransformer(new RuntimeException('boom')))),
                 to_memory($memory),
             ))
             ->run();
@@ -1680,10 +1680,9 @@ final class DataFrameTest extends FlowTestCase
             ->batchSize(2)
             ->write(
                 new TransformedBranch(
-                    new CallbackTransformation(static fn(DataFrame $prefix): DataFrame => $prefix->write(new CallOrderLoader(
-                        'inner',
-                        $log,
-                    ))),
+                    new CallbackTransformation(static fn(
+                        DataFrame $prefix,
+                    ): DataFrame => $prefix->write(new CallOrderLoader('inner', $log))),
                     new CallOrderLoader('outer', $log),
                 ),
             )

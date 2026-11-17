@@ -254,8 +254,9 @@ final class ReadColumnsTest extends ParquetIntegrationTestCase
      * @param class-string<ParquetEngine> $engineClass
      */
     #[DataProvider('engine_provider')]
-    public function test_stored_int96_timestamps_hold_the_microseconds_their_datetimes_read_as(string $engineClass): void
-    {
+    public function test_stored_int96_timestamps_hold_the_microseconds_their_datetimes_read_as(
+        string $engineClass,
+    ): void {
         $reader = ParquetEngineMother::create($engineClass, Options::default()->set(Option::INT_96_AS_DATETIME, true));
         $fixture = __DIR__ . '/../IO/Fixtures/EdgeCases/int96.parquet';
         $plan = ReadPlanMother::window(

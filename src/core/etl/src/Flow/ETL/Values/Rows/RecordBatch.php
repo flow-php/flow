@@ -219,8 +219,9 @@ final class RecordBatch
      * A file's refusal names the record; a source that is not a file is named by its reader, which places the refusal
      * by its position among every record added.
      */
-    private function outsideTheSample(SchemaMismatchException $mismatch): InferredSchemaException|SchemaMismatchException
-    {
+    private function outsideTheSample(
+        SchemaMismatchException $mismatch,
+    ): InferredSchemaException|SchemaMismatchException {
         $index = $mismatch->rowIndex;
 
         return $this->uri === null

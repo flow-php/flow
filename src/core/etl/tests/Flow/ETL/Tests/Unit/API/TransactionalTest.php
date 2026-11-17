@@ -83,10 +83,9 @@ final class TransactionalTest extends FlowTestCase
                 new Transactional(
                     $transaction,
                     new TransformedBranch(
-                        new CallbackTransformation(static fn(DataFrame $prefix): DataFrame => $prefix->write(new CallOrderLoader(
-                            'inner',
-                            $log,
-                        ))),
+                        new CallbackTransformation(static fn(
+                            DataFrame $prefix,
+                        ): DataFrame => $prefix->write(new CallOrderLoader('inner', $log))),
                         new CallOrderLoader('outer', $log),
                     ),
                 ),
@@ -149,7 +148,7 @@ final class TransactionalTest extends FlowTestCase
 
         new Transactional(
             new RecordingTransaction(),
-            // @mago-expect analysis:possibly-invalid-argument
+            // @mago-expect analysis:invalid-argument
             new Transactional(new RecordingTransaction(), to_memory(new ArrayMemory())),
         );
     }
