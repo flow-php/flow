@@ -1,0 +1,55 @@
+{% extends 'base.html.twig' %}
+
+{%- block title -%}
+    Page not found - Flow PHP - Data Processing Framework
+{%- endblock -%}
+
+{%- block description -%}
+    The page you are looking for does not exist. Search the Flow PHP documentation or browse the examples.
+{%- endblock -%}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <meta name="robots" content="noindex">
+{% endblock %}
+
+{%- block hero -%}{%- endblock -%}
+
+{%- block contributors -%}{%- endblock -%}
+
+{% block main %}
+    <section class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 mt-12 lg:mt-16">
+        <div class="max-w-3xl">
+            <span class="eyebrow">
+                <span class="h-1.5 w-1.5 rounded-full bg-orange-100"></span>
+                404
+            </span>
+            <h1 class="mt-3 text-4xl sm:text-5xl font-bold tracking-tight">
+                Page not found.
+            </h1>
+            <p class="mt-5 muted text-lg leading-relaxed">
+                The page you are looking for does not exist, or it moved.
+                Search the documentation, or start from the docs or the examples.
+            </p>
+        </div>
+
+        <div class="mt-10 flex flex-wrap gap-3">
+            <button type="button" popovertarget="search-modal" popovertargetaction="show"
+                    class="btn btn-primary px-4 py-2">
+                <img src="{{ asset('images/icons/search.svg') }}" alt="" width="16" height="16">
+                Search docs
+            </button>
+            <a href="{{ path('documentation') }}"
+               class="btn btn-secondary px-4 py-2 no-underline">
+                Documentation <span aria-hidden="true">→</span>
+            </a>
+            <a href="{{ path('example', {topic: 'reading', example: 'array', _fragment: 'example'}) }}"
+               class="btn btn-secondary px-4 py-2 no-underline">
+                Examples <span aria-hidden="true">→</span>
+            </a>
+        </div>
+    </section>
+
+    {# Inline until the site has a shared tracking module. #}
+    <script>if (window.posthog) { window.posthog.capture('site:not_found_view'); }</script>
+{% endblock %}
