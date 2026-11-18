@@ -891,146 +891,32 @@ code {
     }
 }
 
-:root {
-    --pagefind-ui-scale: 0.9;
-    --pagefind-ui-primary: #B33D32;
-    --pagefind-ui-text: #0f172a;
-    --pagefind-ui-background: transparent;
-    --pagefind-ui-border: #e2e8f0;
-    --pagefind-ui-tag: #f1f5f9;
-    --pagefind-ui-border-width: 1px;
-    --pagefind-ui-border-radius: 0.5rem;
-    --pagefind-ui-image-border-radius: 0.5rem;
-    --pagefind-ui-image-box-ratio: 3 / 2;
-    --pagefind-ui-font: 'Cabin Variable', system-ui, sans-serif;
+#site-search {
+    --pf-text: #0f172a;
+    --pf-text-secondary: #475569;
+    --pf-text-muted: #64748b;
+    --pf-background: #fff;
+    --pf-border: #e2e8f0;
+    --pf-border-focus: #94a3b8;
+    --pf-skeleton: #f1f5f9;
+    --pf-skeleton-shine: #f8fafc;
+    --pf-hover: #f1f5f9;
+    --pf-mark: #B33D32;
+    --pf-outline-focus: #B33D32;
+    --pf-border-radius: 0.5rem;
+    --pf-font: 'Cabin Variable', system-ui, sans-serif;
 }
 
-[data-theme="dark"] {
-    --pagefind-ui-primary: #ff5547;
-    --pagefind-ui-text: rgba(255, 255, 255, 0.92);
-    --pagefind-ui-border: rgba(255, 255, 255, 0.10);
-    --pagefind-ui-tag: rgba(255, 255, 255, 0.06);
-}
-
-#site-search .pagefind-ui__search-input {
-    background: #fff;
-    color: #0f172a;
-}
-
-#site-search .pagefind-ui__search-input::placeholder {
-    color: #94a3b8;
-}
-
-#site-search .pagefind-ui__result {
-    border-bottom: 1px solid #e2e8f0;
-}
-
-#site-search .pagefind-ui__result-link {
-    color: #0f172a;
-}
-
-#site-search .pagefind-ui__result-link:hover {
-    color: #B33D32;
-}
-
-#site-search .pagefind-ui__result-excerpt {
-    color: #475569;
-}
-
-#site-search mark {
-    background: transparent;
-    color: #B33D32;
-    font-weight: 600;
-}
-
-#site-search .pagefind-ui__filter-panel,
-#site-search .pagefind-ui__filter-name,
-#site-search .pagefind-ui__filter-value {
-    color: #334155;
-}
-
-#site-search .pagefind-ui__filter-name {
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-size: 0.75rem;
-    color: #64748b;
-}
-
-#site-search .pagefind-ui__filter-value input[type="checkbox"] {
-    accent-color: #ff5547;
-}
-
-#site-search .pagefind-ui__message {
-    color: #64748b;
-}
-
-#site-search .pagefind-ui__search-clear {
-    background: transparent;
-    border: 1px solid #cbd5e1;
-    color: #475569;
-    font-size: 0.75rem;
-    padding: 0.35rem 0.6rem;
-    border-radius: 0.375rem;
-    transition: border-color 120ms, background 120ms, color 120ms;
-}
-
-#site-search .pagefind-ui__search-clear:hover {
-    background: #f1f5f9;
-    border-color: #94a3b8;
-    color: #0f172a;
-}
-
-[data-theme="dark"] #site-search .pagefind-ui__search-input {
-    background: rgba(255, 255, 255, 0.04);
-    color: rgba(255, 255, 255, 0.92);
-}
-
-[data-theme="dark"] #site-search .pagefind-ui__search-input::placeholder {
-    color: rgba(255, 255, 255, 0.45);
-}
-
-[data-theme="dark"] #site-search .pagefind-ui__result {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-[data-theme="dark"] #site-search .pagefind-ui__result-link {
-    color: #fff;
-}
-
-[data-theme="dark"] #site-search .pagefind-ui__result-link:hover {
-    color: #ff5547;
-}
-
-[data-theme="dark"] #site-search .pagefind-ui__result-excerpt {
-    color: rgba(255, 255, 255, 0.70);
-}
-
-[data-theme="dark"] #site-search mark {
-    color: #ff5547;
-}
-
-[data-theme="dark"] #site-search .pagefind-ui__filter-panel,
-[data-theme="dark"] #site-search .pagefind-ui__filter-name,
-[data-theme="dark"] #site-search .pagefind-ui__filter-value {
-    color: rgba(255, 255, 255, 0.85);
-}
-
-[data-theme="dark"] #site-search .pagefind-ui__filter-name {
-    color: rgba(255, 255, 255, 0.55);
-}
-
-[data-theme="dark"] #site-search .pagefind-ui__message {
-    color: rgba(255, 255, 255, 0.65);
-}
-
-[data-theme="dark"] #site-search .pagefind-ui__search-clear {
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    color: rgba(255, 255, 255, 0.70);
-}
-
-[data-theme="dark"] #site-search .pagefind-ui__search-clear:hover {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.20);
-    color: #fff;
+[data-theme="dark"] #site-search {
+    --pf-text: rgba(255, 255, 255, 0.92);
+    --pf-text-secondary: rgba(255, 255, 255, 0.70);
+    --pf-text-muted: rgba(255, 255, 255, 0.55);
+    --pf-background: rgba(255, 255, 255, 0.04);
+    --pf-border: rgba(255, 255, 255, 0.10);
+    --pf-border-focus: rgba(255, 255, 255, 0.20);
+    --pf-skeleton: rgba(255, 255, 255, 0.06);
+    --pf-skeleton-shine: rgba(255, 255, 255, 0.10);
+    --pf-hover: rgba(255, 255, 255, 0.06);
+    --pf-mark: #ff5547;
+    --pf-outline-focus: #ff5547;
 }

@@ -158,6 +158,26 @@ abstract class EndToEndTestCase extends KernelTestCase
         return $path;
     }
 
+    /**
+     * @param list<mixed> $arguments
+     */
+    protected function emitPagefind(PlaywrightBrowser $browser, string $event, array $arguments): void
+    {
+        $this->pageOf(
+            $browser,
+        )->evaluate('([event, args]) => (window.__pagefindHandlers[event] ?? []).forEach((callback) => callback(...args))', [
+            $event,
+            $arguments,
+        ]);
+    }
+
+    protected function fakePagefind(PlaywrightBrowser $browser): void
+    {
+        $this->pageOf($browser)->addInitScript(
+            'window.__pagefindHandlers = {}; Object.defineProperty(window, "PagefindComponents", { value: { getInstanceManager: () => ({ getInstance: () => ({ on: (event, callback) => (window.__pagefindHandlers[event] ??= []).push(callback) }) }) }, writable: false, configurable: false });',
+        );
+    }
+
     protected function getPlaygroundCode(PageInterface $page): string
     {
         return type_string()->assert($page->evaluate(
