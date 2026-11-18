@@ -2,6 +2,10 @@
 seo_title: Read a large JSON file in PHP without running out of memory
 seo_description: 'json_decode needs the whole file in memory, so a big JSON file ends with "Allowed memory size exhausted". Why it happens, and how to read a 110Mb JSON file in PHP with 22Mb.'
 group: Reading files
+problem: 'json_decode() needs 778Mb for a 110Mb file'
+proof_label: 'Reading a 110Mb file'
+proof_before: '778Mb'
+proof_after: '22Mb'
 published: '2026-11-18'
 updated: '2026-11-18'
 ---

@@ -20,6 +20,22 @@ final readonly class Page
         public string $content,
     ) {}
 
+    /**
+     * @return array{problem: ?string, proof_label: ?string, proof_before: ?string, proof_after: ?string, featured: bool}
+     */
+    public function card(): array
+    {
+        $frontMatter = $this->frontMatter();
+
+        return [
+            'problem' => type_union(type_string(), type_null())->assert($frontMatter['problem'] ?? null),
+            'proof_label' => type_union(type_string(), type_null())->assert($frontMatter['proof_label'] ?? null),
+            'proof_before' => type_union(type_string(), type_null())->assert($frontMatter['proof_before'] ?? null),
+            'proof_after' => type_union(type_string(), type_null())->assert($frontMatter['proof_after'] ?? null),
+            'featured' => ($frontMatter['featured'] ?? false) === true,
+        ];
+    }
+
     public function description(): ?string
     {
         $frontMatter = $this->frontMatter();

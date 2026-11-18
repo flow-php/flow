@@ -1,11 +1,11 @@
 {% extends 'base.html.twig' %}
 
 {%- block title -%}
-    Guides | Flow PHP
+    Data processing in PHP: guides with code that runs | Flow PHP
 {%- endblock -%}
 
 {%- block description -%}
-    Real data problems in PHP, one per page, with code that runs: large CSV files, imports, exports and memory errors.
+    Real data problems in PHP, one per page, with code that runs: large CSV, JSON and Excel files, database imports and exports, REST APIs and search.
 {%- endblock -%}
 
 {%- block hero -%}{%- endblock -%}
@@ -28,7 +28,7 @@
             <ul class="grid gap-3 text-sm sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
                 <li class="flex items-center gap-3 rounded-lg border border-slate-200 bg-white/60 px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
                     <img src="{{ asset('images/icons/play.svg') }}" alt="" width="18" height="18" class="shrink-0 opacity-80 dark:invert-0 invert">
-                    <span class="muted">Every script runs in the playground</span>
+                    <span class="muted">Complete scripts, ready to copy</span>
                 </li>
                 <li class="flex items-center gap-3 rounded-lg border border-slate-200 bg-white/60 px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
                     <img src="{{ asset('images/icons/code.svg') }}" alt="" width="18" height="18" class="shrink-0 opacity-80 dark:invert-0 invert">
@@ -41,6 +41,41 @@
             </ul>
         </div>
 
+        {% for slug, guide in featured %}
+            {% set guideUrl = path('guides_guide', {slug: slug}) %}
+            <article class="card card-hover mt-12 grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-center" data-guide-featured>
+                <div>
+                    <span class="eyebrow">
+                        <span class="h-1.5 w-1.5 rounded-full bg-orange-100"></span>
+                        Start here
+                    </span>
+                    <p class="mt-4 font-mono text-sm text-orange-300 dark:text-orange-100">{{ guide.card.problem }}</p>
+                    <h2 class="mt-2 text-2xl font-semibold tracking-tight lg:text-3xl">
+                        <a class="text-slate-900 hover:text-orange-300 no-underline dark:text-white dark:hover:text-orange-100" href="{{ guideUrl }}">
+                            {{ guide.title }}
+                        </a>
+                    </h2>
+                    <p class="mt-3 muted leading-relaxed">{{ guide.description }}</p>
+                    <a class="mt-5 inline-flex items-center gap-1 text-sm text-blue-300 hover:text-orange-300 no-underline dark:text-blue-100 dark:hover:text-orange-100"
+                       href="{{ guideUrl }}" aria-label="Read the guide: {{ guide.title }}">
+                        Read the guide <span aria-hidden="true">→</span>
+                    </a>
+                </div>
+                {% if guide.card.proof_after %}
+                    <div class="rounded-lg border border-slate-200 bg-white/60 px-6 py-8 text-center dark:border-white/10 dark:bg-white/[0.03]">
+                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-white/55">{{ guide.card.proof_label }}</p>
+                        <p class="mt-3 flex items-center justify-center gap-4 font-mono text-4xl font-semibold tracking-tight lg:text-5xl">
+                            {% if guide.card.proof_before %}
+                                <span class="text-slate-400 line-through decoration-2 dark:text-white/40">{{ guide.card.proof_before }}</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-8 w-8 shrink-0 text-slate-400 dark:text-white/40" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+                            {% endif %}
+                            <span class="text-orange-300 dark:text-orange-100">{{ guide.card.proof_after }}</span>
+                        </p>
+                    </div>
+                {% endif %}
+            </article>
+        {% endfor %}
+
         {% for group, guides in groups %}
             <div class="mt-12 flex items-center gap-4">
                 <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-white/55">{{ group }}</h2>
@@ -51,10 +86,8 @@
             <div class="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
                 {% for slug, guide in guides %}
                     {% set guideUrl = path('guides_guide', {slug: slug}) %}
-                    <article class="card card-hover flex flex-col">
-                        <time datetime="{{ guide.updated }}" class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-white/55">
-                            Updated {{ guide.updated|date('M j, Y') }}
-                        </time>
+                    <article class="card card-hover flex flex-col" data-guide-card="{{ slug }}">
+                        <p class="font-mono text-xs text-orange-300 dark:text-orange-100">{{ guide.card.problem }}</p>
                         <h3 class="mt-3 text-xl font-semibold tracking-tight">
                             <a class="text-slate-900 hover:text-orange-300 no-underline dark:text-white dark:hover:text-orange-100" href="{{ guideUrl }}">
                                 {{ guide.title }}
@@ -63,10 +96,25 @@
                         <p class="mt-2 muted text-sm leading-relaxed flex-1">
                             {{ guide.description }}
                         </p>
-                        <a class="mt-4 inline-flex items-center gap-1 text-sm text-blue-300 hover:text-orange-300 no-underline self-start dark:text-blue-100 dark:hover:text-orange-100"
-                           href="{{ guideUrl }}" aria-label="Read the guide: {{ guide.title }}">
-                            Read the guide <span aria-hidden="true">→</span>
-                        </a>
+                        {% if guide.card.proof_after %}
+                            <p class="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-slate-200 pt-4 font-mono text-sm dark:border-white/10" data-guide-proof>
+                                {% if guide.card.proof_before %}
+                                    <span class="text-slate-400 line-through dark:text-white/40">{{ guide.card.proof_before }}</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 text-slate-400 dark:text-white/40" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+                                {% endif %}
+                                <span class="font-semibold text-orange-300 dark:text-orange-100">{{ guide.card.proof_after }}</span>
+                                <span class="font-sans text-xs text-slate-500 dark:text-white/55">{{ guide.card.proof_label }}</span>
+                            </p>
+                        {% endif %}
+                        <div class="mt-4 flex items-center justify-between gap-3">
+                            <a class="inline-flex items-center gap-1 text-sm text-blue-300 hover:text-orange-300 no-underline dark:text-blue-100 dark:hover:text-orange-100"
+                               href="{{ guideUrl }}" aria-label="Read the guide: {{ guide.title }}">
+                                Read the guide <span aria-hidden="true">→</span>
+                            </a>
+                            <time datetime="{{ guide.updated }}" class="text-xs text-slate-500 dark:text-white/40">
+                                {{ guide.updated|date('M j, Y') }}
+                            </time>
+                        </div>
                     </article>
                 {% endfor %}
             </div>

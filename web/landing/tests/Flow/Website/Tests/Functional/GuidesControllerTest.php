@@ -34,6 +34,9 @@ final class GuidesControllerTest extends WebTestCase
             'article#documentation-page[data-pagefind-body] h1',
             '[data-pagefind-filter="type:Guide"]',
             'time[datetime="2026-11-18"]',
+            'link[rel="canonical"][href="http://localhost/guides/read-large-csv-file-in-php"]',
+            'meta[property="og:image"][content="http://localhost/images/guides/social/read-large-csv-file-in-php.png"]',
+            'meta[name="twitter:image"][content="http://localhost/images/guides/social/read-large-csv-file-in-php.png"]',
             'header nav a[href="/guides"][aria-current="page"]',
             'a[href="https://github.com/flow-php/flow/edit/1.x/web/landing/content/guides/read-large-csv-file-in-php.md"]',
         ] as $element) {
@@ -43,6 +46,16 @@ final class GuidesControllerTest extends WebTestCase
         static::assertGreaterThanOrEqual(
             4,
             $crawler->filter('article button[data-clipboard-kind-value="documentation"]')->count(),
+        );
+        static::assertSame(
+            [
+                '/guides/read-large-json-file-in-php',
+                '/guides/export-database-to-excel-in-php',
+                '/guides/import-csv-file-into-mysql-or-postgresql-in-php',
+            ],
+            $crawler
+                ->filter('[data-guide-related] h3 a')
+                ->each(static fn(Crawler $link): ?string => $link->attr('href')),
         );
 
         static::assertSame(
@@ -89,11 +102,27 @@ final class GuidesControllerTest extends WebTestCase
         $crawler = $client->request('GET', '/guides');
 
         self::assertResponseIsSuccessful();
-        static::assertSame('Guides | Flow PHP', $crawler->filter('title')->text());
+        static::assertSame(
+            'Data processing in PHP: guides with code that runs | Flow PHP',
+            $crawler->filter('title')->text(),
+        );
         static::assertSame('Data processing in PHP', $crawler->filter('main h1')->text());
-        static::assertContains('Reading files', $crawler
-            ->filter('main h2')
-            ->each(static fn(Crawler $group): string => $group->text()));
+        static::assertSame(
+            ['Reading files', 'Writing files', 'Importing data', 'Search'],
+            $crawler->filter('main h2.uppercase')->each(static fn(Crawler $group): string => $group->text()),
+        );
+        static::assertSame(
+            'Import a CSV file into MySQL or PostgreSQL in PHP, with upsert',
+            $crawler->filter('[data-guide-featured] h2')->text(),
+        );
+        static::assertSame(
+            '624Mb 98Mb Sorting a million rows',
+            $crawler->filter('[data-guide-card="read-large-csv-file-in-php"] [data-guide-proof]')->text(),
+        );
+        static::assertCount(
+            0,
+            $crawler->filter('[data-guide-card="import-data-from-rest-api-in-php"] [data-guide-proof]'),
+        );
         static::assertSame(
             'Read a large CSV file in PHP without running out of memory',
             $crawler->filter('main a[href="/guides/read-large-csv-file-in-php"]')->text(),

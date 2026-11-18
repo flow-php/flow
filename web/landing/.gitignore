@@ -6,6 +6,7 @@ var/
 public/assets
 public/images/blog/social/
 public/images/work-shop/social/
+public/images/guides/social/
 public/pagefind
 public/*.xml
 !public/BingSiteAuth.xml

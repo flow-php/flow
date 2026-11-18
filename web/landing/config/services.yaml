@@ -61,6 +61,10 @@ services:
         arguments:
             $publicDir: '%kernel.project_dir%/public'
 
+    Flow\Website\SocialCard\Guides\CardGenerator:
+        arguments:
+            $publicDir: '%kernel.project_dir%/public'
+
     Flow\Website\StaticSourceProvider\:
         resource: '../src/Flow/Website/StaticSourceProvider/'
         tags: ['static_content_generator.source_provider']

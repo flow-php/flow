@@ -1,7 +1,11 @@
 ---
-seo_title: 'Export a large CSV file in PHP: stream the download in Symfony without running out of memory'
-seo_description: 'A Symfony StreamedResponse still loads the whole query result, so a big export ends with "Allowed memory size exhausted". How to stream a million rows as CSV, JSON, XML or Parquet in 20Mb.'
+seo_title: 'Export a large CSV file in PHP: stream the download in Symfony'
+seo_description: 'A Symfony StreamedResponse still loads the whole query result and runs out of memory. How to stream a million rows as CSV, JSON, XML or Parquet in 20Mb.'
 group: Writing files
+problem: 'StreamedResponse still runs out of memory'
+proof_label: 'A million orders as a download'
+proof_before: '91Mb'
+proof_after: '20Mb'
 published: '2026-11-18'
 updated: '2026-11-18'
 ---
