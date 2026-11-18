@@ -1,5 +1,5 @@
 {# Sticky glass header. `wide` removes the max-w container for full-width pages. #}
-<header class="sticky top-0 z-50 border-b border-slate-200 bg-[#e8eef7]/80 backdrop-blur-md supports-[backdrop-filter]:bg-[#e8eef7]/65 dark:border-white/10 dark:bg-black/70 dark:supports-[backdrop-filter]:bg-black/55">
+<header data-ph-capture-attribute-link-location="header" class="sticky top-0 z-50 border-b border-slate-200 bg-[#e8eef7]/80 backdrop-blur-md supports-[backdrop-filter]:bg-[#e8eef7]/65 dark:border-white/10 dark:bg-black/70 dark:supports-[backdrop-filter]:bg-black/55">
     <div class="{{ wide|default(false) ? 'px-4 lg:px-8 xl:px-12' : 'mx-auto max-w-screen-2xl px-4 sm:px-6' }} flex h-16 items-center justify-between gap-4">
         <a href="{{ path('home') }}" class="shrink-0 inline-flex items-center" aria-label="Flow PHP - home">
             <img src="{{ asset('images/logo.svg') }}" alt="" width="146" height="40" class="h-7 w-auto lg:h-9 dark:invert-0 invert">
@@ -57,7 +57,7 @@
             <img src="{{ asset('images/icons/menu.svg') }}" alt="" width="24" height="24" class="dark:invert-0 invert">
         </button>
 
-        <nav popover id="mobile-nav" aria-label="Mobile" class="lg:hidden fixed inset-0 m-0 w-screen h-[100dvh] max-h-none max-w-none overflow-y-auto overscroll-contain bg-[#e8eef7] text-slate-900 dark:bg-black dark:text-white">
+        <nav popover id="mobile-nav" data-ph-capture-attribute-link-location="header" aria-label="Mobile" class="lg:hidden fixed inset-0 m-0 w-screen h-[100dvh] max-h-none max-w-none overflow-y-auto overscroll-contain bg-[#e8eef7] text-slate-900 dark:bg-black dark:text-white">
             <div class="flex h-16 items-center justify-between px-4 sm:px-6 border-b border-slate-200 dark:border-white/10">
                 <span class="font-semibold tracking-wide">Menu</span>
                 <button popovertarget="mobile-nav" popovertargetaction="hide"

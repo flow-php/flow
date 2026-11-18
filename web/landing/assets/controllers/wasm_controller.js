@@ -15,6 +15,7 @@ export default class extends Controller {
     #combinedOutput = ''
     #debug = false
     #recycleCount = 0
+    #runtimeLoadReported = false
 
     connect() {
         this.#debug = this.application.debug
@@ -66,10 +67,13 @@ export default class extends Controller {
 
         this.#combinedOutput = ''
 
+        const startedAt = performance.now()
+
         try {
             this.#phpModule.FS.chdir('/workspace')
 
             const exitCode = this.#phpModule.ccall('pib_eval', 'number', ['string'], [code])
+            const executionTime = Math.round(performance.now() - startedAt)
 
             const errorInfo = this.#parseErrorMessage(this.#combinedOutput)
 
@@ -85,7 +89,8 @@ export default class extends Controller {
                     },
                     output: this.#combinedOutput,
                     exitCode,
-                    executionTime: 0,
+                    executionTime,
+                    failureReason: this.#runFailureReason(this.#combinedOutput),
                     memoryUsed: 0
                 }
             }
@@ -94,7 +99,8 @@ export default class extends Controller {
                 success: true,
                 output: this.#combinedOutput || 'Code executed successfully (no output)',
                 exitCode,
-                executionTime: 0,
+                executionTime,
+                failureReason: null,
                 memoryUsed: 0
             }
         } catch (e) {
@@ -107,7 +113,8 @@ export default class extends Controller {
                 },
                 output: this.#combinedOutput,
                 exitCode: 1,
-                executionTime: 0,
+                executionTime: Math.round(performance.now() - startedAt),
+                failureReason: 'other',
                 memoryUsed: 0
             }
         }
@@ -362,6 +369,7 @@ export default class extends Controller {
             return true
         } catch (error) {
             this.#logError('Failed to load resources:', error)
+            this.#reportRuntimeLoad('resources')
             this.#dispatchError('Failed to load resources: ' + error.message)
             return false
         }
@@ -417,16 +425,19 @@ export default class extends Controller {
                     await this.#loadResources()
                 }).catch((err) => {
                     this.#logError('Failed to initialize PHP module:', err)
+                    this.#reportRuntimeLoad('instantiate')
                     this.#dispatchError('Failed to initialize PHP: ' + err.message)
                 })
             } else {
                 this.#logError('PHP function not available after script load')
+                this.#reportRuntimeLoad('runtime_missing')
                 this.#dispatchError('Failed to load PHP module')
             }
         }
 
         script.onerror = (err) => {
             this.#logError('Failed to load PHP script:', err)
+            this.#reportRuntimeLoad('script')
             this.#dispatchError('Failed to load PHP WebAssembly module')
         }
 
@@ -550,6 +561,32 @@ export default class extends Controller {
 
     #dispatchInitialized() {
         this.dispatch('initialized')
+        this.#reportRuntimeLoad(null)
+    }
+
+    #reportRuntimeLoad(failureReason) {
+        if (this.#runtimeLoadReported) {
+            return
+        }
+
+        this.#runtimeLoadReported = true
+        this.dispatch('runtime-load', {
+            detail: {
+                is_success: failureReason === null,
+                duration_ms: Math.round(performance.now()),
+                failure_reason: failureReason
+            }
+        })
+    }
+
+    #runFailureReason(output) {
+        const thrown = output.match(/Uncaught throwable '([^']+)'/)
+
+        if (!thrown || thrown[1] === 'ParseError') {
+            return 'parse'
+        }
+
+        return thrown[1].startsWith('Flow\\') ? 'flow' : 'php'
     }
 
     #dispatchResourcesLoaded() {

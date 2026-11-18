@@ -1,6 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 import { EditorView, basicSetup } from "codemirror"
-import { EditorState, StateField, StateEffect, Compartment, Prec } from "@codemirror/state"
+import { EditorState, StateField, StateEffect, Compartment, Prec, Transaction } from "@codemirror/state"
 import { Decoration } from "@codemirror/view"
 import { keymap } from "@codemirror/view"
 import { php } from "@codemirror/lang-php"
@@ -17,6 +17,7 @@ export default class extends Controller {
     #textarea
     #errorEffect
     #editorReady = false
+    #codeModified = false
     #themeCompartment = new Compartment()
     #onThemeChanged = null
 
@@ -74,6 +75,10 @@ export default class extends Controller {
                 flowTooltips,
                 EditorView.updateListener.of((update) => {
                     if (update.docChanged) {
+                        if (update.transactions.some(transaction => transaction.annotation(Transaction.userEvent) !== undefined)) {
+                            this.#codeModified = true
+                        }
+
                         this.#textarea.value = update.state.doc.toString()
                         this.dispatch('code-changed', { bubbles: true })
                     }
@@ -141,6 +146,10 @@ export default class extends Controller {
             this.#editor.destroy()
             this.#editor = null
         }
+    }
+
+    isCodeModified() {
+        return this.#codeModified
     }
 
     getCode() {

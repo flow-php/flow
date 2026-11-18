@@ -29,6 +29,12 @@ final class HomeController extends AbstractController
         return $this->render('main/not_found.html.twig', []);
     }
 
+    #[Route('/posthog.js', name: 'posthog_loader', options: ['sitemap' => false])]
+    public function posthogLoader(): Response
+    {
+        return $this->render('main/posthog.js.twig', [], new Response(headers: ['Content-Type' => 'text/javascript']));
+    }
+
     #[Route('/sponsor', name: 'sponsor', options: ['sitemap' => false])]
     public function sponsor(): Response
     {

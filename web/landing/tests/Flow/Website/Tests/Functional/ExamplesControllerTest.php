@@ -22,6 +22,18 @@ final class ExamplesControllerTest extends WebTestCase
         static::assertCount(1, $link);
     }
 
+    public function test_open_in_playground_carries_cta(): void
+    {
+        $client = self::createClient();
+        $crawler = $client->request('GET', '/caching/cache/');
+
+        self::assertResponseIsSuccessful();
+        static::assertCount(
+            1,
+            $crawler->filter('a[href="/playground/caching/cache"][data-ph-capture-attribute-cta="example_playground"]'),
+        );
+    }
+
     public function test_code_is_displayed_on_example_page(): void
     {
         $client = self::createClient();

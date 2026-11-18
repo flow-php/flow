@@ -27,6 +27,7 @@ export default class extends Controller {
         const validation = this.#validate(file)
         if (!validation.valid) {
             this.playgroundOutputOutlet.show({ content: validation.error, type: 'error' })
+            this.#reportUpload(file, validation.failureReason)
             return
         }
 
@@ -42,6 +43,22 @@ export default class extends Controller {
             this.playgroundOutputOutlet.show({ content: `File uploaded: ${file.name}`, type: 'success' })
             this.dispatch('file-uploaded', { detail: { filename: file.name, size: file.size }, bubbles: true })
         }
+
+        this.#reportUpload(file, result.success ? null : 'write')
+    }
+
+    #reportUpload(file, failureReason) {
+        const extension = file.name.split('.').pop().toLowerCase()
+
+        this.dispatch('file-upload', {
+            detail: {
+                is_success: failureReason === null,
+                file_extension: this.allowedExtensionsValue.includes(extension) ? extension : 'other',
+                file_size: file.size,
+                failure_reason: failureReason
+            },
+            bubbles: true
+        })
     }
 
     async handleFileUpload(event) {
@@ -96,16 +113,16 @@ export default class extends Controller {
     #validate(file) {
         const filenameCheck = this.#validateFilename(file.name)
         if (!filenameCheck.valid) {
-            return filenameCheck
+            return { ...filenameCheck, failureReason: 'filename' }
         }
 
         if (file.size > this.maxFileSizeValue) {
-            return { valid: false, error: `File too large: ${file.name} (max 2MB)` }
+            return { valid: false, error: `File too large: ${file.name} (max 2MB)`, failureReason: 'size' }
         }
 
         const ext = file.name.split('.').pop().toLowerCase()
         if (!this.allowedExtensionsValue.includes(ext)) {
-            return { valid: false, error: `Invalid extension: ${ext}` }
+            return { valid: false, error: `Invalid extension: ${ext}`, failureReason: 'extension' }
         }
 
         return { valid: true }

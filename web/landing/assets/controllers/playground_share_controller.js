@@ -14,8 +14,6 @@ export default class extends Controller {
     #wasmResourcesLoaded = false
     #pendingSnippetLoad = false
     #defaultFingerprint = null
-    #exampleCodeModified = false
-    #boundHandleExampleLoaded = null
 
     connect() {
         this.#debug = this.application.debug
@@ -24,25 +22,12 @@ export default class extends Controller {
 
         this.#boundHandleCodeChanged = this.#handleCodeChanged.bind(this)
         this.element.addEventListener('code-editor:code-changed', this.#boundHandleCodeChanged)
-
-        this.#boundHandleExampleLoaded = this.#handleExampleLoaded.bind(this)
-        this.element.addEventListener('playground-storage:loaded-from-example', this.#boundHandleExampleLoaded)
     }
 
     disconnect() {
         if (this.#boundHandleCodeChanged) {
             this.element.removeEventListener('code-editor:code-changed', this.#boundHandleCodeChanged)
         }
-        if (this.#boundHandleExampleLoaded) {
-            this.element.removeEventListener('playground-storage:loaded-from-example', this.#boundHandleExampleLoaded)
-        }
-    }
-
-    #handleExampleLoaded() {
-        // Reset the modified flag when example is initially loaded
-        // This prevents the initial setCode() call from marking example as modified
-        this.#exampleCodeModified = false
-        this.#log('Example loaded, reset exampleCodeModified flag')
     }
 
     async onWasmResourcesLoaded() {
@@ -130,6 +115,8 @@ export default class extends Controller {
     }
 
     async #loadSnippetFromR2(snippetId) {
+        let failureReason = 'other'
+
         try {
             const snippetsBaseUrl = this.snippetsUrlValue
             const baseUrl = `${snippetsBaseUrl}/snippets/${snippetId}`
@@ -139,6 +126,7 @@ export default class extends Controller {
 
             const metadataResponse = await fetch(metadataUrl)
             if (!metadataResponse.ok) {
+                failureReason = 'not_found'
                 throw new Error(`Snippet not found (HTTP ${metadataResponse.status})`)
             }
 
@@ -146,12 +134,14 @@ export default class extends Controller {
 
             const expiresAt = new Date(metadata.expires_at)
             if (Date.now() > expiresAt.getTime()) {
+                failureReason = 'expired'
                 throw new Error('Snippet has expired')
             }
 
             const codeUrl = `${baseUrl}/code.php`
             const codeResponse = await fetch(codeUrl)
             if (!codeResponse.ok) {
+                failureReason = 'code_missing'
                 throw new Error('Code file not found')
             }
             const code = await codeResponse.text()
@@ -177,6 +167,7 @@ export default class extends Controller {
 
                         if (!this.wasmOutlet.areResourcesLoaded()) {
                             this.#showNotification('WASM resources failed to load, datasets not loaded', 'error')
+                            this.#reportOpen(null)
                             return
                         }
                         this.#log('WASM resources loaded, proceeding with dataset upload')
@@ -233,8 +224,9 @@ export default class extends Controller {
             this.#showNotification('Snippet loaded successfully!', 'success')
 
             this.#snippetLoaded = true
-
+            this.#reportOpen(null)
         } catch (error) {
+            this.#reportOpen(failureReason)
             console.error('[ShareCode] Failed to load snippet:', error)
             this.#showNotification(`Failed to load snippet: ${error.message}`, 'error')
         }
@@ -243,6 +235,8 @@ export default class extends Controller {
     async share() {
         this.dispatch('action-started', { bubbles: true })
 
+        let files = []
+
         try {
             // First, wait only for code-editor and wasm (NOT turnstile yet)
             await Promise.all([
@@ -250,13 +244,14 @@ export default class extends Controller {
                 this.wasmOutlet.onLoad()
             ])
 
-            const files = await this.#collectUploadedFiles()
+            files = await this.#collectUploadedFiles()
 
             // Check for unmodified example BEFORE requiring Turnstile
-            if (this.isExampleValue && !this.#exampleCodeModified && files.length === 0) {
+            if (this.isExampleValue && !this.codeEditorOutlet.isCodeModified() && files.length === 0) {
                 const exampleUrl = `${window.location.origin}${window.location.pathname}`
                 await this.#copyToClipboard(exampleUrl)
                 this.#showNotification('Example link copied to clipboard!', 'success', exampleUrl)
+                this.#reportShare('example_link', files.length)
                 return
             }
 
@@ -275,6 +270,7 @@ export default class extends Controller {
             if (this.#defaultFingerprint && fingerprint === this.#defaultFingerprint) {
                 this.#log('Code matches default, not uploading')
                 this.#showNotification('You are trying to share default code. Please modify the code first.', 'info')
+                this.#reportShare('refused', files.length)
                 return
             }
 
@@ -293,11 +289,14 @@ export default class extends Controller {
 
                 await this.#copyToClipboard(shareUrl)
                 this.#showNotification('Snippet already exists! Link copied to clipboard.', 'success', shareUrl)
+                this.#reportShare('exists', files.length)
                 return
             }
 
             await this.#uploadSnippetToAPI(code, fingerprint, files)
+            this.#reportShare('created', files.length)
         } catch (error) {
+            this.#reportShare('failed', files.length)
             console.error('[ShareCode] Share failed:', error)
             console.error('[ShareCode] Error stack:', error.stack)
             this.#logError('[ShareCode] Share failed:', error)
@@ -378,12 +377,18 @@ export default class extends Controller {
         }
     }
 
-    #handleCodeChanged() {
-        // Mark example as modified when code changes
-        if (this.isExampleValue) {
-            this.#exampleCodeModified = true
-        }
+    #reportShare(outcome, fileCount) {
+        this.dispatch('snippet-share', { detail: { outcome, file_count: fileCount }, bubbles: true })
+    }
 
+    #reportOpen(failureReason) {
+        this.dispatch('snippet-open', {
+            detail: { is_success: failureReason === null, failure_reason: failureReason },
+            bubbles: true
+        })
+    }
+
+    #handleCodeChanged() {
         if (this.#snippetLoaded) {
             this.#log('Code changed, clearing snippet URL from browser')
             const cleanUrl = `${window.location.origin}${window.location.pathname}`

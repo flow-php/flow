@@ -92,7 +92,7 @@
                                     title="copy code"
                                     aria-label="Copy code"
                                     data-clipboard-target="#example-code-{{ loop.index }}"
-                                    {{ stimulus_controller('clipboard') }}>
+                                    {{ stimulus_controller('clipboard', { kind: 'dsl_function' }) }}>
                                 <img src="{{ asset('images/icons/copy.svg') }}" alt="" width="14" height="14" class="dark:invert-0 invert">
                             </button>
                         </div>
