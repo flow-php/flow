@@ -10,6 +10,15 @@
 
 {%- block og_type -%}article{%- endblock -%}
 
+{% block social_image %}
+    <meta property="og:image" content="{{ absolute_url(social_image) }}" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="{{ guide.title }}" />
+    <meta name="twitter:image" content="{{ absolute_url(social_image) }}">
+{% endblock %}
+
 {%- block hero -%}{%- endblock -%}
 
 {%- block contributors -%}{%- endblock -%}
@@ -33,6 +42,25 @@
 
             {{ guide.content|markdown_to_html }}
         </article>
+
+        <aside class="mt-16" data-pagefind-ignore data-guide-related>
+            <div class="flex items-center gap-4">
+                <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-white/55">More guides</h2>
+                <span class="h-px flex-1 bg-slate-200 dark:bg-white/10"></span>
+            </div>
+            <div class="mt-5 grid gap-5 md:grid-cols-3">
+                {% for other in related %}
+                    <article class="card card-hover flex flex-col">
+                        <p class="font-mono text-xs text-orange-300 dark:text-orange-100">{{ other.card.problem }}</p>
+                        <h3 class="mt-3 text-lg font-semibold tracking-tight">
+                            <a class="text-slate-900 hover:text-orange-300 no-underline dark:text-white dark:hover:text-orange-100" href="{{ path('guides_guide', {slug: other.path}) }}">
+                                {{ other.title }}
+                            </a>
+                        </h3>
+                    </article>
+                {% endfor %}
+            </div>
+        </aside>
 
         <p class="mt-12 text-sm text-slate-500 dark:text-white/55" data-pagefind-ignore>
             Found a typo or an outdated section?

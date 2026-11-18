@@ -2,6 +2,10 @@
 seo_title: 'PhpSpreadsheet out of memory: export a database table to Excel in PHP'
 seo_description: 'PhpSpreadsheet keeps the whole workbook in memory, so a big export ends with "Allowed memory size exhausted". Why it happens, and how to export a million rows to XLSX in 28Mb.'
 group: Writing files
+problem: 'PhpSpreadsheet runs out of memory'
+proof_label: 'A million orders to XLSX'
+proof_before: '3663Mb'
+proof_after: '28Mb'
 published: '2026-11-18'
 updated: '2026-11-18'
 ---

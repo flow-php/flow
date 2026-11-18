@@ -2,6 +2,11 @@
 seo_title: 'Import a CSV file into MySQL or PostgreSQL in PHP, with upsert'
 seo_description: 'Import a CSV file into a MySQL or PostgreSQL table in PHP, a hundred thousand rows in under three seconds, and update the rows that are already there with an upsert.'
 group: Importing data
+problem: 'One INSERT per row takes minutes'
+proof_label: '100,000 rows into MySQL'
+proof_before: '264s'
+proof_after: '2.3s'
+featured: true
 published: '2026-11-18'
 updated: '2026-11-18'
 ---

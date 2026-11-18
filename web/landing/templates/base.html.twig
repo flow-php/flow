@@ -30,6 +30,7 @@
 
     <meta property="og:type" content="{% block og_type %}website{% endblock %}" />
     <meta property="og:url" content="{{ url(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')) }}" />
+    <link rel="canonical" href="{{ url(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')) }}" />
     {% block social_image %}
         <meta property="og:image" content="{{ absolute_url(asset('images/banner.png')) }}" />
         <meta property="og:image:type" content="image/png" />

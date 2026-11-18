@@ -2,6 +2,10 @@
 seo_title: Read a large CSV file in PHP without running out of memory
 seo_description: 'A CSV file bigger than the memory limit ends with "Allowed memory size exhausted". Why file() fails, how fgetcsv fixes it and what Flow adds, with code that runs.'
 group: Reading files
+problem: 'file() and usort() run out of memory'
+proof_label: 'Sorting a million rows'
+proof_before: '624Mb'
+proof_after: '98Mb'
 published: '2026-11-18'
 updated: '2026-11-18'
 ---
