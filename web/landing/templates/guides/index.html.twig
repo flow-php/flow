@@ -1,0 +1,75 @@
+{% extends 'base.html.twig' %}
+
+{%- block title -%}
+    Guides | Flow PHP
+{%- endblock -%}
+
+{%- block description -%}
+    Real data problems in PHP, one per page, with code that runs: large CSV files, imports, exports and memory errors.
+{%- endblock -%}
+
+{%- block hero -%}{%- endblock -%}
+
+{% block main %}
+    <section class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 mt-10 lg:mt-14" data-pagefind-ignore>
+        <div class="grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-end">
+            <div class="max-w-2xl">
+                <span class="eyebrow">
+                    <span class="h-1.5 w-1.5 rounded-full bg-orange-100"></span>
+                    Guides
+                </span>
+                <h1 class="mt-3 section-title">Data processing in PHP</h1>
+                <p class="mt-3 muted text-lg leading-relaxed">
+                    One problem per page, with code that runs.
+                    Each guide shows the plain PHP way first, then the same thing with Flow.
+                </p>
+            </div>
+
+            <ul class="grid gap-3 text-sm sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+                <li class="flex items-center gap-3 rounded-lg border border-slate-200 bg-white/60 px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
+                    <img src="{{ asset('images/icons/play.svg') }}" alt="" width="18" height="18" class="shrink-0 opacity-80 dark:invert-0 invert">
+                    <span class="muted">Every script runs in the playground</span>
+                </li>
+                <li class="flex items-center gap-3 rounded-lg border border-slate-200 bg-white/60 px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
+                    <img src="{{ asset('images/icons/code.svg') }}" alt="" width="18" height="18" class="shrink-0 opacity-80 dark:invert-0 invert">
+                    <span class="muted">Plain PHP first, then Flow</span>
+                </li>
+                <li class="flex items-center gap-3 rounded-lg border border-slate-200 bg-white/60 px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
+                    <img src="{{ asset('images/icons/chart-bar.svg') }}" alt="" width="18" height="18" class="shrink-0 opacity-80 dark:invert-0 invert">
+                    <span class="muted">Memory and time, measured</span>
+                </li>
+            </ul>
+        </div>
+
+        {% for group, guides in groups %}
+            <div class="mt-12 flex items-center gap-4">
+                <h2 class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-white/55">{{ group }}</h2>
+                <span class="h-px flex-1 bg-slate-200 dark:bg-white/10"></span>
+                <span class="text-xs font-mono text-slate-500 dark:text-white/40">{{ guides|length }}</span>
+            </div>
+
+            <div class="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                {% for slug, guide in guides %}
+                    {% set guideUrl = path('guides_guide', {slug: slug}) %}
+                    <article class="card card-hover flex flex-col">
+                        <time datetime="{{ guide.updated }}" class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-white/55">
+                            Updated {{ guide.updated|date('M j, Y') }}
+                        </time>
+                        <h3 class="mt-3 text-xl font-semibold tracking-tight">
+                            <a class="text-slate-900 hover:text-orange-300 no-underline dark:text-white dark:hover:text-orange-100" href="{{ guideUrl }}">
+                                {{ guide.title }}
+                            </a>
+                        </h3>
+                        <p class="mt-2 muted text-sm leading-relaxed flex-1">
+                            {{ guide.description }}
+                        </p>
+                        <a class="mt-4 inline-flex items-center gap-1 text-sm text-blue-300 hover:text-orange-300 no-underline self-start dark:text-blue-100 dark:hover:text-orange-100"
+                           href="{{ guideUrl }}" aria-label="Read the guide: {{ guide.title }}">
+                            Read the guide <span aria-hidden="true">→</span>
+                        </a>
+                    </article>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </section>
+{% endblock %}

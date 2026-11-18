@@ -10,6 +10,7 @@ use Flow\Website\Service\Documentation\Pages;
 use Flow\Website\Service\Examples;
 use Presta\SitemapBundle\Event\SitemapPopulateEvent;
 use Presta\SitemapBundle\Sitemap\Url\UrlConcrete;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
@@ -22,6 +23,8 @@ final readonly class SitemapSubscriber implements EventSubscriberInterface
         private Posts $posts,
         private DSLDefinitions $dslDefinitions,
         private Pages $pages,
+        #[Autowire(service: 'guides.pages')]
+        private Pages $guides,
     ) {}
 
     public static function getSubscribedEvents()
@@ -36,6 +39,7 @@ final readonly class SitemapSubscriber implements EventSubscriberInterface
         $this->populateExamples($event);
         $this->populateBlogPosts($event);
         $this->populateDocumentation($event);
+        $this->populateGuides($event);
     }
 
     private function populateBlogPosts(SitemapPopulateEvent $event): void
@@ -136,6 +140,23 @@ final readonly class SitemapSubscriber implements EventSubscriberInterface
                     'examples',
                 );
             }
+        }
+    }
+
+    private function populateGuides(SitemapPopulateEvent $event): void
+    {
+        foreach ($this->guides->all() as $guide) {
+            $event->getUrlContainer()->addUrl(
+                new UrlConcrete(
+                    $event->getUrlGenerator()->generate(
+                        'guides_guide',
+                        ['slug' => $guide->path],
+                        UrlGeneratorInterface::ABSOLUTE_URL,
+                    ),
+                    changefreq: 'weekly',
+                ),
+                'guides',
+            );
         }
     }
 }

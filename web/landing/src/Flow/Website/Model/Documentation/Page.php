@@ -34,6 +34,11 @@ final readonly class Page
         return 'https://github.com/flow-php/flow/edit/1.x/documentation/' . ltrim($this->path, '/');
     }
 
+    public function group(): string
+    {
+        return type_string()->assert($this->frontMatter()['group'] ?? null);
+    }
+
     public function package(): ?string
     {
         $frontMatter = $this->frontMatter();
@@ -41,11 +46,21 @@ final readonly class Page
         return type_union(type_string(), type_null())->assert($frontMatter['package'] ?? null);
     }
 
+    public function published(): string
+    {
+        return type_string()->assert($this->frontMatter()['published'] ?? null);
+    }
+
     public function title(): ?string
     {
         $frontMatter = $this->frontMatter();
 
         return type_union(type_string(), type_null())->assert($frontMatter['seo_title'] ?? null) ?? 'Documentation';
+    }
+
+    public function updated(): string
+    {
+        return type_string()->assert($this->frontMatter()['updated'] ?? null);
     }
 
     /**

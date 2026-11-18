@@ -78,6 +78,11 @@ services:
         arguments:
             $basePath: '%documentation_base_path%'
 
+    guides.pages:
+        class: Flow\Website\Service\Documentation\Pages
+        arguments:
+            $basePath: '%kernel.project_dir%/content/guides'
+
     Flow\Website\Twig\:
         resource: '../src/Flow/Website/Twig/**/*Extension.php'
         tags: [twig.extension]
