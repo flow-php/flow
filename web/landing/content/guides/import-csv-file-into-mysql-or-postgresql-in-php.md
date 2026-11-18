@@ -274,7 +274,7 @@ PHP 8.3, a hundred thousand orders with five columns, the databases in Docker:
 | Code                                 | MySQL | PostgreSQL |
 |--------------------------------------|-------|------------|
 | One `INSERT` per row                 | 264s  | 120s       |
-| Flow with Doctrine                   | 2.4s  | 2.6s       |
-| Flow with Doctrine, the second night | 1.9s  | 2.9s       |
+| Flow with Doctrine                   | 2.3s  | 2.5s       |
+| Flow with Doctrine, the second night | 1.9s  | 2.7s       |
 | Flow PostgreSQL                      | -     | 2.3s       |
 | Flow PostgreSQL, the second night    | -     | 2.5s       |
