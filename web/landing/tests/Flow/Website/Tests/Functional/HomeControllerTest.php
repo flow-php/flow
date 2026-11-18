@@ -17,7 +17,7 @@ use function str_contains;
 
 final class HomeControllerTest extends WebTestCase
 {
-    public function test_homepage_analytics_markup(): void
+    public function test_homepage_analytics_and_search_markup(): void
     {
         $client = self::createClient();
         $crawler = $client->request('GET', '/');
@@ -26,6 +26,12 @@ final class HomeControllerTest extends WebTestCase
 
         foreach ([
             'head script[src="/posthog.js"]',
+            'head link[href="/pagefind/pagefind-component-ui.css"]',
+            '#site-search pagefind-config[bundle-path="/pagefind/"]',
+            '#site-search pagefind-input',
+            '#site-search pagefind-filter-pane',
+            '#site-search pagefind-summary',
+            '#site-search pagefind-results',
             'header[data-ph-capture-attribute-link-location="header"]',
             'nav#mobile-nav[data-ph-capture-attribute-link-location="header"]',
             'footer[data-ph-capture-attribute-link-location="footer"]',
@@ -39,6 +45,8 @@ final class HomeControllerTest extends WebTestCase
         ] as $element) {
             static::assertCount(1, $crawler->filter($element), $element);
         }
+
+        static::assertCount(0, $crawler->filter('link[href="/pagefind/pagefind-ui.css"]'));
     }
 
     public function test_homepage_examples_link_to_topics(): void
