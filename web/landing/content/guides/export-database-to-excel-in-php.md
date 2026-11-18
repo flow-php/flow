@@ -162,7 +162,7 @@ PHP 8.3, `memory_limit=128M`, orders with five columns:
 | 100,000   | PhpSpreadsheet | 367Mb, without the limit  | 8.7s |
 | 100,000   | Flow           | 28Mb                      | 3.8s |
 | 1,000,000 | PhpSpreadsheet | fatal error, needs 3663Mb | 98s  |
-| 1,000,000 | Flow           | 28Mb                      | 27s  |
+| 1,000,000 | Flow           | 28Mb                      | 29s  |
 
 Ten times more orders cost Flow nothing. They cost PhpSpreadsheet 3296Mb.
 

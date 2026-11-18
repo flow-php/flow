@@ -141,7 +141,7 @@ PHP 8.3, `memory_limit=128M`:
 | Orders    | File size | Code                               | Peak memory               | Time |
 |-----------|-----------|------------------------------------|---------------------------|------|
 | 1,000,000 | 110Mb     | `json_decode`                      | fatal error, needs 778Mb  | -    |
-| 1,000,000 | 110Mb     | Flow                               | 22Mb                      | 2.5s |
+| 1,000,000 | 110Mb     | Flow                               | 22Mb                      | 2.6s |
 | 1,000,000 | 110Mb     | Flow with the `flow_php` extension | 20Mb                      | 1.0s |
 | 3,000,000 | 335Mb     | `json_decode`                      | fatal error, needs 2353Mb | -    |
 | 3,000,000 | 335Mb     | Flow                               | 22Mb                      | 6.8s |
