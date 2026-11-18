@@ -103,7 +103,7 @@ export default class extends Controller {
             return
         }
 
-        this.treeTarget.innerHTML = this.#renderFileTree(tree)
+        this.treeTarget.replaceChildren(this.#renderFileTree(tree))
         this.#populateDropdown(tree)
         this.#treeRendered = true
 
@@ -145,7 +145,8 @@ export default class extends Controller {
     }
 
     #renderFileTree(tree, level = 0) {
-        let html = '<ul class="file-tree">'
+        const list = document.createElement('ul')
+        list.className = 'file-tree'
 
         const entries = Object.values(tree).sort((a, b) => {
             if (a.type === 'directory' && b.type !== 'directory') return -1
@@ -154,33 +155,36 @@ export default class extends Controller {
         })
 
         for (const entry of entries) {
-            const indent = level * 16
+            const isDirectory = entry.type === 'directory'
 
-            if (entry.type === 'directory') {
-                html += `
-                    <li class="file-tree-item directory" style="padding-left: ${indent}px">
-                        <img src="${this.folderIconValue}" class="icon" width="16" height="16" alt="">
-                        <span>${entry.name}</span>
-                    </li>
-                `
+            const item = document.createElement('li')
+            item.className = isDirectory ? 'file-tree-item directory' : 'file-tree-item file clickable'
+            item.style.paddingLeft = `${level * 16}px`
 
-                if (entry.children && Object.keys(entry.children).length > 0) {
-                    html += this.#renderFileTree(entry.children, level + 1)
-                }
-            } else {
-                html += `
-                    <li class="file-tree-item file clickable" style="padding-left: ${indent}px"
-                        data-action="click->playground-tabs#openFile"
-                        data-file-path="${entry.path}">
-                        <img src="${this.fileIconValue}" class="icon" width="16" height="16" alt="">
-                        <span>${entry.name}</span>
-                    </li>
-                `
+            if (!isDirectory) {
+                item.dataset.action = 'click->playground-tabs#openFile'
+                item.dataset.filePath = entry.path
+            }
+
+            const icon = document.createElement('img')
+            icon.src = isDirectory ? this.folderIconValue : this.fileIconValue
+            icon.className = 'icon'
+            icon.width = 16
+            icon.height = 16
+            icon.alt = ''
+
+            const name = document.createElement('span')
+            name.textContent = entry.name
+
+            item.append(icon, name)
+            list.append(item)
+
+            if (isDirectory && entry.children && Object.keys(entry.children).length > 0) {
+                list.append(this.#renderFileTree(entry.children, level + 1))
             }
         }
 
-        html += '</ul>'
-        return html
+        return list
     }
 
     #updateSelectedState() {
