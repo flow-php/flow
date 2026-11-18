@@ -891,6 +891,29 @@ code {
     }
 }
 
+.code-tabs-list {
+    @apply flex flex-wrap gap-1 mt-5 -mb-3;
+}
+
+.code-tab {
+    @apply rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600
+           transition-colors hover:text-slate-900
+           dark:border-white/10 dark:bg-white/[0.03] dark:text-white/70 dark:hover:text-white;
+}
+
+.code-tab[aria-selected="true"] {
+    @apply border-blue-300 text-slate-900 dark:border-blue-100 dark:text-white;
+}
+
+.code-tabs-label {
+    @apply mt-5 -mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-white/55;
+}
+
+.code-tabs:not(.code-tabs-ready) .code-tabs-list,
+.code-tabs-ready .code-tabs-label {
+    display: none;
+}
+
 #site-search {
     --pf-text: #0f172a;
     --pf-text-secondary: #475569;

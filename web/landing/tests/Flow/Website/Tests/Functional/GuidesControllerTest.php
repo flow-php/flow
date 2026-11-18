@@ -7,6 +7,7 @@ namespace Flow\Website\Tests\Functional;
 use Flow\Website\Kernel;
 use Override;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\DomCrawler\Crawler;
 
 use function Flow\Types\DSL\type_string;
 use function json_decode;
@@ -90,7 +91,9 @@ final class GuidesControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         static::assertSame('Guides | Flow PHP', $crawler->filter('title')->text());
         static::assertSame('Data processing in PHP', $crawler->filter('main h1')->text());
-        static::assertSame('Reading files', $crawler->filter('main h2')->text());
+        static::assertContains('Reading files', $crawler
+            ->filter('main h2')
+            ->each(static fn(Crawler $group): string => $group->text()));
         static::assertSame(
             'Read a large CSV file in PHP without running out of memory',
             $crawler->filter('main a[href="/guides/read-large-csv-file-in-php"]')->text(),

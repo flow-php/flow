@@ -87,7 +87,8 @@ final readonly class LeagueCommonMarkConverterFactory
             )
             ->addEventListener(DocumentParsedEvent::class, new FlowManifestRenderer($this->manifest))
             ->addEventListener(DocumentParsedEvent::class, new FlowPackageNavRenderer($this->manifest))
-            ->addEventListener(DocumentParsedEvent::class, new FlowDocLinkRenderer());
+            ->addEventListener(DocumentParsedEvent::class, new FlowDocLinkRenderer())
+            ->addEventListener(DocumentParsedEvent::class, new FlowCodeTabsRenderer());
 
         return $converter;
     }
