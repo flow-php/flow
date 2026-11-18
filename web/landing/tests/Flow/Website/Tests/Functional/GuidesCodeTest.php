@@ -14,6 +14,7 @@ use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
 use function glob;
 use function preg_match_all;
+use function str_contains;
 use function trim;
 
 final class GuidesCodeTest extends EndToEndTestCase
@@ -21,7 +22,9 @@ final class GuidesCodeTest extends EndToEndTestCase
     public static function guides(): Generator
     {
         foreach (type_list(type_string())->assert(glob(dirname(__DIR__, 5) . '/content/guides/*.md')) as $guide) {
-            yield basename($guide, '.md') => [$guide];
+            if (str_contains(type_string()->assert(file_get_contents($guide)), "```php\n")) {
+                yield basename($guide, '.md') => [$guide];
+            }
         }
     }
 
