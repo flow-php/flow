@@ -7,6 +7,9 @@ namespace Flow\Website\Tests\Functional;
 use Flow\Website\Kernel;
 use Override;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\DomCrawler\Crawler;
+
+use function str_contains;
 
 final class HomeControllerTest extends WebTestCase
 {
@@ -47,6 +50,24 @@ final class HomeControllerTest extends WebTestCase
         $client->click($link);
 
         self::assertResponseIsSuccessful();
+    }
+
+    public function test_not_found_page_links_to_docs_examples_and_search(): void
+    {
+        $client = self::createClient();
+        $crawler = $client->request('GET', '/404.html');
+
+        self::assertResponseIsSuccessful();
+        static::assertGreaterThan(0, $crawler->filter('main a[href="/documentation"]')->count());
+        static::assertGreaterThan(0, $crawler->filter('main a[href^="/reading/array/"]')->count());
+        static::assertGreaterThan(0, $crawler->filter('main button[popovertarget="search-modal"]')->count());
+        static::assertCount(1, $crawler
+            ->filter('script')
+            ->reduce(static fn(Crawler $script): bool => str_contains(
+                $script->text(),
+                "window.posthog.capture('site:not_found_view')",
+            )));
+        static::assertSame(1, $crawler->filter('meta[name="robots"][content="noindex"]')->count());
     }
 
     public function test_sponsor_page_sends_sponsors_to_the_work_shop(): void

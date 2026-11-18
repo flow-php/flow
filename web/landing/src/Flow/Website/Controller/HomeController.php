@@ -23,6 +23,12 @@ final class HomeController extends AbstractController
         ]);
     }
 
+    #[Route('/404.html', name: 'not_found', options: ['sitemap' => false])]
+    public function notFound(): Response
+    {
+        return $this->render('main/not_found.html.twig', []);
+    }
+
     #[Route('/sponsor', name: 'sponsor', options: ['sitemap' => false])]
     public function sponsor(): Response
     {
