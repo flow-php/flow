@@ -3,6 +3,13 @@ set -e
 
 CLI_DIR="src/cli"
 
+restore_cli_package() {
+    composer config repositories --unset --working-dir="$CLI_DIR"
+    rm -rf "$CLI_DIR/vendor"
+}
+
+trap restore_cli_package EXIT
+
 composer config repositories.local-etl '{"type": "path", "url": "../core/etl", "options": {"symlink": false}}' --working-dir="$CLI_DIR"
 composer config repositories.local-adapter-csv '{"type": "path", "url": "../adapter/etl-adapter-csv", "options": {"symlink": false}}' --working-dir="$CLI_DIR"
 composer config repositories.local-adapter-parquet '{"type": "path", "url": "../adapter/etl-adapter-parquet", "options": {"symlink": false}}' --working-dir="$CLI_DIR"
@@ -29,8 +36,5 @@ rm -rf "$CLI_DIR/vendor"
 
 composer update --no-dev --working-dir="$CLI_DIR"
 
-tools/box/vendor/bin/box compile --config "$CLI_DIR/box.json"
-
-composer config repositories --unset --working-dir="$CLI_DIR"
-
-rm -rf "$CLI_DIR/vendor"
+# Box runs composer in a temporary directory, where a composer wrapper that reads secrets finds no configuration
+COMPOSER_AUTH="${COMPOSER_AUTH:-"{}"}" tools/box/vendor/bin/box compile --config "$CLI_DIR/box.json"
