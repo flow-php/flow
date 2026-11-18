@@ -50,6 +50,5 @@
         </div>
     </section>
 
-    {# Inline until the site has a shared tracking module. #}
-    <script>if (window.posthog) { window.posthog.capture('site:not_found_view'); }</script>
+    <script>window.posthog?.capture('site:not_found_view');</script>
 {% endblock %}

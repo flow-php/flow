@@ -2,6 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
     static outlets = ["code-editor", "wasm", "playground-output"]
+    static values = { isExample: { type: Boolean, default: false } }
 
     async run() {
         this.dispatch('action-started', { bubbles: true })
@@ -37,8 +38,14 @@ export default class extends Controller {
                 }
             }
 
-            this.dispatch('executed', {
-                detail: { success: result.success, executionTime: result.executionTime },
+            this.dispatch('code-run', {
+                detail: {
+                    is_success: result.success,
+                    duration_ms: result.executionTime,
+                    failure_reason: result.failureReason,
+                    is_example: this.isExampleValue,
+                    is_code_modified: this.codeEditorOutlet.isCodeModified()
+                },
                 bubbles: true
             })
         } finally {

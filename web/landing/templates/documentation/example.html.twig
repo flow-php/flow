@@ -71,10 +71,10 @@
                     <button class="absolute top-3 right-3 inline-flex items-center justify-center h-9 w-9 rounded-md border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20 dark:border-white/10 dark:bg-black/60 dark:hover:bg-black/80 dark:text-white"
                             data-clipboard-target="#code-php"
                             aria-label="Copy code"
-                            {{ stimulus_controller('clipboard') }}>
+                            {{ stimulus_controller('clipboard', { kind: 'example' }) }}>
                         <img src="{{ asset('images/icons/copy.svg') }}" alt="" width="16" height="16" class="dark:invert-0 invert">
                     </button>
-                    <pre class="card !p-4 overflow-auto language-php" data-controller="syntax-highlight"><code id="code-php">{{- code | escape('html') -}}</code></pre>
+                    <pre id="code-php" class="card !p-4 overflow-auto language-php" data-controller="syntax-highlight"><code>{{- code | escape('html') -}}</code></pre>
                 </div>
                 {% endapply %}
             </div>

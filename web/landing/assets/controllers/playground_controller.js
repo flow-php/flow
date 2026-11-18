@@ -1,5 +1,13 @@
 import { Controller } from "@hotwired/stimulus"
 
+const POSTHOG_EVENTS = {
+    'wasm:runtime-load': 'playground:runtime_load',
+    'playground-run:code-run': 'playground:code_run',
+    'playground-share:snippet-share': 'playground:snippet_share',
+    'playground-share:snippet-open': 'playground:snippet_open',
+    'playground-upload:file-upload': 'playground:file_upload',
+}
+
 export default class extends Controller {
     static outlets = ["wasm", "code-editor", "turnstile", "playground-output", "playground-tabs"]
     static targets = ["loadingMessage", "loadingBar", "loadingPercent", "navigation", "editor", "outputContainer", "storageIndicator", "actionSpinner"]
@@ -11,6 +19,10 @@ export default class extends Controller {
 
     connect() {
         this.#log('Connecting playground controller')
+    }
+
+    capture({ type, detail }) {
+        window.posthog?.capture(POSTHOG_EVENTS[type], detail)
     }
 
     onNotification(event) {

@@ -78,7 +78,7 @@ final readonly class LeagueCommonMarkConverterFactory
             ->addExtension(new MentionExtension())
             ->addExtension(new TableExtension())
             ->addRenderer(FencedCode::class, new MermaidCodeRenderer($this->packages), 100)
-            ->addRenderer(FencedCode::class, new FlowCodeRenderer(), 0)
+            ->addRenderer(FencedCode::class, new FlowCodeRenderer($this->packages), 0)
             ->addRenderer(Link::class, new FlowLinkRenderer(), 0)
             ->addRenderer(TableOfContents::class, new TableOfContentsRenderer(), 10)
             ->addEventListener(

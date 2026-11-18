@@ -17,10 +17,17 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Zenstruck\Browser\PlaywrightBrowser;
 use Zenstruck\Browser\Test\BrowserExtension;
 
+use function array_key_exists;
+use function array_map;
 use function file_put_contents;
 use function Flow\Types\DSL\type_instance_of;
+use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_mixed;
+use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 use function is_string;
 use function json_encode;
 use function sprintf;
@@ -104,6 +111,37 @@ abstract class EndToEndTestCase extends KernelTestCase
         $page->events()->onDialog(static fn(DialogInterface $dialog): mixed => $dialog->accept());
     }
 
+    /**
+     * @return list<array{name: string, properties: null|array<string, mixed>}>
+     */
+    protected function capturedEvents(PlaywrightBrowser $browser): array
+    {
+        return type_list(type_structure([
+            'name' => type_string(),
+            'properties' => type_optional(type_map(type_string(), type_mixed())),
+        ]))
+            ->assert($this->pageOf($browser)->evaluate('() => window.__posthogCalls'));
+    }
+
+    /**
+     * @return list<array{name: string, properties: null|array<string, mixed>}>
+     */
+    protected function capturedEventsWithoutDurations(PlaywrightBrowser $browser, int $count): array
+    {
+        $this->pageOf($browser)->waitForFunction(sprintf('() => window.__posthogCalls.length >= %d', $count));
+
+        return array_map(static function (array $event): array {
+            if ($event['properties'] === null || !array_key_exists('duration_ms', $event['properties'])) {
+                return $event;
+            }
+
+            static::assertGreaterThanOrEqual(0, type_integer()->assert($event['properties']['duration_ms']));
+            unset($event['properties']['duration_ms']);
+
+            return $event;
+        }, $this->capturedEvents($browser));
+    }
+
     protected function clearLocalStorage(PageInterface $page): void
     {
         $page->evaluate(
@@ -155,6 +193,13 @@ abstract class EndToEndTestCase extends KernelTestCase
         self::assertNotNull($page, 'the browser has no open page');
 
         return $page;
+    }
+
+    protected function recordPostHog(PlaywrightBrowser $browser): void
+    {
+        $this->pageOf($browser)->addInitScript(
+            'window.__posthogCalls = []; window.posthog = { capture: (name, properties) => window.__posthogCalls.push({ name, properties: properties ?? null }) };',
+        );
     }
 
     protected function setPlaygroundCode(PageInterface $page, string $code): void

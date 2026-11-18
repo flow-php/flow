@@ -1,4 +1,4 @@
-<section class="relative overflow-hidden">
+<section data-ph-capture-attribute-link-location="hero" class="relative overflow-hidden">
     <div class="pointer-events-none absolute inset-x-0 -top-16 h-72 bg-gradient-to-b from-blue-300/10 via-transparent to-transparent dark:from-blue-100/15"></div>
 
     <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 pt-12 pb-10 lg:pt-20 lg:pb-14">
@@ -19,11 +19,11 @@
                 </p>
 
                 <div class="mt-8 flex flex-col sm:flex-row sm:items-center gap-3 max-lg:justify-center">
-                    <a href="{{ path('playground') }}" class="btn btn-primary px-5 py-3">
+                    <a href="{{ path('playground') }}" data-ph-capture-attribute-cta="hero_playground" class="btn btn-primary px-5 py-3">
                         <img src="{{ asset('images/icons/play.svg') }}" alt="" width="18" height="18">
                         Try Playground
                     </a>
-                    <a href="{{ path('documentation') }}" class="btn btn-secondary px-5 py-3 no-underline">
+                    <a href="{{ path('documentation') }}" data-ph-capture-attribute-cta="hero_docs" class="btn btn-secondary px-5 py-3 no-underline">
                         Read the docs
                         <span aria-hidden="true">→</span>
                     </a>
@@ -38,10 +38,12 @@
                                 title="copy command"
                                 aria-label="Copy install command"
                                 data-clipboard-target="#command"
-                                {{ stimulus_controller('clipboard') }}>
+                                {{ stimulus_controller('clipboard', { kind: 'install_command' }) }}>
                             <img src="{{ asset('images/icons/copy.svg') }}" alt="" width="16" height="16" class="inline dark:invert-0 invert">
                         </button>
                     </div>
+                    <a class="mt-2 inline-block text-sm text-slate-700 hover:text-slate-900 no-underline dark:text-white/80 dark:hover:text-white"
+                       href="https://packagist.org/packages/flow-php/etl" target="_blank" rel="noopener">View on Packagist</a>
                 </div>
 
                 <p class="mt-5 text-sm text-slate-500 max-lg:text-center dark:text-white/55">
