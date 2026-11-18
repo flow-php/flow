@@ -26,6 +26,9 @@ final class HomeControllerTest extends WebTestCase
 
         foreach ([
             'head script[src="/posthog.js"]',
+            'header nav[aria-label="Primary"] a[href="/guides"]',
+            'nav#mobile-nav a[href="/guides"]',
+            'footer a[href="/guides"]',
             'head link[href="/pagefind/pagefind-component-ui.css"]',
             '#site-search pagefind-config[bundle-path="/pagefind/"]',
             '#site-search pagefind-input',
