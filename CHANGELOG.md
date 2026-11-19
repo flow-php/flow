@@ -23,6 +23,7 @@
 - [bfd25e](https://github.com/flow-php/flow/commit/bfd25e3ee88004638529d03dfc30f86e931c76f2) - **docs(flow-php/web): blog posts for releases 0.47.0 and 0.48.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2751](https://github.com/flow-php/flow/pull/2751) - **flow-php/filesystem - local filesystem glob list() and status() keep the mount protocol** - [@norberttech](https://github.com/norberttech)
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - copy button on example pages** - [@norberttech](https://github.com/norberttech)
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - search modal error when the search bundle is missing** - [@norberttech](https://github.com/norberttech)
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/cli - phar build with a composer wrapper** - [@norberttech](https://github.com/norberttech)
