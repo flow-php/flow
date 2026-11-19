@@ -14,6 +14,7 @@ use Flow\PostgreSql\QueryBuilder\Clause\CTE;
 use Flow\PostgreSql\QueryBuilder\Clause\WithClause;
 use Flow\PostgreSql\QueryBuilder\Condition\Comparison;
 use Flow\PostgreSql\QueryBuilder\Condition\ComparisonOperator;
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidBuilderStateException;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 use Flow\PostgreSql\QueryBuilder\Expression\Column;
 use Flow\PostgreSql\QueryBuilder\Expression\Literal;
@@ -26,6 +27,7 @@ use Flow\PostgreSql\QueryBuilder\Merge\MergeWhenMatched;
 use Flow\PostgreSql\QueryBuilder\Merge\MergeWhenNotMatched;
 use Flow\PostgreSql\QueryBuilder\Select\SelectBuilder;
 use Flow\PostgreSql\QueryBuilder\Table\Table;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 use function assert;
@@ -36,6 +38,7 @@ use function Flow\PostgreSql\DSL\eq;
 use function Flow\PostgreSql\DSL\gt;
 use function Flow\PostgreSql\DSL\literal;
 use function Flow\PostgreSql\DSL\merge;
+use function Flow\PostgreSql\DSL\merge_action;
 use function Flow\PostgreSql\DSL\param;
 use function Flow\PostgreSql\DSL\select;
 use function Flow\PostgreSql\DSL\table;
@@ -824,6 +827,89 @@ final class MergeBuilderTest extends TestCase
             ->on(new Comparison(Column::name('id'), ComparisonOperator::EQ, Column::name('id')));
 
         $builder->toAst();
+    }
+
+    public function test_merge_returning_all_to_sql(): void
+    {
+        static::assertSame(
+            'MERGE INTO children c USING parents p ON c.parent_id = p.id WHEN MATCHED THEN DELETE RETURNING *',
+            merge('children', 'c')
+                ->using('parents', 'p')
+                ->on(eq(col('parent_id', 'c'), col('id', 'p')))
+                ->whenMatched()
+                ->thenDelete()
+                ->returningAll()
+                ->toSql(),
+        );
+    }
+
+    public function test_merge_returning_aliases_to_sql(): void
+    {
+        static::assertSame(
+            'MERGE INTO children c USING parents p ON c.parent_id = p.id WHEN MATCHED THEN UPDATE SET parent_id = 2 RETURNING WITH (OLD AS o, NEW AS n) o.parent_id, n.parent_id',
+            merge('children', 'c')
+                ->using('parents', 'p')
+                ->on(eq(col('parent_id', 'c'), col('id', 'p')))
+                ->whenMatched()
+                ->thenUpdate(['parent_id' => literal(2)])
+                ->returningAliases('o', 'n')
+                ->returning(col('parent_id', 'o'), col('parent_id', 'n'))
+                ->toSql(),
+        );
+    }
+
+    public function test_merge_returning_aliases_without_alias_throws(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('returningAliases() needs an old or a new alias');
+
+        merge('children', 'c')
+            ->using('parents', 'p')
+            ->on(eq(col('parent_id', 'c'), col('id', 'p')))
+            ->returningAliases();
+    }
+
+    public function test_merge_returning_aliases_without_returning_list_throws(): void
+    {
+        $this->expectException(InvalidBuilderStateException::class);
+        $this->expectExceptionMessage(
+            'RETURNING WITH (OLD AS o) needs a RETURNING list. Call returning() or returningAll() after returningAliases().',
+        );
+
+        merge('children', 'c')
+            ->using('parents', 'p')
+            ->on(eq(col('parent_id', 'c'), col('id', 'p')))
+            ->whenMatched()
+            ->thenDelete()
+            ->returningAliases(old: 'o')
+            ->toSql();
+    }
+
+    public function test_merge_returning_without_expressions_throws(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'returning() needs at least one expression. Call returningAll() for RETURNING *.',
+        );
+
+        merge('children', 'c')
+            ->using('parents', 'p')
+            ->on(eq(col('parent_id', 'c'), col('id', 'p')))
+            ->returning();
+    }
+
+    public function test_merge_returning_to_sql(): void
+    {
+        static::assertSame(
+            'MERGE INTO children c USING parents p ON c.parent_id = p.id WHEN MATCHED THEN DELETE RETURNING merge_action() , c.id',
+            merge('children', 'c')
+                ->using('parents', 'p')
+                ->on(eq(col('parent_id', 'c'), col('id', 'p')))
+                ->whenMatched()
+                ->thenDelete()
+                ->returning(merge_action(), col('id', 'c'))
+                ->toSql(),
+        );
     }
 
     private function deparse(MergeStmt $mergeStmt): string

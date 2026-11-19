@@ -19,6 +19,7 @@ use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Condition\ConditionBuilder;
 use Flow\PostgreSql\QueryBuilder\Condition\Exists;
 use Flow\PostgreSql\QueryBuilder\Condition\In;
+use Flow\PostgreSql\QueryBuilder\Condition\InSubquery;
 use Flow\PostgreSql\QueryBuilder\Condition\IsDistinctFrom;
 use Flow\PostgreSql\QueryBuilder\Condition\IsNull;
 use Flow\PostgreSql\QueryBuilder\Condition\Like;
@@ -142,11 +143,24 @@ function in_(string|Expression $expr, array $values): In
 
     if (count($values) === 1 && $values[0] instanceof Subquery) {
         throw new InvalidArgumentException(
-            'in_() does not support subqueries; use any_($expr, ComparisonOperator::EQ, $subquery) for "IN (subquery)" semantics.',
+            'in_() does not support subqueries; use in_subquery($expr, $subquery) for "IN (subquery)".',
         );
     }
 
     return new In($expr instanceof Expression ? $expr : col($expr), $values);
+}
+
+/**
+ * Create an IN (subquery) condition.
+ *
+ * Example: in_subquery(col('id'), select(col('user_id'))->from(table('orders')))
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function in_subquery(string|Expression $expr, SelectFinalStep $subquery): InSubquery
+{
+    return new InSubquery($expr instanceof Expression ? $expr : col($expr), new Node([
+        'select_stmt' => $subquery->toAst(),
+    ]));
 }
 
 /**

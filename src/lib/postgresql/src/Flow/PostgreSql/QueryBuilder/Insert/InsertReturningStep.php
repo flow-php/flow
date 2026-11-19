@@ -11,4 +11,6 @@ interface InsertReturningStep extends InsertFinalStep
     public function returning(Expression ...$expressions): InsertFinalStep;
 
     public function returningAll(): InsertFinalStep;
+
+    public function returningAliases(?string $old = null, ?string $new = null): InsertReturningStep;
 }

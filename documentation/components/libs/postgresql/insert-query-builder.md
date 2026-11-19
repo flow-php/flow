@@ -125,6 +125,25 @@ echo $query->toSql();
 // INSERT INTO users (name, email) SELECT name, email FROM archived_users
 ```
 
+## Insert with CTE
+
+```php
+<?php
+
+use function Flow\PostgreSql\DSL\{with, cte, delete, select, col, table, eq, literal};
+
+$query = with(
+    cte('removed', delete()->from('children')->where(eq(col('parent_id'), literal(1)))->returning(col('id')))
+)
+    ->insert()
+    ->into('audit')
+    ->columns('id')
+    ->select(select(col('id'))->from(table('removed')));
+
+echo $query->toSql();
+// WITH removed AS (DELETE FROM children WHERE parent_id = 1 RETURNING id) INSERT INTO audit (id) SELECT id FROM removed
+```
+
 ## Upsert (ON CONFLICT)
 
 ### ON CONFLICT DO NOTHING
@@ -270,6 +289,17 @@ $query = insert()
 
 echo $query->toSql();
 // INSERT INTO users (name) VALUES ('John') RETURNING *
+
+// Rename the NEW row alias
+$query = insert()
+    ->into('children')
+    ->columns('id', 'parent_id')
+    ->values(literal(12), literal(1))
+    ->returningAliases(new: 'n')
+    ->returning(col('id', 'n'));
+
+echo $query->toSql();
+// INSERT INTO children (id, parent_id) VALUES (12, 1) RETURNING WITH (NEW AS n) n.id
 ```
 
 ## Schema-Qualified Tables

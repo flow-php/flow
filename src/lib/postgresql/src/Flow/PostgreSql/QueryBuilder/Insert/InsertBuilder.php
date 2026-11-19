@@ -10,11 +10,11 @@ use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\PBList;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\Protobuf\AST\ResTarget;
-use Flow\PostgreSql\Protobuf\AST\ReturningClause;
 use Flow\PostgreSql\Protobuf\AST\SelectStmt;
 use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\Clause\ConflictTarget;
 use Flow\PostgreSql\QueryBuilder\Clause\OnConflictClause;
+use Flow\PostgreSql\QueryBuilder\Clause\ReturningClause;
 use Flow\PostgreSql\QueryBuilder\Clause\WithClause;
 use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
@@ -33,7 +33,6 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
     /**
      * @param list<string> $columns
      * @param list<list<Expression>> $valuesList
-     * @param list<Expression> $returning
      */
     private function __construct(
         private ?WithClause $with = null,
@@ -45,8 +44,7 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
         private ?SelectFinalStep $selectQuery = null,
         private bool $defaultValues = false,
         private ?OnConflictClause $onConflict = null,
-        private array $returning = [],
-        private bool $returningAll = false,
+        private ?ReturningClause $returning = null,
     ) {}
 
     public static function create(): InsertIntoStep
@@ -173,31 +171,7 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
             $onConflict = OnConflictClause::fromAst($conflictNode);
         }
 
-        $returning = [];
-        $returningAll = false;
-        $insertReturningClause = $insertStmt->getReturningClause();
-        $returningListNodes = $insertReturningClause !== null ? $insertReturningClause->getExprs() : [];
-
-        foreach ($returningListNodes as $retNode) {
-            $resTarget = $retNode->getResTarget();
-
-            if ($resTarget !== null) {
-                $valNode = $resTarget->getVal();
-
-                if ($valNode !== null) {
-                    $expr = ExpressionFactory::fromAst($valNode);
-
-                    if ($expr instanceof Star && !$expr->isQualified()) {
-                        $returningAll = true;
-                        $returning = [];
-
-                        break;
-                    }
-
-                    $returning[] = $expr;
-                }
-            }
-        }
+        $returningClause = $insertStmt->getReturningClause();
 
         $with = null;
         $withClauseNode = $insertStmt->getWithClause();
@@ -216,8 +190,9 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
             $selectQuery,
             $defaultValues,
             $onConflict,
-            $returning,
-            $returningAll,
+            $returningClause === null
+                ? null
+                : ReturningClause::fromAst((new Node())->setReturningClause($returningClause)),
         );
     }
 
@@ -239,7 +214,6 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
             $this->defaultValues,
             $this->onConflict,
             $this->returning,
-            $this->returningAll,
         );
     }
 
@@ -256,7 +230,6 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
             true,
             $this->onConflict,
             $this->returning,
-            $this->returningAll,
         );
     }
 
@@ -282,7 +255,6 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
             $this->defaultValues,
             $this->onConflict,
             $this->returning,
-            $this->returningAll,
         );
     }
 
@@ -299,7 +271,6 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
             $this->defaultValues,
             $clause,
             $this->returning,
-            $this->returningAll,
         );
     }
 
@@ -321,7 +292,6 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
             $this->defaultValues,
             OnConflictClause::doUpdate($target, $updates),
             $this->returning,
-            $this->returningAll,
         );
     }
 
@@ -337,12 +307,11 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
             $this->selectQuery,
             $this->defaultValues,
             $this->onConflict,
-            array_values([...$expressions]),
-            false,
+            ($this->returning ?? new ReturningClause())->returning(...$expressions),
         );
     }
 
-    public function returningAll(): InsertFinalStep
+    public function returningAliases(?string $old = null, ?string $new = null): InsertReturningStep
     {
         return new self(
             $this->with,
@@ -354,9 +323,13 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
             $this->selectQuery,
             $this->defaultValues,
             $this->onConflict,
-            [],
-            true,
+            ($this->returning ?? new ReturningClause())->aliases($old, $new),
         );
+    }
+
+    public function returningAll(): InsertFinalStep
+    {
+        return $this->returning(Star::all());
     }
 
     public function select(SelectFinalStep $select): InsertOnConflictStep
@@ -372,7 +345,6 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
             false,
             $this->onConflict,
             $this->returning,
-            $this->returningAll,
         );
     }
 
@@ -460,32 +432,8 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
             }
         }
 
-        if ($this->returningAll) {
-            $resTarget = new ResTarget();
-            $resTarget->setVal(Star::all()->toAst());
-
-            $retNode = new Node();
-            $retNode->setResTarget($resTarget);
-
-            $returningClause = new ReturningClause();
-            $returningClause->setExprs([$retNode]);
-            $insertStmt->setReturningClause($returningClause);
-        } elseif ($this->returning !== []) {
-            $returningNodes = [];
-
-            foreach ($this->returning as $expr) {
-                $resTarget = new ResTarget();
-                $resTarget->setVal($expr->toAst());
-
-                $retNode = new Node();
-                $retNode->setResTarget($resTarget);
-
-                $returningNodes[] = $retNode;
-            }
-
-            $returningClause = new ReturningClause();
-            $returningClause->setExprs($returningNodes);
-            $insertStmt->setReturningClause($returningClause);
+        if ($this->returning !== null) {
+            $insertStmt->setReturningClause($this->returning->toAst()->getReturningClause());
         }
 
         if ($this->with !== null) {
@@ -513,7 +461,6 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
             $this->defaultValues,
             $this->onConflict,
             $this->returning,
-            $this->returningAll,
         );
     }
 
@@ -534,7 +481,6 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
             $this->defaultValues,
             $this->onConflict->where($condition),
             $this->returning,
-            $this->returningAll,
         );
     }
 }

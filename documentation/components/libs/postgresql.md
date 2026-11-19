@@ -215,7 +215,7 @@ echo $query->toSQL();
 <?php
 
 use function Flow\PostgreSql\DSL\{
-    insert, col, param, conflict_columns, returning_all
+    insert, col, param, conflict_columns
 };
 
 // Build an upsert query

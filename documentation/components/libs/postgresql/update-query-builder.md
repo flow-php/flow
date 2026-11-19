@@ -11,7 +11,7 @@ The Update Query Builder provides a fluent, type-safe interface for constructing
 ```php
 <?php
 
-use function Flow\PostgreSql\DSL\{update, literal, col, eq, literal};
+use function Flow\PostgreSql\DSL\{update, literal, col, eq};
 
 $query = update()
     ->update('users')
@@ -45,7 +45,7 @@ echo $query->toSql();
 ```php
 <?php
 
-use function Flow\PostgreSql\DSL\{update, literal, col, eq, literal};
+use function Flow\PostgreSql\DSL\{update, literal, col, eq};
 
 // Chained set() calls
 $query = update()
@@ -75,7 +75,7 @@ echo $query->toSql();
 ```php
 <?php
 
-use function Flow\PostgreSql\DSL\{update, literal, col, eq, literal};
+use function Flow\PostgreSql\DSL\{update, literal, col, eq};
 
 $query = update()
     ->update('users', 'u')
@@ -144,12 +144,31 @@ echo $query->toSql();
 // UPDATE products SET price = original_price WHERE id = 1
 ```
 
+## Update with CTE
+
+```php
+<?php
+
+use function Flow\PostgreSql\DSL\{with, cte, delete, select, col, table, eq, literal, in_subquery};
+
+$query = with(
+    cte('moved', delete()->from('children')->where(eq(col('parent_id'), literal(1)))->returning(col('id')))
+)
+    ->update()
+    ->update('audit')
+    ->set('note', literal('moved'))
+    ->where(in_subquery(col('id'), select(col('id'))->from(table('moved'))));
+
+echo $query->toSql();
+// WITH moved AS (DELETE FROM children WHERE parent_id = 1 RETURNING id) UPDATE audit SET note = 'moved' WHERE id IN (SELECT id FROM moved)
+```
+
 ## RETURNING Clause
 
 ```php
 <?php
 
-use function Flow\PostgreSql\DSL\{update, literal, col, eq, literal};
+use function Flow\PostgreSql\DSL\{update, literal, col, eq};
 
 // Return specific columns
 $query = update()
@@ -170,6 +189,17 @@ $query = update()
 
 echo $query->toSql();
 // UPDATE users SET name = 'John' WHERE id = 1 RETURNING *
+
+// Old and new values through renamed aliases
+$query = update()
+    ->update('children')
+    ->set('parent_id', literal(2))
+    ->where(eq(col('id'), literal(10)))
+    ->returningAliases(old: 'o', new: 'n')
+    ->returning(col('parent_id', 'o'), col('parent_id', 'n'));
+
+echo $query->toSql();
+// UPDATE children SET parent_id = 2 WHERE id = 10 RETURNING WITH (OLD AS o, NEW AS n) o.parent_id, n.parent_id
 ```
 
 ## Complex WHERE Conditions

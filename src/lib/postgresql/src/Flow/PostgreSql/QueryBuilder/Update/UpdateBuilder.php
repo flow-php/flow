@@ -8,9 +8,9 @@ use Flow\PostgreSql\Protobuf\AST\Alias;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\Protobuf\AST\ResTarget;
-use Flow\PostgreSql\Protobuf\AST\ReturningClause;
 use Flow\PostgreSql\Protobuf\AST\UpdateStmt;
 use Flow\PostgreSql\QueryBuilder\AstDeparser;
+use Flow\PostgreSql\QueryBuilder\Clause\ReturningClause;
 use Flow\PostgreSql\QueryBuilder\Clause\WithClause;
 use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Condition\ConditionFactory;
@@ -38,7 +38,6 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
     /**
      * @param array<string, Expression> $assignments
      * @param array<TableReference> $from
-     * @param array<Expression> $returning
      */
     private function __construct(
         private ?WithClause $with = null,
@@ -48,7 +47,7 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
         private array $assignments = [],
         private array $from = [],
         private ?Condition $where = null,
-        private array $returning = [],
+        private ?ReturningClause $returning = null,
     ) {}
 
     public static function create(): UpdateTableStep
@@ -140,17 +139,20 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
             $where = ConditionFactory::fromAst($whereNode);
         }
 
-        $returning = [];
         $returningClause = $updateStmt->getReturningClause();
-        $returningList = $returningClause !== null ? $returningClause->getExprs() : [];
 
-        if (count($returningList) > 0) {
-            foreach ($returningList as $returningNode) {
-                $returning[] = ExpressionFactory::fromAst($returningNode);
-            }
-        }
-
-        return new self($with, $table, $schema, $alias, $assignments, $from, $where, $returning);
+        return new self(
+            $with,
+            $table,
+            $schema,
+            $alias,
+            $assignments,
+            $from,
+            $where,
+            $returningClause === null
+                ? null
+                : ReturningClause::fromAst((new Node())->setReturningClause($returningClause)),
+        );
     }
 
     public static function with(WithClause $with): UpdateTableStep
@@ -191,7 +193,21 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
             assignments: $this->assignments,
             from: $this->from,
             where: $this->where,
-            returning: $expressions,
+            returning: ($this->returning ?? new ReturningClause())->returning(...$expressions),
+        );
+    }
+
+    public function returningAliases(?string $old = null, ?string $new = null): UpdateReturningStep
+    {
+        return new self(
+            with: $this->with,
+            table: $this->table,
+            schema: $this->schema,
+            alias: $this->alias,
+            assignments: $this->assignments,
+            from: $this->from,
+            where: $this->where,
+            returning: ($this->returning ?? new ReturningClause())->aliases($old, $new),
         );
     }
 
@@ -288,22 +304,8 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
             $updateStmt->setWhereClause($this->where->toAst());
         }
 
-        if ($this->returning !== []) {
-            $returningList = [];
-
-            foreach ($this->returning as $expression) {
-                $resTarget = new ResTarget();
-                $resTarget->setVal($expression->toAst());
-
-                $node = new Node();
-                $node->setResTarget($resTarget);
-
-                $returningList[] = $node;
-            }
-
-            $returningClause = new ReturningClause();
-            $returningClause->setExprs($returningList);
-            $updateStmt->setReturningClause($returningClause);
+        if ($this->returning !== null) {
+            $updateStmt->setReturningClause($this->returning->toAst()->getReturningClause());
         }
 
         if ($this->with !== null) {

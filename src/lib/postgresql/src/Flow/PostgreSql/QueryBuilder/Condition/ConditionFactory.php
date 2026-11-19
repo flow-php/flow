@@ -71,7 +71,9 @@ final class ConditionFactory
 
             return match ($subLinkType) {
                 SubLinkType::EXISTS_SUBLINK => Exists::fromAst($node),
-                SubLinkType::ANY_SUBLINK => Any::fromAst($node),
+                SubLinkType::ANY_SUBLINK => $subLink->getOperName()->count() === 0
+                    ? InSubquery::fromAst($node)
+                    : Any::fromAst($node),
                 SubLinkType::ALL_SUBLINK => All::fromAst($node),
                 SubLinkType::EXPR_SUBLINK => BooleanCondition::fromAst($node),
                 default => throw UnsupportedNodeException::forNodeType('SubLink type: '

@@ -8,6 +8,8 @@ use Flow\PostgreSql\Protobuf\AST\A_Expr_Kind;
 use Flow\PostgreSql\Protobuf\AST\FuncCall;
 use Flow\PostgreSql\Protobuf\AST\MinMaxOp;
 use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\SubLinkType;
+use Flow\PostgreSql\QueryBuilder\Condition\ConditionFactory;
 use Flow\PostgreSql\QueryBuilder\Exception\UnsupportedNodeException;
 
 use function count;
@@ -99,8 +101,12 @@ final class ExpressionFactory
             return CaseExpression::fromAst($node);
         }
 
-        if ($node->getSubLink() !== null) {
-            return Subquery::fromAst($node);
+        $subLink = $node->getSubLink();
+
+        if ($subLink !== null) {
+            return $subLink->getSubLinkType() === SubLinkType::EXPR_SUBLINK
+                ? Subquery::fromAst($node)
+                : ConditionFactory::fromAst($node);
         }
 
         $minMaxExpr = $node->getMinMaxExpr();
@@ -123,6 +129,10 @@ final class ExpressionFactory
 
         if ($node->getSqlValueFunction() !== null) {
             return SQLValueFunctionExpression::fromAst($node);
+        }
+
+        if ($node->getMergeSupportFunc() !== null) {
+            return MergeActionFunction::fromAst($node);
         }
 
         if ($node->getCollateClause() !== null) {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Select;
 
+use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\SelectStmt;
 use Flow\PostgreSql\QueryBuilder\Clause\CTEMaterialization;
 use Flow\PostgreSql\QueryBuilder\Clause\NullsPosition;
@@ -13,10 +14,13 @@ use Flow\PostgreSql\QueryBuilder\Condition\Comparison;
 use Flow\PostgreSql\QueryBuilder\Condition\ComparisonOperator;
 use Flow\PostgreSql\QueryBuilder\Expression\AggregateCall;
 use Flow\PostgreSql\QueryBuilder\Expression\Column;
+use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
 use Flow\PostgreSql\QueryBuilder\Expression\Literal;
+use Flow\PostgreSql\QueryBuilder\Expression\MergeActionFunction;
 use Flow\PostgreSql\QueryBuilder\Expression\Star;
 use Flow\PostgreSql\QueryBuilder\Select\SelectBuilder;
 use Flow\PostgreSql\QueryBuilder\Table\Table;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\PostgreSql\DSL\agg_avg;
@@ -1497,6 +1501,130 @@ final class SelectBuilderTest extends TestCase
                     sql_parse($sql)->raw()->getStmts()[0]->getStmt()?->getSelectStmt(),
                 ),
             )->toSql(),
+        );
+    }
+
+    #[TestWith([
+        'WITH RECURSIVE t(n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM t WHERE n < 3) SEARCH BREADTH FIRST BY n SET ord SELECT * FROM t',
+    ])]
+    #[TestWith([
+        "WITH RECURSIVE t(id, link) AS (SELECT id, link FROM edges WHERE id = 1 UNION ALL SELECT e.id, e.link FROM edges e JOIN t ON e.id = t.link) CYCLE id SET is_cycle TO 'Y' DEFAULT 'N' USING path SELECT * FROM t",
+    ])]
+    #[TestWith([
+        'WITH RECURSIVE t(id, link) AS (SELECT id, link FROM edges WHERE id = 1 UNION ALL SELECT e.id, e.link FROM edges e JOIN t ON e.id = t.link) SEARCH DEPTH FIRST BY id SET ord CYCLE id SET is_cycle TO true DEFAULT false USING path SELECT * FROM t',
+    ])]
+    public function test_from_ast_round_trips_cte_search_and_cycle(string $sql): void
+    {
+        static::assertSame(
+            $sql,
+            SelectBuilder::fromAst(
+                type_instance_of(SelectStmt::class)->assert(
+                    sql_parse($sql)->raw()->getStmts()[0]->getStmt()?->getSelectStmt(),
+                ),
+            )->toSql(),
+        );
+    }
+
+    public function test_from_ast_fills_cycle_mark_defaults(): void
+    {
+        static::assertSame(
+            'WITH RECURSIVE t(id, link) AS (SELECT id, link FROM edges WHERE id = 1 UNION ALL SELECT e.id, e.link FROM edges e JOIN t ON e.id = t.link) CYCLE id SET is_cycle TO true DEFAULT false USING path SELECT * FROM t',
+            SelectBuilder::fromAst(
+                type_instance_of(SelectStmt::class)->assert(
+                    sql_parse(
+                        'WITH RECURSIVE t(id, link) AS (SELECT id, link FROM edges WHERE id = 1 UNION ALL SELECT e.id, e.link FROM edges e JOIN t ON e.id = t.link) CYCLE id SET is_cycle USING path SELECT * FROM t',
+                    )->raw()->getStmts()[0]
+                        ->getStmt()
+                        ?->getSelectStmt(),
+                ),
+            )->toSql(),
+        );
+    }
+
+    #[TestWith(['WITH d AS (DELETE FROM children WHERE parent_id = 1 RETURNING id) SELECT id FROM d'])]
+    #[TestWith([
+        'WITH u AS (UPDATE children SET parent_id = 2 WHERE id = 10 RETURNING id, parent_id) SELECT id, parent_id FROM u',
+    ])]
+    #[TestWith(["WITH i AS (INSERT INTO audit (id, note) VALUES (1, 'x') RETURNING id) SELECT id FROM i"])]
+    #[TestWith([
+        'WITH m AS (MERGE INTO children c USING parents p ON c.parent_id = p.id WHEN MATCHED THEN DELETE RETURNING c.id) SELECT id FROM m',
+    ])]
+    public function test_from_ast_round_trips_data_modifying_cte(string $sql): void
+    {
+        static::assertSame(
+            $sql,
+            SelectBuilder::fromAst(
+                type_instance_of(SelectStmt::class)->assert(
+                    sql_parse($sql)->raw()->getStmts()[0]->getStmt()?->getSelectStmt(),
+                ),
+            )->toSql(),
+        );
+    }
+
+    #[TestWith(['SELECT id IN (SELECT id FROM children) AS f FROM parents'])]
+    #[TestWith(['SELECT CASE WHEN id IN (SELECT parent_id FROM children) THEN 1 ELSE 0 END AS f FROM parents'])]
+    #[TestWith(['SELECT id = ANY (SELECT id FROM children) AS f FROM parents'])]
+    #[TestWith(['SELECT EXISTS (SELECT 1 FROM children) AS f FROM parents'])]
+    public function test_from_ast_round_trips_sublink_in_expression_position(string $sql): void
+    {
+        static::assertSame(
+            $sql,
+            SelectBuilder::fromAst(
+                type_instance_of(SelectStmt::class)->assert(
+                    sql_parse($sql)->raw()->getStmts()[0]->getStmt()?->getSelectStmt(),
+                ),
+            )->toSql(),
+        );
+    }
+
+    #[TestWith([
+        'SELECT id FROM parents WHERE id IN (SELECT id FROM d)',
+        'SELECT id FROM parents WHERE id IN (SELECT id FROM d)',
+    ])]
+    #[TestWith([
+        'SELECT id FROM parents WHERE id NOT IN (SELECT id FROM d)',
+        'SELECT id FROM parents WHERE NOT id IN (SELECT id FROM d)',
+    ])]
+    public function test_from_ast_round_trips_in_subquery(string $sql, string $deparsed): void
+    {
+        static::assertSame(
+            $deparsed,
+            SelectBuilder::fromAst(
+                type_instance_of(SelectStmt::class)->assert(
+                    sql_parse($sql)->raw()->getStmts()[0]->getStmt()?->getSelectStmt(),
+                ),
+            )->toSql(),
+        );
+    }
+
+    public function test_from_ast_round_trips_merge_cte_with_merge_action(): void
+    {
+        $selectStmt = type_instance_of(SelectStmt::class)->assert(
+            sql_parse(
+                'WITH m AS (MERGE INTO children c USING parents p ON c.parent_id = p.id WHEN MATCHED THEN DELETE RETURNING merge_action(), c.id) SELECT * FROM m',
+            )->raw()->getStmts()[0]
+                ->getStmt()
+                ?->getSelectStmt(),
+        );
+
+        static::assertSame(
+            'WITH m AS (MERGE INTO children c USING parents p ON c.parent_id = p.id WHEN MATCHED THEN DELETE RETURNING merge_action() , c.id) SELECT * FROM m',
+            SelectBuilder::fromAst($selectStmt)->toSql(),
+        );
+        static::assertInstanceOf(
+            MergeActionFunction::class,
+            ExpressionFactory::fromAst(
+                type_instance_of(Node::class)->assert(
+                    $selectStmt->getWithClause()?->getCtes()[0]
+                        ?->getCommonTableExpr()
+                        ?->getCtequery()
+                        ?->getMergeStmt()
+                        ?->getReturningClause()
+                        ?->getExprs()[0]
+                        ?->getResTarget()
+                        ?->getVal(),
+                ),
+            ),
         );
     }
 }

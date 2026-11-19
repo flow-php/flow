@@ -6,78 +6,74 @@ namespace Flow\PostgreSql\QueryBuilder\Clause;
 
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ResTarget;
+use Flow\PostgreSql\Protobuf\AST\ReturningClause as ReturningClauseNode;
+use Flow\PostgreSql\Protobuf\AST\ReturningOption;
+use Flow\PostgreSql\Protobuf\AST\ReturningOptionKind;
 use Flow\PostgreSql\QueryBuilder\Bridge\AstConvertible;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
-use Flow\PostgreSql\QueryBuilder\Expression\Column;
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidBuilderStateException;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
-use Flow\PostgreSql\QueryBuilder\Expression\Star;
+use InvalidArgumentException;
 
-/**
- * Represents a RETURNING clause for INSERT/UPDATE/DELETE statements.
- */
+use function array_values;
+
 final readonly class ReturningClause implements AstConvertible
 {
     /**
      * @param list<Expression> $expressions
      */
     public function __construct(
-        private array $expressions,
+        private array $expressions = [],
+        private ?string $oldAlias = null,
+        private ?string $newAlias = null,
     ) {}
-
-    public static function all(): self
-    {
-        return new self([Star::all()]);
-    }
-
-    public static function columns(string ...$columns): self
-    {
-        $expressions = [];
-
-        foreach ($columns as $column) {
-            $expressions[] = Column::name($column);
-        }
-
-        return new self($expressions);
-    }
 
     public static function fromAst(Node $node): static
     {
-        $resTarget = $node->getResTarget();
+        $returningClause = $node->getReturningClause();
 
-        if ($resTarget === null) {
-            throw InvalidAstException::unexpectedNodeType('ResTarget', 'unknown');
+        if ($returningClause === null) {
+            throw InvalidAstException::unexpectedNodeType('ReturningClause', 'unknown');
         }
 
-        $valNode = $resTarget->getVal();
+        $expressions = [];
 
-        if ($valNode === null) {
-            throw InvalidAstException::missingRequiredField('val', 'ResTarget');
+        foreach ($returningClause->getExprs() as $expressionNode) {
+            $expressions[] = ExpressionFactory::fromAst($expressionNode);
         }
 
-        $expression = ExpressionFactory::fromAst($valNode);
+        $oldAlias = null;
+        $newAlias = null;
 
-        return new self([$expression]);
+        foreach ($returningClause->getOptions() as $optionNode) {
+            $option = $optionNode->getReturningOption();
+
+            if ($option === null) {
+                throw InvalidAstException::invalidFieldValue(
+                    'options',
+                    'ReturningClause',
+                    'Expected ReturningOption node',
+                );
+            }
+
+            if ($option->getOption() === ReturningOptionKind::RETURNING_OPTION_OLD) {
+                $oldAlias = $option->getValue();
+            } elseif ($option->getOption() === ReturningOptionKind::RETURNING_OPTION_NEW) {
+                $newAlias = $option->getValue();
+            }
+        }
+
+        return new self($expressions, $oldAlias, $newAlias);
     }
 
-    /**
-     * @return list<Node>
-     */
-    public static function toAstNodes(self $clause): array
+    public function aliases(?string $old, ?string $new): self
     {
-        $nodes = [];
-
-        foreach ($clause->expressions as $expr) {
-            $resTarget = new ResTarget();
-            $resTarget->setVal($expr->toAst());
-
-            $node = new Node();
-            $node->setResTarget($resTarget);
-
-            $nodes[] = $node;
+        if ($old === null && $new === null) {
+            throw new InvalidArgumentException('returningAliases() needs an old or a new alias');
         }
 
-        return $nodes;
+        return new self($this->expressions, $old, $new);
     }
 
     /**
@@ -88,18 +84,58 @@ final readonly class ReturningClause implements AstConvertible
         return $this->expressions;
     }
 
-    public function toAst(): Node
+    public function returning(Expression ...$expressions): self
     {
-        if ($this->expressions === []) {
-            throw InvalidAstException::missingRequiredField('expressions', 'ReturningClause');
+        if ($expressions === []) {
+            throw new InvalidArgumentException(
+                'returning() needs at least one expression. Call returningAll() for RETURNING *.',
+            );
         }
 
-        $resTarget = new ResTarget();
-        $resTarget->setVal($this->expressions[0]->toAst());
+        return new self(array_values($expressions), $this->oldAlias, $this->newAlias);
+    }
 
-        $node = new Node();
-        $node->setResTarget($resTarget);
+    public function toAst(): Node
+    {
+        $options = [];
 
-        return $node;
+        if ($this->oldAlias !== null) {
+            $options[] = self::optionNode(ReturningOptionKind::RETURNING_OPTION_OLD, $this->oldAlias);
+        }
+
+        if ($this->newAlias !== null) {
+            $options[] = self::optionNode(ReturningOptionKind::RETURNING_OPTION_NEW, $this->newAlias);
+        }
+
+        if ($this->expressions === [] && $options !== []) {
+            throw InvalidBuilderStateException::returningAliasesWithoutList($this->oldAlias, $this->newAlias);
+        }
+
+        $expressionNodes = [];
+
+        foreach ($this->expressions as $expression) {
+            $expressionNode = $expression->toAst();
+
+            if ($expressionNode->getResTarget() === null) {
+                $expressionNode = (new Node())->setResTarget((new ResTarget())->setVal($expressionNode));
+            }
+
+            $expressionNodes[] = $expressionNode;
+        }
+
+        $returningClause = new ReturningClauseNode();
+        $returningClause->setExprs($expressionNodes);
+        $returningClause->setOptions($options);
+
+        return (new Node())->setReturningClause($returningClause);
+    }
+
+    private static function optionNode(int $kind, string $alias): Node
+    {
+        return (new Node())->setReturningOption(
+            (new ReturningOption())
+                ->setOption($kind)
+                ->setValue($alias),
+        );
     }
 }

@@ -21,7 +21,6 @@ use Flow\PostgreSql\QueryBuilder\Clause\LockWaitPolicy;
 use Flow\PostgreSql\QueryBuilder\Clause\NullsPosition;
 use Flow\PostgreSql\QueryBuilder\Clause\OnConflictClause;
 use Flow\PostgreSql\QueryBuilder\Clause\OrderBy;
-use Flow\PostgreSql\QueryBuilder\Clause\ReturningClause;
 use Flow\PostgreSql\QueryBuilder\Clause\SortDirection;
 use Flow\PostgreSql\QueryBuilder\Clause\WindowDefinition;
 use Flow\PostgreSql\QueryBuilder\Clause\WindowFrame;
@@ -32,6 +31,7 @@ use Flow\PostgreSql\QueryBuilder\Cursor\DeclareCursorBuilder;
 use Flow\PostgreSql\QueryBuilder\Cursor\DeclareCursorOptionsStep;
 use Flow\PostgreSql\QueryBuilder\Cursor\FetchCursorBuilder;
 use Flow\PostgreSql\QueryBuilder\Delete\DeleteBuilder;
+use Flow\PostgreSql\QueryBuilder\Delete\DeleteFinalStep;
 use Flow\PostgreSql\QueryBuilder\Delete\DeleteFromStep;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 use Flow\PostgreSql\QueryBuilder\Expression\AggregateCall;
@@ -46,6 +46,7 @@ use Flow\PostgreSql\QueryBuilder\Expression\FunctionCall;
 use Flow\PostgreSql\QueryBuilder\Expression\Greatest;
 use Flow\PostgreSql\QueryBuilder\Expression\Least;
 use Flow\PostgreSql\QueryBuilder\Expression\Literal;
+use Flow\PostgreSql\QueryBuilder\Expression\MergeActionFunction;
 use Flow\PostgreSql\QueryBuilder\Expression\NullIf;
 use Flow\PostgreSql\QueryBuilder\Expression\Parameter;
 use Flow\PostgreSql\QueryBuilder\Expression\RowExpression;
@@ -58,10 +59,12 @@ use Flow\PostgreSql\QueryBuilder\Expression\WindowFunction;
 use Flow\PostgreSql\QueryBuilder\Factory\CopyFactory;
 use Flow\PostgreSql\QueryBuilder\Insert\BulkInsert;
 use Flow\PostgreSql\QueryBuilder\Insert\InsertBuilder;
+use Flow\PostgreSql\QueryBuilder\Insert\InsertFinalStep;
 use Flow\PostgreSql\QueryBuilder\Insert\InsertIntoStep;
 use Flow\PostgreSql\QueryBuilder\Listen\ListenBuilder;
 use Flow\PostgreSql\QueryBuilder\Listen\ListenFinalStep;
 use Flow\PostgreSql\QueryBuilder\Merge\MergeBuilder;
+use Flow\PostgreSql\QueryBuilder\Merge\MergeFinalStep;
 use Flow\PostgreSql\QueryBuilder\Merge\MergeUsingStep;
 use Flow\PostgreSql\QueryBuilder\Notify\NotifyBuilder;
 use Flow\PostgreSql\QueryBuilder\Notify\NotifyFinalStep;
@@ -94,6 +97,7 @@ use Flow\PostgreSql\QueryBuilder\Transaction\SetTransactionOptionsStep;
 use Flow\PostgreSql\QueryBuilder\Unlisten\UnlistenBuilder;
 use Flow\PostgreSql\QueryBuilder\Unlisten\UnlistenFinalStep;
 use Flow\PostgreSql\QueryBuilder\Update\UpdateBuilder;
+use Flow\PostgreSql\QueryBuilder\Update\UpdateFinalStep;
 use Flow\PostgreSql\QueryBuilder\Update\UpdateTableStep;
 use Flow\PostgreSql\QueryBuilder\With\WithBuilder;
 use InvalidArgumentException;
@@ -575,6 +579,17 @@ function current_date(): SQLValueFunctionExpression
 }
 
 /**
+ * MERGE merge_action() function: 'INSERT', 'UPDATE' or 'DELETE' for each row in MERGE ... RETURNING.
+ *
+ * Example: merge('t')->using('s', 's')->on(...)->whenMatched()->thenDelete()->returning(merge_action())
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function merge_action(): MergeActionFunction
+{
+    return new MergeActionFunction();
+}
+
+/**
  * SQL standard CURRENT_TIME function.
  *
  * Returns the current time (at the start of the transaction).
@@ -831,22 +846,18 @@ function desc(string|Expression $expr, NullsPosition $nulls = NullsPosition::DEF
  * Create a CTE (Common Table Expression).
  *
  * @param string $name CTE name
- * @param SelectFinalStep $query CTE query
+ * @param DeleteFinalStep|InsertFinalStep|MergeFinalStep|SelectFinalStep|UpdateFinalStep $query CTE query
  * @param array<string> $columnNames Column aliases (optional)
  * @param CTEMaterialization $materialization Materialization hint
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function cte(
     string $name,
-    SelectFinalStep $query,
+    SelectFinalStep|InsertFinalStep|UpdateFinalStep|DeleteFinalStep|MergeFinalStep $query,
     array $columnNames = [],
     CTEMaterialization $materialization = CTEMaterialization::DEFAULT,
-    bool $recursive = false,
 ): CTE {
-    $node = new Node();
-    $node->setSelectStmt($query->toAst());
-
-    return new CTE($name, $node, $columnNames, $materialization, $recursive);
+    return new CTE($name, $query, $columnNames, $materialization);
 }
 
 /**
@@ -1012,28 +1023,6 @@ function conflict_columns(array $columns): ConflictTarget
 function conflict_constraint(string $name): ConflictTarget
 {
     return ConflictTarget::constraint($name);
-}
-
-/**
- * Create a RETURNING clause.
- *
- * @param Expression|string ...$expressions Expressions to return
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function returning(string|Expression ...$expressions): ReturningClause
-{
-    return new ReturningClause(array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
-        ? $e
-        : col($e), array_values($expressions)));
-}
-
-/**
- * Create a RETURNING * clause.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function returning_all(): ReturningClause
-{
-    return ReturningClause::all();
 }
 
 /**

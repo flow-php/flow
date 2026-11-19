@@ -18,11 +18,14 @@ use Flow\PostgreSql\QueryBuilder\Condition\ComparisonOperator;
 use Flow\PostgreSql\QueryBuilder\Delete\DeleteBuilder;
 use Flow\PostgreSql\QueryBuilder\Delete\DeleteFinalStep;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidBuilderStateException;
 use Flow\PostgreSql\QueryBuilder\Expression\Column;
 use Flow\PostgreSql\QueryBuilder\Expression\FunctionCall;
 use Flow\PostgreSql\QueryBuilder\Expression\Literal;
 use Flow\PostgreSql\QueryBuilder\Table\Table;
+use InvalidArgumentException;
 use LogicException;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
 use function assert;
@@ -34,7 +37,9 @@ use function Flow\PostgreSql\DSL\eq;
 use function Flow\PostgreSql\DSL\literal;
 use function Flow\PostgreSql\DSL\param;
 use function Flow\PostgreSql\DSL\select;
+use function Flow\PostgreSql\DSL\sql_parse;
 use function Flow\PostgreSql\DSL\table;
+use function Flow\Types\DSL\type_instance_of;
 use function function_exists;
 
 final class DeleteBuilderTest extends TestCase
@@ -812,6 +817,85 @@ final class DeleteBuilderTest extends TestCase
         $builder = DeleteBuilder::create();
         assert($builder instanceof DeleteFinalStep);
         $builder->toAst();
+    }
+
+    #[TestWith([
+        'DELETE FROM parents WHERE id IN (SELECT id FROM d)',
+        'DELETE FROM parents WHERE id IN (SELECT id FROM d)',
+    ])]
+    #[TestWith([
+        'WITH d AS (SELECT id FROM parents) DELETE FROM parents WHERE id IN (SELECT id FROM d)',
+        'WITH d AS (SELECT id FROM parents) DELETE FROM parents WHERE id IN (SELECT id FROM d)',
+    ])]
+    #[TestWith([
+        'DELETE FROM parents WHERE id NOT IN (SELECT id FROM d)',
+        'DELETE FROM parents WHERE NOT id IN (SELECT id FROM d)',
+    ])]
+    public function test_from_ast_round_trips_in_subquery(string $sql, string $deparsed): void
+    {
+        static::assertSame(
+            $deparsed,
+            DeleteBuilder::fromAst(
+                type_instance_of(DeleteStmt::class)->assert(
+                    sql_parse($sql)->raw()->getStmts()[0]->getStmt()?->getDeleteStmt(),
+                ),
+            )->toSql(),
+        );
+    }
+
+    public function test_from_ast_keeps_returning_aliases(): void
+    {
+        static::assertSame(
+            'DELETE FROM children WHERE id = 10 RETURNING WITH (OLD AS o) o.id',
+            DeleteBuilder::fromAst(
+                type_instance_of(DeleteStmt::class)->assert(
+                    sql_parse('DELETE FROM children WHERE id = 10 RETURNING WITH (OLD AS o) o.id')->raw()->getStmts()[0]
+                        ->getStmt()
+                        ?->getDeleteStmt(),
+                ),
+            )->toSql(),
+        );
+    }
+
+    public function test_returning_aliases_to_sql(): void
+    {
+        static::assertSame(
+            'DELETE FROM children WHERE id = 10 RETURNING WITH (OLD AS o) o.id',
+            delete()
+                ->from('children')
+                ->where(eq(col('id'), literal(10)))
+                ->returningAliases(old: 'o')
+                ->returning(col('id', 'o'))
+                ->toSql(),
+        );
+    }
+
+    public function test_returning_aliases_without_alias_throws(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('returningAliases() needs an old or a new alias');
+
+        delete()->from('children')->returningAliases();
+    }
+
+    public function test_returning_aliases_without_returning_list_throws(): void
+    {
+        $this->expectException(InvalidBuilderStateException::class);
+        $this->expectExceptionMessage(
+            'RETURNING WITH (OLD AS o) needs a RETURNING list. Call returning() or returningAll() after returningAliases().',
+        );
+
+        delete()->from('children')->returningAliases(old: 'o')->toSql();
+    }
+
+    public function test_returning_without_expressions_throws(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'returning() needs at least one expression. Call returningAll() for RETURNING *.',
+        );
+
+        delete()->from('children')->returning();
     }
 
     private function deparse(DeleteStmt $deleteStmt): string
