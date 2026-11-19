@@ -21,6 +21,7 @@ use function Flow\Filesystem\Bridge\AsyncAWS\DSL\aws_s3_filesystem;
 use function get_debug_type;
 use function implode;
 use function is_array;
+use function is_bool;
 use function is_int;
 use function is_scalar;
 use function is_string;
@@ -196,7 +197,7 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
             throw new InvalidArgumentException('Filesystem factory for backend "aws_s3" `options` must be an array.');
         }
 
-        $allowed = ['block_size', 'copy_part_size'];
+        $allowed = ['block_size', 'bulk_delete', 'copy_part_size'];
         $unknown = array_diff(array_keys($optionsConfig), $allowed);
 
         if ($unknown !== []) {
@@ -212,6 +213,13 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
                 throw new InvalidArgumentException('`options.block_size` must be an integer.');
             }
             $options = $options->withBlockSize($optionsConfig['block_size']);
+        }
+
+        if (array_key_exists('bulk_delete', $optionsConfig) && $optionsConfig['bulk_delete'] !== null) {
+            if (!is_bool($optionsConfig['bulk_delete'])) {
+                throw new InvalidArgumentException('`options.bulk_delete` must be a boolean.');
+            }
+            $options = $options->withBulkDelete($optionsConfig['bulk_delete']);
         }
 
         if (array_key_exists('copy_part_size', $optionsConfig) && $optionsConfig['copy_part_size'] !== null) {

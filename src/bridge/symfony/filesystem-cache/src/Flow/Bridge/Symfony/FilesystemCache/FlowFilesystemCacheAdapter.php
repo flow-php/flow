@@ -73,13 +73,13 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
 
     protected function doClear(string $namespace): bool
     {
+        if ($namespace === '') {
+            $this->filesystem->rm($this->listPattern());
+
+            return true;
+        }
+
         foreach ($this->filesystem->list($this->listPattern(), new OnlyFiles()) as $status) {
-            if ($namespace === '') {
-                $this->filesystem->rm($status->path);
-
-                continue;
-            }
-
             if (str_starts_with($this->readId($status->path), $namespace)) {
                 $this->filesystem->rm($status->path);
             }

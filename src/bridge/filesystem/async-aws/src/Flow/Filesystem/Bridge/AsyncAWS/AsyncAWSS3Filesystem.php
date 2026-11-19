@@ -19,6 +19,8 @@ use Flow\Filesystem\SourceStream;
 use Generator;
 use SensitiveParameter;
 
+use function array_map;
+use function count;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_string;
@@ -35,6 +37,8 @@ use function trim;
  */
 final readonly class AsyncAWSS3Filesystem implements Filesystem
 {
+    private const int DELETE_OBJECTS_LIMIT = 1000;
+
     public function __construct(
         private Mount $mount,
         private string $bucket,
@@ -276,20 +280,7 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
         $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
         if ($path->isPattern()) {
-            $deletedCount = 0;
-
-            foreach ($this->list($path) as $fileStatus) {
-                $this->client
-                    ->client()
-                    ->deleteObject([
-                        'Bucket' => $this->bucket,
-                        'Key' => ltrim($fileStatus->path->path(), '/'),
-                    ]);
-
-                $deletedCount++;
-            }
-
-            return (bool) $deletedCount;
+            return $this->deleteListed($path);
         }
 
         try {
@@ -301,11 +292,7 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
                 ]);
             $headObject->resolve();
         } catch (NoSuchKeyException) {
-            /**
-             * Since AzureS3 doesn't have a concept of folders, before we check if the intention is not to delete
-             * entire path, like for example aws-s3://nested/folder we need to first add / at the end, to accidentally
-             * not delete files that would also match the prefix, like: aws-s3://nested/folder_but_file.txt.
-             */
+            // the trailing slash keeps "folder" from matching "folder_but_file.txt"
             $folderPath = path(trim($path->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR, $path->options());
 
             if (!$recursive) {
@@ -316,19 +303,7 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
                 }
             }
 
-            $deletedCount = 0;
-
-            foreach ($this->list($folderPath) as $fileStatus) {
-                $this->client
-                    ->client()
-                    ->deleteObject([
-                        'Bucket' => $this->bucket,
-                        'Key' => ltrim($fileStatus->path->path(), '/'),
-                    ]);
-                $deletedCount++;
-            }
-
-            return (bool) $deletedCount;
+            return $this->deleteListed($folderPath);
         }
 
         $this->client
@@ -365,11 +340,7 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
 
                 return new FileStatus($path, true, $headObject->getContentLength(), $headObject->getLastModified());
             } catch (NoSuchKeyException) {
-                /**
-                 * Since S3 doesn't have a concept of folders, before we check if the intention is not to delete
-                 * entire path, like for example aws-s3://nested/folder we need to first add / at the end, to accidentally
-                 * not match files that would also match the prefix, like: aws-s3://nested/folder_but_file.txt.
-                 */
+                // the trailing slash keeps "folder" from matching "folder_but_file.txt"
                 $folderPath = path(trim($path->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR, $path->options());
 
                 foreach ($this->list($folderPath) as $fileStatus) {
@@ -407,5 +378,61 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
             $this->options->blockFactory(),
             $this->options->partSize(),
         );
+    }
+
+    private function deleteListed(Path $path): bool
+    {
+        $keys = [];
+        $deleted = false;
+
+        foreach ($this->list($path) as $fileStatus) {
+            $key = ltrim($fileStatus->path->path(), DIRECTORY_SEPARATOR);
+            $deleted = true;
+
+            if (!$this->options->bulkDelete()) {
+                $this->client->client()->deleteObject(['Bucket' => $this->bucket, 'Key' => $key]);
+
+                continue;
+            }
+
+            $keys[] = $key;
+
+            if (count($keys) === self::DELETE_OBJECTS_LIMIT) {
+                $this->deleteObjects($path, $keys);
+                $keys = [];
+            }
+        }
+
+        if ($keys !== []) {
+            $this->deleteObjects($path, $keys);
+        }
+
+        return $deleted;
+    }
+
+    /**
+     * @param non-empty-list<string> $keys
+     */
+    private function deleteObjects(Path $listed, array $keys): void
+    {
+        $errors = $this->client
+            ->client()
+            ->deleteObjects([
+                'Bucket' => $this->bucket,
+                'Delete' => ['Objects' => array_map(static fn(string $key): array => ['Key' => $key], $keys)],
+            ])
+            ->getErrors();
+
+        if ($errors === []) {
+            return;
+        }
+
+        throw new RuntimeException(sprintf(
+            '%d of %d paths were not removed, the first is %s: %s',
+            count($errors),
+            count($keys),
+            path($listed->protocol() . '://' . DIRECTORY_SEPARATOR . $errors[0]->getKey(), $listed->options())->uri(),
+            $errors[0]->getCode(),
+        ));
     }
 }

@@ -179,7 +179,8 @@ final readonly class SharedKeyFactory implements AuthorizationFactory
         $lowercaseHeaders = array_change_key_case($headers);
 
         foreach ($includedHeaders as $header) {
-            $stringToSign[] = $lowercaseHeaders[$header] ?? '';
+            $value = $lowercaseHeaders[$header] ?? '';
+            $stringToSign[] = $header === 'content-length' && $value === '0' ? '' : $value;
         }
 
         if (count($canonicalizedHeaders) > 0) {

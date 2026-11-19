@@ -10,6 +10,10 @@ use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 
 use function array_key_exists;
+use function count;
+use function explode;
+use function htmlspecialchars;
+use function implode;
 use function in_array;
 use function ltrim;
 use function max;
@@ -25,12 +29,53 @@ use function strlen;
 use function substr;
 use function trim;
 
+use const ENT_XML1;
 use const PHP_URL_PATH;
 use const PHP_URL_QUERY;
 
 final class S3ClientMother
 {
     public const string ERROR_XML = '<?xml version="1.0" encoding="UTF-8"?><Error><Code>InternalError</Code><Message>We encountered an internal error.</Message><RequestId>r</RequestId></Error>';
+
+    /**
+     * @param array<string, array{int, array<string, string>, 2?: string}> $answers "Operation" answers every such request, "Operation#n" its n-th request only
+     * @param list<string> $calls receives "Operation" per request: HeadObject, ListObjectsV2, DeleteObject, DeleteObjects
+     */
+    public static function answering(array $answers, array &$calls): S3Client
+    {
+        /** @var array<string, int> $counts */
+        $counts = [];
+
+        return new S3Client(
+            ['region' => 'eu-west-1', 'accessKeyId' => 'k', 'accessKeySecret' => 's', 'endpoint' => 'http://s3.test'],
+            null,
+            new MockHttpClient(static function (string $method, string $url) use (
+                $answers,
+                &$calls,
+                &$counts,
+            ): MockResponse {
+                $query = [];
+                parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
+
+                $name = match (true) {
+                    $method === 'HEAD' => 'HeadObject',
+                    $method === 'GET' && ($query['list-type'] ?? null) === '2' => 'ListObjectsV2',
+                    $method === 'DELETE' => 'DeleteObject',
+                    $method === 'POST' && array_key_exists('delete', $query) => 'DeleteObjects',
+                    default => 'Unexpected ' . $method . ' ' . $url,
+                };
+                $counts[$name] = ($counts[$name] ?? 0) + 1;
+                $calls[] = $name;
+
+                $answer = $answers[$name . '#' . $counts[$name]] ?? $answers[$name] ?? [500, [], ''];
+
+                return new MockResponse($answer[2] ?? '', [
+                    'http_code' => $answer[0],
+                    'response_headers' => $answer[1],
+                ]);
+            }),
+        );
+    }
 
     /**
      * @param list<string> $calls receives "Operation key range" per request, e.g. "UploadPartCopy dst.bin bytes=0-5242879"
@@ -209,6 +254,51 @@ final class S3ClientMother
             $operation,
             new MockResponse(self::ERROR_XML, ['http_code' => $status]),
             $calls,
+        );
+    }
+
+    public static function deleteResult(string ...$failedKeyCodes): string
+    {
+        $errors = [];
+
+        foreach ($failedKeyCodes as $failedKeyCode) {
+            [$key, $code] = explode(':', $failedKeyCode, 2);
+            $errors[] =
+                '<Error><Key>'
+                . htmlspecialchars($key, ENT_XML1)
+                . '</Key><Code>'
+                . $code
+                . '</Code><Message>'
+                . $code
+                . '</Message></Error>';
+        }
+
+        return (
+            '<?xml version="1.0" encoding="UTF-8"?><DeleteResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">'
+            . implode('', $errors)
+            . '</DeleteResult>'
+        );
+    }
+
+    public static function listing(string ...$keys): string
+    {
+        $contents = [];
+
+        foreach ($keys as $key) {
+            $contents[] =
+                '<Contents><Key>'
+                . htmlspecialchars($key, ENT_XML1)
+                . '</Key>'
+                . '<LastModified>2026-11-18T12:00:00.000Z</LastModified><Size>1</Size></Contents>';
+        }
+
+        return (
+            '<?xml version="1.0" encoding="UTF-8"?><ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">'
+            . '<Name>bucket</Name><KeyCount>'
+            . count($keys)
+            . '</KeyCount><IsTruncated>false</IsTruncated>'
+            . implode('', $contents)
+            . '</ListBucketResult>'
         );
     }
 

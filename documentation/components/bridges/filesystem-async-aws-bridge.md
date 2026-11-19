@@ -91,3 +91,22 @@ The limits are part of the filesystem description, so a worker process builds th
 `mv()` sends one `CopyObject` up to `copy_part_size` (default 256 MiB, 5 MiB to 5 GB). Above it, `mv()` copies the
 object in ranged parts of that size. The source is deleted only after the copy succeeded. A move above
 `copy_part_size` does not carry object tags.
+
+## Deletes
+
+```php
+use function Flow\Filesystem\DSL\path;
+
+$s3->rm(path('aws-s3://data'));          // 1 DeleteObjects request per 1,000 keys
+$s3->rm(path('aws-s3://data/*.parquet')); // the same for a pattern
+$s3->rm(path('aws-s3://data/a.csv'));     // HeadObject, then 1 DeleteObject
+
+// a refused key: the current request finishes, no further request is sent
+// Flow\Filesystem\Exception\RuntimeException:
+// 3 of 1000 paths were not removed, the first is aws-s3://data/part-7.parquet: AccessDenied
+
+// 1 DeleteObject request per key
+$s3 = aws_s3_filesystem($bucket, $client, aws_s3_filesystem_options()->withBulkDelete(false));
+```
+
+Turn bulk delete off for an S3-compatible store that has no `DeleteObjects`.

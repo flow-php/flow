@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\Azure;
 
-use Exception;
 use Flow\Azure\SDK\BlobService\BlockBlob\Block;
 use Flow\Azure\SDK\BlobService\BlockBlob\BlockList;
 use Flow\Azure\SDK\BlobService\BlockBlob\BlockState;
 use Flow\Azure\SDK\BlobService\PutBlockBlobBlockList\PutBlockBlobBlockListOptions;
+use Flow\Azure\SDK\Exception\AzureException;
 use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\Exception\InvalidSchemeException;
 use Flow\Filesystem\Exception\RuntimeException;
@@ -24,6 +24,7 @@ use SensitiveParameter;
 
 use function bin2hex;
 use function ceil;
+use function count;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_string;
@@ -31,8 +32,10 @@ use function ltrim;
 use function max;
 use function min;
 use function random_bytes;
+use function rawurldecode;
 use function sprintf;
 use function str_ends_with;
+use function strlen;
 use function trim;
 
 /**
@@ -46,6 +49,8 @@ final readonly class AzureBlobFilesystem implements Filesystem
     private const int AZURE_MAX_BLOCK_SIZE = 4000 * 1024 * 1024;
 
     private const int AZURE_MAX_BLOCKS = 50_000;
+
+    private const int BLOB_BATCH_LIMIT = 256;
 
     public function __construct(
         private Mount $mount,
@@ -250,41 +255,27 @@ final readonly class AzureBlobFilesystem implements Filesystem
         $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
         if ($path->isPattern()) {
-            $deletedCount = 0;
-
-            foreach ($this->list($path) as $fileStatus) {
-                $this->blobService->blobService()->deleteBlob($fileStatus->path->path());
-                $deletedCount++;
-            }
-
-            return (bool) $deletedCount;
+            return $this->deleteListed($path);
         }
 
         try {
-            $this->blobService->blobService()->deleteBlob($path->path());
+            $this->blobService->blobService()->deleteBlob(ltrim($path->path(), DIRECTORY_SEPARATOR));
 
             return true;
-        } catch (Exception) {
-            /**
-             * Since AzureBlobStorage doesn't have a concept of folders, before we check if the intention is not to delete
-             * entire path, like for example azure-blob://nested/folder we need to first add / at the end, to accidentally
-             * not delete files that would also match the prefix, like: azure-blob://nested/folder_but_file.txt.
-             */
-            $folderPath = path(trim($path->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR, $path->options());
-
-            if (!$recursive && $this->list($folderPath)->valid()) {
-                throw new RuntimeException("Directory {$path->uri()} was not removed: it is not empty");
+        } catch (AzureException $exception) {
+            if ($exception->response->getStatusCode() !== 404) {
+                throw $exception;
             }
-
-            $deletedCount = 0;
-
-            foreach ($this->list($folderPath) as $fileStatus) {
-                $this->blobService->blobService()->deleteBlob($fileStatus->path->path());
-                $deletedCount++;
-            }
-
-            return (bool) $deletedCount;
         }
+
+        // the trailing slash keeps "folder" from matching "folder_but_file.txt"
+        $folderPath = path(trim($path->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR, $path->options());
+
+        if (!$recursive && $this->list($folderPath)->valid()) {
+            throw new RuntimeException("Directory {$path->uri()} was not removed: it is not empty");
+        }
+
+        return $this->deleteListed($folderPath);
     }
 
     public function status(Path $path): ?FileStatus
@@ -305,11 +296,7 @@ final readonly class AzureBlobFilesystem implements Filesystem
                 ->getBlobProperties(ltrim($path->path(), DIRECTORY_SEPARATOR));
 
             if ($blobProperties === null) {
-                /**
-                 * Since AzureBlobStorage doesn't have a concept of folders, before we check if the intention is not to delete
-                 * entire path, like for example azure-blob://nested/folder we need to first add / at the end, to accidentally
-                 * not match files that would also match the prefix, like: azure-blob://nested/folder_but_file.txt.
-                 */
+                // the trailing slash keeps "folder" from matching "folder_but_file.txt"
                 $folderPath = path(trim($path->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR, $path->options());
 
                 foreach ($this->list($folderPath) as $fileStatus) {
@@ -348,5 +335,69 @@ final readonly class AzureBlobFilesystem implements Filesystem
             $this->options->blockFactory(),
             $this->options->blockSize(),
         );
+    }
+
+    /**
+     * @param non-empty-list<string> $blobs
+     */
+    private function deleteBlobs(Path $listed, array $blobs): void
+    {
+        try {
+            $this->blobService->blobService()->deleteBlobs($blobs);
+        } catch (AzureException $exception) {
+            $requestPath = rawurldecode($exception->request->getUri()->getPath());
+            $failedBlob = '';
+
+            foreach ($blobs as $blob) {
+                if (strlen($blob) > strlen($failedBlob) && str_ends_with($requestPath, '/' . $blob)) {
+                    $failedBlob = $blob;
+                }
+            }
+
+            if ($failedBlob === '') {
+                throw $exception;
+            }
+
+            throw new RuntimeException(
+                sprintf(
+                    '%d of %d paths were not removed, the first is %s: %s',
+                    $exception->failedRequests,
+                    count($blobs),
+                    path($listed->protocol() . '://' . DIRECTORY_SEPARATOR . $failedBlob, $listed->options())->uri(),
+                    $exception->response->getHeaderLine('x-ms-error-code'),
+                ),
+                previous: $exception,
+            );
+        }
+    }
+
+    private function deleteListed(Path $path): bool
+    {
+        $blobs = [];
+        $deleted = false;
+
+        foreach ($this->list($path) as $fileStatus) {
+            $blob = ltrim($fileStatus->path->path(), DIRECTORY_SEPARATOR);
+            $deleted = true;
+
+            if (!$this->options->bulkDelete()) {
+                $this->blobService->blobService()->deleteBlob($blob);
+
+                continue;
+            }
+
+            $blobs[] = $blob;
+
+            if (count($blobs) === self::BLOB_BATCH_LIMIT) {
+                $this->deleteBlobs($path, $blobs);
+                $blobs = [];
+            }
+        }
+
+        if ($blobs !== []) {
+            $this->deleteBlobs($path, $blobs);
+        }
+
+        return $deleted;
     }
 }

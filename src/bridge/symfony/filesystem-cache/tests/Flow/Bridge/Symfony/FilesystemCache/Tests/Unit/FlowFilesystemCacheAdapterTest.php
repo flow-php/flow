@@ -4,17 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\FilesystemCache\Tests\Unit;
 
+use ArrayObject;
 use Flow\Bridge\Symfony\FilesystemCache\Exception\FilesystemCacheException;
 use Flow\Bridge\Symfony\FilesystemCache\Tests\Context\FilesystemCacheContext;
 use Flow\Bridge\Symfony\FilesystemCache\Tests\Unit\Double\FailingMvFilesystem;
 use Flow\Bridge\Symfony\FilesystemCache\Tests\Unit\Double\SpyLogger;
 use Flow\Bridge\Symfony\FilesystemCache\Tests\Unit\Double\SpyMarshaller;
+use Flow\Filesystem\Path;
+use Flow\Filesystem\Testing\FilesystemOperation;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Cache\Exception\InvalidArgumentException;
 use Symfony\Component\Cache\Marshaller\DefaultMarshaller;
 use Symfony\Contracts\Cache\ItemInterface as CacheItemInterface;
 
 use function explode;
+use function Flow\Filesystem\DSL\intercepted_filesystem;
 use function iterator_to_array;
 use function sprintf;
 use function strlen;
@@ -49,6 +53,44 @@ final class FlowFilesystemCacheAdapterTest extends TestCase
 
         static::assertFalse($adapter->getItem('a')->isHit());
         static::assertFalse($adapter->getItem('b')->isHit());
+    }
+
+    public function test_clear_with_empty_prefix_removes_all_items_with_one_rm_call(): void
+    {
+        $removals = new ArrayObject();
+        $adapter = $this->context->adapter(filesystem: intercepted_filesystem($this->context->filesystem)->onCall(static function (
+            FilesystemOperation $operation,
+            Path $path,
+        ) use ($removals): void {
+            if ($operation === FilesystemOperation::Rm) {
+                $removals->append($path->uri());
+            }
+        }));
+
+        foreach (['a' => 1, 'b' => 2, 'c' => 3] as $key => $value) {
+            $adapter->save($adapter->getItem($key)->set($value));
+        }
+
+        static::assertCount(3, $this->context->listFiles());
+        static::assertTrue($adapter->clear());
+
+        static::assertCount(1, $removals);
+        static::assertSame([], $this->context->listFiles());
+    }
+
+    public function test_save_and_get_item_work_after_clear_with_empty_prefix(): void
+    {
+        $adapter = $this->context->adapter();
+        $adapter->save($adapter->getItem('a')->set(1));
+        $adapter->save($adapter->getItem('b')->set(2));
+
+        static::assertTrue($adapter->clear());
+        static::assertSame([], $this->context->listFiles());
+
+        $adapter->save($adapter->getItem('a')->set('again'));
+
+        static::assertFalse($adapter->getItem('b')->isHit());
+        static::assertSame('again', $adapter->getItem('a')->get());
     }
 
     public function test_clear_with_prefix_only_removes_items_whose_id_starts_with_prefix(): void

@@ -10,6 +10,8 @@ use Flow\Azure\SDK\AuthorizationFactory\SharedKeyFactory;
 use Http\Discovery\Psr17FactoryDiscovery;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Azure\SDK\DSL\azure_shared_key_authorization_factory;
+
 final class SharedKeyFactoryTest extends TestCase
 {
     public function test_for_returns_string_starting_with_shared_key_prefix_and_account(): void
@@ -167,6 +169,21 @@ final class SharedKeyFactoryTest extends TestCase
                 'source/a.parquet',
                 new DateTimeImmutable('2026-11-13 14:00:00', new DateTimeZone('+02:00')),
             ),
+        );
+    }
+
+    public function test_zero_content_length_signs_as_an_empty_string(): void
+    {
+        $request = Psr17FactoryDiscovery::findRequestFactory()
+            ->createRequest('DELETE', 'https://account.blob.core.windows.net/container/a.txt')
+            ->withHeader('date', 'Wed, 18 Nov 2026 12:00:00 GMT');
+
+        static::assertSame(
+            azure_shared_key_authorization_factory('account', base64_encode('key'))->for($request),
+            azure_shared_key_authorization_factory('account', base64_encode('key'))->for($request->withHeader(
+                'content-length',
+                '0',
+            )),
         );
     }
 }

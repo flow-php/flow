@@ -19,12 +19,14 @@ use function is_string;
 use function sprintf;
 
 /**
- * @type S3Options = array{block_location: string, block_permissions: null|PermissionsShape, copy_part_size: int, file_fast_path: bool, part_size: int}
+ * @type S3Options = array{block_location: string, block_permissions: null|PermissionsShape, bulk_delete: bool, copy_part_size: int, file_fast_path: bool, part_size: int}
  * @import-type PermissionsShape from Permissions
  */
 final class Options
 {
     private BlockFactory $blockFactory;
+
+    private bool $bulkDelete = true;
 
     private int $copyPartSize = 256 * 1024 * 1024;
 
@@ -44,6 +46,11 @@ final class Options
     public function blockFactory(): BlockFactory
     {
         return $this->blockFactory;
+    }
+
+    public function bulkDelete(): bool
+    {
+        return $this->bulkDelete;
     }
 
     public function copyPartSize(): int
@@ -75,12 +82,13 @@ final class Options
             !is_string($data['block_location'] ?? null)
             || !array_key_exists('block_permissions', $data)
             || $data['block_permissions'] !== null && !is_array($data['block_permissions'])
+            || !is_bool($data['bulk_delete'] ?? null)
             || !is_int($data['copy_part_size'] ?? null)
             || !is_bool($data['file_fast_path'] ?? null)
             || !is_int($data['part_size'] ?? null)
         ) {
             throw new InvalidArgumentException(
-                'AsyncAWS options must hold block_location (string), block_permissions (null or array), copy_part_size (int), file_fast_path (bool) and part_size (int)',
+                'AsyncAWS options must hold block_location (string), block_permissions (null or array), bulk_delete (bool), copy_part_size (int), file_fast_path (bool) and part_size (int)',
             );
         }
 
@@ -91,6 +99,7 @@ final class Options
                     $data['block_permissions'] === null ? null : Permissions::fromArray($data['block_permissions']),
                 ),
             )
+            ->withBulkDelete($data['bulk_delete'])
             ->withCopyPartSize($data['copy_part_size'])
             ->withFileFastPath($data['file_fast_path'])
             ->withBlockSize($data['part_size']);
@@ -108,6 +117,7 @@ final class Options
         return [
             'block_location' => $this->blockFactory->blockLocation(),
             'block_permissions' => $this->blockFactory->permissions()?->normalize(),
+            'bulk_delete' => $this->bulkDelete,
             'copy_part_size' => $this->copyPartSize,
             'file_fast_path' => $this->fileFastPath,
             'part_size' => $this->partSize,
@@ -133,6 +143,13 @@ final class Options
         }
 
         $this->partSize = $bytes;
+
+        return $this;
+    }
+
+    public function withBulkDelete(bool $enabled = true): self
+    {
+        $this->bulkDelete = $enabled;
 
         return $this;
     }

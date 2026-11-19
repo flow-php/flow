@@ -15,11 +15,13 @@ use Flow\Filesystem\Stream\BlockFactory;
 use Flow\Types\Exception\InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
 use function end;
 use function Flow\Filesystem\Bridge\AsyncAWS\DSL\aws_s3_filesystem;
 use function Flow\Filesystem\Bridge\AsyncAWS\DSL\aws_s3_filesystem_options;
 use function Flow\Filesystem\DSL\path;
 use function iterator_to_array;
+use function range;
 
 final class AsyncAWSS3FilesystemTest extends TestCase
 {
@@ -287,5 +289,111 @@ final class AsyncAWSS3FilesystemTest extends TestCase
 
         static::assertContains('AbortMultipartUpload dst', $calls);
         static::assertNotContains('DeleteObject src', $calls);
+    }
+
+    public function test_rm_of_a_directory_sends_one_delete_objects(): void
+    {
+        $calls = [];
+
+        static::assertTrue(aws_s3_filesystem('bucket', S3ClientMother::answering([
+            'HeadObject' => [404, []],
+            'ListObjectsV2' => [200, [], S3ClientMother::listing('dir/a.txt', 'dir/b.txt', 'dir/c.txt')],
+            'DeleteObject' => [204, []],
+            'DeleteObjects' => [200, [], S3ClientMother::deleteResult()],
+        ], $calls))->rm(path('aws-s3://dir')));
+
+        static::assertSame(['HeadObject', 'ListObjectsV2', 'DeleteObjects'], $calls);
+    }
+
+    public function test_rm_without_bulk_delete_sends_one_delete_object_per_key(): void
+    {
+        $calls = [];
+
+        static::assertTrue(aws_s3_filesystem(
+            'bucket',
+            S3ClientMother::answering([
+                'HeadObject' => [404, []],
+                'ListObjectsV2' => [200, [], S3ClientMother::listing('dir/a.txt', 'dir/b.txt', 'dir/c.txt')],
+                'DeleteObject' => [204, []],
+                'DeleteObjects' => [200, [], S3ClientMother::deleteResult()],
+            ], $calls),
+            aws_s3_filesystem_options()->withBulkDelete(false),
+        )->rm(path('aws-s3://dir')));
+
+        static::assertSame(['HeadObject', 'ListObjectsV2', 'DeleteObject', 'DeleteObject', 'DeleteObject'], $calls);
+    }
+
+    public function test_rm_of_a_pattern_sends_one_delete_objects_per_1000_keys(): void
+    {
+        $calls = [];
+
+        static::assertTrue(aws_s3_filesystem('bucket', S3ClientMother::answering([
+            'ListObjectsV2' => [
+                200,
+                [],
+                S3ClientMother::listing(...array_map(
+                    static fn(int $index): string => "dir/{$index}.csv",
+                    range(0, 1000),
+                )),
+            ],
+            'DeleteObject' => [204, []],
+            'DeleteObjects' => [200, [], S3ClientMother::deleteResult()],
+        ], $calls))->rm(path('aws-s3://dir/*.csv')));
+
+        static::assertSame(['ListObjectsV2', 'DeleteObjects', 'DeleteObjects'], $calls);
+    }
+
+    public function test_rm_of_a_non_empty_directory_without_recursion_sends_no_delete(): void
+    {
+        $calls = [];
+
+        try {
+            aws_s3_filesystem('bucket', S3ClientMother::answering([
+                'HeadObject' => [404, []],
+                'ListObjectsV2' => [200, [], S3ClientMother::listing('dir/a.txt')],
+            ], $calls))->rm(path('aws-s3://dir'), recursive: false);
+
+            static::fail('rm() of a non-empty directory without recursion must throw');
+        } catch (RuntimeException $exception) {
+            static::assertSame('Directory aws-s3://dir was not removed: it is not empty', $exception->getMessage());
+        }
+
+        static::assertSame(['HeadObject', 'ListObjectsV2'], $calls);
+    }
+
+    public function test_rm_of_refused_keys_throws_before_the_next_delete_objects(): void
+    {
+        $calls = [];
+
+        try {
+            aws_s3_filesystem('bucket', S3ClientMother::answering([
+                'ListObjectsV2' => [
+                    200,
+                    [],
+                    S3ClientMother::listing(...array_map(
+                        static fn(int $index): string => "dir/{$index}.csv",
+                        range(0, 1000),
+                    )),
+                ],
+                'DeleteObjects' => [
+                    200,
+                    [],
+                    S3ClientMother::deleteResult(
+                        'dir/7.csv:AccessDenied',
+                        'dir/8.csv:AccessDenied',
+                        'dir/9.csv:AccessDenied',
+                    ),
+                ],
+            ], $calls))->rm(path('aws-s3://dir/*.csv'));
+
+            static::fail('rm() of refused keys must throw');
+        } catch (RuntimeException $exception) {
+            static::assertSame(
+                '3 of 1000 paths were not removed, the first is aws-s3://dir/7.csv: AccessDenied',
+                $exception->getMessage(),
+            );
+        }
+
+        static::assertSame(['ListObjectsV2', 'DeleteObjects'], $calls);
     }
 }

@@ -24,6 +24,7 @@ final class OptionsTest extends TestCase
     {
         $options = (new Options())
             ->withBlockSize(1024)
+            ->withBulkDelete(false)
             ->withFileFastPath(false)
             ->withListBlobInclude(OptionInclude::METADATA, OptionInclude::SNAPSHOTS)
             ->withListBlobMaxResults(50)
@@ -32,6 +33,7 @@ final class OptionsTest extends TestCase
         $normalized = $options->normalize();
 
         static::assertNotNull($normalized);
+        static::assertFalse($normalized['bulk_delete']);
         static::assertSame(['metadata', 'snapshots'], $normalized['list_blob_include']);
         static::assertSame('files', $normalized['list_blob_show_only']);
         static::assertEquals($options, Options::fromArray($normalized));
@@ -111,7 +113,7 @@ final class OptionsTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(
-            'Azure options must hold block_location, block_permissions, block_size, copy_part_size, file_fast_path, list_blob_include, list_blob_max_results, list_blob_show_only and tmp_dir',
+            'Azure options must hold block_location, block_permissions, block_size, bulk_delete, copy_part_size, file_fast_path, list_blob_include, list_blob_max_results, list_blob_show_only and tmp_dir',
         );
 
         Options::fromArray($normalized);

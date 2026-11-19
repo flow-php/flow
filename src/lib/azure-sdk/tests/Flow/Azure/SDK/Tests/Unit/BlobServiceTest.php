@@ -7,12 +7,117 @@ namespace Flow\Azure\SDK\Tests\Unit;
 use Flow\Azure\SDK\BlobService\BlockBlob\BlockState;
 use Flow\Azure\SDK\BlobService\ListBlobs\Blob;
 use Flow\Azure\SDK\Exception\AzureException;
+use Flow\Azure\SDK\Exception\InvalidArgumentException;
 use Flow\Azure\SDK\Tests\Context\BlobServiceContext;
 use Flow\Azure\SDK\Tests\Double\FixedResponseClient;
 use PHPUnit\Framework\TestCase;
 
+use function array_fill;
+use function array_map;
+use function range;
+use function substr_count;
+
 final class BlobServiceTest extends TestCase
 {
+    public function test_delete_blobs_counts_a_missing_blob_as_deleted(): void
+    {
+        $client = new FixedResponseClient(BlobServiceContext::batchResponse([0 => 202, 1 => 404]));
+
+        BlobServiceContext::serviceWithClient($client)->deleteBlobs(['a.txt', 'b.txt']);
+
+        static::assertCount(1, $client->requests());
+    }
+
+    public function test_delete_blobs_reads_parts_out_of_order(): void
+    {
+        $client = new FixedResponseClient(BlobServiceContext::batchResponse([2 => 202, 0 => 202, 1 => 202]));
+
+        BlobServiceContext::serviceWithClient($client)->deleteBlobs(['a.txt', 'b.txt', 'c.txt']);
+
+        static::assertCount(1, $client->requests());
+    }
+
+    public function test_delete_blobs_refuses_more_than_256_blobs(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Blob Batch accepts at most 256 blobs, got 257');
+
+        BlobServiceContext::service()->deleteBlobs(array_map(
+            static fn(int $index): string => "{$index}.txt",
+            range(0, 256),
+        ));
+    }
+
+    public function test_delete_blobs_reports_every_failed_part_with_the_first_failed_subrequest(): void
+    {
+        try {
+            BlobServiceContext::service(BlobServiceContext::batchResponse([
+                0 => 202,
+                1 => 403,
+                2 => 500,
+            ]))->deleteBlobs([
+                'a.txt',
+                'b.txt',
+                'c.txt',
+            ]);
+
+            static::fail('deleteBlobs() with failed parts must throw');
+        } catch (AzureException $exception) {
+            static::assertSame(2, $exception->failedRequests);
+            static::assertSame('/container/b.txt', $exception->request->getUri()->getPath());
+            static::assertSame(403, $exception->response->getStatusCode());
+            static::assertSame('Code403', $exception->response->getHeaderLine('x-ms-error-code'));
+            static::assertStringContainsString('<Code>Code403</Code>', $exception->getMessage());
+        }
+    }
+
+    public function test_delete_blobs_reports_a_blob_without_a_part_as_failed(): void
+    {
+        try {
+            BlobServiceContext::service(BlobServiceContext::batchResponse([0 => 202]))->deleteBlobs(['a.txt', 'b.txt']);
+
+            static::fail('deleteBlobs() with a missing part must throw');
+        } catch (AzureException $exception) {
+            static::assertSame(1, $exception->failedRequests);
+            static::assertSame('/container/b.txt', $exception->request->getUri()->getPath());
+        }
+    }
+
+    public function test_delete_blobs_sends_no_request_for_no_blobs(): void
+    {
+        $client = new FixedResponseClient();
+
+        BlobServiceContext::serviceWithClient($client)->deleteBlobs([]);
+
+        static::assertSame([], $client->requests());
+    }
+
+    public function test_delete_blobs_sends_one_batch_with_a_part_per_blob(): void
+    {
+        $client = new FixedResponseClient(BlobServiceContext::batchResponse(array_fill(0, 2, 202)));
+
+        BlobServiceContext::serviceWithClient($client)->deleteBlobs(['dir/a.txt', 'dir/b.txt']);
+
+        $request = $client->requests()[0];
+        $body = (string) $request->getBody();
+        static::assertSame('POST', $request->getMethod());
+        static::assertSame('restype=container&comp=batch', $request->getUri()->getQuery());
+        static::assertSame('2024-08-04', $request->getHeaderLine('x-ms-version'));
+        static::assertStringStartsWith('multipart/mixed; boundary=batch_', $request->getHeaderLine('content-type'));
+        static::assertSame(2, substr_count($body, "Content-Type: application/http\r\n"));
+        static::assertStringContainsString("Content-ID: 0\r\n\r\nDELETE /container/dir/a.txt HTTP/1.1\r\n", $body);
+        static::assertStringContainsString("Content-ID: 1\r\n\r\nDELETE /container/dir/b.txt HTTP/1.1\r\n", $body);
+        static::assertStringNotContainsString('x-ms-version', $body);
+        static::assertSame(2, substr_count($body, 'authorization: SharedKey account:'));
+    }
+
+    public function test_delete_blobs_throws_on_a_batch_status_other_than_202(): void
+    {
+        $this->expectException(AzureException::class);
+
+        BlobServiceContext::service(BlobServiceContext::response(400, ''))->deleteBlobs(['a.txt']);
+    }
+
     public function test_delete_container_addresses_the_container(): void
     {
         $client = new FixedResponseClient(BlobServiceContext::response(202, ''));
