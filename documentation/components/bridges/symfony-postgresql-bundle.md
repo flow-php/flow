@@ -476,9 +476,17 @@ These commands are always available, with or without a migration configuration.
 | `flow:database:create` | Create the configured database                    |
 | `flow:database:drop`   | Drop the configured database (requires `--force`) |
 | `flow:sql:run`         | Execute SQL directly on the database              |
+| `flow:sql:format`      | Format SQL with the flow-php/postgresql parser    |
 
-The commands above accept `--connection` (`-c`) to target a specific connection. Migration commands do not accept
-it. They always run against the configured migrations connection.
+`flow:database:create`, `flow:database:drop` and `flow:sql:run` accept `--connection` (`-c`) to target a specific
+connection. Migration commands do not accept it. They always run against the configured migrations connection.
+
+```bash
+bin/console flow:sql:format "select id,name from users -- active only"
+bin/console flow:sql:format --path="sql/*.sql" --write
+bin/console flow:sql:format --path=sql --check
+bin/console flow:sql:format --path=sql --write --preserve-comments
+```
 
 ### Migration Commands
 

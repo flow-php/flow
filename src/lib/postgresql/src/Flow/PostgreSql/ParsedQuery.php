@@ -9,7 +9,9 @@ use Flow\PostgreSql\AST\Nodes\StatementFactory;
 use Flow\PostgreSql\AST\Nodes\Statements;
 use Flow\PostgreSql\AST\NodeVisitor;
 use Flow\PostgreSql\AST\Traverser;
+use Flow\PostgreSql\Exception\ExtensionOutdatedException;
 use Flow\PostgreSql\Protobuf\AST\ParseResult;
+use ReflectionFunction;
 
 use function pg_query_deparse;
 use function pg_query_deparse_opts;
@@ -18,6 +20,7 @@ final readonly class ParsedQuery
 {
     public function __construct(
         private ParseResult $parseResult,
+        private ?string $sql = null,
     ) {}
 
     /**
@@ -26,6 +29,7 @@ final readonly class ParsedQuery
      * When called without options, returns the SQL as a simple string.
      * When called with DeparseOptions, applies formatting (pretty-printing, indentation, etc.).
      *
+     * @throws ExtensionOutdatedException if comments are requested and the loaded extension cannot keep them
      * @throws \RuntimeException if deparsing fails
      */
     public function deparse(?DeparseOptions $options = null): string
@@ -34,14 +38,28 @@ final readonly class ParsedQuery
             return pg_query_deparse($this->parseResult->serializeToString());
         }
 
-        return pg_query_deparse_opts(
+        $arguments = [
             $this->parseResult->serializeToString(),
             $options->hasPrettyPrint(),
             $options->getIndentSize(),
             $options->getMaxLineLength(),
             $options->hasTrailingNewline(),
             $options->commasAtStartOfLine(),
-        );
+        ];
+
+        if ($options->hasPreserveComments() && $this->sql !== null) {
+            if ($this->parseResult->getStmts()->count() === 0) {
+                return $this->sql;
+            }
+
+            if ((new ReflectionFunction('pg_query_deparse_opts'))->getNumberOfParameters() < 7) {
+                throw new ExtensionOutdatedException();
+            }
+
+            $arguments[] = $this->sql;
+        }
+
+        return pg_query_deparse_opts(...$arguments);
     }
 
     public function raw(): ParseResult

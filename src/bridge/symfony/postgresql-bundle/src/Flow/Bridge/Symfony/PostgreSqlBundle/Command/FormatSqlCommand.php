@@ -78,11 +78,12 @@ final class FormatSqlCommand extends Command
                 InputOption::VALUE_NONE,
                 'Place commas at the start of the line instead of the end',
             )
+            ->addOption('trailing-newline', null, InputOption::VALUE_NONE, 'Append a trailing newline to formatted SQL')
             ->addOption(
-                'trailing-newline',
+                'preserve-comments',
                 null,
                 InputOption::VALUE_NONE,
-                'Append a trailing newline to formatted SQL',
+                'Keep SQL comments in the formatted output',
             );
     }
 
@@ -132,7 +133,8 @@ final class FormatSqlCommand extends Command
             ->maxLineLength(type_integer()->cast($input->getOption('max-line-length')))
             ->prettyPrint(!type_boolean()->cast($input->getOption('no-pretty-print')))
             ->commasStartOfLine(type_boolean()->cast($input->getOption('commas-start-of-line')))
-            ->trailingNewline(type_boolean()->cast($input->getOption('trailing-newline')));
+            ->trailingNewline(type_boolean()->cast($input->getOption('trailing-newline')))
+            ->preserveComments(type_boolean()->cast($input->getOption('preserve-comments')));
     }
 
     private function formatPath(

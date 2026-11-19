@@ -23,6 +23,9 @@
 
 #include "pg_query_arginfo.h"
 
+// exported by libpg_query.a, declared only in its internal header; pg_query_free_deparse_comments_result() skips the error
+void pg_query_free_error(PgQueryError *error);
+
 zend_module_entry pg_query_module_entry = {
     STANDARD_MODULE_HEADER,
     PHP_PG_QUERY_EXTNAME,
@@ -446,8 +449,10 @@ PHP_FUNCTION(pg_query_deparse_opts)
     zend_long max_line_length = 80;
     bool trailing_newline = false;
     bool commas_start_of_line = false;
+    char *comments_from = NULL;
+    size_t comments_from_len = 0;
 
-    ZEND_PARSE_PARAMETERS_START(1, 6)
+    ZEND_PARSE_PARAMETERS_START(1, 7)
         Z_PARAM_STRING(protobuf, protobuf_len)
         Z_PARAM_OPTIONAL
         Z_PARAM_BOOL(pretty_print)
@@ -455,15 +460,46 @@ PHP_FUNCTION(pg_query_deparse_opts)
         Z_PARAM_LONG(max_line_length)
         Z_PARAM_BOOL(trailing_newline)
         Z_PARAM_BOOL(commas_start_of_line)
+        Z_PARAM_STRING_OR_NULL(comments_from, comments_from_len)
     ZEND_PARSE_PARAMETERS_END();
+
+    PgQueryDeparseCommentsResult comments = {0};
+
+    if (comments_from != NULL) {
+        comments = pg_query_deparse_comments_for_query(comments_from);
+
+        if (comments.error) {
+            char error_msg[1024];
+
+            if (comments.error->message) {
+                strncpy(error_msg, comments.error->message, sizeof(error_msg) - 1);
+                error_msg[sizeof(error_msg) - 1] = '\0';
+            } else {
+                strcpy(error_msg, "Comment scan error");
+            }
+
+            pg_query_free_error(comments.error);
+            pg_query_free_deparse_comments_result(comments);
+
+            zend_throw_exception(spl_ce_RuntimeException, error_msg, 0);
+            RETURN_THROWS();
+        }
+
+        for (size_t i = 0; i < comments.comment_count; i++) {
+            // a `--` comment ends at the newline, so a node placed after it on the same line becomes comment text
+            if (strncmp(comments.comments[i]->str, "--", 2) == 0 && comments.comments[i]->newlines_after_comment < 1) {
+                comments.comments[i]->newlines_after_comment = 1;
+            }
+        }
+    }
 
     PgQueryProtobuf pbuf;
     pbuf.data = protobuf;
     pbuf.len = protobuf_len;
 
     struct PostgresDeparseOpts opts = {0};
-    opts.comments = NULL;
-    opts.comment_count = 0;
+    opts.comments = comments.comments;
+    opts.comment_count = comments.comment_count;
     opts.pretty_print = pretty_print;
     opts.indent_size = (int)indent_size;
     opts.max_line_length = (int)max_line_length;
@@ -471,6 +507,7 @@ PHP_FUNCTION(pg_query_deparse_opts)
     opts.commas_start_of_line = commas_start_of_line;
 
     PgQueryDeparseResult result = pg_query_deparse_protobuf_opts(pbuf, opts);
+    pg_query_free_deparse_comments_result(comments);
 
     if (result.error) {
         char error_msg[1024];

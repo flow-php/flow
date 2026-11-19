@@ -15,12 +15,14 @@ use Flow\PostgreSql\AST\Nodes\Table;
 use Flow\PostgreSql\AST\Visitors\ColumnRefCollector;
 use Flow\PostgreSql\AST\Visitors\FuncCallCollector;
 use Flow\PostgreSql\AST\Visitors\RangeVarCollector;
+use Flow\PostgreSql\Exception\ExtensionOutdatedException;
 use Flow\PostgreSql\ParsedQuery;
 use Flow\PostgreSql\Protobuf\AST\ParseResult;
 use PHPUnit\Framework\TestCase;
 
 use function array_map;
 use function extension_loaded;
+use function Flow\PostgreSql\DSL\sql_deparse_options;
 use function Flow\PostgreSql\DSL\sql_parse;
 use function Flow\PostgreSql\DSL\sql_query_columns;
 use function Flow\PostgreSql\DSL\sql_query_functions;
@@ -28,6 +30,8 @@ use function Flow\PostgreSql\DSL\sql_query_tables;
 
 final class ParsedQueryTest extends TestCase
 {
+    public const COMMENTED_SQL = "SELECT a, -- the a column\n  b\n/* block comment\n   two lines */\nFROM t\nWHERE x = \$1 -- trailing\n  AND y IN (1, 2);";
+
     protected function setUp(): void
     {
         if (!extension_loaded('pg_query')) {
@@ -130,6 +134,58 @@ final class ParsedQueryTest extends TestCase
 
         $deleteStatement = $result->statements()->first();
         static::assertInstanceOf(DeleteStatement::class, $deleteStatement);
+    }
+
+    public function test_deparse_with_default_options_drops_comments(): void
+    {
+        static::assertSame(
+            sql_parse(
+                "SELECT a,\n  b\nFROM t\nWHERE x = $1\n  AND y IN (1, 2);",
+            )->deparse(sql_deparse_options()->indentSize(2)),
+            sql_parse(self::COMMENTED_SQL)->deparse(sql_deparse_options()->indentSize(2)),
+        );
+    }
+
+    public function test_deparse_with_preserve_comments_keeps_comments_of_parsed_source(): void
+    {
+        static::assertSame(
+            "SELECT\n  a,\n  -- the a column\n  b\nFROM t\nWHERE\n  /* block comment\n   two lines */\n  x = $1\n  AND -- trailing\n  y IN (1, 2)",
+            sql_parse(self::COMMENTED_SQL)->deparse(sql_deparse_options()->indentSize(2)->preserveComments()),
+        );
+    }
+
+    public function test_deparse_with_preserve_comments_of_query_without_source_has_no_comments(): void
+    {
+        static::assertSame(
+            sql_parse(self::COMMENTED_SQL)->deparse(sql_deparse_options()),
+            (new ParsedQuery(sql_parse(self::COMMENTED_SQL)->raw()))->deparse(
+                sql_deparse_options()->preserveComments(),
+            ),
+        );
+    }
+
+    public function test_deparse_with_preserve_comments_returns_a_source_without_statements_unchanged(): void
+    {
+        static::assertSame(
+            "-- only a comment\n/* and a block */",
+            sql_parse("-- only a comment\n/* and a block */")->deparse(sql_deparse_options()->preserveComments()),
+        );
+    }
+
+    public function test_deparse_without_options_drops_comments(): void
+    {
+        static::assertSame(
+            'SELECT a, b FROM t WHERE x = $1 AND y IN (1, 2)',
+            sql_parse(self::COMMENTED_SQL)->deparse(),
+        );
+    }
+
+    public function test_extension_outdated_exception_tells_how_to_keep_working(): void
+    {
+        static::assertSame(
+            'The loaded pg_query extension does not keep comments in deparse. Update flow-php/pg-query-ext to 0.49 or later, or remove the DeparseOptions::preserveComments() call.',
+            (new ExtensionOutdatedException())->getMessage(),
+        );
     }
 
     public function test_functions_from_select(): void

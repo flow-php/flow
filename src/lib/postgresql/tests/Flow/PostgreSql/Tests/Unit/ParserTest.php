@@ -424,6 +424,32 @@ final class ParserTest extends TestCase
         static::assertSame('SELECT id, name FROM users', $deparsed);
     }
 
+    public function test_pg_format_drops_comments_by_default(): void
+    {
+        static::assertSame('SELECT 1', sql_format("SELECT 1 -- one\n"));
+    }
+
+    public function test_pg_format_drops_comment_only_input_by_default(): void
+    {
+        static::assertSame('', sql_format("-- only a comment\n/* and a block */"));
+    }
+
+    public function test_pg_format_keeps_comments_with_preserve_comments(): void
+    {
+        static::assertSame("SELECT 1\n-- one", sql_format(
+            "SELECT 1 -- one\n",
+            sql_deparse_options()->preserveComments(),
+        ));
+    }
+
+    public function test_pg_format_returns_comment_only_input_unchanged_with_preserve_comments(): void
+    {
+        static::assertSame("-- only a comment\n/* and a block */", sql_format(
+            "-- only a comment\n/* and a block */",
+            sql_deparse_options()->preserveComments(),
+        ));
+    }
+
     public function test_pg_format_with_custom_options(): void
     {
         if (!function_exists('pg_query_deparse_opts')) {
