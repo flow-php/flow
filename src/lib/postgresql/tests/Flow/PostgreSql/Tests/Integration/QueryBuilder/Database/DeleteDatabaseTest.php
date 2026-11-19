@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration\QueryBuilder\Database;
 
+use Flow\PostgreSql\Protobuf\AST\DeleteStmt;
+use Flow\PostgreSql\QueryBuilder\Condition\ComparisonOperator;
+use Flow\PostgreSql\QueryBuilder\Delete\DeleteBuilder;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 
 use function Flow\PostgreSql\DSL\agg_count;
+use function Flow\PostgreSql\DSL\any_;
+use function Flow\PostgreSql\DSL\asc;
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\column;
 use function Flow\PostgreSql\DSL\column_type_integer;
@@ -15,6 +20,7 @@ use function Flow\PostgreSql\DSL\column_type_text;
 use function Flow\PostgreSql\DSL\column_type_timestamp;
 use function Flow\PostgreSql\DSL\column_type_varchar;
 use function Flow\PostgreSql\DSL\create;
+use function Flow\PostgreSql\DSL\cte;
 use function Flow\PostgreSql\DSL\delete;
 use function Flow\PostgreSql\DSL\eq;
 use function Flow\PostgreSql\DSL\insert;
@@ -22,8 +28,11 @@ use function Flow\PostgreSql\DSL\literal;
 use function Flow\PostgreSql\DSL\or_;
 use function Flow\PostgreSql\DSL\primary_key;
 use function Flow\PostgreSql\DSL\select;
+use function Flow\PostgreSql\DSL\sql_parse;
 use function Flow\PostgreSql\DSL\star;
 use function Flow\PostgreSql\DSL\table;
+use function Flow\PostgreSql\DSL\with;
+use function Flow\Types\DSL\type_instance_of;
 
 final class DeleteDatabaseTest extends PostgreSqlTestCase
 {
@@ -108,6 +117,94 @@ final class DeleteDatabaseTest extends PostgreSqlTestCase
             ->client()
             ->fetchSingle(select(agg_count(star())->as('cnt'))->from(table(self::TABLE_ARCHIVE))->toSql());
         static::assertSame(0, $row['cnt']);
+    }
+
+    public function test_delete_rebuilt_from_parsed_in_subquery(): void
+    {
+        static::assertSame(
+            2,
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->execute(
+                    DeleteBuilder::fromAst(
+                        type_instance_of(DeleteStmt::class)->assert(
+                            sql_parse(
+                                'DELETE FROM '
+                                . self::TABLE_LOGS
+                                . ' WHERE id IN (SELECT log_id FROM '
+                                . self::TABLE_ARCHIVE
+                                . ')',
+                            )->raw()->getStmts()[0]
+                                ->getStmt()
+                                ?->getDeleteStmt(),
+                        ),
+                    )->toSql(),
+                ),
+        );
+        static::assertSame(
+            [['id' => 3], ['id' => 4], ['id' => 5]],
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->fetchAll(
+                    select(col('id'))
+                        ->from(table(self::TABLE_LOGS))
+                        ->orderBy(asc(col('id')))
+                        ->toSql(),
+                ),
+        );
+    }
+
+    public function test_delete_with_data_modifying_cte_removes_parents_and_children(): void
+    {
+        static::assertSame(
+            2,
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->execute(
+                    with(
+                        cte(
+                            'removed_logs',
+                            select(col('id'))->from(table(self::TABLE_LOGS))->where(eq(col('level'), literal('DEBUG'))),
+                        ),
+                        cte(
+                            'removed_archive',
+                            delete()
+                                ->from(self::TABLE_ARCHIVE)
+                                ->where(any_(
+                                    col('log_id'),
+                                    ComparisonOperator::EQ,
+                                    select(col('id'))->from(table('removed_logs')),
+                                )),
+                        ),
+                    )
+                        ->delete()
+                        ->from(self::TABLE_LOGS)
+                        ->where(any_(col('id'), ComparisonOperator::EQ, select(col('id'))->from(table('removed_logs'))))
+                        ->toSql(),
+                ),
+        );
+        static::assertSame(
+            [['id' => 1], ['id' => 4], ['id' => 5]],
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->fetchAll(
+                    select(col('id'))
+                        ->from(table(self::TABLE_LOGS))
+                        ->orderBy(asc(col('id')))
+                        ->toSql(),
+                ),
+        );
+        static::assertSame(
+            [['log_id' => 1]],
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->fetchAll(select(col('log_id'))->from(table(self::TABLE_ARCHIVE))->toSql()),
+        );
     }
 
     public function test_delete_with_multiple_conditions(): void

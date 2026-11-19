@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\With;
 
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidBuilderStateException;
 use Flow\PostgreSql\QueryBuilder\Select\SelectFromStep;
 use PHPUnit\Framework\TestCase;
 
@@ -15,6 +16,16 @@ use function Flow\PostgreSql\DSL\with;
 
 final class WithBuilderTest extends TestCase
 {
+    public function test_merge_on_recursive_with_throws(): void
+    {
+        $this->expectException(InvalidBuilderStateException::class);
+        $this->expectExceptionMessage(
+            'MERGE does not accept WITH RECURSIVE, because PostgreSQL rejects it. Remove recursive() from the WITH clause of this MERGE, or use INSERT, UPDATE or DELETE.',
+        );
+
+        with(cte('t', select(col('id'))->from(table('s'))))->recursive()->merge('target');
+    }
+
     public function test_select_returns_from_step_and_renders_with_clause(): void
     {
         $builder = with(cte('t', select(col('id'))->from(table('s'))))->select(col('id'));

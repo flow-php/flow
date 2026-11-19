@@ -15,6 +15,7 @@ use Flow\PostgreSql\QueryBuilder\Clause\WithClause;
 use Flow\PostgreSql\QueryBuilder\Condition\Comparison;
 use Flow\PostgreSql\QueryBuilder\Condition\ComparisonOperator;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidBuilderStateException;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 use Flow\PostgreSql\QueryBuilder\Expression\BinaryExpression;
 use Flow\PostgreSql\QueryBuilder\Expression\Column;
@@ -23,6 +24,8 @@ use Flow\PostgreSql\QueryBuilder\Expression\Literal;
 use Flow\PostgreSql\QueryBuilder\Select\SelectBuilder;
 use Flow\PostgreSql\QueryBuilder\Table\Table;
 use Flow\PostgreSql\QueryBuilder\Update\UpdateBuilder;
+use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
 use function count;
@@ -32,9 +35,11 @@ use function Flow\PostgreSql\DSL\eq;
 use function Flow\PostgreSql\DSL\literal;
 use function Flow\PostgreSql\DSL\param;
 use function Flow\PostgreSql\DSL\select;
+use function Flow\PostgreSql\DSL\sql_parse;
 use function Flow\PostgreSql\DSL\sub_select;
 use function Flow\PostgreSql\DSL\table;
 use function Flow\PostgreSql\DSL\update;
+use function Flow\Types\DSL\type_instance_of;
 use function function_exists;
 
 final class UpdateBuilderTest extends TestCase
@@ -782,6 +787,84 @@ final class UpdateBuilderTest extends TestCase
         $ctes = $withClause->getCtes();
         static::assertNotNull($ctes);
         static::assertCount(1, $ctes);
+    }
+
+    #[TestWith([
+        "UPDATE parents SET name = 'x' WHERE id IN (SELECT id FROM d)",
+        "UPDATE parents SET name = 'x' WHERE id IN (SELECT id FROM d)",
+    ])]
+    #[TestWith([
+        "UPDATE parents SET name = 'x' WHERE id NOT IN (SELECT id FROM d)",
+        "UPDATE parents SET name = 'x' WHERE NOT id IN (SELECT id FROM d)",
+    ])]
+    public function test_from_ast_round_trips_in_subquery(string $sql, string $deparsed): void
+    {
+        static::assertSame(
+            $deparsed,
+            UpdateBuilder::fromAst(
+                type_instance_of(UpdateStmt::class)->assert(
+                    sql_parse($sql)->raw()->getStmts()[0]->getStmt()?->getUpdateStmt(),
+                ),
+            )->toSql(),
+        );
+    }
+
+    public function test_from_ast_keeps_returning_aliases(): void
+    {
+        static::assertSame(
+            'UPDATE children SET parent_id = 2 WHERE id = 10 RETURNING WITH (OLD AS o, NEW AS n) o.parent_id, n.parent_id',
+            UpdateBuilder::fromAst(
+                type_instance_of(UpdateStmt::class)->assert(
+                    sql_parse(
+                        'UPDATE children SET parent_id = 2 WHERE id = 10 RETURNING WITH (OLD AS o, NEW AS n) o.parent_id, n.parent_id',
+                    )->raw()->getStmts()[0]
+                        ->getStmt()
+                        ?->getUpdateStmt(),
+                ),
+            )->toSql(),
+        );
+    }
+
+    public function test_returning_aliases_to_sql(): void
+    {
+        static::assertSame(
+            'UPDATE children SET parent_id = 2 WHERE id = 10 RETURNING WITH (OLD AS o, NEW AS n) o.parent_id, n.parent_id',
+            update()
+                ->update('children')
+                ->set('parent_id', literal(2))
+                ->where(eq(col('id'), literal(10)))
+                ->returningAliases(old: 'o', new: 'n')
+                ->returning(col('parent_id', 'o'), col('parent_id', 'n'))
+                ->toSql(),
+        );
+    }
+
+    public function test_returning_aliases_without_alias_throws(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('returningAliases() needs an old or a new alias');
+
+        update()->update('children')->set('parent_id', literal(2))->returningAliases();
+    }
+
+    public function test_returning_aliases_without_returning_list_throws(): void
+    {
+        $this->expectException(InvalidBuilderStateException::class);
+        $this->expectExceptionMessage(
+            'RETURNING WITH (OLD AS o, NEW AS n) needs a RETURNING list. Call returning() or returningAll() after returningAliases().',
+        );
+
+        update()->update('children')->set('parent_id', literal(2))->returningAliases('o', 'n')->toSql();
+    }
+
+    public function test_returning_without_expressions_throws(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'returning() needs at least one expression. Call returningAll() for RETURNING *.',
+        );
+
+        update()->update('children')->set('parent_id', literal(2))->returning();
     }
 
     private function deparse(UpdateStmt $updateStmt): string

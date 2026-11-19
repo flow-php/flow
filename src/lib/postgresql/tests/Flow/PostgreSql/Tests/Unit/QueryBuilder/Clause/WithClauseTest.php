@@ -97,7 +97,7 @@ final class WithClauseTest extends TestCase
     public function test_recursive_with_clause_to_ast(): void
     {
         $query = $this->createMockSelectNode();
-        $cte = new CTE('hierarchy', $query, recursive: true);
+        $cte = new CTE('hierarchy', $query);
         $withClause = new WithClause([$cte], recursive: true);
 
         $node = $withClause->toAst();

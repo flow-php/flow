@@ -12,10 +12,13 @@ use Flow\PostgreSql\Protobuf\AST\RawStmt;
 use Flow\PostgreSql\QueryBuilder\Clause\ConflictTarget;
 use Flow\PostgreSql\QueryBuilder\Clause\OnConflictClause;
 use Flow\PostgreSql\QueryBuilder\Condition\IsNull;
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidBuilderStateException;
 use Flow\PostgreSql\QueryBuilder\Expression\Column;
 use Flow\PostgreSql\QueryBuilder\Expression\FunctionCall;
 use Flow\PostgreSql\QueryBuilder\Expression\Literal;
 use Flow\PostgreSql\QueryBuilder\Insert\InsertBuilder;
+use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
 use function count;
@@ -26,7 +29,9 @@ use function Flow\PostgreSql\DSL\literal;
 use function Flow\PostgreSql\DSL\param;
 use function Flow\PostgreSql\DSL\parameters;
 use function Flow\PostgreSql\DSL\select;
+use function Flow\PostgreSql\DSL\sql_parse;
 use function Flow\PostgreSql\DSL\table;
+use function Flow\Types\DSL\type_instance_of;
 use function function_exists;
 
 final class InsertBuilderTest extends TestCase
@@ -744,6 +749,84 @@ final class InsertBuilderTest extends TestCase
                 ->values(literal('John'), literal('john@example.com'))
                 ->toSql(),
         );
+    }
+
+    #[TestWith([
+        'INSERT INTO audit (id) SELECT id FROM parents WHERE id IN (SELECT id FROM d)',
+        'INSERT INTO audit (id) SELECT id FROM parents WHERE id IN (SELECT id FROM d)',
+    ])]
+    #[TestWith([
+        'INSERT INTO audit (id) SELECT id FROM parents WHERE id NOT IN (SELECT id FROM d)',
+        'INSERT INTO audit (id) SELECT id FROM parents WHERE NOT id IN (SELECT id FROM d)',
+    ])]
+    public function test_from_ast_round_trips_in_subquery(string $sql, string $deparsed): void
+    {
+        static::assertSame(
+            $deparsed,
+            InsertBuilder::fromAst(
+                type_instance_of(InsertStmt::class)->assert(
+                    sql_parse($sql)->raw()->getStmts()[0]->getStmt()?->getInsertStmt(),
+                ),
+            )->toSql(),
+        );
+    }
+
+    public function test_from_ast_keeps_returning_aliases(): void
+    {
+        static::assertSame(
+            'INSERT INTO children (id, parent_id) VALUES (12, 1) RETURNING WITH (NEW AS n) n.id',
+            InsertBuilder::fromAst(
+                type_instance_of(InsertStmt::class)->assert(
+                    sql_parse(
+                        'INSERT INTO children (id, parent_id) VALUES (12, 1) RETURNING WITH (NEW AS n) n.id',
+                    )->raw()->getStmts()[0]
+                        ->getStmt()
+                        ?->getInsertStmt(),
+                ),
+            )->toSql(),
+        );
+    }
+
+    public function test_returning_aliases_to_sql(): void
+    {
+        static::assertSame(
+            'INSERT INTO children (id, parent_id) VALUES (12, 1) RETURNING WITH (NEW AS n) n.id',
+            insert()
+                ->into('children')
+                ->columns('id', 'parent_id')
+                ->values(literal(12), literal(1))
+                ->returningAliases(new: 'n')
+                ->returning(col('id', 'n'))
+                ->toSql(),
+        );
+    }
+
+    public function test_returning_aliases_without_alias_throws(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('returningAliases() needs an old or a new alias');
+
+        insert()->into('children')->columns('id')->values(literal(12))->returningAliases();
+    }
+
+    public function test_returning_aliases_without_returning_list_throws(): void
+    {
+        $this->expectException(InvalidBuilderStateException::class);
+        $this->expectExceptionMessage(
+            'RETURNING WITH (NEW AS n) needs a RETURNING list. Call returning() or returningAll() after returningAliases().',
+        );
+
+        insert()->into('children')->columns('id')->values(literal(12))->returningAliases(new: 'n')->toSql();
+    }
+
+    public function test_returning_without_expressions_throws(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'returning() needs at least one expression. Call returningAll() for RETURNING *.',
+        );
+
+        insert()->into('children')->columns('id')->values(literal(12))->returning();
     }
 
     private function deparse(InsertStmt $insertStmt): string

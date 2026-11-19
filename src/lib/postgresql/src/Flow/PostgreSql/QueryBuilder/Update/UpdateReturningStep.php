@@ -22,4 +22,6 @@ interface UpdateReturningStep extends UpdateFinalStep
      * Add RETURNING * clause.
      */
     public function returningAll(): UpdateFinalStep;
+
+    public function returningAliases(?string $old = null, ?string $new = null): UpdateReturningStep;
 }

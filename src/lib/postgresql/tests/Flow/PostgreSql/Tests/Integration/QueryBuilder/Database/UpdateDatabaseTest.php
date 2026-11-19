@@ -173,6 +173,26 @@ final class UpdateDatabaseTest extends PostgreSqlTestCase
         static::assertSame('80000.00', $row['salary']);
     }
 
+    public function test_update_with_returning_aliases_returns_old_and_new_values(): void
+    {
+        static::assertSame(
+            ['salary' => '50000.00', 'department_id' => 2],
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->fetchSingle(
+                    update()
+                        ->update(self::TABLE_EMPLOYEES)
+                        ->set('salary', literal(70000))
+                        ->set('department_id', literal(2))
+                        ->where(eq(col('name'), literal('Alice')))
+                        ->returningAliases(old: 'o', new: 'n')
+                        ->returning(col('salary', 'o'), col('department_id', 'n'))
+                        ->toSql(),
+                ),
+        );
+    }
+
     public function test_update_with_returning_all(): void
     {
         $query = update()

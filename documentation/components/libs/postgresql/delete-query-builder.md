@@ -94,6 +94,30 @@ echo $query->toSql();
 // DELETE FROM users WHERE id = ANY (SELECT user_id FROM inactive_users)
 ```
 
+## Delete with CTE (WITH Clause)
+
+```php
+<?php
+
+use function Flow\PostgreSql\DSL\{with, cte, delete, select, col, table, eq, literal, in_subquery};
+
+$query = with(
+    cte('removed_parents', select(col('id'))->from(table('parents'))->where(eq(col('archived'), literal(true)))),
+    cte(
+        'removed_children',
+        delete()
+            ->from('children')
+            ->where(in_subquery(col('parent_id'), select(col('id'))->from(table('removed_parents'))))
+    )
+)
+    ->delete()
+    ->from('parents')
+    ->where(in_subquery(col('id'), select(col('id'))->from(table('removed_parents'))));
+
+echo $query->toSql();
+// WITH removed_parents AS (SELECT id FROM parents WHERE archived = true), removed_children AS (DELETE FROM children WHERE parent_id IN (SELECT id FROM removed_parents)) DELETE FROM parents WHERE id IN (SELECT id FROM removed_parents)
+```
+
 ## RETURNING Clause
 
 ```php
@@ -118,6 +142,16 @@ $query = delete()
 
 echo $query->toSql();
 // DELETE FROM users WHERE id = 1 RETURNING *
+
+// Rename the OLD row alias
+$query = delete()
+    ->from('children')
+    ->where(eq(col('id'), literal(10)))
+    ->returningAliases(old: 'o')
+    ->returning(col('id', 'o'));
+
+echo $query->toSql();
+// DELETE FROM children WHERE id = 10 RETURNING WITH (OLD AS o) o.id
 ```
 
 ## Complex WHERE Conditions

@@ -7,6 +7,7 @@ namespace Flow\PostgreSql\QueryBuilder\With;
 use Flow\PostgreSql\QueryBuilder\Clause\WithClause;
 use Flow\PostgreSql\QueryBuilder\Delete\DeleteBuilder;
 use Flow\PostgreSql\QueryBuilder\Delete\DeleteFromStep;
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidBuilderStateException;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 use Flow\PostgreSql\QueryBuilder\Insert\InsertBuilder;
 use Flow\PostgreSql\QueryBuilder\Insert\InsertIntoStep;
@@ -44,6 +45,10 @@ final readonly class WithBuilder
      */
     public function merge(string $table, ?string $alias = null): MergeUsingStep
     {
+        if ($this->withClause->recursive()) {
+            throw InvalidBuilderStateException::recursiveWithOnMerge();
+        }
+
         return MergeBuilder::with($this->withClause)->into($table, $alias);
     }
 

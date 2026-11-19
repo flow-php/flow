@@ -170,7 +170,9 @@ final class InTest extends TestCase
     public function test_in_with_single_subquery_throws(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('in_() does not support subqueries');
+        $this->expectExceptionMessage(
+            'in_() does not support subqueries; use in_subquery($expr, $subquery) for "IN (subquery)".',
+        );
 
         in_(col('y'), [sub_select(select(col('id'))->from(table('s')))]);
     }

@@ -8,15 +8,13 @@ use Flow\PostgreSql\Protobuf\AST\Alias;
 use Flow\PostgreSql\Protobuf\AST\DeleteStmt;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
-use Flow\PostgreSql\Protobuf\AST\ResTarget;
-use Flow\PostgreSql\Protobuf\AST\ReturningClause;
 use Flow\PostgreSql\QueryBuilder\AstDeparser;
+use Flow\PostgreSql\QueryBuilder\Clause\ReturningClause;
 use Flow\PostgreSql\QueryBuilder\Clause\WithClause;
 use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Condition\ConditionFactory;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
-use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
 use Flow\PostgreSql\QueryBuilder\Expression\Star;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Table\AliasedTable;
@@ -31,7 +29,6 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
 {
     /**
      * @param array<TableReference> $using
-     * @param array<Expression> $returning
      */
     private function __construct(
         private ?WithClause $with = null,
@@ -40,7 +37,7 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
         private ?string $alias = null,
         private array $using = [],
         private ?Condition $where = null,
-        private array $returning = [],
+        private ?ReturningClause $returning = null,
     ) {}
 
     public static function create(): DeleteFromStep
@@ -114,31 +111,7 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
             }
         }
 
-        $returningExpressions = [];
         $returningClause = $deleteStmt->getReturningClause();
-        $returningList = $returningClause !== null ? $returningClause->getExprs() : [];
-
-        if (count($returningList) > 0) {
-            foreach ($returningList as $resTargetNode) {
-                $resTarget = $resTargetNode->getResTarget();
-
-                if ($resTarget === null) {
-                    throw InvalidAstException::invalidFieldValue(
-                        'returning_list',
-                        'DeleteStmt',
-                        'Expected ResTarget node',
-                    );
-                }
-
-                $val = $resTarget->getVal();
-
-                if ($val === null) {
-                    throw InvalidAstException::missingRequiredField('val', 'ResTarget');
-                }
-
-                $returningExpressions[] = ExpressionFactory::fromAst($val);
-            }
-        }
 
         return new self(
             with: $withClause,
@@ -147,7 +120,9 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
             alias: $aliasName,
             using: $using,
             where: $whereCondition,
-            returning: $returningExpressions,
+            returning: $returningClause === null
+                ? null
+                : ReturningClause::fromAst((new Node())->setReturningClause($returningClause)),
         );
     }
 
@@ -187,11 +162,11 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
             alias: $this->alias,
             using: $this->using,
             where: $this->where,
-            returning: $expressions,
+            returning: ($this->returning ?? new ReturningClause())->returning(...$expressions),
         );
     }
 
-    public function returningAll(): DeleteFinalStep
+    public function returningAliases(?string $old = null, ?string $new = null): DeleteReturningStep
     {
         return new self(
             with: $this->with,
@@ -200,8 +175,13 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
             alias: $this->alias,
             using: $this->using,
             where: $this->where,
-            returning: [Star::all()],
+            returning: ($this->returning ?? new ReturningClause())->aliases($old, $new),
         );
+    }
+
+    public function returningAll(): DeleteFinalStep
+    {
+        return $this->returning(Star::all());
     }
 
     public function toSql(): string
@@ -258,22 +238,8 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
             $deleteStmt->setWhereClause($this->where->toAst());
         }
 
-        if ($this->returning !== []) {
-            $returningNodes = [];
-
-            foreach ($this->returning as $expression) {
-                $resTarget = new ResTarget();
-                $resTarget->setVal($expression->toAst());
-
-                $resTargetNode = new Node();
-                $resTargetNode->setResTarget($resTarget);
-
-                $returningNodes[] = $resTargetNode;
-            }
-
-            $returningClause = new ReturningClause();
-            $returningClause->setExprs($returningNodes);
-            $deleteStmt->setReturningClause($returningClause);
+        if ($this->returning !== null) {
+            $deleteStmt->setReturningClause($this->returning->toAst()->getReturningClause());
         }
 
         return $deleteStmt;

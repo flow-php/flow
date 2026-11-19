@@ -17,6 +17,7 @@ use function Flow\PostgreSql\DSL\gt;
 use function Flow\PostgreSql\DSL\insert;
 use function Flow\PostgreSql\DSL\literal;
 use function Flow\PostgreSql\DSL\merge;
+use function Flow\PostgreSql\DSL\merge_action;
 use function Flow\PostgreSql\DSL\order_by;
 use function Flow\PostgreSql\DSL\primary_key;
 use function Flow\PostgreSql\DSL\select;
@@ -98,6 +99,33 @@ final class MergeDatabaseTest extends PostgreSqlTestCase
         $this->pgsqlContext()->dropSchemaIfExists(self::SCHEMA_NAME);
 
         parent::tearDown();
+    }
+
+    public function test_merge_returning_merge_action_per_row(): void
+    {
+        static::assertEqualsCanonicalizing(
+            [
+                ['merge_action' => 'DELETE', 'id' => 1],
+                ['merge_action' => 'UPDATE', 'id' => 2],
+                ['merge_action' => 'INSERT', 'id' => 3],
+            ],
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->fetchAll(
+                    merge(self::TABLE_TARGET, 't')
+                        ->using(self::TABLE_SOURCE, 's')
+                        ->on(eq(col('t.id'), col('s.id')))
+                        ->whenMatchedAnd(eq(col('s.id'), literal(1)))
+                        ->thenDelete()
+                        ->whenMatched()
+                        ->thenUpdate(['value' => col('s.value')])
+                        ->whenNotMatched()
+                        ->thenInsert(['id', 'name', 'value'], [col('s.id'), col('s.name'), col('s.value')])
+                        ->returning(merge_action(), col('s.id'))
+                        ->toSql(),
+                ),
+        );
     }
 
     public function test_merge_delete_matched(): void

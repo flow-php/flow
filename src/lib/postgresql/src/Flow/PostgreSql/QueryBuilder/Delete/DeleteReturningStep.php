@@ -22,4 +22,6 @@ interface DeleteReturningStep extends DeleteFinalStep
      * Add a RETURNING * clause to return all columns.
      */
     public function returningAll(): DeleteFinalStep;
+
+    public function returningAliases(?string $old = null, ?string $new = null): DeleteReturningStep;
 }

@@ -35,7 +35,7 @@ echo $query->toSql();
 
 use function Flow\PostgreSql\DSL\{
     select, star, table, col,
-    eq, gt, lt, ge, le, ne, between, in_, like, is_null,
+    eq, gt, lt, ge, le, ne, between, in_, in_subquery, like, is_null,
     literal,
     and_, or_, not_
 };
@@ -97,6 +97,14 @@ $query = select(star())
 
 echo $query->toSql();
 // SELECT * FROM users WHERE status IN ('active', 'pending', 'verified')
+
+// IN (subquery) condition
+$query = select(star())
+    ->from(table('users'))
+    ->where(in_subquery(col('id'), select(col('user_id'))->from(table('orders'))));
+
+echo $query->toSql();
+// SELECT * FROM users WHERE id IN (SELECT user_id FROM orders)
 
 // LIKE condition
 $query = select(star())
@@ -244,7 +252,7 @@ echo $query->toSql();
 <?php
 
 use function Flow\PostgreSql\DSL\{
-    select, with, star, table, col, cte, eq, literal
+    select, with, star, table, col, cte, eq, literal, update, binary_expr, lt
 };
 
 use Flow\PostgreSql\QueryBuilder\Clause\CTEMaterialization;
@@ -283,6 +291,62 @@ $query = with(cte('tree', $recursiveQuery))
 
 echo $query->toSql();
 // WITH RECURSIVE tree AS (...) SELECT * FROM tree
+
+// Recursive CTE with SEARCH (searchDepthFirst() writes DEPTH FIRST)
+$query = with(
+    cte(
+        't',
+        select(literal(1))->unionAll(
+            select(binary_expr(col('n'), '+', literal(1)))->from(table('t'))->where(lt(col('n'), literal(3)))
+        ),
+        ['n']
+    )->searchBreadthFirst(['n'], 'ord')
+)
+    ->recursive()
+    ->select(star())
+    ->from(table('t'));
+
+echo $query->toSql();
+// WITH RECURSIVE t(n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM t WHERE n < 3) SEARCH BREADTH FIRST BY n SET ord SELECT * FROM t
+
+// Recursive CTE with CYCLE (without the mark values, the cycle mark is true / false)
+$query = with(
+    cte(
+        'graph',
+        select(col('id'), col('link'))
+            ->from(table('edges'))
+            ->where(eq(col('id'), literal(1)))
+            ->unionAll(
+                select(col('id', 'e'), col('link', 'e'))
+                    ->from(table('edges')->as('e'))
+                    ->join(table('graph'), eq(col('id', 'e'), col('link', 'graph')))
+            ),
+        ['id', 'link']
+    )->cycle(['id'], 'is_cycle', 'path', literal('Y'), literal('N'))
+)
+    ->recursive()
+    ->select(star())
+    ->from(table('graph'));
+
+echo $query->toSql();
+// WITH RECURSIVE graph(id, link) AS (SELECT id, link FROM edges WHERE id = 1 UNION ALL SELECT e.id, e.link FROM edges e JOIN graph ON e.id = graph.link) CYCLE id SET is_cycle TO 'Y' DEFAULT 'N' USING path SELECT * FROM graph
+
+// Data-modifying CTE: cte() also takes INSERT, UPDATE, DELETE and MERGE queries
+$query = with(
+    cte(
+        'updated',
+        update()
+            ->update('children')
+            ->set('parent_id', literal(2))
+            ->where(eq(col('id'), literal(10)))
+            ->returning(col('id'), col('parent_id'))
+    )
+)
+    ->select(col('id'), col('parent_id'))
+    ->from(table('updated'));
+
+echo $query->toSql();
+// WITH updated AS (UPDATE children SET parent_id = 2 WHERE id = 10 RETURNING id, parent_id) SELECT id, parent_id FROM updated
 
 // Materialized CTE
 $query = with(

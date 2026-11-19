@@ -242,6 +242,26 @@ echo $query->toSql();
 // MERGE INTO target t USING source s ON t.id = s.id WHEN NOT MATCHED BY SOURCE THEN DELETE
 ```
 
+## Merge with RETURNING
+
+`merge_action()` returns `INSERT`, `UPDATE` or `DELETE` for each row. `returningAll()` writes `RETURNING *`.
+
+```php
+<?php
+
+use function Flow\PostgreSql\DSL\{merge, merge_action, col, eq};
+
+$query = merge('children', 'c')
+    ->using('parents', 'p')
+    ->on(eq(col('parent_id', 'c'), col('id', 'p')))
+    ->whenMatched()
+    ->thenDelete()
+    ->returning(merge_action(), col('id', 'c'));
+
+echo $query->toSql();
+// MERGE INTO children c USING parents p ON c.parent_id = p.id WHEN MATCHED THEN DELETE RETURNING merge_action() , c.id
+```
+
 ## Schema-Qualified Tables
 
 ```php

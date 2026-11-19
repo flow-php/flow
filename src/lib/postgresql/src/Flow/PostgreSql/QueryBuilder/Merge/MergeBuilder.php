@@ -12,9 +12,12 @@ use Flow\PostgreSql\Protobuf\AST\RangeSubselect;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\Protobuf\AST\ResTarget;
 use Flow\PostgreSql\QueryBuilder\AstDeparser;
+use Flow\PostgreSql\QueryBuilder\Clause\ReturningClause;
 use Flow\PostgreSql\QueryBuilder\Clause\WithClause;
 use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
+use Flow\PostgreSql\QueryBuilder\Expression\Expression;
+use Flow\PostgreSql\QueryBuilder\Expression\Star;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
 
@@ -37,6 +40,7 @@ final readonly class MergeBuilder implements MergeIntoStep, MergeOnStep, MergeUs
         private ?string $sourceAlias = null,
         private ?Condition $joinCondition = null,
         private array $whenClauses = [],
+        private ?ReturningClause $returning = null,
     ) {}
 
     public static function create(): MergeIntoStep
@@ -62,6 +66,7 @@ final readonly class MergeBuilder implements MergeIntoStep, MergeOnStep, MergeUs
             $this->sourceAlias,
             $this->joinCondition,
             [...$this->whenClauses, $clause],
+            $this->returning,
         );
     }
 
@@ -80,6 +85,7 @@ final readonly class MergeBuilder implements MergeIntoStep, MergeOnStep, MergeUs
             $this->sourceAlias,
             $this->joinCondition,
             $this->whenClauses,
+            $this->returning,
         );
     }
 
@@ -96,7 +102,47 @@ final readonly class MergeBuilder implements MergeIntoStep, MergeOnStep, MergeUs
             $this->sourceAlias,
             $condition,
             $this->whenClauses,
+            $this->returning,
         );
+    }
+
+    public function returning(Expression ...$expressions): MergeFinalStep
+    {
+        return new self(
+            $this->with,
+            $this->table,
+            $this->schema,
+            $this->tableAlias,
+            $this->sourceTable,
+            $this->sourceSchema,
+            $this->sourceSelect,
+            $this->sourceAlias,
+            $this->joinCondition,
+            $this->whenClauses,
+            ($this->returning ?? new ReturningClause())->returning(...$expressions),
+        );
+    }
+
+    public function returningAliases(?string $old = null, ?string $new = null): MergeWhenStep
+    {
+        return new self(
+            $this->with,
+            $this->table,
+            $this->schema,
+            $this->tableAlias,
+            $this->sourceTable,
+            $this->sourceSchema,
+            $this->sourceSelect,
+            $this->sourceAlias,
+            $this->joinCondition,
+            $this->whenClauses,
+            ($this->returning ?? new ReturningClause())->aliases($old, $new),
+        );
+    }
+
+    public function returningAll(): MergeFinalStep
+    {
+        return $this->returning(Star::all());
     }
 
     public function toSql(): string
@@ -188,6 +234,10 @@ final readonly class MergeBuilder implements MergeIntoStep, MergeOnStep, MergeUs
 
         $mergeStmt->setMergeWhenClauses($whenClauseNodes);
 
+        if ($this->returning !== null) {
+            $mergeStmt->setReturningClause($this->returning->toAst()->getReturningClause());
+        }
+
         if ($this->with !== null) {
             $withNode = $this->with->toAst();
             $withClause = $withNode->getWithClause();
@@ -230,6 +280,7 @@ final readonly class MergeBuilder implements MergeIntoStep, MergeOnStep, MergeUs
             $alias,
             $this->joinCondition,
             $this->whenClauses,
+            $this->returning,
         );
     }
 
