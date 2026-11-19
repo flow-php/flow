@@ -125,7 +125,10 @@ final readonly class NativeLocalFilesystem implements Filesystem
         }
 
         foreach ((new GlobWalker())->walk($path) as $filePath) {
-            $status = self::statFor(path_real($filePath, $path->options()), $filePath);
+            $status = self::statFor(
+                path($this->mount->protocol . '://' . path_real($filePath)->path(), $path->options()),
+                $filePath,
+            );
 
             if ($pathFilter->accept($status)) {
                 yield $status;
@@ -225,7 +228,9 @@ final readonly class NativeLocalFilesystem implements Filesystem
 
         $filePath = (new GlobWalker())->walk($path)[0] ?? null;
 
-        return $filePath === null ? null : self::statFor(path($filePath, $path->options()), $filePath);
+        return $filePath === null
+            ? null
+            : self::statFor(path($this->mount->protocol . '://' . $filePath, $path->options()), $filePath);
     }
 
     public function supports(Path $path): bool

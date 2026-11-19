@@ -238,6 +238,38 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
         ));
     }
 
+    public function test_list_pattern_yields_paths_with_the_mount_protocol(): void
+    {
+        $fs = native_local_filesystem('workspace');
+        $fs->writeTo(path('workspace://' . __DIR__ . '/var/mount_list/a.txt'))->append('data');
+        $fs->writeTo(path('workspace://' . __DIR__ . '/var/mount_list/b.txt'))->append('data');
+
+        $listed = iterator_to_array($fs->list(path('workspace://' . __DIR__ . '/var/mount_list/*.txt')));
+
+        static::assertSame(
+            [
+                path('workspace://' . __DIR__ . '/var/mount_list/a.txt')->uri(),
+                path('workspace://' . __DIR__ . '/var/mount_list/b.txt')->uri(),
+            ],
+            array_map(static fn(FileStatus $status): string => $status->path->uri(), $listed),
+        );
+
+        foreach ($listed as $status) {
+            static::assertTrue($fs->status($status->path)?->isFile());
+        }
+    }
+
+    public function test_status_pattern_yields_a_path_with_the_mount_protocol(): void
+    {
+        $fs = native_local_filesystem('workspace');
+        $fs->writeTo(path('workspace://' . __DIR__ . '/var/mount_status/a.txt'))->append('data');
+
+        static::assertSame(
+            path('workspace://' . __DIR__ . '/var/mount_status/a.txt')->uri(),
+            $fs->status(path('workspace://' . __DIR__ . '/var/mount_status/*.txt'))?->path->uri(),
+        );
+    }
+
     public function test_list_rejects_mismatched_scheme(): void
     {
         $this->expectException(InvalidSchemeException::class);
