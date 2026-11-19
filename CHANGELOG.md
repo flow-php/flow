@@ -1,6 +1,11 @@
 ## [Unreleased] - 2026-11-19
 
 ### Added
+- [#2755](https://github.com/flow-php/flow/pull/2755) - **flow-php/postgresql - INSERT, UPDATE, DELETE and MERGE queries in cte()** - [@norberttech](https://github.com/norberttech)
+- [#2755](https://github.com/flow-php/flow/pull/2755) - **flow-php/postgresql - SEARCH and CYCLE clauses on recursive CTEs** - [@norberttech](https://github.com/norberttech)
+- [#2755](https://github.com/flow-php/flow/pull/2755) - **flow-php/postgresql - MERGE returning(), returningAll() and merge_action()** - [@norberttech](https://github.com/norberttech)
+- [#2755](https://github.com/flow-php/flow/pull/2755) - **flow-php/postgresql - returningAliases() for RETURNING WITH (OLD AS, NEW AS)** - [@norberttech](https://github.com/norberttech)
+- [#2755](https://github.com/flow-php/flow/pull/2755) - **flow-php/postgresql - in_subquery() for IN (subquery) conditions** - [@norberttech](https://github.com/norberttech)
 - [#2753](https://github.com/flow-php/flow/pull/2753) - **flow-php/pg-query-ext - pg_query_deparse_opts() keeps the comments of the comments_from source SQL** - [@norberttech](https://github.com/norberttech)
 - [#2753](https://github.com/flow-php/flow/pull/2753) - **flow-php/postgresql - DeparseOptions::preserveComments() keeps SQL comments in deparse() and sql_format()** - [@norberttech](https://github.com/norberttech)
 - [#2753](https://github.com/flow-php/flow/pull/2753) - **flow-php/postgresql - ExtensionOutdatedException for a pg_query extension without comments support** - [@norberttech](https://github.com/norberttech)
@@ -24,6 +29,8 @@
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - Packagist links in the hero and the footer** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2755](https://github.com/flow-php/flow/pull/2755) - **flow-php/postgresql - returning() without expressions throws** - [@norberttech](https://github.com/norberttech)
+- [#2755](https://github.com/flow-php/flow/pull/2755) - **flow-php/postgresql - recursive WITH on MERGE throws at build time** - [@norberttech](https://github.com/norberttech)
 - [#2752](https://github.com/flow-php/flow/pull/2752) - **flow-php/filesystem-async-aws-bridge - rm() of a directory or pattern uses DeleteObjects** - [@norberttech](https://github.com/norberttech)
 - [#2752](https://github.com/flow-php/flow/pull/2752) - **flow-php/filesystem-azure-bridge - rm() of a directory or pattern uses Blob Batch** - [@norberttech](https://github.com/norberttech)
 - [#2752](https://github.com/flow-php/flow/pull/2752) - **flow-php/symfony-filesystem-cache-bridge - clear() sends one rm() call** - [@norberttech](https://github.com/norberttech)
@@ -34,6 +41,9 @@
 - [bfd25e](https://github.com/flow-php/flow/commit/bfd25e3ee88004638529d03dfc30f86e931c76f2) - **docs(flow-php/web): blog posts for releases 0.47.0 and 0.48.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2755](https://github.com/flow-php/flow/pull/2755) - **flow-php/postgresql - fromAst() dropping SEARCH, CYCLE and RETURNING aliases** - [@norberttech](https://github.com/norberttech)
+- [#2755](https://github.com/flow-php/flow/pull/2755) - **flow-php/postgresql - fromAst() failing on IN, ANY and EXISTS subqueries** - [@norberttech](https://github.com/norberttech)
+- [#2755](https://github.com/flow-php/flow/pull/2755) - **flow-php/postgresql - aliased expressions in RETURNING** - [@norberttech](https://github.com/norberttech)
 - [#2753](https://github.com/flow-php/flow/pull/2753) - **flow-php/filesystem-async-aws-bridge - bulk delete error message for a refusal without a key** - [@norberttech](https://github.com/norberttech)
 - [#2752](https://github.com/flow-php/flow/pull/2752) - **flow-php/azure-sdk - Shared Key signature for a zero Content-Length** - [@norberttech](https://github.com/norberttech)
 - [#2752](https://github.com/flow-php/flow/pull/2752) - **flow-php/filesystem-azure-bridge - rm() no longer hides a refused delete of a file** - [@norberttech](https://github.com/norberttech)
@@ -41,6 +51,11 @@
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - copy button on example pages** - [@norberttech](https://github.com/norberttech)
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - search modal error when the search bundle is missing** - [@norberttech](https://github.com/norberttech)
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/cli - phar build with a composer wrapper** - [@norberttech](https://github.com/norberttech)
+
+### Removed
+- [#2755](https://github.com/flow-php/flow/pull/2755) - **flow-php/postgresql - recursive argument of cte() and CTE** - [@norberttech](https://github.com/norberttech)
+- [#2755](https://github.com/flow-php/flow/pull/2755) - **flow-php/postgresql - returning() and returning_all() DSL functions** - [@norberttech](https://github.com/norberttech)
+- [#2755](https://github.com/flow-php/flow/pull/2755) - **flow-php/postgresql - ReturningClause::all() and ReturningClause::columns()** - [@norberttech](https://github.com/norberttech)
 
 ### Security
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - playground file names rendered as text, not as markup** - [@norberttech](https://github.com/norberttech)
