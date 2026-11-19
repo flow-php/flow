@@ -137,6 +137,36 @@ final class FormatSqlCommandTest extends CommandTestCase
         static::assertStringContainsString('No .sql files found', $tester->getDisplay());
     }
 
+    public function test_preserve_comments_option_keeps_comments(): void
+    {
+        $tester = new CommandTester($this->context->command('flow.postgresql.command.sql_format'));
+        $tester->execute(['sql' => "select a, -- the a column\n b from t", '--preserve-comments' => true]);
+
+        static::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        static::assertStringContainsString('-- the a column', $tester->getDisplay());
+    }
+
+    public function test_removes_comments_by_default(): void
+    {
+        $tester = new CommandTester($this->context->command('flow.postgresql.command.sql_format'));
+        $tester->execute(['sql' => "select a, -- the a column\n b from t"]);
+
+        static::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        static::assertStringNotContainsString('-- the a column', $tester->getDisplay());
+    }
+
+    public function test_write_with_preserve_comments_leaves_comment_only_file_unchanged(): void
+    {
+        $file = $this->fs->writeFile('comments.sql', "-- only a comment\n/* and a block */");
+
+        $tester = new CommandTester($this->context->command('flow.postgresql.command.sql_format'));
+        $tester->execute(['--path' => $file->path(), '--write' => true, '--preserve-comments' => true]);
+
+        static::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        static::assertStringContainsString('0 file(s) reformatted, 1 unchanged.', $tester->getDisplay());
+        static::assertSame("-- only a comment\n/* and a block */", $this->fs->readFile('comments.sql'));
+    }
+
     public function test_writes_formatted_file_back_with_write_option(): void
     {
         $file = $this->fs->writeFile('query.sql', 'select id,name from users');

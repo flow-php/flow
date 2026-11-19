@@ -165,6 +165,12 @@ $sql = sql_deparse($query, sql_deparse_options()
 
 // Shorthand: parse and format in one step
 $formatted = sql_format('SELECT id,name FROM users WHERE active=true');
+
+// Comments are removed by default
+$formatted = sql_format("SELECT id, -- primary key\n name FROM users");
+
+// Keep the comments of the input
+$formatted = sql_format("SELECT id, -- primary key\n name FROM users", sql_deparse_options()->preserveComments());
 ```
 
 #### DeparseOptions
@@ -176,6 +182,7 @@ $formatted = sql_format('SELECT id,name FROM users WHERE active=true');
 | `maxLineLength(int)`      | Maximum line length before wrapping | `80`    |
 | `trailingNewline(bool)`   | Add trailing newline at end         | `false` |
 | `commasStartOfLine(bool)` | Place commas at start of lines      | `false` |
+| `preserveComments(bool)`  | Keep the comments of the parsed SQL | `false` |
 
 ---
 
@@ -839,9 +846,9 @@ catalog_comparator()->compare($current, $target, dropIfExists: true);
 <?php
 
 use Flow\PostgreSql\AST\Transformers\{OffsetPaginationConfig, OffsetPaginationModifier};
-use Flow\PostgreSql\Exception\{ParserException, ExtensionNotLoadedException, PaginationException};
+use Flow\PostgreSql\Exception\{ParserException, ExtensionNotLoadedException, ExtensionOutdatedException, PaginationException};
 
-use function Flow\PostgreSql\DSL\sql_parse;
+use function Flow\PostgreSql\DSL\{sql_deparse_options, sql_format, sql_parse};
 
 try {
     $query = sql_parse('INVALID SQL');
@@ -849,6 +856,12 @@ try {
     // pg_query extension is not loaded
 } catch (ParserException $e) {
     echo "Parse error: " . $e->getMessage();
+}
+
+try {
+    $sql = sql_format("SELECT 1 -- one\n", sql_deparse_options()->preserveComments());
+} catch (ExtensionOutdatedException $e) {
+    // pg_query extension is older than 0.49 and cannot keep comments
 }
 
 try {

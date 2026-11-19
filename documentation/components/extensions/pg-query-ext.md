@@ -146,8 +146,34 @@ pg_query_deparse_opts(
     int $indent_size = 4,       // Spaces per indentation level
     int $max_line_length = 80,  // Maximum line length before wrapping
     bool $trailing_newline = false,    // Add trailing newline
-    bool $commas_start_of_line = false // Place commas at line start
+    bool $commas_start_of_line = false, // Place commas at line start
+    ?string $comments_from = null       // Source SQL whose comments the output keeps
 ): string
+```
+
+```php
+<?php
+
+$sql = "SELECT a, -- the a column
+  b
+/* block comment
+   two lines */
+FROM t
+WHERE x = $1 -- trailing
+  AND y IN (1, 2);";
+
+echo pg_query_deparse_opts(pg_query_parse_protobuf($sql), true, 2, 80, false, false, $sql);
+// SELECT
+//   a,
+//   -- the a column
+//   b
+// FROM t
+// WHERE
+//   /* block comment
+//    two lines */
+//   x = $1
+//   AND -- trailing
+//   y IN (1, 2)
 ```
 
 ## Error Handling

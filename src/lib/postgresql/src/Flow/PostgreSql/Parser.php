@@ -44,7 +44,7 @@ final class Parser
         $result = new ParseResult();
         $result->mergeFromString($protobuf);
 
-        return new ParsedQuery($result);
+        return new ParsedQuery($result, $sql);
     }
 
     /**

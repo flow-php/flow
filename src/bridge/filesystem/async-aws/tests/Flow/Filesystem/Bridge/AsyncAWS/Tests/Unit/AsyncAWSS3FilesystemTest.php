@@ -361,6 +361,32 @@ final class AsyncAWSS3FilesystemTest extends TestCase
         static::assertSame(['HeadObject', 'ListObjectsV2'], $calls);
     }
 
+    public function test_rm_of_a_refusal_without_a_key_throws_with_the_error_code(): void
+    {
+        $calls = [];
+
+        try {
+            aws_s3_filesystem('bucket', S3ClientMother::answering([
+                'ListObjectsV2' => [200, [], S3ClientMother::listing('dir/a.csv')],
+                'DeleteObjects' => [
+                    200,
+                    [],
+                    '<?xml version="1.0" encoding="UTF-8"?><DeleteResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">'
+                        . '<Error><Code>InternalError</Code><Message>InternalError</Message></Error></DeleteResult>',
+                ],
+            ], $calls))->rm(path('aws-s3://dir/*.csv'));
+
+            static::fail('rm() of a refusal without a key must throw');
+        } catch (RuntimeException $exception) {
+            static::assertSame(
+                '1 of 1 paths were not removed, the first is aws-s3://: InternalError',
+                $exception->getMessage(),
+            );
+        }
+
+        static::assertSame(['ListObjectsV2', 'DeleteObjects'], $calls);
+    }
+
     public function test_rm_of_refused_keys_throws_before_the_next_delete_objects(): void
     {
         $calls = [];

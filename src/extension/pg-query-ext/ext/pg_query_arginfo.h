@@ -42,6 +42,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_pg_query_deparse_opts, 0, 1, IS_
     ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, max_line_length, IS_LONG, 0, "80")
     ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, trailing_newline, _IS_BOOL, 0, "false")
     ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, commas_start_of_line, _IS_BOOL, 0, "false")
+    ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, comments_from, IS_STRING, 1, "null")
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_pg_query_summary, 0, 1, IS_STRING, 0)

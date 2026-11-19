@@ -121,6 +121,7 @@ if (!function_exists('pg_query_parse')) {
      * @param int $max_line_length Maximum line length before wrapping (default: 80)
      * @param bool $trailing_newline Add a trailing newline at the end (default: false)
      * @param bool $commas_start_of_line Place commas at the start of lines (default: false)
+     * @param null|string $comments_from Source SQL whose comments the output keeps (default: null, no comments)
      *
      * @throws \RuntimeException on deparse error
      *
@@ -133,6 +134,7 @@ if (!function_exists('pg_query_parse')) {
         int $max_line_length = 80,
         bool $trailing_newline = false,
         bool $commas_start_of_line = false,
+        ?string $comments_from = null,
     ): string {
         throw new RuntimeException('pg_query extension is not loaded');
     }

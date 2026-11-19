@@ -14,6 +14,8 @@ final class DeparseOptions
 
     private bool $prettyPrint = true;
 
+    private bool $preserveComments = false;
+
     private bool $trailingNewline = false;
 
     public static function new(): self
@@ -43,6 +45,11 @@ final class DeparseOptions
         return $this->maxLineLength;
     }
 
+    public function hasPreserveComments(): bool
+    {
+        return $this->preserveComments;
+    }
+
     public function hasPrettyPrint(): bool
     {
         return $this->prettyPrint;
@@ -63,6 +70,13 @@ final class DeparseOptions
     public function maxLineLength(int $maxLineLength): self
     {
         $this->maxLineLength = $maxLineLength;
+
+        return $this;
+    }
+
+    public function preserveComments(bool $preserveComments = true): self
+    {
+        $this->preserveComments = $preserveComments;
 
         return $this;
     }

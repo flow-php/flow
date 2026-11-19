@@ -431,7 +431,10 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
             '%d of %d paths were not removed, the first is %s: %s',
             count($errors),
             count($keys),
-            path($listed->protocol() . '://' . DIRECTORY_SEPARATOR . $errors[0]->getKey(), $listed->options())->uri(),
+            path(
+                $listed->protocol() . '://' . DIRECTORY_SEPARATOR . (string) $errors[0]->getKey(),
+                $listed->options(),
+            )->uri(),
             $errors[0]->getCode(),
         ));
     }
