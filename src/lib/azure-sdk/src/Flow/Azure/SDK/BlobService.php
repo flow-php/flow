@@ -12,6 +12,7 @@ use Flow\Azure\SDK\BlobService\Configuration;
 use Flow\Azure\SDK\BlobService\CopyBlob\CopyBlobOptions;
 use Flow\Azure\SDK\BlobService\CreateContainer\CreateContainerOptions;
 use Flow\Azure\SDK\BlobService\DeleteBlob\DeleteBlobOptions;
+use Flow\Azure\SDK\BlobService\DeleteBlobs\DeleteBlobsOptions;
 use Flow\Azure\SDK\BlobService\DeleteContainer\DeleteContainerOptions;
 use Flow\Azure\SDK\BlobService\GetBlob\BlobContent;
 use Flow\Azure\SDK\BlobService\GetBlob\GetBlobOptions;
@@ -32,19 +33,31 @@ use Flow\Azure\SDK\Normalizer\SimpleXMLNormalizer;
 use Generator;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 
 use function array_key_exists;
+use function array_keys;
 use function array_merge;
+use function array_values;
+use function bin2hex;
+use function count;
+use function explode;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_union;
 use function gmdate;
+use function implode;
+use function in_array;
 use function is_array;
 use function is_resource;
 use function is_string;
+use function ltrim;
+use function preg_match;
+use function random_bytes;
+use function rtrim;
 use function strlen;
 
 final readonly class BlobService implements BlobServiceInterface
@@ -133,6 +146,118 @@ final readonly class BlobService implements BlobServiceInterface
 
             throw new AzureException(__METHOD__, $request, $response);
         }
+    }
+
+    /**
+     * @param list<string> $blobs at most 256, all in the configured container
+     *
+     * @throws AzureException
+     * @throws ClientExceptionInterface
+     * @throws InvalidArgumentException
+     */
+    public function deleteBlobs(array $blobs, DeleteBlobsOptions $options = new DeleteBlobsOptions()): void
+    {
+        if ($blobs === []) {
+            return;
+        }
+
+        count($blobs) <= 256
+            || throw new InvalidArgumentException('Blob Batch accepts at most 256 blobs, got ' . count($blobs));
+
+        $boundary = 'batch_' . bin2hex(random_bytes(16));
+        $date = gmdate('D, d M Y H:i:s T', time());
+        $subrequests = [];
+        $body = '';
+
+        foreach (array_values($blobs) as $index => $blob) {
+            $subrequest = $this->httpFactory
+                ->delete($this->urlFactory->create($this->configuration, $blob))
+                ->withHeader('date', $date)
+                ->withHeader('content-length', '0');
+
+            foreach ($options->toSubrequestHeaders() as $header => $value) {
+                $subrequest = $subrequest->withHeader($header, $value);
+            }
+
+            $subrequests[$index] = $subrequest->withHeader(
+                'authorization',
+                $this->authorizationFactory->for($subrequest),
+            );
+
+            $body .=
+                "--{$boundary}\r\nContent-Type: application/http\r\nContent-Transfer-Encoding: binary\r\n"
+                . "Content-ID: {$index}\r\n\r\nDELETE {$subrequests[$index]->getUri()->getPath()} HTTP/1.1\r\n";
+
+            foreach ($subrequests[$index]->getHeaders() as $header => $values) {
+                $body .= $header . ': ' . implode(', ', $values) . "\r\n";
+            }
+
+            $body .= "\r\n";
+        }
+
+        $body .= "--{$boundary}--\r\n";
+
+        $request = $this->httpFactory
+            ->post($this->urlFactory->create(
+                $this->configuration,
+                queryParameters: array_merge($options->toURIParameters(), [
+                    'restype' => 'container',
+                    'comp' => 'batch',
+                ]),
+            ))
+            ->withHeader('date', $date)
+            ->withHeader('content-type', 'multipart/mixed; boundary=' . $boundary)
+            ->withHeader('content-length', (string) strlen($body))
+            ->withBody($this->httpFactory->stream($body));
+
+        foreach ($options->toHeaders() as $header => $value) {
+            $request = $request->withHeader($header, $value);
+        }
+
+        $this->logger->info('Azure - Blob Service - Blob Batch', ['request' => $request]);
+
+        $request = $request->withHeader('authorization', $this->authorizationFactory->for($request));
+
+        $response = $this->httpClient->sendRequest($request);
+
+        $this->logger->info('Azure - Blob Service - Blob Batch', ['response' => $response]);
+
+        if ($response->getStatusCode() !== 202) {
+            $this->logger->critical('Azure - Blob Service - Blob Batch', ['response' => $response]);
+
+            throw new AzureException(__METHOD__, $request, $response);
+        }
+
+        $results = $this->blobBatchResults($response);
+        $failures = [];
+
+        foreach (array_keys($subrequests) as $index) {
+            if (!array_key_exists($index, $results) || !in_array($results[$index][0], [202, 404], true)) {
+                $failures[] = $index;
+            }
+        }
+
+        if ($failures === []) {
+            return;
+        }
+
+        $this->logger->critical('Azure - Blob Service - Blob Batch', ['response' => $response]);
+
+        if (!array_key_exists($failures[0], $results)) {
+            throw new AzureException(__METHOD__, $subrequests[$failures[0]], $response, count($failures));
+        }
+
+        [$status, $errorCode, $partBody] = $results[$failures[0]];
+
+        throw new AzureException(
+            __METHOD__,
+            $subrequests[$failures[0]],
+            $response
+                ->withStatus($status)
+                ->withHeader('x-ms-error-code', $errorCode)
+                ->withBody($this->httpFactory->stream($partBody)),
+            count($failures),
+        );
     }
 
     /**
@@ -657,5 +782,40 @@ final readonly class BlobService implements BlobServiceInterface
 
             throw new AzureException(__METHOD__, $request, $response);
         }
+    }
+
+    /**
+     * @return array<int, array{int, string, string}> status, x-ms-error-code and body of each part, by Content-ID
+     */
+    private function blobBatchResults(ResponseInterface $response): array
+    {
+        $boundary = [];
+
+        if (preg_match('/boundary="?([^";]+)"?/i', $response->getHeaderLine('content-type'), $boundary) !== 1) {
+            return [];
+        }
+
+        $results = [];
+
+        foreach (explode('--' . $boundary[1], $response->getBody()->getContents()) as $part) {
+            $sections = explode("\r\n\r\n", ltrim($part, "\r\n"), 3);
+            $contentId = [];
+            $status = [];
+            $errorCode = [];
+
+            if (
+                count($sections) < 2
+                || preg_match('/^Content-ID:\s*(\d+)/mi', $sections[0], $contentId) !== 1
+                || preg_match('/^HTTP\/1\.1 (\d{3})/', $sections[1], $status) !== 1
+            ) {
+                continue;
+            }
+
+            preg_match('/^x-ms-error-code:\s*(\S+)/mi', $sections[1], $errorCode);
+
+            $results[(int) $contentId[1]] = [(int) $status[1], $errorCode[1] ?? '', rtrim($sections[2] ?? '', "\r\n")];
+        }
+
+        return $results;
     }
 }

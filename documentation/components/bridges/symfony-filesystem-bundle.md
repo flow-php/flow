@@ -328,6 +328,7 @@ flow_filesystem:
               max_retries: 1
           options:
             block_size: 6291456
+            bulk_delete: true          # false: 1 DeleteObject per key, for stores without DeleteObjects
             copy_part_size: 268435456  # mv() above this size copies in ranged parts
 ```
 
@@ -385,6 +386,7 @@ flow_filesystem:
               max_retries: 1
           options:
             block_size: 4194304
+            bulk_delete: true          # false: 1 Delete Blob per blob instead of Blob Batch
             copy_part_size: 268435456  # mv() above this size copies in ranged blocks
             list_blob_max_results: 100
 ```

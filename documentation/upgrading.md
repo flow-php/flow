@@ -293,6 +293,12 @@ PHP engine.
 | `RustBackend::allocatedBytes()` adds `Flow\Arrow\allocated_bytes()`                               | it counts the bytes of `flow_php` only, which hold the Parquet bytes of the `flow_php` engine. `Flow\Arrow\allocated_bytes()` stays for the bytes of `arrow` |
 | `FLOW_ARROW_ABI` 2                                                                                | 3: build `arrow` from the release of `flow-php/parquet`                                                                                                      |
 
+### 24) `flow-php/azure-sdk` - `BlobServiceInterface` deletes blobs in one batch
+
+| Before                 | After                                                                                                  |
+|------------------------|--------------------------------------------------------------------------------------------------------|
+| `BlobServiceInterface` | also `deleteBlobs(array $blobs, DeleteBlobsOptions $options = new DeleteBlobsOptions()): void`         |
+
 ---
 
 ## Upgrading from 0.46.x to 0.47.x

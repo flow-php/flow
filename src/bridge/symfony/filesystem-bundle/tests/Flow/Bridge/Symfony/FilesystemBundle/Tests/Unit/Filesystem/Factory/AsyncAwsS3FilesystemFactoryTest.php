@@ -298,6 +298,32 @@ final class AsyncAwsS3FilesystemFactoryTest extends TestCase
         ]);
     }
 
+    public function test_options_bulk_delete(): void
+    {
+        $configuration = (new AsyncAwsS3FilesystemFactory())
+            ->create('aws-s3', [
+                'bucket' => 'b',
+                'client' => ['region' => 'us-east-1'],
+                'options' => ['bulk_delete' => false],
+            ])
+            ->normalize();
+
+        static::assertNotNull($configuration);
+        static::assertFalse($configuration['options']['bulk_delete'] ?? null);
+    }
+
+    public function test_options_bulk_delete_must_be_a_boolean(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('`options.bulk_delete` must be a boolean.');
+
+        (new AsyncAwsS3FilesystemFactory())->create('aws-s3', [
+            'bucket' => 'b',
+            'client' => ['region' => 'us-east-1'],
+            'options' => ['bulk_delete' => 'false'],
+        ]);
+    }
+
     public function test_options_copy_part_size(): void
     {
         $configuration = (new AsyncAwsS3FilesystemFactory())

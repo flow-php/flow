@@ -33,6 +33,29 @@ final class BlobServiceContext
         );
     }
 
+    /**
+     * @param array<int, int> $statuses status by Content-ID, in the order of the response parts
+     */
+    public static function batchResponse(array $statuses): ResponseInterface
+    {
+        $body = '';
+
+        foreach ($statuses as $contentId => $status) {
+            $body .=
+                "--batchresponse_test\r\nContent-Type: application/http\r\nContent-ID: {$contentId}\r\n\r\n"
+                . "HTTP/1.1 {$status} Status\r\n"
+                . ($status >= 400 ? "x-ms-error-code: Code{$status}\r\n" : '')
+                . "\r\n"
+                . ($status >= 400 ? "<Error><Code>Code{$status}</Code></Error>\r\n" : '');
+        }
+
+        return self::responseWithHeaders(
+            202,
+            ['Content-Type' => 'multipart/mixed; boundary=batchresponse_test'],
+            $body . "--batchresponse_test--\r\n",
+        );
+    }
+
     public static function response(int $status, string $body): ResponseInterface
     {
         return Psr17FactoryDiscovery::findResponseFactory()

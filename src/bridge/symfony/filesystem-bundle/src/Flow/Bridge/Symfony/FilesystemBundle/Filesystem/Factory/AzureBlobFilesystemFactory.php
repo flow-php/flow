@@ -29,6 +29,7 @@ use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem;
 use function get_debug_type;
 use function implode;
 use function is_array;
+use function is_bool;
 use function is_int;
 use function is_string;
 use function sprintf;
@@ -238,7 +239,7 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
             );
         }
 
-        $allowed = ['block_size', 'copy_part_size', 'list_blob_max_results'];
+        $allowed = ['block_size', 'bulk_delete', 'copy_part_size', 'list_blob_max_results'];
         $unknown = array_diff(array_keys($optionsConfig), $allowed);
 
         if ($unknown !== []) {
@@ -254,6 +255,13 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
                 throw new InvalidArgumentException('`options.block_size` must be an integer.');
             }
             $options = $options->withBlockSize($optionsConfig['block_size']);
+        }
+
+        if (array_key_exists('bulk_delete', $optionsConfig) && $optionsConfig['bulk_delete'] !== null) {
+            if (!is_bool($optionsConfig['bulk_delete'])) {
+                throw new InvalidArgumentException('`options.bulk_delete` must be a boolean.');
+            }
+            $options = $options->withBulkDelete($optionsConfig['bulk_delete']);
         }
 
         if (array_key_exists('copy_part_size', $optionsConfig) && $optionsConfig['copy_part_size'] !== null) {

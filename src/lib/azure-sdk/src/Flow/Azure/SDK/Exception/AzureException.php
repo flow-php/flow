@@ -15,6 +15,7 @@ final class AzureException extends Exception
         string $endpoint,
         public readonly RequestInterface $request,
         public readonly ResponseInterface $response,
+        public readonly int $failedRequests = 1,
     ) {
         parent::__construct(sprintf(
             'Azure SDK Exception: %s, %d, %s',

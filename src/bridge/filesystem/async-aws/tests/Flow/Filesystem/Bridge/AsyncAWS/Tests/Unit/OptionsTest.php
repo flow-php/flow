@@ -32,6 +32,7 @@ final class OptionsTest extends TestCase
     {
         $options = (new Options())
             ->withFileFastPath(false)
+            ->withBulkDelete(false)
             ->withBlockSize(6 * 1024 * 1024)
             ->withCopyPartSize(6 * 1024 * 1024);
 
@@ -41,6 +42,7 @@ final class OptionsTest extends TestCase
             [
                 'block_location' => sys_get_temp_dir(),
                 'block_permissions' => null,
+                'bulk_delete' => false,
                 'copy_part_size' => 6 * 1024 * 1024,
                 'file_fast_path' => false,
                 'part_size' => 6 * 1024 * 1024,

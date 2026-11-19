@@ -8,6 +8,7 @@ use Flow\Azure\SDK\BlobService\BlockBlob\BlockList;
 use Flow\Azure\SDK\BlobService\CopyBlob\CopyBlobOptions;
 use Flow\Azure\SDK\BlobService\CreateContainer\CreateContainerOptions;
 use Flow\Azure\SDK\BlobService\DeleteBlob\DeleteBlobOptions;
+use Flow\Azure\SDK\BlobService\DeleteBlobs\DeleteBlobsOptions;
 use Flow\Azure\SDK\BlobService\DeleteContainer\DeleteContainerOptions;
 use Flow\Azure\SDK\BlobService\GetBlob\BlobContent;
 use Flow\Azure\SDK\BlobService\GetBlob\GetBlobOptions;
@@ -22,13 +23,25 @@ use Flow\Azure\SDK\BlobService\PutBlockBlob\PutBlockBlobOptions;
 use Flow\Azure\SDK\BlobService\PutBlockBlobBlock\PutBlockBlobBlockOptions;
 use Flow\Azure\SDK\BlobService\PutBlockBlobBlockList\PutBlockBlobBlockListOptions;
 use Flow\Azure\SDK\BlobService\PutBlockBlobBlockList\SimpleXMLSerializer;
+use Flow\Azure\SDK\Exception\AzureException;
+use Flow\Azure\SDK\Exception\InvalidArgumentException;
 use Generator;
+use Psr\Http\Client\ClientExceptionInterface;
 
 interface BlobServiceInterface
 {
     public function copyBlob(string $fromBlob, string $toBlob, CopyBlobOptions $options = new CopyBlobOptions()): void;
 
     public function deleteBlob(string $blob, DeleteBlobOptions $options = new DeleteBlobOptions()): void;
+
+    /**
+     * @param list<string> $blobs at most 256, all in the configured container
+     *
+     * @throws AzureException
+     * @throws ClientExceptionInterface
+     * @throws InvalidArgumentException
+     */
+    public function deleteBlobs(array $blobs, DeleteBlobsOptions $options = new DeleteBlobsOptions()): void;
 
     public function deleteContainer(DeleteContainerOptions $options = new DeleteContainerOptions()): void;
 

@@ -110,6 +110,25 @@ copies ranged blocks with Put Block From URL and commits them with one Put Block
 headers and the metadata of the source. The source is deleted only after the copy succeeded. Blob tags are not
 carried. The source is signed with a SAS, so the service must use Shared Key authorization.
 
+### rm()
+
+```php
+<?php
+
+use function Flow\Filesystem\DSL\path;
+
+$azure->rm(path('azure-blob://data'));          // 1 Blob Batch request per 256 blobs
+$azure->rm(path('azure-blob://data/*.parquet')); // the same for a pattern
+$azure->rm(path('azure-blob://data/a.csv'));     // 1 Delete Blob request
+
+// a refused blob: the current batch finishes, no further batch is sent
+// Flow\Filesystem\Exception\RuntimeException:
+// 3 of 256 paths were not removed, the first is azure-blob://data/part-7.parquet: AuthorizationFailure
+
+// 1 Delete Blob request per blob
+$azure = azure_filesystem($blobService, azure_filesystem_options()->withBulkDelete(false));
+```
+
 ## Usage with Flow
 
 To use the Azure Blob filesystem with Flow, give it to the source or sink that reads or writes the

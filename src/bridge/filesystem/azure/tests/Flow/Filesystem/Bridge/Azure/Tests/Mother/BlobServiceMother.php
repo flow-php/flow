@@ -17,18 +17,21 @@ use function Flow\Azure\SDK\DSL\azure_blob_service_config;
 use function Flow\Azure\SDK\DSL\azure_http_factory;
 use function Flow\Azure\SDK\DSL\azure_shared_key_authorization_factory;
 use function Flow\Azure\SDK\DSL\azure_url_factory;
+use function htmlspecialchars;
+use function implode;
 use function parse_str;
 use function parse_url;
 use function strlen;
 use function substr;
 use function trim;
 
+use const ENT_XML1;
 use const PHP_URL_QUERY;
 
 final class BlobServiceMother
 {
     /**
-     * @param array<string, array{int, array<string, string>}> $answers "Operation" answers every such request, "Operation#n" its n-th request only
+     * @param array<string, array{int, array<string, string>, 2?: string}> $answers "Operation" answers every such request, "Operation#n" its n-th request only
      * @param list<string> $calls receives "Operation" per request, "PutBlockFromUrl bytes=<first>-<last>" for a ranged block
      * @param list<array<string, string>> $putBlockListHeaders receives the lowercased headers of every PutBlockList request
      */
@@ -64,6 +67,8 @@ final class BlobServiceMother
                 $name = match (true) {
                     $method === 'HEAD' => 'GetBlobProperties',
                     $method === 'DELETE' => 'DeleteBlob',
+                    $method === 'GET' && ($query['comp'] ?? null) === 'list' => 'ListBlobs',
+                    $method === 'POST' && ($query['comp'] ?? null) === 'batch' => 'BlobBatch',
                     $method === 'PUT' && ($query['comp'] ?? null) === 'blocklist' => 'PutBlockList',
                     $method === 'PUT' && ($query['comp'] ?? null) === 'block' && $copySource => 'PutBlockFromUrl',
                     $method === 'PUT' && $copySource && ($headers['x-ms-requires-sync'] ?? null) === 'true'
@@ -77,9 +82,12 @@ final class BlobServiceMother
                     $putBlockListHeaders[] = $headers;
                 }
 
-                [$status, $responseHeaders] = $answers[$name . '#' . $counts[$name]] ?? $answers[$name] ?? [500, []];
+                $answer = $answers[$name . '#' . $counts[$name]] ?? $answers[$name] ?? [500, [], ''];
 
-                return new MockResponse('', ['http_code' => $status, 'response_headers' => $responseHeaders]);
+                return new MockResponse($answer[2] ?? '', [
+                    'http_code' => $answer[0],
+                    'response_headers' => $answer[1],
+                ]);
             },
         ));
 
@@ -90,6 +98,45 @@ final class BlobServiceMother
             azure_http_factory($client, $client),
             azure_url_factory(),
             new NullLogger(),
+        );
+    }
+
+    public static function batchAnswer(int ...$statuses): string
+    {
+        $parts = [];
+
+        foreach ($statuses as $contentId => $status) {
+            $errorCode = match ($status) {
+                202 => '',
+                403 => "x-ms-error-code: AuthorizationFailure\r\n",
+                404 => "x-ms-error-code: BlobNotFound\r\n",
+                default => "x-ms-error-code: InternalError\r\n",
+            };
+            $parts[] =
+                "--batchresponse_test\r\nContent-Type: application/http\r\nContent-ID: {$contentId}\r\n\r\n"
+                . "HTTP/1.1 {$status} Status\r\n{$errorCode}x-ms-version: 2024-08-04\r\n\r\n";
+        }
+
+        return implode('', $parts) . "--batchresponse_test--\r\n";
+    }
+
+    public static function listing(string ...$blobs): string
+    {
+        $entries = [];
+
+        foreach ($blobs as $blob) {
+            $entries[] =
+                '<Blob><Name>'
+                . htmlspecialchars($blob, ENT_XML1)
+                . '</Name><Properties>'
+                . '<Last-Modified>Wed, 18 Nov 2026 12:00:00 GMT</Last-Modified><Content-Length>1</Content-Length>'
+                . '</Properties></Blob>';
+        }
+
+        return (
+            '<?xml version="1.0" encoding="utf-8"?><EnumerationResults ContainerName="container"><Blobs>'
+            . implode('', $entries)
+            . '</Blobs></EnumerationResults>'
         );
     }
 }

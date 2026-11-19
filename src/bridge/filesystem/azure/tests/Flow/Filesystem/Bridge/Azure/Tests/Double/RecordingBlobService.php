@@ -8,6 +8,7 @@ use Flow\Azure\SDK\BlobService\BlockBlob\BlockList;
 use Flow\Azure\SDK\BlobService\CopyBlob\CopyBlobOptions;
 use Flow\Azure\SDK\BlobService\CreateContainer\CreateContainerOptions;
 use Flow\Azure\SDK\BlobService\DeleteBlob\DeleteBlobOptions;
+use Flow\Azure\SDK\BlobService\DeleteBlobs\DeleteBlobsOptions;
 use Flow\Azure\SDK\BlobService\DeleteContainer\DeleteContainerOptions;
 use Flow\Azure\SDK\BlobService\GetBlob\BlobContent;
 use Flow\Azure\SDK\BlobService\GetBlob\GetBlobOptions;
@@ -31,6 +32,8 @@ final class RecordingBlobService implements BlobServiceInterface
 
     public int $deleteBlobCount = 0;
 
+    public int $deleteBlobsCount = 0;
+
     public int $getBlobPropertiesCount = 0;
 
     public int $listBlobsCount = 0;
@@ -49,6 +52,12 @@ final class RecordingBlobService implements BlobServiceInterface
     {
         $this->deleteBlobCount++;
         $this->delegate->deleteBlob($blob, $options);
+    }
+
+    public function deleteBlobs(array $blobs, DeleteBlobsOptions $options = new DeleteBlobsOptions()): void
+    {
+        $this->deleteBlobsCount++;
+        $this->delegate->deleteBlobs($blobs, $options);
     }
 
     public function deleteContainer(DeleteContainerOptions $options = new DeleteContainerOptions()): void

@@ -13,11 +13,14 @@ use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Types\Exception\InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
+use function array_fill;
+use function array_map;
 use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem;
 use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem_options;
 use function Flow\Filesystem\DSL\path;
 use function in_array;
 use function iterator_to_array;
+use function range;
 
 final class AzureBlobFilesystemTest extends TestCase
 {
@@ -268,5 +271,193 @@ final class AzureBlobFilesystemTest extends TestCase
         }
 
         static::assertSame(['GetBlobProperties'], $calls);
+    }
+
+    public function test_rm_of_a_file_rethrows_a_refused_delete(): void
+    {
+        $calls = [];
+
+        try {
+            azure_filesystem(BlobServiceMother::answering([
+                'DeleteBlob' => [403, ['x-ms-error-code' => 'AuthorizationFailure']],
+                'ListBlobs' => [200, [], BlobServiceMother::listing()],
+            ], $calls))->rm(path('azure-blob://a.txt'));
+
+            static::fail('rm() of a refused delete must throw');
+        } catch (AzureException) {
+        }
+
+        static::assertSame(['DeleteBlob'], $calls);
+    }
+
+    public function test_rm_of_a_directory_sends_one_batch(): void
+    {
+        $calls = [];
+
+        static::assertTrue(azure_filesystem(BlobServiceMother::answering([
+            'DeleteBlob#1' => [404, ['x-ms-error-code' => 'BlobNotFound']],
+            'DeleteBlob' => [202, []],
+            'ListBlobs' => [200, [], BlobServiceMother::listing('dir/a.txt', 'dir/b.txt', 'dir/c.txt')],
+            'BlobBatch' => [
+                202,
+                ['Content-Type' => 'multipart/mixed; boundary=batchresponse_test'],
+                BlobServiceMother::batchAnswer(202, 202, 202),
+            ],
+        ], $calls))->rm(path('azure-blob://dir')));
+
+        static::assertSame(['DeleteBlob', 'ListBlobs', 'BlobBatch'], $calls);
+    }
+
+    public function test_rm_of_a_pattern_sends_one_batch_per_256_blobs(): void
+    {
+        $calls = [];
+
+        static::assertTrue(azure_filesystem(BlobServiceMother::answering([
+            'DeleteBlob' => [202, []],
+            'ListBlobs' => [
+                200,
+                [],
+                BlobServiceMother::listing(...array_map(
+                    static fn(int $index): string => "dir/{$index}.csv",
+                    range(0, 256),
+                )),
+            ],
+            'BlobBatch#1' => [
+                202,
+                ['Content-Type' => 'multipart/mixed; boundary=batchresponse_test'],
+                BlobServiceMother::batchAnswer(...array_fill(0, 256, 202)),
+            ],
+            'BlobBatch#2' => [
+                202,
+                ['Content-Type' => 'multipart/mixed; boundary=batchresponse_test'],
+                BlobServiceMother::batchAnswer(202),
+            ],
+        ], $calls))->rm(path('azure-blob://dir/*.csv')));
+
+        static::assertSame(['ListBlobs', 'BlobBatch', 'BlobBatch'], $calls);
+    }
+
+    public function test_rm_without_bulk_delete_sends_one_delete_blob_per_blob(): void
+    {
+        $calls = [];
+
+        static::assertTrue(azure_filesystem(BlobServiceMother::answering([
+            'DeleteBlob#1' => [404, ['x-ms-error-code' => 'BlobNotFound']],
+            'DeleteBlob' => [202, []],
+            'ListBlobs' => [200, [], BlobServiceMother::listing('dir/a.txt', 'dir/b.txt', 'dir/c.txt')],
+            'BlobBatch' => [
+                202,
+                ['Content-Type' => 'multipart/mixed; boundary=batchresponse_test'],
+                BlobServiceMother::batchAnswer(202, 202, 202),
+            ],
+        ], $calls), azure_filesystem_options()->withBulkDelete(false))->rm(path('azure-blob://dir')));
+
+        static::assertSame(['DeleteBlob', 'ListBlobs', 'DeleteBlob', 'DeleteBlob', 'DeleteBlob'], $calls);
+    }
+
+    public function test_rm_counts_a_missing_blob_of_a_batch_as_deleted(): void
+    {
+        $calls = [];
+
+        static::assertTrue(azure_filesystem(BlobServiceMother::answering([
+            'ListBlobs' => [200, [], BlobServiceMother::listing('dir/a.csv', 'dir/b.csv')],
+            'BlobBatch' => [
+                202,
+                ['Content-Type' => 'multipart/mixed; boundary=batchresponse_test'],
+                BlobServiceMother::batchAnswer(202, 404),
+            ],
+        ], $calls))->rm(path('azure-blob://dir/*.csv')));
+    }
+
+    public function test_rm_of_a_non_empty_directory_without_recursion_sends_no_batch(): void
+    {
+        $calls = [];
+
+        try {
+            azure_filesystem(BlobServiceMother::answering([
+                'DeleteBlob' => [404, ['x-ms-error-code' => 'BlobNotFound']],
+                'ListBlobs' => [200, [], BlobServiceMother::listing('dir/a.txt')],
+            ], $calls))->rm(path('azure-blob://dir'), recursive: false);
+
+            static::fail('rm() of a non-empty directory without recursion must throw');
+        } catch (RuntimeException $exception) {
+            static::assertSame('Directory azure-blob://dir was not removed: it is not empty', $exception->getMessage());
+        }
+
+        static::assertSame(['DeleteBlob', 'ListBlobs'], $calls);
+    }
+
+    public function test_rm_of_refused_blobs_throws_before_the_next_batch(): void
+    {
+        $calls = [];
+
+        try {
+            azure_filesystem(BlobServiceMother::answering([
+                'ListBlobs' => [
+                    200,
+                    [],
+                    BlobServiceMother::listing(...array_map(
+                        static fn(int $index): string => "dir/{$index}.csv",
+                        range(0, 256),
+                    )),
+                ],
+                'BlobBatch' => [
+                    202,
+                    ['Content-Type' => 'multipart/mixed; boundary=batchresponse_test'],
+                    BlobServiceMother::batchAnswer(202, 403, 403, ...array_fill(0, 253, 202)),
+                ],
+            ], $calls))->rm(path('azure-blob://dir/*.csv'));
+
+            static::fail('rm() of refused blobs must throw');
+        } catch (RuntimeException $exception) {
+            static::assertSame(
+                '2 of 256 paths were not removed, the first is azure-blob://dir/1.csv: AuthorizationFailure',
+                $exception->getMessage(),
+            );
+            static::assertInstanceOf(AzureException::class, $exception->getPrevious());
+        }
+
+        static::assertSame(['ListBlobs', 'BlobBatch'], $calls);
+    }
+
+    public function test_rm_rethrows_a_refused_batch_request(): void
+    {
+        $calls = [];
+
+        try {
+            azure_filesystem(BlobServiceMother::answering([
+                'DeleteBlob' => [404, ['x-ms-error-code' => 'BlobNotFound']],
+                'ListBlobs' => [200, [], BlobServiceMother::listing('dir/a.txt', 'dir/b.txt')],
+                'BlobBatch' => [403, ['x-ms-error-code' => 'AuthorizationFailure']],
+            ], $calls))->rm(path('azure-blob://dir'));
+
+            static::fail('rm() of a refused batch request must throw');
+        } catch (AzureException) {
+        }
+
+        static::assertSame(['DeleteBlob', 'ListBlobs', 'BlobBatch'], $calls);
+    }
+
+    public function test_rm_names_the_longest_matching_blob_of_a_refused_batch(): void
+    {
+        $calls = [];
+
+        try {
+            azure_filesystem(BlobServiceMother::answering([
+                'ListBlobs' => [200, [], BlobServiceMother::listing('b.csv', 'a/b.csv')],
+                'BlobBatch' => [
+                    202,
+                    ['Content-Type' => 'multipart/mixed; boundary=batchresponse_test'],
+                    BlobServiceMother::batchAnswer(202, 403),
+                ],
+            ], $calls))->rm(path('azure-blob://**/*.csv'));
+
+            static::fail('rm() of a refused blob must throw');
+        } catch (RuntimeException $exception) {
+            static::assertSame(
+                '1 of 2 paths were not removed, the first is azure-blob://a/b.csv: AuthorizationFailure',
+                $exception->getMessage(),
+            );
+        }
     }
 }
