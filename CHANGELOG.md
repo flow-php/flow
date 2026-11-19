@@ -1,6 +1,10 @@
 ## [Unreleased] - 2026-11-19
 
 ### Added
+- [#2752](https://github.com/flow-php/flow/pull/2752) - **flow-php/azure-sdk - BlobServiceInterface::deleteBlobs() deletes up to 256 blobs in one Blob Batch request** - [@norberttech](https://github.com/norberttech)
+- [#2752](https://github.com/flow-php/flow/pull/2752) - **flow-php/filesystem-async-aws-bridge - bulk_delete option turns bulk delete off** - [@norberttech](https://github.com/norberttech)
+- [#2752](https://github.com/flow-php/flow/pull/2752) - **flow-php/filesystem-azure-bridge - bulk_delete option turns bulk delete off** - [@norberttech](https://github.com/norberttech)
+- [#2752](https://github.com/flow-php/flow/pull/2752) - **flow-php/symfony-filesystem-bundle - bulk_delete option for aws_s3 and azure_blob filesystems** - [@norberttech](https://github.com/norberttech)
 - [#2750](https://github.com/flow-php/flow/pull/2750) - **flow-php/web - guides section with a hub page, sitemap and navigation links** - [@norberttech](https://github.com/norberttech)
 - [#2750](https://github.com/flow-php/flow/pull/2750) - **flow-php/web - guides for reading large CSV and JSON files** - [@norberttech](https://github.com/norberttech)
 - [#2750](https://github.com/flow-php/flow/pull/2750) - **flow-php/web - guides for Excel export and streamed CSV download in Symfony** - [@norberttech](https://github.com/norberttech)
@@ -16,6 +20,9 @@
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - Packagist links in the hero and the footer** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2752](https://github.com/flow-php/flow/pull/2752) - **flow-php/filesystem-async-aws-bridge - rm() of a directory or pattern uses DeleteObjects** - [@norberttech](https://github.com/norberttech)
+- [#2752](https://github.com/flow-php/flow/pull/2752) - **flow-php/filesystem-azure-bridge - rm() of a directory or pattern uses Blob Batch** - [@norberttech](https://github.com/norberttech)
+- [#2752](https://github.com/flow-php/flow/pull/2752) - **flow-php/symfony-filesystem-cache-bridge - clear() sends one rm() call** - [@norberttech](https://github.com/norberttech)
 - [#2750](https://github.com/flow-php/flow/pull/2750) - **flow-php/web - smaller search button in the header to fit the Guides link** - [@norberttech](https://github.com/norberttech)
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - site search moved to the Pagefind Component UI** - [@norberttech](https://github.com/norberttech)
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - playground user data masked from analytics autocapture** - [@norberttech](https://github.com/norberttech)
@@ -23,6 +30,8 @@
 - [bfd25e](https://github.com/flow-php/flow/commit/bfd25e3ee88004638529d03dfc30f86e931c76f2) - **docs(flow-php/web): blog posts for releases 0.47.0 and 0.48.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2752](https://github.com/flow-php/flow/pull/2752) - **flow-php/azure-sdk - Shared Key signature for a zero Content-Length** - [@norberttech](https://github.com/norberttech)
+- [#2752](https://github.com/flow-php/flow/pull/2752) - **flow-php/filesystem-azure-bridge - rm() no longer hides a refused delete of a file** - [@norberttech](https://github.com/norberttech)
 - [#2751](https://github.com/flow-php/flow/pull/2751) - **flow-php/filesystem - local filesystem glob list() and status() keep the mount protocol** - [@norberttech](https://github.com/norberttech)
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - copy button on example pages** - [@norberttech](https://github.com/norberttech)
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - search modal error when the search bundle is missing** - [@norberttech](https://github.com/norberttech)
