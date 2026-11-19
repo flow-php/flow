@@ -1,6 +1,10 @@
 ## [Unreleased] - 2026-11-19
 
 ### Added
+- [#2753](https://github.com/flow-php/flow/pull/2753) - **flow-php/pg-query-ext - pg_query_deparse_opts() keeps the comments of the comments_from source SQL** - [@norberttech](https://github.com/norberttech)
+- [#2753](https://github.com/flow-php/flow/pull/2753) - **flow-php/postgresql - DeparseOptions::preserveComments() keeps SQL comments in deparse() and sql_format()** - [@norberttech](https://github.com/norberttech)
+- [#2753](https://github.com/flow-php/flow/pull/2753) - **flow-php/postgresql - ExtensionOutdatedException for a pg_query extension without comments support** - [@norberttech](https://github.com/norberttech)
+- [#2753](https://github.com/flow-php/flow/pull/2753) - **flow-php/symfony-postgresql-bundle - flow:sql:format --preserve-comments** - [@norberttech](https://github.com/norberttech)
 - [#2752](https://github.com/flow-php/flow/pull/2752) - **flow-php/azure-sdk - BlobServiceInterface::deleteBlobs() deletes up to 256 blobs in one Blob Batch request** - [@norberttech](https://github.com/norberttech)
 - [#2752](https://github.com/flow-php/flow/pull/2752) - **flow-php/filesystem-async-aws-bridge - bulk_delete option turns bulk delete off** - [@norberttech](https://github.com/norberttech)
 - [#2752](https://github.com/flow-php/flow/pull/2752) - **flow-php/filesystem-azure-bridge - bulk_delete option turns bulk delete off** - [@norberttech](https://github.com/norberttech)
@@ -30,6 +34,7 @@
 - [bfd25e](https://github.com/flow-php/flow/commit/bfd25e3ee88004638529d03dfc30f86e931c76f2) - **docs(flow-php/web): blog posts for releases 0.47.0 and 0.48.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2753](https://github.com/flow-php/flow/pull/2753) - **flow-php/filesystem-async-aws-bridge - bulk delete error message for a refusal without a key** - [@norberttech](https://github.com/norberttech)
 - [#2752](https://github.com/flow-php/flow/pull/2752) - **flow-php/azure-sdk - Shared Key signature for a zero Content-Length** - [@norberttech](https://github.com/norberttech)
 - [#2752](https://github.com/flow-php/flow/pull/2752) - **flow-php/filesystem-azure-bridge - rm() no longer hides a refused delete of a file** - [@norberttech](https://github.com/norberttech)
 - [#2751](https://github.com/flow-php/flow/pull/2751) - **flow-php/filesystem - local filesystem glob list() and status() keep the mount protocol** - [@norberttech](https://github.com/norberttech)
