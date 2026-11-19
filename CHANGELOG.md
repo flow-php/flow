@@ -1,6 +1,14 @@
-## [Unreleased] - 2026-11-18
+## [Unreleased] - 2026-11-19
 
 ### Added
+- [#2750](https://github.com/flow-php/flow/pull/2750) - **flow-php/web - guides section with a hub page, sitemap and navigation links** - [@norberttech](https://github.com/norberttech)
+- [#2750](https://github.com/flow-php/flow/pull/2750) - **flow-php/web - guides for reading large CSV and JSON files** - [@norberttech](https://github.com/norberttech)
+- [#2750](https://github.com/flow-php/flow/pull/2750) - **flow-php/web - guides for Excel export and streamed CSV download in Symfony** - [@norberttech](https://github.com/norberttech)
+- [#2750](https://github.com/flow-php/flow/pull/2750) - **flow-php/web - guides for CSV, Excel and REST API imports** - [@norberttech](https://github.com/norberttech)
+- [#2750](https://github.com/flow-php/flow/pull/2750) - **flow-php/web - guide for indexing a database table in Elasticsearch** - [@norberttech](https://github.com/norberttech)
+- [#2750](https://github.com/flow-php/flow/pull/2750) - **flow-php/web - code tabs in markdown pages** - [@norberttech](https://github.com/norberttech)
+- [#2750](https://github.com/flow-php/flow/pull/2750) - **flow-php/web - share image and related guides for each guide** - [@norberttech](https://github.com/norberttech)
+- [#2750](https://github.com/flow-php/flow/pull/2750) - **flow-php/web - canonical link on every page** - [@norberttech](https://github.com/norberttech)
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - 404 page** - [@norberttech](https://github.com/norberttech)
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - analytics events for code copy, playground and site search** - [@norberttech](https://github.com/norberttech)
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - analytics on the API reference** - [@norberttech](https://github.com/norberttech)
@@ -8,6 +16,7 @@
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - Packagist links in the hero and the footer** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2750](https://github.com/flow-php/flow/pull/2750) - **flow-php/web - smaller search button in the header to fit the Guides link** - [@norberttech](https://github.com/norberttech)
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - site search moved to the Pagefind Component UI** - [@norberttech](https://github.com/norberttech)
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - playground user data masked from analytics autocapture** - [@norberttech](https://github.com/norberttech)
 - [482137](https://github.com/flow-php/flow/commit/482137dfc32690a56996427bff7eab62a031ccf1) - **docs(flow-php/web): blog post for release 0.45.0** - [@norberttech](https://github.com/norberttech)
