@@ -106,4 +106,70 @@ final class KeySetPageTest extends FlowTestCase
 
         KeySetPage::of($keySet, [], 2, KeyValues::of($keySet, ['id' => 3]));
     }
+
+    public function test_a_composite_key_differing_only_in_the_last_key_is_accepted(): void
+    {
+        $keySet = pgsql_pagination_key_set(pgsql_pagination_key_asc('a'), pgsql_pagination_key_asc('b'));
+        $page = KeySetPage::of($keySet, [['a' => 1, 'b' => 1], ['a' => 1, 'b' => 2], ['a' => 1, 'b' => 3]], 2, null);
+
+        static::assertSame([['a' => 1, 'b' => 1], ['a' => 1, 'b' => 2]], $page->rows);
+        static::assertEquals(KeyValues::of($keySet, ['a' => 1, 'b' => 2]), $page->cursor);
+        static::assertEquals(KeyValues::of($keySet, ['a' => 1, 'b' => 3]), $page->lookahead);
+    }
+
+    public function test_a_missing_key_column_in_a_middle_row_is_rejected(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Column "id" not found in result row for keyset pagination');
+
+        KeySetPage::of(
+            pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+            [['id' => 1], ['other' => 2], ['id' => 3]],
+            2,
+            null,
+        );
+    }
+
+    public function test_a_null_key_in_a_middle_row_is_rejected(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            'NULL value found in column "id" for keyset pagination; key columns must be non-null',
+        );
+
+        KeySetPage::of(
+            pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+            [['id' => 1], ['id' => null], ['id' => 3]],
+            2,
+            null,
+        );
+    }
+
+    public function test_an_invalid_key_after_a_tie_is_rejected_before_the_tie(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            'NULL value found in column "id" for keyset pagination; key columns must be non-null',
+        );
+
+        KeySetPage::of(
+            pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+            [['id' => 1], ['id' => 1], ['id' => null]],
+            2,
+            null,
+        );
+    }
+
+    public function test_an_unsupported_key_type_in_a_middle_row_is_rejected(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Unsupported value type "array" in column "id" for keyset pagination');
+
+        KeySetPage::of(
+            pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+            [['id' => 1], ['id' => [2]], ['id' => 3]],
+            2,
+            null,
+        );
+    }
 }
