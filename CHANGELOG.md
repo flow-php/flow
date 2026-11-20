@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-11-19
+## [Unreleased] - 2026-11-20
 
 ### Added
 - [#2755](https://github.com/flow-php/flow/pull/2755) - **flow-php/postgresql - INSERT, UPDATE, DELETE and MERGE queries in cte()** - [@norberttech](https://github.com/norberttech)
@@ -41,6 +41,8 @@
 - [bfd25e](https://github.com/flow-php/flow/commit/bfd25e3ee88004638529d03dfc30f86e931c76f2) - **docs(flow-php/web): blog posts for releases 0.47.0 and 0.48.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2756](https://github.com/flow-php/flow/pull/2756) - **flow-php/etl-adapter-doctrine - keyset pagination built a key object for every row** - [@norberttech](https://github.com/norberttech)
+- [#2756](https://github.com/flow-php/flow/pull/2756) - **flow-php/etl-adapter-postgresql - keyset pagination built a key object and parsed the key name for every row** - [@norberttech](https://github.com/norberttech)
 - [#2755](https://github.com/flow-php/flow/pull/2755) - **flow-php/postgresql - fromAst() dropping SEARCH, CYCLE and RETURNING aliases** - [@norberttech](https://github.com/norberttech)
 - [#2755](https://github.com/flow-php/flow/pull/2755) - **flow-php/postgresql - fromAst() failing on IN, ANY and EXISTS subqueries** - [@norberttech](https://github.com/norberttech)
 - [#2755](https://github.com/flow-php/flow/pull/2755) - **flow-php/postgresql - aliased expressions in RETURNING** - [@norberttech](https://github.com/norberttech)
