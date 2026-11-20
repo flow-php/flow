@@ -7,7 +7,7 @@ proof_label: 'A million orders as a download'
 proof_before: '91Mb'
 proof_after: '20Mb'
 published: '2026-11-18'
-updated: '2026-11-18'
+updated: '2026-11-20'
 ---
 
 # Stream a large CSV download in Symfony without running out of memory
@@ -258,15 +258,14 @@ PHP 8.3, `memory_limit=128M`, a million orders in MySQL. Every controller masks 
 
 | Format  | `StreamedResponse` by hand | Flow        | Flow with the `flow_php` extension |
 |---------|----------------------------|-------------|------------------------------------|
-| CSV     | 91Mb, 3.7s                 | 20Mb, 6.5s  | 20Mb, 4.5s                         |
-| JSON    | 91Mb, 4.5s                 | 20Mb, 6.7s  | 20Mb, 4.2s                         |
-| XML     | 91Mb, 4.9s                 | 20Mb, 7.0s  | 20Mb, 5.3s                         |
-| Parquet | -                          | 42Mb, 10.2s | 20Mb, 4.4s                         |
+| CSV     | 91Mb, 3.2s                 | 20Mb, 5.8s  | 18Mb, 3.5s                         |
+| JSON    | 91Mb, 4.1s                 | 20Mb, 5.9s  | 18Mb, 3.5s                         |
+| XML     | 91Mb, 4.5s                 | 20Mb, 5.9s  | 20Mb, 4.5s                         |
+| Parquet | -                          | 42Mb, 8.6s  | 20Mb, 3.5s                         |
 
-With the extension Flow is as fast as the controllers written by hand for JSON, and close to them for CSV and XML. Without it they are faster.
+With the extension Flow is faster than the controller written by hand for JSON, as fast for XML, and close to it for CSV. Without it they are faster.
 But they are three different pieces of code, and their memory grows with the table.
-The Flow controller is one piece of code with one line changed, and with half of the orders or with all of them it takes the same 20Mb.
-
-> Flow is slower here than it should be. The keyset reader does more work for every row than it needs to, and there is an open issue for it: [flow-php/flow#2748](https://github.com/flow-php/flow/issues/2748).
+The Flow controller is one piece of code with one line changed.
+With half of the orders or with all of them it never takes more than 20Mb.
 
 [flow_php](/documentation/components/extensions/flow-php-ext) is an optional PHP extension. The controller stays the same, without a single change.
