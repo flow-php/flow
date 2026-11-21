@@ -29,6 +29,7 @@ final class ReportMother
         ?Schema $schema = null,
         ?array $sources = null,
         ?Columns $columns = null,
+        ?string $datasetHash = null,
     ): Report {
         return new Report(
             $schema,
@@ -44,6 +45,7 @@ final class ReportMother
                 $processes,
             ),
             $sources,
+            $datasetHash,
         );
     }
 }

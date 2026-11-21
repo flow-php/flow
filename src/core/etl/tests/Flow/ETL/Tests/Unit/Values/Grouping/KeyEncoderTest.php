@@ -175,4 +175,29 @@ final class KeyEncoderTest extends FlowTestCase
     ): void {
         static::assertSame($bucket, KeyEncoder::bucketOf($key, $buckets, $hashOffset));
     }
+
+    public function test_an_int_and_a_float_of_one_value_are_one_key_under_a_float_key_type(): void
+    {
+        $declared = schema(float_schema('k'));
+
+        static::assertSame(
+            ["\x03\x00\x00\x00\x00\x00\x00\xF0\x3F"],
+            (new KeyEncoder(['k'], declared: $declared))->of(array_to_rows([['k' => 1]], schema(int_schema('k')))),
+        );
+        static::assertSame(
+            ["\x03\x00\x00\x00\x00\x00\x00\xF0\x3F"],
+            (new KeyEncoder(['k'], declared: $declared))->of(array_to_rows([['k' => 1.0]], $declared)),
+        );
+    }
+
+    public function test_a_column_the_batch_lacks_under_a_nullable_declaration_keys_as_null(): void
+    {
+        static::assertSame(
+            ["\x00\x02\x01\x00\x00\x00\x00\x00\x00\x00"],
+            (new KeyEncoder(
+                ['k', 'id'],
+                declared: schema(int_schema('k', nullable: true), int_schema('id')),
+            ))->of(array_to_rows([['id' => 1]], schema(int_schema('id')))),
+        );
+    }
 }

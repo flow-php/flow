@@ -21,6 +21,7 @@ use function hash;
 use function hexdec;
 use function iterator_to_array;
 use function ksort;
+use function pack;
 use function range;
 use function sort;
 use function substr;
@@ -29,16 +30,18 @@ final class HashBucketingTest extends FlowTestCase
 {
     public function test_a_hash_offset_reads_other_digits_of_the_key_hash(): void
     {
-        $hash = hash('xxh128', "\0i1");
+        $hash = hash('xxh128', "\x02\x01\x00\x00\x00\x00\x00\x00\x00");
 
         static::assertSame(
             (int) hexdec(substr($hash, 0, 8)) % 16,
-            (new HashBucketing(new KeyEncoder(['id']), 16, new NativePHPRandomValueGenerator()))->indexOf("\0i1"),
+            (new HashBucketing(new KeyEncoder(['id']), 16, new NativePHPRandomValueGenerator()))->indexOf(
+                "\x02\x01\x00\x00\x00\x00\x00\x00\x00",
+            ),
         );
         static::assertSame(
             (int) hexdec(substr($hash, 8, 8)) % 16,
             (new HashBucketing(new KeyEncoder(['id']), 16, new NativePHPRandomValueGenerator(), 'bucket', 8))->indexOf(
-                "\0i1",
+                "\x02\x01\x00\x00\x00\x00\x00\x00\x00",
             ),
         );
     }
@@ -47,7 +50,9 @@ final class HashBucketingTest extends FlowTestCase
     {
         static::assertSame(
             0,
-            (new HashBucketing(new KeyEncoder(['id']), 1, new NativePHPRandomValueGenerator()))->indexOf("\0i1"),
+            (new HashBucketing(new KeyEncoder(['id']), 1, new NativePHPRandomValueGenerator()))->indexOf(
+                "\x02\x01\x00\x00\x00\x00\x00\x00\x00",
+            ),
         );
     }
 
@@ -272,7 +277,7 @@ final class HashBucketingTest extends FlowTestCase
         $expected = [];
 
         foreach (range(0, 99) as $id) {
-            $expected[$strategy->indexOf("\0i{$id}")][] = $id;
+            $expected[$strategy->indexOf("\x02" . pack('P', $id))][] = $id;
         }
 
         $actual = [];
@@ -322,7 +327,7 @@ final class HashBucketingTest extends FlowTestCase
         }
 
         static::assertCount(1, $buckets);
-        static::assertSame($strategy->indexOf("\0n"), $buckets[0]->index);
+        static::assertSame($strategy->indexOf("\x00"), $buckets[0]->index);
         static::assertSame([1, 2, 3], $values);
     }
 }

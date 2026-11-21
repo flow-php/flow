@@ -1407,7 +1407,13 @@ final class PhpBackendTest extends TestCase
             ],
             schema(int_schema('k'), str_schema('v')),
             ['k'],
-            ["\0i1", "\0i2", "\0i1", "\0i3", "\0i2"],
+            [
+                "\x02\x01\x00\x00\x00\x00\x00\x00\x00",
+                "\x02\x02\x00\x00\x00\x00\x00\x00\x00",
+                "\x02\x01\x00\x00\x00\x00\x00\x00\x00",
+                "\x02\x03\x00\x00\x00\x00\x00\x00\x00",
+                "\x02\x02\x00\x00\x00\x00\x00\x00\x00",
+            ],
             4,
             0,
         ];
@@ -1419,7 +1425,11 @@ final class PhpBackendTest extends TestCase
             ],
             schema(int_schema('k'), str_schema('s'), str_schema('v')),
             ['k', 's'],
-            ["\0i1\0s1:a", "\0i1\0s1:b", "\0i1\0s1:a"],
+            [
+                "\x02\x01\x00\x00\x00\x00\x00\x00\x00\x04\x01\x00\x00\x00\x00\x00\x00\x00a",
+                "\x02\x01\x00\x00\x00\x00\x00\x00\x00\x04\x01\x00\x00\x00\x00\x00\x00\x00b",
+                "\x02\x01\x00\x00\x00\x00\x00\x00\x00\x04\x01\x00\x00\x00\x00\x00\x00\x00a",
+            ],
             16,
             8,
         ];
@@ -1427,7 +1437,7 @@ final class PhpBackendTest extends TestCase
             [['k' => null, 'v' => 'a'], ['k' => 7, 'v' => 'b'], ['k' => null, 'v' => 'c']],
             schema(int_schema('k', nullable: true), str_schema('v')),
             ['k'],
-            ["\0n", "\0i7", "\0n"],
+            ["\x00", "\x02\x07\x00\x00\x00\x00\x00\x00\x00", "\x00"],
             4,
             24,
         ];
@@ -1508,5 +1518,40 @@ final class PhpBackendTest extends TestCase
 
         // @mago-ignore analysis:invalid-argument
         (new PhpBackend())->partition($rows, [$rows->column('k')], 4, 25);
+    }
+
+    public function test_row_hashes_are_the_xxh128_of_the_row_form(): void
+    {
+        $rows = array_to_rows(
+            [['a' => 1, 'b' => null], ['a' => 2, 'b' => null]],
+            schema(int_schema('a'), str_schema('b', true)),
+        );
+
+        static::assertSame(
+            ['8e18789eac90baf2a1f6bc7cceafa11a', 'e406cdb168be00960a58088d91a960c5'],
+            (new PhpBackend())
+                ->rowHashes($rows->columns(), 2)
+                ->physicals(),
+        );
+        static::assertSame(
+            ['99aa06d3014798d86001c324468d497f'],
+            (new PhpBackend())
+                ->rowHashes([], 1)
+                ->physicals(),
+        );
+    }
+
+    public function test_row_hashes_ignore_the_column_order(): void
+    {
+        $rows = array_to_rows([['a' => 1, 'b' => 'x']], schema(int_schema('a'), str_schema('b')));
+
+        static::assertSame(
+            (new PhpBackend())
+                ->rowHashes(['a' => $rows->column('a'), 'b' => $rows->column('b')], 1)
+                ->physicals(),
+            (new PhpBackend())
+                ->rowHashes(['b' => $rows->column('b'), 'a' => $rows->column('a')], 1)
+                ->physicals(),
+        );
     }
 }

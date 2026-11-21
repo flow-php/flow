@@ -1,0 +1,118 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Tests\Unit\Values\Column\Php;
+
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Tests\Mother\ColumnMother;
+use Flow\ETL\Values\Column\MultisetDigest;
+use Flow\ETL\Values\Column\Php\PhpGroupedMultisetHashes;
+use PHPUnit\Framework\TestCase;
+
+use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\schema;
+use function hash;
+use function unpack;
+
+final class PhpGroupedMultisetHashesTest extends TestCase
+{
+    public function test_each_row_is_summed_into_its_group(): void
+    {
+        $hashes = new PhpGroupedMultisetHashes();
+        $hashes->add(
+            array_to_rows([['a' => 1], ['a' => 2], ['a' => 1]], schema(int_schema('a')))->columns(),
+            ColumnMother::of(int_schema('id'), [0, 1, 0]),
+        );
+
+        static::assertSame(
+            ['1c30f13d592175e443ed78f99d5f4234', 'e406cdb168be00960a58088d91a960c5'],
+            $hashes->hashes()->physicals(),
+        );
+    }
+
+    public function test_a_group_below_the_highest_seen_one_is_zero(): void
+    {
+        $hashes = new PhpGroupedMultisetHashes();
+        $hashes->add(
+            array_to_rows([['a' => 1]], schema(int_schema('a')))->columns(),
+            ColumnMother::of(int_schema('id'), [1]),
+        );
+
+        static::assertSame(
+            ['00000000000000000000000000000000', '8e18789eac90baf2a1f6bc7cceafa11a'],
+            $hashes->hashes()->physicals(),
+        );
+        static::assertEquals(MultisetDigest::empty(), $hashes->partials()[0]);
+    }
+
+    public function test_no_rows_give_no_groups(): void
+    {
+        $hashes = new PhpGroupedMultisetHashes();
+        $hashes->add([], ColumnMother::of(int_schema('id'), []));
+
+        static::assertSame([], $hashes->hashes()->physicals());
+        static::assertSame([], $hashes->partials());
+    }
+
+    public function test_partials_are_the_digests_by_group(): void
+    {
+        $hashes = new PhpGroupedMultisetHashes();
+        $hashes->add(
+            array_to_rows([['a' => 1], ['a' => 2]], schema(int_schema('a')))->columns(),
+            ColumnMother::of(int_schema('id'), [0, 1]),
+        );
+
+        static::assertEquals(
+            [
+                new MultisetDigest(-6776021345102749414, -8207677697987396878),
+                new MultisetDigest(745355142457024709, -2015697621351530346),
+            ],
+            $hashes->partials(),
+        );
+    }
+
+    public function test_earlier_groups_are_added_to_the_groups_they_map_to(): void
+    {
+        $earlier = new PhpGroupedMultisetHashes();
+        $earlier->add(
+            array_to_rows([['a' => 1], ['a' => 2]], schema(int_schema('a')))->columns(),
+            ColumnMother::of(int_schema('id'), [0, 1]),
+        );
+        $later = new PhpGroupedMultisetHashes();
+        $later->add(
+            array_to_rows([['a' => 1]], schema(int_schema('a')))->columns(),
+            ColumnMother::of(int_schema('id'), [0]),
+        );
+        $later->absorbEarlier($earlier, [1 => 0, 0 => 2]);
+
+        static::assertSame(
+            [
+                '721f4650154ebb88ac4ec50a605901df',
+                '00000000000000000000000000000000',
+                '8e18789eac90baf2a1f6bc7cceafa11a',
+            ],
+            $later->hashes()->physicals(),
+        );
+    }
+
+    public function test_a_batch_without_columns_hashes_each_row_as_the_empty_row(): void
+    {
+        /** @var array{1: int, 2: int} $lanes */
+        $lanes = unpack('J2', hash('xxh128', '', true));
+        $empty = new MultisetDigest($lanes[2], $lanes[1]);
+        $hashes = new PhpGroupedMultisetHashes();
+        $hashes->add([], ColumnMother::of(int_schema('id'), [1, 0, 1]));
+
+        static::assertSame([$empty->hex(), $empty->plus($empty)->hex()], $hashes->hashes()->physicals());
+    }
+
+    public function test_an_earlier_group_it_lacks_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Earlier group 3 has no hash');
+
+        (new PhpGroupedMultisetHashes())->absorbEarlier(new PhpGroupedMultisetHashes(), [3 => 0]);
+    }
+}

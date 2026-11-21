@@ -10,6 +10,8 @@ use Flow\ETL\IO\Extractor\Signal;
 use Flow\ETL\IO\Extractor\Statistics;
 use Flow\ETL\Runtime\Metrics\Processes;
 use Flow\ETL\Runtime\Metrics\SourceStatistics;
+use Flow\ETL\Values\Column\DatasetHash;
+use Flow\ETL\Values\Column\MultisetDigest;
 use Flow\ETL\Values\Memory\Unit;
 use Flow\ETL\Values\Rows;
 use Flow\Telemetry\ObjectExtractor;
@@ -19,6 +21,7 @@ use SplObjectStorage;
 use function array_map;
 use function array_values;
 use function max;
+use function min;
 
 final class RunCounts
 {
@@ -40,8 +43,11 @@ final class RunCounts
      */
     private array $workers = [];
 
-    public function __construct()
-    {
+    private int $rowsCoveredByAbsorbedDigests = 0;
+
+    public function __construct(
+        private readonly ?DatasetHash $outputHash = null,
+    ) {
         /** @var SplObjectStorage<Extractor, SourceCount> $reads */
         $reads = new SplObjectStorage();
         $this->reads = $reads;
@@ -111,6 +117,42 @@ final class RunCounts
         foreach ($other->workers as $pid => $peakBytes) {
             $this->worker($pid, $peakBytes);
         }
+    }
+
+    public function hashesOutput(): bool
+    {
+        return $this->outputHash !== null;
+    }
+
+    public function hashOutput(Rows $rows): void
+    {
+        if ($this->outputHash === null) {
+            return;
+        }
+
+        if ($rows->schema()->count() === 0) {
+            $covered = min($rows->count(), $this->rowsCoveredByAbsorbedDigests);
+            $this->rowsCoveredByAbsorbedDigests -= $covered;
+            $this->outputHash->add([], $rows->count() - $covered);
+
+            return;
+        }
+
+        $this->outputHash->add($rows->columns(), $rows->count());
+    }
+
+    /**
+     * @param int<0, max> $rows
+     */
+    public function absorbOutputHash(MultisetDigest $digest, int $rows): void
+    {
+        $this->outputHash?->absorb($digest);
+        $this->rowsCoveredByAbsorbedDigests += $rows;
+    }
+
+    public function outputHash(): ?string
+    {
+        return $this->outputHash?->digest()->hex();
     }
 
     public function worker(int $pid, int $peakBytes): void

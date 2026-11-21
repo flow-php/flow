@@ -83,24 +83,7 @@ final readonly class HtmlElementPhysical implements Physical
 
     public function markup(string $physical): string
     {
-        $markup = $this->position->markupOf($physical);
-
-        if ($markup !== null) {
-            return $markup;
-        }
-
-        if ($this->position->pathOf($physical) === null) {
-            return $physical;
-        }
-
-        /** @var \Dom\HTMLElement $element */
-        $element = $this->fromPhysical($physical);
-        // @mago-ignore analysis:non-existent-method
-        // @mago-ignore analysis:mixed-assignment
-        $html = $element->ownerDocument?->saveHtml($element);
-        assert(is_string($html));
-
-        return $html;
+        return $this->position->markupOf($physical) ?? $physical;
     }
 
     public function fromPhysicalAll(array $physicals): array

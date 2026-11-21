@@ -11,7 +11,7 @@ use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\EvaluationException;
 use Flow\ETL\Functions\Evaluation\ResultColumn;
 use Flow\ETL\Kernels\Hash\Algorithm;
-use Flow\ETL\Kernels\Hash\NativePHPHash;
+use Flow\ETL\Kernels\Hash\PhpAlgorithm;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Column\Column;
 use Flow\ETL\Values\Rows;
@@ -23,19 +23,21 @@ use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function gettype;
 use function is_scalar;
+use function is_string;
 use function serialize;
 
 final class Hash implements ScalarFunction
 {
     use ScalarFunctionChain;
 
+    private readonly Algorithm $algorithm;
+
     private readonly ScalarFunction $value;
 
-    public function __construct(
-        mixed $value,
-        private readonly Algorithm $algorithm = new NativePHPHash(),
-    ) {
+    public function __construct(mixed $value, Algorithm|string $algorithm = 'xxh128')
+    {
         $this->value = $value instanceof ScalarFunction ? $value : new Literal($value);
+        $this->algorithm = is_string($algorithm) ? new PhpAlgorithm($algorithm) : $algorithm;
     }
 
     public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static

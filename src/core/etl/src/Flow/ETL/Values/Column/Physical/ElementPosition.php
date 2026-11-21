@@ -17,7 +17,7 @@ use function substr;
 use const XML_ELEMENT_NODE;
 
 /**
- * Format: "\x01<path>\0<markup length>\0<element><owner document>"; older builds wrote legacy forms.
+ * Format: "\x01<path>\0<markup length>\0<element><owner document>".
  */
 final readonly class ElementPosition
 {
@@ -60,9 +60,7 @@ final readonly class ElementPosition
      */
     public function pathOf(string $physical): ?string
     {
-        return str_starts_with($physical, "\x01") || str_starts_with($physical, "\0")
-            ? substr($physical, 1, (int) strpos($physical, "\0", 1) - 1)
-            : null;
+        return str_starts_with($physical, "\x01") ? substr($physical, 1, (int) strpos($physical, "\0", 1) - 1) : null;
     }
 
     /**
@@ -83,11 +81,6 @@ final readonly class ElementPosition
     public function documentOf(string $physical): string
     {
         $pathEnd = (int) strpos($physical, "\0", 1);
-
-        if (!str_starts_with($physical, "\x01")) {
-            return substr($physical, $pathEnd + 1);
-        }
-
         $lengthEnd = (int) strpos($physical, "\0", $pathEnd + 1);
 
         return substr($physical, $lengthEnd + 1 + (int) substr($physical, $pathEnd + 1, $lengthEnd - $pathEnd - 1));

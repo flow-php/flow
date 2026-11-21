@@ -50,15 +50,6 @@ final class ElementPositionTest extends TestCase
         static::assertSame("<root>\0</root>", $position->documentOf($physical));
     }
 
-    public function test_the_document_without_the_markup_splits_into_the_path_and_the_document(): void
-    {
-        $position = new ElementPosition();
-
-        static::assertSame('0/2', $position->pathOf("\x000/2\x00<root/>"));
-        static::assertNull($position->markupOf("\x000/2\x00<root/>"));
-        static::assertSame('<root/>', $position->documentOf("\x000/2\x00<root/>"));
-    }
-
     public function test_bare_markup_has_no_position(): void
     {
         static::assertNull((new ElementPosition())->pathOf('<root/>'));

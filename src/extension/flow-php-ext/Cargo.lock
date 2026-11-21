@@ -711,6 +711,7 @@ dependencies = [
  "arrow-buffer",
  "arrow-ord",
  "arrow-schema",
+ "flow-batch-frame",
  "memchr",
  "xxhash-rust",
 ]

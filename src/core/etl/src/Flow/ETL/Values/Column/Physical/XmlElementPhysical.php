@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Values\Column\Physical;
 
+use Dom\Element;
+use Dom\XMLDocument;
 use DOMDocument;
 use DOMElement;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
@@ -26,28 +28,37 @@ final readonly class XmlElementPhysical implements Physical
 
     public function toPhysical(mixed $value): mixed
     {
+        /** @var DOMElement|\Dom\Element $value */
+        $path = $this->position->path($value);
+
+        if ($path === null) {
+            return $this->canonical($this->rooted($value));
+        }
+
         if ($value instanceof DOMElement) {
-            $path = $this->position->path($value);
-            $xml = $value->ownerDocument?->saveXML($path === null ? $value : null);
+            $xml = $value->ownerDocument?->saveXML();
 
             if ($xml === null || $xml === false) {
                 throw new InvalidArgumentException('Floe failed to convert DOMElement to XML string');
             }
 
-            $xml = (new XmlCharacterReferences())->decoded($xml);
-
-            return $path === null ? $xml : $this->position->physical($path, $this->canonical($value), $xml);
+            return $this->position->physical(
+                $path,
+                $this->canonical($value),
+                (new XmlCharacterReferences())->decoded($xml),
+            );
         }
 
-        /** @var \Dom\Element $value */
-        $path = $this->position->path($value);
         // @mago-ignore analysis:non-existent-method
         // @mago-ignore analysis:mixed-assignment
-        $markup = $value->ownerDocument?->saveXml($path === null ? $value : null);
+        $markup = $value->ownerDocument?->saveXml();
         assert(is_string($markup));
-        $markup = (new XmlCharacterReferences())->decoded($markup);
 
-        return $path === null ? $markup : $this->position->physical($path, $this->canonical($value), $markup);
+        return $this->position->physical(
+            $path,
+            $this->canonical($value),
+            (new XmlCharacterReferences())->decoded($markup),
+        );
     }
 
     public function fromPhysical(mixed $physical): mixed
@@ -69,11 +80,7 @@ final readonly class XmlElementPhysical implements Physical
 
     public function markup(string $physical): string
     {
-        return (
-            $this->position->markupOf($physical) ?? $this->canonical(type_instance_of(
-                DOMElement::class,
-            )->assert($this->fromPhysical($physical)))
-        );
+        return $this->position->markupOf($physical) ?? $physical;
     }
 
     /**
@@ -88,6 +95,28 @@ final readonly class XmlElementPhysical implements Physical
         }
 
         return $markup;
+    }
+
+    /**
+     * @param DOMElement|\Dom\Element $element
+     *
+     * @return DOMElement|\Dom\Element
+     */
+    private function rooted(object $element): object
+    {
+        // C14N() of a node outside any document tree returns ''
+        if ($element instanceof DOMElement) {
+            $document = new DOMDocument();
+
+            return type_instance_of(DOMElement::class)->assert($document->appendChild(type_instance_of(
+                DOMElement::class,
+            )->assert($document->importNode($element, true))));
+        }
+
+        // @mago-ignore analysis:unavailable-method
+        $document = XMLDocument::createEmpty();
+
+        return type_instance_of(Element::class)->assert($document->appendChild($document->importNode($element, true)));
     }
 
     public function fromPhysicalAll(array $physicals): array

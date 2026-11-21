@@ -31,7 +31,7 @@ final class ReportTest extends FlowTestCase
         $source = new SourceStatistics('ArrayExtractor', new Statistics(Cardinality::exact(2)), 2, true);
         $report = ReportMother::of(new Processes(Unit::fromBytes(25), [Unit::fromBytes(
             40,
-        )]), 2, schema(int_schema('id')), [$source]);
+        )]), 2, schema(int_schema('id')), [$source], datasetHash: '721f4650154ebb88ac4ec50a605901df');
 
         $normalized = $report->normalize();
 
@@ -46,9 +46,11 @@ final class ReportTest extends FlowTestCase
                     'columns' => null,
                 ],
                 'sources' => [$source->normalize()],
+                'dataset_hash' => '721f4650154ebb88ac4ec50a605901df',
             ],
             $normalized,
         );
+        static::assertSame('721f4650154ebb88ac4ec50a605901df', $report->datasetHash());
         // JSON keeps the values, not a float's ".0"
         static::assertEquals($normalized, json_decode(
             json_encode($normalized, JSON_THROW_ON_ERROR),
@@ -63,6 +65,7 @@ final class ReportTest extends FlowTestCase
 
         static::assertNull($normalized['schema']);
         static::assertNull($normalized['sources']);
+        static::assertNull($normalized['dataset_hash']);
     }
 
     public function test_a_report_holding_infinite_and_nan_values_encodes_as_json(): void

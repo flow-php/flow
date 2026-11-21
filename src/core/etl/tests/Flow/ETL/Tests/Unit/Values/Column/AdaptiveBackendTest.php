@@ -13,7 +13,9 @@ use Flow\ETL\Tests\Mother\ColumnMother;
 use Flow\ETL\Tests\Mother\RowsMother;
 use Flow\ETL\Values\Column\AdaptiveBackend;
 use Flow\ETL\Values\Column\Frame\NoopCodec;
+use Flow\ETL\Values\Column\Php\PhpDatasetHash;
 use Flow\ETL\Values\Column\Php\PhpGroupedCounts;
+use Flow\ETL\Values\Column\Php\PhpGroupedMultisetHashes;
 use Flow\ETL\Values\Column\Php\PhpGroupedTotals;
 use Flow\ETL\Values\Column\PhpBackend;
 use Flow\ETL\Values\Column\ValueColumn;
@@ -287,5 +289,21 @@ final class AdaptiveBackendTest extends TestCase
         $this->expectExceptionMessage('does not match flow-php/etl');
 
         new AdaptiveBackend(new FlowPhpExtension(true, FlowPhpExtension::ABI + 1, '0.46.0'));
+    }
+
+    public function test_row_hashes_and_multiset_hashes_are_the_php_backends(): void
+    {
+        $rows = array_to_rows([['a' => 1], ['a' => 2]], schema(int_schema('a')));
+
+        static::assertSame(
+            (new PhpBackend())
+                ->rowHashes($rows->columns(), 2)
+                ->physicals(),
+            (new AdaptiveBackend())
+                ->rowHashes($rows->columns(), 2)
+                ->physicals(),
+        );
+        static::assertInstanceOf(PhpDatasetHash::class, (new AdaptiveBackend())->datasetHash());
+        static::assertInstanceOf(PhpGroupedMultisetHashes::class, (new AdaptiveBackend())->groupedMultisetHashes());
     }
 }

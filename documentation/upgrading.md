@@ -49,6 +49,46 @@ with(cte('tree', $query))->recursive()->select(star())->from(table('tree'));
 
 Applies to the delete, update, insert and merge builders.
 
+### 4) `flow-php/etl` - a detached xml element is stored by its canonical markup
+
+| Before                                                         | After                                |
+|----------------------------------------------------------------|--------------------------------------|
+| a detached xml element is stored as `saveXML()`, `<a/>`        | stored as its C14N markup, `<a></a>` |
+| an xml element with no owner document throws in `toPhysical()` | stored as its C14N markup            |
+
+Floe files and caches written by 0.45 to 0.48 keep the raw form of a detached xml element. Flow compares, hashes and
+writes such a value in that raw form. Write the file again with this version to store the C14N markup.
+
+### 5) `flow-php/etl` - `NativePHPHash` is renamed to `PhpAlgorithm`, and `hash()` takes an algorithm name
+
+| Before                                                                   | After                                                                 |
+|--------------------------------------------------------------------------|-----------------------------------------------------------------------|
+| `Flow\ETL\Kernels\Hash\NativePHPHash`                                    | `Flow\ETL\Kernels\Hash\PhpAlgorithm`                                  |
+| `hash(ref('email'), new NativePHPHash('sha256'))`                        | `hash(ref('email'), 'sha256')`                                        |
+| `ref('email')->hash(new NativePHPHash('xxh64', options: ['seed' => 7]))` | `ref('email')->hash(hash_algorithm('xxh64', options: ['seed' => 7]))` |
+
+Catch `Flow\ETL\Foundation\Exception\InvalidArgumentException` instead of `\InvalidArgumentException` for an unknown algorithm name.
+
+### 6) `flow-php/etl` - `Backend` has three new methods, and the flow_php ABI is 4
+
+| Before           | After                                                     |
+|------------------|-----------------------------------------------------------|
+| -                | `Backend::rowHashes(array $columns, int $count): Column`  |
+| -                | `Backend::datasetHash(): DatasetHash`                     |
+| -                | `Backend::groupedMultisetHashes(): GroupedMultisetHashes` |
+| `FLOW_PHP_ABI` 3 | `FLOW_PHP_ABI` 4                                          |
+
+A custom `Backend` must implement the three methods. Update or rebuild the flow_php extension together with the library.
+
+### 7) `flow-php/etl` - group, join, distinct and bucket keys have the declared type of their column
+
+| Before                                                             | After                                                              |
+|--------------------------------------------------------------------|--------------------------------------------------------------------|
+| a datetime batch under a date key column groups by instant         | it is cast to the date first and groups by day                     |
+| an xml value under a string key column keys by its stored document | it keys by the text that the string cast gives                     |
+| int `1` and float `1.0` under a float key column are two keys      | one key                                                            |
+| a join with an undeclared left schema buckets the right side first | it reads the first left batch first, so both sides key in one type |
+
 ---
 
 ## Upgrading from 0.47.x to 0.48.x

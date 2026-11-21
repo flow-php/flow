@@ -46,7 +46,7 @@ use Flow\ETL\IO\Loader\SchemaValidationLoader;
 use Flow\ETL\IO\Loader\StreamLoader;
 use Flow\ETL\IO\Loader\StreamLoader\Output;
 use Flow\ETL\IO\Loader\StreamLoader\Type;
-use Flow\ETL\Kernels\Hash\NativePHPHash;
+use Flow\ETL\Kernels\Hash\PhpAlgorithm;
 use Flow\ETL\Kernels\Hash\PlainText;
 use Flow\ETL\Kernels\Sort\ExternalSortConfig;
 use Flow\ETL\Kernels\Sort\MemorySortConfig;
@@ -338,7 +338,7 @@ final class DescribableFixtures
             MemoryLoader::class => static fn(): Describable => new MemoryLoader(new ArrayMemory()),
             MemorySortConfig::class => static fn(): Describable => new MemorySortConfig(),
             MergedAggregate::class => static fn(): Describable => new MergedAggregate(sum(ref('amount'))),
-            NativePHPHash::class => static fn(): Describable => new NativePHPHash('sha256', true, ['seed' => 3]),
+            PhpAlgorithm::class => static fn(): Describable => new PhpAlgorithm('sha256', true, ['seed' => 3]),
             NativePHPRandomValueGenerator::class => static fn(): Describable => new NativePHPRandomValueGenerator(),
             PartialAggregate::class => static fn(): Describable => new PartialAggregate(sum(ref('amount'))),
             PeerFrame::class => static fn(): Describable => new PeerFrame([ref('id')->desc()]),

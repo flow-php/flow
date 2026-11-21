@@ -23,12 +23,14 @@ use flow_batch_frame::frame;
 use flow_batch_frame::kind::Kind;
 use flow_batch_frame::layout::buffer_count;
 use flow_column_kernels::arithmetic::Operator;
+use flow_column_kernels::canonical::row_lanes;
 use flow_column_kernels::compare::{contains, ends_with, is_not_null, is_null, starts_with};
-use flow_column_kernels::grouping::{append_text_key, bucket_of};
+use flow_column_kernels::grouping::bucket_of;
 
 use crate::arithmetic::{native_arithmetic, native_modulo};
 use crate::batch_columns::HeldBatch;
 use crate::builder::{throw, RustColumnBuilder};
+use crate::canonical_rows::{named, named_column, ordered, row_columns, STRING_TYPE};
 use crate::column::RustColumn;
 use crate::compare::{boolean_column, native_comparison, native_text_match};
 use crate::ctx::{
@@ -37,10 +39,11 @@ use crate::ctx::{
 };
 use crate::exception::ext_exception;
 use crate::frame::{string_of, FrameBody, PhpCodec};
-use crate::group_table::{KeyColumn, RustGroupTable};
+use crate::group_table::RustGroupTable;
 use crate::grouped_counts::RustGroupedCounts;
 use crate::grouped_totals::RustGroupedTotals;
 use crate::interfaces::{backend_ce, describable_ce};
+use crate::multiset_hashes::{RustDatasetHash, RustGroupedMultisetHashes};
 use crate::plan::{physical_for_definition, type_plan, TypePlan};
 use crate::render::{decode_exception, encode_exception, floe_exception, frame_exception, invalid_argument};
 use crate::sort::{handed_off_native_bytes, native_sort, native_sort_working_bytes};
@@ -48,23 +51,11 @@ use crate::sort::{handed_off_native_bytes, native_sort, native_sort_working_byte
 const COLUMN_MISMATCH: &str = "Flow\\ETL\\Foundation\\Exception\\ColumnMismatchException";
 const DESCRIPTION: &str = "Flow\\ETL\\Foundation\\Describe\\Description";
 const DEFINITIONS: &str = "Flow\\ETL\\Values\\Schema\\Definitions";
-const KEY_ENCODER: &str = "Flow\\ETL\\Values\\Grouping\\KeyEncoder";
 const MIXED_TYPE: &str = "Flow\\Types\\Type\\Native\\MixedType";
 const ROWS: &str = "Flow\\ETL\\Values\\Rows";
 const PHP_BACKEND: &str = "Flow\\ETL\\Values\\Column\\PhpBackend";
 const RUST_BACKEND: &str = "Flow\\ETL\\Values\\Column\\RustBackend";
 const SCHEMA_MISMATCH: &str = "Flow\\ETL\\Foundation\\Exception\\SchemaMismatchException";
-// the types whose KeyEncoder text append_text_key() writes exactly
-const TEXT_KEYS: [&str; 8] = [
-    "integer",
-    "positive_integer",
-    "boolean",
-    "null",
-    "string",
-    "non_empty_string",
-    "numeric-string",
-    "class_string",
-];
 
 /// A return typed `Flow\ETL\Values\Column\Column`: `adopt()` hands back its argument itself.
 pub struct ColumnValue(pub Zval);
@@ -289,6 +280,34 @@ impl RustBackend {
         RustGroupedCounts::default()
     }
 
+    #[php(name = "rowHashes")]
+    pub fn row_hashes(&self, columns: &ZendHashTable, count: i64) -> PhpResult<RustColumn> {
+        let resolved = row_columns(columns)?;
+        let count = usize::try_from(count).map_err(|_| ext_exception("flow_php expected a row count of 0 or more"))?;
+        let mut row = Vec::new();
+        let mut entries = Vec::new();
+        let hashes = (0..count)
+            .map(|index| {
+                named(&mut row, &mut entries, &resolved, index);
+                let (low, high) = row_lanes(&row);
+
+                format!("{high:016x}{low:016x}")
+            })
+            .collect::<Vec<_>>();
+
+        RustColumn::of_type(Arc::new(LargeBinaryArray::from_iter_values(hashes)), STRING_TYPE)
+    }
+
+    #[php(name = "datasetHash")]
+    pub fn dataset_hash(&self) -> RustDatasetHash {
+        RustDatasetHash::default()
+    }
+
+    #[php(name = "groupedMultisetHashes")]
+    pub fn grouped_multiset_hashes(&self) -> RustGroupedMultisetHashes {
+        RustGroupedMultisetHashes::default()
+    }
+
     #[php(name = "groupTable")]
     pub fn group_table(&self, columns: &ZendHashTable, declared: &Zval) -> PhpResult<RustGroupTable> {
         RustGroupTable::new(columns, declared)
@@ -327,29 +346,15 @@ impl RustBackend {
 
         let columns = keys
             .values()
-            .map(|column| partition_key(column, count))
+            .map(|column| named_column(Vec::new(), column))
             .collect::<PhpResult<Vec<_>>>()?;
         let mut slots = AHashMap::<u64, usize>::new();
         let mut indices: Vec<(u64, Vec<i64>)> = Vec::new();
         let mut key = Vec::new();
+        let mut entries = Vec::new();
 
         for row in 0..count {
-            key.clear();
-
-            for column in &columns {
-                match column {
-                    KeyColumn::Native(array) => {
-                        if !append_text_key(&mut key, array.as_ref(), row) {
-                            return Err(ext_exception(format!(
-                                "flow_php has no partition key for {} values",
-                                array.data_type()
-                            )));
-                        }
-                    }
-                    KeyColumn::Encoded(encoded) => key.extend_from_slice(&encoded[row]),
-                }
-            }
-
+            ordered(&mut key, &mut entries, &columns, row);
             let bucket = bucket_of(&key, hash_offset, bucket_count);
             let slot = *slots.entry(bucket).or_insert_with(|| {
                 indices.push((bucket, Vec::new()));
@@ -596,32 +601,6 @@ impl NoRows {
     }
 }
 
-fn partition_key(column: &Zval, count: usize) -> PhpResult<KeyColumn> {
-    if let Some(native) = column.extract::<&RustColumn>() {
-        if TEXT_KEYS.contains(&native.plan().type_name.as_str()) {
-            return Ok(KeyColumn::Native(Arc::clone(native.data())));
-        }
-    }
-
-    let mut columns = ZendHashTable::new();
-    columns.push(column.shallow_clone())?;
-    let mut columns_zv = Zval::new();
-    columns_zv.set_hashtable(columns);
-    let keys = call_static(KEY_ENCODER, "ofColumns", &mut [columns_zv, zval_long(count as i64)])?;
-
-    Ok(KeyColumn::Encoded(
-        keys.array()
-            .ok_or_else(|| ext_exception("flow_php expected KeyEncoder::ofColumns() to return an array"))?
-            .values()
-            .map(|key| {
-                key.zend_str()
-                    .map(|key| key.as_bytes().to_vec())
-                    .ok_or_else(|| ext_exception("flow_php expected KeyEncoder::ofColumns() to return strings"))
-            })
-            .collect::<PhpResult<Vec<_>>>()?,
-    ))
-}
-
 /// `Rows::fromColumns($schema, $columns, $count)`.
 pub fn rows_from_columns(schema: &Zval, columns: ZBox<ZendHashTable>, count: usize) -> Result<Zval, NoRows> {
     let mut columns_zv = Zval::new();
@@ -681,7 +660,7 @@ pub fn native_column(definition: &Zval, column: &Zval) -> PhpResult<(Rc<TypePlan
 }
 
 impl RustBackend {
-    fn adopt_result(&self, column: Zval) -> PhpResult<ColumnValue> {
+    pub(crate) fn adopt_result(&self, column: Zval) -> PhpResult<ColumnValue> {
         let definition = call_static(
             DEFINITIONS,
             "of",

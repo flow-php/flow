@@ -64,16 +64,12 @@ final class XmlElementPhysicalTest extends TestCase
         );
     }
 
-    public function test_the_document_without_the_element_markup_still_loads(): void
+    public function test_bare_markup_is_its_own_markup(): void
     {
-        $physical = new XmlElementPhysical();
-        $bytes = "\x000\x00<root><user><name>Name</name></user><id>01</id></root>";
-        $element = type_instance_of(DOMElement::class)->assert($physical->fromPhysical($bytes));
-
-        static::assertSame('user', $element->tagName);
-        static::assertSame('root', $element->parentElement?->tagName);
-        static::assertSame('<user><name>Name</name></user>', $physical->markup($bytes));
-        static::assertSame('<item id="5">value</item>', $physical->markup('<item id="5">value</item>'));
+        static::assertSame(
+            '<item id="5">value</item>',
+            (new XmlElementPhysical())->markup('<item id="5">value</item>'),
+        );
     }
 
     public function test_a_path_outside_the_document_is_refused(): void
@@ -112,11 +108,41 @@ final class XmlElementPhysicalTest extends TestCase
         );
     }
 
-    public function test_a_detached_dom_element_is_refused(): void
+    public function test_an_element_without_an_owner_document_is_stored_by_its_canonical_markup(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('failed to convert DOMElement to XML string');
+        static::assertSame('<detached></detached>', (new XmlElementPhysical())->toPhysical(new DOMElement('detached')));
+    }
 
-        (new XmlElementPhysical())->toPhysical(new DOMElement('detached'));
+    public function test_a_detached_element_is_stored_by_its_canonical_markup_and_returned_as_stored(): void
+    {
+        $document = new DOMDocument();
+        $element = type_instance_of(DOMElement::class)->assert($document->createElement('a'));
+        $element->setAttribute('x', '1');
+        $element->appendChild(type_instance_of(DOMElement::class)->assert($document->createElement('b')));
+        $physical = new XmlElementPhysical();
+        $bytes = type_string()->assert($physical->toPhysical($element));
+
+        static::assertSame('<a x="1"><b></b></a>', $bytes);
+        static::assertSame('<a x="1"><b></b></a>', $physical->markup($bytes));
+        static::assertSame(
+            'b',
+            type_instance_of(DOMElement::class)->assert($physical->fromPhysical($bytes))->firstElementChild?->tagName,
+        );
+    }
+
+    #[RequiresPhp('>= 8.4.0')]
+    public function test_a_detached_dom_element_of_the_new_api_is_stored_by_its_canonical_markup(): void
+    {
+        // @mago-ignore analysis:unavailable-method
+        $document = XMLDocument::createEmpty();
+        $element = $document->createElement('a');
+        $element->appendChild($document->createElement('b'));
+
+        static::assertSame('<a><b></b></a>', (new XmlElementPhysical())->toPhysical($element));
+    }
+
+    public function test_a_raw_markup_of_earlier_builds_is_returned_as_stored(): void
+    {
+        static::assertSame('<a><b/></a>', (new XmlElementPhysical())->markup('<a><b/></a>'));
     }
 }

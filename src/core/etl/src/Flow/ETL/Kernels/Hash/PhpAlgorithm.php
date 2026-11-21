@@ -7,7 +7,7 @@ namespace Flow\ETL\Kernels\Hash;
 use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
-use InvalidArgumentException;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use SensitiveParameter;
 
 use function Flow\Types\DSL\type_array;
@@ -18,7 +18,7 @@ use function hash_algos;
 use function in_array;
 use function sprintf;
 
-final class NativePHPHash implements Algorithm, Describable
+final class PhpAlgorithm implements Algorithm, Describable
 {
     private static ?array $algorithms = null;
 

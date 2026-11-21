@@ -128,6 +128,17 @@ interface Backend
     public function groupedCounts(): GroupedCounts;
 
     /**
+     * @param array<array-key, Column> $columns
+     *
+     * @return Column string, never null
+     */
+    public function rowHashes(array $columns, int $count): Column;
+
+    public function datasetHash(): DatasetHash;
+
+    public function groupedMultisetHashes(): GroupedMultisetHashes;
+
+    /**
      * @param list<string> $columns
      */
     public function groupTable(array $columns, Schema $declared): GroupTable;
