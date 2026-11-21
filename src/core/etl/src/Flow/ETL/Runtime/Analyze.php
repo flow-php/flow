@@ -8,6 +8,8 @@ final class Analyze
 {
     private bool $collectColumnStatistics = false;
 
+    private bool $collectDatasetHash = false;
+
     private bool $collectSchema = false;
 
     private bool $collectSourceStatistics = false;
@@ -17,6 +19,11 @@ final class Analyze
     public function collectColumnStatistics(): bool
     {
         return $this->collectColumnStatistics;
+    }
+
+    public function collectDatasetHash(): bool
+    {
+        return $this->collectDatasetHash;
     }
 
     public function collectSchema(): bool
@@ -32,6 +39,13 @@ final class Analyze
     public function withColumnStatistics(): self
     {
         $this->collectColumnStatistics = true;
+
+        return $this;
+    }
+
+    public function withDatasetHash(): self
+    {
+        $this->collectDatasetHash = true;
 
         return $this;
     }

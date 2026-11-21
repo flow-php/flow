@@ -93,7 +93,7 @@ final class TextValuesTest extends TestCase
             ],
             ['<row a="żółć"><!-- c --></row>', '<a/>', null],
         ];
-        yield 'xml_element' => [type_xml_element(), ['<a b="1"><c/></a>', null], ['<a b="1"><c></c></a>', null]];
+        yield 'xml_element' => [type_xml_element(), ['<a b="1"><c></c></a>', null], ['<a b="1"><c></c></a>', null]];
         yield 'html' => [type_html(), ['<html><body>x</body></html>', null], ['<html><body>x</body></html>', null]];
         yield 'html_element' => [type_html_element(), ['<p>x</p>', null], ['<p>x</p>', null]];
         yield 'null' => [type_null(), [null, null], [null, null]];
@@ -226,7 +226,7 @@ final class TextValuesTest extends TestCase
             ['<?xml version="1.0"?>' . "\n" . '<root><a>1</a></root>' . "\n", null],
             ['<root><a>1</a></root>', null],
         ];
-        yield 'xml_element' => [type_xml_element(), ['<a b="1"><c/></a>'], ['<a b="1"><c></c></a>']];
+        yield 'xml_element' => [type_xml_element(), ['<a b="1"><c></c></a>'], ['<a b="1"><c></c></a>']];
         yield 'html' => [
             type_html(),
             ['<!DOCTYPE html><html><body>x</body></html>'],

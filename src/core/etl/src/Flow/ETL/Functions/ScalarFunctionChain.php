@@ -14,7 +14,6 @@ use Flow\ETL\Functions\ArraySort\Sort;
 use Flow\ETL\Functions\Between\Boundary;
 use Flow\ETL\Functions\String\StringStyles;
 use Flow\ETL\Kernels\Hash\Algorithm;
-use Flow\ETL\Kernels\Hash\NativePHPHash;
 use Flow\ETL\Values\Schema;
 use Flow\Types\Type;
 use Flow\Types\Type\Comparison\Operator;
@@ -376,7 +375,7 @@ trait ScalarFunctionChain
         return new Comparison($this, Operator::GREATER_THAN_EQUAL, $ref);
     }
 
-    public function hash(Algorithm $algorithm = new NativePHPHash()): Hash
+    public function hash(Algorithm|string $algorithm = 'xxh128'): Hash
     {
         return new Hash($this, $algorithm);
     }

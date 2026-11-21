@@ -205,18 +205,18 @@ final class AllFunctionsDeclareTheirTypeTest extends FlowTestCase
         ScalarFunctionContract::withChildrenRoundTrips($fn);
     }
 
-    public function test_exactly_49_of_the_127_declare_themselves_nullable(): void
+    public function test_exactly_49_of_the_128_declare_themselves_nullable(): void
     {
         [$nullable, $notNull, $unavailable] = ScalarFunctionFixtures::nullabilitySplit();
 
-        static::assertCount(127, ScalarFunctionClasses::declaring(ExtractorClasses::root('core/etl')));
+        static::assertCount(128, ScalarFunctionClasses::declaring(ExtractorClasses::root('core/etl')));
         static::assertCount(49, self::declared_nullable_classes());
         static::assertCount(
             49,
             [...$nullable, ...array_intersect($unavailable, self::declared_nullable_classes())],
             'nullable set drifted: ' . implode(', ', array_diff($nullable, self::declared_nullable_classes())),
         );
-        static::assertCount(78, [...$notNull, ...array_diff($unavailable, self::declared_nullable_classes())]);
+        static::assertCount(79, [...$notNull, ...array_diff($unavailable, self::declared_nullable_classes())]);
     }
 
     /**

@@ -128,6 +128,7 @@ use Flow\ETL\Functions\MatchCases;
 use Flow\ETL\Functions\MatchCases\MatchCondition;
 use Flow\ETL\Functions\Max;
 use Flow\ETL\Functions\Min;
+use Flow\ETL\Functions\MultisetHash;
 use Flow\ETL\Functions\Not;
 use Flow\ETL\Functions\Now;
 use Flow\ETL\Functions\NumberFormat;
@@ -143,6 +144,7 @@ use Flow\ETL\Functions\RegexMatch;
 use Flow\ETL\Functions\RegexMatchAll;
 use Flow\ETL\Functions\RegexReplace;
 use Flow\ETL\Functions\Round;
+use Flow\ETL\Functions\RowHash;
 use Flow\ETL\Functions\RowNumber;
 use Flow\ETL\Functions\Sanitize;
 use Flow\ETL\Functions\ScalarFunction;
@@ -196,7 +198,7 @@ use Flow\ETL\IO\Loader\Partitioning;
 use Flow\ETL\IO\Loader\StreamLoader;
 use Flow\ETL\IO\Loader\StreamLoader\Output;
 use Flow\ETL\Kernels\Hash\Algorithm;
-use Flow\ETL\Kernels\Hash\NativePHPHash;
+use Flow\ETL\Kernels\Hash\PhpAlgorithm;
 use Flow\ETL\Operators\Constraint;
 use Flow\ETL\Operators\Constraint\SortedByConstraint;
 use Flow\ETL\Operators\Constraint\UniqueConstraint;
@@ -278,6 +280,7 @@ use Flow\Types\Type\Logical\StructureType;
 use Psr\Clock\ClockInterface;
 
 use function array_is_list;
+use function array_values;
 use function class_exists;
 use function enum_exists;
 use function Flow\Filesystem\DSL\path;
@@ -1170,10 +1173,28 @@ function concat_ws(ScalarFunction|string $separator, ScalarFunction|string ...$f
     return new ConcatWithSeparator($separator, ...$functions);
 }
 
+/**
+ * @param Algorithm|string $algorithm a hash_algos() name, or an Algorithm such as hash_algorithm('xxh64', options: [...])
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function hash(mixed $value, Algorithm $algorithm = new NativePHPHash()): Hash
+function hash(mixed $value, Algorithm|string $algorithm = 'xxh128'): Hash
 {
     return new Hash($value, $algorithm);
+}
+
+/**
+ * @param array<array-key, mixed> $options the options of PHP's hash(), for example ['seed' => 7]
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function hash_algorithm(string $name = 'xxh128', bool $binary = false, array $options = []): Algorithm
+{
+    return new PhpAlgorithm($name, $binary, $options);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
+function row_hash(Reference $ref, Reference ...$refs): RowHash
+{
+    return new RowHash([$ref, ...array_values($refs)]);
 }
 
 /**
@@ -1207,6 +1228,12 @@ function enum_value(mixed $value): EnumValue
 function count(?Reference $function = null): Count
 {
     return new Count($function);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
+function multiset_hash(Reference ...$refs): MultisetHash
+{
+    return new MultisetHash(array_values($refs));
 }
 
 /**

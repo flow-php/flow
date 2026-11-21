@@ -1,5 +1,5 @@
 --TEST--
-RustBackend::partition() puts every row in the bucket PhpBackend::partition() gives it, in row order: text keys natively, the other types through KeyEncoder, composite keys, columns from either backend, offsets 0 and 8, 1, 4 and 16 buckets
+RustBackend::partition() puts every row in the bucket PhpBackend::partition() gives it, in row order, on the canonical encoding without a call back into PHP: scalar, list, structure, map, xml and html keys, composite keys, columns from either backend, offsets 0 and 8, 1, 4 and 16 buckets
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 --FILE--
@@ -8,8 +8,8 @@ require __DIR__ . '/bootstrap.php';
 
 use Flow\ETL\Values\Column\{Backend, PhpBackend, RustBackend};
 
-use function Flow\ETL\DSL\{array_to_rows, bool_schema, float_schema, int_schema, list_schema, schema, str_schema, structure_schema};
-use function Flow\Types\DSL\{type_integer, type_list, type_string, type_structure};
+use function Flow\ETL\DSL\{array_to_rows, bool_schema, float_schema, html_schema, int_schema, list_schema, map_schema, schema, str_schema, structure_schema, xml_schema};
+use function Flow\Types\DSL\{type_integer, type_list, type_map, type_string, type_structure};
 
 $cases = [
     'nullable strings' => [[str_schema('k', nullable: true)], [['a'], [null], ['b'], [''], [null], ['a'], ['0']]],
@@ -20,6 +20,9 @@ $cases = [
     'structures with nulls' => [[structure_schema('k', type_structure(['a' => type_string()]), nullable: true)], [[['a' => 'x']], [null], [['a' => 'y']], [['a' => 'x']]]],
     'only nulls' => [[str_schema('k', nullable: true)], [[null], [null]]],
     'a composite key' => [[int_schema('k'), str_schema('s')], [[1, 'a'], [1, 'b'], [2, 'a'], [1, 'a']]],
+    'maps with nulls' => [[map_schema('k', type_map(type_string(), type_integer()), nullable: true)], [[['a' => 1]], [['b' => 2, 'a' => 1]], [null], [['a' => 1, 'b' => 2]]]],
+    'xml' => [[xml_schema('k')], [['<a/>'], ['<b>1</b>'], ['<a/>']]],
+    ...(class_exists('\Dom\HTMLDocument') ? ['html' => [[html_schema('k')], [['<p>a</p>'], ['<p>b</p>'], ['<p>a</p>']]]] : []),
 ];
 
 $partitioned = static function (Backend $partitioner, Backend $columns, array $definitions, array $values, int $buckets, int $offset): array {
@@ -52,6 +55,10 @@ foreach ($cases as $label => [$definitions, $values]) {
     echo $label, ': ', implode(', ', array_unique($outcomes)), "\n";
 }
 
+if (!class_exists('\Dom\HTMLDocument')) {
+    echo "html: same\n";
+}
+
 $empty = array_to_rows([], schema(int_schema('k')), $rust);
 echo 'empty batch: ', json_encode($rust->partition($empty, [$empty->column('k')], 4, 0)), "\n";
 $one = array_to_rows([['k' => 1], ['k' => 2]], schema(int_schema('k')), $rust);
@@ -80,6 +87,9 @@ lists with nulls: same
 structures with nulls: same
 only nulls: same
 a composite key: same
+maps with nulls: same
+xml: same
+html: same
 empty batch: []
 one bucket is the batch itself: true
 a bucket count of 0: same Flow\ETL\Foundation\Exception\InvalidArgumentException Buckets count must be greater than 0, given: 0

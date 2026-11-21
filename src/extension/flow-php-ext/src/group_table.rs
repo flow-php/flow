@@ -1,44 +1,25 @@
+use std::rc::Rc;
 use std::sync::Arc;
 
 use ahash::AHashMap;
-use arrow_array::{ArrayRef, Int64Array, NullArray};
+use arrow_array::{Int64Array, NullArray};
 use ext_php_rs::convert::IntoZval;
 use ext_php_rs::error::Result as ZvalResult;
 use ext_php_rs::flags::{ClassFlags, DataType};
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendHashTable, Zval};
-use flow_column_kernels::grouping::{append_encoded, append_native_key};
 
-use crate::backend::RustBackend;
+use crate::canonical_rows::{named_column, ordered, RowColumn};
 use crate::column::RustColumn;
-use crate::ctx::{call_method, construct, expect_object, find_class, zval_long, zval_str};
+use crate::ctx::{call_method, construct, find_class, instance, zval_long, zval_str};
 use crate::exception::ext_exception;
 use crate::interfaces::group_table_ce;
-use crate::plan::type_plan;
+use crate::plan::{type_plan, TypePlan};
 
 const GROUP_IDS: &str = "Flow\\ETL\\Values\\Grouping\\GroupIds";
 const INTEGER_TYPE: &str = "Flow\\Types\\Type\\Native\\IntegerType";
-const KEY_ENCODER: &str = "Flow\\ETL\\Values\\Grouping\\KeyEncoder";
-const MIXED_TYPE: &str = "Flow\\Types\\Type\\Native\\MixedType";
-
-// types whose stored physical is what ComparableValues::equality() compares; xml and html compare by TextValues
-const NATIVE_KEYS: [&str; 15] = [
-    "integer",
-    "positive_integer",
-    "float",
-    "boolean",
-    "string",
-    "non_empty_string",
-    "numeric-string",
-    "class_string",
-    "json",
-    "enum",
-    "uuid",
-    "datetime",
-    "date",
-    "time",
-    "null",
-];
+const NULL_TYPE: &str = "Flow\\Types\\Type\\Native\\NullType";
+const VALUE_EQUALITY: &str = "Flow\\ETL\\Values\\Column\\ValueEquality";
 
 pub struct GroupIdsValue(Zval);
 
@@ -53,11 +34,6 @@ impl IntoZval for GroupIdsValue {
     }
 }
 
-pub(crate) enum KeyColumn {
-    Native(ArrayRef),
-    Encoded(Vec<Vec<u8>>),
-}
-
 #[php_class]
 #[php(
     name = "Flow\\ETL\\Values\\Grouping\\RustGroupTable",
@@ -66,6 +42,8 @@ pub(crate) enum KeyColumn {
 )]
 pub struct RustGroupTable {
     columns: Vec<Zval>,
+    /// The declared type of each key column, by position, that its batches are cast to as `KeyEncoder::columns()` does.
+    declared_types: Vec<Option<(Zval, Rc<TypePlan>)>>,
     declared: Zval,
     ids: AHashMap<Box<[u8]>, i64>,
 }
@@ -80,82 +58,61 @@ impl RustGroupTable {
                     .ok_or_else(|| ext_exception("flow_php expected group by columns as strings"))
             })
             .collect::<PhpResult<Vec<_>>>()?;
+        let declared_types = columns
+            .iter()
+            .map(|name| {
+                let definition = call_method(declared, "findDefinition", &mut [name.shallow_clone()])?;
+
+                if definition.is_null() {
+                    return Ok(None);
+                }
+
+                let declared_type = call_method(&definition, "type", &mut [])?;
+                let plan = type_plan(&declared_type)?;
+
+                Ok(Some((declared_type, plan)))
+            })
+            .collect::<PhpResult<Vec<_>>>()?;
 
         Ok(Self {
             columns,
+            declared_types,
             declared: declared.shallow_clone(),
             ids: AHashMap::new(),
         })
     }
 
-    fn key_column(&self, rows: &Zval, schema: &Zval, name: &Zval, count: usize) -> PhpResult<KeyColumn> {
+    fn key_column(&self, rows: &Zval, schema: &Zval, position: usize, count: usize) -> PhpResult<RowColumn> {
+        let name = &self.columns[position];
+
         if call_method(schema, "findDefinition", &mut [name.shallow_clone()])?.is_null()
             && self.declared_nullable(name)?
         {
-            return Ok(KeyColumn::Native(Arc::new(NullArray::new(count))));
+            let nulls = RustColumn::of_type(Arc::new(NullArray::new(count)), NULL_TYPE)?.into_zval(false)?;
+
+            return named_column(Vec::new(), &nulls);
         }
 
         let column = call_method(rows, "column", &mut [name.shallow_clone()])?;
+        let key = named_column(Vec::new(), &column)?;
 
-        if let Some(native) = column.extract::<&RustColumn>() {
-            return if NATIVE_KEYS.contains(&native.plan().type_name.as_str()) {
-                Ok(KeyColumn::Native(Arc::clone(native.data())))
-            } else {
-                self.encoded(rows, name)
-            };
+        match &self.declared_types[position] {
+            Some((declared_type, plan)) if plan.type_name != key.2.type_name => named_column(
+                Vec::new(),
+                &call_method(
+                    &instance(VALUE_EQUALITY)?,
+                    "cast",
+                    &mut [column, declared_type.shallow_clone(), name.shallow_clone()],
+                )?,
+            ),
+            _ => Ok(key),
         }
-
-        let column_type = call_method(&column, "type", &mut [])?;
-
-        if expect_object(&column_type, "a Type")?.instance_of(find_class(MIXED_TYPE)?)
-            || !NATIVE_KEYS.contains(&type_plan(&column_type)?.type_name.as_str())
-        {
-            return self.encoded(rows, name);
-        }
-
-        // adopted, so a column keeps one encoding whichever backend built its batch
-        let definition = call_method(schema, "get", &mut [name.shallow_clone()])?;
-        let adopted = RustBackend.adopt(&definition, &column)?.0;
-
-        Ok(KeyColumn::Native(Arc::clone(
-            adopted
-                .extract::<&RustColumn>()
-                .ok_or_else(|| ext_exception("flow_php expected RustBackend::adopt() to return a RustColumn"))?
-                .data(),
-        )))
     }
 
     fn declared_nullable(&self, name: &Zval) -> PhpResult<bool> {
         let definition = call_method(&self.declared, "findDefinition", &mut [name.shallow_clone()])?;
 
         Ok(!definition.is_null() && call_method(&definition, "isNullable", &mut [])?.bool() == Some(true))
-    }
-
-    fn encoded(&self, rows: &Zval, name: &Zval) -> PhpResult<KeyColumn> {
-        let mut names = ZendHashTable::new();
-        names.push(name.shallow_clone())?;
-        let mut names_zv = Zval::new();
-        names_zv.set_hashtable(names);
-        let mut types = Zval::new();
-        types.set_hashtable(ZendHashTable::new());
-        let encoder = construct(
-            find_class(KEY_ENCODER)?,
-            &mut [names_zv, types, self.declared.shallow_clone()],
-        )?
-        .into_zval(false)?;
-        let keys = call_method(&encoder, "of", &mut [rows.shallow_clone()])?;
-
-        Ok(KeyColumn::Encoded(
-            keys.array()
-                .ok_or_else(|| ext_exception("flow_php expected KeyEncoder::of() to return an array"))?
-                .values()
-                .map(|key| {
-                    key.zend_str()
-                        .map(|key| key.as_bytes().to_vec())
-                        .ok_or_else(|| ext_exception("flow_php expected KeyEncoder::of() to return strings"))
-                })
-                .collect::<PhpResult<Vec<_>>>()?,
-        ))
     }
 
     fn each_key(
@@ -169,30 +126,14 @@ impl RustGroupTable {
         }
 
         let schema = call_method(rows, "schema", &mut [])?;
-        let columns = self
-            .columns
-            .iter()
-            .map(|name| self.key_column(rows, &schema, name, count))
+        let columns = (0..self.columns.len())
+            .map(|position| self.key_column(rows, &schema, position, count))
             .collect::<PhpResult<Vec<_>>>()?;
         let mut key = Vec::new();
+        let mut entries = Vec::new();
 
         for row in 0..count {
-            key.clear();
-
-            for column in &columns {
-                match column {
-                    KeyColumn::Native(array) => {
-                        if !append_native_key(&mut key, array.as_ref(), row) {
-                            return Err(ext_exception(format!(
-                                "flow_php has no group key for {} values",
-                                array.data_type()
-                            )));
-                        }
-                    }
-                    KeyColumn::Encoded(keys) => append_encoded(&mut key, &keys[row]),
-                }
-            }
-
+            ordered(&mut key, &mut entries, &columns, row);
             visit(row, &key)?;
         }
 

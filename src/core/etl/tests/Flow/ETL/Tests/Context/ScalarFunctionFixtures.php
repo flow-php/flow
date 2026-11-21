@@ -106,6 +106,7 @@ use Flow\ETL\Functions\RegexReplace;
 use Flow\ETL\Functions\Repeat;
 use Flow\ETL\Functions\Reverse;
 use Flow\ETL\Functions\Round;
+use Flow\ETL\Functions\RowHash;
 use Flow\ETL\Functions\Sanitize;
 use Flow\ETL\Functions\ScalarFunction;
 use Flow\ETL\Functions\Size;
@@ -145,7 +146,7 @@ use Flow\ETL\Functions\Uuid;
 use Flow\ETL\Functions\When;
 use Flow\ETL\Functions\Wordwrap;
 use Flow\ETL\Functions\XPath;
-use Flow\ETL\Kernels\Hash\NativePHPHash;
+use Flow\ETL\Kernels\Hash\PhpAlgorithm;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Rows;
@@ -571,10 +572,14 @@ final class ScalarFunctionFixtures
                 'returns' => type_optional(type_integer()),
             ],
             Hash::class => [
-                'factory' => static fn(): ScalarFunction => new Hash(ref('string'), new NativePHPHash('sha256', true, [
+                'factory' => static fn(): ScalarFunction => new Hash(ref('string'), new PhpAlgorithm('sha256', true, [
                     'seed' => 3,
                 ])),
                 'returns' => type_optional(type_string()),
+            ],
+            RowHash::class => [
+                'factory' => static fn(): ScalarFunction => new RowHash([ref('integer'), ref('string')]),
+                'returns' => type_string(),
             ],
             HTMLQuerySelector::class => [
                 'factory' => static fn(): ScalarFunction => new HTMLQuerySelector(ref('html'), lit('div')),

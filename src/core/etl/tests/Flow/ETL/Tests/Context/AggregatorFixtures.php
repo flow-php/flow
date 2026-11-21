@@ -15,6 +15,7 @@ use Flow\ETL\Functions\First;
 use Flow\ETL\Functions\Last;
 use Flow\ETL\Functions\Max;
 use Flow\ETL\Functions\Min;
+use Flow\ETL\Functions\MultisetHash;
 use Flow\ETL\Functions\ReferenceResolver;
 use Flow\ETL\Functions\StringAggregate;
 use Flow\ETL\Functions\Sum;
@@ -33,6 +34,7 @@ use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\last;
 use function Flow\ETL\DSL\max;
 use function Flow\ETL\DSL\min;
+use function Flow\ETL\DSL\multiset_hash;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -60,6 +62,7 @@ final class AggregatorFixtures
             Last::class,
             Max::class,
             Min::class,
+            MultisetHash::class,
             StringAggregate::class,
             Sum::class,
         ];
@@ -79,6 +82,7 @@ final class AggregatorFixtures
             Last::class => last(ref('v')),
             Max::class => max(ref('v')),
             Min::class => min(ref('v')),
+            MultisetHash::class => multiset_hash(ref('v'), ref('s')),
             StringAggregate::class => string_agg(ref('s'), '|', SortOrder::DESC),
             Sum::class => sum(ref('v'), exact: true)->over(window()->partitionBy(ref('s'))),
             default => throw InvalidArgumentException::because('%s has no fixture', $class),

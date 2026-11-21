@@ -3,6 +3,7 @@ mod arithmetic;
 mod backend;
 mod batch_columns;
 mod builder;
+mod canonical_rows;
 mod cast;
 mod column;
 mod compare;
@@ -20,6 +21,7 @@ mod interfaces;
 mod iterator;
 mod json;
 mod json_check;
+mod multiset_hashes;
 mod parquet;
 mod physical;
 mod plan;
@@ -36,7 +38,7 @@ use ext_php_rs::{info_table_end, info_table_row, info_table_start};
 
 /// The contract version flow-php/etl expects (`Flow\ETL\Foundation\FlowPhpExtension::ABI`); both change together whenever a
 /// registered class or interface changes.
-const FLOW_PHP_ABI: i64 = 3;
+const FLOW_PHP_ABI: i64 = 4;
 
 pub extern "C" fn php_module_info(_module: *mut ModuleEntry) {
     info_table_start!();
@@ -79,6 +81,8 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .class::<group_table::RustGroupTable>()
         .class::<grouped_counts::RustGroupedCounts>()
         .class::<grouped_totals::RustGroupedTotals>()
+        .class::<multiset_hashes::RustDatasetHash>()
+        .class::<multiset_hashes::RustGroupedMultisetHashes>()
         .class::<backend::RustBackend>()
         .class::<iterator::RustIterator>()
         .class::<csv::source::RustCSVOpenSource>()

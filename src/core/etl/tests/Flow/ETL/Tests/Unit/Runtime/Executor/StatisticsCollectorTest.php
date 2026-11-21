@@ -15,6 +15,7 @@ use Flow\ETL\Runtime\Metrics\Report;
 use Flow\ETL\Runtime\Metrics\SourceStatistics;
 use Flow\ETL\Runtime\Metrics\Statistics\Columns;
 use Flow\ETL\Tests\Context\MemoryTelemetryContext;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\Double\StubLauncher;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Cardinality;
@@ -310,6 +311,87 @@ final class StatisticsCollectorTest extends FlowTestCase
             flow_context(config_builder()->withTelemetry($telemetry->telemetry)->launcher(new StubLauncher())->build()),
         );
 
+        static::assertSame([], $telemetry->logs->entriesWithSeverity(Severity::WARN));
+    }
+
+    public function test_the_dataset_hash_is_the_multiset_hash_of_every_captured_row(): void
+    {
+        $collector = new StatisticsCollector(analyze()->withDatasetHash(), flow_context());
+
+        $collector->capture(array_to_rows([['a' => 2]], schema(int_schema('a'))));
+        $collector->capture(array_to_rows([], schema(int_schema('a'))));
+        $collector->capture(array_to_rows([['a' => 1]], schema(int_schema('a'))));
+
+        static::assertSame('721f4650154ebb88ac4ec50a605901df', $collector->report()->datasetHash());
+        static::assertFalse($collector->readsColumns());
+    }
+
+    public function test_a_dataset_hash_of_no_rows_is_zero(): void
+    {
+        static::assertSame(
+            '00000000000000000000000000000000',
+            (new StatisticsCollector(analyze()->withDatasetHash(), flow_context()))->report()->datasetHash(),
+        );
+    }
+
+    public function test_without_the_dataset_hash_no_accumulator_is_created_and_none_is_reported(): void
+    {
+        $backend = new SpyBackend();
+        $collector = new StatisticsCollector(
+            analyze()->withSchema()->withColumnStatistics()->withSourceStatistics(),
+            flow_context(config_builder()->backend($backend)->build()),
+        );
+
+        $collector->capture(array_to_rows([['a' => 1]], schema(int_schema('a')), $backend));
+
+        static::assertNull($collector->report()->datasetHash());
+        static::assertSame(0, $backend->datasetHashesCreated());
+        static::assertFalse(
+            (new StatisticsCollector(
+                analyze()->withSourceStatistics(),
+                flow_context(config_builder()->backend($backend)->build()),
+            ))->readsColumns(),
+        );
+    }
+
+    public function test_the_dataset_hash_takes_its_accumulator_from_the_context_backend(): void
+    {
+        $backend = new SpyBackend();
+
+        new StatisticsCollector(
+            analyze()->withDatasetHash(),
+            flow_context(config_builder()->backend($backend)->build()),
+        );
+
+        static::assertSame(1, $backend->datasetHashesCreated());
+    }
+
+    public function test_the_dataset_hash_under_a_launcher_is_not_named_in_the_warning(): void
+    {
+        $telemetry = new MemoryTelemetryContext();
+
+        new StatisticsCollector(
+            analyze()->withSchema()->withDatasetHash(),
+            flow_context(config_builder()->withTelemetry($telemetry->telemetry)->launcher(new StubLauncher())->build()),
+        );
+
+        static::assertSame(
+            'analyze()->withSchema() sends every row to the parent process, so the writes do not '
+            . 'run in parallel. Drop it to keep parallel writes.',
+            $telemetry->logs->entriesWithSeverity(Severity::WARN)[0]->record->body,
+        );
+    }
+
+    public function test_the_dataset_hash_alone_under_a_launcher_keeps_the_writes_parallel(): void
+    {
+        $telemetry = new MemoryTelemetryContext();
+        $collector = new StatisticsCollector(
+            analyze()->withDatasetHash(),
+            flow_context(config_builder()->withTelemetry($telemetry->telemetry)->launcher(new StubLauncher())->build()),
+        );
+
+        static::assertFalse($collector->readsColumns());
+        static::assertTrue($collector->counts()?->hashesOutput());
         static::assertSame([], $telemetry->logs->entriesWithSeverity(Severity::WARN));
     }
 }

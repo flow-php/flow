@@ -7,8 +7,10 @@ namespace Flow\ETL\Tests\Double;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Column\Column;
 use Flow\ETL\Values\Column\ColumnBuilder;
+use Flow\ETL\Values\Column\DatasetHash;
 use Flow\ETL\Values\Column\Frame\Codec;
 use Flow\ETL\Values\Column\GroupedCounts;
+use Flow\ETL\Values\Column\GroupedMultisetHashes;
 use Flow\ETL\Values\Column\GroupedTotals;
 use Flow\ETL\Values\Column\PhpBackend;
 use Flow\ETL\Values\Grouping\GroupTable;
@@ -107,6 +109,21 @@ final readonly class AcceptingBackend implements Backend
     public function groupedCounts(): GroupedCounts
     {
         return (new PhpBackend())->groupedCounts();
+    }
+
+    public function rowHashes(array $columns, int $count): Column
+    {
+        return (new PhpBackend())->rowHashes($columns, $count);
+    }
+
+    public function datasetHash(): DatasetHash
+    {
+        return (new PhpBackend())->datasetHash();
+    }
+
+    public function groupedMultisetHashes(): GroupedMultisetHashes
+    {
+        return (new PhpBackend())->groupedMultisetHashes();
     }
 
     /**

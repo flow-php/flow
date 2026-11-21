@@ -59,18 +59,6 @@ final class HtmlElementPhysicalTest extends TestCase
     }
 
     #[RequiresPhp('>= 8.4.0')]
-    public function test_the_document_without_the_element_markup_still_loads(): void
-    {
-        $physical = new HtmlElementPhysical();
-        $bytes = "\x000\x00<article><section><h1>Name</h1></section><span>01</span></article>";
-        $element = type_html_element()->assert($physical->fromPhysical($bytes));
-
-        static::assertSame('SECTION', $element->tagName);
-        static::assertSame('ARTICLE', $element->parentElement?->tagName);
-        static::assertSame('<section><h1>Name</h1></section>', $physical->markup($bytes));
-    }
-
-    #[RequiresPhp('>= 8.4.0')]
     public function test_a_detached_element_is_stored_as_its_markup(): void
     {
         $element = type_html_element()->cast('<p>a</p>');

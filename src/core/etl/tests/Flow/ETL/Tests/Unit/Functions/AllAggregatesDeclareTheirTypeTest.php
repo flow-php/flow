@@ -15,6 +15,7 @@ use Flow\ETL\Functions\First;
 use Flow\ETL\Functions\Last;
 use Flow\ETL\Functions\Max;
 use Flow\ETL\Functions\Min;
+use Flow\ETL\Functions\MultisetHash;
 use Flow\ETL\Functions\Rank;
 use Flow\ETL\Functions\ReferenceResolver;
 use Flow\ETL\Functions\RowNumber;
@@ -42,6 +43,7 @@ use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\last;
 use function Flow\ETL\DSL\max;
 use function Flow\ETL\DSL\min;
+use function Flow\ETL\DSL\multiset_hash;
 use function Flow\ETL\DSL\rank;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row_number;
@@ -98,7 +100,7 @@ final class AllAggregatesDeclareTheirTypeTest extends FlowTestCase
         }
 
         static::assertSame(10, $nullable);
-        static::assertSame(5, $bare);
+        static::assertSame(6, $bare);
     }
 
     public function test_with_children_round_trips_in_both_directions(): void
@@ -145,6 +147,7 @@ final class AllAggregatesDeclareTheirTypeTest extends FlowTestCase
             Last::class => static fn(): Last => last(ref('v')),
             Max::class => static fn(): Max => max(ref('v')),
             Min::class => static fn(): Min => min(ref('v')),
+            MultisetHash::class => static fn(): MultisetHash => multiset_hash(ref('v')),
             Rank::class => static fn(): Rank => rank(),
             RowNumber::class => static fn(): RowNumber => row_number(),
             StringAggregate::class => static fn(): StringAggregate => string_agg(ref('v')),

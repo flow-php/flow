@@ -139,6 +139,21 @@ final readonly class AdaptiveBackend implements Backend, Describable
         return $this->backend->groupedCounts();
     }
 
+    public function rowHashes(array $columns, int $count): Column
+    {
+        return $this->backend->rowHashes($columns, $count);
+    }
+
+    public function datasetHash(): DatasetHash
+    {
+        return $this->backend->datasetHash();
+    }
+
+    public function groupedMultisetHashes(): GroupedMultisetHashes
+    {
+        return $this->backend->groupedMultisetHashes();
+    }
+
     /**
      * @param list<string> $columns
      */

@@ -8,6 +8,7 @@ use ext_php_rs::exception::PhpException;
 use ext_php_rs::types::Zval;
 use ext_php_rs::zend::Function;
 use flow_batch_frame::kind::{self, kind_of, parse_type, Kind, Markup};
+use flow_column_kernels::canonical::{encoding_of, Encoding};
 
 use crate::cast::{build_cast_kind, CastKind};
 use crate::ctx::{self, call_handle, call_method, ce_method_ref, expect_object, find_class, instance};
@@ -18,6 +19,8 @@ const IDENTITY: &str = "Flow\\ETL\\Values\\Column\\Physical\\IdentityPhysical";
 
 pub struct TypePlan {
     pub kind: Kind,
+    /// The canonical encoding of a value of this type, for row hashes.
+    pub encoding: Encoding,
     pub type_name: String,
     pub type_zv: Zval,
     pub values: ValueNode,
@@ -66,6 +69,7 @@ fn json_plan(type_zv: &Zval) -> Result<Rc<TypePlan>, PhpException> {
     let physical = call_method(&instance(PHYSICAL_FOR)?, "physical", &mut [type_zv.shallow_clone()])?;
     let plan = Rc::new(TypePlan {
         kind: kind_of(&parsed).map_err(json_exception)?,
+        encoding: encoding_of(&parsed).map_err(json_exception)?,
         type_name: parsed.base().unwrap_or(&parsed).type_.clone(),
         type_zv: type_zv.shallow_clone(),
         values: kind::value_node(&parsed)

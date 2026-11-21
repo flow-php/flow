@@ -222,11 +222,28 @@ final class GroupTableTest extends FlowTestCase
     #[DataProviderExternal(BackendsContext::class, 'backends')]
     public function test_a_date_and_a_datetime_at_the_same_instant_share_an_id(Backend $backend): void
     {
-        $table = $backend->groupTable(['k'], schema(date_schema('k')));
+        $table = $backend->groupTable(['k'], schema(date_schema('k')->merge(datetime_schema('k'))));
         $table->assign(array_to_rows([['k' => new DateTimeImmutable('2024-01-01')]], schema(date_schema('k'))));
 
         static::assertSame(
             [0, 1],
+            $table
+                ->assign(array_to_rows([
+                    ['k' => new DateTimeImmutable('2024-01-01 00:00:00', new DateTimeZone('UTC'))],
+                    ['k' => new DateTimeImmutable('2024-01-01 00:00:01', new DateTimeZone('UTC'))],
+                ], schema(datetime_schema('k'))))
+                ->ids->values(),
+        );
+    }
+
+    #[DataProviderExternal(BackendsContext::class, 'backends')]
+    public function test_a_key_has_the_declared_type_so_datetimes_under_a_date_key_group_by_day(Backend $backend): void
+    {
+        $table = $backend->groupTable(['k'], schema(date_schema('k')));
+        $table->assign(array_to_rows([['k' => new DateTimeImmutable('2024-01-01')]], schema(date_schema('k'))));
+
+        static::assertSame(
+            [0, 0],
             $table
                 ->assign(array_to_rows([
                     ['k' => new DateTimeImmutable('2024-01-01 00:00:00', new DateTimeZone('UTC'))],
@@ -270,7 +287,7 @@ final class GroupTableTest extends FlowTestCase
         $document->loadXML('<a>x</a>');
         $table = $backend->groupTable(['k'], schema(str_schema('k')->merge(xml_schema('k'))));
         $table->assign(array_to_rows(
-            [['k' => "<?xml version=\"1.0\"?>\n<a>x</a>\n"]],
+            [['k' => '<a>x</a>'], ['k' => "<?xml version=\"1.0\"?>\n<a>x</a>\n"]],
             schema(str_schema('k')),
             $backend,
         ));
@@ -279,7 +296,7 @@ final class GroupTableTest extends FlowTestCase
             [0],
             $table->assign(array_to_rows([['k' => $document]], schema(xml_schema('k')), $backend))->ids->values(),
         );
-        static::assertSame(1, $table->count());
+        static::assertSame(2, $table->count());
     }
 
     #[DataProviderExternal(BackendsContext::class, 'backends')]

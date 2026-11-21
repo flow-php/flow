@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Operators\Join;
 
 use ArrayObject;
+use DateTimeImmutable;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\JoinException;
 use Flow\ETL\Foundation\ProgressUnit;
@@ -34,6 +35,8 @@ use RuntimeException;
 
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config_builder;
+use function Flow\ETL\DSL\date_schema;
+use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\rows;
@@ -1124,5 +1127,66 @@ final class HashJoinTest extends FlowTestCase
         );
 
         static::assertSame(1, $stage->doneCalls(StageName::join));
+    }
+
+    public function test_an_undeclared_left_side_buckets_both_sides_in_the_type_they_compare_in(): void
+    {
+        $joined = [];
+
+        foreach (HashJoinMother::grace(Expression::on(['day' => 'at']), JoinType::inner)->join(
+            (static function () {
+                yield array_to_rows([['day' => new DateTimeImmutable('2024-01-01')]], schema(date_schema('day')));
+            })(),
+            (static function () {
+                yield array_to_rows(
+                    [['at' => new DateTimeImmutable('2024-01-01 00:00:00 UTC'), 'name' => 'Alice']],
+                    schema(datetime_schema('at'), str_schema('name')),
+                );
+            })(),
+            flow_context()->backend(),
+        ) as $batch) {
+            foreach ($batch->toArray() as $row) {
+                $joined[] = $row['name'];
+            }
+        }
+
+        static::assertSame(['Alice'], $joined);
+    }
+
+    public function test_only_an_undeclared_left_side_is_read_before_the_right_side_is_bucketized(): void
+    {
+        /** @var ArrayObject<int, string> $order */
+        $order = new ArrayObject();
+        $left = static function () use ($order) {
+            $order->append('left read');
+
+            yield array_to_rows([['id' => 1]], schema(int_schema('id')));
+        };
+        $right = static function (ReportedMemoryBackend $backend) use ($order) {
+            yield array_to_rows([['user_id' => 1]], schema(int_schema('user_id')));
+            // the build side outgrows the memory limit, so it is bucketized
+            $backend->reported = 2_000_000_000;
+            yield array_to_rows([['user_id' => 2]], schema(int_schema('user_id')));
+
+            $order->append('right read');
+        };
+        $spilling = static fn(): HashJoin => HashJoinMother::with(
+            Expression::on(['id' => 'user_id']),
+            JoinType::inner,
+            new SpyRowsStorage(new MemoryRowsStorage()),
+            memoryLimit: Unit::fromGb(1),
+        );
+        $declared = type_instance_of(HashJoin::class)->assert($spilling()->bind(
+            schema(int_schema('id')),
+            schema(int_schema('user_id')),
+        )->step);
+
+        iterator_to_array($declared->join($left(), $right($backend = new ReportedMemoryBackend()), $backend), false);
+        $declaredOrder = $order->getArrayCopy();
+        $order->exchangeArray([]);
+        iterator_to_array($spilling()->join($left(), $right($backend = new ReportedMemoryBackend()), $backend), false);
+
+        static::assertSame(['right read', 'left read'], $declaredOrder);
+        static::assertSame(['left read', 'right read'], $order->getArrayCopy());
     }
 }

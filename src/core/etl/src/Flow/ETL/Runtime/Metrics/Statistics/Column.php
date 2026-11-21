@@ -8,6 +8,7 @@ use DateTimeInterface;
 use Flow\ETL\Functions\Reference\Reference;
 use Flow\ETL\Functions\Reference\UnresolvedReference;
 use Flow\ETL\Kernels\Bucketing\SeenKeys;
+use Flow\ETL\Values\Column\CanonicalEncoding;
 use Flow\ETL\Values\Column\Column as ColumnData;
 use Flow\ETL\Values\Grouping\KeyEncoder;
 use Flow\ETL\Values\Rows;
@@ -100,7 +101,9 @@ final class Column
             [$definition->name() => $column],
             $column->count(),
         ));
-        $this->seen->add($column->nullCount() === 0 ? $keys : array_values(array_diff($keys, ["\0n"])));
+        $this->seen->add(
+            $column->nullCount() === 0 ? $keys : array_values(array_diff($keys, [CanonicalEncoding::NULL])),
+        );
     }
 
     public function distinctCount(): int

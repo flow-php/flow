@@ -229,18 +229,23 @@ final readonly class HashJoin implements Describable
                 }
             }
 
-            // the bounded read has seen the first right batch, so an undescribable right side has its schema now
-            [$leftKeys, $rightKeys] = $equalityKeys?->encoders($leftSchema, $rightSchema) ?? [null, null];
-
-            if ($held === null) {
-                $this->bucketize($rightRows, $rightBuckets, $resident ? null : $rightKeys, 'join-right', $backend);
-            }
-
             $leftRows = $this->tap($left, $leftSchema);
 
             // left rows with a null join key can never match, they only surface in left/left_anti output
             if ($equalityKeys !== null && $this->type->dropsNullKeys(Side::left)) {
                 $leftRows = (new NullKeyFilter($equalityKeys->left))->rows($leftRows);
+            }
+
+            // the right buckets key in the type both sides compare in, so an undeclared left side shows its first batch
+            if ($equalityKeys !== null && !$resident && $held === null && $leftSchema === null && !$leftRows->valid()) {
+                $leftRows = self::noRows();
+            }
+
+            // the bounded read has seen the first right batch, so an undescribable right side has its schema now
+            [$leftKeys, $rightKeys] = $equalityKeys?->encoders($leftSchema, $rightSchema) ?? [null, null];
+
+            if ($held === null) {
+                $this->bucketize($rightRows, $rightBuckets, $resident ? null : $rightKeys, 'join-right', $backend);
             }
 
             if ($resident || $held !== null) {
