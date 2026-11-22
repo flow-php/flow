@@ -8,12 +8,13 @@ use Flow\ETL\Foundation\Exception\CorruptedRecordException;
 use Flow\ETL\IO\Extractor;
 use Flow\ETL\IO\Extractor\Signal;
 use Flow\ETL\IO\Extractor\Statistics;
+use Flow\ETL\Runtime\Metrics\DatasetHash;
 use Flow\ETL\Runtime\Metrics\Processes;
 use Flow\ETL\Runtime\Metrics\SourceStatistics;
-use Flow\ETL\Values\Column\DatasetHash;
-use Flow\ETL\Values\Column\MultisetDigest;
+use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Memory\Unit;
 use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Schema;
 use Flow\Telemetry\ObjectExtractor;
 use Generator;
 use SplObjectStorage;
@@ -43,10 +44,10 @@ final class RunCounts
      */
     private array $workers = [];
 
-    private int $rowsCoveredByAbsorbedDigests = 0;
+    private int $rowsCoveredByAbsorbedHashes = 0;
 
     public function __construct(
-        private readonly ?DatasetHash $outputHash = null,
+        private readonly ?OutputHasher $outputHasher = null,
     ) {
         /** @var SplObjectStorage<Extractor, SourceCount> $reads */
         $reads = new SplObjectStorage();
@@ -119,40 +120,37 @@ final class RunCounts
         }
     }
 
-    public function hashesOutput(): bool
+    public function outputHasher(): ?OutputHasher
     {
-        return $this->outputHash !== null;
+        return $this->outputHasher;
     }
 
-    public function hashOutput(Rows $rows): void
+    public function hashOutput(Rows $rows, Backend $backend): void
     {
-        if ($this->outputHash === null) {
+        if ($this->outputHasher === null) {
             return;
         }
 
         if ($rows->schema()->count() === 0) {
-            $covered = min($rows->count(), $this->rowsCoveredByAbsorbedDigests);
-            $this->rowsCoveredByAbsorbedDigests -= $covered;
-            $this->outputHash->add([], $rows->count() - $covered);
+            $covered = min($rows->count(), $this->rowsCoveredByAbsorbedHashes);
+            $this->rowsCoveredByAbsorbedHashes -= $covered;
+            $this->outputHasher->add(Rows::fromColumns(new Schema(), [], $rows->count() - $covered), $backend);
 
             return;
         }
 
-        $this->outputHash->add($rows->columns(), $rows->count());
+        $this->outputHasher->add($rows, $backend);
     }
 
-    /**
-     * @param int<0, max> $rows
-     */
-    public function absorbOutputHash(MultisetDigest $digest, int $rows): void
+    public function absorbOutputHash(DatasetHash $partial): void
     {
-        $this->outputHash?->absorb($digest);
-        $this->rowsCoveredByAbsorbedDigests += $rows;
+        $this->outputHasher?->absorb($partial);
+        $this->rowsCoveredByAbsorbedHashes += $partial->total->rows;
     }
 
-    public function outputHash(): ?string
+    public function outputHash(): ?DatasetHash
     {
-        return $this->outputHash?->digest()->hex();
+        return $this->outputHasher?->hash();
     }
 
     public function worker(int $pid, int $peakBytes): void

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\IO\Loader;
 
 use DateTimeImmutable;
+use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\IO\Loader\RowPartitions;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Schema\Definition;
@@ -100,5 +101,15 @@ final class RowPartitionsTest extends FlowTestCase
         (new RowPartitions(refs(ref('v'))))->of(array_to_rows([['v' => $structure->cast([
             'a' => 'x',
         ])]], schema(structure_schema('v', $structure))), 0);
+    }
+
+    public function test_an_aliased_reference_needs_a_column_of_the_alias_name(): void
+    {
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+        $this->expectExceptionMessage('Schema definition for column "day" not found.');
+
+        (new RowPartitions(refs(ref('date')->as('day'))))->of(array_to_rows([[
+            'date' => '2026-11-20',
+        ]], schema(str_schema('date'))), 0);
     }
 }

@@ -81,9 +81,9 @@ Each contract with a Rust and a PHP implementation follows one pattern:
 | `Flow\ETL\IO\Loader\File\FileWriter`                      | `RustParquetFileWriter` | `ParquetFileWriter`    | `ParquetFileWriterFactory::writer()` |
 
 The extension also registers `Flow\ETL\Values\Column\{Column, ColumnBuilder, GroupedTotals, GroupedCounts,
-DatasetHash, GroupedMultisetHashes}` (`RustColumn`, `RustColumnBuilder`, `RustGroupedTotals`, `RustGroupedCounts`,
-`RustDatasetHash`, `RustGroupedMultisetHashes`). It also registers `Flow\ETL\Values\Grouping\GroupTable`
-(`RustGroupTable`). `RustBackend` returns the last five. Its sources return the iterator `Flow\ETL\Values\RustIterator`.
+GroupedMultisetHashes}` (`RustColumn`, `RustColumnBuilder`, `RustGroupedTotals`, `RustGroupedCounts`,
+`RustGroupedMultisetHashes`). It also registers `Flow\ETL\Values\Grouping\GroupTable` (`RustGroupTable`).
+`RustBackend` returns the last four. Its sources return the iterator `Flow\ETL\Values\RustIterator`.
 
 ## CSV and JSON writers
 

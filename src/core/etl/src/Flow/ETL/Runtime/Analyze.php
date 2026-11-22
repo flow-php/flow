@@ -4,26 +4,27 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Runtime;
 
+use Flow\ETL\Functions\Reference\Reference;
+use Flow\ETL\Functions\Reference\References;
+use Flow\ETL\Runtime\Executor\OutputHasher;
+use Flow\ETL\Runtime\Executor\PartitionedOutputHasher;
+use Flow\ETL\Runtime\Executor\WholeOutputHasher;
+
 final class Analyze
 {
     private bool $collectColumnStatistics = false;
 
-    private bool $collectDatasetHash = false;
-
     private bool $collectSchema = false;
 
     private bool $collectSourceStatistics = false;
+
+    private ?References $datasetHashBy = null;
 
     public function __construct() {}
 
     public function collectColumnStatistics(): bool
     {
         return $this->collectColumnStatistics;
-    }
-
-    public function collectDatasetHash(): bool
-    {
-        return $this->collectDatasetHash;
     }
 
     public function collectSchema(): bool
@@ -43,9 +44,18 @@ final class Analyze
         return $this;
     }
 
-    public function withDatasetHash(): self
+    public function newOutputHasher(): ?OutputHasher
     {
-        $this->collectDatasetHash = true;
+        return match (true) {
+            $this->datasetHashBy === null => null,
+            $this->datasetHashBy->count() === 0 => new WholeOutputHasher(),
+            default => new PartitionedOutputHasher($this->datasetHashBy),
+        };
+    }
+
+    public function withDatasetHash(Reference ...$partitions): self
+    {
+        $this->datasetHashBy = new References(...$partitions);
 
         return $this;
     }

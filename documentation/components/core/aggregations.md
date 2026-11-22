@@ -110,6 +110,90 @@ df()->read(from_array([['a' => 0.1], ['a' => 0.2]]))->aggregate([sum(ref('a'), e
 
 ## Hashing rows
 
+A sync job writes orders partitioned by day and country. The partition hashes tell which folders changed since the
+last run:
+
+```php
+<?php
+
+use Flow\ETL\Runtime\Metrics\PartitionHash;
+use Flow\Filesystem\Partition;
+
+use function Flow\ETL\Adapter\Parquet\to_parquet;
+use function Flow\ETL\DSL\{analyze, data_frame, date_schema, int_schema, partition_by, ref, schema, str_schema};
+
+$orders = schema(int_schema('id'), date_schema('date'), str_schema('country', nullable: true));
+
+$report = data_frame()
+    ->read($externalOrders->withSchema($orders))
+    ->write(to_parquet('orders')->partitionBy(partition_by('date', 'country')))
+    ->run(analyze: analyze()->withDatasetHash(ref('date'), ref('country')));
+
+$previous = file_exists('orders.hashes.json')
+    ? json_decode((string) file_get_contents('orders.hashes.json'), true, flags: JSON_THROW_ON_ERROR)
+    : [];
+$current = [];
+
+foreach ($report->datasetHash()->partitions as $partition) {
+    $segments = array_map(static fn(Partition $p): string => $p->segment(), $partition->partitions->toArray());
+    $current[implode('/', $segments)] = $partition->hash->value;
+}
+
+$changed = array_keys(array_diff_assoc($current, $previous));   // ['date=2026-11-20/country=PL', ...]
+$removed = array_keys(array_diff_key($previous, $current));
+file_put_contents('orders.hashes.json', json_encode($current));
+```
+
+A partition hash covers every column of every row of the partition. The named columns only group the rows.
+`$report->datasetHash()->total` is the hash of all rows: `->value` is the hash and `->rows` is the number of rows.
+It equals the hash of `withDatasetHash()` without columns, and then `->partitions` is `[]`. `$partition->hash->rows`
+is the number of rows of one partition.
+
+`PartitionHash::normalize()` gives the stored form of one entry,
+`['partitions' => ['date' => '2026-11-20', 'country' => 'PL'], 'hash' => ['rows' => 120, 'value' => '...']]`.
+`PartitionHash::fromArray()` reads it back.
+
+```php
+<?php
+
+use Flow\ETL\Runtime\Metrics\DatasetHash;
+
+$week = DatasetHash::fromArray($storedMondayReport['dataset_hash'])->plus($tuesday->datasetHash());
+
+$week->total->value;   // '31be1d609a26d996382e2a23855ebbe5', the hash of one run over both days
+$week->partitions;     // PL: 2 rows, DE: 1 row
+```
+
+`plus()` adds the totals and the partitions with the same values. The result equals the hash of one run over the
+rows of both.
+
+A null value is the partition `__HIVE_DEFAULT_PARTITION__`, as the loader writes it:
+`country=__HIVE_DEFAULT_PARTITION__`.
+
+A list, map, structure, json, xml or html column cannot be named. A float column cannot be named either, because
+`0.0` and `-0.0` are one value but two folder names. Cast it first:
+
+```php
+<?php
+
+use function Flow\ETL\DSL\{analyze, data_frame, ref};
+use function Flow\Types\DSL\type_string;
+
+data_frame()->read($rates)->run(analyze: analyze()->withDatasetHash(ref('rate')));
+// analyze()->withDatasetHash() cannot group by the float column "rate": 0.0 and -0.0 are one value but two partition
+// names. Cast it to a decimal string or an integer first.
+
+data_frame()
+    ->read($rates)
+    ->withColumn('rate_key', ref('rate')->cast(type_string()))
+    ->run(analyze: analyze()->withDatasetHash(ref('rate_key')));
+```
+
+The key column `rate_key` is part of the output, so it is part of every partition hash.
+
+Declare the schema of the partition columns, as in the first sample. Then the hash of a partition is the same between
+runs and between workers. The batch size, the order of the files and the number of workers do not change a hash.
+
 ```php
 <?php
 
@@ -126,7 +210,7 @@ df()->read(from_array($rows))->aggregate([multiset_hash()])->fetch();
 df()->read(from_array($rows))->groupBy('country')->aggregate(multiset_hash(ref('id')))->fetch();
 // PL: 'ab8476f29c95212a306bffff897d7afb', DE: 'f3aebd664d56cdeceed04ea04775ad52'
 
-df()->read(from_array($rows))->run(analyze: analyze()->withDatasetHash())->datasetHash();
+df()->read(from_array($rows))->run(analyze: analyze()->withDatasetHash())->datasetHash()->total->value;
 // '31be1d609a26d996382e2a23855ebbe5'
 ```
 

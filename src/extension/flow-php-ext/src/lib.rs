@@ -81,7 +81,6 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .class::<group_table::RustGroupTable>()
         .class::<grouped_counts::RustGroupedCounts>()
         .class::<grouped_totals::RustGroupedTotals>()
-        .class::<multiset_hashes::RustDatasetHash>()
         .class::<multiset_hashes::RustGroupedMultisetHashes>()
         .class::<backend::RustBackend>()
         .class::<iterator::RustIterator>()

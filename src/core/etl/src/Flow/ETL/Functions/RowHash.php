@@ -14,6 +14,7 @@ use Flow\ETL\Values\Rows;
 use Flow\Types\Type;
 use SensitiveParameter;
 
+use function array_map;
 use function array_values;
 use function Flow\Types\DSL\type_string;
 
@@ -79,12 +80,14 @@ final class RowHash implements ScalarFunction
 
     public function eval(Rows $rows, Backend $backend): Column
     {
-        $columns = [];
-
-        foreach ($rows->isEmpty() ? [] : $this->refs as $ref) {
-            $columns[$ref->base()] = $rows->column($ref->base());
-        }
-
-        return $backend->rowHashes($columns, $rows->count());
+        return $backend->rowHashes(
+            $rows->isEmpty()
+                ? []
+                : $rows->select(...array_map(
+                    static fn(Reference $ref): string => $ref->base(),
+                    $this->refs,
+                ))->columns(),
+            $rows->count(),
+        );
     }
 }

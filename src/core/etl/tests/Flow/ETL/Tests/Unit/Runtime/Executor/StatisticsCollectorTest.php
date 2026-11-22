@@ -11,6 +11,9 @@ use Flow\ETL\Foundation\Clock\HighResolutionTime;
 use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\IO\Extractor\Statistics;
 use Flow\ETL\Runtime\Executor\StatisticsCollector;
+use Flow\ETL\Runtime\Executor\WholeOutputHasher;
+use Flow\ETL\Runtime\Metrics\Hash;
+use Flow\ETL\Runtime\Metrics\PartitionHash;
 use Flow\ETL\Runtime\Metrics\Report;
 use Flow\ETL\Runtime\Metrics\SourceStatistics;
 use Flow\ETL\Runtime\Metrics\Statistics\Columns;
@@ -20,6 +23,8 @@ use Flow\ETL\Tests\Double\StubLauncher;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Values\Cardinality;
 use Flow\ETL\Values\Memory\Unit;
+use Flow\Filesystem\Partition;
+use Flow\Filesystem\Partitions;
 use Flow\Telemetry\Logger\LogEntry;
 use Flow\Telemetry\Logger\Severity;
 
@@ -30,6 +35,7 @@ use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function iterator_to_array;
@@ -322,15 +328,19 @@ final class StatisticsCollectorTest extends FlowTestCase
         $collector->capture(array_to_rows([], schema(int_schema('a'))));
         $collector->capture(array_to_rows([['a' => 1]], schema(int_schema('a'))));
 
-        static::assertSame('721f4650154ebb88ac4ec50a605901df', $collector->report()->datasetHash());
+        static::assertEquals(
+            new Hash(2, '721f4650154ebb88ac4ec50a605901df'),
+            $collector->report()->datasetHash()?->total,
+        );
+        static::assertSame([], $collector->report()->datasetHash()?->partitions);
         static::assertFalse($collector->readsColumns());
     }
 
     public function test_a_dataset_hash_of_no_rows_is_zero(): void
     {
-        static::assertSame(
-            '00000000000000000000000000000000',
-            (new StatisticsCollector(analyze()->withDatasetHash(), flow_context()))->report()->datasetHash(),
+        static::assertEquals(
+            new Hash(0, '00000000000000000000000000000000'),
+            (new StatisticsCollector(analyze()->withDatasetHash(), flow_context()))->report()->datasetHash()?->total,
         );
     }
 
@@ -345,7 +355,7 @@ final class StatisticsCollectorTest extends FlowTestCase
         $collector->capture(array_to_rows([['a' => 1]], schema(int_schema('a')), $backend));
 
         static::assertNull($collector->report()->datasetHash());
-        static::assertSame(0, $backend->datasetHashesCreated());
+        static::assertSame(0, $backend->groupedMultisetHashesCreated());
         static::assertFalse(
             (new StatisticsCollector(
                 analyze()->withSourceStatistics(),
@@ -358,12 +368,13 @@ final class StatisticsCollectorTest extends FlowTestCase
     {
         $backend = new SpyBackend();
 
-        new StatisticsCollector(
+        $collector = new StatisticsCollector(
             analyze()->withDatasetHash(),
             flow_context(config_builder()->backend($backend)->build()),
         );
+        $collector->capture(array_to_rows([['a' => 1]], schema(int_schema('a')), $backend));
 
-        static::assertSame(1, $backend->datasetHashesCreated());
+        static::assertSame(1, $backend->groupedMultisetHashesCreated());
     }
 
     public function test_the_dataset_hash_under_a_launcher_is_not_named_in_the_warning(): void
@@ -391,7 +402,35 @@ final class StatisticsCollectorTest extends FlowTestCase
         );
 
         static::assertFalse($collector->readsColumns());
-        static::assertTrue($collector->counts()?->hashesOutput());
+        static::assertInstanceOf(WholeOutputHasher::class, $collector->counts()?->outputHasher());
         static::assertSame([], $telemetry->logs->entriesWithSeverity(Severity::WARN));
+    }
+
+    public function test_a_partitioned_dataset_hash_reports_one_hash_per_partition_and_their_total(): void
+    {
+        $schema = schema(str_schema('country'), int_schema('id'));
+        $whole = new StatisticsCollector(analyze()->withDatasetHash(), flow_context());
+        $collector = new StatisticsCollector(analyze()->withDatasetHash(ref('country')), flow_context());
+
+        foreach ([$whole, $collector] as $each) {
+            $each->capture(array_to_rows([['country' => 'PL', 'id' => 1], ['country' => 'DE', 'id' => 2]], $schema));
+            $each->capture(array_to_rows([['country' => 'PL', 'id' => 3]], $schema));
+        }
+
+        static::assertEquals($whole->report()->datasetHash()?->total, $collector->report()->datasetHash()?->total);
+        static::assertEquals(
+            [new Partitions(new Partition('country', 'PL')), new Partitions(new Partition('country', 'DE'))],
+            array_map(
+                static fn(PartitionHash $hash): Partitions => $hash->partitions,
+                $collector->report()->datasetHash()->partitions ?? [],
+            ),
+        );
+        static::assertSame(
+            [2, 1],
+            array_map(
+                static fn(PartitionHash $hash): int => $hash->hash->rows,
+                $collector->report()->datasetHash()->partitions ?? [],
+            ),
+        );
     }
 }

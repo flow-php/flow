@@ -18,12 +18,9 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row_hash;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
-use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
-use function hex2bin;
-use function unpack;
 
 final class MultisetHashTest extends FlowTestCase
 {
@@ -40,9 +37,7 @@ final class MultisetHashTest extends FlowTestCase
         $summed = multiset_hash();
 
         foreach ($rowHashes as $rowHash) {
-            /** @var array{1: int, 2: int} $lanes */
-            $lanes = unpack('J2', (string) hex2bin($rowHash));
-            $summed->merge(['low' => $lanes[2], 'high' => $lanes[1]], $backend);
+            $summed->merge(['hash' => $rowHash], $backend);
         }
 
         static::assertSame(['bdea5ee4847f3df6cb724988fb66ecd4', 'ba7c3390ce5fcedfea5c7d697dbe1ac9'], $rowHashes);
@@ -118,23 +113,20 @@ final class MultisetHashTest extends FlowTestCase
         $merged->merge($second->partial(), $backend);
 
         static::assertSame('7866927552df0cd5b5cec6f27925079d', $merged->value());
-        static::assertSame(['low' => -5346116962925344867, 'high' => 8675782764775017685], $merged->partial());
+        static::assertSame(['hash' => '7866927552df0cd5b5cec6f27925079d'], $merged->partial());
     }
 
     public function test_an_aggregate_that_saw_no_row_is_zero(): void
     {
         static::assertSame('00000000000000000000000000000000', multiset_hash()->value());
-        static::assertSame(['low' => 0, 'high' => 0], multiset_hash()->partial());
+        static::assertSame(['hash' => '00000000000000000000000000000000'], multiset_hash()->partial());
     }
 
     public function test_it_declares_its_output_and_partial(): void
     {
         static::assertSame('_multiset_hash', multiset_hash()->outputName());
         static::assertEquals(type_string(), multiset_hash()->returns());
-        static::assertEquals(
-            type_structure(['low' => type_integer(), 'high' => type_integer()]),
-            multiset_hash()->partialType(),
-        );
+        static::assertEquals(type_structure(['hash' => type_string()]), multiset_hash()->partialType());
     }
 
     public function test_a_rebuilt_aggregate_keeps_its_references(): void
@@ -163,7 +155,7 @@ final class MultisetHashTest extends FlowTestCase
     public function test_a_named_column_the_batch_lacks_is_refused_with_a_suggestion(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Column "emal" does not exist. Did you mean one of the following? ["email"]');
+        $this->expectExceptionMessage('Schema definition for column "emal" not found. Did you mean one of: [email]?');
 
         multiset_hash(ref('emal'))
             ->aggregate(array_to_rows([['email' => 'x']], schema(str_schema('email'))), [0], new PhpBackend());

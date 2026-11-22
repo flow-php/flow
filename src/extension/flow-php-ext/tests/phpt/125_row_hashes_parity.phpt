@@ -1,12 +1,12 @@
 --TEST--
-RustBackend::rowHashes(), datasetHash() and groupedMultisetHashes() give the hashes PhpBackend gives: every tag, the canonical edge cases, a native map<string, integer> with the key "1", positioned and bare xml elements, columns from either backend, batches split differently, batches without columns, digests, partials, absorb and absorbEarlier
+RustBackend::rowHashes() and groupedMultisetHashes() give the hashes PhpBackend gives: every tag, the canonical edge cases, a native map<string, integer> with the key "1", positioned and bare xml elements, columns from either backend, batches split differently, batches without columns, one group, absorbEarlier and the carry between lanes
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 --FILE--
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Values\Column\{Backend, MultisetDigest, PhpBackend, RustBackend};
+use Flow\ETL\Values\Column\{Backend, Column, GroupedMultisetHashes, MultisetDigest, PhpBackend, RustBackend};
 use Flow\ETL\Values\Column\Php\MapColumn;
 use Flow\ETL\Values\Rows;
 
@@ -40,24 +40,19 @@ $edges = [
 $cases = ['every tag' => [all_types_schema(), all_types_values()], 'edge cases' => $edges];
 
 $rows = static fn(Backend $backend, Rows $source): Rows => $source->adoptedBy($backend);
-$lanes = static fn(MultisetDigest $digest): array => [$digest->low, $digest->high];
-$hashes = static function (Backend $backend, Rows $rows, int $batch, ?array $ids = null) use ($lanes): array {
-    $dataset = $backend->datasetHash();
+$hashes = static function (Backend $backend, Rows $rows, int $batch, ?array $ids = null): array {
+    $ids ??= array_fill(0, $rows->count(), 0);
     $grouped = $backend->groupedMultisetHashes();
 
     foreach ($rows->chunks($batch) as $index => $part) {
-        $ids === null
-            ? $dataset->add($part->columns(), $part->count())
-            : $grouped->add($part->columns(), array_to_rows(
-                array_map(static fn(int $id): array => ['id' => $id], array_slice($ids, $index * $batch, $part->count())),
-                schema(int_schema('id')),
-                $backend,
-            )->column('id'));
+        $grouped->add($part->columns(), array_to_rows(
+            array_map(static fn(int $id): array => ['id' => $id], array_slice($ids, $index * $batch, $part->count())),
+            schema(int_schema('id')),
+            $backend,
+        )->column('id'));
     }
 
-    return $ids === null
-        ? [$dataset->digest()->hex(), $lanes($dataset->digest())]
-        : [$grouped->hashes()->physicals(), array_map($lanes, $grouped->partials())];
+    return $grouped->hashes()->physicals();
 };
 
 foreach ($cases as $label => [$schema, $values]) {
@@ -108,32 +103,41 @@ $phpInto->absorbEarlier($direct, [0 => 0, 1 => 1, 2 => 2]);
 echo 'absorbEarlier of php, native and into php: ', $intoPhp->hashes()->physicals() === $direct->hashes()->physicals()
     && $intoNative->hashes()->physicals() === $direct->hashes()->physicals()
     && $phpInto->hashes()->physicals() === $direct->hashes()->physicals()
-    && array_map($lanes, $intoPhp->partials()) === array_map($lanes, $fromPhp->partials()) ? 'same' : 'MISMATCH', "\n";
+    && $intoPhp->hashes()->physicals() === $fromPhp->hashes()->physicals() ? 'same' : 'MISMATCH', "\n";
 echo 'unseen group: ', $direct->hashes()->physicals()[1], "\n";
-echo 'empty: ', $rust->datasetHash()->digest()->hex(), ' ', json_encode($rust->groupedMultisetHashes()->hashes()->physicals()), ' ', json_encode($rust->groupedMultisetHashes()->partials()), "\n";
+echo 'empty: ', json_encode($rust->groupedMultisetHashes()->hashes()->physicals()), "\n";
 
 $withoutColumns = static function (Backend $backend): array {
-    $dataset = $backend->datasetHash();
-    $dataset->add([], 3);
+    $one = $backend->groupedMultisetHashes();
+    $one->add([], array_to_rows([['id' => 0], ['id' => 0], ['id' => 0]], schema(int_schema('id')), $backend)->column('id'));
     $grouped = $backend->groupedMultisetHashes();
     $grouped->add([], array_to_rows([['id' => 1], ['id' => 0], ['id' => 1]], schema(int_schema('id')), $backend)->column('id'));
 
-    return [$dataset->digest()->hex(), $grouped->hashes()->physicals()];
+    return [$one->hashes()->physicals(), $grouped->hashes()->physicals()];
 };
 echo 'batch without columns: ', $withoutColumns($rust) === $withoutColumns($php) ? 'same' : 'MISMATCH', ' ', json_encode($withoutColumns($rust)), "\n";
 
-$datasetFromPhp = $php->datasetHash();
-$datasetFromPhp->add($source->columns(), $source->count());
-$absorbed = $rust->datasetHash();
-$absorbed->absorb($datasetFromPhp->digest());
-$datasetDirect = $rust->datasetHash();
-$datasetDirect->add($source->adoptedBy($rust)->columns(), $source->count());
-echo 'absorb of a php digest: ', $absorbed->digest() == $datasetDirect->digest() ? 'same' : 'MISMATCH', "\n";
+$earlier = static fn(string $hex): GroupedMultisetHashes => new class($hex) implements GroupedMultisetHashes {
+    public function __construct(private readonly string $hex) {}
+    public function add(array $columns, Column $ids): void {}
+    public function hashes(): Column { return array_to_rows([['h' => $this->hex]], schema(str_schema('h')), new PhpBackend())->column('h'); }
+    public function absorbEarlier(GroupedMultisetHashes $earlier, array $into): void {}
+};
+$carry = $rust->groupedMultisetHashes();
+$carry->absorbEarlier($earlier((new MultisetDigest(0xFFFFFFFF, PHP_INT_MAX))->hex()), [0 => 0]);
+$carry->absorbEarlier($earlier((new MultisetDigest(0xFFFFFFFF, 1))->hex()), [0 => 0]);
+echo 'carry: ', $carry->hashes()->physicals()[0], "\n";
 
-$carry = $rust->datasetHash();
-$carry->absorb(new MultisetDigest(0xFFFFFFFF, PHP_INT_MAX));
-$carry->absorb(new MultisetDigest(0xFFFFFFFF, 1));
-echo 'carry: ', $carry->digest()->hex(), ' ', json_encode($lanes($carry->digest())), "\n";
+foreach (['uppercase' => '0000000000000000000000000000000A', 'sign' => '+0000000000000000000000000000000'] as $label => $hex) {
+    foreach (['php' => $php, 'rust' => $rust] as $side => $backend) {
+        try {
+            $backend->groupedMultisetHashes()->absorbEarlier($earlier($hex), [0 => 0]);
+            echo "{$label} into {$side}: accepted\n";
+        } catch (Throwable $e) {
+            echo "{$label} into {$side}: ", $e::class, ': ', $e->getMessage(), "\n";
+        }
+    }
+}
 
 try {
     $rust->groupedMultisetHashes()->absorbEarlier($rust->groupedMultisetHashes(), [3 => 0]);
@@ -151,10 +155,13 @@ edge cases: same
 native map with the key "1": native, same
 absorbEarlier of php, native and into php: same
 unseen group: 00000000000000000000000000000000
-empty: 00000000000000000000000000000000 [] []
-batch without columns: same ["ccfe147903d6ca882005496cd3a7dc7d",["99aa06d3014798d86001c324468d497f","33540da6028f31b0c00386488d1a92fe"]]
-absorb of a php digest: same
-carry: 800000000000000000000001fffffffe [8589934590,-9223372036854775808]
+empty: []
+batch without columns: same [["ccfe147903d6ca882005496cd3a7dc7d"],["99aa06d3014798d86001c324468d497f","33540da6028f31b0c00386488d1a92fe"]]
+carry: 800000000000000000000001fffffffe
+uppercase into php: Flow\ETL\Foundation\Exception\InvalidArgumentException: A multiset digest is 32 lowercase hex characters, high lane first, given: "0000000000000000000000000000000A"
+uppercase into rust: Flow\ETL\Foundation\Exception\InvalidArgumentException: A multiset digest is 32 lowercase hex characters, high lane first, given: "0000000000000000000000000000000A"
+sign into php: Flow\ETL\Foundation\Exception\InvalidArgumentException: A multiset digest is 32 lowercase hex characters, high lane first, given: "+0000000000000000000000000000000"
+sign into rust: Flow\ETL\Foundation\Exception\InvalidArgumentException: A multiset digest is 32 lowercase hex characters, high lane first, given: "+0000000000000000000000000000000"
 missing earlier group: Flow\ETL\Foundation\Exception\InvalidArgumentException: Earlier group 3 has no hash
 only nulls: 99aa06d3014798d86001c324468d497f
 no columns: ["99aa06d3014798d86001c324468d497f","99aa06d3014798d86001c324468d497f"]

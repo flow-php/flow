@@ -7,11 +7,19 @@ namespace Flow\ETL\Tests\Unit\Values\Grouping;
 use DateTimeImmutable;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\ColumnMother;
 use Flow\ETL\Values\Grouping\KeyEncoder;
+use Flow\ETL\Values\Schema\Definitions;
+use Flow\Filesystem\Partition;
+use Flow\Types\Type;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestWith;
 
+use function array_map;
 use function array_merge;
 use function array_unique;
+use function count;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\date_schema;
@@ -21,6 +29,8 @@ use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function Flow\Types\DSL\type_date;
+use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
@@ -29,6 +39,52 @@ use const NAN;
 
 final class KeyEncoderTest extends FlowTestCase
 {
+    public static function sharedKeys(): Generator
+    {
+        yield 'two nan payloads' => [type_float(), [NAN, -NAN]];
+        yield 'a date' => [type_date(), [new DateTimeImmutable('2026-11-20'), new DateTimeImmutable('2026-11-20')]];
+        yield 'one instant in utc and in +02:00' => [
+            type_datetime(),
+            [new DateTimeImmutable('2026-11-20T10:00:00+00:00'), new DateTimeImmutable('2026-11-20T12:00:00+02:00')],
+        ];
+    }
+
+    /**
+     * @param Type<mixed> $type
+     * @param list<mixed> $values
+     */
+    #[DataProvider('sharedKeys')]
+    public function test_one_key_gives_one_partition_value(Type $type, array $values): void
+    {
+        static::assertCount(
+            1,
+            array_unique(KeyEncoder::ofColumns([ColumnMother::of(
+                Definitions::of('k', $type),
+                $values,
+            )], count($values))),
+        );
+        static::assertCount(
+            1,
+            array_unique(array_map(static fn(mixed $value): string => Partition::fromValue(
+                'k',
+                $type,
+                $value,
+            ), $values)),
+        );
+    }
+
+    public function test_zero_and_negative_zero_are_one_key_but_two_partition_values(): void
+    {
+        static::assertCount(
+            1,
+            array_unique(KeyEncoder::ofColumns([ColumnMother::of(Definitions::of('k', type_float()), [0.0, -0.0])], 2)),
+        );
+        static::assertSame(['0.0', '-0.0'], [
+            Partition::fromValue('k', type_float(), 0.0),
+            Partition::fromValue('k', type_float(), -0.0),
+        ]);
+    }
+
     public function test_an_empty_batch_has_no_keys(): void
     {
         static::assertSame([], (new KeyEncoder(['k']))->of(rows(schema(int_schema('k')))));

@@ -69,16 +69,15 @@ writes such a value in that raw form. Write the file again with this version to 
 
 Catch `Flow\ETL\Foundation\Exception\InvalidArgumentException` instead of `\InvalidArgumentException` for an unknown algorithm name.
 
-### 6) `flow-php/etl` - `Backend` has three new methods, and the flow_php ABI is 4
+### 6) `flow-php/etl` - `Backend` has two new methods, and the flow_php ABI is 4
 
 | Before           | After                                                     |
 |------------------|-----------------------------------------------------------|
 | -                | `Backend::rowHashes(array $columns, int $count): Column`  |
-| -                | `Backend::datasetHash(): DatasetHash`                     |
 | -                | `Backend::groupedMultisetHashes(): GroupedMultisetHashes` |
 | `FLOW_PHP_ABI` 3 | `FLOW_PHP_ABI` 4                                          |
 
-A custom `Backend` must implement the three methods. Update or rebuild the flow_php extension together with the library.
+A custom `Backend` must implement the two methods. Update or rebuild the flow_php extension together with the library.
 
 ### 7) `flow-php/etl` - group, join, distinct and bucket keys have the declared type of their column
 
@@ -88,6 +87,15 @@ A custom `Backend` must implement the three methods. Update or rebuild the flow_
 | an xml value under a string key column keys by its stored document | it keys by the text that the string cast gives                     |
 | int `1` and float `1.0` under a float key column are two keys      | one key                                                            |
 | a join with an undeclared left schema buckets the right side first | it reads the first left batch first, so both sides key in one type |
+
+### 8) `flow-php/filesystem` - an empty string is a valid partition value
+
+| Before                                       | After                                             |
+|----------------------------------------------|---------------------------------------------------|
+| `new Partition('country', '')` throws        | it is the partition `country` with the value `''` |
+| `Partition::fromSegment('country=')` is null | it is the partition `country` with the value `''` |
+| a partitioned write refuses an empty value   | it writes the folder `country=`                   |
+| a read ignores a folder `country=`           | it reads it as the partition column `country`     |
 
 ---
 

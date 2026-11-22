@@ -79,14 +79,13 @@ final class PhpGroupedMultisetHashes implements GroupedMultisetHashes
         );
     }
 
-    public function partials(): array
-    {
-        return $this->digests;
-    }
-
     public function absorbEarlier(GroupedMultisetHashes $earlier, array $into): void
     {
-        $digests = $earlier->partials();
+        $digests = $earlier instanceof self
+            ? $earlier->digests
+            : array_map(static fn(mixed $hex): MultisetDigest => MultisetDigest::fromHex(type_string()->assert(
+                $hex,
+            )), $earlier->hashes()->physicals());
 
         foreach ($into as $from => $to) {
             $this->grow($to);
