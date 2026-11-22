@@ -332,7 +332,6 @@ function interfaces_reflection(): string
         'Flow\\ETL\\Values\\Column\\Backend',
         'Flow\\ETL\\Values\\Column\\Column',
         'Flow\\ETL\\Values\\Column\\ColumnBuilder',
-        'Flow\\ETL\\Values\\Column\\DatasetHash',
         'Flow\\ETL\\Values\\Column\\GroupedCounts',
         'Flow\\ETL\\Values\\Column\\GroupedMultisetHashes',
         'Flow\\ETL\\Values\\Column\\GroupedTotals',

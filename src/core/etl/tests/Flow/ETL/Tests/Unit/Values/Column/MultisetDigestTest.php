@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Values\Column;
 
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Values\Column\MultisetDigest;
-use Flow\Types\Exception\InvalidTypeException;
 use PHPUnit\Framework\TestCase;
 
 use const PHP_INT_MAX;
@@ -35,27 +35,33 @@ final class MultisetDigestTest extends TestCase
         );
     }
 
-    public function test_normalize_and_from_array_round_trip_both_lanes(): void
+    public function test_from_hex_reads_back_both_lanes_at_the_limits(): void
     {
-        static::assertSame(['low' => -1, 'high' => PHP_INT_MIN], (new MultisetDigest(-1, PHP_INT_MIN))->normalize());
         static::assertEquals(
-            new MultisetDigest(-1, PHP_INT_MIN),
-            MultisetDigest::fromArray((new MultisetDigest(-1, PHP_INT_MIN))->normalize()),
+            new MultisetDigest(PHP_INT_MIN, PHP_INT_MAX),
+            MultisetDigest::fromHex((new MultisetDigest(PHP_INT_MIN, PHP_INT_MAX))->hex()),
+        );
+        static::assertEquals(
+            new MultisetDigest(PHP_INT_MAX, PHP_INT_MIN),
+            MultisetDigest::fromHex((new MultisetDigest(PHP_INT_MAX, PHP_INT_MIN))->hex()),
         );
     }
 
-    public function test_from_array_refuses_a_lane_that_is_not_an_integer(): void
+    public function test_from_hex_refuses_a_string_that_is_not_32_lowercase_hex_characters(): void
     {
-        $this->expectException(InvalidTypeException::class);
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'A multiset digest is 32 lowercase hex characters, high lane first, given: "0000000000000000000000000000000"',
+        );
 
-        MultisetDigest::fromArray(['low' => 1, 'high' => '2']);
+        MultisetDigest::fromHex('0000000000000000000000000000000');
     }
 
-    public function test_from_array_refuses_a_missing_lane(): void
+    public function test_from_hex_refuses_uppercase_hex(): void
     {
-        $this->expectException(InvalidTypeException::class);
+        $this->expectException(InvalidArgumentException::class);
 
-        MultisetDigest::fromArray(['low' => 1]);
+        MultisetDigest::fromHex('0000000000000000000000000000000A');
     }
 
     public function test_both_lanes_wrap_past_minus_one(): void

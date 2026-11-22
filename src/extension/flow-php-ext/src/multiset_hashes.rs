@@ -1,81 +1,24 @@
-//! `Flow\ETL\Values\Column\{RustDatasetHash, RustGroupedMultisetHashes}`: wrapping sums of the row hash lanes, held
-//! natively between batches, one sum for the dataset or one per group.
+//! `Flow\ETL\Values\Column\RustGroupedMultisetHashes`: wrapping sums of the row hash lanes, held natively between
+//! batches, one sum per group.
 
 use std::sync::Arc;
 
 use arrow_array::LargeBinaryArray;
-use ext_php_rs::boxed::ZBox;
-use ext_php_rs::convert::IntoZval;
-use ext_php_rs::error::Result as ZvalResult;
-use ext_php_rs::flags::{ClassFlags, DataType};
+use ext_php_rs::flags::ClassFlags;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ArrayKey, ZendHashTable, Zval};
 use flow_column_kernels::canonical::row_lanes;
 
 use crate::canonical_rows::{named, row_columns, STRING_TYPE};
 use crate::column::RustColumn;
-use crate::ctx::{call_method, construct, expect_object, find_class, read_property, zval_long};
+use crate::ctx::call_method;
 use crate::exception::ext_exception;
 use crate::grouped_totals::group_ids;
-use crate::interfaces::{dataset_hash_ce, grouped_multiset_hashes_ce};
+use crate::interfaces::grouped_multiset_hashes_ce;
 use crate::render::invalid_argument;
-
-const MULTISET_DIGEST: &str = "Flow\\ETL\\Values\\Column\\MultisetDigest";
 
 /// [low, high]
 type Lanes = [u64; 2];
-
-/// A `MultisetDigest` object, so `digest()` declares that return type.
-pub struct DigestValue(Zval);
-
-impl IntoZval for DigestValue {
-    const TYPE: DataType = DataType::object(MULTISET_DIGEST);
-    const NULLABLE: bool = false;
-
-    fn set_zval(self, zv: &mut Zval, _persistent: bool) -> ZvalResult<()> {
-        *zv = self.0;
-
-        Ok(())
-    }
-}
-
-#[php_class]
-#[php(
-    name = "Flow\\ETL\\Values\\Column\\RustDatasetHash",
-    flags = ClassFlags::Final,
-    implements(ce = dataset_hash_ce, stub = "Flow\\ETL\\Values\\Column\\DatasetHash")
-)]
-#[derive(Default)]
-pub struct RustDatasetHash {
-    lanes: Lanes,
-}
-
-#[php_impl]
-impl RustDatasetHash {
-    pub fn add(&mut self, columns: &ZendHashTable, count: i64) -> PhpResult<()> {
-        let resolved = row_columns(columns)?;
-        let count = usize::try_from(count).map_err(|_| ext_exception("flow_php expected a row count of 0 or more"))?;
-        let mut row = Vec::new();
-        let mut entries = Vec::new();
-
-        for index in 0..count {
-            named(&mut row, &mut entries, &resolved, index);
-            add_lanes(&mut self.lanes, row_lanes(&row).into());
-        }
-
-        Ok(())
-    }
-
-    pub fn digest(&self) -> PhpResult<DigestValue> {
-        Ok(DigestValue(digest(self.lanes)?))
-    }
-
-    pub fn absorb(&mut self, digest: &Zval) -> PhpResult<()> {
-        add_lanes(&mut self.lanes, lanes_of(digest)?);
-
-        Ok(())
-    }
-}
 
 #[php_class]
 #[php(
@@ -118,23 +61,13 @@ impl RustGroupedMultisetHashes {
         RustColumn::of_type(Arc::new(LargeBinaryArray::from_iter_values(hashes)), STRING_TYPE)
     }
 
-    pub fn partials(&self) -> PhpResult<ZBox<ZendHashTable>> {
-        let mut partials = ZendHashTable::with_capacity(self.lanes.len() as u32);
-
-        for lanes in &self.lanes {
-            partials.push(digest(*lanes)?)?;
-        }
-
-        Ok(partials)
-    }
-
     #[php(name = "absorbEarlier")]
     pub fn absorb_earlier(&mut self, earlier: &Zval, into: &ZendHashTable) -> PhpResult<()> {
         let lanes = match earlier.extract::<&RustGroupedMultisetHashes>() {
             Some(native) => native.lanes.clone(),
-            None => call_method(earlier, "partials", &mut [])?
+            None => call_method(&call_method(earlier, "hashes", &mut [])?, "physicals", &mut [])?
                 .array()
-                .ok_or_else(|| ext_exception("flow_php expected GroupedMultisetHashes::partials() to return an array"))?
+                .ok_or_else(|| ext_exception("flow_php expected Column::physicals() to return an array"))?
                 .values()
                 .map(lanes_of)
                 .collect::<PhpResult<Vec<_>>>()?,
@@ -176,29 +109,19 @@ fn add_lanes(lanes: &mut Lanes, [low, high]: Lanes) {
     lanes[1] = lanes[1].wrapping_add(high);
 }
 
-fn digest([low, high]: Lanes) -> PhpResult<Zval> {
-    let mut object = construct(
-        find_class(MULTISET_DIGEST)?,
-        &mut [zval_long(low as i64), zval_long(high as i64)],
-    )?;
-    let mut zv = Zval::new();
-    zv.set_object(&mut object);
+fn lanes_of(hex: &Zval) -> PhpResult<Lanes> {
+    let hex = hex
+        .str()
+        .ok_or_else(|| ext_exception("flow_php expected a multiset hash as a string"))?;
+    let lowercase_hex = hex.len() == 32 && hex.bytes().all(|byte| matches!(byte, b'0'..=b'9' | b'a'..=b'f'));
+    let digest = u128::from_str_radix(hex, 16)
+        .ok()
+        .filter(|_| lowercase_hex)
+        .ok_or_else(|| {
+            invalid_argument(format!(
+                "A multiset digest is 32 lowercase hex characters, high lane first, given: \"{hex}\""
+            ))
+        })?;
 
-    Ok(zv)
-}
-
-fn lanes_of(digest: &Zval) -> PhpResult<Lanes> {
-    let object = expect_object(digest, "a MultisetDigest")?;
-    let lane = |name: &str| {
-        read_property(object, name)?
-            .long()
-            .map(|lane| lane as u64)
-            .ok_or_else(|| {
-                ext_exception(format!(
-                    "flow_php expected the '{name}' lane of a MultisetDigest as an int"
-                ))
-            })
-    };
-
-    Ok([lane("low")?, lane("high")?])
+    Ok([digest as u64, (digest >> 64) as u64])
 }

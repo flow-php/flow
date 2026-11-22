@@ -10,14 +10,14 @@ use Flow\ETL\Foundation\Exception\InvalidLogicException;
 use Flow\ETL\Functions\Reference\Reference;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Column\Column;
-use Flow\ETL\Values\Column\DatasetHash;
+use Flow\ETL\Values\Column\GroupedMultisetHashes;
 use Flow\ETL\Values\Column\MultisetDigest;
 use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Schema\Definitions;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\StructureType;
 use SensitiveParameter;
 
-use function array_combine;
 use function array_map;
 use function array_values;
 use function count;
@@ -27,14 +27,18 @@ use function Flow\Types\DSL\type_structure;
 
 final class MultisetHash implements AggregatesByGroup
 {
-    private ?DatasetHash $hash = null;
+    private ?GroupedMultisetHashes $hash = null;
+
+    private MultisetDigest $absorbed;
 
     /**
      * @param list<Reference> $refs [] hashes every column
      */
     public function __construct(
         private readonly array $refs = [],
-    ) {}
+    ) {
+        $this->absorbed = MultisetDigest::empty();
+    }
 
     public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
     {
@@ -53,30 +57,30 @@ final class MultisetHash implements AggregatesByGroup
         }
 
         $names = $this->names();
-        $columns = $names === null ? $rows->columns() : array_combine($names, array_map($rows->column(...), $names));
-        $this->hash ??= $backend->datasetHash();
-        $this->hash->add(
+        $columns = $names === [] ? $rows->columns() : $rows->select(...$names)->columns();
+        ($this->hash ??= $backend->groupedMultisetHashes())->add(
             count($indices) === $rows->count()
                 ? $columns
                 : array_map(static fn(Column $column): Column => $column->take($indices), $columns),
-            count($indices),
+            $backend->constant(Definitions::of('group', type_integer()), 0, count($indices)),
         );
     }
 
     public function merge(array $partial, Backend $backend): void
     {
-        $this->hash ??= $backend->datasetHash();
-        $this->hash->absorb(MultisetDigest::fromArray($partial));
+        $this->absorbed = $this->absorbed->plus(MultisetDigest::fromHex(type_string()->assert(
+            $partial['hash'] ?? null,
+        )));
     }
 
     public function partial(): array
     {
-        return ($this->hash?->digest() ?? MultisetDigest::empty())->normalize();
+        return ['hash' => $this->value()];
     }
 
     public function partialType(): StructureType
     {
-        return type_structure(['low' => type_integer(), 'high' => type_integer()]);
+        return type_structure(['hash' => type_string()]);
     }
 
     public function grouped(Backend $backend): GroupedAggregation
@@ -153,14 +157,16 @@ final class MultisetHash implements AggregatesByGroup
 
     public function value(): string
     {
-        return ($this->hash?->digest() ?? MultisetDigest::empty())->hex();
+        return MultisetDigest::fromHex(type_string()->assert(
+            $this->hash?->hashes()->physicals()[0] ?? MultisetDigest::empty()->hex(),
+        ))->plus($this->absorbed)->hex();
     }
 
     /**
-     * @return null|list<string>
+     * @return list<string>
      */
-    private function names(): ?array
+    private function names(): array
     {
-        return $this->refs === [] ? null : array_map(static fn(Reference $ref): string => $ref->base(), $this->refs);
+        return array_map(static fn(Reference $ref): string => $ref->base(), $this->refs);
     }
 }

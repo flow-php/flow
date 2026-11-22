@@ -8,20 +8,18 @@ use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Column\Column;
 use Flow\ETL\Values\Column\GroupedMultisetHashes;
-use Flow\ETL\Values\Column\MultisetDigest;
 use Flow\ETL\Values\Grouping\GroupIds;
 use Flow\ETL\Values\Rows;
 
-use function array_combine;
 use function array_map;
 
 final readonly class MultisetHashesByGroup implements GroupedAggregation
 {
     /**
-     * @param null|list<string> $columns null takes every column of each batch
+     * @param list<string> $columns [] takes every column of each batch
      */
     public function __construct(
-        private ?array $columns,
+        private array $columns,
         private GroupedMultisetHashes $hashes,
     ) {}
 
@@ -32,9 +30,7 @@ final readonly class MultisetHashesByGroup implements GroupedAggregation
         }
 
         $this->hashes->add(
-            $this->columns === null
-                ? $rows->columns()
-                : array_combine($this->columns, array_map($rows->column(...), $this->columns)),
+            $this->columns === [] ? $rows->columns() : $rows->select(...$this->columns)->columns(),
             $ids->ids,
         );
     }
@@ -46,7 +42,7 @@ final readonly class MultisetHashesByGroup implements GroupedAggregation
 
     public function partials(int $groups): array
     {
-        return array_map(static fn(MultisetDigest $digest): array => $digest->normalize(), $this->hashes->partials());
+        return array_map(static fn(mixed $hash): array => ['hash' => $hash], $this->hashes->hashes()->physicals());
     }
 
     public function absorbEarlier(GroupedAggregation $earlier, array $into, Backend $backend): void

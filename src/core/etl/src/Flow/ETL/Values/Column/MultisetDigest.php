@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Values\Column;
 
-use function Flow\Types\DSL\type_integer;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+
+use function hex2bin;
+use function preg_match;
 use function sprintf;
+use function unpack;
 
 final readonly class MultisetDigest
 {
@@ -19,12 +23,19 @@ final readonly class MultisetDigest
         return new self(0, 0);
     }
 
-    /**
-     * @param array<array-key, mixed> $data
-     */
-    public static function fromArray(array $data): self
+    public static function fromHex(string $hex): self
     {
-        return new self(type_integer()->assert($data['low'] ?? null), type_integer()->assert($data['high'] ?? null));
+        if (preg_match('/^[0-9a-f]{32}$/', $hex) !== 1) {
+            throw new InvalidArgumentException(sprintf(
+                'A multiset digest is 32 lowercase hex characters, high lane first, given: "%s"',
+                $hex,
+            ));
+        }
+
+        /** @var array{1: int, 2: int} $lanes */
+        $lanes = unpack('J2', (string) hex2bin($hex));
+
+        return new self($lanes[2], $lanes[1]);
     }
 
     /**
@@ -41,14 +52,6 @@ final readonly class MultisetDigest
     public function plus(self $other): self
     {
         return new self(self::wrappingAdd($this->low, $other->low), self::wrappingAdd($this->high, $other->high));
-    }
-
-    /**
-     * @return array{low: int, high: int}
-     */
-    public function normalize(): array
-    {
-        return ['low' => $this->low, 'high' => $this->high];
     }
 
     public function hex(): string

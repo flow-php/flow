@@ -99,6 +99,8 @@ use Flow\ETL\Runtime\ErrorHandler\IgnoreError;
 use Flow\ETL\Runtime\ErrorHandler\SkipRows;
 use Flow\ETL\Runtime\ErrorHandler\ThrowError;
 use Flow\ETL\Runtime\Executor\OfferedFailure;
+use Flow\ETL\Runtime\Executor\PartitionedOutputHasher;
+use Flow\ETL\Runtime\Executor\WholeOutputHasher;
 use Flow\ETL\Runtime\Heartbeat\HeartbeatStage;
 use Flow\ETL\Runtime\Heartbeat\ScheduledHeartbeat;
 use Flow\ETL\Storage\BucketingConfig;
@@ -390,6 +392,11 @@ final class DescribableFixtures
                 config()->serializer(),
             ),
             OfferedFailure::class => static fn(): Describable => new OfferedFailure(new SkipRows()),
+            PartitionedOutputHasher::class => static fn(): Describable => new PartitionedOutputHasher(refs(
+                'date',
+                'country',
+            )),
+            WholeOutputHasher::class => static fn(): Describable => new WholeOutputHasher(),
             SkipRows::class => static fn(): Describable => new SkipRows(),
             SortColumn::class => static fn(): Describable => new SortColumn('id', SortOrder::DESC, NullsOrder::FIRST),
             StreamLoader::class => static fn(): Describable => new StreamLoader(

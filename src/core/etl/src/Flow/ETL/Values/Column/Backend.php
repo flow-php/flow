@@ -134,8 +134,6 @@ interface Backend
      */
     public function rowHashes(array $columns, int $count): Column;
 
-    public function datasetHash(): DatasetHash;
-
     public function groupedMultisetHashes(): GroupedMultisetHashes;
 
     /**

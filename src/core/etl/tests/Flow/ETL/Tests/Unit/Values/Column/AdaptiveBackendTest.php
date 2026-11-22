@@ -13,7 +13,6 @@ use Flow\ETL\Tests\Mother\ColumnMother;
 use Flow\ETL\Tests\Mother\RowsMother;
 use Flow\ETL\Values\Column\AdaptiveBackend;
 use Flow\ETL\Values\Column\Frame\NoopCodec;
-use Flow\ETL\Values\Column\Php\PhpDatasetHash;
 use Flow\ETL\Values\Column\Php\PhpGroupedCounts;
 use Flow\ETL\Values\Column\Php\PhpGroupedMultisetHashes;
 use Flow\ETL\Values\Column\Php\PhpGroupedTotals;
@@ -303,7 +302,6 @@ final class AdaptiveBackendTest extends TestCase
                 ->rowHashes($rows->columns(), 2)
                 ->physicals(),
         );
-        static::assertInstanceOf(PhpDatasetHash::class, (new AdaptiveBackend())->datasetHash());
         static::assertInstanceOf(PhpGroupedMultisetHashes::class, (new AdaptiveBackend())->groupedMultisetHashes());
     }
 }

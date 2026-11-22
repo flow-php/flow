@@ -145,13 +145,14 @@ final class ExternalSortTest extends FlowTestCase
     public function test_data_over_the_limit_spills_and_merges(): void
     {
         $storage = new SpyRowsStorage(new MemoryRowsStorage());
-        $backend = config()->backend();
+        $backend = new ReportedMemoryBackend();
+        $yields = 0;
         $sort = ExternalSortMother::with([ref('id')->asc()], $storage);
 
         static::assertSame(
             [0, 1, 2, 3, 10, 11, 12, 13],
             IdRows::ids($sort->sort(
-                IdRows::batches([10, 0], [11, 1], [2, 12], [13, 3]),
+                IdRows::reportedFrames($backend, $yields, [10, 0], [11, 1], [2, 12], [13, 3]),
                 $backend,
                 new MemoryBudget($backend, Unit::fromBytes(1), null),
             )),
@@ -309,13 +310,14 @@ final class ExternalSortTest extends FlowTestCase
     public function test_a_spilled_run_is_written_in_frames_of_at_most_the_batch_size(): void
     {
         $storage = new RecordingRowsStorage(new MemoryRowsStorage());
-        $backend = config()->backend();
+        $backend = new ReportedMemoryBackend();
+        $yields = 0;
         $sort = ExternalSortMother::with([ref('id')->asc()], $storage, batchSize: 2);
 
         static::assertSame(
             [0, 1, 2, 3, 4, 10, 11, 12, 13, 14],
             IdRows::ids($sort->sort(
-                IdRows::batches([14, 10, 12, 11, 13], [4, 0, 2, 1, 3]),
+                IdRows::reportedFrames($backend, $yields, [14, 10, 12, 11, 13], [4, 0, 2, 1, 3]),
                 $backend,
                 new MemoryBudget($backend, Unit::fromBytes(1), null),
             )),
@@ -402,7 +404,8 @@ final class ExternalSortTest extends FlowTestCase
     public function test_a_spilling_sort_counts_every_row_it_takes_once_and_is_busy_while_it_merges(): void
     {
         $progress = new ProgressSpy();
-        $backend = config()->backend();
+        $backend = new ReportedMemoryBackend();
+        $yields = 0;
         $sort = ExternalSortMother::with(
             [ref('id')->asc()],
             mergeFanIn: 2,
@@ -410,10 +413,11 @@ final class ExternalSortTest extends FlowTestCase
         );
 
         IdRows::ids($sort->sort(
-            $sort->counted(IdRows::batches(...array_map(
-                static fn(int $i): array => [($i * 2) + 1, $i * 2],
-                range(9, 0),
-            ))),
+            $sort->counted(IdRows::reportedFrames(
+                $backend,
+                $yields,
+                ...array_map(static fn(int $i): array => [($i * 2) + 1, $i * 2], range(9, 0)),
+            )),
             $backend,
             new MemoryBudget($backend, Unit::fromBytes(1), null),
         ));
@@ -426,13 +430,18 @@ final class ExternalSortTest extends FlowTestCase
     public function test_runs_past_the_fan_in_are_reduced_to_merged_runs_first(): void
     {
         $storage = new RecordingRowsStorage(new MemoryRowsStorage());
-        $backend = config()->backend();
+        $backend = new ReportedMemoryBackend();
+        $yields = 0;
         $sort = ExternalSortMother::with([ref('id')->asc()], $storage, mergeFanIn: 2);
 
         static::assertSame(
             range(0, 19),
             IdRows::ids($sort->sort(
-                IdRows::batches(...array_map(static fn(int $i): array => [($i * 2) + 1, $i * 2], range(9, 0))),
+                IdRows::reportedFrames(
+                    $backend,
+                    $yields,
+                    ...array_map(static fn(int $i): array => [($i * 2) + 1, $i * 2], range(9, 0)),
+                ),
                 $backend,
                 new MemoryBudget($backend, Unit::fromBytes(1), null),
             )),
@@ -448,11 +457,12 @@ final class ExternalSortTest extends FlowTestCase
         $spill = new RecordingRowsStorage(new MemoryRowsStorage());
         $merge = new RecordingRowsStorage(new MemoryRowsStorage());
 
-        $backend = config()->backend();
+        $backend = new ReportedMemoryBackend();
+        $yields = 0;
         $sort = ExternalSortMother::with([ref('id')->asc()], $spill, 2, mergeStorage: $merge);
 
         IdRows::ids($sort->sort(
-            IdRows::batches([3], [2], [1]),
+            IdRows::reportedFrames($backend, $yields, [3], [2], [1]),
             $backend,
             new MemoryBudget($backend, Unit::fromBytes(1), null),
         ));
@@ -483,13 +493,18 @@ final class ExternalSortTest extends FlowTestCase
     public function test_a_limit_over_the_memory_limit_stops_every_merge_at_the_limit(): void
     {
         $storage = new SpyRowsStorage(new MemoryRowsStorage());
-        $backend = config()->backend();
+        $backend = new ReportedMemoryBackend();
+        $yields = 0;
         $sort = ExternalSortMother::with([ref('id')->asc()], $storage, mergeFanIn: 2);
 
         static::assertSame(
             [0, 1, 2],
             IdRows::ids($sort->sort(
-                IdRows::batches(...array_map(static fn(int $i): array => [$i + 10, $i], range(9, 0))),
+                IdRows::reportedFrames(
+                    $backend,
+                    $yields,
+                    ...array_map(static fn(int $i): array => [$i + 10, $i], range(9, 0)),
+                ),
                 $backend,
                 new MemoryBudget($backend, Unit::fromBytes(1), null),
                 3,
@@ -516,14 +531,16 @@ final class ExternalSortTest extends FlowTestCase
     public function test_spilled_sort_equals_one_in_memory_sort(int $seed): void
     {
         $dataset = SortDatasetMother::random($seed);
-        $input = (static function () use ($dataset): Generator {
+        $backend = new ReportedMemoryBackend();
+        $input = (static function () use ($dataset, $backend): Generator {
             foreach ($dataset['runs'] as $rows) {
+                $backend->reported += 1_000_000;
+
                 yield array_to_rows($rows, $dataset['schema']);
             }
         })();
 
         $sorted = rows($dataset['schema']);
-        $backend = config()->backend();
         $sort = ExternalSortMother::with($dataset['columns'], mergeFanIn: 2, batchSize: $dataset['mergeBatchSize']);
 
         foreach ($sort->sort($input, $backend, new MemoryBudget($backend, Unit::fromBytes(1), null)) as $batch) {
@@ -559,16 +576,20 @@ final class ExternalSortTest extends FlowTestCase
         $mergeStorage->append('pre-existing', array_to_rows([['id' => 1]], schema(int_schema('id'))));
         $merge->add(new Bucket('pre-existing', 1, 0));
 
+        $backend = new ReportedMemoryBackend();
+
         try {
             iterator_to_array(
                 (new ExternalSort([ref('id')->asc()], $spill, $merge, new NativePHPRandomValueGenerator(), 2))->sort(
-                    (static function (): Generator {
-                        yield from IdRows::batches([9, 8], [7, 6]);
+                    (static function () use ($backend): Generator {
+                        $yields = 0;
+
+                        yield from IdRows::reportedFrames($backend, $yields, [9, 8], [7, 6]);
 
                         throw new RuntimeException('upstream failed');
                     })(),
-                    config()->backend(),
-                    new MemoryBudget(config()->backend(), Unit::fromBytes(1), null),
+                    $backend,
+                    new MemoryBudget($backend, Unit::fromBytes(1), null),
                 ),
                 false,
             );
@@ -597,6 +618,8 @@ final class ExternalSortTest extends FlowTestCase
     public function test_of_merges_into_the_spill_storage_without_a_merge_storage(): void
     {
         $spill = new RecordingRowsStorage(new MemoryRowsStorage());
+        $backend = new ReportedMemoryBackend();
+        $yields = 0;
 
         iterator_to_array(
             ExternalSort::of(
@@ -605,12 +628,16 @@ final class ExternalSortTest extends FlowTestCase
                     ->storage($spill)
                     ->memoryLimit(Unit::fromBytes(1))
                     ->bucketsCount(2)
-                    ->build(path('memory://spill'), new PhpBackend()),
+                    ->build(path('memory://spill'), $backend),
                 new NativePHPRandomValueGenerator(),
             )->sort(
-                IdRows::batches(...array_map(static fn(int $id): array => [$id], range(9, 0))),
-                new PhpBackend(),
-                new MemoryBudget(new PhpBackend(), Unit::fromBytes(1), null),
+                IdRows::reportedFrames(
+                    $backend,
+                    $yields,
+                    ...array_map(static fn(int $id): array => [$id], range(9, 0)),
+                ),
+                $backend,
+                new MemoryBudget($backend, Unit::fromBytes(1), null),
             ),
             false,
         );
@@ -625,6 +652,8 @@ final class ExternalSortTest extends FlowTestCase
     {
         $spill = new RecordingRowsStorage(new MemoryRowsStorage());
         $merge = new RecordingRowsStorage(new MemoryRowsStorage());
+        $backend = new ReportedMemoryBackend();
+        $yields = 0;
 
         iterator_to_array(
             ExternalSort::of(
@@ -634,12 +663,16 @@ final class ExternalSortTest extends FlowTestCase
                     ->mergeStorage($merge)
                     ->memoryLimit(Unit::fromBytes(1))
                     ->bucketsCount(2)
-                    ->build(path('memory://spill'), new PhpBackend()),
+                    ->build(path('memory://spill'), $backend),
                 new NativePHPRandomValueGenerator(),
             )->sort(
-                IdRows::batches(...array_map(static fn(int $id): array => [$id], range(9, 0))),
-                new PhpBackend(),
-                new MemoryBudget(new PhpBackend(), Unit::fromBytes(1), null),
+                IdRows::reportedFrames(
+                    $backend,
+                    $yields,
+                    ...array_map(static fn(int $id): array => [$id], range(9, 0)),
+                ),
+                $backend,
+                new MemoryBudget($backend, Unit::fromBytes(1), null),
             ),
             false,
         );

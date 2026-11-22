@@ -22,7 +22,7 @@ final class MultisetHashesByGroupTest extends FlowTestCase
         $backend = new PhpBackend();
         $schema = schema(str_schema('g'), int_schema('v'));
         $rows = array_to_rows([['g' => 'a', 'v' => 1], ['g' => 'a', 'v' => 2], ['g' => 'b', 'v' => 1]], $schema);
-        $hashes = new MultisetHashesByGroup(null, $backend->groupedMultisetHashes());
+        $hashes = new MultisetHashesByGroup([], $backend->groupedMultisetHashes());
 
         $hashes->aggregateGroups($rows, $backend->groupTable(['g'], $schema)->assign($rows), $backend);
 
@@ -37,7 +37,7 @@ final class MultisetHashesByGroupTest extends FlowTestCase
         $backend = new PhpBackend();
         $schema = schema(str_schema('g'), int_schema('v'));
         $table = $backend->groupTable(['g'], $schema);
-        $hashes = new MultisetHashesByGroup(null, $backend->groupedMultisetHashes());
+        $hashes = new MultisetHashesByGroup([], $backend->groupedMultisetHashes());
         $first = array_to_rows([['g' => 'a', 'v' => 2], ['g' => 'b', 'v' => 1]], $schema);
         $second = array_to_rows([['g' => 'a', 'v' => 1]], $schema);
 
@@ -60,7 +60,7 @@ final class MultisetHashesByGroupTest extends FlowTestCase
         $hashes->aggregateGroups($rows, $backend->groupTable(['g'], $schema)->assign($rows), $backend);
 
         static::assertSame(['e0191505b9cce3349c6f8093cab56dec'], $hashes->groupValues(1, $backend)->values());
-        static::assertSame([['low' => -7174374309128475156, 'high' => -2298783020459695308]], $hashes->partials(1));
+        static::assertSame([['hash' => 'e0191505b9cce3349c6f8093cab56dec']], $hashes->partials(1));
     }
 
     public function test_earlier_groups_are_absorbed_into_the_groups_they_map_to(): void
@@ -69,8 +69,8 @@ final class MultisetHashesByGroupTest extends FlowTestCase
         $schema = schema(str_schema('g'), int_schema('v'));
         $earlierRows = array_to_rows([['g' => 'a', 'v' => 1], ['g' => 'b', 'v' => 1]], $schema);
         $laterRows = array_to_rows([['g' => 'b', 'v' => 9], ['g' => 'a', 'v' => 2]], $schema);
-        $earlier = new MultisetHashesByGroup(null, $backend->groupedMultisetHashes());
-        $later = new MultisetHashesByGroup(null, $backend->groupedMultisetHashes());
+        $earlier = new MultisetHashesByGroup([], $backend->groupedMultisetHashes());
+        $later = new MultisetHashesByGroup([], $backend->groupedMultisetHashes());
 
         $earlier->aggregateGroups($earlierRows, $backend->groupTable(['g'], $schema)->assign($earlierRows), $backend);
         $later->aggregateGroups($laterRows, $backend->groupTable(['g'], $schema)->assign($laterRows), $backend);
@@ -87,7 +87,7 @@ final class MultisetHashesByGroupTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Grouped multiset hashes absorb only other grouped multiset hashes');
 
-        (new MultisetHashesByGroup(null, $backend->groupedMultisetHashes()))->absorbEarlier(
+        (new MultisetHashesByGroup([], $backend->groupedMultisetHashes()))->absorbEarlier(
             new CountsByGroup(null, $backend->groupedCounts()),
             [0 => 0],
             $backend,
@@ -102,7 +102,7 @@ final class MultisetHashesByGroupTest extends FlowTestCase
         $hashes = new MultisetHashesByGroup(['valu'], $backend->groupedMultisetHashes());
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Column "valu" does not exist. Did you mean one of the following? ["value"]');
+        $this->expectExceptionMessage('Schema definition for column "valu" not found. Did you mean one of: [value]?');
 
         $hashes->aggregateGroups($rows, $backend->groupTable(['g'], $schema)->assign($rows), $backend);
     }

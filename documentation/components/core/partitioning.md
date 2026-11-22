@@ -141,6 +141,8 @@ Flow writes each value in full. A typed read gets the value back without changes
 | `datetime`  | `2026-10-02 13:00:00.123456 UTC` | `date=2026-10-02T13%3A00%3A00.123456%2B00%3A00` |
 | `date`      | `2026-10-02`                     | `date=2026-10-02`                               |
 | `float`     | `1.0E-9`                         | `x=1.0e-9`                                      |
+| `string`    | `null`                           | `country=__HIVE_DEFAULT_PARTITION__`            |
+| `string`    | `''`                             | `country=`                                      |
 
 A `datetime` column makes one directory for each distinct value. For one directory for each day, partition by a `date`:
 

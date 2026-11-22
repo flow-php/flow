@@ -20,11 +20,6 @@ interface GroupedMultisetHashes
     public function hashes(): Column;
 
     /**
-     * @return list<MultisetDigest> by group id
-     */
-    public function partials(): array;
-
-    /**
      * @param array<int, int> $into earlier group id => this group id
      */
     public function absorbEarlier(self $earlier, array $into): void;

@@ -8,6 +8,7 @@ use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\Mother\ColumnMother;
 use Flow\ETL\Values\Column\MultisetDigest;
 use Flow\ETL\Values\Column\Php\PhpGroupedMultisetHashes;
+use Flow\ETL\Values\Column\PhpBackend;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\ETL\DSL\array_to_rows;
@@ -44,7 +45,6 @@ final class PhpGroupedMultisetHashesTest extends TestCase
             ['00000000000000000000000000000000', '8e18789eac90baf2a1f6bc7cceafa11a'],
             $hashes->hashes()->physicals(),
         );
-        static::assertEquals(MultisetDigest::empty(), $hashes->partials()[0]);
     }
 
     public function test_no_rows_give_no_groups(): void
@@ -53,10 +53,9 @@ final class PhpGroupedMultisetHashesTest extends TestCase
         $hashes->add([], ColumnMother::of(int_schema('id'), []));
 
         static::assertSame([], $hashes->hashes()->physicals());
-        static::assertSame([], $hashes->partials());
     }
 
-    public function test_partials_are_the_digests_by_group(): void
+    public function test_hashes_are_the_digests_by_group(): void
     {
         $hashes = new PhpGroupedMultisetHashes();
         $hashes->add(
@@ -64,12 +63,9 @@ final class PhpGroupedMultisetHashesTest extends TestCase
             ColumnMother::of(int_schema('id'), [0, 1]),
         );
 
-        static::assertEquals(
-            [
-                new MultisetDigest(-6776021345102749414, -8207677697987396878),
-                new MultisetDigest(745355142457024709, -2015697621351530346),
-            ],
-            $hashes->partials(),
+        static::assertSame(
+            ['8e18789eac90baf2a1f6bc7cceafa11a', 'e406cdb168be00960a58088d91a960c5'],
+            $hashes->hashes()->physicals(),
         );
     }
 
@@ -106,6 +102,53 @@ final class PhpGroupedMultisetHashesTest extends TestCase
         $hashes->add([], ColumnMother::of(int_schema('id'), [1, 0, 1]));
 
         static::assertSame([$empty->hex(), $empty->plus($empty)->hex()], $hashes->hashes()->physicals());
+    }
+
+    public function test_one_row_in_one_group_equals_its_row_hash(): void
+    {
+        $rows = array_to_rows([['a' => 1]], schema(int_schema('a')));
+        $hashes = new PhpGroupedMultisetHashes();
+        $hashes->add($rows->columns(), ColumnMother::of(int_schema('id'), [0]));
+
+        static::assertSame(['8e18789eac90baf2a1f6bc7cceafa11a'], $hashes->hashes()->physicals());
+        static::assertSame(
+            (new PhpBackend())
+                ->rowHashes($rows->columns(), 1)
+                ->physicals(),
+            $hashes->hashes()->physicals(),
+        );
+    }
+
+    public function test_row_order_over_batches_does_not_count(): void
+    {
+        $forward = new PhpGroupedMultisetHashes();
+        $forward->add(
+            array_to_rows([['a' => 1], ['a' => 2]], schema(int_schema('a')))->columns(),
+            ColumnMother::of(int_schema('id'), [0, 0]),
+        );
+        $backward = new PhpGroupedMultisetHashes();
+        $backward->add(
+            array_to_rows([['a' => 2]], schema(int_schema('a')))->columns(),
+            ColumnMother::of(int_schema('id'), [0]),
+        );
+        $backward->add(
+            array_to_rows([['a' => 1]], schema(int_schema('a')))->columns(),
+            ColumnMother::of(int_schema('id'), [0]),
+        );
+
+        static::assertSame(['721f4650154ebb88ac4ec50a605901df'], $forward->hashes()->physicals());
+        static::assertSame($forward->hashes()->physicals(), $backward->hashes()->physicals());
+    }
+
+    public function test_a_row_of_only_nulls_counts_as_a_row(): void
+    {
+        $hashes = new PhpGroupedMultisetHashes();
+        $hashes->add(
+            array_to_rows([['a' => null]], schema(int_schema('a', true)))->columns(),
+            ColumnMother::of(int_schema('id'), [0]),
+        );
+
+        static::assertSame(['99aa06d3014798d86001c324468d497f'], $hashes->hashes()->physicals());
     }
 
     public function test_an_earlier_group_it_lacks_is_refused(): void

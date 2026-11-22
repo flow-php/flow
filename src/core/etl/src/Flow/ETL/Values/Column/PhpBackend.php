@@ -23,7 +23,6 @@ use Flow\ETL\Values\Column\Php\ColumnDecoder;
 use Flow\ETL\Values\Column\Php\ConstantColumn;
 use Flow\ETL\Values\Column\Php\ListColumn;
 use Flow\ETL\Values\Column\Php\MapColumn;
-use Flow\ETL\Values\Column\Php\PhpDatasetHash;
 use Flow\ETL\Values\Column\Php\PhpGroupedCounts;
 use Flow\ETL\Values\Column\Php\PhpGroupedMultisetHashes;
 use Flow\ETL\Values\Column\Php\PhpGroupedTotals;
@@ -682,11 +681,6 @@ final readonly class PhpBackend implements Backend, Describable
             ),
             0,
         );
-    }
-
-    public function datasetHash(): DatasetHash
-    {
-        return new PhpDatasetHash();
     }
 
     public function groupedMultisetHashes(): GroupedMultisetHashes

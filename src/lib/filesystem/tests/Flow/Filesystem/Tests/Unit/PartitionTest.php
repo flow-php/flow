@@ -17,13 +17,51 @@ use function Flow\Types\DSL\type_date;
 use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_html;
+use function Flow\Types\DSL\type_html_element;
 use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_json;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_xml;
+use function Flow\Types\DSL\type_xml_element;
 use function ini_get;
 use function ini_set;
 
 final class PartitionTest extends TestCase
 {
+    public static function unpartitionable_types(): Generator
+    {
+        yield 'html' => [type_html(), 'html'];
+        yield 'html element' => [type_html_element(), 'html_element'];
+        yield 'xml' => [type_xml(), 'xml'];
+        yield 'xml element' => [type_xml_element(), 'xml_element'];
+        yield 'json' => [type_json(), 'json'];
+        yield 'list' => [type_list(type_integer()), 'list<integer>'];
+        yield 'structure' => [type_structure(['a' => type_integer()]), 'structure{a: integer}'];
+        yield 'map' => [type_map(type_string(), type_integer()), 'map<string, integer>'];
+    }
+
+    /**
+     * @param Type<mixed> $type
+     */
+    #[DataProvider('unpartitionable_types')]
+    public function test_assert_partitionable_refuses_a_type_without_a_folder_name(Type $type, string $name): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Column "c" of type ' . $name . ' can\'t be used as a partition');
+
+        Partition::assertPartitionable('c', $type);
+    }
+
+    public function test_assert_partitionable_accepts_a_scalar_type(): void
+    {
+        Partition::assertPartitionable('c', type_float());
+
+        $this->addToAssertionCount(1);
+    }
+
     /**
      * @return array<array<string>>
      */
@@ -176,12 +214,31 @@ final class PartitionTest extends TestCase
         );
     }
 
-    public function test_an_empty_value_is_still_refused(): void
+    public function test_an_empty_value_is_written_and_read_back_apart_from_null(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Partition value can't be empty");
+        static::assertSame('region=', (new Partition('region', ''))->segment());
+        static::assertSame('region', Partition::fromSegment('region=')?->name);
+        static::assertSame('', Partition::fromSegment('region=')?->value);
+    }
 
-        new Partition('name', '');
+    public function test_creating_partitions_from_uri_reads_an_empty_value(): void
+    {
+        static::assertSame(
+            ['country' => '', 'year' => '2026'],
+            array_column(
+                array_map(static fn(Partition $p): array => [
+                    'name' => $p->name,
+                    'value' => $p->value,
+                ], Partition::fromUri('/dataset/country=/year=2026/file.parquet')->toArray()),
+                'value',
+                'name',
+            ),
+        );
+    }
+
+    public function test_a_segment_without_a_name_is_not_a_partition(): void
+    {
+        static::assertNull(Partition::fromSegment('=value'));
     }
 
     public function test_an_empty_name_is_still_refused(): void

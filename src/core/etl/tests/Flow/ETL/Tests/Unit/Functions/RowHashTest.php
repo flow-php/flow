@@ -80,7 +80,7 @@ final class RowHashTest extends FlowTestCase
     public function test_a_reference_the_batch_lacks_is_refused_with_a_suggestion(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Column "emal" does not exist. Did you mean one of the following? ["email"]');
+        $this->expectExceptionMessage('Schema definition for column "emal" not found. Did you mean one of: [email]?');
 
         row_hash(ref('a'), ref('emal'))->eval(
             array_to_rows([['a' => 1, 'email' => 'x']], schema(int_schema('a'), str_schema('email'))),

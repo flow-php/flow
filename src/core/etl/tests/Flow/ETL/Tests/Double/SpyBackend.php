@@ -7,7 +7,6 @@ namespace Flow\ETL\Tests\Double;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Column\Column;
 use Flow\ETL\Values\Column\ColumnBuilder;
-use Flow\ETL\Values\Column\DatasetHash;
 use Flow\ETL\Values\Column\Frame\Codec;
 use Flow\ETL\Values\Column\GroupedCounts;
 use Flow\ETL\Values\Column\GroupedMultisetHashes;
@@ -34,7 +33,7 @@ final class SpyBackend implements Backend
 
     private int $groupedTotals = 0;
 
-    private int $datasetHashes = 0;
+    private int $groupedMultisetHashes = 0;
 
     private readonly PhpBackend $php;
 
@@ -204,15 +203,10 @@ final class SpyBackend implements Backend
         return $this->php->rowHashes($columns, $count);
     }
 
-    public function datasetHash(): DatasetHash
-    {
-        $this->datasetHashes++;
-
-        return $this->php->datasetHash();
-    }
-
     public function groupedMultisetHashes(): GroupedMultisetHashes
     {
+        $this->groupedMultisetHashes++;
+
         return $this->php->groupedMultisetHashes();
     }
 
@@ -221,9 +215,9 @@ final class SpyBackend implements Backend
         return $this->groupedCounts;
     }
 
-    public function datasetHashesCreated(): int
+    public function groupedMultisetHashesCreated(): int
     {
-        return $this->datasetHashes;
+        return $this->groupedMultisetHashes;
     }
 
     /**

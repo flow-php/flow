@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Mother;
 
 use DateTimeImmutable;
 use Flow\ETL\Foundation\Clock\HighResolutionTime;
+use Flow\ETL\Runtime\Metrics\DatasetHash;
 use Flow\ETL\Runtime\Metrics\Processes;
 use Flow\ETL\Runtime\Metrics\Report;
 use Flow\ETL\Runtime\Metrics\SourceStatistics;
@@ -29,7 +30,7 @@ final class ReportMother
         ?Schema $schema = null,
         ?array $sources = null,
         ?Columns $columns = null,
-        ?string $datasetHash = null,
+        ?DatasetHash $datasetHash = null,
     ): Report {
         return new Report(
             $schema,

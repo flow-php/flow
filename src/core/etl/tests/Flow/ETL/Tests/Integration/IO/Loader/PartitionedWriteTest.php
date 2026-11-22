@@ -132,6 +132,31 @@ final class PartitionedWriteTest extends FlowIntegrationTestCase
         static::assertFileExists($output->suffix('/region=__HIVE_DEFAULT_PARTITION__/out.floe')->path());
     }
 
+    public function test_an_empty_partition_value_writes_an_empty_directory_value_and_reads_back_apart_from_null(): void
+    {
+        $output = $this->cacheDir->suffix('/empty');
+
+        df()
+            ->read(from_array([['region' => '', 'text' => 'a'], ['region' => null, 'text' => 'b']]))
+            ->write(
+                to_floe($output->suffix('/out.floe')->path())
+                    ->saveMode(overwrite())
+                    ->partitionBy(partition_by('region')),
+            )
+            ->run();
+
+        static::assertFileExists($output->suffix('/region=/out.floe')->path());
+        static::assertFileExists($output->suffix('/region=__HIVE_DEFAULT_PARTITION__/out.floe')->path());
+        static::assertSame(
+            [['text' => 'a', 'region' => ''], ['text' => 'b', 'region' => null]],
+            df()
+                ->read(from_floe($output->suffix('/**/*.floe')->path()))
+                ->sortBy(ref('text'))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
     public function test_a_partition_value_carrying_a_reserved_character_is_encoded(): void
     {
         $output = $this->cacheDir->suffix('/encoded');

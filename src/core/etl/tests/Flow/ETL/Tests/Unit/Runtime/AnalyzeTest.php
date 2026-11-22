@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Runtime;
 
+use Flow\ETL\Runtime\Executor\PartitionedOutputHasher;
+use Flow\ETL\Runtime\Executor\WholeOutputHasher;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\analyze;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\refs;
 
 final class AnalyzeTest extends FlowTestCase
 {
@@ -14,9 +18,24 @@ final class AnalyzeTest extends FlowTestCase
     {
         $analyze = analyze();
 
-        static::assertFalse($analyze->collectDatasetHash());
+        static::assertNull($analyze->newOutputHasher());
         static::assertSame($analyze, $analyze->withDatasetHash());
-        static::assertTrue($analyze->collectDatasetHash());
+        static::assertEquals(new WholeOutputHasher(), $analyze->newOutputHasher());
         static::assertFalse($analyze->collectSchema());
+    }
+
+    public function test_named_columns_give_a_partitioned_hasher(): void
+    {
+        static::assertEquals(
+            new PartitionedOutputHasher(refs(ref('date'), ref('country'))),
+            analyze()->withDatasetHash(ref('date'), ref('country'))->newOutputHasher(),
+        );
+    }
+
+    public function test_each_call_builds_a_new_hasher(): void
+    {
+        $analyze = analyze()->withDatasetHash();
+
+        static::assertNotSame($analyze->newOutputHasher(), $analyze->newOutputHasher());
     }
 }

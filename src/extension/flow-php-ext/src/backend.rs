@@ -43,7 +43,7 @@ use crate::group_table::RustGroupTable;
 use crate::grouped_counts::RustGroupedCounts;
 use crate::grouped_totals::RustGroupedTotals;
 use crate::interfaces::{backend_ce, describable_ce};
-use crate::multiset_hashes::{RustDatasetHash, RustGroupedMultisetHashes};
+use crate::multiset_hashes::RustGroupedMultisetHashes;
 use crate::plan::{physical_for_definition, type_plan, TypePlan};
 use crate::render::{decode_exception, encode_exception, floe_exception, frame_exception, invalid_argument};
 use crate::sort::{handed_off_native_bytes, native_sort, native_sort_working_bytes};
@@ -296,11 +296,6 @@ impl RustBackend {
             .collect::<Vec<_>>();
 
         RustColumn::of_type(Arc::new(LargeBinaryArray::from_iter_values(hashes)), STRING_TYPE)
-    }
-
-    #[php(name = "datasetHash")]
-    pub fn dataset_hash(&self) -> RustDatasetHash {
-        RustDatasetHash::default()
     }
 
     #[php(name = "groupedMultisetHashes")]

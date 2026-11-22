@@ -50,10 +50,6 @@ final class Partition
         if ('' === $this->name) {
             throw new InvalidArgumentException("Partition name can't be empty");
         }
-
-        if ('' === $this->value) {
-            throw new InvalidArgumentException("Partition value can't be empty");
-        }
     }
 
     public static function decode(string $segment): string
@@ -92,7 +88,7 @@ final class Partition
     {
         $matches = [];
 
-        if (!preg_match('/^([^=]+)=([^=]+)$/', $segment, $matches)) {
+        if (!preg_match('/^([^=]+)=([^=]*)$/', $segment, $matches)) {
             return null;
         }
 
@@ -116,9 +112,36 @@ final class Partition
 
     /**
      * @param Type<mixed> $type
+     *
+     * @throws InvalidArgumentException
+     */
+    public static function assertPartitionable(string $name, Type $type): void
+    {
+        if (
+            $type instanceof HTMLType
+            || $type instanceof HTMLElementType
+            || $type instanceof XMLType
+            || $type instanceof XMLElementType
+            || $type instanceof JsonType
+            || $type instanceof ListType
+            || $type instanceof StructureType
+            || $type instanceof MapType
+        ) {
+            throw new InvalidArgumentException(sprintf(
+                'Column "%s" of type %s can\'t be used as a partition',
+                $name,
+                $type->toString(),
+            ));
+        }
+    }
+
+    /**
+     * @param Type<mixed> $type
      */
     public static function fromValue(string $name, Type $type, mixed $value): string
     {
+        self::assertPartitionable($name, $type);
+
         if ($type instanceof DateTimeType) {
             $datetime = $type->cast($type->assert($value));
 
@@ -140,23 +163,6 @@ final class Partition
             } finally {
                 $precision->restore();
             }
-        }
-
-        if (
-            $type instanceof HTMLType
-            || $type instanceof HTMLElementType
-            || $type instanceof XMLType
-            || $type instanceof XMLElementType
-            || $type instanceof JsonType
-            || $type instanceof ListType
-            || $type instanceof StructureType
-            || $type instanceof MapType
-        ) {
-            throw new InvalidArgumentException(sprintf(
-                'Column "%s" of type %s can\'t be used as a partition',
-                $name,
-                $type->toString(),
-            ));
         }
 
         return (new TypedValueFormatter())->format($type, $value);

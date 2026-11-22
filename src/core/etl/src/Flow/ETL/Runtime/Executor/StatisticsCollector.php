@@ -57,9 +57,7 @@ final class StatisticsCollector
             $this->schema = $this->analyze->collectSchema() ? new Schema() : null;
         }
 
-        $this->counts = new RunCounts(
-            $this->analyze?->collectDatasetHash() === true ? $this->context->backend()->datasetHash() : null,
-        );
+        $this->counts = new RunCounts($this->analyze?->newOutputHasher());
 
         if ($this->readsColumns() && $this->context->config->launcher() !== null) {
             $this->context
@@ -95,7 +93,7 @@ final class StatisticsCollector
             }
         }
 
-        $this->counts->hashOutput($rows);
+        $this->counts->hashOutput($rows, $this->context->backend());
     }
 
     /**
