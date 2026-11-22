@@ -144,6 +144,46 @@ Flow writes each value in full. A typed read gets the value back without changes
 | `string`    | `null`                           | `country=__HIVE_DEFAULT_PARTITION__`            |
 | `string`    | `''`                             | `country=`                                      |
 
+### Null and Empty Values
+
+A null value goes to the directory `__HIVE_DEFAULT_PARTITION__`, the name that Hive, Spark and DuckDB use. An empty
+string goes to a directory with no value. A read gives both back:
+
+```php
+<?php
+
+use function Flow\ETL\Adapter\Parquet\{from_parquet, to_parquet};
+use function Flow\ETL\DSL\{data_frame, from_array, int_schema, overwrite, partition_by, schema, str_schema};
+
+$users = schema(int_schema('id'), str_schema('country', nullable: true));
+
+data_frame()
+    ->read(from_array([
+        ['id' => 1, 'country' => 'PL'],
+        ['id' => 2, 'country' => null],
+        ['id' => 3, 'country' => ''],
+    ])->withSchema($users))
+    ->write(to_parquet(__DIR__ . '/users/users.parquet')
+        ->partitionBy(partition_by('country'))
+        ->saveMode(overwrite()))
+    ->run();
+
+// users/country=PL
+// users/country=__HIVE_DEFAULT_PARTITION__
+// users/country=
+
+data_frame()->read(from_parquet(__DIR__ . '/users/**/*.parquet'))->fetch();
+
+// id | country
+//  1 | PL
+//  2 | null
+//  3 | ''
+```
+
+A string value `__HIVE_DEFAULT_PARTITION__` reads back as null.
+
+### Datetime Values
+
 A `datetime` column makes one directory for each distinct value. For one directory for each day, partition by a `date`:
 
 ```php
