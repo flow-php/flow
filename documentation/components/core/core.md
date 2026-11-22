@@ -214,7 +214,7 @@ Physical plan
                   Statistics: rows exact 1 · size unknown
 ```
 
-`Memory: 1024 MiB` is the default limit under `memory_limit = -1`: the memory the join may add after it starts.
+`Memory: 1024 MiB` is the default limit under `memory_limit = -1`: the memory the join can add after it starts.
 [Memory limit](/documentation/components/core/sort.md#memory-limit) lists the other defaults and the process cap.
 
 The planner plans a joined frame separately, so its pipelines have their own numbers. `Right side:` tells which
@@ -338,6 +338,7 @@ For more information about each DataFrame operation, see this component document
 - [Column Backend](/documentation/components/core/column-backend.md): where batch columns live: PHP arrays or the flow_php extension
 - [Batch Processing](/documentation/components/core/batch-processing.md): controlling batch sizes and memory collection
 - [Partitioning](/documentation/components/core/partitioning.md): data partitioning for efficient processing
+- [Hashing](/documentation/components/core/hashing.md): row, group, run and partition hashes to detect changed data
 - [Caching](/documentation/components/core/caching.md): performance optimization through caching
 - [Floe File Format](/documentation/components/core/floe.md): flow's native self-describing columnar binary format
 - [Source Statistics](/documentation/components/core/statistics.md): what a source declares about its rows and bytes before it is read
