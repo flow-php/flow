@@ -132,6 +132,27 @@ final class MigratorTest extends TestCase
         static::assertCount(1, $this->store->executedMigrations());
     }
 
+    public function test_migrate_executes_pending_migration_older_than_latest_executed(): void
+    {
+        $migrator = new Migrator(
+            $this->fixtureRepository(),
+            $this->store,
+            new DefaultMigrationExecutor(),
+            $this->context->client,
+            $this->configuration,
+        );
+
+        $migrator->executeVersion(Version::fromString('20260401120000'), Direction::UP);
+        $migrator->executeVersion(Version::fromString('20260403090000'), Direction::UP);
+
+        $results = $migrator->migrate();
+
+        static::assertCount(1, $results);
+        static::assertTrue($results[0]->isSuccessful());
+        static::assertTrue($results[0]->version->equals(Version::fromString('20260402100000')));
+        static::assertCount(0, $migrator->status()->pending());
+    }
+
     public function test_migrate_up_from_empty_state(): void
     {
         $migrator = new Migrator(

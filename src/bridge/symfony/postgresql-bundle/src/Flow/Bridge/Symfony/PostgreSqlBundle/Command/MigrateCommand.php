@@ -6,6 +6,7 @@ namespace Flow\Bridge\Symfony\PostgreSqlBundle\Command;
 
 use Flow\PostgreSql\Migrations\Configuration as MigrationsConfiguration;
 use Flow\PostgreSql\Migrations\Direction;
+use Flow\PostgreSql\Migrations\Exception\MigrationException;
 use Flow\PostgreSql\Migrations\MigrationState;
 use Flow\PostgreSql\Migrations\Migrator;
 use Flow\PostgreSql\Migrations\VersionResolver;
@@ -94,7 +95,13 @@ final class MigrateCommand extends Command
             return Command::SUCCESS;
         }
 
-        $results = $this->migrator->migrate($version, $dryRun, $allOrNothing);
+        try {
+            $results = $this->migrator->migrate($version, $dryRun, $allOrNothing);
+        } catch (MigrationException $exception) {
+            $io->error($exception->getMessage());
+
+            return Command::FAILURE;
+        }
 
         if (count($results) === 0) {
             $io->success('Already up to date.');

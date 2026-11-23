@@ -36,6 +36,7 @@ use Flow\PostgreSql\Migrations\Configuration as MigrationsConfiguration;
 use Flow\PostgreSql\Migrations\Executor\MigrationExecutor;
 use Flow\PostgreSql\Migrations\Generator\DiffMigrationGenerator;
 use Flow\PostgreSql\Migrations\Generator\MigrationGenerator;
+use Flow\PostgreSql\Migrations\MigrationMode;
 use Flow\PostgreSql\Migrations\MigrationsFactory;
 use Flow\PostgreSql\Migrations\Migrator;
 use Flow\PostgreSql\Migrations\Repository\MigrationRepository;
@@ -415,6 +416,11 @@ final class FlowPostgreSqlBundle extends AbstractBundle
             ->defaultFalse()
             ->info('Emit IF EXISTS on diff-generated DROP statements (default: false)')
             ->end()
+            ->enumNode('mode')
+            ->info('Which pending migrations migrate runs: "all_pending" (every pending migration up to the target, in version order) or "strict_order" (fail before any migration runs when a pending migration is older than the latest executed one)')
+            ->values(['all_pending', 'strict_order'])
+            ->defaultValue('all_pending')
+            ->end()
             ->arrayNode('context')
             ->info(
                 'Extra attributes merged into the migration context alongside the service container (available under FlowPostgreSqlBundle::SERVICE_CONTAINER). Read them in a migration via MigrationContext::attribute(). Values can be literals, @service_id references (@@ escapes a literal @), %parameter% placeholders, or %env(VAR)% expressions. Useful for handing private services or resolved config to a migration without making them public.',
@@ -528,7 +534,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
     }
 
     /**
-     * @param array{connections: array<string, array{dsn: string, dbname: ?string, host: ?string, port: ?int, user: ?string, password: ?string, dbname_suffix: string, options: array<string, bool|float|int|string|null>, session_settings: array<string, bool|float|int|string|null>, test_transaction_rollback: bool, lazy: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, transaction_spans: 'grouped'|'per_operation'|'off', collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}, profiler?: bool}>, messenger: array{enabled: bool, table_name: string, schema: string}, cache: array{pools?: array<string, array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string, share_connection: bool}>}, session: array{enabled: bool, connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, lock_mode: string, ttl: ?int, share_connection: bool}, migrations: array{enabled: bool, connection: ?string, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool, drop_if_exists: bool, context?: array<string, mixed>, exclude?: list<array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string}>}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>, profiler?: array{enabled?: bool|null, include_parameters?: bool, max_queries?: int, max_retained_parameters?: int, max_query_length?: int, migrations?: bool}} $config
+     * @param array{connections: array<string, array{dsn: string, dbname: ?string, host: ?string, port: ?int, user: ?string, password: ?string, dbname_suffix: string, options: array<string, bool|float|int|string|null>, session_settings: array<string, bool|float|int|string|null>, test_transaction_rollback: bool, lazy: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, transaction_spans: 'grouped'|'per_operation'|'off', collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}, profiler?: bool}>, messenger: array{enabled: bool, table_name: string, schema: string}, cache: array{pools?: array<string, array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string, share_connection: bool}>}, session: array{enabled: bool, connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, lock_mode: string, ttl: ?int, share_connection: bool}, migrations: array{enabled: bool, connection: ?string, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool, drop_if_exists: bool, mode: 'all_pending'|'strict_order', context?: array<string, mixed>, exclude?: list<array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string}>}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>, profiler?: array{enabled?: bool|null, include_parameters?: bool, max_queries?: int, max_retained_parameters?: int, max_query_length?: int, migrations?: bool}} $config
      */
     #[Override]
     public function loadExtension(array $config, ContainerConfigurator $configurator, ContainerBuilder $container): void
@@ -922,7 +928,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
     }
 
     /**
-     * @param array{enabled: bool, connection: ?string, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool, drop_if_exists: bool, context?: array<string, mixed>, exclude?: list<array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string}>} $mc
+     * @param array{enabled: bool, connection: ?string, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool, drop_if_exists: bool, mode: 'all_pending'|'strict_order', context?: array<string, mixed>, exclude?: list<array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string}>} $mc
      */
     private function registerMigrations(string $connection, array $mc, ContainerBuilder $container): void
     {
@@ -942,6 +948,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
             $this->buildExclusionPolicy($mc['exclude'] ?? []),
             $mc['drop_if_exists'],
             $this->buildMigrationContextAttributes($mc['context'] ?? []),
+            MigrationMode::from($mc['mode']),
         ]);
         $configDef->setPublic(true);
         $container->setDefinition("flow.postgresql.migrations.configuration", $configDef);

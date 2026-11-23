@@ -8,6 +8,8 @@ use Flow\PostgreSql\Migrations\Version;
 use RuntimeException;
 use Throwable;
 
+use function array_map;
+use function implode;
 use function sprintf;
 
 class MigrationException extends RuntimeException
@@ -67,6 +69,15 @@ class MigrationException extends RuntimeException
     public static function noChangesDetected(): self
     {
         return new self('No changes detected between source and target catalog.');
+    }
+
+    public static function outOfOrder(Version $latestExecuted, Version ...$pending): self
+    {
+        return new self(sprintf(
+            'Pending migrations "%s" are older than the latest executed migration "%s". Switch the migration mode to "all_pending" (MigrationMode::ALL_PENDING) to run them, or execute each version explicitly.',
+            implode('", "', array_map(static fn(Version $version): string => (string) $version, $pending)),
+            $latestExecuted,
+        ));
     }
 
     public static function versionNotFound(Version $version): self

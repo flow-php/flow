@@ -16,7 +16,7 @@ use function count;
 
 /**
  * @type MigrationRow = array{version: string, name: string, state: string, executedAt: null|string, executionTimeMs: null|int}
- * @type ConfigurationData = array{tableName: string, tableSchema: string, directory: string, namespace: string, allOrNothing: bool}
+ * @type ConfigurationData = array{tableName: string, tableSchema: string, directory: string, namespace: string, allOrNothing: bool, mode: string}
  */
 final class FlowMigrationsDataCollector extends DataCollector
 {
@@ -154,6 +154,7 @@ final class FlowMigrationsDataCollector extends DataCollector
             'directory' => $this->configuration->migrationsDirectory,
             'namespace' => $this->configuration->migrationsNamespace,
             'allOrNothing' => $this->configuration->allOrNothing,
+            'mode' => $this->configuration->mode->value,
         ];
     }
 }

@@ -11,6 +11,7 @@ use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\PostgreSql\Client\DsnParser;
 use Flow\PostgreSql\Client\Infrastructure\PgSql\PgSqlClient;
+use Flow\PostgreSql\Migrations\MigrationMode;
 use LogicException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -69,10 +70,10 @@ final class CommandTestContext
         ]);
     }
 
-    public function bootWithMigrations(): void
+    public function bootWithMigrations(MigrationMode $mode = MigrationMode::ALL_PENDING): void
     {
         $this->symfonyContext->bootKernel([
-            'config' => function (TestKernel $kernel): void {
+            'config' => function (TestKernel $kernel) use ($mode): void {
                 $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
                     $container->register('test.catalog_provider', SimpleTestCatalogProvider::class)->setPublic(true);
                 });
@@ -87,6 +88,7 @@ final class CommandTestContext
                         'directory' => $this->migrationsDir,
                         'namespace' => 'FlowTest\\Migrations',
                         'table_name' => 'flow_migrations_test',
+                        'mode' => $mode->value,
                     ],
                     'catalog_providers' => [
                         ['catalog_provider_id' => 'test.catalog_provider'],
@@ -199,6 +201,22 @@ final class CommandTestContext
         preg_match('/Generated migration: (\S+)/', $tester->getDisplay(), $matches);
 
         return $matches[1];
+    }
+
+    public function generateMigrationOlderThanAnyExecuted(): void
+    {
+        (new CommandTester($this->command('flow.postgresql.command.generate')))->execute(['name' => 'older']);
+
+        $this->filesystem->mv(
+            path((string) $this->migrationDirs('*_older')[0]),
+            path($this->migrationsDir . '/20000101000000_older'),
+        );
+    }
+
+    public function isUpToDate(): bool
+    {
+        return (new CommandTester($this->command('flow.postgresql.command.up_to_date')))->execute([])
+        === Command::SUCCESS;
     }
 
     public function migrationDirs(string $pattern): array

@@ -30,6 +30,7 @@ use Flow\PostgreSql\Migrations\Configuration as MigrationsConfiguration;
 use Flow\PostgreSql\Migrations\Executor\MigrationExecutor;
 use Flow\PostgreSql\Migrations\Generator\DiffMigrationGenerator;
 use Flow\PostgreSql\Migrations\Generator\MigrationGenerator;
+use Flow\PostgreSql\Migrations\MigrationMode;
 use Flow\PostgreSql\Migrations\MigrationsFactory;
 use Flow\PostgreSql\Migrations\Migrator;
 use Flow\PostgreSql\Migrations\Repository\MigrationRepository;
@@ -459,6 +460,37 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
         static::assertTrue($this->getContainer()->has(VersionResolver::class));
         static::assertTrue($this->getContainer()->has(MigrationGenerator::class));
         static::assertTrue($this->getContainer()->has(DiffMigrationGenerator::class));
+    }
+
+    public function test_migrations_configuration_receives_mode(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $container->register('flow.postgresql.default.client', SpyClient::class)->setPublic(true);
+                });
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'default' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/postgres',
+                        ],
+                    ],
+                    'migrations' => [
+                        'enabled' => true,
+                        'directory' => '/tmp/test_migrations',
+                        'namespace' => 'App\\Migrations',
+                        'mode' => 'strict_order',
+                    ],
+                    'catalog_providers' => [
+                        ['catalog' => ['schemas' => []]],
+                    ],
+                ]);
+            },
+        ]);
+
+        $configuration = $this->getContainer()->get('flow.postgresql.migrations.configuration');
+        static::assertInstanceOf(MigrationsConfiguration::class, $configuration);
+        static::assertSame(MigrationMode::STRICT_ORDER, $configuration->mode);
     }
 
     public function test_migrations_configuration_injects_service_container_attribute(): void

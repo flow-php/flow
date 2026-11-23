@@ -92,6 +92,7 @@ final class FlowMigrationsDataCollectorTest extends TestCase
         $configurationData = $collector->getConfiguration();
         static::assertIsArray($configurationData);
         static::assertSame('flow_migrations', $configurationData['tableName']);
+        static::assertSame('all_pending', $configurationData['mode']);
 
         $executed = $collector->getMigrations()[0];
         static::assertSame('20260401120000', $executed['version']);

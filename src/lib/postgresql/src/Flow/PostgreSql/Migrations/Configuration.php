@@ -27,5 +27,6 @@ final readonly class Configuration
         public ?ExclusionPolicy $exclusionPolicy = null,
         public bool $dropIfExists = false,
         public array $attributes = [],
+        public MigrationMode $mode = MigrationMode::ALL_PENDING,
     ) {}
 }

@@ -6,6 +6,8 @@ namespace Flow\PostgreSql\Migrations\Tests\Unit;
 
 use Flow\PostgreSql\Migrations\Configuration;
 use Flow\PostgreSql\Migrations\Direction;
+use Flow\PostgreSql\Migrations\Exception\MigrationException;
+use Flow\PostgreSql\Migrations\MigrationMode;
 use Flow\PostgreSql\Migrations\MigrationState;
 use Flow\PostgreSql\Migrations\Migrator;
 use Flow\PostgreSql\Migrations\Repository\AvailableMigration;
@@ -125,6 +127,218 @@ final class MigratorTest extends TestCase
             static::assertTrue($result->isSuccessful());
             static::assertSame(Direction::UP, $result->direction);
         }
+    }
+
+    public function test_migrate_executes_pending_migration_older_than_latest_executed(): void
+    {
+        $store = new FakeMigrationStore();
+        $store->complete(Version::fromString('20260402120000'), 100);
+        $client = new SpyClient();
+
+        $migrator = new Migrator(
+            new FakeMigrationRepository(
+                new AvailableMigration(Version::fromString('20260401120000'), 'older', new SpyMigration(), null),
+                new AvailableMigration(Version::fromString('20260402120000'), 'newer', new SpyMigration(), null),
+            ),
+            $store,
+            new SpyMigrationExecutor(),
+            $client,
+            new Configuration($client, new FakeCatalogProvider(new Catalog([])), '/tmp', 'App\\Migrations'),
+        );
+
+        $results = $migrator->migrate();
+
+        static::assertCount(1, $results);
+        static::assertSame(Direction::UP, $results[0]->direction);
+        static::assertTrue($results[0]->version->equals(Version::fromString('20260401120000')));
+        static::assertCount(0, $migrator->status()->pending());
+    }
+
+    public function test_migrate_executes_pending_migrations_around_latest_executed_in_version_order(): void
+    {
+        $store = new FakeMigrationStore();
+        $store->complete(Version::fromString('20260402120000'), 100);
+        $client = new SpyClient();
+
+        $migrator = new Migrator(
+            new FakeMigrationRepository(
+                new AvailableMigration(Version::fromString('20260401120000'), 'older', new SpyMigration(), null),
+                new AvailableMigration(Version::fromString('20260402120000'), 'executed', new SpyMigration(), null),
+                new AvailableMigration(Version::fromString('20260403120000'), 'newer', new SpyMigration(), null),
+            ),
+            $store,
+            new SpyMigrationExecutor(),
+            $client,
+            new Configuration($client, new FakeCatalogProvider(new Catalog([])), '/tmp', 'App\\Migrations'),
+        );
+
+        $results = $migrator->migrate();
+
+        static::assertCount(2, $results);
+        static::assertTrue($results[0]->version->equals(Version::fromString('20260401120000')));
+        static::assertTrue($results[1]->version->equals(Version::fromString('20260403120000')));
+        static::assertCount(0, $migrator->status()->pending());
+    }
+
+    public function test_migrate_to_latest_executed_version_executes_older_pending_migration_only(): void
+    {
+        $store = new FakeMigrationStore();
+        $store->complete(Version::fromString('20260402120000'), 100);
+        $client = new SpyClient();
+
+        $migrator = new Migrator(
+            new FakeMigrationRepository(
+                new AvailableMigration(Version::fromString('20260401120000'), 'older', new SpyMigration(), null),
+                new AvailableMigration(Version::fromString('20260402120000'), 'executed', new SpyMigration(), null),
+                new AvailableMigration(Version::fromString('20260403120000'), 'newer', new SpyMigration(), null),
+            ),
+            $store,
+            new SpyMigrationExecutor(),
+            $client,
+            new Configuration($client, new FakeCatalogProvider(new Catalog([])), '/tmp', 'App\\Migrations'),
+        );
+
+        $results = $migrator->migrate(Version::fromString('20260402120000'));
+
+        static::assertCount(1, $results);
+        static::assertSame(Direction::UP, $results[0]->direction);
+        static::assertTrue($results[0]->version->equals(Version::fromString('20260401120000')));
+        static::assertFalse($store->executedMigrations()->has(Version::fromString('20260403120000')));
+    }
+
+    public function test_migrate_in_strict_order_executes_all_migrations_when_nothing_is_executed(): void
+    {
+        $store = new FakeMigrationStore();
+        $client = new SpyClient();
+
+        $migrator = new Migrator(
+            new FakeMigrationRepository(
+                new AvailableMigration(Version::fromString('20260401120000'), 'first', new SpyMigration(), null),
+                new AvailableMigration(Version::fromString('20260402120000'), 'second', new SpyMigration(), null),
+            ),
+            $store,
+            new SpyMigrationExecutor(),
+            $client,
+            new Configuration(
+                $client,
+                new FakeCatalogProvider(new Catalog([])),
+                '/tmp',
+                'App\\Migrations',
+                mode: MigrationMode::STRICT_ORDER,
+            ),
+        );
+
+        static::assertCount(2, $migrator->migrate());
+        static::assertCount(2, $store->executedMigrations());
+    }
+
+    public function test_migrate_in_strict_order_fails_on_pending_migrations_older_than_latest_executed(): void
+    {
+        $store = new FakeMigrationStore();
+        $store->complete(Version::fromString('20260403120000'), 100);
+        $executor = new SpyMigrationExecutor();
+        $client = new SpyClient();
+
+        $migrator = new Migrator(
+            new FakeMigrationRepository(
+                new AvailableMigration(Version::fromString('20260401120000'), 'oldest', new SpyMigration(), null),
+                new AvailableMigration(Version::fromString('20260402120000'), 'older', new SpyMigration(), null),
+                new AvailableMigration(Version::fromString('20260403120000'), 'executed', new SpyMigration(), null),
+                new AvailableMigration(Version::fromString('20260404120000'), 'newer', new SpyMigration(), null),
+            ),
+            $store,
+            $executor,
+            $client,
+            new Configuration(
+                $client,
+                new FakeCatalogProvider(new Catalog([])),
+                '/tmp',
+                'App\\Migrations',
+                mode: MigrationMode::STRICT_ORDER,
+            ),
+        );
+
+        try {
+            $migrator->migrate();
+            static::fail('Expected MigrationException');
+        } catch (MigrationException $exception) {
+            static::assertStringContainsString(
+                '"20260401120000", "20260402120000" are older than the latest executed migration "20260403120000"',
+                $exception->getMessage(),
+            );
+        }
+
+        static::assertSame([], $executor->executedPlans);
+        static::assertCount(1, $store->executedMigrations());
+    }
+
+    public function test_migrate_in_strict_order_executes_pending_migrations_newer_than_latest_executed(): void
+    {
+        $store = new FakeMigrationStore();
+        $store->complete(Version::fromString('20260401120000'), 100);
+        $client = new SpyClient();
+
+        $migrator = new Migrator(
+            new FakeMigrationRepository(
+                new AvailableMigration(Version::fromString('20260401120000'), 'executed', new SpyMigration(), null),
+                new AvailableMigration(Version::fromString('20260402120000'), 'newer', new SpyMigration(), null),
+            ),
+            $store,
+            new SpyMigrationExecutor(),
+            $client,
+            new Configuration(
+                $client,
+                new FakeCatalogProvider(new Catalog([])),
+                '/tmp',
+                'App\\Migrations',
+                mode: MigrationMode::STRICT_ORDER,
+            ),
+        );
+
+        static::assertCount(1, $migrator->migrate());
+        static::assertCount(2, $store->executedMigrations());
+    }
+
+    public function test_migrate_in_strict_order_rolls_back_when_older_migration_is_pending(): void
+    {
+        $store = new FakeMigrationStore();
+        $store->complete(Version::fromString('20260402120000'), 100);
+        $store->complete(Version::fromString('20260403120000'), 100);
+        $client = new SpyClient();
+
+        $migrator = new Migrator(
+            new FakeMigrationRepository(
+                new AvailableMigration(Version::fromString('20260401120000'), 'older', new SpyMigration(), null),
+                new AvailableMigration(
+                    Version::fromString('20260402120000'),
+                    'target',
+                    new SpyMigration(),
+                    new SpyRollback(),
+                ),
+                new AvailableMigration(
+                    Version::fromString('20260403120000'),
+                    'latest',
+                    new SpyMigration(),
+                    new SpyRollback(),
+                ),
+            ),
+            $store,
+            new SpyMigrationExecutor(),
+            $client,
+            new Configuration(
+                $client,
+                new FakeCatalogProvider(new Catalog([])),
+                '/tmp',
+                'App\\Migrations',
+                mode: MigrationMode::STRICT_ORDER,
+            ),
+        );
+
+        $results = $migrator->migrate(Version::fromString('20260402120000'));
+
+        static::assertCount(1, $results);
+        static::assertSame(Direction::DOWN, $results[0]->direction);
+        static::assertTrue($results[0]->version->equals(Version::fromString('20260403120000')));
     }
 
     public function test_migrate_propagates_configuration_attributes_to_context(): void
