@@ -63,6 +63,10 @@
 - [bfd25e](https://github.com/flow-php/flow/commit/bfd25e3ee88004638529d03dfc30f86e931c76f2) - **docs(flow-php/web): blog posts for releases 0.47.0 and 0.48.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2762](https://github.com/flow-php/flow/pull/2762) - **flow-php/symfony-telemetry-bundle - HTTP client response throws on destruct when the profiler is enabled** - [@norberttech](https://github.com/norberttech)
+- [#2762](https://github.com/flow-php/flow/pull/2762) - **flow-php/symfony-telemetry-bundle - HTTP client span stays active after a successful request** - [@norberttech](https://github.com/norberttech)
+- [#2762](https://github.com/flow-php/flow/pull/2762) - **flow-php/symfony-telemetry-bundle - failed HTTP client span completes without status code and error.type** - [@norberttech](https://github.com/norberttech)
+- [#2762](https://github.com/flow-php/flow/pull/2762) - **flow-php/symfony-telemetry-bundle - transport error on response destruct is not recorded on the span** - [@norberttech](https://github.com/norberttech)
 - [#2760](https://github.com/flow-php/flow/pull/2760) - **flow-php/postgresql - Migrator::migrate() runs pending migrations older than the latest executed one** - [@norberttech](https://github.com/norberttech)
 - [#2760](https://github.com/flow-php/flow/pull/2760) - **flow-php/symfony-postgresql-bundle - flow:migrations:migrate no longer reports "Already up to date" with pending migrations** - [@norberttech](https://github.com/norberttech)
 - [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/etl - detached XML elements are stored in canonical form** - [@norberttech](https://github.com/norberttech)
