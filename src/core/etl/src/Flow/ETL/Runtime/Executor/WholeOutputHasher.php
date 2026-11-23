@@ -11,6 +11,7 @@ use Flow\ETL\Runtime\Metrics\Hash;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Column\GroupedMultisetHashes;
 use Flow\ETL\Values\Column\MultisetDigest;
+use Flow\ETL\Values\Column\MultisetHashAlgorithm;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema\Definitions;
 use SensitiveParameter;
@@ -26,25 +27,26 @@ final class WholeOutputHasher implements OutputHasher
 
     private DatasetHash $absorbed;
 
-    public function __construct()
-    {
-        $this->absorbed = new DatasetHash(Hash::empty(), []);
+    public function __construct(
+        private readonly MultisetHashAlgorithm $algorithm,
+    ) {
+        $this->absorbed = new DatasetHash(Hash::empty(), [], $algorithm);
     }
 
     public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
     {
-        return new self();
+        return new self(MultisetHashAlgorithm::named(type_string()->assert($data['algorithm'] ?? null)));
     }
 
     public function describe(): ?Description
     {
-        return new Description(self::class, []);
+        return new Description(self::class, ['algorithm' => $this->algorithm->value]);
     }
 
     public function add(Rows $rows, Backend $backend): void
     {
         $this->rows += $rows->count();
-        ($this->hasher ??= $backend->groupedMultisetHashes())->add($rows->columns(), $backend->constant(
+        ($this->hasher ??= $backend->groupedMultisetHashes($this->algorithm))->add($rows->columns(), $backend->constant(
             Definitions::of('group', type_integer()),
             0,
             $rows->count(),
@@ -53,7 +55,7 @@ final class WholeOutputHasher implements OutputHasher
 
     public function absorb(DatasetHash $partial): void
     {
-        $this->absorbed = $this->absorbed->plus(new DatasetHash($partial->total, []));
+        $this->absorbed = $this->absorbed->plus(new DatasetHash($partial->total, [], $partial->algorithm));
     }
 
     public function hash(): DatasetHash
@@ -64,6 +66,7 @@ final class WholeOutputHasher implements OutputHasher
                 type_string()->assert($this->hasher?->hashes()->physicals()[0] ?? MultisetDigest::empty()->hex()),
             ),
             [],
+            $this->algorithm,
         ))->plus($this->absorbed);
     }
 }

@@ -11,6 +11,7 @@ use Flow\ETL\Values\Column\Frame\Codec;
 use Flow\ETL\Values\Column\GroupedCounts;
 use Flow\ETL\Values\Column\GroupedMultisetHashes;
 use Flow\ETL\Values\Column\GroupedTotals;
+use Flow\ETL\Values\Column\MultisetHashAlgorithm;
 use Flow\ETL\Values\Column\PhpBackend;
 use Flow\ETL\Values\Grouping\GroupTable;
 use Flow\ETL\Values\Rows;
@@ -151,9 +152,9 @@ final class ReportedMemoryBackend implements Backend
         return $this->php->rowHashes($columns, $count);
     }
 
-    public function groupedMultisetHashes(): GroupedMultisetHashes
+    public function groupedMultisetHashes(MultisetHashAlgorithm $algorithm): GroupedMultisetHashes
     {
-        return $this->php->groupedMultisetHashes();
+        return $this->php->groupedMultisetHashes($algorithm);
     }
 
     /**

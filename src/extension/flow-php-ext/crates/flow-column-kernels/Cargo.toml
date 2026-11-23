@@ -13,5 +13,7 @@ arrow-arith = "60"
 arrow-ord = "60"
 arrow-schema.workspace = true
 flow-batch-frame = { path = "../flow-batch-frame" }
+md-5.workspace = true
 memchr.workspace = true
+sha2.workspace = true
 xxhash-rust.workspace = true

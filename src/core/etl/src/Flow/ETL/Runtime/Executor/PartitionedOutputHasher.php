@@ -16,6 +16,7 @@ use Flow\ETL\Runtime\Metrics\PartitionHash;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Column\GroupedCounts;
 use Flow\ETL\Values\Column\GroupedMultisetHashes;
+use Flow\ETL\Values\Column\MultisetHashAlgorithm;
 use Flow\ETL\Values\Grouping\GroupTable;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
@@ -50,20 +51,24 @@ final class PartitionedOutputHasher implements OutputHasher
 
     public function __construct(
         private readonly References $by,
+        private readonly MultisetHashAlgorithm $algorithm,
     ) {
-        $this->absorbed = new DatasetHash(Hash::empty(), []);
+        $this->absorbed = new DatasetHash(Hash::empty(), [], $algorithm);
         $this->declared = new Schema();
         $this->rowPartitions = new RowPartitions($by);
     }
 
     public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
     {
-        return new self($rebuild->of($data['by'] ?? null, References::class));
+        return new self(
+            $rebuild->of($data['by'] ?? null, References::class),
+            MultisetHashAlgorithm::named(type_string()->assert($data['algorithm'] ?? null)),
+        );
     }
 
     public function describe(): ?Description
     {
-        return Description::compose(self::class, ['by' => $this->by]);
+        return Description::compose(self::class, ['by' => $this->by, 'algorithm' => $this->algorithm->value]);
     }
 
     public function add(Rows $rows, Backend $backend): void
@@ -91,7 +96,7 @@ final class PartitionedOutputHasher implements OutputHasher
         }
 
         $ids = $this->table->assign($rows);
-        ($this->digests ??= $backend->groupedMultisetHashes())->add($rows->columns(), $ids->ids);
+        ($this->digests ??= $backend->groupedMultisetHashes($this->algorithm))->add($rows->columns(), $ids->ids);
         ($this->rows ??= $backend->groupedCounts())->add($ids->ids, $ids->ids);
 
         if ($ids->firstRows === []) {
@@ -122,7 +127,7 @@ final class PartitionedOutputHasher implements OutputHasher
             $total = $total->plus($local[$id]->hash);
         }
 
-        return $this->absorbed->plus(new DatasetHash($total, $local));
+        return $this->absorbed->plus(new DatasetHash($total, $local, $this->algorithm));
     }
 
     private static function missing(string $column): InvalidArgumentException

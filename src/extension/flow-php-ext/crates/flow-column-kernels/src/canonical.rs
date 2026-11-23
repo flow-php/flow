@@ -7,6 +7,8 @@ use arrow_schema::DataType;
 use flow_batch_frame::error::Part;
 use flow_batch_frame::kind::TypeJson;
 use flow_batch_frame::Error;
+use md5::Md5;
+use sha2::{Digest, Sha256};
 use xxhash_rust::xxh3::xxh3_128;
 
 pub const NULL: u8 = 0x00;
@@ -120,11 +122,29 @@ pub fn append_name(out: &mut Vec<u8>, name: &[u8]) {
     out.extend_from_slice(name);
 }
 
-/// (low, high) of `xxh3_128(encoded)`.
-pub fn row_lanes(encoded: &[u8]) -> (u64, u64) {
+/// [low, high] of `xxh3_128(encoded)`.
+pub fn row_lanes(encoded: &[u8]) -> [u64; 2] {
     let hash = xxh3_128(encoded);
 
-    (hash as u64, (hash >> 64) as u64)
+    [hash as u64, (hash >> 64) as u64]
+}
+
+/// [low, high] of the first 128 bits of `md5(encoded)`.
+pub fn md5_row_lanes(encoded: &[u8]) -> [u64; 2] {
+    first_128_bits(&Md5::digest(encoded))
+}
+
+/// [low, high] of the first 128 bits of `sha256(encoded)`.
+pub fn sha256_row_lanes(encoded: &[u8]) -> [u64; 2] {
+    first_128_bits(&Sha256::digest(encoded))
+}
+
+fn first_128_bits(digest: &[u8]) -> [u64; 2] {
+    let mut first = [0_u8; 16];
+    first.copy_from_slice(&digest[..16]);
+    let hash = u128::from_be_bytes(first);
+
+    [hash as u64, (hash >> 64) as u64]
 }
 
 fn write(
@@ -821,7 +841,16 @@ mod tests {
     fn row_lanes_are_the_low_and_high_half_of_xxh3_128() {
         assert_eq!(
             row_lanes(b"abc"),
-            (8_696_274_497_037_089_104_u64, 481_984_899_792_396_677_u64)
+            [8_696_274_497_037_089_104_u64, 481_984_899_792_396_677_u64]
+        );
+    }
+
+    #[test]
+    fn md5_and_sha256_row_lanes_are_the_first_128_bits_of_the_digest() {
+        assert_eq!(md5_row_lanes(b"abc"), [0xd6963f7d28e17f72_u64, 0x900150983cd24fb0_u64]);
+        assert_eq!(
+            sha256_row_lanes(b"abc"),
+            [0x414140de5dae2223_u64, 0xba7816bf8f01cfea_u64]
         );
     }
 

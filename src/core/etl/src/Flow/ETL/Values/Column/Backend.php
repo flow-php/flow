@@ -134,7 +134,7 @@ interface Backend
      */
     public function rowHashes(array $columns, int $count): Column;
 
-    public function groupedMultisetHashes(): GroupedMultisetHashes;
+    public function groupedMultisetHashes(MultisetHashAlgorithm $algorithm): GroupedMultisetHashes;
 
     /**
      * @param list<string> $columns
