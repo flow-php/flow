@@ -69,10 +69,38 @@ final class TracableResponseTest extends TestCase
         $response = new TraceableResponse($tracer, $spy, $span);
         unset($response);
 
-        static::assertTrue($spy->destructCalled);
+        static::assertFalse($spy->destructCalled);
+        static::assertFalse($spy->getHeadersCalled);
         static::assertTrue($span->isEnded());
         static::assertCount(1, $processor->endedSpans());
         static::assertSame(200, $span->attributes()['http.response.status_code']);
+    }
+
+    public function test_destruct_resolves_response_whose_status_is_unknown(): void
+    {
+        $processor = new MemorySpanProcessor(new MemoryExporter());
+        $tracer = TelemetryMother::withSpanProcessor($processor)->tracer('test');
+        $span = $tracer->span('GET host', SpanKind::CLIENT);
+
+        $spy = new SpyResponse(0);
+        $response = new TraceableResponse($tracer, $spy, $span);
+        unset($response);
+
+        static::assertTrue($spy->getHeadersCalled);
+        static::assertTrue($span->isEnded());
+        static::assertCount(1, $processor->endedSpans());
+        static::assertArrayNotHasKey('http.response.status_code', $span->attributes());
+    }
+
+    public function test_destruct_skips_resolving_after_content_was_read(): void
+    {
+        $tracer = TelemetryMother::withSpanProcessor(new MemorySpanProcessor(new MemoryExporter()))->tracer('test');
+        $spy = new SpyResponse(0);
+        $response = new TraceableResponse($tracer, $spy, $tracer->span('GET host', SpanKind::CLIENT));
+        $response->getContent();
+        unset($response);
+
+        static::assertFalse($spy->getHeadersCalled);
     }
 
     public function test_get_content_completes_span_with_error_status_for_4xx(): void

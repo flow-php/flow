@@ -17,8 +17,11 @@ use Flow\Telemetry\Tracer\SpanKind;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use Symfony\Component\HttpClient\Exception\ClientException;
+use Symfony\Component\HttpClient\Exception\TransportException;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
+use Symfony\Component\HttpClient\TraceableHttpClient;
 
 use function Flow\Telemetry\DSL\url_sanitizer;
 
@@ -27,6 +30,22 @@ use function Flow\Telemetry\DSL\url_sanitizer;
 #[CoversClass(ResponseStream::class)]
 final class TracableHttpClientTest extends TestCase
 {
+    public function test_consumed_response_behind_symfony_tracing_destructs_silently(): void
+    {
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
+        $tracable = new TracableHttpClient(new TraceableHttpClient(new MockHttpClient(new MockResponse('{}', [
+            'http_code' => 200,
+        ]))), TelemetryMother::withSpanProcessor($spanProcessor), 'test.client');
+
+        $response = $tracable->request('GET', 'https://api.example.com/users');
+        $response->getContent();
+        unset($response);
+
+        $spans = $spanProcessor->endedSpans();
+        static::assertCount(1, $spans);
+        static::assertSame(200, $spans[0]->attributes()['http.response.status_code']);
+    }
+
     public function test_emits_no_spans_when_tracing_is_suppressed(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
@@ -43,6 +62,132 @@ final class TracableHttpClientTest extends TestCase
             $spanProcessor->endedSpans(),
             'HTTP client instrumentation must emit no spans while tracing is suppressed',
         );
+    }
+
+    public function test_get_content_on_4xx_records_status_before_completion(): void
+    {
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
+        $tracable = new TracableHttpClient(new MockHttpClient(new MockResponse('', [
+            'http_code' => 404,
+        ])), TelemetryMother::withSpanProcessor($spanProcessor), 'test.client');
+
+        $response = $tracable->request('GET', 'https://api.example.com/missing');
+        $exceptionThrown = false;
+
+        try {
+            $response->getContent();
+        } catch (ClientException) {
+            $exceptionThrown = true;
+        }
+
+        static::assertTrue($exceptionThrown);
+
+        $spans = $spanProcessor->endedSpans();
+        static::assertCount(1, $spans);
+        static::assertSame(404, $spans[0]->attributes()['http.response.status_code']);
+        static::assertSame('404', $spans[0]->attributes()['error.type']);
+        static::assertCount(1, $spans[0]->events());
+        static::assertSame('HTTP 404', $spans[0]->status()?->description);
+    }
+
+    public function test_get_status_code_then_get_content_on_4xx_keeps_http_status(): void
+    {
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
+        $tracable = new TracableHttpClient(new MockHttpClient(new MockResponse('', [
+            'http_code' => 404,
+        ])), TelemetryMother::withSpanProcessor($spanProcessor), 'test.client');
+
+        $response = $tracable->request('GET', 'https://api.example.com/missing');
+        static::assertSame(404, $response->getStatusCode());
+        $exceptionThrown = false;
+
+        try {
+            $response->getContent();
+        } catch (ClientException) {
+            $exceptionThrown = true;
+        }
+
+        static::assertTrue($exceptionThrown);
+
+        $spans = $spanProcessor->endedSpans();
+        static::assertCount(1, $spans);
+        static::assertSame(404, $spans[0]->attributes()['http.response.status_code']);
+        static::assertSame('404', $spans[0]->attributes()['error.type']);
+        static::assertSame('HTTP 404', $spans[0]->status()?->description);
+    }
+
+    public function test_never_consumed_4xx_behind_symfony_tracing_throws_client_exception(): void
+    {
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
+        $tracable = new TracableHttpClient(new TraceableHttpClient(new MockHttpClient(new MockResponse('', [
+            'http_code' => 404,
+        ]))), TelemetryMother::withSpanProcessor($spanProcessor), 'test.client');
+
+        $response = $tracable->request('GET', 'https://api.example.com/missing');
+        $exceptionThrown = false;
+
+        try {
+            unset($response);
+        } catch (ClientException) {
+            $exceptionThrown = true;
+        }
+
+        static::assertTrue($exceptionThrown);
+
+        $spans = $spanProcessor->endedSpans();
+        static::assertCount(1, $spans);
+        static::assertSame(404, $spans[0]->attributes()['http.response.status_code']);
+        static::assertSame('404', $spans[0]->attributes()['error.type']);
+        static::assertCount(1, $spans[0]->events());
+
+        $status = $spans[0]->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isError());
+        static::assertSame('HTTP 404', $status->description);
+    }
+
+    public function test_never_consumed_response_behind_symfony_tracing_completes_span(): void
+    {
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
+        $tracable = new TracableHttpClient(new TraceableHttpClient(new MockHttpClient(new MockResponse('{}', [
+            'http_code' => 200,
+        ]))), TelemetryMother::withSpanProcessor($spanProcessor), 'test.client');
+
+        $response = $tracable->request('GET', 'https://api.example.com/users');
+        unset($response);
+
+        $spans = $spanProcessor->endedSpans();
+        static::assertCount(1, $spans);
+        static::assertSame(200, $spans[0]->attributes()['http.response.status_code']);
+    }
+
+    public function test_never_consumed_transport_error_completes_span_with_error(): void
+    {
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
+        $tracable = new TracableHttpClient(new MockHttpClient(new MockResponse('', [
+            'error' => 'mock transport error',
+        ])), TelemetryMother::withSpanProcessor($spanProcessor), 'test.client');
+
+        $response = $tracable->request('GET', 'https://api.example.com/users');
+        $transportException = null;
+
+        try {
+            unset($response);
+        } catch (TransportException $exception) {
+            $transportException = $exception;
+        }
+
+        static::assertInstanceOf(TransportException::class, $transportException);
+
+        $spans = $spanProcessor->endedSpans();
+        static::assertCount(1, $spans);
+        static::assertCount(1, $spans[0]->events());
+        static::assertSame(TransportException::class, $spans[0]->attributes()['error.type']);
+
+        $status = $spans[0]->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isError());
+        static::assertSame($transportException->getMessage(), $status->description);
     }
 
     public function test_request_defaults_host_to_unknown_when_missing(): void
@@ -300,6 +445,37 @@ final class TracableHttpClientTest extends TestCase
         static::assertSame('HTTP 500', $status->description);
     }
 
+    public function test_request_leaves_no_active_span_after_it_fails(): void
+    {
+        $telemetry = TelemetryMother::withSpanProcessor(new MemorySpanProcessor(new MemoryExporter()));
+        $tracable = new TracableHttpClient(new FailingHttpClient('Connection timeout'), $telemetry, 'test.client');
+
+        $exceptionThrown = false;
+
+        try {
+            $tracable->request('GET', 'https://api.example.com/users');
+        } catch (RuntimeException) {
+            $exceptionThrown = true;
+        }
+
+        static::assertTrue($exceptionThrown);
+        static::assertNull($telemetry->tracer('test')->activeSpan());
+    }
+
+    public function test_request_leaves_no_active_span_after_it_returns(): void
+    {
+        $telemetry = TelemetryMother::withSpanProcessor(new MemorySpanProcessor(new MemoryExporter()));
+        $tracable = new TracableHttpClient(new MockHttpClient(new MockResponse('{}')), $telemetry, 'test.client');
+
+        $response = $tracable->request('GET', 'https://api.example.com/users');
+
+        static::assertNull($telemetry->tracer('test')->activeSpan());
+
+        $response->getContent();
+
+        static::assertNull($telemetry->tracer('test')->activeSpan());
+    }
+
     public function test_request_leaves_status_unset_for_2xx_codes(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
@@ -423,6 +599,24 @@ final class TracableHttpClientTest extends TestCase
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
         static::assertSame(200, $spans[0]->attributes()['http.response.status_code']);
+    }
+
+    public function test_two_requests_in_a_row_give_two_sibling_spans(): void
+    {
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
+        $tracable = new TracableHttpClient(
+            new MockHttpClient([new MockResponse('{}'), new MockResponse('{}')]),
+            TelemetryMother::withSpanProcessor($spanProcessor),
+            'test.client',
+        );
+
+        $tracable->request('GET', 'https://api.example.com/first')->getContent();
+        $tracable->request('GET', 'https://api.example.com/second')->getContent();
+
+        $spans = $spanProcessor->endedSpans();
+        static::assertCount(2, $spans);
+        static::assertNull($spans[0]->context()->parentSpanId);
+        static::assertNull($spans[1]->context()->parentSpanId);
     }
 
     public function test_with_options_creates_new_instance(): void
