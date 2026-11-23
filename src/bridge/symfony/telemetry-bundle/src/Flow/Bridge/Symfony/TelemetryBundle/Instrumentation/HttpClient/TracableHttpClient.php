@@ -56,10 +56,11 @@ final readonly class TracableHttpClient implements HttpClientInterface
 
             $span->recordException($exception, new DateTimeImmutable(), ['exception.message' => $message]);
             $span->setStatus(SpanStatus::error($message));
-            $scope->detach();
             $tracer->complete($span);
 
             throw $exception;
+        } finally {
+            $scope->detach();
         }
 
         // base_uri and the query option make the effective URL differ from the $url argument.

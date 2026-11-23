@@ -22,7 +22,6 @@ use TypeError;
 use function get_debug_type;
 use function is_int;
 use function is_string;
-use function method_exists;
 use function sprintf;
 
 /**
@@ -44,9 +43,13 @@ final class TraceableResponse implements ResponseInterface
     public function __destruct()
     {
         try {
-            if (method_exists($this->response, '__destruct')) {
-                $this->response->__destruct();
+            if (!$this->completed && $this->response->getInfo('http_code') === 0) {
+                $this->response->getHeaders(true);
             }
+        } catch (Throwable $exception) {
+            $this->failAndComplete($exception);
+
+            throw $exception;
         } finally {
             $this->recordStatusFromInfo();
             $this->complete();
@@ -194,7 +197,13 @@ final class TraceableResponse implements ResponseInterface
             : $exception->getMessage();
 
         $this->span->recordException($exception, new DateTimeImmutable(), ['exception.message' => $message]);
-        $this->span->setStatus(SpanStatus::error($message));
+        $this->recordStatusFromInfo();
+
+        if ($this->span->status()?->isError() !== true) {
+            $this->span->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class);
+            $this->span->setStatus(SpanStatus::error($message));
+        }
+
         $this->complete();
     }
 
