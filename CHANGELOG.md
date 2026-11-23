@@ -1,6 +1,9 @@
 ## [Unreleased] - 2026-11-23
 
 ### Added
+- [#2760](https://github.com/flow-php/flow/pull/2760) - **flow-php/postgresql - MigrationMode with ALL_PENDING and STRICT_ORDER, set through Configuration::$mode** - [@norberttech](https://github.com/norberttech)
+- [#2760](https://github.com/flow-php/flow/pull/2760) - **flow-php/symfony-postgresql-bundle - migrations.mode configuration key** - [@norberttech](https://github.com/norberttech)
+- [#2760](https://github.com/flow-php/flow/pull/2760) - **flow-php/symfony-postgresql-bundle - migration mode in the profiler panel** - [@norberttech](https://github.com/norberttech)
 - [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/etl - row_hash() scalar function, a typed xxh128 hash of the row** - [@norberttech](https://github.com/norberttech)
 - [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/etl - multiset_hash() aggregate, an order-independent hash of all rows** - [@norberttech](https://github.com/norberttech)
 - [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/etl - analyze()->withDatasetHash() and Report::datasetHash()** - [@norberttech](https://github.com/norberttech)
@@ -40,6 +43,7 @@
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - Packagist links in the hero and the footer** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2760](https://github.com/flow-php/flow/pull/2760) - **flow-php/symfony-postgresql-bundle - flow:migrations:migrate prints a MigrationException as an error and exits with code 1** - [@norberttech](https://github.com/norberttech)
 - [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/etl - group, join, distinct and bucket keys use one typed canonical encoding** - [@norberttech](https://github.com/norberttech)
 - [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/etl - keys have the declared type of their column** - [@norberttech](https://github.com/norberttech)
 - [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/etl - hash() takes an algorithm name** - [@norberttech](https://github.com/norberttech)
@@ -59,6 +63,8 @@
 - [bfd25e](https://github.com/flow-php/flow/commit/bfd25e3ee88004638529d03dfc30f86e931c76f2) - **docs(flow-php/web): blog posts for releases 0.47.0 and 0.48.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2760](https://github.com/flow-php/flow/pull/2760) - **flow-php/postgresql - Migrator::migrate() runs pending migrations older than the latest executed one** - [@norberttech](https://github.com/norberttech)
+- [#2760](https://github.com/flow-php/flow/pull/2760) - **flow-php/symfony-postgresql-bundle - flow:migrations:migrate no longer reports "Already up to date" with pending migrations** - [@norberttech](https://github.com/norberttech)
 - [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/etl - detached XML elements are stored in canonical form** - [@norberttech](https://github.com/norberttech)
 - [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/etl - ExternalSortTest scripts its memory instead of reading the test process** - [@norberttech](https://github.com/norberttech)
 - [#2756](https://github.com/flow-php/flow/pull/2756) - **flow-php/etl-adapter-doctrine - keyset pagination built a key object for every row** - [@norberttech](https://github.com/norberttech)
