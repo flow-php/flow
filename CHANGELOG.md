@@ -1,6 +1,17 @@
-## [Unreleased] - 2026-11-20
+## [Unreleased] - 2026-11-23
 
 ### Added
+- [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/etl - row_hash() scalar function, a typed xxh128 hash of the row** - [@norberttech](https://github.com/norberttech)
+- [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/etl - multiset_hash() aggregate, an order-independent hash of all rows** - [@norberttech](https://github.com/norberttech)
+- [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/etl - analyze()->withDatasetHash() and Report::datasetHash()** - [@norberttech](https://github.com/norberttech)
+- [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/etl - analyze()->withDatasetHash(ref('date')) hashes every partition of the output** - [@norberttech](https://github.com/norberttech)
+- [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/etl - Hash, PartitionHash and DatasetHash report types** - [@norberttech](https://github.com/norberttech)
+- [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/etl - DatasetHash::plus() combines the hashes of two runs** - [@norberttech](https://github.com/norberttech)
+- [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/etl - hash_algorithm() DSL function** - [@norberttech](https://github.com/norberttech)
+- [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/etl - Backend::rowHashes() and Backend::groupedMultisetHashes()** - [@norberttech](https://github.com/norberttech)
+- [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/flow-php-ext - native row hashes and grouped multiset hashes** - [@norberttech](https://github.com/norberttech)
+- [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/filesystem - an empty string is a valid partition value, written as the folder name=** - [@norberttech](https://github.com/norberttech)
+- [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/etl - Hashing documentation page** - [@norberttech](https://github.com/norberttech)
 - [#2755](https://github.com/flow-php/flow/pull/2755) - **flow-php/postgresql - INSERT, UPDATE, DELETE and MERGE queries in cte()** - [@norberttech](https://github.com/norberttech)
 - [#2755](https://github.com/flow-php/flow/pull/2755) - **flow-php/postgresql - SEARCH and CYCLE clauses on recursive CTEs** - [@norberttech](https://github.com/norberttech)
 - [#2755](https://github.com/flow-php/flow/pull/2755) - **flow-php/postgresql - MERGE returning(), returningAll() and merge_action()** - [@norberttech](https://github.com/norberttech)
@@ -29,6 +40,13 @@
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - Packagist links in the hero and the footer** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/etl - group, join, distinct and bucket keys use one typed canonical encoding** - [@norberttech](https://github.com/norberttech)
+- [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/etl - keys have the declared type of their column** - [@norberttech](https://github.com/norberttech)
+- [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/etl - hash() takes an algorithm name** - [@norberttech](https://github.com/norberttech)
+- [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/etl - NativePHPHash renamed to PhpAlgorithm** - [@norberttech](https://github.com/norberttech)
+- [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/etl - PhpAlgorithm throws the Flow InvalidArgumentException** - [@norberttech](https://github.com/norberttech)
+- [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/flow-php-ext - ABI version 4** - [@norberttech](https://github.com/norberttech)
+- [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/flow-php-ext - group table and partitioning use the canonical key encoding** - [@norberttech](https://github.com/norberttech)
 - [#2755](https://github.com/flow-php/flow/pull/2755) - **flow-php/postgresql - returning() without expressions throws** - [@norberttech](https://github.com/norberttech)
 - [#2755](https://github.com/flow-php/flow/pull/2755) - **flow-php/postgresql - recursive WITH on MERGE throws at build time** - [@norberttech](https://github.com/norberttech)
 - [#2752](https://github.com/flow-php/flow/pull/2752) - **flow-php/filesystem-async-aws-bridge - rm() of a directory or pattern uses DeleteObjects** - [@norberttech](https://github.com/norberttech)
@@ -41,6 +59,8 @@
 - [bfd25e](https://github.com/flow-php/flow/commit/bfd25e3ee88004638529d03dfc30f86e931c76f2) - **docs(flow-php/web): blog posts for releases 0.47.0 and 0.48.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/etl - detached XML elements are stored in canonical form** - [@norberttech](https://github.com/norberttech)
+- [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/etl - ExternalSortTest scripts its memory instead of reading the test process** - [@norberttech](https://github.com/norberttech)
 - [#2756](https://github.com/flow-php/flow/pull/2756) - **flow-php/etl-adapter-doctrine - keyset pagination built a key object for every row** - [@norberttech](https://github.com/norberttech)
 - [#2756](https://github.com/flow-php/flow/pull/2756) - **flow-php/etl-adapter-postgresql - keyset pagination built a key object and parsed the key name for every row** - [@norberttech](https://github.com/norberttech)
 - [#2755](https://github.com/flow-php/flow/pull/2755) - **flow-php/postgresql - fromAst() dropping SEARCH, CYCLE and RETURNING aliases** - [@norberttech](https://github.com/norberttech)
