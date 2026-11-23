@@ -6,12 +6,12 @@
 
 A hash is 32 hex characters. Equal rows give equal hashes, in any row order and any column order.
 
-| You want the hash of | Use                                      |
-|----------------------|------------------------------------------|
-| each row             | `row_hash()`                             |
-| each group of rows   | `multiset_hash()`                        |
-| the output of a run  | `analyze()->withDatasetHash()`           |
-| each partition       | `analyze()->withDatasetHash(ref('...'))` |
+| You want the hash of | Use                                        |
+|----------------------|--------------------------------------------|
+| each row             | `row_hash()`                               |
+| each group of rows   | `multiset_hash()`                          |
+| the output of a run  | `analyze()->withDatasetHash()`             |
+| each partition       | `analyze()->withDatasetHash([ref('...')])` |
 
 ## Hash of each row
 
@@ -129,10 +129,45 @@ $stored = data_frame()
     ->run(analyze: analyze()->withDatasetHash())
     ->datasetHash();
 
+$written->algorithm;      // MultisetHashAlgorithm::xxh128
 $written->total->rows;    // 3
 $written->total->value;   // 'f2920d3f120d5130873032ec79839580'
 $stored->total->value;    // 'f2920d3f120d5130873032ec79839580', the copy is complete
 ```
+
+### Choose the algorithm
+
+The default is `xxh128`. A run can use `md5` or `sha256` instead:
+
+```php
+<?php
+
+use Flow\ETL\Values\Column\MultisetHashAlgorithm;
+
+use function Flow\ETL\DSL\{analyze, data_frame, from_array};
+
+$hash = data_frame()
+    ->read(from_array([
+        ['id' => 1, 'country' => 'PL'],
+        ['id' => 2, 'country' => 'DE'],
+        ['id' => 3, 'country' => 'PL'],
+    ]))
+    ->run(analyze: analyze()->withDatasetHash(algorithm: MultisetHashAlgorithm::sha256))
+    ->datasetHash();
+
+$hash->algorithm;      // MultisetHashAlgorithm::sha256
+$hash->total->value;   // 'cb6fbf9a3db645ba28221bc5cc601940'
+```
+
+| Algorithm | Hash of the same three rows        |
+|-----------|------------------------------------|
+| `xxh128`  | `31be1d609a26d996382e2a23855ebbe5` |
+| `md5`     | `d3534278fef52e032aa2fe1e55c44c1b` |
+| `sha256`  | `cb6fbf9a3db645ba28221bc5cc601940` |
+
+Every hash is 32 hex characters. Flow adds the first 128 bits of the digest of each row, so a `sha256` hash is not
+the SHA-256 of a file. The flow_php extension gives the same hash for each algorithm. `row_hash()` and
+`multiset_hash()` always use `xxh128`.
 
 ## Hash of each partition
 
@@ -146,7 +181,7 @@ use function Flow\ETL\DSL\{analyze, data_frame, partition_by, ref};
 $report = data_frame()
     ->read(from_csv('orders.csv')->withSchema($orders))
     ->write(to_parquet('orders/orders.parquet')->partitionBy(partition_by('date')))
-    ->run(analyze: analyze()->withDatasetHash(ref('date')));
+    ->run(analyze: analyze()->withDatasetHash([ref('date')]));
 
 $current = [];
 
@@ -186,7 +221,7 @@ use Flow\ETL\Runtime\Metrics\DatasetHash;
 
 file_put_contents('monday.json', json_encode($monday->datasetHash()->normalize()));
 
-// {"total":{"rows":1,"value":"61d8d2f77533f36e5f23e4e587fa5e41"},"partitions":[]}
+// {"algorithm":"xxh128","total":{"rows":1,"value":"61d8d2f77533f36e5f23e4e587fa5e41"},"partitions":[]}
 
 $stored = json_decode(file_get_contents('monday.json'), true);
 $week = DatasetHash::fromArray($stored)->plus($tuesday->datasetHash());
@@ -195,7 +230,7 @@ $week->total->rows;    // 3
 $week->total->value;   // '31be1d609a26d996382e2a23855ebbe5', equal to one run over both days
 ```
 
-`plus()` also adds the partitions with the same values.
+`plus()` also adds the partitions with the same values. If the two hashes have different algorithms, `plus()` throws.
 
 ## Rules
 

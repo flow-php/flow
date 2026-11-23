@@ -7,7 +7,6 @@ use arrow_array::LargeBinaryArray;
 use ext_php_rs::flags::ClassFlags;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ArrayKey, ZendHashTable, Zval};
-use flow_column_kernels::canonical::row_lanes;
 
 use crate::canonical_rows::{named, row_columns, STRING_TYPE};
 use crate::column::RustColumn;
@@ -20,15 +19,18 @@ use crate::render::invalid_argument;
 /// [low, high]
 type Lanes = [u64; 2];
 
+/// the lanes of the digest of one encoded row
+pub type RowLanes = fn(&[u8]) -> Lanes;
+
 #[php_class]
 #[php(
     name = "Flow\\ETL\\Values\\Column\\RustGroupedMultisetHashes",
     flags = ClassFlags::Final,
     implements(ce = grouped_multiset_hashes_ce, stub = "Flow\\ETL\\Values\\Column\\GroupedMultisetHashes")
 )]
-#[derive(Default)]
 pub struct RustGroupedMultisetHashes {
     lanes: Vec<Lanes>,
+    row_lanes: RowLanes,
 }
 
 #[php_impl]
@@ -45,7 +47,7 @@ impl RustGroupedMultisetHashes {
 
         for (index, id) in ids.into_iter().enumerate() {
             named(&mut row, &mut entries, &resolved, index);
-            add_lanes(&mut self.lanes[id], row_lanes(&row).into());
+            add_lanes(&mut self.lanes[id], (self.row_lanes)(&row));
         }
 
         Ok(())
@@ -97,6 +99,13 @@ impl RustGroupedMultisetHashes {
 }
 
 impl RustGroupedMultisetHashes {
+    pub fn of(row_lanes: RowLanes) -> Self {
+        Self {
+            lanes: Vec::new(),
+            row_lanes,
+        }
+    }
+
     fn grow(&mut self, id: usize) {
         if self.lanes.len() <= id {
             self.lanes.resize(id + 1, [0, 0]);

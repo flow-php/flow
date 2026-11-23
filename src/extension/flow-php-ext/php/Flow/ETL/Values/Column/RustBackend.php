@@ -146,7 +146,7 @@ final class RustBackend implements Backend, Describable
         throw new RuntimeException('flow_php extension is not loaded');
     }
 
-    public function groupedMultisetHashes(): GroupedMultisetHashes
+    public function groupedMultisetHashes(MultisetHashAlgorithm $algorithm): GroupedMultisetHashes
     {
         throw new RuntimeException('flow_php extension is not loaded');
     }

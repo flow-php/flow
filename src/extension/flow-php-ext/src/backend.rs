@@ -23,7 +23,7 @@ use flow_batch_frame::frame;
 use flow_batch_frame::kind::Kind;
 use flow_batch_frame::layout::buffer_count;
 use flow_column_kernels::arithmetic::Operator;
-use flow_column_kernels::canonical::row_lanes;
+use flow_column_kernels::canonical::{md5_row_lanes, row_lanes, sha256_row_lanes};
 use flow_column_kernels::compare::{contains, ends_with, is_not_null, is_null, starts_with};
 use flow_column_kernels::grouping::bucket_of;
 
@@ -35,7 +35,8 @@ use crate::column::RustColumn;
 use crate::compare::{boolean_column, native_comparison, native_text_match};
 use crate::ctx::{
     call_handle_catching, call_method, call_static, ce_method_ref, column_key, construct, expect_object, find_class,
-    ht_for_each, ht_get, ht_insert, ht_insert_long, instance, transparent_exception, zval_long, zval_str,
+    ht_for_each, ht_get, ht_insert, ht_insert_long, instance, read_property, transparent_exception, zval_long,
+    zval_str,
 };
 use crate::exception::ext_exception;
 use crate::frame::{string_of, FrameBody, PhpCodec};
@@ -43,7 +44,7 @@ use crate::group_table::RustGroupTable;
 use crate::grouped_counts::RustGroupedCounts;
 use crate::grouped_totals::RustGroupedTotals;
 use crate::interfaces::{backend_ce, describable_ce};
-use crate::multiset_hashes::RustGroupedMultisetHashes;
+use crate::multiset_hashes::{RowLanes, RustGroupedMultisetHashes};
 use crate::plan::{physical_for_definition, type_plan, TypePlan};
 use crate::render::{decode_exception, encode_exception, floe_exception, frame_exception, invalid_argument};
 use crate::sort::{handed_off_native_bytes, native_sort, native_sort_working_bytes};
@@ -289,7 +290,7 @@ impl RustBackend {
         let hashes = (0..count)
             .map(|index| {
                 named(&mut row, &mut entries, &resolved, index);
-                let (low, high) = row_lanes(&row);
+                let [low, high] = row_lanes(&row);
 
                 format!("{high:016x}{low:016x}")
             })
@@ -299,8 +300,21 @@ impl RustBackend {
     }
 
     #[php(name = "groupedMultisetHashes")]
-    pub fn grouped_multiset_hashes(&self) -> RustGroupedMultisetHashes {
-        RustGroupedMultisetHashes::default()
+    pub fn grouped_multiset_hashes(&self, algorithm: &Zval) -> PhpResult<RustGroupedMultisetHashes> {
+        let name = read_property(expect_object(algorithm, "a MultisetHashAlgorithm")?, "value")?;
+        let row_lanes: RowLanes = match name.zend_str().map(|name| name.as_bytes()) {
+            Some(b"xxh128") => row_lanes,
+            Some(b"md5") => md5_row_lanes,
+            Some(b"sha256") => sha256_row_lanes,
+            unknown => {
+                return Err(ext_exception(format!(
+                    "flow_php does not know the multiset hash algorithm \"{}\", update the extension",
+                    String::from_utf8_lossy(unknown.unwrap_or_default())
+                )))
+            }
+        };
+
+        Ok(RustGroupedMultisetHashes::of(row_lanes))
     }
 
     #[php(name = "groupTable")]

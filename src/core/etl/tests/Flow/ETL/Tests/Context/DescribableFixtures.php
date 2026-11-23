@@ -115,6 +115,7 @@ use Flow\ETL\Tests\Double\StaticExtractorFactory;
 use Flow\ETL\Values\BatchSize;
 use Flow\ETL\Values\Column\AdaptiveBackend;
 use Flow\ETL\Values\Column\Frame\NoopCodec;
+use Flow\ETL\Values\Column\MultisetHashAlgorithm;
 use Flow\ETL\Values\Column\PhpBackend;
 use Flow\ETL\Values\Join\JoinType;
 use Flow\ETL\Values\Memory\Unit;
@@ -392,11 +393,13 @@ final class DescribableFixtures
                 config()->serializer(),
             ),
             OfferedFailure::class => static fn(): Describable => new OfferedFailure(new SkipRows()),
-            PartitionedOutputHasher::class => static fn(): Describable => new PartitionedOutputHasher(refs(
-                'date',
-                'country',
-            )),
-            WholeOutputHasher::class => static fn(): Describable => new WholeOutputHasher(),
+            PartitionedOutputHasher::class => static fn(): Describable => new PartitionedOutputHasher(
+                refs('date', 'country'),
+                MultisetHashAlgorithm::xxh128,
+            ),
+            WholeOutputHasher::class => static fn(): Describable => new WholeOutputHasher(
+                MultisetHashAlgorithm::xxh128,
+            ),
             SkipRows::class => static fn(): Describable => new SkipRows(),
             SortColumn::class => static fn(): Describable => new SortColumn('id', SortOrder::DESC, NullsOrder::FIRST),
             StreamLoader::class => static fn(): Describable => new StreamLoader(

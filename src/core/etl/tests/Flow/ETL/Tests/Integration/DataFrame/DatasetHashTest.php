@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 use DateTimeImmutable;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\ETL\Values\Column\MultisetDigest;
+use Flow\ETL\Values\Column\MultisetHashAlgorithm;
 use Flow\Filesystem\Partition;
 use PHPUnit\Framework\Attributes\TestWith;
 
@@ -72,6 +73,21 @@ final class DatasetHashTest extends FlowIntegrationTestCase
         );
     }
 
+    public function test_the_report_names_the_chosen_algorithm(): void
+    {
+        $hash = df()
+            ->read(from_array([
+                ['id' => 1, 'country' => 'PL'],
+                ['id' => 2, 'country' => 'DE'],
+                ['id' => 3, 'country' => 'PL'],
+            ]))
+            ->run(analyze: analyze()->withDatasetHash(algorithm: MultisetHashAlgorithm::sha256))
+            ->datasetHash();
+
+        static::assertSame(MultisetHashAlgorithm::sha256, $hash?->algorithm);
+        static::assertSame('cb6fbf9a3db645ba28221bc5cc601940', $hash->total->value);
+    }
+
     public function test_rows_without_columns_hash_as_empty_rows(): void
     {
         /** @var array{1: int, 2: int} $lanes */
@@ -123,7 +139,7 @@ final class DatasetHashTest extends FlowIntegrationTestCase
                     ->saveMode(overwrite())
                     ->partitionBy(partition_by('date', 'country')),
             )
-            ->run(analyze: analyze()->withDatasetHash(ref('date'), ref('country')))
+            ->run(analyze: analyze()->withDatasetHash([ref('date'), ref('country')]))
             ->datasetHash();
         $folders = [];
 

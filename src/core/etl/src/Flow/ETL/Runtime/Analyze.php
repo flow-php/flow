@@ -9,6 +9,7 @@ use Flow\ETL\Functions\Reference\References;
 use Flow\ETL\Runtime\Executor\OutputHasher;
 use Flow\ETL\Runtime\Executor\PartitionedOutputHasher;
 use Flow\ETL\Runtime\Executor\WholeOutputHasher;
+use Flow\ETL\Values\Column\MultisetHashAlgorithm;
 
 final class Analyze
 {
@@ -19,6 +20,8 @@ final class Analyze
     private bool $collectSourceStatistics = false;
 
     private ?References $datasetHashBy = null;
+
+    private MultisetHashAlgorithm $datasetHashAlgorithm;
 
     public function __construct() {}
 
@@ -48,14 +51,20 @@ final class Analyze
     {
         return match (true) {
             $this->datasetHashBy === null => null,
-            $this->datasetHashBy->count() === 0 => new WholeOutputHasher(),
-            default => new PartitionedOutputHasher($this->datasetHashBy),
+            $this->datasetHashBy->count() === 0 => new WholeOutputHasher($this->datasetHashAlgorithm),
+            default => new PartitionedOutputHasher($this->datasetHashBy, $this->datasetHashAlgorithm),
         };
     }
 
-    public function withDatasetHash(Reference ...$partitions): self
-    {
+    /**
+     * @param array<Reference> $partitions
+     */
+    public function withDatasetHash(
+        array $partitions = [],
+        MultisetHashAlgorithm $algorithm = MultisetHashAlgorithm::xxh128,
+    ): self {
         $this->datasetHashBy = new References(...$partitions);
+        $this->datasetHashAlgorithm = $algorithm;
 
         return $this;
     }

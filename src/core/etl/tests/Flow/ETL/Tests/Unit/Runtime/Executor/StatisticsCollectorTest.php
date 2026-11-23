@@ -410,7 +410,7 @@ final class StatisticsCollectorTest extends FlowTestCase
     {
         $schema = schema(str_schema('country'), int_schema('id'));
         $whole = new StatisticsCollector(analyze()->withDatasetHash(), flow_context());
-        $collector = new StatisticsCollector(analyze()->withDatasetHash(ref('country')), flow_context());
+        $collector = new StatisticsCollector(analyze()->withDatasetHash([ref('country')]), flow_context());
 
         foreach ([$whole, $collector] as $each) {
             $each->capture(array_to_rows([['country' => 'PL', 'id' => 1], ['country' => 'DE', 'id' => 2]], $schema));

@@ -71,11 +71,11 @@ Catch `Flow\ETL\Foundation\Exception\InvalidArgumentException` instead of `\Inva
 
 ### 6) `flow-php/etl` - `Backend` has two new methods, and the flow_php ABI is 4
 
-| Before           | After                                                     |
-|------------------|-----------------------------------------------------------|
-| -                | `Backend::rowHashes(array $columns, int $count): Column`  |
-| -                | `Backend::groupedMultisetHashes(): GroupedMultisetHashes` |
-| `FLOW_PHP_ABI` 3 | `FLOW_PHP_ABI` 4                                          |
+| Before           | After                                                                                     |
+|------------------|-------------------------------------------------------------------------------------------|
+| -                | `Backend::rowHashes(array $columns, int $count): Column`                                  |
+| -                | `Backend::groupedMultisetHashes(MultisetHashAlgorithm $algorithm): GroupedMultisetHashes` |
+| `FLOW_PHP_ABI` 3 | `FLOW_PHP_ABI` 4                                                                          |
 
 A custom `Backend` must implement the two methods. Update or rebuild the flow_php extension together with the library.
 

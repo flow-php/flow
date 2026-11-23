@@ -20,6 +20,7 @@ const ROWS: DataType = DataType::object("Flow\\ETL\\Values\\Rows");
 const SCHEMA: DataType = DataType::object("Flow\\ETL\\Values\\Schema");
 const SCHEMA_INFERENCE: DataType = DataType::object("Flow\\ETL\\IO\\Inference\\SchemaInference");
 const GROUPED_COUNTS: DataType = DataType::object("Flow\\ETL\\Values\\Column\\GroupedCounts");
+const MULTISET_HASH_ALGORITHM: DataType = DataType::object("Flow\\ETL\\Values\\Column\\MultisetHashAlgorithm");
 const GROUPED_MULTISET_HASHES: DataType = DataType::object("Flow\\ETL\\Values\\Column\\GroupedMultisetHashes");
 const GROUP_TABLE: DataType = DataType::object("Flow\\ETL\\Values\\Grouping\\GroupTable");
 const GROUP_IDS: DataType = DataType::object("Flow\\ETL\\Values\\Grouping\\GroupIds");
@@ -446,7 +447,11 @@ pub fn register() -> Result<()> {
                 vec![Arg::new("columns", DataType::Array), Arg::new("count", DataType::Long)],
                 COLUMN,
             ),
-            method("groupedMultisetHashes", vec![], GROUPED_MULTISET_HASHES),
+            method(
+                "groupedMultisetHashes",
+                vec![Arg::new("algorithm", MULTISET_HASH_ALGORITHM)],
+                GROUPED_MULTISET_HASHES,
+            ),
             method(
                 "groupTable",
                 vec![Arg::new("columns", DataType::Array), Arg::new("declared", SCHEMA)],

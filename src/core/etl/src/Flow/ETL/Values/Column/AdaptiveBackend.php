@@ -144,9 +144,9 @@ final readonly class AdaptiveBackend implements Backend, Describable
         return $this->backend->rowHashes($columns, $count);
     }
 
-    public function groupedMultisetHashes(): GroupedMultisetHashes
+    public function groupedMultisetHashes(MultisetHashAlgorithm $algorithm): GroupedMultisetHashes
     {
-        return $this->backend->groupedMultisetHashes();
+        return $this->backend->groupedMultisetHashes($algorithm);
     }
 
     /**

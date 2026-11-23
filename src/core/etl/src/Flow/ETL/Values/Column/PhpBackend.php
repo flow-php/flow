@@ -683,9 +683,9 @@ final readonly class PhpBackend implements Backend, Describable
         );
     }
 
-    public function groupedMultisetHashes(): GroupedMultisetHashes
+    public function groupedMultisetHashes(MultisetHashAlgorithm $algorithm): GroupedMultisetHashes
     {
-        return new PhpGroupedMultisetHashes();
+        return new PhpGroupedMultisetHashes($algorithm);
     }
 
     public function groupTable(array $columns, Schema $declared): GroupTable

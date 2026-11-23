@@ -15,6 +15,7 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\ColumnMother;
 use Flow\ETL\Tests\Mother\ReportMother;
 use Flow\ETL\Values\Cardinality;
+use Flow\ETL\Values\Column\MultisetHashAlgorithm;
 use Flow\ETL\Values\Memory\Unit;
 use Flow\Filesystem\Partition;
 use Flow\Filesystem\Partitions;
@@ -34,18 +35,14 @@ final class ReportTest extends FlowTestCase
     public function test_normalize_holds_what_the_typed_getters_hold_and_survives_json(): void
     {
         $source = new SourceStatistics('ArrayExtractor', new Statistics(Cardinality::exact(2)), 2, true);
-        $report = ReportMother::of(
-            new Processes(Unit::fromBytes(25), [Unit::fromBytes(40)]),
-            2,
-            schema(int_schema('id')),
-            [$source],
-            datasetHash: new DatasetHash(new Hash(2, '721f4650154ebb88ac4ec50a605901df'), [
-                new PartitionHash(
-                    new Partitions(new Partition('country', null)),
-                    new Hash(2, '721f4650154ebb88ac4ec50a605901df'),
-                ),
-            ]),
-        );
+        $report = ReportMother::of(new Processes(Unit::fromBytes(25), [Unit::fromBytes(
+            40,
+        )]), 2, schema(int_schema('id')), [$source], datasetHash: new DatasetHash(new Hash(2, '721f4650154ebb88ac4ec50a605901df'), [
+            new PartitionHash(
+                new Partitions(new Partition('country', null)),
+                new Hash(2, '721f4650154ebb88ac4ec50a605901df'),
+            ),
+        ], MultisetHashAlgorithm::xxh128));
 
         $normalized = $report->normalize();
 
@@ -61,6 +58,7 @@ final class ReportTest extends FlowTestCase
                 ],
                 'sources' => [$source->normalize()],
                 'dataset_hash' => [
+                    'algorithm' => 'xxh128',
                     'total' => ['rows' => 2, 'value' => '721f4650154ebb88ac4ec50a605901df'],
                     'partitions' => [
                         [

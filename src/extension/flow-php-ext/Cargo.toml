@@ -44,7 +44,9 @@ arrow-array = { version = "60", features = ["ffi"] }
 arrow-buffer = "60"
 arrow-data = "60"
 arrow-schema = { version = "60", features = ["canonical_extension_types"] }
+md-5 = "0.10"
 memchr = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["raw_value", "unbounded_depth"] }
+sha2 = "0.10"
 xxhash-rust = { version = "0.8", features = ["xxh3"] }
