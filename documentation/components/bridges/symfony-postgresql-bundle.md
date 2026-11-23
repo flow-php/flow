@@ -231,7 +231,17 @@ flow_postgresql:
     all_or_nothing: false                          # Wrap all migrations in a single transaction
     generate_rollback: true                        # Generate rollback files automatically
     drop_if_exists: false                          # Emit IF EXISTS on diff-generated DROP statements
+    mode: all_pending                              # Which pending migrations migrate runs: all_pending or strict_order
 ```
+
+#### `mode`
+
+When two branches each add a migration and the older version deploys second, that pending migration is older than
+the latest executed migration.
+
+- `all_pending` (default): `flow:migrations:migrate` runs every pending migration up to the target, in version order.
+- `strict_order`: `flow:migrations:migrate` stops with an error and exit code 1. It runs no migration. Run the older
+  version with `flow:migrations:execute`, or set the mode to `all_pending`.
 
 #### `drop_if_exists`
 

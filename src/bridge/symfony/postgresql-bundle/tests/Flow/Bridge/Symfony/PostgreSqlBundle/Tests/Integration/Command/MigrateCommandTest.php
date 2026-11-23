@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Integration\Command;
 
+use Flow\PostgreSql\Migrations\MigrationMode;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -37,6 +38,37 @@ final class MigrateCommandTest extends CommandTestCase
         static::assertSame(Command::SUCCESS, $tester->getStatusCode());
         static::assertStringContainsString('Dry run completed', $tester->getDisplay());
         static::assertFalse($this->context->tableExists('test_users'));
+    }
+
+    public function test_migrate_executes_pending_migration_older_than_latest_executed(): void
+    {
+        $this->context->generateDiffMigration();
+        $this->context->runMigrate();
+        $this->context->generateMigrationOlderThanAnyExecuted();
+
+        $tester = new CommandTester($this->context->command('flow.postgresql.command.migrate'));
+        $tester->execute([], ['interactive' => false]);
+
+        static::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        static::assertStringNotContainsString('Already up to date', $tester->getDisplay());
+        static::assertStringContainsString('1 migration(s) executed', $tester->getDisplay());
+        static::assertTrue($this->context->isUpToDate());
+    }
+
+    public function test_migrate_in_strict_order_fails_on_pending_migration_older_than_latest_executed(): void
+    {
+        $this->context->bootWithMigrations(MigrationMode::STRICT_ORDER);
+        $this->context->generateDiffMigration();
+        $this->context->runMigrate();
+        $this->context->generateMigrationOlderThanAnyExecuted();
+
+        $tester = new CommandTester($this->context->command('flow.postgresql.command.migrate'));
+        $tester->execute([], ['interactive' => false]);
+
+        static::assertSame(Command::FAILURE, $tester->getStatusCode());
+        static::assertStringNotContainsString('Already up to date', $tester->getDisplay());
+        static::assertStringContainsString('Pending migrations "20000101000000" are older', $tester->getDisplay());
+        static::assertFalse($this->context->isUpToDate());
     }
 
     public function test_migrate_first_rolls_back_to_first_version(): void

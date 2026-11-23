@@ -482,6 +482,22 @@ final class ConfigurationTest extends TestCase
         static::assertFalse($config['migrations']['all_or_nothing']);
         static::assertTrue($config['migrations']['generate_rollback']);
         static::assertFalse($config['migrations']['drop_if_exists']);
+        static::assertSame('all_pending', $config['migrations']['mode']);
+    }
+
+    public function test_migrations_mode_can_be_strict_order(): void
+    {
+        $config = $this->context->processConfig([
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'migrations' => [
+                'enabled' => true,
+                'mode' => 'strict_order',
+            ],
+        ]);
+
+        static::assertSame('strict_order', $config['migrations']['mode']);
     }
 
     public function test_migrations_drop_if_exists_can_be_enabled(): void

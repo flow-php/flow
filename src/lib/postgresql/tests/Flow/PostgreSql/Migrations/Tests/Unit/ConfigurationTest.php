@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Migrations\Tests\Unit;
 
 use Flow\PostgreSql\Migrations\Configuration;
+use Flow\PostgreSql\Migrations\MigrationMode;
 use Flow\PostgreSql\Migrations\Tests\Double\FakeCatalogProvider;
 use Flow\PostgreSql\Migrations\Tests\Double\SpyClient;
 use Flow\PostgreSql\Schema\Catalog;
@@ -68,5 +69,6 @@ final class ConfigurationTest extends TestCase
         static::assertFalse($config->allOrNothing);
         static::assertTrue($config->generateRollback);
         static::assertSame([], $config->attributes);
+        static::assertSame(MigrationMode::ALL_PENDING, $config->mode);
     }
 }

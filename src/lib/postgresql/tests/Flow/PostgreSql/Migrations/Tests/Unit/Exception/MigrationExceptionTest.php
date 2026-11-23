@@ -97,6 +97,18 @@ final class MigrationExceptionTest extends TestCase
         static::assertSame('No changes detected between source and target catalog.', $exception->getMessage());
     }
 
+    public function test_out_of_order(): void
+    {
+        static::assertSame(
+            'Pending migrations "20260101000000", "20260102000000" are older than the latest executed migration "20260103000000". Switch the migration mode to "all_pending" (MigrationMode::ALL_PENDING) to run them, or execute each version explicitly.',
+            MigrationException::outOfOrder(
+                Version::fromString('20260103000000'),
+                Version::fromString('20260101000000'),
+                Version::fromString('20260102000000'),
+            )->getMessage(),
+        );
+    }
+
     public function test_version_not_found(): void
     {
         $exception = MigrationException::versionNotFound(Version::fromString('20260403120000'));

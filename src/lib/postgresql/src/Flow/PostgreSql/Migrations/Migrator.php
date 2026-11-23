@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Migrations;
 
 use Flow\PostgreSql\Client\Client;
+use Flow\PostgreSql\Migrations\Exception\MigrationException;
 use Flow\PostgreSql\Migrations\Executor\ExecutionResult;
 use Flow\PostgreSql\Migrations\Executor\MigrationExecutor;
 use Flow\PostgreSql\Migrations\Repository\MigrationRepository;
 use Flow\PostgreSql\Migrations\Store\MigrationStore;
 use RuntimeException;
 
+use function array_filter;
+use function array_map;
 use function array_reverse;
 
 final readonly class Migrator
@@ -74,26 +77,33 @@ final readonly class Migrator
             return [];
         }
 
-        if ($latestExecuted !== null && $latestExecuted->version->equals($target)) {
-            return [];
-        }
-
         $plans = [];
 
-        if ($latestExecuted === null || $target->isAfter($latestExecuted->version)) {
-            $pending = $latestExecuted === null
-                ? $available->upTo($target)
-                : $available->after($latestExecuted->version)->upTo($target);
-
-            foreach ($pending as $migration) {
-                $plans[] = new MigrationPlan(
-                    $migration->version,
-                    $migration->migration,
-                    $migration->rollback,
-                    Direction::UP,
-                );
+        if ($latestExecuted === null || !$latestExecuted->version->isAfter($target)) {
+            foreach ($available->upTo($target) as $migration) {
+                if (!$executed->has($migration->version)) {
+                    $plans[] = new MigrationPlan(
+                        $migration->version,
+                        $migration->migration,
+                        $migration->rollback,
+                        Direction::UP,
+                    );
+                }
             }
-        } elseif ($latestExecuted->version->isAfter($target)) {
+
+            if ($latestExecuted !== null && $this->configuration->mode === MigrationMode::STRICT_ORDER) {
+                $outOfOrder = array_filter($plans, static fn(
+                    MigrationPlan $plan,
+                ): bool => $latestExecuted->version->isAfter($plan->version));
+
+                if ($outOfOrder !== []) {
+                    throw MigrationException::outOfOrder(
+                        $latestExecuted->version,
+                        ...array_map(static fn(MigrationPlan $plan): Version => $plan->version, $outOfOrder),
+                    );
+                }
+            }
+        } else {
             $toRollback = [];
 
             foreach ($executed as $em) {
