@@ -39,10 +39,12 @@ foreach ($cases as $label => [$definition, $known, $probed]) {
         ', ', json_encode($expected), "\n";
 }
 
+$html = static fn (string $text): string => "<!DOCTYPE html><html><head></head><body><p>{$text}</p></body></html>";
+
 $nested = [
     'maps' => [map_schema('v', type_map(type_string(), type_integer()), nullable: true), [['a' => 1], ['b' => 2, 'a' => 1], null], [['a' => 1, 'b' => 2], ['a' => 1], ['c' => 3], null]],
     'xml' => [xml_schema('v'), ['<a/>', '<b>1</b>'], ['<b>1</b>', '<c/>', '<a/>']],
-    'html' => [html_schema('v'), ['<p>a</p>'], ['<p>b</p>', '<p>a</p>']],
+    'html' => [html_schema('v'), [$html('a')], [$html('b'), $html('a')]],
 ];
 
 foreach ($nested as $label => [$definition, $known, $probed]) {

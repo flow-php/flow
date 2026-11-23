@@ -11,6 +11,8 @@ use Flow\ETL\Values\Column\{Backend, PhpBackend, RustBackend};
 use function Flow\ETL\DSL\{array_to_rows, bool_schema, float_schema, html_schema, int_schema, list_schema, map_schema, schema, str_schema, structure_schema, xml_schema};
 use function Flow\Types\DSL\{type_integer, type_list, type_map, type_string, type_structure};
 
+$html = static fn (string $text): string => "<!DOCTYPE html><html><head></head><body><p>{$text}</p></body></html>";
+
 $cases = [
     'nullable strings' => [[str_schema('k', nullable: true)], [['a'], [null], ['b'], [''], [null], ['a'], ['0']]],
     'ints' => [[int_schema('k')], array_map(static fn(int $i): array => [$i % 11 - 5], range(0, 40))],
@@ -22,7 +24,7 @@ $cases = [
     'a composite key' => [[int_schema('k'), str_schema('s')], [[1, 'a'], [1, 'b'], [2, 'a'], [1, 'a']]],
     'maps with nulls' => [[map_schema('k', type_map(type_string(), type_integer()), nullable: true)], [[['a' => 1]], [['b' => 2, 'a' => 1]], [null], [['a' => 1, 'b' => 2]]]],
     'xml' => [[xml_schema('k')], [['<a/>'], ['<b>1</b>'], ['<a/>']]],
-    ...(class_exists('\Dom\HTMLDocument') ? ['html' => [[html_schema('k')], [['<p>a</p>'], ['<p>b</p>'], ['<p>a</p>']]]] : []),
+    ...(class_exists('\Dom\HTMLDocument') ? ['html' => [[html_schema('k')], [[$html('a')], [$html('b')], [$html('a')]]]] : []),
 ];
 
 $partitioned = static function (Backend $partitioner, Backend $columns, array $definitions, array $values, int $buckets, int $offset): array {
