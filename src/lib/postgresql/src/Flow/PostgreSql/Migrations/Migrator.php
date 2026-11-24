@@ -6,11 +6,13 @@ namespace Flow\PostgreSql\Migrations;
 
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Migrations\Exception\MigrationException;
+use Flow\PostgreSql\Migrations\Exception\MigrationLockedException;
 use Flow\PostgreSql\Migrations\Executor\ExecutionResult;
 use Flow\PostgreSql\Migrations\Executor\MigrationExecutor;
 use Flow\PostgreSql\Migrations\Repository\MigrationRepository;
 use Flow\PostgreSql\Migrations\Store\MigrationStore;
 use RuntimeException;
+use Throwable;
 
 use function array_filter;
 use function array_map;
@@ -28,9 +30,76 @@ final readonly class Migrator
 
     public function executeVersion(Version $version, Direction $direction, bool $dryRun = false): ExecutionResult
     {
+        if ($dryRun) {
+            return $this->runExecuteVersion($version, $direction, true);
+        }
+
+        return $this->locked(fn(): ExecutionResult => $this->runExecuteVersion($version, $direction, false));
+    }
+
+    /**
+     * @return list<ExecutionResult>
+     */
+    public function migrate(?Version $to = null, bool $dryRun = false, ?bool $allOrNothing = null): array
+    {
+        if ($dryRun) {
+            return $this->runMigrate($to, true, $allOrNothing);
+        }
+
+        return $this->locked(fn(): array => $this->runMigrate($to, false, $allOrNothing));
+    }
+
+    public function status(): MigrationStatusList
+    {
+        $available = $this->repository->all();
+        $executed = $this->store->executedMigrations();
+        $statuses = [];
+
+        foreach ($available as $migration) {
+            if ($executed->has($migration->version)) {
+                $em = $executed->get($migration->version);
+                $statuses[] = new MigrationStatus(
+                    $migration->version,
+                    $migration->name,
+                    MigrationState::EXECUTED,
+                    $em->executedAt,
+                    $em->executionTimeMs,
+                );
+            } else {
+                $statuses[] = new MigrationStatus($migration->version, $migration->name, MigrationState::PENDING, null);
+            }
+        }
+
+        foreach ($executed as $em) {
+            if (!$available->has($em->version)) {
+                $statuses[] = new MigrationStatus(
+                    $em->version,
+                    (string) $em->version,
+                    MigrationState::UNAVAILABLE,
+                    $em->executedAt,
+                    $em->executionTimeMs,
+                );
+            }
+        }
+
+        return new MigrationStatusList(...$statuses);
+    }
+
+    private function runExecuteVersion(Version $version, Direction $direction, bool $dryRun): ExecutionResult
+    {
         $this->store->initialize();
 
         $available = $this->repository->get($version);
+        $executed = $this->store->executedMigrations()->has($version);
+
+        if ($direction === Direction::UP && $executed) {
+            throw MigrationException::alreadyExecuted($version);
+        }
+
+        if ($direction === Direction::DOWN && !$executed) {
+            throw MigrationException::notExecuted($version);
+        }
+
         $plan = new MigrationPlan($available->version, $available->migration, $available->rollback, $direction);
         $context = new MigrationContext($this->client, $this->configuration->attributes);
 
@@ -57,9 +126,45 @@ final readonly class Migrator
     }
 
     /**
+     * @template T
+     *
+     * @param callable(): T $run
+     *
+     * @return T
+     */
+    private function locked(callable $run): mixed
+    {
+        $name =
+            $this->client->parameters()->database()
+            . '.'
+            . $this->configuration->tableSchema
+            . '.'
+            . $this->configuration->tableName;
+
+        if (!$this->configuration->lock->acquire($name)) {
+            throw new MigrationLockedException($name);
+        }
+
+        try {
+            $result = $run();
+        } catch (Throwable $e) {
+            try {
+                $this->configuration->lock->release($name);
+            } catch (Throwable) {
+            }
+
+            throw $e;
+        }
+
+        $this->configuration->lock->release($name);
+
+        return $result;
+    }
+
+    /**
      * @return list<ExecutionResult>
      */
-    public function migrate(?Version $to = null, bool $dryRun = false, ?bool $allOrNothing = null): array
+    private function runMigrate(?Version $to, bool $dryRun, ?bool $allOrNothing): array
     {
         $this->store->initialize();
 
@@ -138,42 +243,6 @@ final readonly class Migrator
         }
 
         return $this->executePlans($plans);
-    }
-
-    public function status(): MigrationStatusList
-    {
-        $available = $this->repository->all();
-        $executed = $this->store->executedMigrations();
-        $statuses = [];
-
-        foreach ($available as $migration) {
-            if ($executed->has($migration->version)) {
-                $em = $executed->get($migration->version);
-                $statuses[] = new MigrationStatus(
-                    $migration->version,
-                    $migration->name,
-                    MigrationState::EXECUTED,
-                    $em->executedAt,
-                    $em->executionTimeMs,
-                );
-            } else {
-                $statuses[] = new MigrationStatus($migration->version, $migration->name, MigrationState::PENDING, null);
-            }
-        }
-
-        foreach ($executed as $em) {
-            if (!$available->has($em->version)) {
-                $statuses[] = new MigrationStatus(
-                    $em->version,
-                    (string) $em->version,
-                    MigrationState::UNAVAILABLE,
-                    $em->executedAt,
-                    $em->executionTimeMs,
-                );
-            }
-        }
-
-        return new MigrationStatusList(...$statuses);
     }
 
     /**

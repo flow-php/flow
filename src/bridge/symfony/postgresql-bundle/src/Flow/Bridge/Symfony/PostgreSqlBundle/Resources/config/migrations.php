@@ -13,6 +13,7 @@ use Flow\Bridge\Symfony\PostgreSqlBundle\Command\StatusCommand;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Command\UpToDateCommand;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
+use function Symfony\Component\DependencyInjection\Loader\Configurator\param;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 
 return static function (ContainerConfigurator $container): void {
@@ -44,6 +45,7 @@ return static function (ContainerConfigurator $container): void {
             service('flow.postgresql.migrations.migrator'),
             service('flow.postgresql.migrations.version_resolver'),
             service('flow.postgresql.migrations.configuration'),
+            param('flow.postgresql.migrations.lock_timeout'),
         ])
         ->tag('console.command');
 

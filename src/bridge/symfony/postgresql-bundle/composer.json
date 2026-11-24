@@ -29,6 +29,7 @@
         "flow-php/symfony-postgresql-session-bridge": "self.version",
         "symfony/cache": "^6.4 || ^7.4 || ^8.0",
         "symfony/framework-bundle": "^6.4 || ^7.4 || ^8.0",
+        "symfony/lock": "^6.4 || ^7.4 || ^8.0",
         "symfony/messenger": "^6.4 || ^7.4 || ^8.0",
         "symfony/var-dumper": "^6.4 || ^7.4 || ^8.0",
         "symfony/web-profiler-bundle": "^6.4 || ^7.4 || ^8.0"
@@ -38,6 +39,7 @@
         "flow-php/symfony-postgresql-cache-bridge": "For Symfony Cache PostgreSQL adapter support",
         "flow-php/symfony-postgresql-messenger-bridge": "For Symfony Messenger PostgreSQL transport support",
         "flow-php/symfony-postgresql-session-bridge": "For Symfony Session PostgreSQL handler support",
+        "symfony/lock": "For a migrations lock outside the database (flow_postgresql.migrations.lock.type: symfony)",
         "symfony/web-profiler-bundle": "For the dev-only Flow PostgreSQL Web Profiler queries panel"
     },
     "config": {

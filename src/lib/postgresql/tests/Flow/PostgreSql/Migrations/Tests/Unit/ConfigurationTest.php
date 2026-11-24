@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Migrations\Tests\Unit;
 
 use Flow\PostgreSql\Migrations\Configuration;
+use Flow\PostgreSql\Migrations\Lock\AdvisoryMigrationLock;
+use Flow\PostgreSql\Migrations\Lock\NoMigrationLock;
 use Flow\PostgreSql\Migrations\MigrationMode;
 use Flow\PostgreSql\Migrations\Tests\Double\FakeCatalogProvider;
 use Flow\PostgreSql\Migrations\Tests\Double\SpyClient;
@@ -27,6 +29,21 @@ final class ConfigurationTest extends TestCase
         );
 
         static::assertSame(['container' => $attribute], $config->attributes);
+    }
+
+    public function test_custom_lock_is_kept(): void
+    {
+        $lock = new NoMigrationLock();
+
+        $config = new Configuration(
+            client: new SpyClient(),
+            targetCatalogProvider: new FakeCatalogProvider(new Catalog([])),
+            migrationsDirectory: '/app/migrations',
+            migrationsNamespace: 'App\\Migrations',
+            lock: $lock,
+        );
+
+        static::assertSame($lock, $config->lock);
     }
 
     public function test_custom_values(): void
@@ -70,5 +87,6 @@ final class ConfigurationTest extends TestCase
         static::assertTrue($config->generateRollback);
         static::assertSame([], $config->attributes);
         static::assertSame(MigrationMode::ALL_PENDING, $config->mode);
+        static::assertInstanceOf(AdvisoryMigrationLock::class, $config->lock);
     }
 }

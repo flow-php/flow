@@ -12,6 +12,7 @@ use Flow\Bridge\Symfony\PostgreSqlBundle\Connection\ConnectionParametersFactory;
 use Flow\Bridge\Symfony\PostgreSqlBundle\DependencyInjection\Compiler\CatalogProviderPass;
 use Flow\Bridge\Symfony\PostgreSqlBundle\DependencyInjection\Compiler\CommandLocatorPass;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Generator\TwigMigrationGenerator;
+use Flow\Bridge\Symfony\PostgreSqlBundle\Lock\SymfonyMigrationLock;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Messenger\FlowPostgreSqlTransportFactory;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Profiler\ProfilerClient;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Profiler\ExplainQueryController;
@@ -36,6 +37,8 @@ use Flow\PostgreSql\Migrations\Configuration as MigrationsConfiguration;
 use Flow\PostgreSql\Migrations\Executor\MigrationExecutor;
 use Flow\PostgreSql\Migrations\Generator\DiffMigrationGenerator;
 use Flow\PostgreSql\Migrations\Generator\MigrationGenerator;
+use Flow\PostgreSql\Migrations\Lock\AdvisoryMigrationLock;
+use Flow\PostgreSql\Migrations\Lock\NoMigrationLock;
 use Flow\PostgreSql\Migrations\MigrationMode;
 use Flow\PostgreSql\Migrations\MigrationsFactory;
 use Flow\PostgreSql\Migrations\Migrator;
@@ -56,6 +59,7 @@ use LogicException;
 use Override;
 use Reflector;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
 use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -64,6 +68,7 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\DependencyInjection\ServiceLocator;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
+use Symfony\Component\Lock\LockFactory;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 
@@ -74,6 +79,7 @@ use function class_exists;
 use function Flow\Types\DSL\type_string;
 use function implode;
 use function in_array;
+use function is_array;
 use function is_bool;
 use function is_string;
 use function sprintf;
@@ -83,6 +89,13 @@ use function substr;
 final class FlowPostgreSqlBundle extends AbstractBundle
 {
     public const string SERVICE_CONTAINER = 'service_container';
+
+    private const array MIGRATIONS_LOCK_KEYS = [
+        'advisory' => ['timeout'],
+        'symfony' => ['timeout', 'ttl', 'factory_service_id'],
+        'service' => ['timeout', 'service_id'],
+        'none' => [],
+    ];
 
     private const string WEB_PROFILER_BUNDLE = 'Symfony\\Bundle\\WebProfilerBundle\\WebProfilerBundle';
 
@@ -421,6 +434,66 @@ final class FlowPostgreSqlBundle extends AbstractBundle
             ->values(['all_pending', 'strict_order'])
             ->defaultValue('all_pending')
             ->end()
+            ->arrayNode('lock')
+            ->info('Lock that stops two processes from running migrations at the same time.')
+            ->addDefaultsIfNotSet()
+            ->beforeNormalization()
+            ->always(static function (mixed $v): mixed {
+                if (!is_array($v)) {
+                    return $v;
+                }
+
+                $type = $v['type'] ?? 'advisory';
+                $allowed = self::MIGRATIONS_LOCK_KEYS[$type] ?? null;
+
+                if ($allowed === null) {
+                    return $v;
+                }
+
+                foreach (array_keys($v) as $key) {
+                    if ($key !== 'type' && !in_array($key, $allowed, true)) {
+                        throw new InvalidConfigurationException(sprintf(
+                            'The "%s" parameter is not supported when flow_postgresql.migrations.lock.type is "%s".',
+                            $key,
+                            type_string()->assert($type),
+                        ));
+                    }
+                }
+
+                return $v;
+            })
+            ->end()
+            ->children()
+            ->enumNode('type')
+            ->info('"advisory" (PostgreSQL session advisory lock), "symfony" (symfony/lock LockFactory), "service" (your own MigrationLock service) or "none"')
+            ->values(['advisory', 'symfony', 'service', 'none'])
+            ->defaultValue('advisory')
+            ->end()
+            ->integerNode('timeout')
+            ->info('Seconds flow:migrations:migrate waits for a busy lock')
+            ->defaultValue(300)
+            ->min(0)
+            ->end()
+            ->integerNode('ttl')
+            ->info('Seconds a "symfony" lock lives; must outlive the longest migration run')
+            ->defaultValue(3600)
+            ->min(1)
+            ->end()
+            ->scalarNode('factory_service_id')
+            ->info('LockFactory service used by the "symfony" type')
+            ->defaultValue('lock.factory')
+            ->cannotBeEmpty()
+            ->end()
+            ->scalarNode('service_id')
+            ->info('MigrationLock service used by the "service" type')
+            ->defaultNull()
+            ->end()
+            ->end()
+            ->validate()
+            ->ifTrue(static fn(array $v): bool => $v['type'] === 'service' && ($v['service_id'] ?? '') === '')
+            ->thenInvalid('flow_postgresql.migrations.lock.type "service" requires a non-empty "service_id".')
+            ->end()
+            ->end()
             ->arrayNode('context')
             ->info(
                 'Extra attributes merged into the migration context alongside the service container (available under FlowPostgreSqlBundle::SERVICE_CONTAINER). Read them in a migration via MigrationContext::attribute(). Values can be literals, @service_id references (@@ escapes a literal @), %parameter% placeholders, or %env(VAR)% expressions. Useful for handing private services or resolved config to a migration without making them public.',
@@ -534,7 +607,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
     }
 
     /**
-     * @param array{connections: array<string, array{dsn: string, dbname: ?string, host: ?string, port: ?int, user: ?string, password: ?string, dbname_suffix: string, options: array<string, bool|float|int|string|null>, session_settings: array<string, bool|float|int|string|null>, test_transaction_rollback: bool, lazy: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, transaction_spans: 'grouped'|'per_operation'|'off', collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}, profiler?: bool}>, messenger: array{enabled: bool, table_name: string, schema: string}, cache: array{pools?: array<string, array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string, share_connection: bool}>}, session: array{enabled: bool, connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, lock_mode: string, ttl: ?int, share_connection: bool}, migrations: array{enabled: bool, connection: ?string, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool, drop_if_exists: bool, mode: 'all_pending'|'strict_order', context?: array<string, mixed>, exclude?: list<array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string}>}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>, profiler?: array{enabled?: bool|null, include_parameters?: bool, max_queries?: int, max_retained_parameters?: int, max_query_length?: int, migrations?: bool}} $config
+     * @param array{connections: array<string, array{dsn: string, dbname: ?string, host: ?string, port: ?int, user: ?string, password: ?string, dbname_suffix: string, options: array<string, bool|float|int|string|null>, session_settings: array<string, bool|float|int|string|null>, test_transaction_rollback: bool, lazy: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, transaction_spans: 'grouped'|'per_operation'|'off', collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}, profiler?: bool}>, messenger: array{enabled: bool, table_name: string, schema: string}, cache: array{pools?: array<string, array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string, share_connection: bool}>}, session: array{enabled: bool, connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, lock_mode: string, ttl: ?int, share_connection: bool}, migrations: array{enabled: bool, connection: ?string, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool, drop_if_exists: bool, mode: 'all_pending'|'strict_order', lock: array{type: 'advisory'|'symfony'|'service'|'none', timeout: int, ttl: int, factory_service_id: string, service_id: ?string}, context?: array<string, mixed>, exclude?: list<array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string}>}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>, profiler?: array{enabled?: bool|null, include_parameters?: bool, max_queries?: int, max_retained_parameters?: int, max_query_length?: int, migrations?: bool}} $config
      */
     #[Override]
     public function loadExtension(array $config, ContainerConfigurator $configurator, ContainerBuilder $container): void
@@ -928,7 +1001,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
     }
 
     /**
-     * @param array{enabled: bool, connection: ?string, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool, drop_if_exists: bool, mode: 'all_pending'|'strict_order', context?: array<string, mixed>, exclude?: list<array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string}>} $mc
+     * @param array{enabled: bool, connection: ?string, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool, drop_if_exists: bool, mode: 'all_pending'|'strict_order', lock: array{type: 'advisory'|'symfony'|'service'|'none', timeout: int, ttl: int, factory_service_id: string, service_id: ?string}, context?: array<string, mixed>, exclude?: list<array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string}>} $mc
      */
     private function registerMigrations(string $connection, array $mc, ContainerBuilder $container): void
     {
@@ -949,8 +1022,10 @@ final class FlowPostgreSqlBundle extends AbstractBundle
             $mc['drop_if_exists'],
             $this->buildMigrationContextAttributes($mc['context'] ?? []),
             MigrationMode::from($mc['mode']),
+            $this->registerMigrationsLock($connection, $mc['lock'], $container),
         ]);
         $configDef->setPublic(true);
+        $container->setParameter('flow.postgresql.migrations.lock_timeout', $mc['lock']['timeout']);
         $container->setDefinition("flow.postgresql.migrations.configuration", $configDef);
 
         $fsDef = new Definition(NativeLocalFilesystem::class);
@@ -1034,6 +1109,37 @@ final class FlowPostgreSqlBundle extends AbstractBundle
         $container->setAlias(VersionResolver::class, "flow.postgresql.migrations.version_resolver");
         $container->setAlias(MigrationGenerator::class, "flow.postgresql.migrations.generator");
         $container->setAlias(DiffMigrationGenerator::class, "flow.postgresql.migrations.diff_generator");
+    }
+
+    /**
+     * @param array{type: 'advisory'|'symfony'|'service'|'none', timeout: int, ttl: int, factory_service_id: string, service_id: ?string} $lock
+     */
+    private function registerMigrationsLock(string $connection, array $lock, ContainerBuilder $container): Reference
+    {
+        if ($lock['type'] === 'service') {
+            $container->setAlias('flow.postgresql.migrations.lock', type_string()->assert($lock['service_id']));
+
+            return new Reference('flow.postgresql.migrations.lock');
+        }
+
+        if ($lock['type'] === 'symfony' && !class_exists(LockFactory::class)) {
+            throw new LogicException(
+                'flow_postgresql.migrations.lock.type "symfony" requires the symfony/lock package. Run "composer require symfony/lock".',
+            );
+        }
+
+        $container->setDefinition('flow.postgresql.migrations.lock', match ($lock['type']) {
+            'advisory' => new Definition(AdvisoryMigrationLock::class, [
+                new Reference("flow.postgresql.{$connection}.client"),
+            ]),
+            'symfony' => new Definition(SymfonyMigrationLock::class, [
+                new Reference($lock['factory_service_id']),
+                (float) $lock['ttl'],
+            ]),
+            'none' => new Definition(NoMigrationLock::class),
+        });
+
+        return new Reference('flow.postgresql.migrations.lock');
     }
 
     /**

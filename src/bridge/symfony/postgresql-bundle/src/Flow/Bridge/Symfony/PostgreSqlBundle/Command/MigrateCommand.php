@@ -7,6 +7,7 @@ namespace Flow\Bridge\Symfony\PostgreSqlBundle\Command;
 use Flow\PostgreSql\Migrations\Configuration as MigrationsConfiguration;
 use Flow\PostgreSql\Migrations\Direction;
 use Flow\PostgreSql\Migrations\Exception\MigrationException;
+use Flow\PostgreSql\Migrations\Exception\MigrationLockedException;
 use Flow\PostgreSql\Migrations\MigrationState;
 use Flow\PostgreSql\Migrations\Migrator;
 use Flow\PostgreSql\Migrations\VersionResolver;
@@ -20,15 +21,23 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 use function count;
 use function Flow\Types\DSL\type_string;
+use function hrtime;
 use function sprintf;
+use function usleep;
 
 #[AsCommand(name: 'flow:migrations:migrate', description: 'Execute migrations')]
 final class MigrateCommand extends Command
 {
+    /**
+     * @param non-negative-int $lockTimeoutSeconds
+     * @param non-negative-int $lockPollIntervalMilliseconds
+     */
     public function __construct(
         private readonly Migrator $migrator,
         private readonly VersionResolver $resolver,
         private readonly MigrationsConfiguration $configuration,
+        private readonly int $lockTimeoutSeconds = 300,
+        private readonly int $lockPollIntervalMilliseconds = 1000,
     ) {
         parent::__construct();
     }
@@ -95,12 +104,38 @@ final class MigrateCommand extends Command
             return Command::SUCCESS;
         }
 
-        try {
-            $results = $this->migrator->migrate($version, $dryRun, $allOrNothing);
-        } catch (MigrationException $exception) {
-            $io->error($exception->getMessage());
+        $deadline = hrtime(true) + ($this->lockTimeoutSeconds * 1_000_000_000);
+        $waiting = false;
 
-            return Command::FAILURE;
+        while (true) {
+            try {
+                $results = $this->migrator->migrate($version, $dryRun, $allOrNothing);
+
+                break;
+            } catch (MigrationLockedException) {
+                if (hrtime(true) >= $deadline) {
+                    $io->error(sprintf(
+                        'Another process is still running migrations after %d seconds. Run the command again when it finishes, or raise flow_postgresql.migrations.lock.timeout.',
+                        $this->lockTimeoutSeconds,
+                    ));
+
+                    return Command::FAILURE;
+                }
+
+                if (!$waiting) {
+                    $io->note(sprintf(
+                        'Another process is running migrations. Waiting up to %d seconds for it to finish...',
+                        $this->lockTimeoutSeconds,
+                    ));
+                    $waiting = true;
+                }
+
+                usleep($this->lockPollIntervalMilliseconds * 1000);
+            } catch (MigrationException $exception) {
+                $io->error($exception->getMessage());
+
+                return Command::FAILURE;
+            }
         }
 
         if (count($results) === 0) {

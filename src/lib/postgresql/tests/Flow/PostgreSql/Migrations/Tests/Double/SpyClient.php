@@ -18,12 +18,25 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 use RuntimeException;
 use Throwable;
 
+use function array_shift;
+use function Flow\PostgreSql\DSL\pgsql_connection_params;
+
 final class SpyClient implements Client
 {
     /**
      * @var list<array{sql: string, parameters: array<int, mixed>}>
      */
     public array $executedQueries = [];
+
+    /**
+     * @var list<bool>
+     */
+    public array $scalarBoolResults = [];
+
+    /**
+     * @var list<array{sql: string, parameters: array<int, mixed>}>
+     */
+    public array $scalarQueries = [];
 
     public int $transactionCallCount = 0;
 
@@ -114,7 +127,12 @@ final class SpyClient implements Client
 
     public function fetchScalarBool(Sql|string $sql, array $parameters = []): bool
     {
-        throw new RuntimeException('Not implemented');
+        $this->scalarQueries[] = [
+            'sql' => $sql instanceof Sql ? $sql->toSql() : $sql,
+            'parameters' => $parameters,
+        ];
+
+        return array_shift($this->scalarBoolResults) ?? true;
     }
 
     public function fetchScalarFloat(Sql|string $sql, array $parameters = []): float
@@ -169,7 +187,7 @@ final class SpyClient implements Client
 
     public function parameters(): ConnectionParameters
     {
-        throw new RuntimeException('Not implemented');
+        return pgsql_connection_params('testdb', 'localhost', 5432, 'user');
     }
 
     public function rollBack(): void
