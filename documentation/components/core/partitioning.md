@@ -15,7 +15,7 @@ You declare partitioning on the loader, not on the DataFrame.
 <?php
 
 use function Flow\ETL\Adapter\CSV\to_csv;
-use function Flow\ETL\DSL\{data_frame, from_array, overwrite, partition_by, ref};
+use function Flow\ETL\DSL\{data_frame, from_array, overwrite, ref};
 
 data_frame()
     ->read(from_array([
@@ -24,7 +24,7 @@ data_frame()
         ['date' => '2024-01-02', 'department' => 'sales', 'amount' => 150],
     ]))
     ->write(to_csv(__DIR__ . '/output/sales.csv')
-        ->partitionBy(partition_by(ref('date')))
+        ->partitionBy(ref('date'))
         ->saveMode(overwrite()))
     ->run();
 ```
@@ -45,7 +45,7 @@ Each column adds a nesting level.
 <?php
 
 use function Flow\ETL\Adapter\CSV\to_csv;
-use function Flow\ETL\DSL\{data_frame, from_array, overwrite, partition_by, ref};
+use function Flow\ETL\DSL\{data_frame, from_array, overwrite, ref};
 
 data_frame()
     ->read(from_array([
@@ -53,7 +53,7 @@ data_frame()
         ['date' => '2024-01-01', 'department' => 'marketing', 'amount' => 200],
     ]))
     ->write(to_csv(__DIR__ . '/output/sales.csv')
-        ->partitionBy(partition_by(ref('date'), ref('department')))
+        ->partitionBy([ref('date'), ref('department')])
         ->saveMode(overwrite()))
     ->run();
 ```
@@ -76,7 +76,7 @@ directory for it.
 <?php
 
 use function Flow\ETL\Adapter\CSV\to_csv;
-use function Flow\ETL\DSL\{data_frame, from_array, overwrite, partition_by, ref};
+use function Flow\ETL\DSL\{data_frame, from_array, overwrite, ref};
 
 data_frame()
     ->read(from_array([
@@ -84,7 +84,7 @@ data_frame()
         ['date' => '2024-01-01', 'department' => 'marketing', 'amount' => 200],
     ]))
     ->write(to_csv(__DIR__ . '/output/{department}.csv')
-        ->partitionBy(partition_by(ref('date'), ref('department')))
+        ->partitionBy([ref('date'), ref('department')])
         ->saveMode(overwrite()))
     ->run();
 ```
@@ -153,7 +153,7 @@ string goes to a directory with no value. A read gives both back:
 <?php
 
 use function Flow\ETL\Adapter\Parquet\{from_parquet, to_parquet};
-use function Flow\ETL\DSL\{data_frame, from_array, int_schema, overwrite, partition_by, schema, str_schema};
+use function Flow\ETL\DSL\{data_frame, from_array, int_schema, overwrite, schema, str_schema};
 
 $users = schema(int_schema('id'), str_schema('country', nullable: true));
 
@@ -164,7 +164,7 @@ data_frame()
         ['id' => 3, 'country' => ''],
     ])->withSchema($users))
     ->write(to_parquet(__DIR__ . '/users/users.parquet')
-        ->partitionBy(partition_by('country'))
+        ->partitionBy('country')
         ->saveMode(overwrite()))
     ->run();
 
@@ -190,7 +190,7 @@ A `datetime` column makes one directory for each distinct value. For one directo
 <?php
 
 use function Flow\ETL\Adapter\Parquet\to_parquet;
-use function Flow\ETL\DSL\{data_frame, from_array, overwrite, partition_by, ref};
+use function Flow\ETL\DSL\{data_frame, from_array, overwrite, ref};
 use function Flow\Types\DSL\type_date;
 
 data_frame()
@@ -200,7 +200,7 @@ data_frame()
     ]))
     ->withColumn('day', ref('created_at')->cast(type_date()))
     ->write(to_parquet(__DIR__ . '/output/events.parquet')
-        ->partitionBy(partition_by('day'))
+        ->partitionBy('day')
         ->saveMode(overwrite()))
     ->run();
 ```
@@ -221,7 +221,7 @@ The save mode controls what happens to partition directories that exist.
 <?php
 
 use function Flow\ETL\Adapter\CSV\to_csv;
-use function Flow\ETL\DSL\{data_frame, from_array, overwrite, partition_by, ref};
+use function Flow\ETL\DSL\{data_frame, from_array, overwrite, ref};
 
 data_frame()
     ->read(from_array([
@@ -229,7 +229,7 @@ data_frame()
         ['date' => '2024-01-02', 'amount' => 200],
     ]))
     ->write(to_csv(__DIR__ . '/output/sales.csv')
-        ->partitionBy(partition_by(ref('date')))
+        ->partitionBy(ref('date'))
         ->saveMode(overwrite()))
     ->run();
 ```
@@ -246,12 +246,12 @@ or merge the data before the write.
 <?php
 
 use function Flow\ETL\Adapter\CSV\to_csv;
-use function Flow\ETL\DSL\{append, data_frame, from_array, partition_by, ref};
+use function Flow\ETL\DSL\{append, data_frame, from_array, ref};
 
 data_frame()
     ->read(from_array([['date' => '2024-01-01', 'amount' => 100]]))
     ->write(to_csv(__DIR__ . '/output/sales.csv')
-        ->partitionBy(partition_by(ref('date')))
+        ->partitionBy(ref('date'))
         ->saveMode(append()))
     ->run();
 ```
@@ -264,12 +264,12 @@ Adds files named after the run (`sales-<run>.csv`). Each run adds more files.
 <?php
 
 use function Flow\ETL\Adapter\CSV\to_csv;
-use function Flow\ETL\DSL\{data_frame, from_array, ignore, partition_by, ref};
+use function Flow\ETL\DSL\{data_frame, from_array, ignore, ref};
 
 data_frame()
     ->read(from_array([['date' => '2024-01-01', 'amount' => 100]]))
     ->write(to_csv(__DIR__ . '/output/sales.csv')
-        ->partitionBy(partition_by(ref('date')))
+        ->partitionBy(ref('date'))
         ->saveMode(ignore()))
     ->run();
 ```
@@ -282,12 +282,12 @@ If the partition directory exists, the write is skipped. There is no error.
 <?php
 
 use function Flow\ETL\Adapter\CSV\to_csv;
-use function Flow\ETL\DSL\{data_frame, from_array, partition_by, ref};
+use function Flow\ETL\DSL\{data_frame, from_array, ref};
 
 data_frame()
     ->read(from_array([['date' => '2024-01-01', 'amount' => 100]]))
     ->write(to_csv(__DIR__ . '/output/sales.csv')
-        ->partitionBy(partition_by(ref('date'))))
+        ->partitionBy(ref('date')))
     ->run();
 ```
 
@@ -309,7 +309,7 @@ data_frame()
 
 Partition values from the path become regular columns. If the schema does not declare a partition column, Flow
 appends it as a string column. To read it as another type, declare it (`int_schema('date')`). A file can also hold
-the partition column (`partition_by(...)->writeColumns()`). Then the file schema (Parquet, Floe) gives the type. A
+the partition column (`->partitionBy(..., writeColumns: true)`). Then the file schema (Parquet, Floe) gives the type. A
 `filter(ref('date')->between(lit($from), lit($to)))` with `DateTimeImmutable` bounds then prunes. Pruning skips the
 files that cannot match. Flow casts string bounds (`lit('2026-10-02')`) to the `date` / `datetime` type of the
 column, so they prune too.

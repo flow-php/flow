@@ -56,7 +56,7 @@ final class PartitionRouterTest extends FlowTestCase
         static::assertSame(
             ['id', 'region'],
             PartitionRoutingContext::route(
-                Partitioning::by(ref('region'))->writeColumns(),
+                Partitioning::by(ref('region'), writeColumns: true),
                 array_to_rows([['id' => 1, 'region' => 'eu']], schema(int_schema('id'), str_schema('region'))),
             )[0][1]
                 ->schema()
@@ -85,7 +85,7 @@ final class PartitionRouterTest extends FlowTestCase
             array_map(
                 static fn($partition): string => $partition->name,
                 PartitionRoutingContext::route(
-                    Partitioning::by(ref('year'), ref('day'), ref('month')),
+                    Partitioning::by([ref('year'), ref('day'), ref('month')]),
                     array_to_rows(
                         [['id' => 1, 'year' => '2024', 'month' => '03', 'day' => '01']],
                         schema(int_schema('id'), str_schema('year'), str_schema('month'), str_schema('day')),
@@ -111,7 +111,7 @@ final class PartitionRouterTest extends FlowTestCase
         static::assertSame(
             [['region' => 'eu']],
             PartitionRoutingContext::route(
-                Partitioning::by('region')->writeColumns(),
+                Partitioning::by('region', writeColumns: true),
                 array_to_rows([['region' => 'eu']], schema(str_schema('region'))),
             )[0][1]->toArray(),
         );

@@ -33,7 +33,6 @@ use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\ignore;
 use function Flow\ETL\DSL\overwrite;
-use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -154,11 +153,7 @@ final readonly class FileFormatContract
     {
         df()
             ->read(from_array([['text' => 'a', 'p' => 'x'], ['text' => 'b', 'p' => 'y'], ['text' => 'c', 'p' => 'y']]))
-            ->write(
-                $format
-                    ->loader($this->cacheDir->suffix('/out/data.' . $format->extension()))
-                    ->partitionBy(partition_by('p')),
-            )
+            ->write($format->loader($this->cacheDir->suffix('/out/data.' . $format->extension()))->partitionBy('p'))
             ->run();
 
         Assert::assertSame(

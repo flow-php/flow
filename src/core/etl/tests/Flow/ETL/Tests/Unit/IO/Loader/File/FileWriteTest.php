@@ -23,7 +23,6 @@ use RuntimeException;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
@@ -112,7 +111,7 @@ final class FileWriteTest extends FlowTestCase
             native_local_filesystem(),
             $out->suffix('/part-{part}.txt'),
             SaveMode::Overwrite,
-            new PartitionRouter(partition_by('group')),
+            new PartitionRouter(Partitioning::by('group')),
             new SpyFileWriterFactory(),
         ))->closure(new VoidProgress());
 
@@ -164,7 +163,7 @@ final class FileWriteTest extends FlowTestCase
             memory_filesystem(),
             path('memory://out/part-{part}.txt'),
             SaveMode::Overwrite,
-            new PartitionRouter(partition_by('group')),
+            new PartitionRouter(Partitioning::by('group')),
             new SpyFileWriterFactory(),
         );
         $frame->write(
@@ -187,7 +186,7 @@ final class FileWriteTest extends FlowTestCase
             memory_filesystem(),
             path('memory://out/part-{part}.txt'),
             SaveMode::Overwrite,
-            new PartitionRouter(partition_by('group')),
+            new PartitionRouter(Partitioning::by('group')),
             new SpyFileWriterFactory(failingClose: true),
         );
         $frame->write(
@@ -215,7 +214,7 @@ final class FileWriteTest extends FlowTestCase
             $filesystem,
             path('memory://out/file.txt'),
             SaveMode::ExceptionIfExists,
-            new PartitionRouter(partition_by('group')),
+            new PartitionRouter(Partitioning::by('group')),
             $writers,
         );
         $schema = schema(int_schema('id'), str_schema('group'));
@@ -243,7 +242,7 @@ final class FileWriteTest extends FlowTestCase
             $filesystem,
             path('memory://out/file.txt'),
             SaveMode::ExceptionIfExists,
-            new PartitionRouter(partition_by('group')),
+            new PartitionRouter(Partitioning::by('group')),
             $writers,
         );
 
@@ -297,7 +296,7 @@ final class FileWriteTest extends FlowTestCase
             memory_filesystem(),
             path('memory://out/file.txt'),
             SaveMode::ExceptionIfExists,
-            new PartitionRouter(partition_by('group')),
+            new PartitionRouter(Partitioning::by('group')),
             $writers,
         );
 

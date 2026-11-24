@@ -12,6 +12,7 @@ use function array_values;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
+use function is_array;
 
 final readonly class Partitioning
 {
@@ -20,9 +21,20 @@ final readonly class Partitioning
         public bool $writeColumns = false,
     ) {}
 
-    public static function by(string|Reference $column, string|Reference ...$columns): self
+    /**
+     * @param non-empty-list<Reference|string>|Reference|string $columns
+     * @param bool $writeColumns keep the partition columns in the file body as well as in the path
+     *
+     * @throws InvalidArgumentException when $columns is an empty list
+     */
+    public static function by(array|string|Reference $columns, bool $writeColumns = false): self
     {
-        return new self(References::init($column, ...$columns));
+        // @mago-ignore analysis:impossible-condition,redundant-comparison
+        if ($columns === []) {
+            throw new InvalidArgumentException('partitionBy() needs at least one column, an empty list was given');
+        }
+
+        return new self(References::init(...is_array($columns) ? $columns : [$columns]), $writeColumns);
     }
 
     /**
@@ -31,9 +43,8 @@ final readonly class Partitioning
     public static function fromArray(array $data): self
     {
         $by = type_list(type_string())->assert($data['by'] ?? null);
-        $partitioning = $by === [] ? self::none() : self::by(...$by);
 
-        return type_boolean()->assert($data['write_columns'] ?? null) ? $partitioning->writeColumns() : $partitioning;
+        return $by === [] ? self::none() : self::by($by, type_boolean()->assert($data['write_columns'] ?? null));
     }
 
     public static function none(): self
@@ -47,17 +58,5 @@ final readonly class Partitioning
     public function normalize(): array
     {
         return ['by' => array_values($this->by->names()), 'write_columns' => $this->writeColumns];
-    }
-
-    /**
-     * Keep the partition columns in the file body as well as in the path. Off by default.
-     */
-    public function writeColumns(bool $writeColumns = true): self
-    {
-        if (!$this->by->count()) {
-            throw new InvalidArgumentException('writeColumns requires at least one partition column');
-        }
-
-        return new self($this->by, $writeColumns);
     }
 }

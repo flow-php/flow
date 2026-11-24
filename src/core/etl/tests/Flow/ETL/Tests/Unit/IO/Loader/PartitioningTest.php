@@ -9,7 +9,7 @@ use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\IO\Loader\Partitioning;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\partition_by;
+use function Flow\ETL\DSL\ref;
 
 final class PartitioningTest extends FlowTestCase
 {
@@ -19,37 +19,46 @@ final class PartitioningTest extends FlowTestCase
         static::assertFalse(Partitioning::none()->writeColumns);
     }
 
-    public function test_write_columns_on_none_is_refused(): void
+    public function test_by_takes_one_name_or_one_reference(): void
+    {
+        static::assertSame(['region'], Partitioning::by('region')->by->names());
+        static::assertSame(['region'], Partitioning::by(ref('region'))->by->names());
+    }
+
+    public function test_by_takes_a_list_of_names_and_references_in_the_given_order(): void
+    {
+        static::assertSame(['year', 'month'], Partitioning::by(['year', ref('month')])->by->names());
+    }
+
+    public function test_by_an_empty_list_is_refused(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('writeColumns requires at least one partition column');
+        $this->expectExceptionMessage('partitionBy() needs at least one column, an empty list was given');
 
-        Partitioning::none()->writeColumns();
+        // @mago-ignore analysis:invalid-argument
+        Partitioning::by([]);
     }
 
-    public function test_the_dsl_delegates_without_normalising(): void
+    public function test_write_columns_is_off_by_default(): void
     {
-        static::assertEquals(Partitioning::by('region'), partition_by('region'));
-    }
-
-    public function test_write_columns_is_off_by_default_and_immutable(): void
-    {
-        $partitioning = Partitioning::by('region');
-
-        static::assertFalse($partitioning->writeColumns);
-        static::assertTrue($partitioning->writeColumns()->writeColumns);
-        static::assertFalse($partitioning->writeColumns);
+        static::assertFalse(Partitioning::by('region')->writeColumns);
+        static::assertTrue(Partitioning::by('region', writeColumns: true)->writeColumns);
     }
 
     public function test_normalize_round_trips(): void
     {
-        $partitioning = partition_by('a', 'b')->writeColumns();
+        $partitioning = Partitioning::by(['a', 'b'], writeColumns: true);
 
         static::assertEquals(
             $partitioning,
             Partitioning::fromArray(Json::decode(Json::encode($partitioning->normalize()))),
         );
         static::assertSame(['by' => ['a', 'b'], 'write_columns' => true], $partitioning->normalize());
+    }
+
+    public function test_from_array_without_columns_is_none(): void
+    {
+        static::assertEquals(Partitioning::none(), Partitioning::fromArray(['by' => [], 'write_columns' => true]));
     }
 
     public function test_none_round_trips(): void

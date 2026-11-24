@@ -28,7 +28,6 @@ use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -387,11 +386,10 @@ final class FloeExtractorTest extends FlowIntegrationTestCase
                 [['id' => 'a', 'date' => new DateTimeImmutable('2026-10-02 13:00:00 UTC')]],
                 schema(str_schema('id'), datetime_schema('date')),
             ))
-            ->write(
-                to_floe(path('memory://var/typed/file.floe'), filesystem: $memory)->partitionBy(
-                    partition_by('date')->writeColumns(),
-                ),
-            )
+            ->write(to_floe(path('memory://var/typed/file.floe'), filesystem: $memory)->partitionBy(
+                'date',
+                writeColumns: true,
+            ))
             ->run();
 
         $extractor = from_floe(path('memory://var/typed/**/*.floe'), filesystem: $memory);
@@ -412,11 +410,10 @@ final class FloeExtractorTest extends FlowIntegrationTestCase
                 ],
                 schema(str_schema('id'), datetime_schema('date')),
             ))
-            ->write(
-                to_floe(path('memory://var/range/file.floe'), filesystem: $memory)->partitionBy(
-                    partition_by('date')->writeColumns(),
-                ),
-            )
+            ->write(to_floe(path('memory://var/range/file.floe'), filesystem: $memory)->partitionBy(
+                'date',
+                writeColumns: true,
+            ))
             ->run();
 
         static::assertSame(

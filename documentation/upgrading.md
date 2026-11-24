@@ -114,6 +114,30 @@ Update or rebuild the flow_php extension together with the library.
 | `Metadata::add()` and `merge()` renumber a numeric key, `with('5', 'x')->add('k', 'v')` has the key `0` | they keep `'5'`                                                       |
 | `Flow\ETL\Foundation\ArrayComparison\{ArrayComparison, ArraySortByKey}`                                 | removed                                                               |
 
+### 11) `flow-php/etl` and the file adapters - `partitionBy()` takes the columns, `partition_by()` is removed
+
+| Before                                                        | After                                                                                |
+|---------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| `->partitionBy(partition_by('date'))`                         | `->partitionBy('date')`                                                              |
+| `->partitionBy(partition_by('date', ref('country')))`         | `->partitionBy(['date', ref('country')])`                                            |
+| `->partitionBy(partition_by('date')->writeColumns())`         | `->partitionBy('date', writeColumns: true)`                                          |
+| `partition_by()`                                              | removed                                                                              |
+| `FileLoader::partitionBy(Partitioning $partitioning): static` | `partitionBy(array\|string\|Reference $columns, bool $writeColumns = false): static` |
+| `Partitioning::by('date', 'country')->writeColumns()`         | `Partitioning::by(['date', 'country'], writeColumns: true)`                          |
+| `->partitionBy(...)` with no column is a PHP error            | `->partitionBy([])` throws `InvalidArgumentException`                                |
+
+Before:
+
+```php
+to_parquet($path)->partitionBy(partition_by('date', 'country')->writeColumns());
+```
+
+After:
+
+```php
+to_parquet($path)->partitionBy(['date', 'country'], writeColumns: true);
+```
+
 ---
 
 ## Upgrading from 0.47.x to 0.48.x

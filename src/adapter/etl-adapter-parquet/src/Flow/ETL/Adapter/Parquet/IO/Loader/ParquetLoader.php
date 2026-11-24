@@ -12,6 +12,7 @@ use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\FlowPhpExtension;
 use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Functions\Reference\Reference;
 use Flow\ETL\IO\Filesystem\SaveMode;
 use Flow\ETL\IO\Loader\Closure;
 use Flow\ETL\IO\Loader\Discardable;
@@ -50,8 +51,6 @@ final class ParquetLoader implements Closure, Discardable, FileLoader
 
     private PartitionRouter $router;
 
-    private Partitioning $partitioning;
-
     private readonly Filesystem $filesystem;
 
     private SaveMode $saveMode = SaveMode::ExceptionIfExists;
@@ -74,8 +73,7 @@ final class ParquetLoader implements Closure, Discardable, FileLoader
             || throw InvalidArgumentException::unsupportedPath($filesystem, $path, 'to_parquet');
 
         $this->filesystem = $filesystem;
-        $this->partitioning = Partitioning::none();
-        $this->router = new PartitionRouter($this->partitioning);
+        $this->router = new PartitionRouter(Partitioning::none());
         $this->converter = new SchemaConverter();
         // every row reaching a loader was validated where it entered the pipeline, so the writer does not validate
         // each value against the column again - withOptions() can still turn it back on
@@ -95,8 +93,7 @@ final class ParquetLoader implements Closure, Discardable, FileLoader
             ->withCompressions(type_enum(Compressions::class)->assert(constant(
                 Compressions::class . '::' . type_string()->assert($data['compressions'] ?? null),
             )))
-            ->withOptions(Options::fromArray(type_array()->assert($data['options'] ?? null)))
-            ->partitionBy(Partitioning::fromArray(type_array()->assert($data['partitioning'] ?? null)));
+            ->withOptions(Options::fromArray(type_array()->assert($data['options'] ?? null)));
 
         if (($data['engine'] ?? null) !== null) {
             $loader->withEngine($rebuild->of($data['engine'], ConfiguredParquetEngine::class)->engine());
@@ -105,6 +102,10 @@ final class ParquetLoader implements Closure, Discardable, FileLoader
         if (($data['schema'] ?? null) !== null) {
             $loader->withSchema(Schema::fromArray(type_array()->assert($data['schema'])));
         }
+
+        $loader->router = new PartitionRouter(Partitioning::fromArray(type_array()->assert(
+            $data['partitioning'] ?? null,
+        )));
 
         if (($data['task'] ?? null) !== null) {
             $loader->task = Part::fromArray(type_array()->assert($data['task']));
@@ -133,7 +134,7 @@ final class ParquetLoader implements Closure, Discardable, FileLoader
                 'engine' => $this->engine === null ? null : new ConfiguredParquetEngine($this->engine),
                 'options' => $this->options->normalize(),
                 'schema' => $this->schema?->normalize(),
-                'partitioning' => $this->partitioning->normalize(),
+                'partitioning' => $this->router->partitioning->normalize(),
                 'task' => $this->task?->normalize(),
             ],
             extensions: [
@@ -147,10 +148,9 @@ final class ParquetLoader implements Closure, Discardable, FileLoader
         );
     }
 
-    public function partitionBy(Partitioning $partitioning): static
+    public function partitionBy(array|string|Reference $columns, bool $writeColumns = false): static
     {
-        $this->partitioning = $partitioning;
-        $this->router = new PartitionRouter($partitioning);
+        $this->router = new PartitionRouter(Partitioning::by($columns, $writeColumns));
 
         return $this;
     }
@@ -173,7 +173,7 @@ final class ParquetLoader implements Closure, Discardable, FileLoader
             $this->filesystem,
             $this->path,
             $this->saveMode,
-            $this->partitioning->by->count() > 0,
+            $this->router->partitioned(),
             $run,
             $tasks,
         );
@@ -186,14 +186,13 @@ final class ParquetLoader implements Closure, Discardable, FileLoader
 
     public function partitioning(): Partitioning
     {
-        return $this->partitioning;
+        return $this->router->partitioning;
     }
 
     public function inTask(Part $task): static
     {
         $loader = (new self($this->path, $this->filesystem))
             ->saveMode($this->saveMode)
-            ->partitionBy($this->partitioning)
             ->withCompressions($this->compressions)
             ->withEngine($this->engine)
             ->withOptions($this->options);
@@ -202,6 +201,7 @@ final class ParquetLoader implements Closure, Discardable, FileLoader
             $loader->withSchema($this->schema);
         }
 
+        $loader->router = $this->router;
         $loader->task = $task;
 
         return $loader;

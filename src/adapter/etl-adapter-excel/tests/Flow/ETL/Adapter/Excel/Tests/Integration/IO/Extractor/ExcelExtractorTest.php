@@ -48,7 +48,6 @@ use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\infer_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\overwrite;
-use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -1091,7 +1090,7 @@ final class ExcelExtractorTest extends FlowTestCase
             ->write(
                 to_excel(__DIR__ . '/var/partition_schema/file.xlsx')
                     ->saveMode(overwrite())
-                    ->partitionBy(partition_by('date')->writeColumns()),
+                    ->partitionBy('date', writeColumns: true),
             )
             ->run();
 

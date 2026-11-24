@@ -9,8 +9,7 @@ Date: 2026-03-02
 ---
 
 Several Flow PHP methods accept multiple arguments, and at least one argument is required. Examples:
-- `DataFrame::partitionBy()`
-- `Rows::partitionBy()`
+- `DataFrame::repartition()`
 - `Window::partitionBy()`
 - Type comparison methods
 
@@ -43,6 +42,16 @@ Not:
 
 ```php ignore
 public function method(Type ...$args) : ReturnType
+```
+
+PHP does not allow a parameter after a variadic parameter. If a method needs another parameter after the list, the
+list is a `non-empty-list` array, and static analysis rejects an empty list:
+
+```php ignore
+/**
+ * @param non-empty-list<Reference|string>|Reference|string $columns
+ */
+public function partitionBy(array|string|Reference $columns, bool $writeColumns = false) : static
 ```
 
 ## Pros & Cons

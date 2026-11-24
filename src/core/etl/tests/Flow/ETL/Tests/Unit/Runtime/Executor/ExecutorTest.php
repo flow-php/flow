@@ -112,7 +112,6 @@ use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
-use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\rows;
@@ -2016,7 +2015,7 @@ final class ExecutorTest extends FlowTestCase
             ->read(from_array([['id' => 1, 'dept' => 'a'], ['id' => 2, 'dept' => 'b'], ['id' => 3, 'dept' => 'c']]))
             ->write(
                 to_floe(path('memory://out/rows.floe'), filesystem: $context->slowMoves(memory_filesystem()))
-                    ->partitionBy(partition_by('dept'))
+                    ->partitionBy('dept')
                     ->saveMode(overwrite()),
             )
             ->run();

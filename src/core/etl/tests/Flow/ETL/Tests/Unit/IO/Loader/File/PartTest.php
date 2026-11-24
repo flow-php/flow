@@ -10,7 +10,6 @@ use Flow\ETL\IO\Loader\Partitioning;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\TestWith;
 
-use function Flow\ETL\DSL\partition_by;
 use function Flow\Filesystem\DSL\path;
 use function max;
 
@@ -84,15 +83,15 @@ final class PartTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('cannot name the partition column "part"');
 
-        Part::refuseReserved(path('file:///out/{part}/orders-{part}.csv'), partition_by('part'));
+        Part::refuseReserved(path('file:///out/{part}/orders-{part}.csv'), Partitioning::by('part'));
     }
 
     public function test_refuse_reserved_allows_other_columns_and_plain_destinations(): void
     {
         $this->expectNotToPerformAssertions();
 
-        Part::refuseReserved(path('file:///out/orders-{part}.csv'), partition_by('dept'));
-        Part::refuseReserved(path('file:///out/orders.csv'), partition_by('part'));
+        Part::refuseReserved(path('file:///out/orders-{part}.csv'), Partitioning::by('dept'));
+        Part::refuseReserved(path('file:///out/orders.csv'), Partitioning::by('part'));
         Part::refuseReserved(path('file:///out/orders-{part}.csv'), Partitioning::none());
     }
 }

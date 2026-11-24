@@ -45,7 +45,6 @@ use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\infer_schema;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\partition_types;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\schema_to_ascii;
@@ -915,11 +914,10 @@ final class JsonExtractorTest extends FlowTestCase
                 ],
                 schema(datetime_schema('date'), str_schema('text')),
             ))
-            ->write(
-                to_json(path('memory://var/json/file.json'), filesystem: $memory)->partitionBy(
-                    partition_by('date')->writeColumns(),
-                ),
-            )
+            ->write(to_json(path('memory://var/json/file.json'), filesystem: $memory)->partitionBy(
+                'date',
+                writeColumns: true,
+            ))
             ->run();
 
         $extractor = from_json(path('memory://var/json/**/*.json'), filesystem: $memory);

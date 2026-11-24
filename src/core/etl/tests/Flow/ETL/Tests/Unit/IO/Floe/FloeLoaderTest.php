@@ -29,7 +29,6 @@ use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
@@ -144,7 +143,7 @@ final class FloeLoaderTest extends TestCase
         $context = flow_context(config());
         $memory = memory_filesystem();
         // one batch carrying both combinations: the loader routes it, B39
-        $loader = to_floe(path('memory://parts/data.floe'), filesystem: $memory)->partitionBy(partition_by('country'));
+        $loader = to_floe(path('memory://parts/data.floe'), filesystem: $memory)->partitionBy('country');
         $loader->load(
             array_to_rows(
                 [['id' => 1, 'country' => 'PL'], ['id' => 2, 'country' => 'US']],
@@ -252,7 +251,7 @@ final class FloeLoaderTest extends TestCase
                 ))
                     ->saveMode(SaveMode::Overwrite)
                     ->withSchema(schema(int_schema('id'), str_schema('name')))
-                    ->partitionBy(partition_by('name')->writeColumns()),
+                    ->partitionBy('name', writeColumns: true),
             )->describe()?->data['partitioning'],
         );
 
@@ -300,7 +299,7 @@ final class FloeLoaderTest extends TestCase
             new Options(1024),
         ))
             ->saveMode(SaveMode::Overwrite)
-            ->partitionBy(partition_by('name'))
+            ->partitionBy('name')
             ->withSchema(schema(int_schema('id')));
         $copy = $loader->inTask(new Part(3, 4, '1a2b3c4d5e6f7a8b', false));
 
@@ -343,8 +342,8 @@ final class FloeLoaderTest extends TestCase
 
         static::assertEquals(Partitioning::none(), $loader->partitioning());
         static::assertEquals(
-            partition_by('name')->writeColumns(),
-            $loader->partitionBy(partition_by('name')->writeColumns())->partitioning(),
+            Partitioning::by('name', writeColumns: true),
+            $loader->partitionBy('name', writeColumns: true)->partitioning(),
         );
     }
 }

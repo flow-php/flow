@@ -302,7 +302,7 @@ branch gets. No row is lost or put in the wrong group.
 
 `repartition()` does not use constant memory. It puts the full stream into buckets first. Only then are all rows with
 the same key together. Thus it is in the first group above, with `sortBy()` and `join()`. One directory for each key
-is a different thing, which you declare on the loader: `to_csv(...)->partitionBy(partition_by(ref('region')))`.
+is a different thing, which you declare on the loader: `to_csv(...)->partitionBy(ref('region'))`.
 
 To change the batches of the pipeline, and not only the batches that the loader of the branch gets, call
 `$df->batchSize(...)` on the frame.

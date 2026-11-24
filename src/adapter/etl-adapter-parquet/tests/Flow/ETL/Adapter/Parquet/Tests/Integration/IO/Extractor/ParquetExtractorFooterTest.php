@@ -27,7 +27,6 @@ use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -189,11 +188,10 @@ final class ParquetExtractorFooterTest extends FlowTestCase
                 ],
                 schema(str_schema('id'), datetime_schema('date')),
             ))
-            ->write(
-                to_parquet(path('memory://var/pruned/file.parquet'), filesystem: $filesystem)->partitionBy(
-                    partition_by('date')->writeColumns(),
-                ),
-            )
+            ->write(to_parquet(path('memory://var/pruned/file.parquet'), filesystem: $filesystem)->partitionBy(
+                'date',
+                writeColumns: true,
+            ))
             ->run();
 
         static::assertSame(

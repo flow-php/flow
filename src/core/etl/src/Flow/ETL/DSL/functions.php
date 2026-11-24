@@ -195,7 +195,6 @@ use Flow\ETL\IO\Inference\SchemaInferenceBuilder;
 use Flow\ETL\IO\Loader;
 use Flow\ETL\IO\Loader\ArrayLoader;
 use Flow\ETL\IO\Loader\MemoryLoader;
-use Flow\ETL\IO\Loader\Partitioning;
 use Flow\ETL\IO\Loader\StreamLoader;
 use Flow\ETL\IO\Loader\StreamLoader\Output;
 use Flow\ETL\Operators\Constraint;
@@ -1985,12 +1984,6 @@ function pivot_values(int|string ...$values): DeclaredPivotValues
 function discover_pivot_values(int $maxValues = 10_000): DiscoveredPivotValues
 {
     return new DiscoveredPivotValues($maxValues);
-}
-
-#[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
-function partition_by(string|Reference $column, string|Reference ...$columns): Partitioning
-{
-    return Partitioning::by($column, ...$columns);
 }
 
 /**

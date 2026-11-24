@@ -123,7 +123,6 @@ use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\memory_sort;
-use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\pivot_values;
 use function Flow\ETL\DSL\rank;
 use function Flow\ETL\DSL\ref;
@@ -727,7 +726,7 @@ final class NodeTranslatorTest extends FlowTestCase
         NodeTranslatorMother::of(config())->steps(
             new Write(
                 NodeMother::read(),
-                to_floe(path('file:///tmp/out/{part}/rows-{part}.floe'))->partitionBy(partition_by('part')),
+                to_floe(path('file:///tmp/out/{part}/rows-{part}.floe'))->partitionBy('part'),
             ),
         );
     }

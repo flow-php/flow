@@ -17,7 +17,6 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\Adapter\Excel\DSL\to_excel;
 use function Flow\ETL\DSL\overwrite;
-use function Flow\ETL\DSL\partition_by;
 
 final class ExcelLoaderTest extends FlowTestCase
 {
@@ -33,7 +32,7 @@ final class ExcelLoaderTest extends FlowTestCase
         yield 'sheet name' => [
             to_excel('/data/out.xlsx')
                 ->saveMode(overwrite())
-                ->partitionBy(partition_by('country'))
+                ->partitionBy('country')
                 ->withDateFormat('dd/mm/yyyy')
                 ->withDateTimeFormat('dd/mm/yyyy hh:mm')
                 ->withHeader(false)

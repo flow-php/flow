@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\IO\Loader\File;
 
 use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Functions\Reference\Reference;
 use Flow\ETL\IO\Filesystem\SaveMode;
 use Flow\ETL\IO\Loader;
 use Flow\ETL\IO\Loader\Partitioning;
@@ -29,7 +30,11 @@ interface FileLoader extends Loader
      */
     public function inTask(Part $task): static;
 
-    public function partitionBy(Partitioning $partitioning): static;
+    /**
+     * @param non-empty-list<Reference|string>|Reference|string $columns
+     * @param bool $writeColumns keep the partition columns in the file body as well as in the path
+     */
+    public function partitionBy(array|string|Reference $columns, bool $writeColumns = false): static;
 
     /**
      * What partitionBy() set; Partitioning::none() by default.

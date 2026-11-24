@@ -44,7 +44,6 @@ use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
-use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\string_schema;
@@ -607,7 +606,7 @@ final class ExcelLoaderTest extends FlowTestCase
                         new FailingCloseFilesystem(native_local_filesystem(), failingStreams: 2),
                     )
                         ->saveMode(overwrite())
-                        ->partitionBy(partition_by('p')),
+                        ->partitionBy('p'),
                 )
                 ->run();
             static::fail('the run was expected to throw');
@@ -643,7 +642,7 @@ final class ExcelLoaderTest extends FlowTestCase
     public function test_closure_reports_each_partition_writer_close_and_stream_close(): void
     {
         $scratch = ReaderRoundTrip::scratch('excel-progress-partitions');
-        $loader = to_excel($scratch->suffix('/rows.xlsx'))->partitionBy(partition_by('p'));
+        $loader = to_excel($scratch->suffix('/rows.xlsx'))->partitionBy('p');
         $loader->load(
             array_to_rows(
                 [['p' => 'a', 'id' => 1], ['p' => 'b', 'id' => 2]],
@@ -690,7 +689,7 @@ final class ExcelLoaderTest extends FlowTestCase
         $scratch = ReaderRoundTrip::scratch('in-task');
         $loader = to_excel($scratch->suffix('/rows.out'))
             ->saveMode(SaveMode::Overwrite)
-            ->partitionBy(partition_by('name'))
+            ->partitionBy('name')
             ->withSheetName('rows')
             ->withHeader(false);
         $copy = $loader->inTask(new Part(3, 4, '1a2b3c4d5e6f7a8b', false));
@@ -727,8 +726,8 @@ final class ExcelLoaderTest extends FlowTestCase
 
         static::assertEquals(Partitioning::none(), $loader->partitioning());
         static::assertEquals(
-            partition_by('name')->writeColumns(),
-            $loader->partitionBy(partition_by('name')->writeColumns())->partitioning(),
+            Partitioning::by('name', writeColumns: true),
+            $loader->partitionBy('name', writeColumns: true)->partitioning(),
         );
     }
 }

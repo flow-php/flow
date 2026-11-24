@@ -24,7 +24,6 @@ use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
-use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
@@ -168,7 +167,7 @@ final class JsonTest extends FlowTestCase
             ->write(
                 to_json(__DIR__ . '/var/test_partitioning_json_file/products.json')
                     ->saveMode(overwrite())
-                    ->partitionBy(partition_by('size', 'color')),
+                    ->partitionBy(['size', 'color']),
             )
             ->run();
 
@@ -295,7 +294,7 @@ final class JsonTest extends FlowTestCase
                 ->write(to_json(
                     path('memory://var/staged/file.json'),
                     filesystem: new FailingCloseFilesystem($memory, failingStreams: 2),
-                )->partitionBy(partition_by('p')))
+                )->partitionBy('p'))
                 ->run();
             static::fail('the run was expected to throw');
         } catch (FilesystemRuntimeException $failure) {

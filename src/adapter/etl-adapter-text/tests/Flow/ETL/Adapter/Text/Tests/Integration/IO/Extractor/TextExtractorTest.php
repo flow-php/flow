@@ -33,7 +33,6 @@ use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
@@ -289,7 +288,7 @@ final class TextExtractorTest extends FlowTestCase
                 ],
                 schema(datetime_schema('date'), str_schema('text')),
             ))
-            ->write(to_text(path('memory://var/text/file.txt'), filesystem: $memory)->partitionBy(partition_by('date')))
+            ->write(to_text(path('memory://var/text/file.txt'), filesystem: $memory)->partitionBy('date'))
             ->run();
 
         $extractor = from_text(path('memory://var/text/**/*.txt'), filesystem: $memory);
