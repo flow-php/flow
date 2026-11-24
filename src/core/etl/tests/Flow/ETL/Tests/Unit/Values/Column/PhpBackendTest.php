@@ -14,6 +14,7 @@ use Flow\ETL\Foundation\Exception\ColumnMismatchException;
 use Flow\ETL\Foundation\Exception\EvaluationException;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\SchemaMismatchException;
+use Flow\ETL\Foundation\Hash\HashAlgorithm;
 use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
 use Flow\ETL\Kernels\Bucketing\HashBucketing;
 use Flow\ETL\Tests\Context\FrameContext;
@@ -49,6 +50,7 @@ use Flow\Types\Value\Uuid;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\RequiresPhp;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 use UnitEnum;
@@ -331,6 +333,26 @@ final class PhpBackendTest extends TestCase
         (new PhpBackend())
             ->builder($definition)
             ->append(null);
+    }
+
+    #[TestWith([HashAlgorithm::md5, '098f6bcd4621d373cade4e832627b4f6', 'd41d8cd98f00b204e9800998ecf8427e'])]
+    #[TestWith([
+        HashAlgorithm::sha256,
+        '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
+        'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+    ])]
+    #[TestWith([HashAlgorithm::xxh128, '6c78e0e3bd51d358d01e758642b85fb8', '99aa06d3014798d86001c324468d497f'])]
+    public function test_hash_gives_the_full_hex_digest_and_keeps_nulls(
+        HashAlgorithm $algorithm,
+        string $test,
+        string $empty,
+    ): void {
+        static::assertSame(
+            [$test, null, $empty],
+            (new PhpBackend())
+                ->hash(ColumnMother::of(str_schema('value', nullable: true), ['test', null, '']), $algorithm)
+                ->physicals(),
+        );
     }
 
     #[RequiresPhp('>= 8.4.0')]

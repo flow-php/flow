@@ -5,56 +5,51 @@ declare(strict_types=1);
 namespace Flow\ETL\Functions;
 
 use Exception;
-use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\EvaluationException;
-use Flow\ETL\Foundation\Hash\Algorithm;
-use Flow\ETL\Foundation\Hash\PhpAlgorithm;
+use Flow\ETL\Foundation\Hash\HashAlgorithm;
 use Flow\ETL\Functions\Evaluation\ResultColumn;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Column\Column;
 use Flow\ETL\Values\Rows;
 use Flow\Types\Type;
+use Flow\Types\Type\Native\StringType;
 use Flow\Types\Value\Json;
 use SensitiveParameter;
 
+use function Flow\Types\DSL\type_bare;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function gettype;
 use function is_scalar;
-use function is_string;
 use function serialize;
 
 final class Hash implements ScalarFunction
 {
     use ScalarFunctionChain;
 
-    private readonly Algorithm $algorithm;
+    private readonly HashAlgorithm $algorithm;
 
     private readonly ScalarFunction $value;
 
-    public function __construct(mixed $value, Algorithm|string $algorithm = 'xxh128')
+    public function __construct(mixed $value, HashAlgorithm $algorithm = HashAlgorithm::xxh128)
     {
         $this->value = $value instanceof ScalarFunction ? $value : new Literal($value);
-        $this->algorithm = is_string($algorithm) ? new PhpAlgorithm($algorithm) : $algorithm;
+        $this->algorithm = $algorithm;
     }
 
     public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
     {
         return new self(
             $rebuild->of($data['value'] ?? null, ScalarFunction::class),
-            $rebuild->of($data['algorithm'] ?? null, Algorithm::class),
+            HashAlgorithm::named(type_string()->assert($data['algorithm'] ?? null)),
         );
     }
 
     public function describe(): ?Description
     {
-        return (
-            $this->algorithm instanceof Describable
-                ? Description::compose(self::class, ['value' => $this->value, 'algorithm' => $this->algorithm])
-                : null
-        );
+        return Description::compose(self::class, ['value' => $this->value, 'algorithm' => $this->algorithm->value]);
     }
 
     /**
@@ -84,29 +79,37 @@ final class Hash implements ScalarFunction
 
     public function eval(Rows $rows, Backend $backend): Column
     {
-        $values = (new Parameter($this->value))->values($rows, $backend);
-        $results = [];
+        $column = $this->value->eval($rows, $backend);
+
+        return $backend->hash(
+            type_bare($column->type()) instanceof StringType ? $column : $this->texts($column, $backend),
+            $this->algorithm,
+        );
+    }
+
+    private function texts(Column $column, Backend $backend): Column
+    {
+        $texts = [];
         $i = 0;
 
         try {
             // @mago-ignore analysis:mixed-assignment
-            foreach ($values as $i => $value) {
+            foreach ($column->values() as $i => $value) {
                 if ($value instanceof Json) {
                     $value = $value->toArray();
                 }
 
-                $results[] = match ($value) {
-                    null => null,
-                    default => match (gettype($value)) {
-                        'array', 'object' => $this->algorithm->hash(serialize($value)),
-                        default => $this->algorithm->hash(is_scalar($value) ? (string) $value : ''),
-                    },
-                };
+                $texts[] = $value === null
+                    ? null
+                    : match (gettype($value)) {
+                        'array', 'object' => serialize($value),
+                        default => is_scalar($value) ? (string) $value : '',
+                    };
             }
         } catch (Exception $e) {
             throw EvaluationException::at($i, $e);
         }
 
-        return (new ResultColumn($backend))->of($this, $results);
+        return (new ResultColumn($backend))->of($this, $texts);
     }
 }

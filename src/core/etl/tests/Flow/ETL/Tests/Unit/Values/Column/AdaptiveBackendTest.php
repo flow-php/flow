@@ -7,13 +7,13 @@ namespace Flow\ETL\Tests\Unit\Values\Column;
 use Flow\ETL\Foundation\Exception\ColumnMismatchException;
 use Flow\ETL\Foundation\Exception\RuntimeException;
 use Flow\ETL\Foundation\FlowPhpExtension;
+use Flow\ETL\Foundation\Hash\HashAlgorithm;
 use Flow\ETL\Tests\Double\ForeignColumnStub;
 use Flow\ETL\Tests\Double\TrailingZerosCodecStub;
 use Flow\ETL\Tests\Mother\ColumnMother;
 use Flow\ETL\Tests\Mother\RowsMother;
 use Flow\ETL\Values\Column\AdaptiveBackend;
 use Flow\ETL\Values\Column\Frame\NoopCodec;
-use Flow\ETL\Values\Column\MultisetHashAlgorithm;
 use Flow\ETL\Values\Column\Php\PhpGroupedCounts;
 use Flow\ETL\Values\Column\Php\PhpGroupedMultisetHashes;
 use Flow\ETL\Values\Column\Php\PhpGroupedTotals;
@@ -207,6 +207,16 @@ final class AdaptiveBackendTest extends TestCase
         );
     }
 
+    public function test_hash_is_what_the_php_backend_answers(): void
+    {
+        $rows = array_to_rows([['s' => 'test'], ['s' => null]], schema(str_schema('s', nullable: true)));
+
+        static::assertEquals(
+            (new PhpBackend())->hash($rows->column('s'), HashAlgorithm::md5),
+            (new AdaptiveBackend())->hash($rows->column('s'), HashAlgorithm::md5),
+        );
+    }
+
     public function test_ends_with_is_what_the_php_backend_answers(): void
     {
         $rows = array_to_rows(
@@ -305,7 +315,7 @@ final class AdaptiveBackendTest extends TestCase
         );
         static::assertInstanceOf(
             PhpGroupedMultisetHashes::class,
-            (new AdaptiveBackend())->groupedMultisetHashes(MultisetHashAlgorithm::xxh128),
+            (new AdaptiveBackend())->groupedMultisetHashes(HashAlgorithm::xxh128),
         );
     }
 }

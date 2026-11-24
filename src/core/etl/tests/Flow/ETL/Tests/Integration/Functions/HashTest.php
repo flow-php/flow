@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Functions;
 
-use Flow\ETL\Foundation\Hash\PhpAlgorithm;
+use Flow\ETL\Foundation\Hash\HashAlgorithm;
 use Flow\ETL\Storage\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
@@ -48,7 +48,7 @@ final class HashTest extends FlowTestCase
             ->read(from_array([
                 ['key' => 'value'],
             ]))
-            ->withColumn('hash', ref('key')->hash(new PhpAlgorithm('sha512')))
+            ->withColumn('hash', ref('key')->hash(HashAlgorithm::sha256))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -56,7 +56,7 @@ final class HashTest extends FlowTestCase
             [
                 [
                     'key' => 'value',
-                    'hash' => 'ec2c83edecb60304d154ebdb85bdfaf61a92bd142e71c4f7b25a15b9cb5f3c0ae301cfb3569cf240e4470031385348bc296d8d99d09e06b26f09591a97527296',
+                    'hash' => 'cd42404d52ad55ccfa9aca4adc828aa5800ad9d385a0671fbcbf724118320619',
                 ],
             ],
             $memory->dump(),

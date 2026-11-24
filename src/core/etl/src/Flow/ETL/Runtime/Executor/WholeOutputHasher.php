@@ -6,12 +6,12 @@ namespace Flow\ETL\Runtime\Executor;
 
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
+use Flow\ETL\Foundation\Hash\HashAlgorithm;
 use Flow\ETL\Runtime\Metrics\DatasetHash;
 use Flow\ETL\Runtime\Metrics\Hash;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Column\GroupedMultisetHashes;
 use Flow\ETL\Values\Column\MultisetDigest;
-use Flow\ETL\Values\Column\MultisetHashAlgorithm;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema\Definitions;
 use SensitiveParameter;
@@ -28,14 +28,14 @@ final class WholeOutputHasher implements OutputHasher
     private DatasetHash $absorbed;
 
     public function __construct(
-        private readonly MultisetHashAlgorithm $algorithm,
+        private readonly HashAlgorithm $algorithm,
     ) {
         $this->absorbed = new DatasetHash(Hash::empty(), [], $algorithm);
     }
 
     public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
     {
-        return new self(MultisetHashAlgorithm::named(type_string()->assert($data['algorithm'] ?? null)));
+        return new self(HashAlgorithm::named(type_string()->assert($data['algorithm'] ?? null)));
     }
 
     public function describe(): ?Description

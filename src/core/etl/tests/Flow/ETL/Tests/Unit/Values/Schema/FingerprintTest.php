@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Values\Schema;
 
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Hash\HashAlgorithm;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\Fixtures\Enum\StringEnum;
 use Flow\ETL\Tests\FlowTestCase;
@@ -19,7 +20,6 @@ use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\ETL\DSL\enum_schema;
 use function Flow\ETL\DSL\float_schema;
-use function Flow\ETL\DSL\hash_algorithm;
 use function Flow\ETL\DSL\html_element_schema;
 use function Flow\ETL\DSL\html_schema;
 use function Flow\ETL\DSL\int_schema;
@@ -341,7 +341,7 @@ final class FingerprintTest extends FlowTestCase
     {
         $fingerprint = schema(int_schema('id'))->fingerprint();
 
-        static::assertSame(hash('sha256', $fingerprint->canonical()), $fingerprint->hash(hash_algorithm('sha256')));
+        static::assertSame(hash('sha256', $fingerprint->canonical()), $fingerprint->hash(HashAlgorithm::sha256));
     }
 
     public function test_to_string_is_the_default_xxh128_hash(): void

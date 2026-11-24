@@ -6,11 +6,11 @@ namespace Flow\ETL\Values\Schema;
 
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\RuntimeException;
-use Flow\ETL\Foundation\Hash\Algorithm;
-use Flow\ETL\Foundation\Hash\PhpAlgorithm;
+use Flow\ETL\Foundation\Hash\HashAlgorithm;
 use Flow\ETL\Values\Schema;
 use JsonException;
 
+use function hash;
 use function ini_get;
 use function ini_set;
 use function json_encode;
@@ -25,8 +25,7 @@ final readonly class Fingerprint
 {
     private const string VERSION = 'v1';
 
-    private const int JSON_FLAGS =
-        JSON_THROW_ON_ERROR | JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
+    private const int JSON_FLAGS = JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
 
     private string $canonical;
 
@@ -66,9 +65,9 @@ final readonly class Fingerprint
         return $this->canonical === $other->canonical;
     }
 
-    public function hash(Algorithm $algorithm = new PhpAlgorithm()): string
+    public function hash(HashAlgorithm $algorithm = HashAlgorithm::xxh128): string
     {
-        return $algorithm->hash($this->canonical);
+        return hash($algorithm->value, $this->canonical);
     }
 
     public function toString(): string
@@ -123,13 +122,10 @@ final readonly class Fingerprint
     private function encode(array $canonical): string
     {
         try {
-            /** @var string $json */
-            $json = json_encode($canonical, self::JSON_FLAGS);
-
-            return $json;
+            return json_encode($canonical, JSON_THROW_ON_ERROR | self::JSON_FLAGS);
         } catch (JsonException $exception) {
             try {
-                json_encode($canonical['options'], self::JSON_FLAGS);
+                json_encode($canonical['options'], JSON_THROW_ON_ERROR | self::JSON_FLAGS);
             } catch (JsonException $keysException) {
                 throw new InvalidArgumentException(
                     sprintf(
@@ -143,7 +139,7 @@ final readonly class Fingerprint
 
             foreach ($canonical['columns'] as $column) {
                 try {
-                    json_encode($column, self::JSON_FLAGS);
+                    json_encode($column, JSON_THROW_ON_ERROR | self::JSON_FLAGS);
                 } catch (JsonException $columnException) {
                     throw new InvalidArgumentException(
                         sprintf(

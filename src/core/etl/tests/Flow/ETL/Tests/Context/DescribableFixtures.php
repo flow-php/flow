@@ -7,8 +7,7 @@ namespace Flow\ETL\Tests\Context;
 use Closure;
 use Flow\ETL\Foundation\Describe\ConfiguredFilesystem;
 use Flow\ETL\Foundation\Describe\Describable;
-use Flow\ETL\Foundation\Hash\PhpAlgorithm;
-use Flow\ETL\Foundation\Hash\PlainText;
+use Flow\ETL\Foundation\Hash\HashAlgorithm;
 use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
 use Flow\ETL\Foundation\ProgressUnit;
 use Flow\ETL\Foundation\StageName;
@@ -115,7 +114,6 @@ use Flow\ETL\Tests\Double\StaticExtractorFactory;
 use Flow\ETL\Values\BatchSize;
 use Flow\ETL\Values\Column\AdaptiveBackend;
 use Flow\ETL\Values\Column\Frame\NoopCodec;
-use Flow\ETL\Values\Column\MultisetHashAlgorithm;
 use Flow\ETL\Values\Column\PhpBackend;
 use Flow\ETL\Values\Join\JoinType;
 use Flow\ETL\Values\Memory\Unit;
@@ -341,12 +339,10 @@ final class DescribableFixtures
             MemoryLoader::class => static fn(): Describable => new MemoryLoader(new ArrayMemory()),
             MemorySortConfig::class => static fn(): Describable => new MemorySortConfig(),
             MergedAggregate::class => static fn(): Describable => new MergedAggregate(sum(ref('amount'))),
-            PhpAlgorithm::class => static fn(): Describable => new PhpAlgorithm('sha256', true, ['seed' => 3]),
             NativePHPRandomValueGenerator::class => static fn(): Describable => new NativePHPRandomValueGenerator(),
             PartialAggregate::class => static fn(): Describable => new PartialAggregate(sum(ref('amount'))),
             PeerFrame::class => static fn(): Describable => new PeerFrame([ref('id')->desc()]),
             PhpBackend::class => static fn(): Describable => new PhpBackend(),
-            PlainText::class => static fn(): Describable => new PlainText(),
             PruneColumnsTransformer::class => static fn(): Describable => new PruneColumnsTransformer(
                 'id',
                 ref('name'),
@@ -395,11 +391,9 @@ final class DescribableFixtures
             OfferedFailure::class => static fn(): Describable => new OfferedFailure(new SkipRows()),
             PartitionedOutputHasher::class => static fn(): Describable => new PartitionedOutputHasher(
                 refs('date', 'country'),
-                MultisetHashAlgorithm::xxh128,
+                HashAlgorithm::xxh128,
             ),
-            WholeOutputHasher::class => static fn(): Describable => new WholeOutputHasher(
-                MultisetHashAlgorithm::xxh128,
-            ),
+            WholeOutputHasher::class => static fn(): Describable => new WholeOutputHasher(HashAlgorithm::xxh128),
             SkipRows::class => static fn(): Describable => new SkipRows(),
             SortColumn::class => static fn(): Describable => new SortColumn('id', SortOrder::DESC, NullsOrder::FIRST),
             StreamLoader::class => static fn(): Describable => new StreamLoader(

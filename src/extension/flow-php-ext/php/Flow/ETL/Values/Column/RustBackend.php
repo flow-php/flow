@@ -7,6 +7,7 @@ namespace Flow\ETL\Values\Column;
 use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
+use Flow\ETL\Foundation\Hash\HashAlgorithm;
 use Flow\ETL\Values\Column\Frame\Codec;
 use Flow\ETL\Values\Grouping\GroupTable;
 use Flow\ETL\Values\Rows;
@@ -146,7 +147,12 @@ final class RustBackend implements Backend, Describable
         throw new RuntimeException('flow_php extension is not loaded');
     }
 
-    public function groupedMultisetHashes(MultisetHashAlgorithm $algorithm): GroupedMultisetHashes
+    public function hash(Column $strings, HashAlgorithm $algorithm): Column
+    {
+        throw new RuntimeException('flow_php extension is not loaded');
+    }
+
+    public function groupedMultisetHashes(HashAlgorithm $algorithm): GroupedMultisetHashes
     {
         throw new RuntimeException('flow_php extension is not loaded');
     }

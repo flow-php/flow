@@ -8,6 +8,7 @@ use Flow\ETL\Foundation\Exception\ColumnMismatchException;
 use Flow\ETL\Foundation\Exception\EvaluationException;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\OffsetOverflow;
+use Flow\ETL\Foundation\Hash\HashAlgorithm;
 use Flow\ETL\Values\Column\Frame\Codec;
 use Flow\ETL\Values\Column\Frame\FloeException;
 use Flow\ETL\Values\Column\Frame\FrameTooLarge;
@@ -134,7 +135,10 @@ interface Backend
      */
     public function rowHashes(array $columns, int $count): Column;
 
-    public function groupedMultisetHashes(MultisetHashAlgorithm $algorithm): GroupedMultisetHashes;
+    /** $strings holds strings; a null row stays null. One lowercase hex digest per row, the full digest. */
+    public function hash(Column $strings, HashAlgorithm $algorithm): Column;
+
+    public function groupedMultisetHashes(HashAlgorithm $algorithm): GroupedMultisetHashes;
 
     /**
      * @param list<string> $columns

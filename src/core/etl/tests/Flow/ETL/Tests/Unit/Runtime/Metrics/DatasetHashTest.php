@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Runtime\Metrics;
 
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Hash\HashAlgorithm;
 use Flow\ETL\Runtime\Metrics\DatasetHash;
 use Flow\ETL\Runtime\Metrics\Hash;
 use Flow\ETL\Runtime\Metrics\PartitionHash;
-use Flow\ETL\Values\Column\MultisetHashAlgorithm;
 use Flow\Filesystem\Partition;
 use Flow\Filesystem\Partitions;
 use PHPUnit\Framework\TestCase;
@@ -21,11 +21,7 @@ final class DatasetHashTest extends TestCase
             new Partitions(new Partition('country', 'PL')),
             new Hash(2, 'ab8476f29c95212a306bffff897d7afb'),
         );
-        $hash = new DatasetHash(
-            new Hash(3, '31be1d609a26d996382e2a23855ebbe5'),
-            [$partition],
-            MultisetHashAlgorithm::xxh128,
-        );
+        $hash = new DatasetHash(new Hash(3, '31be1d609a26d996382e2a23855ebbe5'), [$partition], HashAlgorithm::xxh128);
 
         static::assertEquals(new Hash(3, '31be1d609a26d996382e2a23855ebbe5'), $hash->total);
         static::assertSame([$partition], $hash->partitions);
@@ -42,7 +38,7 @@ final class DatasetHashTest extends TestCase
                         new Hash(3, '00000000000000000000000000000003'),
                     ),
                 ],
-                MultisetHashAlgorithm::xxh128,
+                HashAlgorithm::xxh128,
             ),
             (new DatasetHash(
                 new Hash(1, '00000000000000000000000000000001'),
@@ -52,7 +48,7 @@ final class DatasetHashTest extends TestCase
                         new Hash(1, '00000000000000000000000000000001'),
                     ),
                 ],
-                MultisetHashAlgorithm::xxh128,
+                HashAlgorithm::xxh128,
             ))->plus(
                 new DatasetHash(
                     new Hash(2, '00000000000000000000000000000002'),
@@ -62,7 +58,7 @@ final class DatasetHashTest extends TestCase
                             new Hash(2, '00000000000000000000000000000002'),
                         ),
                     ],
-                    MultisetHashAlgorithm::xxh128,
+                    HashAlgorithm::xxh128,
                 ),
             ),
         );
@@ -85,12 +81,8 @@ final class DatasetHashTest extends TestCase
 
         static::assertEquals(
             [$pl, $de, $us],
-            (new DatasetHash(
-                new Hash(2, '00000000000000000000000000000003'),
-                [$pl, $de],
-                MultisetHashAlgorithm::xxh128,
-            ))->plus(
-                new DatasetHash(new Hash(1, '00000000000000000000000000000004'), [$us], MultisetHashAlgorithm::xxh128),
+            (new DatasetHash(new Hash(2, '00000000000000000000000000000003'), [$pl, $de], HashAlgorithm::xxh128))->plus(
+                new DatasetHash(new Hash(1, '00000000000000000000000000000004'), [$us], HashAlgorithm::xxh128),
             )->partitions,
         );
     }
@@ -114,8 +106,8 @@ final class DatasetHashTest extends TestCase
                         new Hash(1, '00000000000000000000000000000002'),
                     ),
                 ],
-                MultisetHashAlgorithm::xxh128,
-            ))->plus(new DatasetHash(Hash::empty(), [], MultisetHashAlgorithm::xxh128))->partitions,
+                HashAlgorithm::xxh128,
+            ))->plus(new DatasetHash(Hash::empty(), [], HashAlgorithm::xxh128))->partitions,
         );
     }
 
@@ -134,7 +126,7 @@ final class DatasetHashTest extends TestCase
                         new Hash(1, '00000000000000000000000000000001'),
                     ),
                 ],
-                MultisetHashAlgorithm::xxh128,
+                HashAlgorithm::xxh128,
             ))->plus(
                 new DatasetHash(
                     new Hash(1, '00000000000000000000000000000002'),
@@ -144,7 +136,7 @@ final class DatasetHashTest extends TestCase
                             new Hash(1, '00000000000000000000000000000002'),
                         ),
                     ],
-                    MultisetHashAlgorithm::xxh128,
+                    HashAlgorithm::xxh128,
                 ),
             )->partitions,
         );
@@ -160,19 +152,19 @@ final class DatasetHashTest extends TestCase
                     new Hash(1, '00000000000000000000000000000001'),
                 ),
             ],
-            MultisetHashAlgorithm::xxh128,
+            HashAlgorithm::xxh128,
         );
 
-        static::assertEquals($hash, $hash->plus(new DatasetHash(Hash::empty(), [], MultisetHashAlgorithm::xxh128)));
-        static::assertEquals($hash, (new DatasetHash(Hash::empty(), [], MultisetHashAlgorithm::xxh128))->plus($hash));
+        static::assertEquals($hash, $hash->plus(new DatasetHash(Hash::empty(), [], HashAlgorithm::xxh128)));
+        static::assertEquals($hash, (new DatasetHash(Hash::empty(), [], HashAlgorithm::xxh128))->plus($hash));
     }
 
     public function test_plus_of_two_whole_hashes_adds_the_totals_and_has_no_partitions(): void
     {
         static::assertEquals(
-            new DatasetHash(new Hash(5, 'ffffffffffffffff0000000000000000'), [], MultisetHashAlgorithm::xxh128),
-            (new DatasetHash(new Hash(2, 'ffffffffffffffffffffffffffffffff'), [], MultisetHashAlgorithm::xxh128))->plus(
-                new DatasetHash(new Hash(3, '00000000000000000000000000000001'), [], MultisetHashAlgorithm::xxh128),
+            new DatasetHash(new Hash(5, 'ffffffffffffffff0000000000000000'), [], HashAlgorithm::xxh128),
+            (new DatasetHash(new Hash(2, 'ffffffffffffffffffffffffffffffff'), [], HashAlgorithm::xxh128))->plus(
+                new DatasetHash(new Hash(3, '00000000000000000000000000000001'), [], HashAlgorithm::xxh128),
             ),
         );
     }
@@ -206,7 +198,7 @@ final class DatasetHashTest extends TestCase
                         new Hash(1, 'f3aebd664d56cdeceed04ea04775ad52'),
                     ),
                 ],
-                MultisetHashAlgorithm::xxh128,
+                HashAlgorithm::xxh128,
             ))->normalize(),
         );
     }
@@ -221,7 +213,7 @@ final class DatasetHashTest extends TestCase
                     new Hash(2, 'ab8476f29c95212a306bffff897d7afb'),
                 ),
             ],
-            MultisetHashAlgorithm::xxh128,
+            HashAlgorithm::xxh128,
         );
 
         static::assertEquals($hash, DatasetHash::fromArray($hash->normalize()));
@@ -229,7 +221,7 @@ final class DatasetHashTest extends TestCase
 
     public function test_a_hash_without_partitions_reads_back_without_partitions(): void
     {
-        $hash = new DatasetHash(new Hash(3, '31be1d609a26d996382e2a23855ebbe5'), [], MultisetHashAlgorithm::xxh128);
+        $hash = new DatasetHash(new Hash(3, '31be1d609a26d996382e2a23855ebbe5'), [], HashAlgorithm::xxh128);
 
         static::assertSame(
             [
@@ -250,8 +242,8 @@ final class DatasetHashTest extends TestCase
             'partitions' => [],
         ]);
 
-        static::assertSame(MultisetHashAlgorithm::sha256, $stored->algorithm);
-        static::assertSame(MultisetHashAlgorithm::sha256, $stored->plus($stored)->algorithm);
+        static::assertSame(HashAlgorithm::sha256, $stored->algorithm);
+        static::assertSame(HashAlgorithm::sha256, $stored->plus($stored)->algorithm);
     }
 
     public function test_from_array_needs_the_algorithm(): void
@@ -265,7 +257,7 @@ final class DatasetHashTest extends TestCase
     public function test_from_array_refuses_an_unknown_algorithm(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Unknown multiset hash algorithm "crc32", use one of: md5, sha256, xxh128');
+        $this->expectExceptionMessage('Unknown hash algorithm "crc32", use one of: md5, sha256, xxh128');
 
         DatasetHash::fromArray([
             'algorithm' => 'crc32',
@@ -281,8 +273,8 @@ final class DatasetHashTest extends TestCase
             'A sha256 dataset hash cannot be added to a xxh128 dataset hash, hash both datasets with the same algorithm',
         );
 
-        (new DatasetHash(Hash::empty(), [], MultisetHashAlgorithm::xxh128))->plus(
-            new DatasetHash(Hash::empty(), [], MultisetHashAlgorithm::sha256),
+        (new DatasetHash(Hash::empty(), [], HashAlgorithm::xxh128))->plus(
+            new DatasetHash(Hash::empty(), [], HashAlgorithm::sha256),
         );
     }
 

@@ -1,4 +1,4 @@
-//! `RustBackend::compare()`, the text matches, `isNull()` and `isNotNull()`: native where arrow answers exactly as
+//! `RustBackend::compare()`, the text matches, `hash()`, `isNull()` and `isNotNull()`: native where arrow answers exactly as
 //! `PhpBackend` does.
 
 use std::sync::Arc;
@@ -9,7 +9,9 @@ use arrow_array::{ArrayRef, BooleanArray, Float64Array, LargeBinaryArray};
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::types::Zval;
 use flow_column_kernels::compare::{compare_floats, compare_ordered, floats_of_ints, Operator};
+use flow_column_kernels::digest::{hex_digests, HexDigest};
 
+use crate::canonical_rows::STRING_TYPE;
 use crate::column::RustColumn;
 use crate::ctx::{expect_object, read_property};
 use crate::exception::ext_exception;
@@ -65,6 +67,23 @@ pub fn native_text_match(
         haystack.data().as_binary::<i64>(),
         needle.data().as_binary::<i64>(),
     ))
+    .map(Some)
+}
+
+// None sends the call to PhpBackend, as native_text_match does
+pub fn native_hash(strings: &Zval, digest: HexDigest) -> Result<Option<RustColumn>, PhpException> {
+    let Some(strings) = strings.extract::<&RustColumn>() else {
+        return Ok(None);
+    };
+
+    if strings.plan().type_name != "string" {
+        return Ok(None);
+    }
+
+    RustColumn::of_type(
+        Arc::new(hex_digests(strings.data().as_binary::<i64>(), digest)),
+        STRING_TYPE,
+    )
     .map(Some)
 }
 
