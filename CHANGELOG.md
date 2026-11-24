@@ -1,6 +1,7 @@
 ## [Unreleased] - 2026-11-24
 
 ### Added
+- [#2765](https://github.com/flow-php/flow/pull/2765) - **flow-php/etl - analyze()->withDatasetHash() accepts column names** - [@norberttech](https://github.com/norberttech)
 - [#2764](https://github.com/flow-php/flow/pull/2764) - **flow-php/etl - Schema::fingerprint() with a versioned canonical form and hash** - [@norberttech](https://github.com/norberttech)
 - [#2764](https://github.com/flow-php/flow/pull/2764) - **flow-php/etl - schema_fingerprint_options() to select metadata keys** - [@norberttech](https://github.com/norberttech)
 - [#2764](https://github.com/flow-php/flow/pull/2764) - **flow-php/etl - HashAlgorithm enum (md5, sha256, xxh128)** - [@norberttech](https://github.com/norberttech)
@@ -52,6 +53,14 @@
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - Packagist links in the hero and the footer** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2765](https://github.com/flow-php/flow/pull/2765) - **flow-php/etl - FileLoader::partitionBy() takes the columns and a writeColumns argument** - [@norberttech](https://github.com/norberttech)
+- [#2765](https://github.com/flow-php/flow/pull/2765) - **flow-php/etl - Partitioning::by() takes a column or a list of columns and writeColumns** - [@norberttech](https://github.com/norberttech)
+- [#2765](https://github.com/flow-php/flow/pull/2765) - **flow-php/etl-adapter-csv - partitionBy() takes the columns** - [@norberttech](https://github.com/norberttech)
+- [#2765](https://github.com/flow-php/flow/pull/2765) - **flow-php/etl-adapter-json - partitionBy() takes the columns** - [@norberttech](https://github.com/norberttech)
+- [#2765](https://github.com/flow-php/flow/pull/2765) - **flow-php/etl-adapter-text - partitionBy() takes the columns** - [@norberttech](https://github.com/norberttech)
+- [#2765](https://github.com/flow-php/flow/pull/2765) - **flow-php/etl-adapter-xml - partitionBy() takes the columns** - [@norberttech](https://github.com/norberttech)
+- [#2765](https://github.com/flow-php/flow/pull/2765) - **flow-php/etl-adapter-excel - partitionBy() takes the columns** - [@norberttech](https://github.com/norberttech)
+- [#2765](https://github.com/flow-php/flow/pull/2765) - **flow-php/etl-adapter-parquet - partitionBy() takes the columns** - [@norberttech](https://github.com/norberttech)
 - [#2764](https://github.com/flow-php/flow/pull/2764) - **flow-php/etl - hash() takes a HashAlgorithm** - [@norberttech](https://github.com/norberttech)
 - [#2764](https://github.com/flow-php/flow/pull/2764) - **flow-php/etl - list order in schema metadata counts** - [@norberttech](https://github.com/norberttech)
 - [#2763](https://github.com/flow-php/flow/pull/2763) - **flow-php/postgresql - Migrator::executeVersion() refuses an executed (up) or not executed (down) version** - [@norberttech](https://github.com/norberttech)
@@ -99,6 +108,8 @@
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/cli - phar build with a composer wrapper** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2765](https://github.com/flow-php/flow/pull/2765) - **flow-php/etl - partition_by()** - [@norberttech](https://github.com/norberttech)
+- [#2765](https://github.com/flow-php/flow/pull/2765) - **flow-php/etl - Partitioning::writeColumns()** - [@norberttech](https://github.com/norberttech)
 - [#2764](https://github.com/flow-php/flow/pull/2764) - **flow-php/etl - Algorithm, PhpAlgorithm, PlainText, MultisetHashAlgorithm** - [@norberttech](https://github.com/norberttech)
 - [#2764](https://github.com/flow-php/flow/pull/2764) - **flow-php/etl - hash_algorithm()** - [@norberttech](https://github.com/norberttech)
 - [#2764](https://github.com/flow-php/flow/pull/2764) - **flow-php/etl - Foundation\ArrayComparison** - [@norberttech](https://github.com/norberttech)
