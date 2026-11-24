@@ -298,6 +298,7 @@ fn positioned_markup(physical: &[u8]) -> Option<&[u8]> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::digest::hex;
     use arrow_array::builder::{Int64Builder, LargeBinaryBuilder, MapBuilder};
     use arrow_array::{
         ArrayRef, BooleanArray, Date32Array, DurationMicrosecondArray, FixedSizeBinaryArray, Float64Array, Int64Array,
@@ -319,10 +320,6 @@ mod tests {
                 hex(&out)
             })
             .collect()
-    }
-
-    fn hex(bytes: &[u8]) -> String {
-        bytes.iter().map(|byte| format!("{byte:02x}")).collect()
     }
 
     fn binary(values: &[&[u8]]) -> ArrayRef {

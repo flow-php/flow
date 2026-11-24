@@ -494,5 +494,5 @@ echo schema(int_schema('id'), str_schema('email', nullable: true))->fingerprint(
 - Identity: column names (bytes), order, types with all parameters, nullability. Metadata only for the selected
   keys. Enum columns compare the class name, not the cases.
 - Options only add to identity. Ignoring order or nullability is a comparison, not a fingerprint.
-- If an untrusted party can write schemas, use `$schema->fingerprint()->hash(hash_algorithm('sha256'))`. xxh128 is
+- If an untrusted party can write schemas, use `$schema->fingerprint()->hash(HashAlgorithm::sha256)`. xxh128 is
   stable on every platform, but it is not collision-safe against an attacker.

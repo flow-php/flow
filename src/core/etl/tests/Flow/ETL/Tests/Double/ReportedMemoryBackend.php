@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
+use Flow\ETL\Foundation\Hash\HashAlgorithm;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Column\Column;
 use Flow\ETL\Values\Column\ColumnBuilder;
@@ -11,7 +12,6 @@ use Flow\ETL\Values\Column\Frame\Codec;
 use Flow\ETL\Values\Column\GroupedCounts;
 use Flow\ETL\Values\Column\GroupedMultisetHashes;
 use Flow\ETL\Values\Column\GroupedTotals;
-use Flow\ETL\Values\Column\MultisetHashAlgorithm;
 use Flow\ETL\Values\Column\PhpBackend;
 use Flow\ETL\Values\Grouping\GroupTable;
 use Flow\ETL\Values\Rows;
@@ -152,7 +152,12 @@ final class ReportedMemoryBackend implements Backend
         return $this->php->rowHashes($columns, $count);
     }
 
-    public function groupedMultisetHashes(MultisetHashAlgorithm $algorithm): GroupedMultisetHashes
+    public function hash(Column $strings, HashAlgorithm $algorithm): Column
+    {
+        return $this->php->hash($strings, $algorithm);
+    }
+
+    public function groupedMultisetHashes(HashAlgorithm $algorithm): GroupedMultisetHashes
     {
         return $this->php->groupedMultisetHashes($algorithm);
     }

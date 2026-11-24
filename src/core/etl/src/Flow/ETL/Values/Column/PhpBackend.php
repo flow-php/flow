@@ -13,6 +13,7 @@ use Flow\ETL\Foundation\Exception\ColumnMismatchException;
 use Flow\ETL\Foundation\Exception\EvaluationException;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Exception\SchemaMismatchException;
+use Flow\ETL\Foundation\Hash\HashAlgorithm;
 use Flow\ETL\Values\Column\Frame\Codec;
 use Flow\ETL\Values\Column\Frame\FloeException;
 use Flow\ETL\Values\Column\Frame\FrameTooLarge;
@@ -676,14 +677,28 @@ final readonly class PhpBackend implements Backend, Describable
             type_string(),
             (new PhysicalFor())->physical(type_string()),
             array_map(
-                static fn(string $bytes): string => hash('xxh128', $bytes),
+                static fn(string $bytes): string => hash(HashAlgorithm::xxh128->value, $bytes),
                 (new CanonicalEncoding())->named($columns, $count),
             ),
             0,
         );
     }
 
-    public function groupedMultisetHashes(MultisetHashAlgorithm $algorithm): GroupedMultisetHashes
+    public function hash(Column $strings, HashAlgorithm $algorithm): Column
+    {
+        $definition = Definitions::of('value', type_string(), true);
+
+        return new ScalarColumn(
+            $definition->type(),
+            (new PhysicalFor())->definition($definition),
+            array_map(static fn(?string $text): ?string => $text === null
+                ? null
+                : hash($algorithm->value, $text), $strings->physicals()),
+            $strings->nullCount(),
+        );
+    }
+
+    public function groupedMultisetHashes(HashAlgorithm $algorithm): GroupedMultisetHashes
     {
         return new PhpGroupedMultisetHashes($algorithm);
     }

@@ -25,6 +25,7 @@ use flow_batch_frame::layout::buffer_count;
 use flow_column_kernels::arithmetic::Operator;
 use flow_column_kernels::canonical::{md5_row_lanes, row_lanes, sha256_row_lanes};
 use flow_column_kernels::compare::{contains, ends_with, is_not_null, is_null, starts_with};
+use flow_column_kernels::digest::{md5_hex, sha256_hex, xxh128_hex, HexDigest};
 use flow_column_kernels::grouping::bucket_of;
 
 use crate::arithmetic::{native_arithmetic, native_modulo};
@@ -32,7 +33,7 @@ use crate::batch_columns::HeldBatch;
 use crate::builder::{throw, RustColumnBuilder};
 use crate::canonical_rows::{named, named_column, ordered, row_columns, STRING_TYPE};
 use crate::column::RustColumn;
-use crate::compare::{boolean_column, native_comparison, native_text_match};
+use crate::compare::{boolean_column, native_comparison, native_hash, native_text_match};
 use crate::ctx::{
     call_handle_catching, call_method, call_static, ce_method_ref, column_key, construct, expect_object, find_class,
     ht_for_each, ht_get, ht_insert, ht_insert_long, instance, read_property, transparent_exception, zval_long,
@@ -129,6 +130,20 @@ impl Definitions {
             .iter()
             .map(|column| (column.key.clone(), Rc::clone(&column.plan)))
             .collect()
+    }
+}
+
+fn hash_algorithm(algorithm: &Zval) -> PhpResult<(RowLanes, HexDigest)> {
+    let name = read_property(expect_object(algorithm, "a HashAlgorithm")?, "value")?;
+
+    match name.zend_str().map(|name| name.as_bytes()).unwrap_or_default() {
+        b"xxh128" => Ok((row_lanes, xxh128_hex)),
+        b"md5" => Ok((md5_row_lanes, md5_hex)),
+        b"sha256" => Ok((sha256_row_lanes, sha256_hex)),
+        unknown => Err(ext_exception(format!(
+            "flow_php does not know the hash algorithm \"{}\", update the extension",
+            String::from_utf8_lossy(unknown)
+        ))),
     }
 }
 
@@ -301,20 +316,18 @@ impl RustBackend {
 
     #[php(name = "groupedMultisetHashes")]
     pub fn grouped_multiset_hashes(&self, algorithm: &Zval) -> PhpResult<RustGroupedMultisetHashes> {
-        let name = read_property(expect_object(algorithm, "a MultisetHashAlgorithm")?, "value")?;
-        let row_lanes: RowLanes = match name.zend_str().map(|name| name.as_bytes()) {
-            Some(b"xxh128") => row_lanes,
-            Some(b"md5") => md5_row_lanes,
-            Some(b"sha256") => sha256_row_lanes,
-            unknown => {
-                return Err(ext_exception(format!(
-                    "flow_php does not know the multiset hash algorithm \"{}\", update the extension",
-                    String::from_utf8_lossy(unknown.unwrap_or_default())
-                )))
-            }
-        };
+        Ok(RustGroupedMultisetHashes::of(hash_algorithm(algorithm)?.0))
+    }
 
-        Ok(RustGroupedMultisetHashes::of(row_lanes))
+    pub fn hash(&self, strings: &Zval, algorithm: &Zval) -> PhpResult<ColumnValue> {
+        match native_hash(strings, hash_algorithm(algorithm)?.1)? {
+            Some(digests) => Ok(ColumnValue(digests.into_zval(false)?)),
+            None => self.adopt_result(call_method(
+                &instance(PHP_BACKEND)?,
+                "hash",
+                &mut [strings.shallow_clone(), algorithm.shallow_clone()],
+            )?),
+        }
     }
 
     #[php(name = "groupTable")]

@@ -8,6 +8,7 @@ use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\FlowPhpExtension;
+use Flow\ETL\Foundation\Hash\HashAlgorithm;
 use Flow\ETL\Values\Column\Frame\Codec;
 use Flow\ETL\Values\Grouping\GroupTable;
 use Flow\ETL\Values\Rows;
@@ -144,7 +145,12 @@ final readonly class AdaptiveBackend implements Backend, Describable
         return $this->backend->rowHashes($columns, $count);
     }
 
-    public function groupedMultisetHashes(MultisetHashAlgorithm $algorithm): GroupedMultisetHashes
+    public function hash(Column $strings, HashAlgorithm $algorithm): Column
+    {
+        return $this->backend->hash($strings, $algorithm);
+    }
+
+    public function groupedMultisetHashes(HashAlgorithm $algorithm): GroupedMultisetHashes
     {
         return $this->backend->groupedMultisetHashes($algorithm);
     }

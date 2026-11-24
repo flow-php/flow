@@ -59,26 +59,25 @@ Applies to the delete, update, insert and merge builders.
 Floe files and caches written by 0.45 to 0.48 keep the raw form of a detached xml element. Flow compares, hashes and
 writes such a value in that raw form. Write the file again with this version to store the C14N markup.
 
-### 5) `flow-php/etl` - `NativePHPHash` is renamed to `PhpAlgorithm`, and `hash()` takes an algorithm name
+### 5) `flow-php/etl` - `NativePHPHash`, `Algorithm` and `PlainText` are replaced by the enum `HashAlgorithm`, and `hash()` takes it
 
-| Before                                                                   | After                                                                 |
-|--------------------------------------------------------------------------|-----------------------------------------------------------------------|
-| `Flow\ETL\Kernels\Hash\NativePHPHash`                                    | `Flow\ETL\Foundation\Hash\PhpAlgorithm`                               |
-| `Flow\ETL\Kernels\Hash\{Algorithm, PlainText}`                           | `Flow\ETL\Foundation\Hash\{Algorithm, PlainText}`                     |
-| `hash(ref('email'), new NativePHPHash('sha256'))`                        | `hash(ref('email'), 'sha256')`                                        |
-| `ref('email')->hash(new NativePHPHash('xxh64', options: ['seed' => 7]))` | `ref('email')->hash(hash_algorithm('xxh64', options: ['seed' => 7]))` |
+| Before                                                                | After                                                                |
+|-----------------------------------------------------------------------|----------------------------------------------------------------------|
+| `Flow\ETL\Kernels\Hash\NativePHPHash`                                 | `Flow\ETL\Foundation\Hash\HashAlgorithm` (`md5`, `sha256`, `xxh128`) |
+| `hash(ref('email'), new NativePHPHash('sha256'))`                     | `hash(ref('email'), HashAlgorithm::sha256)`                          |
+| `new NativePHPHash('sha512')`, `xxh64`, any other `hash_algos()` name | not available, hash the value in PHP outside the pipeline            |
+| `new NativePHPHash('xxh64', options: ['seed' => 7])`                  | not available, seeds and options are removed                         |
+| `new NativePHPHash('sha256', binary: true)`                           | `hex2bin()` of the hex result                                        |
+| `Flow\ETL\Kernels\Hash\PlainText`                                     | removed, use the value itself                                        |
+| a custom class that implements `Flow\ETL\Kernels\Hash\Algorithm`      | removed, `hash()` takes only `HashAlgorithm`                         |
 
-Catch `Flow\ETL\Foundation\Exception\InvalidArgumentException` instead of `\InvalidArgumentException` for an unknown algorithm name.
+### 6) `flow-php/etl` - the flow_php ABI is 4
 
-### 6) `flow-php/etl` - `Backend` has two new methods, and the flow_php ABI is 4
+| Before           | After            |
+|------------------|------------------|
+| `FLOW_PHP_ABI` 3 | `FLOW_PHP_ABI` 4 |
 
-| Before           | After                                                                                     |
-|------------------|-------------------------------------------------------------------------------------------|
-| -                | `Backend::rowHashes(array $columns, int $count): Column`                                  |
-| -                | `Backend::groupedMultisetHashes(MultisetHashAlgorithm $algorithm): GroupedMultisetHashes` |
-| `FLOW_PHP_ABI` 3 | `FLOW_PHP_ABI` 4                                                                          |
-
-A custom `Backend` must implement the two methods. Update or rebuild the flow_php extension together with the library.
+Update or rebuild the flow_php extension together with the library.
 
 ### 7) `flow-php/etl` - group, join, distinct and bucket keys have the declared type of their column
 

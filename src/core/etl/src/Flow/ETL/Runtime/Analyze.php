@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Runtime;
 
+use Flow\ETL\Foundation\Hash\HashAlgorithm;
 use Flow\ETL\Functions\Reference\Reference;
 use Flow\ETL\Functions\Reference\References;
 use Flow\ETL\Runtime\Executor\OutputHasher;
 use Flow\ETL\Runtime\Executor\PartitionedOutputHasher;
 use Flow\ETL\Runtime\Executor\WholeOutputHasher;
-use Flow\ETL\Values\Column\MultisetHashAlgorithm;
 
 final class Analyze
 {
@@ -21,7 +21,7 @@ final class Analyze
 
     private ?References $datasetHashBy = null;
 
-    private MultisetHashAlgorithm $datasetHashAlgorithm;
+    private HashAlgorithm $datasetHashAlgorithm;
 
     public function __construct() {}
 
@@ -59,10 +59,8 @@ final class Analyze
     /**
      * @param array<Reference> $partitions
      */
-    public function withDatasetHash(
-        array $partitions = [],
-        MultisetHashAlgorithm $algorithm = MultisetHashAlgorithm::xxh128,
-    ): self {
+    public function withDatasetHash(array $partitions = [], HashAlgorithm $algorithm = HashAlgorithm::xxh128): self
+    {
         $this->datasetHashBy = new References(...$partitions);
         $this->datasetHashAlgorithm = $algorithm;
 

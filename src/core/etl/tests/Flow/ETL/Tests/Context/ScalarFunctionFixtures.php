@@ -10,7 +10,7 @@ use DOMDocument;
 use Flow\ETL\Foundation\Calculator\Rounding;
 use Flow\ETL\Foundation\Exception\RequiredPHPVersionException;
 use Flow\ETL\Foundation\Exception\SchemaNotDerivableException;
-use Flow\ETL\Foundation\Hash\PhpAlgorithm;
+use Flow\ETL\Foundation\Hash\HashAlgorithm;
 use Flow\ETL\Functions;
 use Flow\ETL\Functions\All;
 use Flow\ETL\Functions\Any;
@@ -572,9 +572,7 @@ final class ScalarFunctionFixtures
                 'returns' => type_optional(type_integer()),
             ],
             Hash::class => [
-                'factory' => static fn(): ScalarFunction => new Hash(ref('string'), new PhpAlgorithm('sha256', true, [
-                    'seed' => 3,
-                ])),
+                'factory' => static fn(): ScalarFunction => new Hash(ref('string'), HashAlgorithm::sha256),
                 'returns' => type_optional(type_string()),
             ],
             RowHash::class => [

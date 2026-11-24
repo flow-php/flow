@@ -7,6 +7,7 @@ namespace Flow\ETL\Runtime\Executor;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Hash\HashAlgorithm;
 use Flow\ETL\Functions\Reference\Reference;
 use Flow\ETL\Functions\Reference\References;
 use Flow\ETL\IO\Loader\RowPartitions;
@@ -16,7 +17,6 @@ use Flow\ETL\Runtime\Metrics\PartitionHash;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Column\GroupedCounts;
 use Flow\ETL\Values\Column\GroupedMultisetHashes;
-use Flow\ETL\Values\Column\MultisetHashAlgorithm;
 use Flow\ETL\Values\Grouping\GroupTable;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema;
@@ -51,7 +51,7 @@ final class PartitionedOutputHasher implements OutputHasher
 
     public function __construct(
         private readonly References $by,
-        private readonly MultisetHashAlgorithm $algorithm,
+        private readonly HashAlgorithm $algorithm,
     ) {
         $this->absorbed = new DatasetHash(Hash::empty(), [], $algorithm);
         $this->declared = new Schema();
@@ -62,7 +62,7 @@ final class PartitionedOutputHasher implements OutputHasher
     {
         return new self(
             $rebuild->of($data['by'] ?? null, References::class),
-            MultisetHashAlgorithm::named(type_string()->assert($data['algorithm'] ?? null)),
+            HashAlgorithm::named(type_string()->assert($data['algorithm'] ?? null)),
         );
     }
 

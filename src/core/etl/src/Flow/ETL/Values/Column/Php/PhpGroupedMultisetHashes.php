@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Values\Column\Php;
 
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Hash\HashAlgorithm;
 use Flow\ETL\Values\Column\CanonicalEncoding;
 use Flow\ETL\Values\Column\Column;
 use Flow\ETL\Values\Column\GroupedMultisetHashes;
 use Flow\ETL\Values\Column\MultisetDigest;
-use Flow\ETL\Values\Column\MultisetHashAlgorithm;
 use Flow\ETL\Values\Column\Physical\PhysicalFor;
 
 use function array_map;
@@ -28,7 +28,7 @@ final class PhpGroupedMultisetHashes implements GroupedMultisetHashes
     private array $digests = [];
 
     public function __construct(
-        private readonly MultisetHashAlgorithm $algorithm,
+        private readonly HashAlgorithm $algorithm,
         private readonly CanonicalEncoding $encoding = new CanonicalEncoding(),
     ) {}
 

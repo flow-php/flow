@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Runtime\Metrics;
 
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
-use Flow\ETL\Values\Column\MultisetHashAlgorithm;
+use Flow\ETL\Foundation\Hash\HashAlgorithm;
 use Flow\Filesystem\Partition;
 
 use function array_key_exists;
@@ -27,7 +27,7 @@ final readonly class DatasetHash
     public function __construct(
         public Hash $total,
         public array $partitions,
-        public MultisetHashAlgorithm $algorithm,
+        public HashAlgorithm $algorithm,
     ) {}
 
     /**
@@ -55,7 +55,7 @@ final readonly class DatasetHash
         return new self(
             Hash::fromArray($data['total']),
             array_map(PartitionHash::fromArray(...), $data['partitions']),
-            MultisetHashAlgorithm::named($data['algorithm']),
+            HashAlgorithm::named($data['algorithm']),
         );
     }
 

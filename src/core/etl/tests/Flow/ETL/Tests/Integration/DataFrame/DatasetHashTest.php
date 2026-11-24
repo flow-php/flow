@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use DateTimeImmutable;
+use Flow\ETL\Foundation\Hash\HashAlgorithm;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\ETL\Values\Column\MultisetDigest;
-use Flow\ETL\Values\Column\MultisetHashAlgorithm;
 use Flow\Filesystem\Partition;
 use PHPUnit\Framework\Attributes\TestWith;
 
@@ -81,10 +81,10 @@ final class DatasetHashTest extends FlowIntegrationTestCase
                 ['id' => 2, 'country' => 'DE'],
                 ['id' => 3, 'country' => 'PL'],
             ]))
-            ->run(analyze: analyze()->withDatasetHash(algorithm: MultisetHashAlgorithm::sha256))
+            ->run(analyze: analyze()->withDatasetHash(algorithm: HashAlgorithm::sha256))
             ->datasetHash();
 
-        static::assertSame(MultisetHashAlgorithm::sha256, $hash?->algorithm);
+        static::assertSame(HashAlgorithm::sha256, $hash?->algorithm);
         static::assertSame('cb6fbf9a3db645ba28221bc5cc601940', $hash->total->value);
     }
 

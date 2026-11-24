@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Runtime\Metrics;
 
+use Flow\ETL\Foundation\Hash\HashAlgorithm;
 use Flow\ETL\IO\Extractor\Statistics;
 use Flow\ETL\Runtime\Metrics\DatasetHash;
 use Flow\ETL\Runtime\Metrics\Hash;
@@ -15,7 +16,6 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\ColumnMother;
 use Flow\ETL\Tests\Mother\ReportMother;
 use Flow\ETL\Values\Cardinality;
-use Flow\ETL\Values\Column\MultisetHashAlgorithm;
 use Flow\ETL\Values\Memory\Unit;
 use Flow\Filesystem\Partition;
 use Flow\Filesystem\Partitions;
@@ -42,7 +42,7 @@ final class ReportTest extends FlowTestCase
                 new Partitions(new Partition('country', null)),
                 new Hash(2, '721f4650154ebb88ac4ec50a605901df'),
             ),
-        ], MultisetHashAlgorithm::xxh128));
+        ], HashAlgorithm::xxh128));
 
         $normalized = $report->normalize();
 

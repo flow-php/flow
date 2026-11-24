@@ -127,11 +127,10 @@ final readonly class Metadata
     }
 
     /**
-     * @return array<string, array<bool|float|int|string>|bool|float|int|string>
+     * @return array<string, array<array-key, mixed>|bool|float|int|string>
      */
     public function normalize(): array
     {
-        /** @var array<string, array<bool|float|int|string>|bool|float|int|string> */
         return $this->map;
     }
 

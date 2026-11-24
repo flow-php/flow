@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Values\Column\Php;
 
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Hash\HashAlgorithm;
 use Flow\ETL\Tests\Mother\ColumnMother;
 use Flow\ETL\Values\Column\MultisetDigest;
-use Flow\ETL\Values\Column\MultisetHashAlgorithm;
 use Flow\ETL\Values\Column\Php\PhpGroupedMultisetHashes;
 use Flow\ETL\Values\Column\PhpBackend;
 use PHPUnit\Framework\Attributes\TestWith;
@@ -23,7 +23,7 @@ final class PhpGroupedMultisetHashesTest extends TestCase
 {
     public function test_each_row_is_summed_into_its_group(): void
     {
-        $hashes = new PhpGroupedMultisetHashes(MultisetHashAlgorithm::xxh128);
+        $hashes = new PhpGroupedMultisetHashes(HashAlgorithm::xxh128);
         $hashes->add(
             array_to_rows([['a' => 1], ['a' => 2], ['a' => 1]], schema(int_schema('a')))->columns(),
             ColumnMother::of(int_schema('id'), [0, 1, 0]),
@@ -35,10 +35,10 @@ final class PhpGroupedMultisetHashesTest extends TestCase
         );
     }
 
-    #[TestWith([MultisetHashAlgorithm::md5, '53b117ed69552c4ee4c638e6c72a526a', '8c589f902ff9330489f46e8138ef3fff'])]
-    #[TestWith([MultisetHashAlgorithm::sha256, '8f55cd2c66338b181c9f478cff77d05c', '7c396438b2b1506bc82ea94d4ad238cd'])]
+    #[TestWith([HashAlgorithm::md5, '53b117ed69552c4ee4c638e6c72a526a', '8c589f902ff9330489f46e8138ef3fff'])]
+    #[TestWith([HashAlgorithm::sha256, '8f55cd2c66338b181c9f478cff77d05c', '7c396438b2b1506bc82ea94d4ad238cd'])]
     public function test_another_algorithm_sums_the_first_128_bits_of_its_digest(
-        MultisetHashAlgorithm $algorithm,
+        HashAlgorithm $algorithm,
         string $first,
         string $second,
     ): void {
@@ -53,7 +53,7 @@ final class PhpGroupedMultisetHashesTest extends TestCase
 
     public function test_a_group_below_the_highest_seen_one_is_zero(): void
     {
-        $hashes = new PhpGroupedMultisetHashes(MultisetHashAlgorithm::xxh128);
+        $hashes = new PhpGroupedMultisetHashes(HashAlgorithm::xxh128);
         $hashes->add(
             array_to_rows([['a' => 1]], schema(int_schema('a')))->columns(),
             ColumnMother::of(int_schema('id'), [1]),
@@ -67,7 +67,7 @@ final class PhpGroupedMultisetHashesTest extends TestCase
 
     public function test_no_rows_give_no_groups(): void
     {
-        $hashes = new PhpGroupedMultisetHashes(MultisetHashAlgorithm::xxh128);
+        $hashes = new PhpGroupedMultisetHashes(HashAlgorithm::xxh128);
         $hashes->add([], ColumnMother::of(int_schema('id'), []));
 
         static::assertSame([], $hashes->hashes()->physicals());
@@ -75,7 +75,7 @@ final class PhpGroupedMultisetHashesTest extends TestCase
 
     public function test_hashes_are_the_digests_by_group(): void
     {
-        $hashes = new PhpGroupedMultisetHashes(MultisetHashAlgorithm::xxh128);
+        $hashes = new PhpGroupedMultisetHashes(HashAlgorithm::xxh128);
         $hashes->add(
             array_to_rows([['a' => 1], ['a' => 2]], schema(int_schema('a')))->columns(),
             ColumnMother::of(int_schema('id'), [0, 1]),
@@ -89,12 +89,12 @@ final class PhpGroupedMultisetHashesTest extends TestCase
 
     public function test_earlier_groups_are_added_to_the_groups_they_map_to(): void
     {
-        $earlier = new PhpGroupedMultisetHashes(MultisetHashAlgorithm::xxh128);
+        $earlier = new PhpGroupedMultisetHashes(HashAlgorithm::xxh128);
         $earlier->add(
             array_to_rows([['a' => 1], ['a' => 2]], schema(int_schema('a')))->columns(),
             ColumnMother::of(int_schema('id'), [0, 1]),
         );
-        $later = new PhpGroupedMultisetHashes(MultisetHashAlgorithm::xxh128);
+        $later = new PhpGroupedMultisetHashes(HashAlgorithm::xxh128);
         $later->add(
             array_to_rows([['a' => 1]], schema(int_schema('a')))->columns(),
             ColumnMother::of(int_schema('id'), [0]),
@@ -116,7 +116,7 @@ final class PhpGroupedMultisetHashesTest extends TestCase
         /** @var array{1: int, 2: int} $lanes */
         $lanes = unpack('J2', hash('xxh128', '', true));
         $empty = new MultisetDigest($lanes[2], $lanes[1]);
-        $hashes = new PhpGroupedMultisetHashes(MultisetHashAlgorithm::xxh128);
+        $hashes = new PhpGroupedMultisetHashes(HashAlgorithm::xxh128);
         $hashes->add([], ColumnMother::of(int_schema('id'), [1, 0, 1]));
 
         static::assertSame([$empty->hex(), $empty->plus($empty)->hex()], $hashes->hashes()->physicals());
@@ -125,7 +125,7 @@ final class PhpGroupedMultisetHashesTest extends TestCase
     public function test_one_row_in_one_group_equals_its_row_hash(): void
     {
         $rows = array_to_rows([['a' => 1]], schema(int_schema('a')));
-        $hashes = new PhpGroupedMultisetHashes(MultisetHashAlgorithm::xxh128);
+        $hashes = new PhpGroupedMultisetHashes(HashAlgorithm::xxh128);
         $hashes->add($rows->columns(), ColumnMother::of(int_schema('id'), [0]));
 
         static::assertSame(['8e18789eac90baf2a1f6bc7cceafa11a'], $hashes->hashes()->physicals());
@@ -139,12 +139,12 @@ final class PhpGroupedMultisetHashesTest extends TestCase
 
     public function test_row_order_over_batches_does_not_count(): void
     {
-        $forward = new PhpGroupedMultisetHashes(MultisetHashAlgorithm::xxh128);
+        $forward = new PhpGroupedMultisetHashes(HashAlgorithm::xxh128);
         $forward->add(
             array_to_rows([['a' => 1], ['a' => 2]], schema(int_schema('a')))->columns(),
             ColumnMother::of(int_schema('id'), [0, 0]),
         );
-        $backward = new PhpGroupedMultisetHashes(MultisetHashAlgorithm::xxh128);
+        $backward = new PhpGroupedMultisetHashes(HashAlgorithm::xxh128);
         $backward->add(
             array_to_rows([['a' => 2]], schema(int_schema('a')))->columns(),
             ColumnMother::of(int_schema('id'), [0]),
@@ -160,7 +160,7 @@ final class PhpGroupedMultisetHashesTest extends TestCase
 
     public function test_a_row_of_only_nulls_counts_as_a_row(): void
     {
-        $hashes = new PhpGroupedMultisetHashes(MultisetHashAlgorithm::xxh128);
+        $hashes = new PhpGroupedMultisetHashes(HashAlgorithm::xxh128);
         $hashes->add(
             array_to_rows([['a' => null]], schema(int_schema('a', true)))->columns(),
             ColumnMother::of(int_schema('id'), [0]),
@@ -174,8 +174,8 @@ final class PhpGroupedMultisetHashesTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Earlier group 3 has no hash');
 
-        (new PhpGroupedMultisetHashes(MultisetHashAlgorithm::xxh128))->absorbEarlier(
-            new PhpGroupedMultisetHashes(MultisetHashAlgorithm::xxh128),
+        (new PhpGroupedMultisetHashes(HashAlgorithm::xxh128))->absorbEarlier(
+            new PhpGroupedMultisetHashes(HashAlgorithm::xxh128),
             [3 => 0],
         );
     }

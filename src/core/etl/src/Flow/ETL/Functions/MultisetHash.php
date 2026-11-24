@@ -7,12 +7,12 @@ namespace Flow\ETL\Functions;
 use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidLogicException;
+use Flow\ETL\Foundation\Hash\HashAlgorithm;
 use Flow\ETL\Functions\Reference\Reference;
 use Flow\ETL\Values\Column\Backend;
 use Flow\ETL\Values\Column\Column;
 use Flow\ETL\Values\Column\GroupedMultisetHashes;
 use Flow\ETL\Values\Column\MultisetDigest;
-use Flow\ETL\Values\Column\MultisetHashAlgorithm;
 use Flow\ETL\Values\Rows;
 use Flow\ETL\Values\Schema\Definitions;
 use Flow\Types\Type;
@@ -59,7 +59,7 @@ final class MultisetHash implements AggregatesByGroup
 
         $names = $this->names();
         $columns = $names === [] ? $rows->columns() : $rows->select(...$names)->columns();
-        ($this->hash ??= $backend->groupedMultisetHashes(MultisetHashAlgorithm::xxh128))->add(
+        ($this->hash ??= $backend->groupedMultisetHashes(HashAlgorithm::xxh128))->add(
             count($indices) === $rows->count()
                 ? $columns
                 : array_map(static fn(Column $column): Column => $column->take($indices), $columns),
@@ -86,10 +86,7 @@ final class MultisetHash implements AggregatesByGroup
 
     public function grouped(Backend $backend): GroupedAggregation
     {
-        return new MultisetHashesByGroup(
-            $this->names(),
-            $backend->groupedMultisetHashes(MultisetHashAlgorithm::xxh128),
-        );
+        return new MultisetHashesByGroup($this->names(), $backend->groupedMultisetHashes(HashAlgorithm::xxh128));
     }
 
     /**
