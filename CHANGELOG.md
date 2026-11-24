@@ -1,6 +1,11 @@
-## [Unreleased] - 2026-11-23
+## [Unreleased] - 2026-11-24
 
 ### Added
+- [#2763](https://github.com/flow-php/flow/pull/2763) - **flow-php/postgresql - migration lock, a PostgreSQL advisory lock by default** - [@norberttech](https://github.com/norberttech)
+- [#2763](https://github.com/flow-php/flow/pull/2763) - **flow-php/postgresql - MigrationLockedException when another process runs migrations** - [@norberttech](https://github.com/norberttech)
+- [#2763](https://github.com/flow-php/flow/pull/2763) - **flow-php/symfony-postgresql-bundle - migrations.lock configuration (advisory, symfony, service, none)** - [@norberttech](https://github.com/norberttech)
+- [#2763](https://github.com/flow-php/flow/pull/2763) - **flow-php/symfony-postgresql-bundle - flow:migrations:migrate waits for a busy lock** - [@norberttech](https://github.com/norberttech)
+- [#2763](https://github.com/flow-php/flow/pull/2763) - **flow-php/symfony-postgresql-bundle - optional symfony/lock migration lock** - [@norberttech](https://github.com/norberttech)
 - [#2760](https://github.com/flow-php/flow/pull/2760) - **flow-php/postgresql - MigrationMode with ALL_PENDING and STRICT_ORDER, set through Configuration::$mode** - [@norberttech](https://github.com/norberttech)
 - [#2760](https://github.com/flow-php/flow/pull/2760) - **flow-php/symfony-postgresql-bundle - migrations.mode configuration key** - [@norberttech](https://github.com/norberttech)
 - [#2760](https://github.com/flow-php/flow/pull/2760) - **flow-php/symfony-postgresql-bundle - migration mode in the profiler panel** - [@norberttech](https://github.com/norberttech)
@@ -43,6 +48,7 @@
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - Packagist links in the hero and the footer** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2763](https://github.com/flow-php/flow/pull/2763) - **flow-php/postgresql - Migrator::executeVersion() refuses an executed (up) or not executed (down) version** - [@norberttech](https://github.com/norberttech)
 - [#2760](https://github.com/flow-php/flow/pull/2760) - **flow-php/symfony-postgresql-bundle - flow:migrations:migrate prints a MigrationException as an error and exits with code 1** - [@norberttech](https://github.com/norberttech)
 - [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/etl - group, join, distinct and bucket keys use one typed canonical encoding** - [@norberttech](https://github.com/norberttech)
 - [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/etl - keys have the declared type of their column** - [@norberttech](https://github.com/norberttech)
