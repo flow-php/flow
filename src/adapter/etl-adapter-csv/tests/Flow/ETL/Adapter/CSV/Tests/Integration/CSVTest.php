@@ -25,7 +25,6 @@ use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\overwrite;
-use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
@@ -160,7 +159,7 @@ final class CSVTest extends FlowTestCase
                 ['year' => '2024', 'name' => '789-DE', 'total' => 200],
                 ['year' => '2025', 'name' => '555-FR', 'total' => 300],
             ]))
-            ->write(to_csv($dir . '/{name}.csv')->saveMode(overwrite())->partitionBy(partition_by('year', 'name')))
+            ->write(to_csv($dir . '/{name}.csv')->saveMode(overwrite())->partitionBy(['year', 'name']))
             ->run();
 
         static::assertFileExists($dir . '/year=2024/123456-PL.csv');
@@ -201,7 +200,7 @@ final class CSVTest extends FlowTestCase
             ->write(
                 to_csv($output . '/{order-name}.csv')
                     ->saveMode(overwrite())
-                    ->partitionBy(partition_by('order-year', 'order-month', 'order-name')),
+                    ->partitionBy(['order-year', 'order-month', 'order-name']),
             )
             ->run();
 
@@ -298,7 +297,7 @@ final class CSVTest extends FlowTestCase
                 ->write(to_csv(
                     path('memory://var/staged/file.csv'),
                     filesystem: new FailingCloseFilesystem($memory, failingStreams: 2),
-                )->partitionBy(partition_by('p')))
+                )->partitionBy('p'))
                 ->run();
             static::fail('the run was expected to throw');
         } catch (FilesystemRuntimeException $failure) {

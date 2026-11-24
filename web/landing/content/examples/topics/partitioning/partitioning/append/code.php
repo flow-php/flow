@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use function Flow\ETL\Adapter\CSV\{from_csv, to_csv};
-use function Flow\ETL\DSL\{append, data_frame, from_array, partition_by, ref, to_output};
+use function Flow\ETL\DSL\{append, data_frame, from_array, ref, to_output};
 
 require __DIR__ . '/vendor/autoload.php';
 
@@ -20,7 +20,7 @@ data_frame()
             ['id' => 8, 'color' => 'blue', 'sku' => 'PRODUCT02'],
         ]
     ))
-    ->write(to_csv(__DIR__ . '/output/products.csv')->saveMode(append())->partitionBy(partition_by(ref('color'), ref('sku'))))
+    ->write(to_csv(__DIR__ . '/output/products.csv')->saveMode(append())->partitionBy([ref('color'), ref('sku')]))
     ->run();
 
 // the directory layout is the lesson, so read the partitions back and show them

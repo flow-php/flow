@@ -10,6 +10,7 @@ use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Functions\Reference\Reference;
 use Flow\ETL\IO\Filesystem\SaveMode;
 use Flow\ETL\IO\Loader\Closure;
 use Flow\ETL\IO\Loader\Discardable;
@@ -45,8 +46,6 @@ final class XMLLoader implements Closure, Discardable, FileLoader, FileWriterFac
     private ?Part $task = null;
 
     private PartitionRouter $router;
-
-    private Partitioning $partitioning;
 
     private readonly Filesystem $filesystem;
 
@@ -87,8 +86,7 @@ final class XMLLoader implements Closure, Discardable, FileLoader, FileWriterFac
         $filesystem->supports($path) || throw InvalidArgumentException::unsupportedPath($filesystem, $path, 'to_xml');
 
         $this->filesystem = $filesystem;
-        $this->partitioning = Partitioning::none();
-        $this->router = new PartitionRouter($this->partitioning);
+        $this->router = new PartitionRouter(Partitioning::none());
         $this->path = $path->setOptionWhenEmpty(Option::CONTENT_TYPE, ContentType::XML);
     }
 
@@ -102,7 +100,6 @@ final class XMLLoader implements Closure, Discardable, FileLoader, FileWriterFac
             ->saveMode(type_enum(SaveMode::class)->assert(constant(
                 SaveMode::class . '::' . type_string()->assert($data['save_mode'] ?? null),
             )))
-            ->partitionBy(Partitioning::fromArray(type_array()->assert($data['partitioning'] ?? null)))
             ->withAttributePrefix(type_string()->assert($data['attribute_prefix'] ?? null))
             ->withDateFormat(type_string()->assert($data['date_format'] ?? null))
             ->withDateTimeFormat(type_string()->assert($data['date_time_format'] ?? null))
@@ -113,6 +110,10 @@ final class XMLLoader implements Closure, Discardable, FileLoader, FileWriterFac
             ->withRootElementName(type_string()->assert($data['root_element_name'] ?? null))
             ->withRowElementName(type_string()->assert($data['row_element_name'] ?? null))
             ->withXMLAttributes(type_map(type_string(), type_string())->assert($data['xml_attributes'] ?? null));
+
+        $loader->router = new PartitionRouter(Partitioning::fromArray(type_array()->assert(
+            $data['partitioning'] ?? null,
+        )));
 
         if (($data['task'] ?? null) !== null) {
             $loader->task = Part::fromArray(type_array()->assert($data['task']));
@@ -131,7 +132,7 @@ final class XMLLoader implements Closure, Discardable, FileLoader, FileWriterFac
             'path' => $this->path->normalize(),
             'filesystem' => new ConfiguredFilesystem($this->filesystem),
             'save_mode' => $this->saveMode->name,
-            'partitioning' => $this->partitioning->normalize(),
+            'partitioning' => $this->router->partitioning->normalize(),
             'task' => $this->task?->normalize(),
             'xml_writer' => $this->xmlWriter,
             'attribute_prefix' => $this->attributePrefix,
@@ -147,10 +148,9 @@ final class XMLLoader implements Closure, Discardable, FileLoader, FileWriterFac
         ]);
     }
 
-    public function partitionBy(Partitioning $partitioning): static
+    public function partitionBy(array|string|Reference $columns, bool $writeColumns = false): static
     {
-        $this->partitioning = $partitioning;
-        $this->router = new PartitionRouter($partitioning);
+        $this->router = new PartitionRouter(Partitioning::by($columns, $writeColumns));
 
         return $this;
     }
@@ -173,7 +173,7 @@ final class XMLLoader implements Closure, Discardable, FileLoader, FileWriterFac
             $this->filesystem,
             $this->path,
             $this->saveMode,
-            $this->partitioning->by->count() > 0,
+            $this->router->partitioned(),
             $run,
             $tasks,
         );
@@ -186,14 +186,13 @@ final class XMLLoader implements Closure, Discardable, FileLoader, FileWriterFac
 
     public function partitioning(): Partitioning
     {
-        return $this->partitioning;
+        return $this->router->partitioning;
     }
 
     public function inTask(Part $task): static
     {
         $loader = (new self($this->path, $this->xmlWriter, $this->filesystem))
             ->saveMode($this->saveMode)
-            ->partitionBy($this->partitioning)
             ->withAttributePrefix($this->attributePrefix)
             ->withDateFormat($this->dateFormat)
             ->withDateTimeFormat($this->dateTimeFormat)
@@ -205,6 +204,7 @@ final class XMLLoader implements Closure, Discardable, FileLoader, FileWriterFac
             ->withRowElementName($this->rowElementName)
             ->withXMLAttributes($this->xmlAttributes);
 
+        $loader->router = $this->router;
         $loader->task = $task;
 
         return $loader;

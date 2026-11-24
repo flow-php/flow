@@ -100,7 +100,7 @@ do:
 ```php
 <?php
 
-use function Flow\ETL\DSL\{data_frame, from_array, partition_by, ref};
+use function Flow\ETL\DSL\{data_frame, from_array, ref};
 use function Flow\Floe\DSL\{from_floe, to_floe};
 
 data_frame()
@@ -109,7 +109,7 @@ data_frame()
         ['id' => 2, 'country' => 'US'],
     ]))
     ->write(to_floe(__DIR__ . '/data/dataset.floe')
-        ->partitionBy(partition_by(ref('country'))))
+        ->partitionBy(ref('country')))
     ->run();
 
 // prune to a single partition

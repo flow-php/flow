@@ -33,7 +33,6 @@ use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
@@ -83,7 +82,7 @@ final class CSVLoaderTest extends FlowTestCase
         $schema = schema(int_schema('id'), str_schema('group'));
         $loader = to_csv(path('memory://out/file.csv'), filesystem: $filesystem)
             ->withNewLineSeparator("\n")
-            ->partitionBy(partition_by('group'));
+            ->partitionBy('group');
 
         $loader->load(array_to_rows([
             ['id' => 1, 'group' => 'a'],
@@ -154,7 +153,7 @@ final class CSVLoaderTest extends FlowTestCase
         $filesystem = memory_filesystem();
         $loader = to_csv(path('memory://out.csv'), filesystem: $filesystem)
             ->withNewLineSeparator("\n")
-            ->partitionBy(partition_by('group'))
+            ->partitionBy('group')
             // the second run writes beside the first one's partition, which ExceptionIfExists refuses
             ->saveMode(SaveMode::Append);
         $read = [];
@@ -204,7 +203,7 @@ final class CSVLoaderTest extends FlowTestCase
                 to_csv($scratch->suffix('/{name}/rows.csv'), separator: ';', new_line_separator: "\r\n")
                     ->saveMode(SaveMode::Overwrite)
                     ->withDateFormat('d/m/Y')
-                    ->partitionBy(partition_by('name')->writeColumns()),
+                    ->partitionBy('name', writeColumns: true),
             )->describe()?->data['partitioning'],
         );
 
@@ -221,7 +220,7 @@ final class CSVLoaderTest extends FlowTestCase
         $scratch = ReaderRoundTrip::scratch('in-task');
         $loader = to_csv($scratch->suffix('/rows.out'), separator: ';')
             ->saveMode(SaveMode::Overwrite)
-            ->partitionBy(partition_by('name'))
+            ->partitionBy('name')
             ->withDateFormat('d/m/Y');
         $copy = $loader->inTask(new Part(3, 4, '1a2b3c4d5e6f7a8b', false));
 
@@ -264,8 +263,8 @@ final class CSVLoaderTest extends FlowTestCase
 
         static::assertEquals(Partitioning::none(), $loader->partitioning());
         static::assertEquals(
-            partition_by('name')->writeColumns(),
-            $loader->partitionBy(partition_by('name')->writeColumns())->partitioning(),
+            Partitioning::by('name', writeColumns: true),
+            $loader->partitionBy('name', writeColumns: true)->partitioning(),
         );
     }
 

@@ -33,6 +33,14 @@ final class AnalyzeTest extends FlowTestCase
         );
     }
 
+    public function test_column_names_give_the_hasher_of_their_references(): void
+    {
+        static::assertEquals(
+            analyze()->withDatasetHash([ref('date'), ref('country')])->newOutputHasher(),
+            analyze()->withDatasetHash(['date', 'country'])->newOutputHasher(),
+        );
+    }
+
     public function test_the_algorithm_reaches_the_hasher(): void
     {
         static::assertEquals(

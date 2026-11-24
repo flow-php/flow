@@ -22,7 +22,6 @@ use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
-use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\time_zone_schema;
@@ -244,7 +243,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
                 ['id' => 2, 'country' => 'US'],
                 ['id' => 3, 'country' => 'PL'],
             ]))
-            ->write(to_floe($dir . '/data.floe')->saveMode(overwrite())->partitionBy(partition_by('country')))
+            ->write(to_floe($dir . '/data.floe')->saveMode(overwrite())->partitionBy('country'))
             ->run();
 
         static::assertFileExists($dir . '/country=PL/data.floe');
@@ -279,7 +278,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
                 ->write(to_floe(
                     path('memory://var/staged/file.floe'),
                     filesystem: new FailingCloseFilesystem($memory, failingStreams: 2),
-                )->partitionBy(partition_by('p')))
+                )->partitionBy('p'))
                 ->run();
             static::fail('the run was expected to throw');
         } catch (FilesystemRuntimeException $failure) {
@@ -296,7 +295,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
         LoaderEndingContext::failedRun(to_floe(
             path('memory://var/failed/file.floe'),
             filesystem: new FailingCloseFilesystem($memory),
-        )->partitionBy(partition_by('id')));
+        )->partitionBy('id'));
 
         static::assertSame([], iterator_to_array($memory->list(path('memory://var/failed/**/*')), false));
     }

@@ -9,6 +9,7 @@ use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Functions\Reference\Reference;
 use Flow\ETL\IO\Filesystem\SaveMode;
 use Flow\ETL\IO\Loader\Closure;
 use Flow\ETL\IO\Loader\Discardable;
@@ -46,12 +47,9 @@ final class FloeLoader implements Closure, Discardable, FileLoader
 
     private PartitionRouter $router;
 
-    private Partitioning $partitioning;
-
-    public function partitionBy(Partitioning $partitioning): static
+    public function partitionBy(array|string|Reference $columns, bool $writeColumns = false): static
     {
-        $this->partitioning = $partitioning;
-        $this->router = new PartitionRouter($partitioning);
+        $this->router = new PartitionRouter(Partitioning::by($columns, $writeColumns));
 
         return $this;
     }
@@ -71,8 +69,7 @@ final class FloeLoader implements Closure, Discardable, FileLoader
         $filesystem->supports($path) || throw InvalidArgumentException::unsupportedPath($filesystem, $path, 'to_floe');
 
         $this->filesystem = $filesystem;
-        $this->partitioning = Partitioning::none();
-        $this->router = new PartitionRouter($this->partitioning);
+        $this->router = new PartitionRouter(Partitioning::none());
     }
 
     public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
@@ -90,15 +87,17 @@ final class FloeLoader implements Closure, Discardable, FileLoader
                 ))->assert($data['metadata'])),
             new Options(type_integer()->assert($data['buffer_size'] ?? null)),
             $rebuild->of($data['filesystem'] ?? null, ConfiguredFilesystem::class)->filesystem(),
-        ))
-            ->saveMode(type_enum(SaveMode::class)->assert(constant(
-                SaveMode::class . '::' . type_string()->assert($data['save_mode'] ?? null),
-            )))
-            ->partitionBy(Partitioning::fromArray(type_array()->assert($data['partitioning'] ?? null)));
+        ))->saveMode(type_enum(SaveMode::class)->assert(constant(
+            SaveMode::class . '::' . type_string()->assert($data['save_mode'] ?? null),
+        )));
 
         if (($data['schema'] ?? null) !== null) {
             $loader->withSchema(Schema::fromArray(type_array()->assert($data['schema'])));
         }
+
+        $loader->router = new PartitionRouter(Partitioning::fromArray(type_array()->assert(
+            $data['partitioning'] ?? null,
+        )));
 
         if (($data['task'] ?? null) !== null) {
             $loader->task = Part::fromArray(type_array()->assert($data['task']));
@@ -119,7 +118,7 @@ final class FloeLoader implements Closure, Discardable, FileLoader
             'schema' => $this->schema?->normalize(),
             'buffer_size' => $this->options->bufferSize,
             'save_mode' => $this->saveMode->name,
-            'partitioning' => $this->partitioning->normalize(),
+            'partitioning' => $this->router->partitioning->normalize(),
             'task' => $this->task?->normalize(),
             'filesystem' => new ConfiguredFilesystem($this->filesystem),
         ]);
@@ -157,7 +156,7 @@ final class FloeLoader implements Closure, Discardable, FileLoader
             $this->filesystem,
             $this->path,
             $this->saveMode,
-            $this->partitioning->by->count() > 0,
+            $this->router->partitioned(),
             $run,
             $tasks,
         );
@@ -170,19 +169,23 @@ final class FloeLoader implements Closure, Discardable, FileLoader
 
     public function partitioning(): Partitioning
     {
-        return $this->partitioning;
+        return $this->router->partitioning;
     }
 
     public function inTask(Part $task): static
     {
-        $loader = (new self($this->path, $this->metadata, $this->options, $this->filesystem))
-            ->saveMode($this->saveMode)
-            ->partitionBy($this->partitioning);
+        $loader = (new self(
+            $this->path,
+            $this->metadata,
+            $this->options,
+            $this->filesystem,
+        ))->saveMode($this->saveMode);
 
         if ($this->schema !== null) {
             $loader->withSchema($this->schema);
         }
 
+        $loader->router = $this->router;
         $loader->task = $task;
 
         return $loader;

@@ -28,7 +28,6 @@ use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
-use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\partition_types;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
@@ -153,9 +152,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
                 ['date' => '2024-04-04', 'text' => '2024-04-04'],
             ]))
             ->write(
-                to_floe($this->cacheDir->path() . '/overwrite/file.floe')
-                    ->saveMode(overwrite())
-                    ->partitionBy(partition_by('date')),
+                to_floe($this->cacheDir->path() . '/overwrite/file.floe')->saveMode(overwrite())->partitionBy('date'),
             )
             ->run();
 
@@ -257,7 +254,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
                 to_floe($output . '/out.floe')
                     ->saveMode(overwrite())
                     // order is chosen on purpose: the writer nests in the order it was given, not by name
-                    ->partitionBy(partition_by('year', 'day', 'month')),
+                    ->partitionBy(['year', 'day', 'month']),
             )
             ->run();
 
@@ -277,7 +274,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
             ->write(
                 to_floe($output . '/{order-year}/{order-month}/{order-name}.floe')
                     ->saveMode(overwrite())
-                    ->partitionBy(partition_by('order-year', 'order-month', 'order-name')),
+                    ->partitionBy(['order-year', 'order-month', 'order-name']),
             )
             ->run();
 

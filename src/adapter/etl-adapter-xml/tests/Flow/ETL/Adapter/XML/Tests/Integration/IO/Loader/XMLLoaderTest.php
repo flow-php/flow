@@ -19,7 +19,6 @@ use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
-use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
@@ -53,7 +52,7 @@ final class XMLLoaderTest extends FlowIntegrationTestCase
             ->write(
                 to_xml(__DIR__ . '/var/test_partitioning_xml_file/products.xml')
                     ->saveMode(overwrite())
-                    ->partitionBy(partition_by('size', 'color')),
+                    ->partitionBy(['size', 'color']),
             )
             ->run();
 
@@ -151,7 +150,7 @@ final class XMLLoaderTest extends FlowIntegrationTestCase
                 ->write(to_xml(
                     path('memory://var/staged/file.xml'),
                     filesystem: new FailingCloseFilesystem($memory, failingStreams: 2),
-                )->partitionBy(partition_by('p')))
+                )->partitionBy('p'))
                 ->run();
             static::fail('the run was expected to throw');
         } catch (FilesystemRuntimeException $failure) {

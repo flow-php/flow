@@ -11,7 +11,7 @@ A hash is 32 hex characters. Equal rows give equal hashes, in any row order and 
 | each row             | `row_hash()`                               |
 | each group of rows   | `multiset_hash()`                          |
 | the output of a run  | `analyze()->withDatasetHash()`             |
-| each partition       | `analyze()->withDatasetHash([ref('...')])` |
+| each partition       | `analyze()->withDatasetHash(['...'])`      |
 
 ## Hash of each row
 
@@ -176,12 +176,12 @@ the SHA-256 of a file. The flow_php extension gives the same hash for each algor
 
 use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\Adapter\Parquet\to_parquet;
-use function Flow\ETL\DSL\{analyze, data_frame, partition_by, ref};
+use function Flow\ETL\DSL\{analyze, data_frame};
 
 $report = data_frame()
     ->read(from_csv('orders.csv')->withSchema($orders))
-    ->write(to_parquet('orders/orders.parquet')->partitionBy(partition_by('date')))
-    ->run(analyze: analyze()->withDatasetHash([ref('date')]));
+    ->write(to_parquet('orders/orders.parquet')->partitionBy('date'))
+    ->run(analyze: analyze()->withDatasetHash(['date']));
 
 $current = [];
 

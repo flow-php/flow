@@ -64,7 +64,6 @@ use function Flow\ETL\DSL\infer_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
-use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\partition_types;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
@@ -217,7 +216,7 @@ final class CSVExtractorTest extends FlowTestCase
                 [['id' => 1, 'year' => null], ['id' => 2, 'year' => '2024']],
                 schema(int_schema('id'), str_schema('year', nullable: true)),
             ))
-            ->write(to_csv($dir . '/data.csv')->saveMode(overwrite())->partitionBy(partition_by('year')))
+            ->write(to_csv($dir . '/data.csv')->saveMode(overwrite())->partitionBy('year'))
             ->run();
 
         $years = df()
@@ -1637,11 +1636,10 @@ final class CSVExtractorTest extends FlowTestCase
                 ],
                 schema(datetime_schema('date'), str_schema('text')),
             ))
-            ->write(
-                to_csv(path('memory://var/csv/file.csv'), filesystem: $memory)->partitionBy(
-                    partition_by('date')->writeColumns(),
-                ),
-            )
+            ->write(to_csv(path('memory://var/csv/file.csv'), filesystem: $memory)->partitionBy(
+                'date',
+                writeColumns: true,
+            ))
             ->run();
 
         $extractor = from_csv(path('memory://var/csv/**/*.csv'), filesystem: $memory);

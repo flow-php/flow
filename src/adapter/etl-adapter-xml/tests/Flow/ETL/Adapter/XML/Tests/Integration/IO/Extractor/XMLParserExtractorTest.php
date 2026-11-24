@@ -34,7 +34,6 @@ use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -558,11 +557,10 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
                 ],
                 schema(datetime_schema('date'), str_schema('text')),
             ))
-            ->write(
-                to_xml(path('memory://var/xml/file.xml'), filesystem: $memory)->partitionBy(
-                    partition_by('date')->writeColumns(),
-                ),
-            )
+            ->write(to_xml(path('memory://var/xml/file.xml'), filesystem: $memory)->partitionBy(
+                'date',
+                writeColumns: true,
+            ))
             ->run();
 
         $extractor = from_xml(path('memory://var/xml/**/*.xml'), 'rows/row', filesystem: $memory);

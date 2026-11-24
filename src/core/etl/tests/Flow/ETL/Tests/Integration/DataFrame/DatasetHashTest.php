@@ -19,7 +19,6 @@ use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\multiset_hash;
 use function Flow\ETL\DSL\overwrite;
-use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -137,7 +136,7 @@ final class DatasetHashTest extends FlowIntegrationTestCase
             ->write(
                 to_floe($output->suffix('/orders.floe')->path())
                     ->saveMode(overwrite())
-                    ->partitionBy(partition_by('date', 'country')),
+                    ->partitionBy(['date', 'country']),
             )
             ->run(analyze: analyze()->withDatasetHash([ref('date'), ref('country')]))
             ->datasetHash();

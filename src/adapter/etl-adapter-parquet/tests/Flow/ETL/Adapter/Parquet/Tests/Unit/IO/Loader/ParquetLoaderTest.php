@@ -35,7 +35,6 @@ use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
@@ -125,7 +124,7 @@ final class ParquetLoaderTest extends TestCase
                     schema: schema(int_schema('id'), str_schema('name')),
                 )
                     ->saveMode(SaveMode::Overwrite)
-                    ->partitionBy(partition_by('name')->writeColumns()),
+                    ->partitionBy('name', writeColumns: true),
             )->describe()?->data['partitioning'],
         );
 
@@ -187,7 +186,7 @@ final class ParquetLoaderTest extends TestCase
             engine: new PhpParquetEngine(),
         )
             ->saveMode(SaveMode::Overwrite)
-            ->partitionBy(partition_by('name'));
+            ->partitionBy('name');
         $copy = $loader->inTask(new Part(3, 4, '1a2b3c4d5e6f7a8b', false));
 
         static::assertSame($loader->destination()->uri(), $copy->destination()->uri());
@@ -229,8 +228,8 @@ final class ParquetLoaderTest extends TestCase
 
         static::assertEquals(Partitioning::none(), $loader->partitioning());
         static::assertEquals(
-            partition_by('name')->writeColumns(),
-            $loader->partitionBy(partition_by('name')->writeColumns())->partitioning(),
+            Partitioning::by('name', writeColumns: true),
+            $loader->partitionBy('name', writeColumns: true)->partitioning(),
         );
     }
 

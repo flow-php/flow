@@ -9,6 +9,7 @@ use Flow\ETL\Foundation\Describe\Description;
 use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Progress;
+use Flow\ETL\Functions\Reference\Reference;
 use Flow\ETL\IO\Filesystem\SaveMode;
 use Flow\ETL\IO\Loader\Closure;
 use Flow\ETL\IO\Loader\Discardable;
@@ -73,9 +74,9 @@ final readonly class CountingFileLoader implements Closure, Discardable, FileLoa
         $this->loader->load($rows, $backend);
     }
 
-    public function partitionBy(Partitioning $partitioning): static
+    public function partitionBy(array|string|Reference $columns, bool $writeColumns = false): static
     {
-        return new self($this->loader->partitionBy($partitioning), $this->destinationCalls);
+        return new self($this->loader->partitionBy($columns, $writeColumns), $this->destinationCalls);
     }
 
     public function partitioning(): Partitioning

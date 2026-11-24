@@ -26,7 +26,6 @@ use function Flow\ETL\Adapter\Text\to_text;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
@@ -69,7 +68,7 @@ final class TextLoaderTest extends FlowTestCase
         $filesystem = memory_filesystem();
         // the second run writes beside the first one's partition, which ExceptionIfExists refuses
         $loader = to_text(path('memory://out.txt'), filesystem: $filesystem)
-            ->partitionBy(partition_by('group'))
+            ->partitionBy('group')
             ->saveMode(SaveMode::Append);
         $read = [];
 
@@ -112,7 +111,7 @@ final class TextLoaderTest extends FlowTestCase
             DescribeRoundTrip::rebuilt(
                 to_text($scratch->suffix('/{name}/rows.txt'), new_line_separator: "\r\n")
                     ->saveMode(SaveMode::Overwrite)
-                    ->partitionBy(partition_by('name')->writeColumns()),
+                    ->partitionBy('name', writeColumns: true),
             )->describe()?->data['partitioning'],
         );
 
@@ -129,7 +128,7 @@ final class TextLoaderTest extends FlowTestCase
         $scratch = ReaderRoundTrip::scratch('in-task');
         $loader = to_text($scratch->suffix('/rows.out'), new_line_separator: "\r\n")
             ->saveMode(SaveMode::Overwrite)
-            ->partitionBy(partition_by('name'));
+            ->partitionBy('name');
         $copy = $loader->inTask(new Part(3, 4, '1a2b3c4d5e6f7a8b', false));
 
         static::assertSame($loader->destination()->uri(), $copy->destination()->uri());
@@ -171,8 +170,8 @@ final class TextLoaderTest extends FlowTestCase
 
         static::assertEquals(Partitioning::none(), $loader->partitioning());
         static::assertEquals(
-            partition_by('name')->writeColumns(),
-            $loader->partitionBy(partition_by('name')->writeColumns())->partitioning(),
+            Partitioning::by('name', writeColumns: true),
+            $loader->partitionBy('name', writeColumns: true)->partitioning(),
         );
     }
 }

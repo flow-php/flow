@@ -52,7 +52,6 @@ use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\overwrite;
-use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\partition_types;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
@@ -570,7 +569,7 @@ final class ParquetTest extends FlowTestCase
                 ->write(to_parquet(
                     path('memory://var/staged/file.parquet'),
                     filesystem: new FailingCloseFilesystem($memory, failingStreams: 2),
-                )->partitionBy(partition_by('p')))
+                )->partitionBy('p'))
                 ->run();
             static::fail('the run was expected to throw');
         } catch (FilesystemRuntimeException $failure) {
@@ -588,7 +587,7 @@ final class ParquetTest extends FlowTestCase
         LoaderEndingContext::failedRun(to_parquet(
             path('memory://var/failed/file.parquet'),
             filesystem: new FailingCloseFilesystem($memory),
-        )->partitionBy(partition_by('id')));
+        )->partitionBy('id'));
 
         static::assertSame([], iterator_to_array($memory->list(path('memory://var/failed/**/*')), false));
     }
@@ -606,7 +605,7 @@ final class ParquetTest extends FlowTestCase
                 path('memory://var/declared/file.parquet'),
                 schema: schema(str_schema('id'), datetime_schema('date'), int_schema('clicks')),
                 filesystem: $memory,
-            )->partitionBy(partition_by('date')))
+            )->partitionBy('date'))
             ->run();
 
         static::assertSame(
@@ -637,10 +636,7 @@ final class ParquetTest extends FlowTestCase
                 ['id' => 'a', 'date' => new DateTimeImmutable('2026-09-01'), 'clicks' => 1],
                 ['id' => 'b', 'date' => new DateTimeImmutable('2026-09-02'), 'clicks' => 2],
             ]))
-            ->write(to_parquet(
-                path('memory://var/inferred/file.parquet'),
-                filesystem: $memory,
-            )->partitionBy(partition_by('date')))
+            ->write(to_parquet(path('memory://var/inferred/file.parquet'), filesystem: $memory)->partitionBy('date'))
             ->run();
 
         static::assertSame(
@@ -668,7 +664,7 @@ final class ParquetTest extends FlowTestCase
                 path('memory://var/engine/file.parquet'),
                 engine: new RustParquetEngine(),
                 filesystem: $memory,
-            )->partitionBy(partition_by('p')))
+            )->partitionBy('p'))
             ->run();
 
         static::assertSame(
@@ -694,7 +690,7 @@ final class ParquetTest extends FlowTestCase
                 path('memory://var/engine/file.parquet'),
                 engine: new PhpParquetEngine(),
                 filesystem: $memory,
-            )->partitionBy(partition_by('p')))
+            )->partitionBy('p'))
             ->run();
 
         static::assertSame(
@@ -739,7 +735,7 @@ final class ParquetTest extends FlowTestCase
                 schema: schema(str_schema('group'), str_schema('id')),
                 filesystem: $memory,
                 engine: $engine,
-            )->partitionBy(partition_by('group')))
+            )->partitionBy('group'))
             ->run();
 
         static::assertSame([[['id' => '1'], ['id' => '3']], [['id' => '2']]], [
@@ -758,14 +754,12 @@ final class ParquetTest extends FlowTestCase
                 ['id' => 'a', 'date' => new DateTimeImmutable('2026-09-01'), 'clicks' => 1],
                 ['id' => 'b', 'date' => new DateTimeImmutable('2026-09-02'), 'clicks' => 2],
             ]))
-            ->write(
-                to_parquet(
-                    path('memory://var/write_columns/file.parquet'),
-                    schema: schema(str_schema('id'), datetime_schema('date'), int_schema('clicks')),
-                    filesystem: $memory,
-                    engine: $engine,
-                )->partitionBy(partition_by('date')->writeColumns()),
-            )
+            ->write(to_parquet(
+                path('memory://var/write_columns/file.parquet'),
+                schema: schema(str_schema('id'), datetime_schema('date'), int_schema('clicks')),
+                filesystem: $memory,
+                engine: $engine,
+            )->partitionBy('date', writeColumns: true))
             ->run();
 
         static::assertSame(
@@ -779,7 +773,6 @@ final class ParquetTest extends FlowTestCase
     public function test_a_datetime_partition_reads_back_the_written_time(bool $writeColumns): void
     {
         $memory = memory_filesystem();
-        $by = partition_by('date');
 
         data_frame()
             ->read(from_array(
@@ -790,7 +783,8 @@ final class ParquetTest extends FlowTestCase
                 schema(str_schema('id'), datetime_schema('date')),
             ))
             ->write(to_parquet(path('memory://var/times/file.parquet'), filesystem: $memory)->partitionBy(
-                $writeColumns ? $by->writeColumns() : $by,
+                'date',
+                $writeColumns,
             ))
             ->run();
 
@@ -817,9 +811,7 @@ final class ParquetTest extends FlowTestCase
                 [['id' => 'a', 'x' => 0.0], ['id' => 'b', 'x' => 1.0E-9]],
                 schema(str_schema('id'), float_schema('x')),
             ))
-            ->write(to_parquet(path('memory://var/floats/file.parquet'), filesystem: $memory)->partitionBy(partition_by(
-                'x',
-            )))
+            ->write(to_parquet(path('memory://var/floats/file.parquet'), filesystem: $memory)->partitionBy('x'))
             ->run();
 
         static::assertSame(

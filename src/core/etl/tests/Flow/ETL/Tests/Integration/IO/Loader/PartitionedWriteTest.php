@@ -10,7 +10,6 @@ use Flow\ETL\Tests\FlowIntegrationTestCase;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\overwrite;
-use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\to_branch;
 use function Flow\Filesystem\DSL\native_local_filesystem;
@@ -29,11 +28,7 @@ final class PartitionedWriteTest extends FlowIntegrationTestCase
                 ['region' => 'us', 'text' => 'b'],
                 ['region' => 'eu', 'text' => 'c'],
             ]))
-            ->write(
-                to_floe($output->suffix('/out.floe')->path())
-                    ->saveMode(overwrite())
-                    ->partitionBy(partition_by('region')),
-            )
+            ->write(to_floe($output->suffix('/out.floe')->path())->saveMode(overwrite())->partitionBy('region'))
             ->run();
 
         static::assertFileExists($output->suffix('/region=eu/out.floe')->path());
@@ -46,11 +41,7 @@ final class PartitionedWriteTest extends FlowIntegrationTestCase
 
         df()
             ->read(from_array([['region' => 'eu', 'text' => 'a']]))
-            ->write(
-                to_floe($output->suffix('/out.floe')->path())
-                    ->saveMode(overwrite())
-                    ->partitionBy(partition_by('region')),
-            )
+            ->write(to_floe($output->suffix('/out.floe')->path())->saveMode(overwrite())->partitionBy('region'))
             ->run();
 
         static::assertSame(
@@ -67,11 +58,7 @@ final class PartitionedWriteTest extends FlowIntegrationTestCase
 
         df()
             ->read(from_array([['region' => 'eu', 'text' => 'a'], ['region' => 'us', 'text' => 'b']]))
-            ->write(
-                to_floe($output->suffix('/out.floe')->path())
-                    ->saveMode(overwrite())
-                    ->partitionBy(partition_by('region')),
-            )
+            ->write(to_floe($output->suffix('/out.floe')->path())->saveMode(overwrite())->partitionBy('region'))
             ->run();
 
         $rows = df()
@@ -97,15 +84,11 @@ final class PartitionedWriteTest extends FlowIntegrationTestCase
             ]))
             ->write(to_branch(
                 ref('text')->isNotNull(),
-                to_floe($output->suffix('/by-region/out.floe')->path())
-                    ->saveMode(overwrite())
-                    ->partitionBy(partition_by('region')),
+                to_floe($output->suffix('/by-region/out.floe')->path())->saveMode(overwrite())->partitionBy('region'),
             ))
             ->write(to_branch(
                 ref('text')->isNotNull(),
-                to_floe($output->suffix('/by-year/out.floe')->path())
-                    ->saveMode(overwrite())
-                    ->partitionBy(partition_by('year')),
+                to_floe($output->suffix('/by-year/out.floe')->path())->saveMode(overwrite())->partitionBy('year'),
             ))
             ->run();
 
@@ -121,11 +104,7 @@ final class PartitionedWriteTest extends FlowIntegrationTestCase
 
         df()
             ->read(from_array([['region' => 'eu', 'text' => 'a'], ['region' => null, 'text' => 'b']]))
-            ->write(
-                to_floe($output->suffix('/out.floe')->path())
-                    ->saveMode(overwrite())
-                    ->partitionBy(partition_by('region')),
-            )
+            ->write(to_floe($output->suffix('/out.floe')->path())->saveMode(overwrite())->partitionBy('region'))
             ->run();
 
         static::assertFileExists($output->suffix('/region=eu/out.floe')->path());
@@ -138,11 +117,7 @@ final class PartitionedWriteTest extends FlowIntegrationTestCase
 
         df()
             ->read(from_array([['region' => '', 'text' => 'a'], ['region' => null, 'text' => 'b']]))
-            ->write(
-                to_floe($output->suffix('/out.floe')->path())
-                    ->saveMode(overwrite())
-                    ->partitionBy(partition_by('region')),
-            )
+            ->write(to_floe($output->suffix('/out.floe')->path())->saveMode(overwrite())->partitionBy('region'))
             ->run();
 
         static::assertFileExists($output->suffix('/region=/out.floe')->path());
@@ -163,11 +138,7 @@ final class PartitionedWriteTest extends FlowIntegrationTestCase
 
         df()
             ->read(from_array([['region' => 'eu/west', 'text' => 'a']]))
-            ->write(
-                to_floe($output->suffix('/out.floe')->path())
-                    ->saveMode(overwrite())
-                    ->partitionBy(partition_by('region')),
-            )
+            ->write(to_floe($output->suffix('/out.floe')->path())->saveMode(overwrite())->partitionBy('region'))
             ->run();
 
         static::assertFileExists($output->suffix('/region=eu%2Fwest/out.floe')->path());
@@ -189,7 +160,7 @@ final class PartitionedWriteTest extends FlowIntegrationTestCase
             ->write(
                 to_floe($output->suffix('/out.floe')->path())
                     ->saveMode(overwrite())
-                    ->partitionBy(partition_by('region')->writeColumns()),
+                    ->partitionBy('region', writeColumns: true),
             )
             ->run();
 

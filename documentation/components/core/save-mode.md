@@ -156,7 +156,7 @@ Save modes work with partitioned data:
         ['date' => '2024-01-02', 'value' => 200],
     ]))
     ->write(to_parquet(__DIR__ . '/data/file.parquet')
-        ->partitionBy(partition_by(ref('date')))
+        ->partitionBy(ref('date'))
         ->saveMode(overwrite()))
     ->run();
 

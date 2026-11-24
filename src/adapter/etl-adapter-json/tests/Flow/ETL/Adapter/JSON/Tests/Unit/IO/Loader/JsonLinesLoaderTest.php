@@ -22,7 +22,6 @@ use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
@@ -90,9 +89,7 @@ final class JsonLinesLoaderTest extends FlowTestCase
     {
         $filesystem = memory_filesystem();
         $schema = schema(int_schema('id'), str_schema('group'));
-        $loader = to_json_lines(path('memory://out/file.jsonl'), filesystem: $filesystem)->partitionBy(partition_by(
-            'group',
-        ));
+        $loader = to_json_lines(path('memory://out/file.jsonl'), filesystem: $filesystem)->partitionBy('group');
 
         $loader->load(array_to_rows([
             ['id' => 1, 'group' => 'a'],

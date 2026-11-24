@@ -10,7 +10,6 @@ use Flow\Benchmarks\Datasets\Datasets;
 use function Flow\ETL\Adapter\CSV\to_csv;
 use function Flow\ETL\Adapter\Parquet\from_parquet;
 use function Flow\ETL\DSL\data_frame;
-use function Flow\ETL\DSL\partition_by;
 
 /**
  * The one partitioned write, shared by the timed write subject and the untimed tree the read
@@ -30,7 +29,7 @@ final readonly class PartitionedOrders
                 data_frame(BenchmarkConfig::builder())->read(from_parquet(Datasets::orders($this->rows)->parquet())),
             )
             ->select('order_id', 'seller_id', 'created_at', 'customer', 'day')
-            ->write(to_csv($root . '/orders.csv')->partitionBy(partition_by($this->cardinality->column())))
+            ->write(to_csv($root . '/orders.csv')->partitionBy($this->cardinality->column()))
             ->run();
     }
 }

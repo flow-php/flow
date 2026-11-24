@@ -57,7 +57,7 @@ final class Analyze
     }
 
     /**
-     * @param array<Reference> $partitions
+     * @param array<Reference|string> $partitions
      */
     public function withDatasetHash(array $partitions = [], HashAlgorithm $algorithm = HashAlgorithm::xxh128): self
     {

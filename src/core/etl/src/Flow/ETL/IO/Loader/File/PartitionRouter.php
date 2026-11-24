@@ -27,7 +27,7 @@ final class PartitionRouter
     private readonly array $dropped;
 
     public function __construct(
-        private readonly Partitioning $partitioning,
+        public readonly Partitioning $partitioning,
     ) {
         $this->rowPartitions = new RowPartitions($partitioning->by);
         $this->dropped = $partitioning->writeColumns ? [] : $partitioning->by->names();
@@ -79,7 +79,7 @@ final class PartitionRouter
         }
 
         throw new InvalidArgumentException(sprintf('No column left to write, every column is a partition column: "%s". '
-        . 'Use partition_by(...)->writeColumns() to write them into the file as well.', implode(
+        . 'Use partitionBy(..., writeColumns: true) to write them into the file as well.', implode(
             '", "',
             $this->partitioning->by->names(),
         )));

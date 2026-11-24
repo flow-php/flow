@@ -36,7 +36,6 @@ use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\list_schema;
-use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
@@ -128,7 +127,7 @@ final class JsonLoaderTest extends FlowTestCase
     {
         $filesystem = memory_filesystem();
         $schema = schema(int_schema('id'), str_schema('group'));
-        $loader = to_json(path('memory://out/file.json'), filesystem: $filesystem)->partitionBy(partition_by('group'));
+        $loader = to_json(path('memory://out/file.json'), filesystem: $filesystem)->partitionBy('group');
 
         $loader->load(array_to_rows([
             ['id' => 1, 'group' => 'a'],
@@ -162,7 +161,7 @@ final class JsonLoaderTest extends FlowTestCase
         $filesystem = memory_filesystem();
         // the second run writes beside the first one's partition, which ExceptionIfExists refuses
         $loader = to_json(path('memory://out.json'), filesystem: $filesystem)
-            ->partitionBy(partition_by('group'))
+            ->partitionBy('group')
             ->saveMode(SaveMode::Append);
         $read = [];
 
@@ -215,7 +214,7 @@ final class JsonLoaderTest extends FlowTestCase
                 )
                     ->saveMode(SaveMode::Overwrite)
                     ->withDateFormat('d/m/Y')
-                    ->partitionBy(partition_by('name')->writeColumns()),
+                    ->partitionBy('name', writeColumns: true),
             )->describe()?->data['partitioning'],
         );
 
@@ -252,7 +251,7 @@ final class JsonLoaderTest extends FlowTestCase
         $scratch = ReaderRoundTrip::scratch('in-task');
         $loader = to_json($scratch->suffix('/rows.out'), put_rows_in_new_lines: true)
             ->saveMode(SaveMode::Overwrite)
-            ->partitionBy(partition_by('name'))
+            ->partitionBy('name')
             ->withDateFormat('d/m/Y');
         $copy = $loader->inTask(new Part(3, 4, '1a2b3c4d5e6f7a8b', false));
 
@@ -295,8 +294,8 @@ final class JsonLoaderTest extends FlowTestCase
 
         static::assertEquals(Partitioning::none(), $loader->partitioning());
         static::assertEquals(
-            partition_by('name')->writeColumns(),
-            $loader->partitionBy(partition_by('name')->writeColumns())->partitioning(),
+            Partitioning::by('name', writeColumns: true),
+            $loader->partitionBy('name', writeColumns: true)->partitioning(),
         );
     }
 

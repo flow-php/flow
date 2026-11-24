@@ -58,7 +58,6 @@ use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\map_schema;
-use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\partition_types;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
@@ -829,11 +828,10 @@ final class ParquetExtractorTest extends FlowIntegrationTestCase
 
         df()
             ->read(from_array([['id' => 'a', $name => $value]], schema(str_schema('id'), $definition)))
-            ->write(
-                to_parquet(path('memory://var/typed/file.parquet'), filesystem: $memory)->partitionBy(
-                    partition_by($name)->writeColumns(),
-                ),
-            )
+            ->write(to_parquet(path('memory://var/typed/file.parquet'), filesystem: $memory)->partitionBy(
+                $name,
+                writeColumns: true,
+            ))
             ->run();
 
         $extractor = from_parquet(path('memory://var/typed/**/*.parquet'), filesystem: $memory);
@@ -850,10 +848,7 @@ final class ParquetExtractorTest extends FlowIntegrationTestCase
                 [['id' => 'a', 'date' => new DateTimeImmutable('2026-10-02 13:00:00 UTC')]],
                 schema(str_schema('id'), datetime_schema('date')),
             ))
-            ->write(to_parquet(
-                path('memory://var/path_only/file.parquet'),
-                filesystem: $memory,
-            )->partitionBy(partition_by('date')))
+            ->write(to_parquet(path('memory://var/path_only/file.parquet'), filesystem: $memory)->partitionBy('date'))
             ->run();
 
         static::assertEquals(

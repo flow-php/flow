@@ -13,6 +13,7 @@ use Flow\ETL\Foundation\Describe\Rebuild;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\ETL\Foundation\Progress;
 use Flow\ETL\Foundation\VoidProgress;
+use Flow\ETL\Functions\Reference\Reference;
 use Flow\ETL\IO\Filesystem\SaveMode;
 use Flow\ETL\IO\Loader\Closure;
 use Flow\ETL\IO\Loader\Discardable;
@@ -54,8 +55,6 @@ final class ExcelLoader implements Closure, Discardable, FileLoader
     private const array MULTIBYTE_EXTENSIONS = ['iconv', 'mbstring'];
 
     private PartitionRouter $router;
-
-    private Partitioning $partitioning;
 
     private readonly Filesystem $filesystem;
 
@@ -106,8 +105,7 @@ final class ExcelLoader implements Closure, Discardable, FileLoader
         $filesystem->supports($path) || throw InvalidArgumentException::unsupportedPath($filesystem, $path, 'to_excel');
 
         $this->filesystem = $filesystem;
-        $this->partitioning = Partitioning::none();
-        $this->router = new PartitionRouter($this->partitioning);
+        $this->router = new PartitionRouter(Partitioning::none());
 
         if (!$path->isLocal()) {
             throw new InvalidArgumentException(
@@ -127,7 +125,6 @@ final class ExcelLoader implements Closure, Discardable, FileLoader
             ->saveMode(type_enum(SaveMode::class)->assert(constant(
                 SaveMode::class . '::' . type_string()->assert($data['save_mode'] ?? null),
             )))
-            ->partitionBy(Partitioning::fromArray(type_array()->assert($data['partitioning'] ?? null)))
             ->withDateFormat(type_string()->assert($data['date_format'] ?? null))
             ->withDateTimeFormat(type_string()->assert($data['date_time_format'] ?? null))
             ->withHeader(type_boolean()->assert($data['header'] ?? null))
@@ -143,6 +140,10 @@ final class ExcelLoader implements Closure, Discardable, FileLoader
                 ExcelWriter::class . '::' . type_string()->assert($data['writer']),
             )));
         }
+
+        $loader->router = new PartitionRouter(Partitioning::fromArray(type_array()->assert(
+            $data['partitioning'] ?? null,
+        )));
 
         if (($data['task'] ?? null) !== null) {
             $loader->task = Part::fromArray(type_array()->assert($data['task']));
@@ -167,7 +168,7 @@ final class ExcelLoader implements Closure, Discardable, FileLoader
                 'path' => $this->path->normalize(),
                 'filesystem' => new ConfiguredFilesystem($this->filesystem),
                 'save_mode' => $this->saveMode->name,
-                'partitioning' => $this->partitioning->normalize(),
+                'partitioning' => $this->router->partitioning->normalize(),
                 'task' => $this->task?->normalize(),
                 'date_format' => $this->dateFormat,
                 'date_time_format' => $this->dateTimeFormat,
@@ -184,10 +185,9 @@ final class ExcelLoader implements Closure, Discardable, FileLoader
         );
     }
 
-    public function partitionBy(Partitioning $partitioning): static
+    public function partitionBy(array|string|Reference $columns, bool $writeColumns = false): static
     {
-        $this->partitioning = $partitioning;
-        $this->router = new PartitionRouter($partitioning);
+        $this->router = new PartitionRouter(Partitioning::by($columns, $writeColumns));
 
         return $this;
     }
@@ -220,7 +220,7 @@ final class ExcelLoader implements Closure, Discardable, FileLoader
             $this->filesystem,
             $this->path,
             $this->saveMode,
-            $this->partitioning->by->count() > 0,
+            $this->router->partitioned(),
             $run,
             $tasks,
         );
@@ -233,14 +233,13 @@ final class ExcelLoader implements Closure, Discardable, FileLoader
 
     public function partitioning(): Partitioning
     {
-        return $this->partitioning;
+        return $this->router->partitioning;
     }
 
     public function inTask(Part $task): static
     {
         $loader = (new self($this->path, $this->filesystem))
             ->saveMode($this->saveMode)
-            ->partitionBy($this->partitioning)
             ->withDateFormat($this->dateFormat)
             ->withDateTimeFormat($this->dateTimeFormat)
             ->withHeader($this->withHeader)
@@ -267,6 +266,7 @@ final class ExcelLoader implements Closure, Discardable, FileLoader
             $loader->withWriterOptions($this->writerOptions);
         }
 
+        $loader->router = $this->router;
         $loader->task = $task;
 
         return $loader;
