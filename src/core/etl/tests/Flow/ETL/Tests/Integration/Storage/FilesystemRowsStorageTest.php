@@ -25,6 +25,7 @@ use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\schema_metadata;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
@@ -120,6 +121,22 @@ final class FilesystemRowsStorageTest extends FlowIntegrationTestCase
             [['id' => 2, 'name' => 'John']],
             schema(int_schema('id'), str_schema('name')),
         ));
+    }
+
+    public function test_append_after_close_with_metadata_keys_in_another_order(): void
+    {
+        $storage = new FilesystemRowsStorage(memory_filesystem(), path('memory://metadata-order'), new PhpBackend());
+        $storage->append('k', array_to_rows([[
+            'id' => 1,
+        ]], schema(int_schema('id', metadata: schema_metadata(['a' => 1, 'b' => ['x' => 1, 'y' => 2]])))));
+        $storage->close('k');
+
+        $storage->append('k', array_to_rows([[
+            'id' => 2,
+        ]], schema(int_schema('id', metadata: schema_metadata(['b' => ['y' => 2, 'x' => 1], 'a' => 1])))));
+        $storage->close('k');
+
+        static::assertSame(2, $storage->rows('k')->exactly());
     }
 
     public function test_append_widening_a_column_type_fails(): void

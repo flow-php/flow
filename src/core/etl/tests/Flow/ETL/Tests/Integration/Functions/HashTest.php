@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Functions;
 
-use Flow\ETL\Kernels\Hash\PhpAlgorithm;
+use Flow\ETL\Foundation\Hash\PhpAlgorithm;
 use Flow\ETL\Storage\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;

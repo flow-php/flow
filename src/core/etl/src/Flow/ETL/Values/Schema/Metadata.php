@@ -4,25 +4,36 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Values\Schema;
 
-use Flow\ETL\Foundation\ArrayComparison\ArrayComparison;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use Flow\Types\Type;
 
+use function array_is_list;
 use function array_key_exists;
-use function array_merge;
+use function array_map;
+use function array_replace;
 use function count;
 use function Flow\Types\DSL\type_array;
 use function is_array;
+use function ksort;
+
+use const SORT_STRING;
 
 final readonly class Metadata
 {
     /**
+     * @var array<string, array<array-key, mixed>|bool|float|int|string>
+     */
+    private array $map;
+
+    /**
      * @param array<string, array<array-key, mixed>|bool|float|int|string> $map
      */
-    private function __construct(
-        private array $map,
-    ) {
-        $this->assertArray($this->map);
+    private function __construct(array $map)
+    {
+        $this->assertArray($map);
+        /** @var array<string, array<array-key, mixed>|bool|float|int|string> $canonical */
+        $canonical = $this->canonical($map);
+        $this->map = $canonical;
     }
 
     public static function empty(): self
@@ -55,11 +66,10 @@ final readonly class Metadata
      */
     public function add(string $key, int|string|bool|float|array $value): self
     {
-        if (is_array($value)) {
-            $this->assertArray($value);
-        }
+        $map = $this->map;
+        $map[$key] = $value;
 
-        return new self(array_merge($this->map, [$key => $value]));
+        return new self($map);
     }
 
     /**
@@ -108,16 +118,12 @@ final readonly class Metadata
 
     public function isEqual(self $metadata): bool
     {
-        if ($this->map === $metadata->map) {
-            return true;
-        }
-
-        return (new ArrayComparison())->equals($this->map, $metadata->map);
+        return $this->map === $metadata->map;
     }
 
     public function merge(self $metadata): self
     {
-        return new self(array_merge($this->map, $metadata->map));
+        return new self(array_replace($this->map, $metadata->map));
     }
 
     /**
@@ -140,6 +146,22 @@ final readonly class Metadata
         }
 
         return new self($map);
+    }
+
+    /**
+     * @param array<array-key, mixed> $array
+     *
+     * @return array<array-key, mixed>
+     */
+    private function canonical(array $array): array
+    {
+        $array = array_map(fn(mixed $value): mixed => is_array($value) ? $this->canonical($value) : $value, $array);
+
+        if (!array_is_list($array)) {
+            ksort($array, SORT_STRING);
+        }
+
+        return $array;
     }
 
     /**

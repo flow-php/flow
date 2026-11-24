@@ -12,6 +12,8 @@ use Flow\Types\Type;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function array_keys;
+use function Flow\ETL\DSL\schema_metadata;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 
@@ -118,5 +120,56 @@ final class MetadataTest extends FlowTestCase
         $this->expectExceptionMessage('Metadata value must be a scalar or an array of scalars');
 
         Metadata::empty()->add('object', [new DateTimeImmutable()]);
+    }
+
+    public function test_normalize_sorts_map_keys_at_every_depth(): void
+    {
+        static::assertSame(
+            ['a' => ['x' => 2, 'y' => 1], 'b' => 1],
+            schema_metadata(['b' => 1, 'a' => ['y' => 1, 'x' => 2]])->normalize(),
+        );
+    }
+
+    public function test_map_keys_are_sorted_as_bytes(): void
+    {
+        static::assertSame(
+            [10, 9, 'B', 'b'],
+            array_keys(
+                Metadata::empty()
+                    ->add('b', 1)
+                    ->add('B', 1)
+                    ->add('9', 1)
+                    ->add('10', 1)
+                    ->normalize(),
+            ),
+        );
+    }
+
+    public function test_list_keeps_its_order(): void
+    {
+        static::assertSame(['b', 'a'], schema_metadata(['tags' => ['b', 'a']])->get('tags'));
+    }
+
+    public function test_is_equal_respects_list_order(): void
+    {
+        static::assertFalse(schema_metadata(['tags' => ['a', 'b']])->isEqual(schema_metadata(['tags' => ['b', 'a']])));
+    }
+
+    public function test_add_keeps_a_numeric_string_key(): void
+    {
+        static::assertSame('x', Metadata::with('5', 'x')->add('k', 'v')->get('5'));
+    }
+
+    public function test_merge_keeps_numeric_string_keys(): void
+    {
+        static::assertSame(
+            [5 => 'x', 7 => 'y'],
+            Metadata::with('5', 'x')->merge(Metadata::with('7', 'y'))->normalize(),
+        );
+    }
+
+    public function test_add_produces_canonical_order(): void
+    {
+        static::assertSame(['a' => 2, 'b' => 1], Metadata::empty()->add('b', 1)->add('a', 2)->normalize());
     }
 }

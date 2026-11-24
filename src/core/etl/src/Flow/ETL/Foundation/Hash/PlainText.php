@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Kernels\Hash;
+namespace Flow\ETL\Foundation\Hash;
 
 use Flow\ETL\Foundation\Describe\Describable;
 use Flow\ETL\Foundation\Describe\Description;

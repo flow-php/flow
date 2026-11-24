@@ -432,3 +432,67 @@ data_frame()
     ->write(to_output())
     ->run();
 ```
+
+## Schema Fingerprint
+
+```php
+<?php
+
+use function Flow\ETL\DSL\{int_schema, schema, schema_fingerprint_options, schema_metadata, str_schema};
+
+$schema = schema(
+    int_schema('id'),
+    str_schema('email', metadata: schema_metadata(['pii' => true, 'description' => 'Login'])),
+);
+
+$schema->fingerprint()->toString();                                                     // xxh128, metadata excluded
+$schema->fingerprint(schema_fingerprint_options()->withMetadataKeys('pii'))->toString(); // only "pii" counts
+```
+
+Detect schema drift between runs. `$storedFingerprint` is the value that your previous run saved:
+
+```php
+$current = data_frame()->read(from_csv('orders.csv'))->schema()->fingerprint()->toString();
+
+if ($current !== $storedFingerprint) {
+    // the source changed: column added, renamed, reordered, retyped or nullability changed
+}
+```
+
+The same `toString()` value works as a cache key for anything derived from a schema.
+
+Store the fingerprint next to written data and compare it on read:
+
+```php
+$storedFingerprint = $schema->fingerprint()->toString();   // on write, saved next to the data
+
+if ($expected->fingerprint()->toString() !== $storedFingerprint) {   // on read
+    throw new RuntimeException('File was written with a different schema');
+}
+```
+
+Compare two schemas in one process:
+
+```php
+$expected->fingerprint()->equals($given->fingerprint());
+```
+
+Print a mismatch with `canonical()`:
+
+```php
+echo schema(int_schema('id'), str_schema('email'))->fingerprint()->canonical(), PHP_EOL;
+echo schema(int_schema('id'), str_schema('email', nullable: true))->fingerprint()->canonical(), PHP_EOL;
+// {"version":"v1","options":{"metadata_keys":[]},"columns":[{"ref":"id","type":{"type":"integer"},"nullable":false},{"ref":"email","type":{"type":"string"},"nullable":false}]}
+// {"version":"v1","options":{"metadata_keys":[]},"columns":[{"ref":"id","type":{"type":"integer"},"nullable":false},{"ref":"email","type":{"type":"string"},"nullable":true}]}
+```
+
+| Question                                  | Use              |
+|-------------------------------------------|------------------|
+| Same schema right now, metadata included? | `$a->isSame($b)` |
+| Same identity, stored and compared later? | `fingerprint()`  |
+
+- Identity: column names (bytes), order, types with all parameters, nullability. Metadata only for the selected
+  keys. Enum columns compare the class name, not the cases.
+- Options only add to identity. Ignoring order or nullability is a comparison, not a fingerprint.
+- If an untrusted party can write schemas, use `$schema->fingerprint()->hash(hash_algorithm('sha256'))`. xxh128 is
+  stable on every platform, but it is not collision-safe against an attacker.

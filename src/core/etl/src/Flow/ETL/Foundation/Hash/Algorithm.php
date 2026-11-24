@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Kernels\Hash;
+namespace Flow\ETL\Foundation\Hash;
 
 interface Algorithm
 {

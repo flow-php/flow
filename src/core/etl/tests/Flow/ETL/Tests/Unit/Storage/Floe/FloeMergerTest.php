@@ -299,7 +299,7 @@ final class FloeMergerTest extends TestCase
         );
 
         static::assertSame(
-            ['a' => '1', 'shared' => 'override', 'b' => '2'],
+            ['a' => '1', 'b' => '2', 'shared' => 'override'],
             (new FloeFiles($fs, new AdaptiveBackend()))
                 ->read(path('memory://out.floe'))
                 ->metadata()
