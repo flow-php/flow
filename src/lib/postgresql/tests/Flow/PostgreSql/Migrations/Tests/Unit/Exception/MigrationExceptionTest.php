@@ -11,6 +11,22 @@ use RuntimeException;
 
 final class MigrationExceptionTest extends TestCase
 {
+    public function test_advisory_lock_not_held(): void
+    {
+        static::assertSame(
+            'The migrations lock "public.flow_migrations" was not held at release. Session locks do not work through a pooler in transaction mode (for example PgBouncer). Connect migrations directly to PostgreSQL, or use a lock outside the database.',
+            MigrationException::advisoryLockNotHeld('public.flow_migrations')->getMessage(),
+        );
+    }
+
+    public function test_already_executed(): void
+    {
+        static::assertSame(
+            'Migration "20260401120000" is already executed. Roll it back first to execute it again.',
+            MigrationException::alreadyExecuted(Version::fromString('20260401120000'))->getMessage(),
+        );
+    }
+
     public function test_attribute_not_found(): void
     {
         $exception = MigrationException::attributeNotFound('container');
@@ -74,6 +90,14 @@ final class MigrationExceptionTest extends TestCase
         );
     }
 
+    public function test_lock_expired(): void
+    {
+        static::assertSame(
+            'The migrations lock "public.flow_migrations" expired before the migrations finished. Raise the lock ttl above the duration of the longest migration run.',
+            MigrationException::lockExpired('public.flow_migrations')->getMessage(),
+        );
+    }
+
     public function test_migration_failed(): void
     {
         $previous = new RuntimeException('Connection lost');
@@ -95,6 +119,14 @@ final class MigrationExceptionTest extends TestCase
         $exception = MigrationException::noChangesDetected();
 
         static::assertSame('No changes detected between source and target catalog.', $exception->getMessage());
+    }
+
+    public function test_not_executed(): void
+    {
+        static::assertSame(
+            'Migration "20260401120000" is not executed, there is nothing to roll back.',
+            MigrationException::notExecuted(Version::fromString('20260401120000'))->getMessage(),
+        );
     }
 
     public function test_out_of_order(): void

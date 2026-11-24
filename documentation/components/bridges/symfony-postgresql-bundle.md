@@ -232,6 +232,12 @@ flow_postgresql:
     generate_rollback: true                        # Generate rollback files automatically
     drop_if_exists: false                          # Emit IF EXISTS on diff-generated DROP statements
     mode: all_pending                              # Which pending migrations migrate runs: all_pending or strict_order
+    lock:
+      type: advisory                               # advisory, symfony, service or none
+      timeout: 300                                 # Seconds flow:migrations:migrate waits for a busy lock
+      ttl: 3600                                    # type: symfony - seconds the lock lives
+      factory_service_id: lock.factory             # type: symfony - the LockFactory service
+      service_id: ~                                # type: service - your MigrationLock service
 ```
 
 #### `mode`
@@ -242,6 +248,95 @@ the latest executed migration.
 - `all_pending` (default): `flow:migrations:migrate` runs every pending migration up to the target, in version order.
 - `strict_order`: `flow:migrations:migrate` stops with an error and exit code 1. It runs no migration. Run the older
   version with `flow:migrations:execute`, or set the mode to `all_pending`.
+
+#### `lock`
+
+A lock stops two processes from running the same migrations at the same time, for example two application instances
+that deploy at once. `flow:migrations:migrate` and `flow:migrations:execute` take the lock. A `--dry-run` takes no
+lock.
+
+```yaml
+flow_postgresql:
+  migrations:
+    lock:
+      type: advisory          # default, a session advisory lock in PostgreSQL
+      timeout: 300
+```
+
+```yaml
+framework:
+  lock: '%env(LOCK_DSN)%'     # registers the lock.factory service
+
+flow_postgresql:
+  migrations:
+    lock:
+      type: symfony           # requires symfony/lock
+      factory_service_id: lock.factory
+      ttl: 3600
+```
+
+```yaml
+flow_postgresql:
+  migrations:
+    lock:
+      type: service
+      service_id: App\Migrations\MyMigrationLock   # implements Flow\PostgreSql\Migrations\Lock\MigrationLock
+```
+
+```yaml
+flow_postgresql:
+  migrations:
+    lock:
+      type: none
+```
+
+Each type accepts only its own keys. Any other key fails at configuration time.
+
+| type       | keys                                   |
+|------------|----------------------------------------|
+| `advisory` | `timeout`                              |
+| `symfony`  | `timeout`, `ttl`, `factory_service_id` |
+| `service`  | `timeout`, `service_id`                |
+| `none`     | -                                      |
+
+If the lock is busy, `flow:migrations:migrate` waits up to `timeout` seconds:
+
+```
+$ bin/console flow:migrations:migrate
+ ! [NOTE] Another process is running migrations. Waiting up to 300 seconds for it to finish...
+ [OK] Already up to date.
+```
+
+`flow:migrations:execute` does not wait. It fails at once.
+
+The advisory lock needs a direct session with PostgreSQL. If migrations connect through a pooler in transaction mode
+(for example PgBouncer), use `type: symfony` with a store outside the database. A lock outside the database must
+outlive the longest migration run, so set `ttl` above its duration.
+
+Without the bundle, pass the lock to `Configuration`. The default is `AdvisoryMigrationLock`. `Migrator` never waits.
+A busy lock throws `MigrationLockedException`:
+
+```php
+<?php
+
+use Flow\PostgreSql\Migrations\Configuration;
+use Flow\PostgreSql\Migrations\Exception\MigrationLockedException;
+use Flow\PostgreSql\Migrations\Lock\NoMigrationLock;
+
+$configuration = new Configuration(
+    client: $client,
+    targetCatalogProvider: $catalogProvider,
+    migrationsDirectory: __DIR__ . '/migrations',
+    migrationsNamespace: 'App\\Migrations',
+    lock: new NoMigrationLock(),
+);
+
+try {
+    $migrator->migrate();
+} catch (MigrationLockedException $exception) {
+    // another process runs the migrations: wait and retry, skip, or fail
+}
+```
 
 #### `drop_if_exists`
 

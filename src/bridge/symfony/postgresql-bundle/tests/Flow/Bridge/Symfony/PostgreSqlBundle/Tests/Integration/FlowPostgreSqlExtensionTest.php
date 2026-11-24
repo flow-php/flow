@@ -11,7 +11,9 @@ use Flow\Bridge\Symfony\PostgreSqlBundle\Command\RunSqlCommand;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Command\SessionPurgeCommand;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Command\UpToDateCommand;
 use Flow\Bridge\Symfony\PostgreSqlBundle\FlowPostgreSqlBundle;
+use Flow\Bridge\Symfony\PostgreSqlBundle\Lock\SymfonyMigrationLock;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Messenger\FlowPostgreSqlTransportFactory;
+use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Context\ExtensionContext;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Fixtures\AttributeTestCatalogProvider;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Fixtures\MigrationSeedProvider;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Fixtures\TestKernel;
@@ -30,6 +32,8 @@ use Flow\PostgreSql\Migrations\Configuration as MigrationsConfiguration;
 use Flow\PostgreSql\Migrations\Executor\MigrationExecutor;
 use Flow\PostgreSql\Migrations\Generator\DiffMigrationGenerator;
 use Flow\PostgreSql\Migrations\Generator\MigrationGenerator;
+use Flow\PostgreSql\Migrations\Lock\AdvisoryMigrationLock;
+use Flow\PostgreSql\Migrations\Lock\NoMigrationLock;
 use Flow\PostgreSql\Migrations\MigrationMode;
 use Flow\PostgreSql\Migrations\MigrationsFactory;
 use Flow\PostgreSql\Migrations\Migrator;
@@ -37,6 +41,7 @@ use Flow\PostgreSql\Migrations\Repository\MigrationRepository;
 use Flow\PostgreSql\Migrations\Store\MigrationStore;
 use Flow\PostgreSql\Migrations\Tests\Double\FakeCatalogProvider;
 use Flow\PostgreSql\Migrations\Tests\Double\SpyClient;
+use Flow\PostgreSql\Migrations\Tests\Double\SpyMigrationLock;
 use Flow\PostgreSql\Migrations\VersionResolver;
 use Flow\PostgreSql\Schema\Catalog;
 use Flow\PostgreSql\Schema\ChainCatalogProvider;
@@ -47,10 +52,13 @@ use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Telemetry;
 use LogicException;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\TestWith;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
+use Symfony\Component\Lock\LockFactory;
+use Symfony\Component\Lock\Store\InMemoryStore;
 
 use function Flow\PostgreSql\DSL\func;
 use function Flow\PostgreSql\DSL\literal;
@@ -1866,5 +1874,69 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
         static::assertTrue($options->traceQueries);
         static::assertSame(TransactionSpanMode::GROUPED, $options->transactionSpans);
         static::assertTrue($options->collectMetrics);
+    }
+
+    /**
+     * @param array<string, int|string> $lock
+     * @param class-string $expectedClass
+     */
+    #[TestWith([[], AdvisoryMigrationLock::class])]
+    #[TestWith([['type' => 'none'], NoMigrationLock::class])]
+    #[TestWith([['type' => 'symfony', 'factory_service_id' => 'app.lock_factory'], SymfonyMigrationLock::class])]
+    #[TestWith([['type' => 'service', 'service_id' => 'app.migration_lock'], SpyMigrationLock::class])]
+    public function test_migrations_configuration_receives_the_configured_lock(array $lock, string $expectedClass): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) use ($lock): void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $container->register('flow.postgresql.default.client', SpyClient::class)->setPublic(true);
+                    $container
+                        ->register('app.lock_factory', LockFactory::class)
+                        ->setArguments([new Definition(InMemoryStore::class)]);
+                    $container->register('app.migration_lock', SpyMigrationLock::class);
+                });
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'default' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/postgres',
+                        ],
+                    ],
+                    'migrations' => [
+                        'enabled' => true,
+                        'directory' => '/tmp/test_migrations',
+                        'namespace' => 'App\\Migrations',
+                        'lock' => $lock,
+                    ],
+                    'catalog_providers' => [
+                        ['catalog' => ['schemas' => []]],
+                    ],
+                ]);
+            },
+        ]);
+
+        $configuration = $this->getContainer()->get('flow.postgresql.migrations.configuration');
+        static::assertInstanceOf(MigrationsConfiguration::class, $configuration);
+        static::assertInstanceOf($expectedClass, $configuration->lock);
+    }
+
+    public function test_migrate_command_receives_the_configured_lock_timeout(): void
+    {
+        $container = (new ExtensionContext())->load([
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://postgres:postgres@localhost:5432/postgres'],
+            ],
+            'migrations' => [
+                'enabled' => true,
+                'directory' => '/tmp/test_migrations',
+                'namespace' => 'App\\Migrations',
+                'lock' => ['timeout' => 42],
+            ],
+        ]);
+
+        static::assertSame(42, $container->getParameter('flow.postgresql.migrations.lock_timeout'));
+        static::assertSame(
+            '%flow.postgresql.migrations.lock_timeout%',
+            $container->getDefinition('flow.postgresql.command.migrate')->getArgument(3),
+        );
     }
 }

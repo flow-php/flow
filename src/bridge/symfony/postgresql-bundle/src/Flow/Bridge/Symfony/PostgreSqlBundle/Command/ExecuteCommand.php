@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\PostgreSqlBundle\Command;
 
 use Flow\PostgreSql\Migrations\Direction;
+use Flow\PostgreSql\Migrations\Exception\MigrationException;
 use Flow\PostgreSql\Migrations\Migrator;
 use Flow\PostgreSql\Migrations\Version;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -63,7 +64,13 @@ final class ExecuteCommand extends Command
             return Command::SUCCESS;
         }
 
-        $result = $this->migrator->executeVersion($version, $direction, $dryRun);
+        try {
+            $result = $this->migrator->executeVersion($version, $direction, $dryRun);
+        } catch (MigrationException $exception) {
+            $io->error($exception->getMessage());
+
+            return Command::FAILURE;
+        }
 
         if ($result->error !== null) {
             $io->error(sprintf(

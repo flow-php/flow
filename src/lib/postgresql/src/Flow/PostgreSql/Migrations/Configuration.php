@@ -5,11 +5,15 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Migrations;
 
 use Flow\PostgreSql\Client\Client;
+use Flow\PostgreSql\Migrations\Lock\AdvisoryMigrationLock;
+use Flow\PostgreSql\Migrations\Lock\MigrationLock;
 use Flow\PostgreSql\Schema\CatalogProvider;
 use Flow\PostgreSql\Schema\Exclusion\ExclusionPolicy;
 
 final readonly class Configuration
 {
+    public MigrationLock $lock;
+
     /**
      * @param array<string, mixed> $attributes
      */
@@ -28,5 +32,8 @@ final readonly class Configuration
         public bool $dropIfExists = false,
         public array $attributes = [],
         public MigrationMode $mode = MigrationMode::ALL_PENDING,
-    ) {}
+        ?MigrationLock $lock = null,
+    ) {
+        $this->lock = $lock ?? new AdvisoryMigrationLock($client);
+    }
 }

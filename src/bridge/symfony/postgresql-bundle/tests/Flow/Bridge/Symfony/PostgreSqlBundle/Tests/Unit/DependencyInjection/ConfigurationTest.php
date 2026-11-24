@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Unit\DependencyInjection;
 
 use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Context\ConfigurationContext;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
+
+use function sprintf;
 
 final class ConfigurationTest extends TestCase
 {
@@ -925,6 +928,99 @@ final class ConfigurationTest extends TestCase
                 'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
             ],
             'profiler' => ['max_retained_parameters' => -1],
+        ]);
+    }
+
+    public function test_migrations_lock_defaults(): void
+    {
+        $config = $this->context->processConfig([
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+        ]);
+
+        static::assertSame(
+            [
+                'type' => 'advisory',
+                'timeout' => 300,
+                'ttl' => 3600,
+                'factory_service_id' => 'lock.factory',
+                'service_id' => null,
+            ],
+            $config['migrations']['lock'],
+        );
+    }
+
+    /**
+     * @param array<string, int|string> $lock
+     */
+    #[TestWith([['type' => 'advisory', 'timeout' => 10]])]
+    #[TestWith([['type' => 'symfony', 'timeout' => 10, 'ttl' => 60, 'factory_service_id' => 'app.lock_factory']])]
+    #[TestWith([['type' => 'service', 'timeout' => 10, 'service_id' => 'app.migration_lock']])]
+    #[TestWith([['type' => 'none']])]
+    public function test_migrations_lock_type_accepts_its_keys(array $lock): void
+    {
+        $config = $this->context->processConfig([
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'migrations' => ['lock' => $lock],
+        ]);
+
+        foreach ($lock as $key => $value) {
+            static::assertSame($value, $config['migrations']['lock'][$key]);
+        }
+    }
+
+    #[TestWith(['advisory', 'ttl', 60])]
+    #[TestWith(['advisory', 'factory_service_id', 'app.lock_factory'])]
+    #[TestWith(['advisory', 'service_id', 'app.migration_lock'])]
+    #[TestWith(['symfony', 'service_id', 'app.migration_lock'])]
+    #[TestWith(['service', 'ttl', 60])]
+    #[TestWith(['service', 'factory_service_id', 'app.lock_factory'])]
+    #[TestWith(['none', 'timeout', 10])]
+    #[TestWith(['none', 'ttl', 60])]
+    public function test_migrations_lock_type_rejects_a_foreign_key(string $type, string $key, int|string $value): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage(sprintf(
+            'The "%s" parameter is not supported when flow_postgresql.migrations.lock.type is "%s".',
+            $key,
+            $type,
+        ));
+
+        $this->context->processConfig([
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'migrations' => ['lock' => ['type' => $type, $key => $value]],
+        ]);
+    }
+
+    public function test_migrations_lock_rejects_negative_timeout(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->context->processConfig([
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'migrations' => ['lock' => ['timeout' => -1]],
+        ]);
+    }
+
+    public function test_migrations_lock_service_requires_service_id(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage(
+            'flow_postgresql.migrations.lock.type "service" requires a non-empty "service_id".',
+        );
+
+        $this->context->processConfig([
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'migrations' => ['lock' => ['type' => 'service']],
         ]);
     }
 }

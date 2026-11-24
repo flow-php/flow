@@ -6,7 +6,10 @@ namespace Flow\PostgreSql\Migrations\Tests\Integration;
 
 use Flow\PostgreSql\Migrations\Configuration;
 use Flow\PostgreSql\Migrations\Direction;
+use Flow\PostgreSql\Migrations\Exception\MigrationException;
+use Flow\PostgreSql\Migrations\Exception\MigrationLockedException;
 use Flow\PostgreSql\Migrations\Executor\DefaultMigrationExecutor;
+use Flow\PostgreSql\Migrations\Lock\AdvisoryMigrationLock;
 use Flow\PostgreSql\Migrations\Migration;
 use Flow\PostgreSql\Migrations\Migrator;
 use Flow\PostgreSql\Migrations\Repository\AvailableMigration;
@@ -16,12 +19,14 @@ use Flow\PostgreSql\Migrations\Tests\Double\FailingMigration;
 use Flow\PostgreSql\Migrations\Tests\Double\FakeCatalogProvider;
 use Flow\PostgreSql\Migrations\Tests\Double\FakeMigrationRepository;
 use Flow\PostgreSql\Migrations\Tests\Double\SpyMigration;
+use Flow\PostgreSql\Migrations\Tests\Double\SpyRollback;
 use Flow\PostgreSql\Migrations\Version;
 use Flow\PostgreSql\Schema\Catalog;
 use PHPUnit\Framework\TestCase;
 use Throwable;
 
 use function Flow\Types\DSL\type_instance_of;
+use function sprintf;
 
 final class MigratorTest extends TestCase
 {
@@ -95,6 +100,29 @@ final class MigratorTest extends TestCase
         static::assertCount(0, $this->store->executedMigrations());
     }
 
+    public function test_execute_version_down_refuses_a_version_that_is_not_executed(): void
+    {
+        $migration = new SpyMigration();
+        $rollback = new SpyRollback();
+        $migrator = new Migrator(
+            new FakeMigrationRepository(
+                new AvailableMigration(Version::fromString('20260501120000'), 'spy', $migration, $rollback),
+            ),
+            $this->store,
+            new DefaultMigrationExecutor(),
+            $this->context->client,
+            $this->configuration,
+        );
+
+        $this->expectExceptionObject(MigrationException::notExecuted(Version::fromString('20260501120000')));
+
+        try {
+            $migrator->executeVersion(Version::fromString('20260501120000'), Direction::DOWN);
+        } finally {
+            static::assertFalse($rollback->rollbackCalled);
+        }
+    }
+
     public function test_execute_version_runs_single_migration(): void
     {
         $migrator = new Migrator(
@@ -109,6 +137,32 @@ final class MigratorTest extends TestCase
 
         static::assertTrue($result->isSuccessful());
         static::assertCount(1, $this->store->executedMigrations());
+    }
+
+    public function test_execute_version_up_refuses_an_executed_version(): void
+    {
+        $migration = new SpyMigration();
+        $migrator = new Migrator(
+            new FakeMigrationRepository(
+                new AvailableMigration(Version::fromString('20260501120000'), 'spy', $migration, null),
+            ),
+            $this->store,
+            new DefaultMigrationExecutor(),
+            $this->context->client,
+            $this->configuration,
+        );
+
+        $migrator->executeVersion(Version::fromString('20260501120000'), Direction::UP);
+        $migration->migrateCalled = false;
+
+        $this->expectExceptionObject(MigrationException::alreadyExecuted(Version::fromString('20260501120000')));
+
+        try {
+            $migrator->executeVersion(Version::fromString('20260501120000'), Direction::UP);
+        } finally {
+            static::assertFalse($migration->migrateCalled);
+            static::assertCount(1, $this->store->executedMigrations());
+        }
     }
 
     public function test_migrate_down_to_specific_version(): void
@@ -151,6 +205,63 @@ final class MigratorTest extends TestCase
         static::assertTrue($results[0]->isSuccessful());
         static::assertTrue($results[0]->version->equals(Version::fromString('20260402100000')));
         static::assertCount(0, $migrator->status()->pending());
+    }
+
+    public function test_migrate_releases_the_lock(): void
+    {
+        $migrator = new Migrator(
+            $this->fixtureRepository(),
+            $this->store,
+            new DefaultMigrationExecutor(),
+            $this->context->client,
+            $this->configuration,
+        );
+
+        $migrator->migrate();
+
+        $second = new AdvisoryMigrationLock($this->context->secondClient());
+        $lockName = $this->context->client->parameters()->database() . '.public.flow_migrations_test';
+
+        static::assertTrue($second->acquire($lockName));
+
+        $second->release($lockName);
+    }
+
+    public function test_migrate_throws_when_another_session_holds_the_lock(): void
+    {
+        $migration = new SpyMigration();
+        $migrator = new Migrator(
+            new FakeMigrationRepository(
+                new AvailableMigration(Version::fromString('20260501120000'), 'spy', $migration, null),
+            ),
+            $this->store,
+            new DefaultMigrationExecutor(),
+            $this->context->client,
+            $this->configuration,
+        );
+        $second = new AdvisoryMigrationLock($this->context->secondClient());
+        $lockName = $this->context->client->parameters()->database() . '.public.flow_migrations_test';
+
+        static::assertTrue($second->acquire($lockName));
+
+        try {
+            $migrator->migrate();
+
+            static::fail('Expected MigrationLockedException.');
+        } catch (MigrationLockedException $exception) {
+            static::assertSame(
+                sprintf(
+                    'Another process is running migrations (lock "%s"). Run the command again when it finishes.',
+                    $lockName,
+                ),
+                $exception->getMessage(),
+            );
+        } finally {
+            $second->release($lockName);
+        }
+
+        static::assertFalse($migration->migrateCalled);
+        static::assertCount(0, $this->store->executedMigrations());
     }
 
     public function test_migrate_up_from_empty_state(): void

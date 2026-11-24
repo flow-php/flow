@@ -14,6 +14,22 @@ use function sprintf;
 
 class MigrationException extends RuntimeException
 {
+    public static function advisoryLockNotHeld(string $name): self
+    {
+        return new self(sprintf(
+            'The migrations lock "%s" was not held at release. Session locks do not work through a pooler in transaction mode (for example PgBouncer). Connect migrations directly to PostgreSQL, or use a lock outside the database.',
+            $name,
+        ));
+    }
+
+    public static function alreadyExecuted(Version $version): self
+    {
+        return new self(sprintf(
+            'Migration "%s" is already executed. Roll it back first to execute it again.',
+            $version,
+        ));
+    }
+
     public static function attributeNotFound(string $name): self
     {
         return new self(sprintf('Migration context attribute "%s" not found.', $name));
@@ -56,6 +72,14 @@ class MigrationException extends RuntimeException
         return new self(sprintf('Migration "%s" is irreversible and cannot be rolled back.', $version));
     }
 
+    public static function lockExpired(string $name): self
+    {
+        return new self(sprintf(
+            'The migrations lock "%s" expired before the migrations finished. Raise the lock ttl above the duration of the longest migration run.',
+            $name,
+        ));
+    }
+
     public static function migrationFailed(Version $version, Throwable $previous): self
     {
         return new self(sprintf('Migration "%s" failed: %s', $version, $previous->getMessage()), 0, $previous);
@@ -69,6 +93,11 @@ class MigrationException extends RuntimeException
     public static function noChangesDetected(): self
     {
         return new self('No changes detected between source and target catalog.');
+    }
+
+    public static function notExecuted(Version $version): self
+    {
+        return new self(sprintf('Migration "%s" is not executed, there is nothing to roll back.', $version));
     }
 
     public static function outOfOrder(Version $latestExecuted, Version ...$pending): self
