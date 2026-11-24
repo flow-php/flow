@@ -136,7 +136,7 @@ final class PHPSchemaFormatterTest extends FlowTestCase
     {
         static::assertEquals(<<<'PHP'
             \Flow\ETL\DSL\schema(
-                \Flow\ETL\DSL\integer_schema("id", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata(["int" => 1, "str" => "str", "bool" => true, "float" => 1.1, "empty_array" => [], "array_of_ints" => [1, 2, 3], "array_of_arrays" => [[1, 2], ["a", "b"]], "associative_array" => ["key" => "value"]])),
+                \Flow\ETL\DSL\integer_schema("id", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata(["array_of_arrays" => [[1, 2], ["a", "b"]], "array_of_ints" => [1, 2, 3], "associative_array" => ["key" => "value"], "bool" => true, "empty_array" => [], "float" => 1.1, "int" => 1, "str" => "str"])),
             );
             PHP, (new PHPSchemaFormatter())->format(schema(int_schema(
             'id',

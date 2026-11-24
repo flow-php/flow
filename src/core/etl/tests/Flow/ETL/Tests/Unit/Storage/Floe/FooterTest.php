@@ -133,7 +133,7 @@ final class FooterTest extends TestCase
 
         static::assertEquals($footer, $decoded);
         static::assertSame(42, $decoded->metadata->getAs('row_count', type_integer()));
-        static::assertSame(['min' => 1, 'max' => 1000], $decoded->metadata->get('id_stats'));
+        static::assertSame(['max' => 1000, 'min' => 1], $decoded->metadata->get('id_stats'));
     }
 
     public function test_from_json_with_non_scalar_metadata_value_throws(): void

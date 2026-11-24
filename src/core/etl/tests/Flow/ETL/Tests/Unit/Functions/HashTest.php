@@ -6,8 +6,8 @@ namespace Flow\ETL\Tests\Unit\Functions;
 
 use DateTimeImmutable;
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Hash\PhpAlgorithm;
 use Flow\ETL\Functions\Hash;
-use Flow\ETL\Kernels\Hash\PhpAlgorithm;
 use Flow\ETL\Tests\Context\DescribeRoundTrip;
 use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\Context\ScalarFunctionFixtures;

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Tests\Unit\Kernels\Hash;
+namespace Flow\ETL\Tests\Unit\Foundation\Hash;
 
 use Flow\ETL\Foundation\Exception\InvalidArgumentException;
-use Flow\ETL\Kernels\Hash\PhpAlgorithm;
+use Flow\ETL\Foundation\Hash\PhpAlgorithm;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\hash_algorithm;

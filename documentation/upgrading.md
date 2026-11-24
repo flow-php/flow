@@ -63,7 +63,8 @@ writes such a value in that raw form. Write the file again with this version to 
 
 | Before                                                                   | After                                                                 |
 |--------------------------------------------------------------------------|-----------------------------------------------------------------------|
-| `Flow\ETL\Kernels\Hash\NativePHPHash`                                    | `Flow\ETL\Kernels\Hash\PhpAlgorithm`                                  |
+| `Flow\ETL\Kernels\Hash\NativePHPHash`                                    | `Flow\ETL\Foundation\Hash\PhpAlgorithm`                               |
+| `Flow\ETL\Kernels\Hash\{Algorithm, PlainText}`                           | `Flow\ETL\Foundation\Hash\{Algorithm, PlainText}`                     |
 | `hash(ref('email'), new NativePHPHash('sha256'))`                        | `hash(ref('email'), 'sha256')`                                        |
 | `ref('email')->hash(new NativePHPHash('xxh64', options: ['seed' => 7]))` | `ref('email')->hash(hash_algorithm('xxh64', options: ['seed' => 7]))` |
 
@@ -103,6 +104,16 @@ A custom `Backend` must implement the two methods. Update or rebuild the flow_ph
 |----------------------------------------------------------------------|----------------------------------------------|
 | `UP` on an executed version ran the migration, then failed on insert | throws `MigrationException` and runs nothing |
 | `DOWN` on a version that is not executed ran the rollback            | throws `MigrationException` and runs nothing |
+
+### 10) `flow-php/etl` - schema metadata is kept in key order, and the order of a list in metadata counts
+
+| Before                                                                                                  | After                                                                 |
+|---------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
+| `Metadata::normalize()` returns the keys in insertion order                                             | returns them sorted by key at every depth, and lists keep their order |
+| `isSame()` and `Metadata::isEqual()` treat `['a', 'b']` and `['b', 'a']` as equal                       | they differ                                                           |
+| a Floe append with the same metadata in another key order throws                                        | it appends                                                            |
+| `Metadata::add()` and `merge()` renumber a numeric key, `with('5', 'x')->add('k', 'v')` has the key `0` | they keep `'5'`                                                       |
+| `Flow\ETL\Foundation\ArrayComparison\{ArrayComparison, ArraySortByKey}`                                 | removed                                                               |
 
 ---
 

@@ -856,7 +856,7 @@ final class FloeFilesTest extends TestCase
         $writer->close();
 
         static::assertSame(
-            ['source' => 'append', 'kept' => 'yes'],
+            ['kept' => 'yes', 'source' => 'append'],
             FloeStreamReaderContext::footer($filesystem, $path)->metadata->normalize(),
         );
     }

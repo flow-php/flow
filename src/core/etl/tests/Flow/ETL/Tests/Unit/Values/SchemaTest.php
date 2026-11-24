@@ -24,6 +24,7 @@ use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\schema_fingerprint_options;
 use function Flow\ETL\DSL\schema_from_json;
 use function Flow\ETL\DSL\schema_metadata;
 use function Flow\ETL\DSL\schema_sort_by_metadata;
@@ -360,6 +361,26 @@ final class SchemaTest extends FlowTestCase
         $this->expectExceptionMessage('Definition array must have an array "type" key');
 
         schema_from_json('[{"ref": "id", "type": "test", "metadata": []}]');
+    }
+
+    public function test_fingerprint_passes_options(): void
+    {
+        static::assertStringContainsString(
+            '"metadata_keys":["pii"]',
+            schema(int_schema('id'))->fingerprint(schema_fingerprint_options()->withMetadataKeys('pii'))->canonical(),
+        );
+    }
+
+    public function test_fingerprint_without_options_selects_no_metadata(): void
+    {
+        static::assertTrue(
+            schema(int_schema('id', metadata: schema_metadata(['pii' => true])))
+                ->fingerprint()
+                ->equals(
+                    schema(int_schema('id', metadata: schema_metadata(['pii' => false])))
+                        ->fingerprint(schema_fingerprint_options()),
+                ),
+        );
     }
 
     public function test_get(): void

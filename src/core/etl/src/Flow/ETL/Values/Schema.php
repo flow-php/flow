@@ -10,6 +10,8 @@ use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Foundation\Exception\SchemaDefinitionNotUniqueException;
 use Flow\ETL\Values\Schema\Definition;
 use Flow\ETL\Values\Schema\Definitions;
+use Flow\ETL\Values\Schema\Fingerprint;
+use Flow\ETL\Values\Schema\FingerprintOptions;
 use Flow\ETL\Values\Schema\Metadata;
 use Flow\ETL\Values\Schema\SameSchemas;
 use Flow\ETL\Values\Schema\SortingStrategy;
@@ -166,6 +168,11 @@ final readonly class Schema implements Countable
     public function definitions(): array
     {
         return $this->definitions;
+    }
+
+    public function fingerprint(FingerprintOptions $options = new FingerprintOptions()): Fingerprint
+    {
+        return new Fingerprint($this, $options);
     }
 
     /**
