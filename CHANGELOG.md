@@ -1,6 +1,10 @@
 ## [Unreleased] - 2026-11-24
 
 ### Added
+- [#2764](https://github.com/flow-php/flow/pull/2764) - **flow-php/etl - Schema::fingerprint() with a versioned canonical form and hash** - [@norberttech](https://github.com/norberttech)
+- [#2764](https://github.com/flow-php/flow/pull/2764) - **flow-php/etl - schema_fingerprint_options() to select metadata keys** - [@norberttech](https://github.com/norberttech)
+- [#2764](https://github.com/flow-php/flow/pull/2764) - **flow-php/etl - HashAlgorithm enum (md5, sha256, xxh128)** - [@norberttech](https://github.com/norberttech)
+- [#2764](https://github.com/flow-php/flow/pull/2764) - **flow-php/flow-php-ext - native hash() for string columns** - [@norberttech](https://github.com/norberttech)
 - [#2763](https://github.com/flow-php/flow/pull/2763) - **flow-php/postgresql - migration lock, a PostgreSQL advisory lock by default** - [@norberttech](https://github.com/norberttech)
 - [#2763](https://github.com/flow-php/flow/pull/2763) - **flow-php/postgresql - MigrationLockedException when another process runs migrations** - [@norberttech](https://github.com/norberttech)
 - [#2763](https://github.com/flow-php/flow/pull/2763) - **flow-php/symfony-postgresql-bundle - migrations.lock configuration (advisory, symfony, service, none)** - [@norberttech](https://github.com/norberttech)
@@ -48,6 +52,8 @@
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - Packagist links in the hero and the footer** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2764](https://github.com/flow-php/flow/pull/2764) - **flow-php/etl - hash() takes a HashAlgorithm** - [@norberttech](https://github.com/norberttech)
+- [#2764](https://github.com/flow-php/flow/pull/2764) - **flow-php/etl - list order in schema metadata counts** - [@norberttech](https://github.com/norberttech)
 - [#2763](https://github.com/flow-php/flow/pull/2763) - **flow-php/postgresql - Migrator::executeVersion() refuses an executed (up) or not executed (down) version** - [@norberttech](https://github.com/norberttech)
 - [#2760](https://github.com/flow-php/flow/pull/2760) - **flow-php/symfony-postgresql-bundle - flow:migrations:migrate prints a MigrationException as an error and exits with code 1** - [@norberttech](https://github.com/norberttech)
 - [#2758](https://github.com/flow-php/flow/pull/2758) - **flow-php/etl - group, join, distinct and bucket keys use one typed canonical encoding** - [@norberttech](https://github.com/norberttech)
@@ -69,6 +75,8 @@
 - [bfd25e](https://github.com/flow-php/flow/commit/bfd25e3ee88004638529d03dfc30f86e931c76f2) - **docs(flow-php/web): blog posts for releases 0.47.0 and 0.48.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2764](https://github.com/flow-php/flow/pull/2764) - **flow-php/etl - schema metadata equal regardless of key order** - [@norberttech](https://github.com/norberttech)
+- [#2764](https://github.com/flow-php/flow/pull/2764) - **flow-php/etl - Metadata::add() and merge() keep numeric keys** - [@norberttech](https://github.com/norberttech)
 - [#2762](https://github.com/flow-php/flow/pull/2762) - **flow-php/symfony-telemetry-bundle - HTTP client response throws on destruct when the profiler is enabled** - [@norberttech](https://github.com/norberttech)
 - [#2762](https://github.com/flow-php/flow/pull/2762) - **flow-php/symfony-telemetry-bundle - HTTP client span stays active after a successful request** - [@norberttech](https://github.com/norberttech)
 - [#2762](https://github.com/flow-php/flow/pull/2762) - **flow-php/symfony-telemetry-bundle - failed HTTP client span completes without status code and error.type** - [@norberttech](https://github.com/norberttech)
@@ -91,6 +99,9 @@
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/cli - phar build with a composer wrapper** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2764](https://github.com/flow-php/flow/pull/2764) - **flow-php/etl - Algorithm, PhpAlgorithm, PlainText, MultisetHashAlgorithm** - [@norberttech](https://github.com/norberttech)
+- [#2764](https://github.com/flow-php/flow/pull/2764) - **flow-php/etl - hash_algorithm()** - [@norberttech](https://github.com/norberttech)
+- [#2764](https://github.com/flow-php/flow/pull/2764) - **flow-php/etl - Foundation\ArrayComparison** - [@norberttech](https://github.com/norberttech)
 - [#2755](https://github.com/flow-php/flow/pull/2755) - **flow-php/postgresql - recursive argument of cte() and CTE** - [@norberttech](https://github.com/norberttech)
 - [#2755](https://github.com/flow-php/flow/pull/2755) - **flow-php/postgresql - returning() and returning_all() DSL functions** - [@norberttech](https://github.com/norberttech)
 - [#2755](https://github.com/flow-php/flow/pull/2755) - **flow-php/postgresql - ReturningClause::all() and ReturningClause::columns()** - [@norberttech](https://github.com/norberttech)
