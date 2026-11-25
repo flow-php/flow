@@ -11,4 +11,4 @@ contact_links:
     about: Who can open a pull request, and how to become a Contributor.
   - name: See the Roadmap
     url: https://github.com/orgs/flow-php/projects/1
-    about: The accepted issues and their milestones.
+    about: The accepted issues and their status.
