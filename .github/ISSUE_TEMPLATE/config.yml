@@ -1,14 +1,14 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Feature idea
+  - name: Suggest a feature
     url: https://github.com/flow-php/flow/discussions/new?category=ideas
     about: Something is missing, or the API is hard to use. Accepted ideas become issues on the Roadmap.
-  - name: Question
+  - name: Ask a question
     url: https://discord.gg/5dNXfQyACW
     about: Ask on the Flow Discord server. It is the fastest way to get an answer.
-  - name: How to contribute
+  - name: Read how to contribute
     url: https://flow-php.com/documentation/contributing/
     about: Who can open a pull request, and how to become a Contributor.
-  - name: Roadmap
+  - name: See the Roadmap
     url: https://github.com/orgs/flow-php/projects/1
     about: The accepted issues and their milestones.

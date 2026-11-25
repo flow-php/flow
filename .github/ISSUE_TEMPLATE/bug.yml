@@ -1,4 +1,4 @@
-name: "Bug"
+name: "Report a bug"
 description: "Existing code does not work as documented."
 type: "Bug"
 labels: ["triage"]
