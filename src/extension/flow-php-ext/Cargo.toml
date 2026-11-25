@@ -31,7 +31,7 @@ serde.workspace = true
 serde_json.workspace = true
 
 [build-dependencies]
-ext-php-rs-build = "0.1"
+ext-php-rs-build = "0.2"
 
 [profile.release]
 strip = true

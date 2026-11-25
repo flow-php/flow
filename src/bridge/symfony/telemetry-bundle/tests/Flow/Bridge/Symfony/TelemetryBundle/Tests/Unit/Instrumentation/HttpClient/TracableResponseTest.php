@@ -382,14 +382,14 @@ final class TracableResponseTest extends TestCase
         try {
             $response->toArray();
         } finally {
-            static::assertSame(
-                'Syntax error for "https://graph.facebook.com/me?access_token=REDACTED".',
+            // PHP 8.6 adds "near location 1:2" to the JSON error message
+            $expectedMessage = '/^Syntax error( near location \d+:\d+)? for "https:\/\/graph\.facebook\.com\/me\?access_token=REDACTED"\.$/';
+
+            static::assertThat(
                 $span->events()[0]->attributes()['exception.message'],
+                static::matchesRegularExpression($expectedMessage),
             );
-            static::assertSame(
-                'Syntax error for "https://graph.facebook.com/me?access_token=REDACTED".',
-                $span->status()?->description,
-            );
+            static::assertMatchesRegularExpression($expectedMessage, (string) $span->status()?->description);
         }
     }
 

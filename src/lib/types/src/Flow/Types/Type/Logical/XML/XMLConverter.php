@@ -15,6 +15,8 @@ use function trim;
 
 final class XMLConverter
 {
+    private const string PHP_86_TRIM_CHARACTERS = " \n\r\t\v\x00\f";
+
     /**
      * @param \DOMDocument $document
      *
@@ -53,7 +55,7 @@ final class XMLConverter
 
         foreach ($element->childNodes as $childNode) {
             if ($childNode instanceof DOMText) {
-                if (trim((string) $childNode->nodeValue)) {
+                if (trim((string) $childNode->nodeValue, self::PHP_86_TRIM_CHARACTERS)) {
                     $xmlArray['@value'] = $childNode->nodeValue;
                 }
             }

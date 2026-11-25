@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         os: ['ubuntu-24.04', 'macos-latest']
-        php: ['8.3', '8.4', '8.5']
+        php: ['8.3', '8.4', '8.5', '8.6']
         exclude: ${{ fromJSON(inputs.full-matrix && '[]' || '[{"os":"macos-latest","php":"8.3"},{"os":"macos-latest","php":"8.4"}]') }}
 
     steps:
@@ -82,7 +82,7 @@ jobs:
         uses: ./.github/actions/composer-install
         with:
           php-version: ${{ matrix.php }}
-          dependencies: locked
+          dependencies: ${{ matrix.php == '8.6' && 'highest' || 'locked' }}
 
       - name: Run PHPT tests
         working-directory: src/extension/flow-php-ext

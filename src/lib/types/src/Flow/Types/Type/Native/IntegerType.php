@@ -30,6 +30,8 @@ use function trim;
  */
 final readonly class IntegerType implements Type
 {
+    private const string NUMERIC_WHITESPACE = " \t\n\r\v\f";
+
     public function assert(mixed $value): int
     {
         if ($this->isValid($value)) {
@@ -63,7 +65,7 @@ final readonly class IntegerType implements Type
             && preg_match('/^\s*[+-]?[0-9]+\s*$/', $value) === 1
         ) {
             // (int) saturates integer-shaped text silently, so round-trip it exactly
-            $trimmed = ltrim(trim($value), '+');
+            $trimmed = ltrim(trim($value, self::NUMERIC_WHITESPACE), '+');
             $negative = str_starts_with($trimmed, '-');
             $digits = ltrim($negative ? substr($trimmed, 1) : $trimmed, '0');
 

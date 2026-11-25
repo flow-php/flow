@@ -24,7 +24,7 @@ Available platforms:
 - Linux ARM64
 - Linux x86_64
 
-PHP versions: 8.3, 8.4, 8.5 (each with NTS and ZTS variants).
+PHP versions: 8.3, 8.4, 8.5, 8.6 (each with NTS and ZTS variants).
 
 ### Installation
 

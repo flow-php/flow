@@ -38,6 +38,8 @@ use const FILTER_VALIDATE_INT;
  */
 final readonly class ValueEquality
 {
+    private const string PHP_86_TRIM_CHARACTERS = " \n\r\t\v\x00\f";
+
     /**
      * $column's values in $type, built on PhpBackend: a cast column never leaves this class and its physicals go
      * straight back to PHP, so a native build would only add a copy.
@@ -243,7 +245,7 @@ final readonly class ValueEquality
         }
 
         // an integral string stays exact past 2^53, where a float would round it
-        $integer = filter_var(trim($value), FILTER_VALIDATE_INT);
+        $integer = filter_var(trim($value, self::PHP_86_TRIM_CHARACTERS), FILTER_VALIDATE_INT);
 
         return $integer === false ? (int) round((float) $value) : $integer;
     }

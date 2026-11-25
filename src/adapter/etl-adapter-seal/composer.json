@@ -12,7 +12,7 @@
         "adapter"
     ],
     "require": {
-        "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+        "php": "~8.3.0 || ~8.4.0 || ~8.5.0 || ~8.6.0",
         "cmsig/seal": "^0.12",
         "flow-php/etl": "self.version"
     },

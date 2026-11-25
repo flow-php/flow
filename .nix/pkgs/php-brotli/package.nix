@@ -5,13 +5,13 @@
 
 php.buildPecl {
   pname = "brotli";
-  version = "0.18.3";
+  version = "0.21.1";
 
   src = fetchFromGitHub {
     owner = "kjdev";
     repo = "php-ext-brotli";
-    tag = "0.18.3";
-    hash = "sha256-kIsQHgiCYcoa5+5wXjA+VCrMj7ZFLunOCOeG5DFD62k=";
+    tag = "0.21.1";
+    hash = "sha256-Cs7LT8leCXN2CLU1gZGFfZrvp4u4C77SbBSARt8bmaE=";
     fetchSubmodules = true;
   };
 }

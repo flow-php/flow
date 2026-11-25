@@ -22,6 +22,8 @@ use function trim;
 
 final class ColumnTypes
 {
+    private const string PHP_86_TRIM_CHARACTERS = " \n\r\t\v\x00\f";
+
     /**
      * Keyed by array-key: PHP turns a numeric column name into an int key.
      *
@@ -137,7 +139,7 @@ final class ColumnTypes
 
             $observed = match (true) {
                 $value === null => type_null(),
-                is_string($value) && trim($value) !== $value => type_string(),
+                is_string($value) && trim($value, self::PHP_86_TRIM_CHARACTERS) !== $value => type_string(),
                 default => $this->typer->narrow($value),
             };
 

@@ -10,7 +10,7 @@
         "load"
     ],
     "require": {
-        "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+        "php": "~8.3.0 || ~8.4.0 || ~8.5.0 || ~8.6.0",
         "ext-bcmath": "*",
         "ext-dom": "*",
         "ext-hash": "*",
@@ -36,7 +36,7 @@
         "openspout/openspout": "^5.3",
         "packaged/thrift": "^0.15.0",
         "php-http/discovery": "^1.0",
-        "phpseclib/phpseclib": "^4.0",
+        "phpseclib/phpseclib": "^4.0.4",
         "psr/clock": "^1.0",
         "psr/http-client": "^1.0",
         "psr/http-factory": "^1.0",

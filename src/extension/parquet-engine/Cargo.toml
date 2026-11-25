@@ -17,4 +17,4 @@ bytes = "1"
 parquet = { version = "60", default-features = false, features = ["arrow", "arrow_canonical_extension_types", "snap", "flate2", "flate2-zlib-rs", "zstd", "lz4", "brotli", "simdutf8"] }
 
 [build-dependencies]
-ext-php-rs-build = "0.1"
+ext-php-rs-build = "0.2"

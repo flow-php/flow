@@ -11,6 +11,7 @@ use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\Types\DSL\type_from_array;
@@ -201,6 +202,14 @@ final class PositiveIntegerTypeTest extends TestCase
             static::assertIsInt($result);
             static::assertSame($value, $result);
         }
+    }
+
+    #[TestWith(["\f1"])]
+    #[TestWith(["1\f"])]
+    #[TestWith(["\f+1\f"])]
+    public function test_cast_form_feed_padded_integer(string $value): void
+    {
+        static::assertSame(1, type_positive_integer()->cast($value));
     }
 
     public function test_an_out_of_range_literal_names_the_range_as_the_reason(): void

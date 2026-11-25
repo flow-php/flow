@@ -356,11 +356,11 @@
             "dist": {
                 "type": "path",
                 "url": "../../src/lib/array-dot",
-                "reference": "aa9e596ee940019b9f2ae1fe3981cac5d9a0e6a6"
+                "reference": "3bdee5691d9ad4694b761178e7f958fd8fb572b3"
             },
             "require": {
                 "flow-php/types": "self.version",
-                "php": "~8.3.0 || ~8.4.0 || ~8.5.0"
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0 || ~8.6.0"
             },
             "type": "library",
             "autoload": {
@@ -402,7 +402,7 @@
             "dist": {
                 "type": "path",
                 "url": "../../src/core/etl",
-                "reference": "55c5a21c8c0a8f87cdbb0937dd6a5d6baedd11fe"
+                "reference": "7d852bc43df0c0c23d6c535f474ffbb58bcdf8cc"
             },
             "require": {
                 "brick/math": "^0.12 || ^0.13 || ^0.14 || ^0.15 || ^0.16 || ^0.17 || ^0.18 || ^1.0",
@@ -412,7 +412,7 @@
                 "flow-php/filesystem": "self.version",
                 "flow-php/telemetry": "self.version",
                 "flow-php/types": "self.version",
-                "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0 || ~8.6.0",
                 "psr/clock": "^1.0",
                 "psr/simple-cache": "^1.0 || ^2.0 || ^3.0",
                 "symfony/string": "^6.4 || ^7.4 || ^8.0"
@@ -468,14 +468,14 @@
             "dist": {
                 "type": "path",
                 "url": "../../src/adapter/etl-adapter-http",
-                "reference": "e3e38ca3e04d36423ef023ac7c41ce0368648511"
+                "reference": "b516949dd3f55df3d15943bb8d6036d242c55d61"
             },
             "require": {
                 "ext-dom": "*",
                 "ext-json": "*",
                 "flow-php/array-dot": "self.version",
                 "flow-php/etl": "self.version",
-                "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0 || ~8.6.0",
                 "psr/http-client": "^1.0",
                 "psr/http-factory": "^1.0"
             },
@@ -521,14 +521,14 @@
             "dist": {
                 "type": "path",
                 "url": "../../src/adapter/etl-adapter-json",
-                "reference": "8d84ef246c9364a27081e0953a148471362c2645"
+                "reference": "0d1022610b65577a321b710e0811c5766fe73965"
             },
             "require": {
                 "ext-json": "*",
                 "flow-php/etl": "self.version",
                 "flow-php/filesystem": "self.version",
                 "halaxa/json-machine": "^1.2",
-                "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0 || ~8.6.0",
                 "psr/http-client": "^1.0",
                 "psr/http-factory": "^1.0"
             },
@@ -574,12 +574,12 @@
             "dist": {
                 "type": "path",
                 "url": "../../src/lib/filesystem",
-                "reference": "c8427fd1f53eac148c2e590f1e36604e080e4f89"
+                "reference": "41a833d7987de07e762e01fa74ed42920c3ae25d"
             },
             "require": {
                 "flow-php/telemetry": "self.version",
                 "flow-php/types": "self.version",
-                "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0 || ~8.6.0",
                 "symfony/polyfill-mbstring": "^1.33"
             },
             "type": "library",
@@ -624,13 +624,13 @@
             "dist": {
                 "type": "path",
                 "url": "../../src/bridge/monolog/telemetry",
-                "reference": "86126b365e7c90c52d5447928ef1765c622f504e"
+                "reference": "8c0614291990082bf87c5e9c2e570542dae7b9e6"
             },
             "require": {
                 "flow-php/etl": "self.version",
                 "flow-php/telemetry": "self.version",
                 "monolog/monolog": "^3.0",
-                "php": "~8.3.0 || ~8.4.0 || ~8.5.0"
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0 || ~8.6.0"
             },
             "type": "library",
             "autoload": {
@@ -670,11 +670,11 @@
             "dist": {
                 "type": "path",
                 "url": "../../src/bridge/psr18/telemetry",
-                "reference": "5e771f57e8d1c0a8ec73fc74b80b9c11a58d8f4c"
+                "reference": "76470817cb1587d3301588717995f781e143c8d8"
             },
             "require": {
                 "flow-php/telemetry": "self.version",
-                "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0 || ~8.6.0",
                 "psr/http-client": "^1.0",
                 "psr/http-message": "^1.0 || ^2.0"
             },
@@ -719,11 +719,11 @@
             "dist": {
                 "type": "path",
                 "url": "../../src/bridge/psr3/telemetry",
-                "reference": "2070310dd701307523e5e567675e8d86c73be767"
+                "reference": "22dee57a60839d243e78f67bbf0fdb5608086b93"
             },
             "require": {
                 "flow-php/telemetry": "self.version",
-                "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0 || ~8.6.0",
                 "psr/log": "^2.0 || ^3.0"
             },
             "type": "library",
@@ -764,15 +764,15 @@
             "dist": {
                 "type": "path",
                 "url": "../../src/bridge/symfony/telemetry-bundle",
-                "reference": "2fd5806ec657dc434856376ce1c118622d1cd744"
+                "reference": "e163071a0b515aefaa129907515755b9dfeefc48"
             },
             "require": {
                 "flow-php/psr3-telemetry-bridge": "self.version",
                 "flow-php/telemetry": "self.version",
-                "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0 || ~8.6.0",
                 "psr/clock": "^1.0",
                 "symfony/config": "^6.4 || ^7.4 || ^8.0",
-                "symfony/console": "^6.4 || ^7.4 || ^8.0",
+                "symfony/console": "^6.4.34 || ^7.4.6 || ^8.0.6",
                 "symfony/dependency-injection": "^6.4 || ^7.4 || ^8.0",
                 "symfony/http-client-contracts": "^3.0",
                 "symfony/http-kernel": "^6.4 || ^7.4 || ^8.0",
@@ -851,11 +851,11 @@
             "dist": {
                 "type": "path",
                 "url": "../../src/lib/telemetry",
-                "reference": "b8b849b1dd7b663f8c5b3a480cd446eefb5b87af"
+                "reference": "070df13d1d61fee5a834643ec897366847275aae"
             },
             "require": {
                 "composer-runtime-api": "^2.2",
-                "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0 || ~8.6.0",
                 "psr/clock": "^1.0",
                 "symfony/polyfill-mbstring": "^1.33"
             },
@@ -896,11 +896,11 @@
             "dist": {
                 "type": "path",
                 "url": "../../src/bridge/telemetry/otlp",
-                "reference": "faf1a2574abaa7afaadcc09215f6595928573fc8"
+                "reference": "0a14c6fb2766f40228c292c45e943699dd83482f"
             },
             "require": {
                 "flow-php/telemetry": "self.version",
-                "php": "~8.3.0 || ~8.4.0 || ~8.5.0"
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0 || ~8.6.0"
             },
             "require-dev": {
                 "ext-curl": "*",
@@ -959,10 +959,10 @@
             "dist": {
                 "type": "path",
                 "url": "../../src/lib/types",
-                "reference": "3f5402604b8e27c7359eaa5688f15b3cb5c18d21"
+                "reference": "68031fb52a0a6cf9b564861986e3d0787f3d4d8a"
             },
             "require": {
-                "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0 || ~8.6.0",
                 "symfony/polyfill-mbstring": "^1.33"
             },
             "type": "library",

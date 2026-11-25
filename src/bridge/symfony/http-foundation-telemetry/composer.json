@@ -12,7 +12,7 @@
     "homepage": "https://github.com/flow-php/flow",
     "license": "MIT",
     "require": {
-        "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+        "php": "~8.3.0 || ~8.4.0 || ~8.5.0 || ~8.6.0",
         "flow-php/telemetry": "self.version",
         "symfony/http-foundation": "^6.4 || ^7.4 || ^8.0"
     },

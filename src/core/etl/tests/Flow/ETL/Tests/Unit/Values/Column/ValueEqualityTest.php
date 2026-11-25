@@ -17,6 +17,7 @@ use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\time_schema;
+use function Flow\Types\DSL\type_integer;
 
 final class ValueEqualityTest extends FlowTestCase
 {
@@ -28,6 +29,14 @@ final class ValueEqualityTest extends FlowTestCase
         );
 
         static::assertSame([null, null, true], (new ValueEquality())->equal($rows->column('l'), $rows->column('r')));
+    }
+
+    public function test_form_feed_padded_integer_text_stays_exact_past_the_float_range(): void
+    {
+        static::assertSame(9_007_199_254_740_993, (new ValueEquality())->number(
+            "\f9007199254740993\f",
+            type_integer(),
+        ));
     }
 
     public function test_strings_are_equal_only_when_identical(): void

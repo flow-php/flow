@@ -38,8 +38,9 @@ jobs:
           - "8.3"
           - "8.4"
           - "8.5"
+          - "8.6"
         # PHPUnit 13 requires PHP >= 8.4.1, so 13 x 8.3 is always excluded.
-        exclude: ${{ fromJSON(inputs.full-matrix && '[{"phpunit-version":"13","php-version":"8.3"}]' || '[{"phpunit-version":"13","php-version":"8.3"},{"phpunit-version":"13","php-version":"8.4"},{"phpunit-version":"12","php-version":"8.3"},{"phpunit-version":"12","php-version":"8.5"},{"phpunit-version":"11","php-version":"8.4"},{"phpunit-version":"11","php-version":"8.5"}]') }}
+        exclude: ${{ fromJSON(inputs.full-matrix && '[{"phpunit-version":"13","php-version":"8.3"}]' || '[{"phpunit-version":"13","php-version":"8.3"},{"phpunit-version":"13","php-version":"8.4"},{"phpunit-version":"12","php-version":"8.3"},{"phpunit-version":"12","php-version":"8.5"},{"phpunit-version":"11","php-version":"8.4"},{"phpunit-version":"11","php-version":"8.5"},{"phpunit-version":"11","php-version":"8.6"},{"phpunit-version":"12","php-version":"8.6"}]') }}
 
     steps:
       - name: "Checkout"
@@ -51,7 +52,7 @@ jobs:
         uses: "./.github/actions/setup-php-env"
         with:
           php-version: "${{ matrix.php-version }}"
-          dependencies: "locked"
+          dependencies: "${{ matrix.php-version == '8.6' && 'highest' || 'locked' }}"
           coverage: ${{ matrix.php-version == '8.3' && 'pcov' || 'none' }}
           extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, curl, pgsql, grpc, protobuf'
           ini-values: 'memory_limit=-1'

@@ -290,6 +290,24 @@ final class RustCSVOpenSourceTest extends FlowTestCase
         }
     }
 
+    public function test_a_form_feed_padded_header_resolves_the_same_on_both_paths(): void
+    {
+        if (!extension_loaded('flow_php')) {
+            static::markTestSkipped('flow_php extension is not loaded');
+        }
+
+        $php = CSVFixtureContext::openPhpStream(CSVFixtureContext::content("\fid,name\f\n1,a\n"));
+        $native = CSVFixtureContext::openNativeStream(CSVFixtureContext::content("\fid,name\f\n1,a\n"));
+
+        try {
+            static::assertSame(['id', 'name'], $php->columns());
+            static::assertSame(['id', 'name'], $native->columns());
+        } finally {
+            $php->close();
+            $native->close();
+        }
+    }
+
     public function test_a_zero_byte_source_resolves_no_header_on_both_paths(): void
     {
         if (!extension_loaded('flow_php')) {

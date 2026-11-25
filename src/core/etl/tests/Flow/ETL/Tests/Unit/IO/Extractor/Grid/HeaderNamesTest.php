@@ -15,6 +15,11 @@ final class HeaderNamesTest extends FlowTestCase
         static::assertSame(['id', '1', '2.5', '1'], (new HeaderNames())->of([' id ', 1, 2.5, true]));
     }
 
+    public function test_form_feed_padded_header_is_trimmed(): void
+    {
+        static::assertSame(['id', 'name'], (new HeaderNames())->of(["\fid", "name\f"]));
+    }
+
     public function test_a_blank_or_non_scalar_cell_is_named_by_its_position(): void
     {
         static::assertSame(
