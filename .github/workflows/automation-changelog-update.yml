@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   automation:
+    environment: ci
     runs-on: ubuntu-latest
     steps:
       - name: "Load GitHub App private key"

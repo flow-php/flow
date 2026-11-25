@@ -16,6 +16,7 @@ permissions:
 
 jobs:
   packages_split:
+    environment: ci
     runs-on: ubuntu-24.04
 
     env:

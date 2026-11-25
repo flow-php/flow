@@ -8,6 +8,7 @@ permissions:
 
 jobs:
   build-archives:
+    environment: ci
     name: "Release"
     runs-on: ${{ matrix.operating-system }}
     permissions:

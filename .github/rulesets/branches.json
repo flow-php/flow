@@ -1,0 +1,22 @@
+{
+  "name": "branches",
+  "target": "branch",
+  "enforcement": "active",
+  "conditions": {
+    "ref_name": {
+      "include": ["~ALL"],
+      "exclude": ["refs/heads/1.x"]
+    }
+  },
+  "rules": [
+    { "type": "creation" },
+    { "type": "update" },
+    { "type": "deletion" }
+  ],
+  "bypass_actors": [
+    { "actor_id": 5, "actor_type": "RepositoryRole", "bypass_mode": "always" },
+    { "actor_id": 4627719, "actor_type": "Team", "bypass_mode": "always" },
+    { "actor_id": 5686249, "actor_type": "Integration", "bypass_mode": "always" },
+    { "actor_id": 29110, "actor_type": "Integration", "bypass_mode": "always" }
+  ]
+}

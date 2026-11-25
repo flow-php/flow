@@ -89,6 +89,7 @@ jobs:
       no-cache: ${{ github.event_name == 'schedule' }}
 
   publish-website:
+    environment: ci
     runs-on: ubuntu-24.04
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
