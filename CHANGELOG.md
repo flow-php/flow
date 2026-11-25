@@ -1,6 +1,7 @@
-## [Unreleased] - 2026-11-22
+## [Unreleased] - 2026-11-25
 
 ### Added
+- [#2777](https://github.com/flow-php/flow/pull/2777) - **flow-php/etl - PHP 8.6 support in every package** - [@norberttech](https://github.com/norberttech)
 - [#2765](https://github.com/flow-php/flow/pull/2765) - **flow-php/etl - analyze()->withDatasetHash() accepts column names** - [@norberttech](https://github.com/norberttech)
 - [#2764](https://github.com/flow-php/flow/pull/2764) - **flow-php/etl - Schema::fingerprint() with a versioned canonical form and hash** - [@norberttech](https://github.com/norberttech)
 - [#2764](https://github.com/flow-php/flow/pull/2764) - **flow-php/etl - schema_fingerprint_options() to select metadata keys** - [@norberttech](https://github.com/norberttech)
@@ -53,6 +54,16 @@
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - Packagist links in the hero and the footer** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2777](https://github.com/flow-php/flow/pull/2777) - **flow-php/telemetry - ServiceAttribute::NAMESPACE renamed to SERVICE_NAMESPACE** - [@norberttech](https://github.com/norberttech)
+- [#2777](https://github.com/flow-php/flow/pull/2777) - **flow-php/filesystem-sftp-bridge - phpseclib constraint from ^4.0 to ^4.0.4** - [@norberttech](https://github.com/norberttech)
+- [#2777](https://github.com/flow-php/flow/pull/2777) - **flow-php/flow-php-ext - ext-php-rs 0.16.5 and ext-php-rs-build 0.2** - [@norberttech](https://github.com/norberttech)
+- [#2777](https://github.com/flow-php/flow/pull/2777) - **flow-php/arrow-ext - ext-php-rs 0.16.5** - [@norberttech](https://github.com/norberttech)
+- [#2777](https://github.com/flow-php/flow/pull/2777) - **flow-php/flow - CI installs the lock file on PHP 8.3 only, PHP 8.4 to 8.6 resolve the highest dependency set** - [@norberttech](https://github.com/norberttech)
+- [#2777](https://github.com/flow-php/flow/pull/2777) - **flow-php/flow - CI matrices are explicit lists instead of fromJSON exclusions** - [@norberttech](https://github.com/norberttech)
+- [#2777](https://github.com/flow-php/flow/pull/2777) - **flow-php/flow - extension workflows have separate Linux and macOS jobs, macOS builds PHP 8.3 in pull requests** - [@norberttech](https://github.com/norberttech)
+- [#2777](https://github.com/flow-php/flow/pull/2777) - **flow-php/flow - CI installs pcov only where coverage is uploaded** - [@norberttech](https://github.com/norberttech)
+- [#2777](https://github.com/flow-php/flow/pull/2777) - **flow-php/flow - a CI job fails when a requested PHP extension does not install** - [@norberttech](https://github.com/norberttech)
+- [#2777](https://github.com/flow-php/flow/pull/2777) - **flow-php/flow - nix shell on a newer nixpkgs revision, with PHP 8.6, zstd 0.19.0 and brotli 0.21.1** - [@norberttech](https://github.com/norberttech)
 - [#2773](https://github.com/flow-php/flow/pull/2773) - **flow-php/etl-adapter-excel - openspout constraint from ~5.3.0 to ^5.3** - [@norberttech](https://github.com/norberttech)
 - [#2773](https://github.com/flow-php/flow/pull/2773) - **flow-php/etl-adapter-excel - XLSX sheet dimension wins over row spans when padding rows** - [@norberttech](https://github.com/norberttech)
 - [ca4c43](https://github.com/flow-php/flow/commit/ca4c4339dadd40195bf2ec41d03a7da9192b15e4) - **docs(flow-php/flow): Todo status marks an accepted issue** - [@norberttech](https://github.com/norberttech)
@@ -91,6 +102,9 @@
 - [bfd25e](https://github.com/flow-php/flow/commit/bfd25e3ee88004638529d03dfc30f86e931c76f2) - **docs(flow-php/web): blog posts for releases 0.47.0 and 0.48.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2777](https://github.com/flow-php/flow/pull/2777) - **flow-php/filesystem - Blocks::fromResource() never ended on PHP 8.6** - [@norberttech](https://github.com/norberttech)
+- [#2777](https://github.com/flow-php/flow/pull/2777) - **flow-php/types - integer casts refused form-feed padded text on PHP 8.3 to 8.5** - [@norberttech](https://github.com/norberttech)
+- [#2777](https://github.com/flow-php/flow/pull/2777) - **flow-php/etl - header names and type inference trimmed a form feed on PHP 8.6 only** - [@norberttech](https://github.com/norberttech)
 - [#2773](https://github.com/flow-php/flow/pull/2773) - **flow-php/etl-adapter-excel - openspout constraint blocked every release after 5.3** - [@norberttech](https://github.com/norberttech)
 - [#2764](https://github.com/flow-php/flow/pull/2764) - **flow-php/etl - schema metadata equal regardless of key order** - [@norberttech](https://github.com/norberttech)
 - [#2764](https://github.com/flow-php/flow/pull/2764) - **flow-php/etl - Metadata::add() and merge() keep numeric keys** - [@norberttech](https://github.com/norberttech)
