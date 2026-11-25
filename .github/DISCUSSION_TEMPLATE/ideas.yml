@@ -1,0 +1,21 @@
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The Maintainers turn an accepted idea into an issue on the [Roadmap](https://github.com/orgs/flow-php/projects/1).
+        They close an idea that they do not accept, with the reason.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What do you want to do?
+      description: The task you have, and what stops you today.
+    validations:
+      required: true
+  - type: textarea
+    id: api
+    attributes:
+      label: Code you want to write
+      description: The DSL functions and DataFrame methods as you want to call them. No backticks needed.
+      render: php
+    validations:
+      required: false

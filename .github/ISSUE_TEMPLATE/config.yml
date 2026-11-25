@@ -1,14 +1,14 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Which issue type should I use?
-    url: https://flow-php.com/documentation/contributing/
-    about: Find out which issue type is best for your case 
-  - name: Discord Community Support
+  - name: Feature idea
+    url: https://github.com/flow-php/flow/discussions/new?category=ideas
+    about: Something is missing, or the API is hard to use. Accepted ideas become issues on the Roadmap.
+  - name: Question
     url: https://discord.gg/5dNXfQyACW
-    about: The fastest way to get answer to your questions
-  - name: Project Documentation
-    url: https://flow-php.com/documentation/
-    about: Project Documentation
-  - name: Project Roadmap
+    about: Ask on the Flow Discord server. It is the fastest way to get an answer.
+  - name: How to contribute
+    url: https://flow-php.com/documentation/contributing/
+    about: Who can open a pull request, and how to become a Contributor.
+  - name: Roadmap
     url: https://github.com/orgs/flow-php/projects/1
-    about: Project Roadmap - please check if given issue is not already there
+    about: The accepted issues and their milestones.

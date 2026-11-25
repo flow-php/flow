@@ -1,0 +1,36 @@
+name: "Contributor application"
+description: "Ask for the right to open pull requests."
+title: "Contributor application"
+assignees: ["norberttech"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Only members of the Contributors team can open pull requests.
+        A Maintainer adds you to the team after this application is accepted.
+  - type: input
+    id: issue
+    attributes:
+      label: Issue you want to work on
+      description: The issue must have a milestone. A milestone means that the Maintainers accepted the issue.
+      placeholder: "#1234"
+    validations:
+      required: true
+  - type: textarea
+    id: plan
+    attributes:
+      label: How do you plan to solve it?
+      description: Start with the public API, the code that a Flow user will write.
+    validations:
+      required: true
+  - type: checkboxes
+    id: rules
+    attributes:
+      label: Rules
+      options:
+        - label: I will agree the design with a Maintainer in the issue before I write code.
+          required: true
+        - label: I will open pull requests only for issues that have a milestone.
+          required: true
+        - label: I understand that the code owners have the last word on the scope and the design of each change.
+          required: true
