@@ -2,8 +2,6 @@ name: "Report a bug"
 description: "Existing code does not work as documented."
 type: "Bug"
 labels: ["triage"]
-projects: ["flow-php/projects/1"]
-assignees: ["norberttech"]
 body:
   - type: textarea
     id: what-happened

@@ -1,7 +1,6 @@
 name: "Report a website problem"
 description: "A problem on flow-php.com: documentation, examples, blog, playground or search."
 labels: ["triage"]
-assignees: ["norberttech"]
 body:
   - type: textarea
     id: what
