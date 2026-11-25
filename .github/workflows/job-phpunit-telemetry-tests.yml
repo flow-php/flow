@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       full-matrix:
-        description: "Every PHPUnit x PHP combination; otherwise one PHP version per PHPUnit major"
+        description: "Every PHPUnit x PHP combination; otherwise one PHP version per PHPUnit major, and PHPUnit 13 on PHP 8.6"
         type: boolean
         required: false
         default: true
@@ -17,7 +17,7 @@ jobs:
   tests:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    services:
+    services: &services
       postgres:
         image: postgres:18-alpine
         env:
@@ -30,19 +30,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        phpunit-version:
-          - "11"
-          - "12"
-          - "13"
-        php-version:
-          - "8.3"
-          - "8.4"
-          - "8.5"
-          - "8.6"
-        # PHPUnit 13 requires PHP >= 8.4.1, so 13 x 8.3 is always excluded.
-        exclude: ${{ fromJSON(inputs.full-matrix && '[{"phpunit-version":"13","php-version":"8.3"}]' || '[{"phpunit-version":"13","php-version":"8.3"},{"phpunit-version":"13","php-version":"8.4"},{"phpunit-version":"12","php-version":"8.3"},{"phpunit-version":"12","php-version":"8.5"},{"phpunit-version":"11","php-version":"8.4"},{"phpunit-version":"11","php-version":"8.5"},{"phpunit-version":"11","php-version":"8.6"},{"phpunit-version":"12","php-version":"8.6"}]') }}
+        include:
+          - phpunit-version: "11"
+            php-version: "8.3"
+            dependencies: "locked"
+          - phpunit-version: "12"
+            php-version: "8.4"
+            dependencies: "highest"
+          - phpunit-version: "13"
+            php-version: "8.5"
+            dependencies: "highest"
+          - phpunit-version: "13"
+            php-version: "8.6"
+            dependencies: "highest"
 
-    steps:
+    steps: &test-steps
       - name: "Checkout"
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -52,7 +54,7 @@ jobs:
         uses: "./.github/actions/setup-php-env"
         with:
           php-version: "${{ matrix.php-version }}"
-          dependencies: "${{ matrix.php-version == '8.6' && 'highest' || 'locked' }}"
+          dependencies: "${{ matrix.dependencies }}"
           coverage: ${{ matrix.php-version == '8.3' && 'pcov' || 'none' }}
           extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, curl, pgsql, grpc, protobuf'
           ini-values: 'memory_limit=-1'
@@ -81,3 +83,37 @@ jobs:
           use_oidc: true
           directory: ./var/phpunit/coverage/clover
           flags: telemetry-tests
+
+  tests-other-combinations:
+    if: ${{ inputs.full-matrix }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services: *services
+    strategy:
+      fail-fast: false
+      matrix:
+        # PHPUnit 13 requires PHP >= 8.4.1, so 13 x 8.3 is not in the list
+        include:
+          - phpunit-version: "11"
+            php-version: "8.4"
+            dependencies: "highest"
+          - phpunit-version: "11"
+            php-version: "8.5"
+            dependencies: "highest"
+          - phpunit-version: "11"
+            php-version: "8.6"
+            dependencies: "highest"
+          - phpunit-version: "12"
+            php-version: "8.3"
+            dependencies: "locked"
+          - phpunit-version: "12"
+            php-version: "8.5"
+            dependencies: "highest"
+          - phpunit-version: "12"
+            php-version: "8.6"
+            dependencies: "highest"
+          - phpunit-version: "13"
+            php-version: "8.4"
+            dependencies: "highest"
+
+    steps: *test-steps

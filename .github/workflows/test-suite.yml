@@ -44,8 +44,6 @@ jobs:
       contents: read
       id-token: write
     uses: ./.github/workflows/job-tests.yml
-    with:
-      dependencies: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && '["locked","lowest","highest"]' || '["locked","lowest"]' }}
 
   phpunit-telemetry-tests:
     permissions:

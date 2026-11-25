@@ -4,23 +4,29 @@ on:
   workflow_call:
     inputs:
       full-matrix:
-        description: "Build macOS on every PHP version and test the macOS PIE install; otherwise macOS builds the newest PHP only"
+        description: "Build macOS on every PHP version and test the macOS PIE install; otherwise macOS builds PHP 8.3 only"
         type: boolean
         required: false
         default: true
 
 jobs:
   build:
-    name: Build and Test Extension
-    runs-on: ${{ matrix.os }}
+    name: Build and Test Extension (Linux)
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-24.04', 'macos-latest']
-        php: ['8.3', '8.4', '8.5', '8.6']
-        exclude: ${{ fromJSON(inputs.full-matrix && '[]' || '[{"os":"macos-latest","php":"8.3"},{"os":"macos-latest","php":"8.4"}]') }}
+        include:
+          - php: '8.3'
+            dependencies: locked
+          - php: '8.4'
+            dependencies: highest
+          - php: '8.5'
+            dependencies: highest
+          - php: '8.6'
+            dependencies: highest
 
-    steps:
+    steps: &build-steps
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -31,8 +37,8 @@ jobs:
         uses: ./.github/actions/setup-php-env
         with:
           php-version: ${{ matrix.php }}
-          dependencies: ${{ matrix.php == '8.6' && 'highest' || 'locked' }}
-          coverage: pcov
+          dependencies: ${{ matrix.dependencies }}
+          coverage: none
           extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, protobuf'
           tools: 'composer:v2, phpize, php-config'
 
@@ -65,16 +71,40 @@ jobs:
           echo "extension=pg_query.so" | sudo tee -a "$(php -r 'echo php_ini_loaded_file();')"
           php -m | grep pg_query
 
-  pie-install-test:
-    name: Test PIE Installation
-    runs-on: ${{ matrix.os }}
+  build-macos:
+    name: Build and Test Extension (macOS)
+    runs-on: macos-latest
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-24.04', 'macos-latest']
-        exclude: ${{ fromJSON(inputs.full-matrix && '[]' || '[{"os":"macos-latest"}]') }}
+        include:
+          - php: '8.3'
+            dependencies: locked
 
-    steps:
+    steps: *build-steps
+
+  build-macos-newer-php:
+    name: Build and Test Extension (macOS, newer PHP)
+    if: ${{ inputs.full-matrix }}
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: '8.4'
+            dependencies: highest
+          - php: '8.5'
+            dependencies: highest
+          - php: '8.6'
+            dependencies: highest
+
+    steps: *build-steps
+
+  pie-install-test:
+    name: Test PIE Installation (Linux)
+    runs-on: ubuntu-24.04
+
+    steps: &pie-steps
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -130,3 +160,10 @@ jobs:
           actual="$(php -r 'echo phpversion("pg_query");')"
           echo "expected: $expected, actual: $actual"
           test "$actual" = "$expected"
+
+  pie-install-test-macos:
+    name: Test PIE Installation (macOS)
+    if: ${{ inputs.full-matrix }}
+    runs-on: macos-latest
+
+    steps: *pie-steps

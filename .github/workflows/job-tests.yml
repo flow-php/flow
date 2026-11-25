@@ -1,14 +1,9 @@
 on:
   workflow_call:
-    inputs:
-      dependencies:
-        type: string
-        required: false
-        default: '["locked"]'
 
 jobs:
   tests:
-    runs-on: ${{ matrix.operating-system }}
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     services:
       postgres:
@@ -45,27 +40,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        dependencies: ${{ fromJSON(inputs.dependencies) }}
-        php-version:
-          - "8.3"
-          - "8.4"
-          - "8.5"
-          - "8.6"
-        operating-system:
-          - "ubuntu-24.04"
-        exclude:
-          - dependencies: "lowest"
-            php-version: "8.4"
-          - dependencies: "lowest"
-            php-version: "8.5"
-          - dependencies: "locked"
-            php-version: "8.6"
-          - dependencies: "lowest"
-            php-version: "8.6"
+        # composer.lock is resolved on PHP 8.3, so only 8.3 installs it; a newer PHP resolves its own set
         include:
-          - dependencies: "highest"
-            php-version: "8.6"
-            operating-system: "ubuntu-24.04"
+          - php-version: "8.3"
+            dependencies: "locked"
+          - php-version: "8.3"
+            dependencies: "lowest"
+          - php-version: "8.4"
+            dependencies: "highest"
+          - php-version: "8.5"
+            dependencies: "highest"
+          - php-version: "8.6"
+            dependencies: "highest"
 
     steps:
       - name: "Checkout"
