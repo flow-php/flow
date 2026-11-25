@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-11-24
+## [Unreleased] - 2026-11-25
 
 ### Added
 - [#2765](https://github.com/flow-php/flow/pull/2765) - **flow-php/etl - analyze()->withDatasetHash() accepts column names** - [@norberttech](https://github.com/norberttech)
@@ -53,6 +53,7 @@
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - Packagist links in the hero and the footer** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [293aab](https://github.com/flow-php/flow/commit/293aabdc12717e3f6ac5bebc57b7ab83670a1e28) - **chore(flow-php/flow): read CI credentials from the ci environment** - [@norberttech](https://github.com/norberttech)
 - [#2765](https://github.com/flow-php/flow/pull/2765) - **flow-php/etl - FileLoader::partitionBy() takes the columns and a writeColumns argument** - [@norberttech](https://github.com/norberttech)
 - [#2765](https://github.com/flow-php/flow/pull/2765) - **flow-php/etl - Partitioning::by() takes a column or a list of columns and writeColumns** - [@norberttech](https://github.com/norberttech)
 - [#2765](https://github.com/flow-php/flow/pull/2765) - **flow-php/etl-adapter-csv - partitionBy() takes the columns** - [@norberttech](https://github.com/norberttech)
