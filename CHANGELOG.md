@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-11-25
+## [Unreleased] - 2026-11-22
 
 ### Added
 - [#2765](https://github.com/flow-php/flow/pull/2765) - **flow-php/etl - analyze()->withDatasetHash() accepts column names** - [@norberttech](https://github.com/norberttech)
@@ -53,6 +53,8 @@
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - Packagist links in the hero and the footer** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2773](https://github.com/flow-php/flow/pull/2773) - **flow-php/etl-adapter-excel - openspout constraint from ~5.3.0 to ^5.3** - [@norberttech](https://github.com/norberttech)
+- [#2773](https://github.com/flow-php/flow/pull/2773) - **flow-php/etl-adapter-excel - XLSX sheet dimension wins over row spans when padding rows** - [@norberttech](https://github.com/norberttech)
 - [ca4c43](https://github.com/flow-php/flow/commit/ca4c4339dadd40195bf2ec41d03a7da9192b15e4) - **docs(flow-php/flow): Todo status marks an accepted issue** - [@norberttech](https://github.com/norberttech)
 - [99d769](https://github.com/flow-php/flow/commit/99d769cf8bfd2f156e5969c372efbf8661333435) - **docs(flow-php/flow): bug and website reports start unassigned and off the Roadmap** - [@norberttech](https://github.com/norberttech)
 - [5c159b](https://github.com/flow-php/flow/commit/5c159b9e586ecbaf92fde8f2e459427b7b6e3f9a) - **docs(flow-php/flow): issue form names start with a verb** - [@norberttech](https://github.com/norberttech)
@@ -89,6 +91,7 @@
 - [bfd25e](https://github.com/flow-php/flow/commit/bfd25e3ee88004638529d03dfc30f86e931c76f2) - **docs(flow-php/web): blog posts for releases 0.47.0 and 0.48.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2773](https://github.com/flow-php/flow/pull/2773) - **flow-php/etl-adapter-excel - openspout constraint blocked every release after 5.3** - [@norberttech](https://github.com/norberttech)
 - [#2764](https://github.com/flow-php/flow/pull/2764) - **flow-php/etl - schema metadata equal regardless of key order** - [@norberttech](https://github.com/norberttech)
 - [#2764](https://github.com/flow-php/flow/pull/2764) - **flow-php/etl - Metadata::add() and merge() keep numeric keys** - [@norberttech](https://github.com/norberttech)
 - [#2762](https://github.com/flow-php/flow/pull/2762) - **flow-php/symfony-telemetry-bundle - HTTP client response throws on destruct when the profiler is enabled** - [@norberttech](https://github.com/norberttech)
