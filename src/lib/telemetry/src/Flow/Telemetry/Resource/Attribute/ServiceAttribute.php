@@ -22,7 +22,7 @@ enum ServiceAttribute: string
     /**
      * A namespace for service.name.
      */
-    case NAMESPACE = 'service.namespace';
+    case SERVICE_NAMESPACE = 'service.namespace';
 
     /**
      * The version string of the service API or implementation.

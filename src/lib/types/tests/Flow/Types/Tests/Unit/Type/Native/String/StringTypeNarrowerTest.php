@@ -224,6 +224,11 @@ final class StringTypeNarrowerTest extends TestCase
         );
     }
 
+    public function test_form_feed_padded_integer_narrows_to_integer(): void
+    {
+        static::assertEquals(type_integer(), (new StringTypeNarrower())->narrow("\f1\f"));
+    }
+
     public function test_detecting_integer(): void
     {
         $narrower = new StringTypeNarrower();

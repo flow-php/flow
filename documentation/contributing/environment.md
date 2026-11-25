@@ -2,7 +2,7 @@
 
 To run the tests locally, you need a running [docker](https://www.docker.com/).
 You also need [PHP 8.3](https://www.php.net/) and [composer](https://getcomposer.org/) in your CLI.
-The minimum PHP version is 8.3, and 8.4 and 8.5 are also supported. Development uses the minimum version, PHP 8.3.
+The minimum PHP version is 8.3, and 8.4, 8.5 and 8.6 are also supported. Development uses the minimum version, PHP 8.3.
 
 
 Instead of the PHP on your host machine, you can use Nix Shell.

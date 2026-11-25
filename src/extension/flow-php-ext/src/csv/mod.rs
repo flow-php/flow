@@ -429,9 +429,9 @@ fn row_values(headers: &[Header], tokenizer: &Tokenizer, record: &Record, empty_
     values_zv
 }
 
-/// PHP's `trim()`: `" \t\n\r\0\x0B"`, nothing else.
+/// PHP 8.6's `trim()`: `" \t\n\r\0\x0B\x0C"`, nothing else.
 pub fn php_trim(bytes: &[u8]) -> &[u8] {
-    let is_trimmed = |byte: &u8| matches!(byte, b' ' | b'\t' | b'\n' | b'\r' | b'\0' | 0x0B);
+    let is_trimmed = |byte: &u8| matches!(byte, b' ' | b'\t' | b'\n' | b'\r' | b'\0' | 0x0B | 0x0C);
     let start = bytes.iter().position(|byte| !is_trimmed(byte)).unwrap_or(bytes.len());
     let end = bytes
         .iter()

@@ -12,6 +12,8 @@ use const STR_PAD_LEFT;
 
 final readonly class HeaderNames
 {
+    private const string PHP_86_TRIM_CHARACTERS = " \n\r\t\v\x00\f";
+
     /**
      * Column names from header cells: a scalar cell as its trimmed text, any other or blank cell as `e` + its position.
      *
@@ -25,7 +27,7 @@ final readonly class HeaderNames
 
         // @mago-ignore analysis:mixed-assignment
         foreach ($cells as $index => $cell) {
-            $name = trim(is_scalar($cell) ? (string) $cell : '');
+            $name = trim(is_scalar($cell) ? (string) $cell : '', self::PHP_86_TRIM_CHARACTERS);
             $names[] = $name !== '' ? $name : 'e' . str_pad((string) $index, 2, '0', STR_PAD_LEFT);
         }
 

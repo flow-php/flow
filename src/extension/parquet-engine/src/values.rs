@@ -36,7 +36,7 @@ fn php_date_obj(object: &mut ZendObject) -> *mut c_void {
         .cast::<c_void>()
 }
 
-// `timelib_time` up to `tim_uptodate` (ext/date/lib/timelib.h, identical in the 2022.14-2022.17 timelib of PHP 8.3-8.5)
+// `timelib_time` up to `tim_uptodate` (ext/date/lib/timelib.h, identical in the 2022.14-2022.17 timelib of PHP 8.3-8.5 and the 2026.03 timelib of PHP 8.6)
 #[repr(C)]
 struct TimelibSpecial {
     kind: c_uint,
@@ -235,8 +235,8 @@ impl Instants {
     }
 }
 
-/// Zend API numbers of PHP 8.3, 8.4 and 8.5, whose timelib (2022.14-2022.17) lays `timelib_time` out as `TimelibTime`.
-const VERIFIED_LAYOUT_APIS: [u32; 3] = [20_230_831, 20_240_924, 20_250_925];
+/// Zend API numbers of PHP 8.3 to 8.6, whose timelib (2022.14-2022.17, 2026.03) lays `timelib_time` out as `TimelibTime`.
+const VERIFIED_LAYOUT_APIS: [u32; 4] = [20_230_831, 20_240_924, 20_250_925, 20_261_112];
 
 fn layout_verified_for(api: u32) -> bool {
     VERIFIED_LAYOUT_APIS.contains(&api)
@@ -392,6 +392,7 @@ mod tests {
         assert!(layout_verified_for(20_230_831));
         assert!(layout_verified_for(20_240_924));
         assert!(layout_verified_for(20_250_925));
+        assert!(layout_verified_for(20_261_112));
         assert!(!layout_verified_for(20_220_829));
         assert!(!layout_verified_for(20_260_000));
     }

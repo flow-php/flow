@@ -8,11 +8,17 @@ use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
 use Flow\Filesystem\Stream\BlockLifecycle;
 use Flow\Filesystem\Stream\Blocks;
+use Flow\Filesystem\Tests\Double\NeverEofStreamWrapper;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Types\DSL\type_resource;
+use function fopen;
 use function str_repeat;
+use function stream_wrapper_register;
+use function stream_wrapper_unregister;
 
 final class BlocksTest extends TestCase
 {
@@ -33,6 +39,24 @@ final class BlocksTest extends TestCase
 
         /** @mago-ignore analysis:possibly-invalid-argument */
         new Blocks($blockSize);
+    }
+
+    #[TestWith([2560, 3])]
+    #[TestWith([2048, 3])]
+    #[TestWith([0, 1])]
+    public function test_from_resource_ends_when_a_copy_returns_no_bytes(int $bytes, int $blockCount): void
+    {
+        stream_wrapper_register('never-eof', NeverEofStreamWrapper::class);
+
+        try {
+            $blocks = new Blocks(1024);
+            $blocks->fromResource(type_resource()->assert(fopen('never-eof://' . $bytes, 'rb')));
+
+            static::assertSame($bytes, $blocks->size());
+            static::assertCount($blockCount, $blocks->all());
+        } finally {
+            stream_wrapper_unregister('never-eof');
+        }
     }
 
     public function test_writing_to_blocks(): void

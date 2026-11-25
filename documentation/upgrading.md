@@ -138,6 +138,20 @@ After:
 to_parquet($path)->partitionBy(['date', 'country'], writeColumns: true);
 ```
 
+### 12) `flow-php/telemetry` - `ServiceAttribute::NAMESPACE` is renamed to `SERVICE_NAMESPACE`
+
+| Before                        | After                                 |
+|-------------------------------|---------------------------------------|
+| `ServiceAttribute::NAMESPACE` | `ServiceAttribute::SERVICE_NAMESPACE` |
+
+### 13) `flow-php/types` and `flow-php/etl` - form-feed padded text is trimmed on every PHP version
+
+| Before (PHP 8.3 to 8.5)                       | After (every PHP version) |
+|-----------------------------------------------|---------------------------|
+| `type_integer()->cast("\f1")` throws          | gives `1`                 |
+| `type_positive_integer()->cast("\f1")` throws | gives `1`                 |
+| a header cell `"\fid"` is named `"\fid"`      | is named `id`             |
+
 ---
 
 ## Upgrading from 0.47.x to 0.48.x

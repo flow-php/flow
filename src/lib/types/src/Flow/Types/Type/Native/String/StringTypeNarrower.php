@@ -50,6 +50,8 @@ use function trim;
 
 final class StringTypeNarrower implements TypeNarrower
 {
+    private const string PHP_86_TRIM_CHARACTERS = " \n\r\t\v\x00\f";
+
     /**
      * DateTimeZone::listIdentifiers() is 419 entries and was rebuilt on every cell that reached the rung.
      *
@@ -100,7 +102,7 @@ final class StringTypeNarrower implements TypeNarrower
             return type_string();
         }
 
-        $value = trim($value);
+        $value = trim($value, self::PHP_86_TRIM_CHARACTERS);
 
         if ($value === '') {
             return type_string();

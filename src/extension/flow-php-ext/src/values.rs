@@ -36,7 +36,7 @@ fn php_date_obj(object: &mut ZendObject) -> *mut c_void {
         .cast::<c_void>()
 }
 
-// `timelib_time` up to `tim_uptodate` (ext/date/lib/timelib.h, identical in the 2022.14-2022.17 timelib of PHP 8.3-8.5)
+// `timelib_time` up to `tim_uptodate` (ext/date/lib/timelib.h, identical in the 2022.14-2022.17 timelib of PHP 8.3-8.5 and the 2026.03 timelib of PHP 8.6)
 #[repr(C)]
 struct TimelibSpecial {
     kind: c_uint,

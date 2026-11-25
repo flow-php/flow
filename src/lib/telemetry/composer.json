@@ -9,7 +9,7 @@
         "tracing"
     ],
     "require": {
-        "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+        "php": "~8.3.0 || ~8.4.0 || ~8.5.0 || ~8.6.0",
         "composer-runtime-api": "^2.2",
         "psr/clock": "^1.0",
         "symfony/polyfill-mbstring": "^1.33"

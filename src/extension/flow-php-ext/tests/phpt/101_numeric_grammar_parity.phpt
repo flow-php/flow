@@ -111,4 +111,4 @@ foreach ($strings as $string) {
 printf("%d strings, %d numeric: %d of %d outcomes identical, %d numeric values equal to PHP's (int) / (float) cast\n", count($strings), $numeric, $identical, 2 * count($strings), $values);
 ?>
 --EXPECT--
-50000 strings, 27035 numeric: 100000 of 100000 outcomes identical, 39043 numeric values equal to PHP's (int) / (float) cast
+50000 strings, 27035 numeric: 100000 of 100000 outcomes identical, 40562 numeric values equal to PHP's (int) / (float) cast

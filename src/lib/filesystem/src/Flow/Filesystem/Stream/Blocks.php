@@ -10,7 +10,6 @@ use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
 
 use function array_merge;
 use function count;
-use function feof;
 use function ftell;
 use function gettype;
 use function is_resource;
@@ -115,18 +114,18 @@ final class Blocks
             );
         }
 
-        // use Block::fromStream and simply move offset after each block
         $offset = ftell($resource);
 
         if ($offset === false) {
             throw new InvalidArgumentException('Cannot determine current position in the stream');
         }
 
-        while (!feof($resource)) {
+        // feof() stays false after a plain file copy on PHP 8.6
+        do {
             $bytesCopied = $this->block()->fromResource($resource, $offset);
             $offset += $bytesCopied;
             $this->size += $bytesCopied;
-        }
+        } while ($bytesCopied > 0);
     }
 
     public function size(): int

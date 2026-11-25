@@ -190,6 +190,16 @@ final class ArrayTypeTest extends TestCase
         );
     }
 
+    public function test_a_form_feed_only_text_node_of_an_xml_document_is_skipped(): void
+    {
+        $xml = new DOMDocument();
+        $xml->loadXML('<root/>');
+        // a parser refuses a form feed, so the node comes from the DOM API
+        $xml->documentElement?->appendChild($xml->createTextNode("\f"));
+
+        static::assertSame(['root' => []], type_array()->cast($xml));
+    }
+
     public function test_null_does_not_become_an_empty_array(): void
     {
         $this->expectException(CastingException::class);

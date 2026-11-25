@@ -28,8 +28,8 @@ assert (!(with-php-benchmark && with-blackfire)) || builtins.throw "Cannot use -
 
 let
     nixpkgs = fetchTarball {
-        url = "https://github.com/NixOS/nixpkgs/archive/00455b0a3690d3f5dc61e9aef4277dc86235b73f.tar.gz";
-        sha256 = "0vz9jxm81zl356vvqaswlf8fqgsz6p5yjy0iy5qq7kr81kpfvbch";
+        url = "https://github.com/NixOS/nixpkgs/archive/619c39f6eac5d1ed6b8f073a9414baf7034b2356.tar.gz";
+        sha256 = "1m4bsj927vplp8rd4fgb789cf897frgvcnp8q8w51bsycvjqzbd1";
     };
 
     pkgs = import nixpkgs {
@@ -57,6 +57,8 @@ let
         pkgs.php84
     else if php-version == 8.5 then
         pkgs.php85
+    else if php-version == 8.6 then
+        pkgs.php86
     else
         throw "Unknown php version ${php-version}";
 

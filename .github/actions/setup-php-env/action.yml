@@ -93,6 +93,12 @@ runs:
         key: ${{ steps.extensions-cache.outputs.key }}
         restore-keys: ${{ steps.extensions-cache.outputs.key }}
 
+    # setup-php only logs an extension that does not build; on 8.6 a missing extension must fail the job
+    - name: "Fail on a missing extension"
+      if: ${{ inputs.php-version == '8.6' }}
+      shell: bash
+      run: echo "fail-fast=true" >> "$GITHUB_ENV"
+
     - name: "Install PHP"
       uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
       with:

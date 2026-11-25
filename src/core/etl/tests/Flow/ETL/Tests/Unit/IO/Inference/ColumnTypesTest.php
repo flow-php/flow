@@ -316,6 +316,18 @@ final class ColumnTypesTest extends FlowTestCase
         );
     }
 
+    public function test_form_feed_padded_value_infers_string(): void
+    {
+        $padded = ColumnTypesMother::fromStrings();
+        $padded->observe(['c' => "\f12"]);
+        $padded->observe(['c' => '13']);
+
+        static::assertEquals(
+            new Schema(definition_from_type('c', type_string(), nullable: true)),
+            $padded->folded()->schema(ColumnTypesMother::floor()),
+        );
+    }
+
     public function test_padded_cells_are_read_as_text_because_cast_does_not_trim(): void
     {
         $padded = ColumnTypesMother::fromStrings();

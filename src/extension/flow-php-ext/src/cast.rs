@@ -215,10 +215,10 @@ fn numeric_scalar(value: &Zval) -> bool {
     }
 }
 
-/// `IntegerType::cast` of a string; a form feed bails, since `trim()` keeps it and PHP's round-trip refuses it.
+/// `IntegerType::cast` of a string.
 pub(crate) fn integer_from_str(bytes: &[u8]) -> Option<i64> {
     match is_numeric_str(bytes) {
-        (IS_LONG, long, _) if !bytes.contains(&0x0C) => Some(long),
+        (IS_LONG, long, _) => Some(long),
         (IS_DOUBLE, _, _) if integer_shaped(bytes) => None,
         (IS_DOUBLE, _, double) if fits_i64(double) => Some(double as i64),
         _ => None,

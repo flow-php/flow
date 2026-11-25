@@ -59,6 +59,9 @@ let
       runHook postInstall
     '';
 
+    # CI and the release binaries build the vendored C libraries, so the shell does too
+    dontCargoUseSystemLibs = true;
+
     doCheck = false;
 
     meta = with lib; {

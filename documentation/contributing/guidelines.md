@@ -103,7 +103,7 @@ These rules also apply to namespaces. For example, the `CSV` adapter cannot depe
 
 # PHP Versions
 
-This project supports only the latest three PHP versions, at this time 8.3, 8.4 and 8.5.
+This project supports the PHP versions 8.3, 8.4, 8.5 and 8.6.
 Development uses the lowest supported version, at this time PHP 8.3.
 The tests run on all three versions, so you can use any of them for development.
 

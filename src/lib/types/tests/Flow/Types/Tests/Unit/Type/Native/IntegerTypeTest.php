@@ -13,6 +13,7 @@ use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -287,6 +288,14 @@ final class IntegerTypeTest extends TestCase
         $this->expectExceptionMessage('value is out of range for integer');
 
         type_integer()->cast('9223372036854775808');
+    }
+
+    #[TestWith(["\f1"])]
+    #[TestWith(["1\f"])]
+    #[TestWith(["\f+1\f"])]
+    public function test_cast_form_feed_padded_integer(string $value): void
+    {
+        static::assertSame(1, type_integer()->cast($value));
     }
 
     /**
