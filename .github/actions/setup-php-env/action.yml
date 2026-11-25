@@ -93,9 +93,8 @@ runs:
         key: ${{ steps.extensions-cache.outputs.key }}
         restore-keys: ${{ steps.extensions-cache.outputs.key }}
 
-    # setup-php only logs an extension that does not build; on 8.6 a missing extension must fail the job
+    # setup-php only logs an extension that does not build; a job must not run without an extension it asked for
     - name: "Fail on a missing extension"
-      if: ${{ inputs.php-version == '8.6' }}
       shell: bash
       run: echo "fail-fast=true" >> "$GITHUB_ENV"
 

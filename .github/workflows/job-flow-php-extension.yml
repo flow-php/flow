@@ -4,23 +4,29 @@ on:
   workflow_call:
     inputs:
       full-matrix:
-        description: "Build macOS on every PHP version and test the macOS PIE install; otherwise macOS builds the newest PHP only"
+        description: "Build macOS on every PHP version and test the macOS PIE install; otherwise macOS builds PHP 8.3 only"
         type: boolean
         required: false
         default: true
 
 jobs:
   build:
-    name: Build and Test Extension
-    runs-on: ${{ matrix.os }}
+    name: Build and Test Extension (Linux)
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-24.04', 'macos-latest']
-        php: ['8.3', '8.4', '8.5', '8.6']
-        exclude: ${{ fromJSON(inputs.full-matrix && '[]' || '[{"os":"macos-latest","php":"8.3"},{"os":"macos-latest","php":"8.4"}]') }}
+        include:
+          - php: '8.3'
+            dependencies: locked
+          - php: '8.4'
+            dependencies: highest
+          - php: '8.5'
+            dependencies: highest
+          - php: '8.6'
+            dependencies: highest
 
-    steps:
+    steps: &build-steps
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -34,7 +40,7 @@ jobs:
           dependencies: locked
           extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, zstd'
           tools: 'composer:v2, php-config'
-          coverage: 'pcov'
+          coverage: ${{ (matrix.php == '8.3' && runner.os == 'Linux') && 'pcov' || 'none' }}
           install-dependencies: 'false'
 
       - name: Setup Rust extension toolchain
@@ -82,7 +88,7 @@ jobs:
         uses: ./.github/actions/composer-install
         with:
           php-version: ${{ matrix.php }}
-          dependencies: ${{ matrix.php == '8.6' && 'highest' || 'locked' }}
+          dependencies: ${{ matrix.dependencies }}
 
       - name: Run PHPT tests
         working-directory: src/extension/flow-php-ext
@@ -139,18 +145,42 @@ jobs:
           directory: ./var/phpunit/coverage/clover
           flags: flow-php-extension
 
-  pie-install-test:
-    name: Test PIE Installation
-    runs-on: ${{ matrix.os }}
-    env:
-      RUSTUP_TOOLCHAIN: stable
+  build-macos:
+    name: Build and Test Extension (macOS)
+    runs-on: macos-latest
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-24.04', 'macos-latest']
-        exclude: ${{ fromJSON(inputs.full-matrix && '[]' || '[{"os":"macos-latest"}]') }}
+        include:
+          - php: '8.3'
+            dependencies: locked
 
-    steps:
+    steps: *build-steps
+
+  build-macos-newer-php:
+    name: Build and Test Extension (macOS, newer PHP)
+    if: ${{ inputs.full-matrix }}
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: '8.4'
+            dependencies: highest
+          - php: '8.5'
+            dependencies: highest
+          - php: '8.6'
+            dependencies: highest
+
+    steps: *build-steps
+
+  pie-install-test:
+    name: Test PIE Installation (Linux)
+    runs-on: ubuntu-24.04
+    env:
+      RUSTUP_TOOLCHAIN: stable
+
+    steps: &pie-steps
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -212,3 +242,12 @@ jobs:
           actual="$(php -r 'echo phpversion("flow_php");')"
           echo "expected: $expected, actual: $actual"
           test "$actual" = "$expected"
+
+  pie-install-test-macos:
+    name: Test PIE Installation (macOS)
+    if: ${{ inputs.full-matrix }}
+    runs-on: macos-latest
+    env:
+      RUSTUP_TOOLCHAIN: stable
+
+    steps: *pie-steps
