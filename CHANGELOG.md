@@ -53,6 +53,7 @@
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - Packagist links in the hero and the footer** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [ca4c43](https://github.com/flow-php/flow/commit/ca4c4339dadd40195bf2ec41d03a7da9192b15e4) - **docs(flow-php/flow): Todo status marks an accepted issue** - [@norberttech](https://github.com/norberttech)
 - [99d769](https://github.com/flow-php/flow/commit/99d769cf8bfd2f156e5969c372efbf8661333435) - **docs(flow-php/flow): bug and website reports start unassigned and off the Roadmap** - [@norberttech](https://github.com/norberttech)
 - [5c159b](https://github.com/flow-php/flow/commit/5c159b9e586ecbaf92fde8f2e459427b7b6e3f9a) - **docs(flow-php/flow): issue form names start with a verb** - [@norberttech](https://github.com/norberttech)
 - [c3502c](https://github.com/flow-php/flow/commit/c3502c91591097a2a4bacefe6f178403e214f722) - **docs(flow-php/flow): contributing process for Contributors team** - [@norberttech](https://github.com/norberttech)
