@@ -35,9 +35,8 @@ final class XlsxSheetRowsTest extends FlowTestCase
             '<row r="1"><c r="A1"><v>1</v></c><c r="D1"><v>4</v></c></row>'
             . '<row r="2"><c r="B2"><v>2</v></c><c r="C2"><v>3</v></c><c r="F2"><v>6</v></c></row>',
         )];
-        yield 'spans pad a row' => [CraftedWorkbook::sheet(
+        yield 'spans pad a row of a sheet without a dimension' => [CraftedWorkbook::sheet(
             '<row r="1" spans="1:5"><c r="B1"><v>1</v></c></row>',
-            'A1:B1',
         )];
         yield 'empty and self-closing rows are skipped' =>
             [CraftedWorkbook::sheet('<row r="1"><c r="A1" t="inlineStr"><is><t></t></is></c></row><row r="2"/>'
@@ -108,6 +107,26 @@ final class XlsxSheetRowsTest extends FlowTestCase
                     serialize(OpenSpoutRows::of($sheet)),
                     serialize(iterator_to_array((new XlsxSheetRows($sheet))->values(), false)),
                 );
+
+                break;
+            }
+        } finally {
+            $reader->close();
+        }
+    }
+
+    public function test_a_dimension_wins_over_the_spans_of_a_row(): void
+    {
+        $reader = new Reader();
+        // OpenSpout is no oracle here: before 5.5.0 its RowIterator pads this row to the spans
+        $reader->open(CraftedWorkbook::with(CraftedWorkbook::sheet(
+            '<row r="1" spans="1:5"><c r="B1"><v>1</v></c></row>',
+            'A1:B1',
+        )));
+
+        try {
+            foreach ($reader->getSheetIterator() as $sheet) {
+                static::assertSame([['', 1]], iterator_to_array((new XlsxSheetRows($sheet))->values(), false));
 
                 break;
             }

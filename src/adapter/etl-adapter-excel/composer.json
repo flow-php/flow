@@ -16,7 +16,7 @@
         "ext-xmlreader": "*",
         "ext-zip": "*",
         "flow-php/etl": "self.version",
-        "openspout/openspout": "~5.3.0"
+        "openspout/openspout": "^5.3"
     },
     "config": {
         "optimize-autoloader": true,
