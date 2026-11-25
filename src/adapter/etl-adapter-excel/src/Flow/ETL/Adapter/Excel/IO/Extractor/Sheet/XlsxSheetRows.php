@@ -55,9 +55,7 @@ final readonly class XlsxSheetRows
 
     public function __construct(Sheet $sheet)
     {
-        // OpenSpout resolves the sheet's XML part and builds its formatter (shared strings, styles, the 1904 flag)
-        // while it opens the workbook, and keeps both on the RowIterator alone: openspout is pinned to 5.3.x for
-        // these three private properties
+        // OpenSpout keeps the sheet's XML part and its formatter on private RowIterator properties alone
         $rows = $sheet->getRowIterator();
 
         $this->file = type_string()->assert((new ReflectionProperty(RowIterator::class, 'filePath'))->getValue($rows));
@@ -73,7 +71,7 @@ final readonly class XlsxSheetRows
 
     /**
      * Each non-empty row's cell values by column index, as OpenSpout's RowIterator yields them with the default
-     * options Flow opens every workbook with: a row is padded to its spans, else to the sheet's dimension, and a
+     * options Flow opens every workbook with: a row is padded to the sheet's dimension, else to its spans, and a
      * sheet that declares no dimension gets the gaps below its cell count filled. Keyed by the row's 1-based number.
      *
      * @return Generator<int, array<int, SheetCellValue>>
@@ -123,7 +121,10 @@ final readonly class XlsxSheetRows
 
                 if ($reader->nodeType === XMLReader::ELEMENT && $reader->localName === 'row') {
                     $spans = $reader->getAttribute('spans');
-                    $width = $spans !== null && $spans !== '' ? (int) (explode(':', $spans)[1] ?? 0) : $dimension;
+                    $width =
+                        $dimension === 0 && $spans !== null && $spans !== ''
+                            ? (int) (explode(':', $spans)[1] ?? 0)
+                            : $dimension;
                     $values = $width > 0 ? array_fill(0, $width, '') : [];
                     $column = -1;
                     $reference = $reader->getAttribute('r');
