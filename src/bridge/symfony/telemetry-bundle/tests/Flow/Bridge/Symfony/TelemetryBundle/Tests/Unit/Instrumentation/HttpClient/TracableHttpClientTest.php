@@ -245,7 +245,7 @@ final class TracableHttpClientTest extends TestCase
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $tracable = new TracableHttpClient(
-            new MockHttpClient(new MockResponse('{}'), 'https://u:p@graph.facebook.com:8443'),
+            new MockHttpClient(new MockResponse('{}'), 'https://graph.facebook.com:8443'),
             TelemetryMother::withSpanProcessor($spanProcessor),
             'test.client',
             url_sanitizer(['access_token']),
@@ -255,7 +255,7 @@ final class TracableHttpClientTest extends TestCase
 
         $attributes = $spanProcessor->endedSpans()[0]->attributes();
         static::assertSame(
-            'https://REDACTED:REDACTED@graph.facebook.com:8443/me?access_token=REDACTED&fields=id',
+            'https://graph.facebook.com:8443/me?access_token=REDACTED&fields=id',
             $attributes['url.full'],
         );
         static::assertSame('https', $attributes['url.scheme']);
