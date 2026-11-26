@@ -32,13 +32,20 @@ final readonly class TimeType implements Type
 
     public function cast(mixed $value): DateInterval
     {
-        if ($this->isValid($value)) {
-            return $value;
+        if ($value instanceof DateInterval) {
+            if ($value->y === 0 && $value->m === 0) {
+                return $value;
+            }
+
+            throw new CastingException(
+                $value,
+                $this,
+                reason: "Relative DateInterval (with months/years) can't be cast to time",
+            );
         }
 
         if ($value instanceof DateTimeInterface) {
             $time = new DateInterval($value->format('\\P\\TG\\Hi\\Ms\\S'));
-            // @mago-ignore analysis:invalid-property-write
             $time->f = (int) $value->format('u') / 1_000_000;
 
             return $time;
@@ -61,7 +68,6 @@ final readonly class TimeType implements Type
                     ));
 
                     if (array_key_exists(4, $matches) && $matches[4] !== '') {
-                        // @mago-ignore analysis:invalid-property-write
                         $interval->f = (int) $matches[4] / (10 ** strlen($matches[4]));
                     }
 
@@ -72,14 +78,6 @@ final readonly class TimeType implements Type
             }
         } catch (Throwable) {
             throw new CastingException($value, type_time());
-        }
-
-        if ($value instanceof DateInterval) {
-            throw new CastingException(
-                $value,
-                $this,
-                reason: "Relative DateInterval (with months/years) can't be cast to time",
-            );
         }
 
         throw new CastingException($value, $this);

@@ -17,12 +17,10 @@ final class TimePhysicalTest extends TestCase
     public function test_microseconds_of_the_duration(): void
     {
         $interval = new DateInterval('P1DT2H3M4S');
-        // @mago-ignore analysis:invalid-property-write
         $interval->f = 0.5;
 
         static::assertSame(93_784_500_000, (new TimePhysical())->toPhysical($interval));
 
-        // @mago-ignore analysis:invalid-property-write
         $interval->invert = 1;
 
         static::assertSame(-93_784_500_000, (new TimePhysical())->toPhysical($interval));
@@ -64,7 +62,6 @@ final class TimePhysicalTest extends TestCase
         $this->expectExceptionMessage('outside the microsecond range of a time column');
 
         $interval = new DateInterval('PT0S');
-        // @mago-ignore analysis:invalid-property-write
         $interval->s = 9_223_372_036_855;
 
         (new TimePhysical())->toPhysical($interval);

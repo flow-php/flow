@@ -42,10 +42,6 @@ final class SimpleXMLNormalizer implements Normalizer
         $grouped = [];
 
         foreach ($children as $name => $child) {
-            if ($child === null) {
-                continue;
-            }
-
             $grouped[$name][] = $child;
         }
 

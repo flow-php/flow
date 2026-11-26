@@ -289,10 +289,7 @@ final class AsyncCurlTransport implements Transport
 
         $queued = 0;
 
-        // @mago-expect analysis:mixed-assignment -- curl_multi_info_read stubs return mixed but PHP 8.3 returns array{msg: int, result: int, handle: CurlHandle}
         while (($info = curl_multi_info_read($this->multiHandle, $queued)) !== false) {
-            // @mago-expect analysis:docblock-type-mismatch -- Mago stubs declare resource but PHP 8.0+ returns CurlHandle
-            /** @var \CurlHandle $ch */
             $ch = $info['handle'];
             $id = (int) $ch;
 

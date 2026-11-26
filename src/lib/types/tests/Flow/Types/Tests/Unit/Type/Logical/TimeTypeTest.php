@@ -114,7 +114,6 @@ final class TimeTypeTest extends TestCase
         ];
 
         $fractional = new DateInterval('PT12H34M56S');
-        // @mago-ignore analysis:invalid-property-write
         $fractional->f = 0.123456;
 
         yield 'fractional clock time to time' => [
@@ -124,7 +123,6 @@ final class TimeTypeTest extends TestCase
         ];
 
         $tenth = new DateInterval('PT12H34M56S');
-        // @mago-ignore analysis:invalid-property-write
         $tenth->f = 0.5;
 
         yield 'a one digit fraction is not scaled' => [

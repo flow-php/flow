@@ -8,21 +8,24 @@ use DateInterval;
 
 final class DateIntervalMother
 {
+    /**
+     * @param int<0, 1> $invert
+     */
     public static function of(string $spec, float $fraction, int $invert): DateInterval
     {
         $interval = new DateInterval($spec);
-        // @mago-ignore analysis:invalid-property-write
         $interval->f = $fraction;
-        // @mago-ignore analysis:invalid-property-write
         $interval->invert = $invert;
 
         return $interval;
     }
 
+    /**
+     * @param int<0, 1> $invert
+     */
     public static function seconds(int $seconds, float $fraction, int $invert): DateInterval
     {
         $interval = self::of('PT0S', $fraction, $invert);
-        // @mago-ignore analysis:invalid-property-write
         $interval->s = $seconds;
 
         return $interval;
