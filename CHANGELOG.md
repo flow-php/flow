@@ -1,6 +1,12 @@
 ## [Unreleased] - 2026-11-26
 
 ### Added
+- [#2780](https://github.com/flow-php/flow/pull/2780) - **flow-php/flow-php-ext - CI builds and tests the extension on NTS and ZTS PHP** - [@norberttech](https://github.com/norberttech)
+- [#2780](https://github.com/flow-php/flow/pull/2780) - **flow-php/arrow-ext - CI builds and tests the extension on NTS and ZTS PHP** - [@norberttech](https://github.com/norberttech)
+- [#2780](https://github.com/flow-php/flow/pull/2780) - **flow-php/pg-query-ext - CI builds and tests the extension on NTS and ZTS PHP** - [@norberttech](https://github.com/norberttech)
+- [#2780](https://github.com/flow-php/flow/pull/2780) - **flow-php/flow-php-ext - test that runs requests on ZTS threads that did not load the extension** - [@norberttech](https://github.com/norberttech)
+- [#2780](https://github.com/flow-php/flow/pull/2780) - **flow-php/arrow-ext - test that runs requests on ZTS threads that did not load the extension** - [@norberttech](https://github.com/norberttech)
+- [#2780](https://github.com/flow-php/flow/pull/2780) - **flow-php/pg-query-ext - test that runs requests on ZTS threads that did not load the extension** - [@norberttech](https://github.com/norberttech)
 - [#2777](https://github.com/flow-php/flow/pull/2777) - **flow-php/etl - PHP 8.6 support in every package** - [@norberttech](https://github.com/norberttech)
 - [#2765](https://github.com/flow-php/flow/pull/2765) - **flow-php/etl - analyze()->withDatasetHash() accepts column names** - [@norberttech](https://github.com/norberttech)
 - [#2764](https://github.com/flow-php/flow/pull/2764) - **flow-php/etl - Schema::fingerprint() with a versioned canonical form and hash** - [@norberttech](https://github.com/norberttech)
@@ -54,6 +60,10 @@
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - Packagist links in the hero and the footer** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2780](https://github.com/flow-php/flow/pull/2780) - **flow-php/flow-php-ext - release builds fail when PHP has the wrong thread safety** - [@norberttech](https://github.com/norberttech)
+- [#2780](https://github.com/flow-php/flow/pull/2780) - **flow-php/arrow-ext - release builds fail when PHP has the wrong thread safety** - [@norberttech](https://github.com/norberttech)
+- [#2780](https://github.com/flow-php/flow/pull/2780) - **flow-php/flow-php-ext - make test fails on a skipped test** - [@norberttech](https://github.com/norberttech)
+- [#2780](https://github.com/flow-php/flow/pull/2780) - **flow-php/arrow-ext - make test fails on a skipped test** - [@norberttech](https://github.com/norberttech)
 - [fb9ddb](https://github.com/flow-php/flow/commit/fb9ddba06a51d6fe82eab50f62cde748c42ae97c) - **docs(flow-php/flow): package descriptions and dead links** - [@norberttech](https://github.com/norberttech)
 - [#2778](https://github.com/flow-php/flow/pull/2778) - **flow-php/flow - mago from 1.60.2 to 1.61.0** - [@norberttech](https://github.com/norberttech)
 - [#2778](https://github.com/flow-php/flow/pull/2778) - **flow-php/types - TimeType and DateType casts test the type directly** - [@norberttech](https://github.com/norberttech)
@@ -107,6 +117,10 @@
 - [bfd25e](https://github.com/flow-php/flow/commit/bfd25e3ee88004638529d03dfc30f86e931c76f2) - **docs(flow-php/web): blog posts for releases 0.47.0 and 0.48.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2780](https://github.com/flow-php/flow/pull/2780) - **flow-php/flow-php-ext - RustBackend::allocatedBytes() counted the memory of other threads on ZTS** - [@norberttech](https://github.com/norberttech)
+- [#2780](https://github.com/flow-php/flow/pull/2780) - **flow-php/arrow-ext - allocated_bytes() counted the memory of other threads on ZTS** - [@norberttech](https://github.com/norberttech)
+- [#2780](https://github.com/flow-php/flow/pull/2780) - **flow-php/flow-php-ext - PHP 8.6 NTS binaries are built on an NTS PHP** - [@norberttech](https://github.com/norberttech)
+- [#2780](https://github.com/flow-php/flow/pull/2780) - **flow-php/arrow-ext - PHP 8.6 NTS binaries are built on an NTS PHP** - [@norberttech](https://github.com/norberttech)
 - [#2777](https://github.com/flow-php/flow/pull/2777) - **flow-php/filesystem - Blocks::fromResource() never ended on PHP 8.6** - [@norberttech](https://github.com/norberttech)
 - [#2777](https://github.com/flow-php/flow/pull/2777) - **flow-php/types - integer casts refused form-feed padded text on PHP 8.3 to 8.5** - [@norberttech](https://github.com/norberttech)
 - [#2777](https://github.com/flow-php/flow/pull/2777) - **flow-php/etl - header names and type inference trimmed a form feed on PHP 8.6 only** - [@norberttech](https://github.com/norberttech)
