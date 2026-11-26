@@ -1,7 +1,7 @@
 {
     "name": "flow-php/azure-sdk",
     "type": "library",
-    "description": "PHP ETL - Filesystem abstraction",
+    "description": "A small Azure SDK for PHP without dependencies.",
     "keywords": [
         "etl",
         "extract",

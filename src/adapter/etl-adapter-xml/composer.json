@@ -1,7 +1,7 @@
 {
     "name": "flow-php/etl-adapter-xml",
     "type": "library",
-    "description": "PHP ETL - Adapter - XML",
+    "description": "Flow adapter that reads and writes XML files.",
     "keywords": [
         "etl",
         "extract",

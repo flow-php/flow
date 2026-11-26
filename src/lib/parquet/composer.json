@@ -1,7 +1,7 @@
 {
     "name": "flow-php/parquet",
     "type": "library",
-    "description": "PHP ETL - library for reading and writing Parquet files",
+    "description": "Read and write Parquet files in pure PHP. An optional native extension makes it faster.",
     "keywords": [
         "etl",
         "extract",

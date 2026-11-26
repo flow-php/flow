@@ -1,7 +1,7 @@
 {
     "name": "flow-php/symfony-postgresql-session-bridge",
     "type": "library",
-    "description": "PHP ETL - Symfony PostgreSQL Session bridge",
+    "description": "Symfony session handler on PostgreSQL without PDO or Doctrine DBAL.",
     "keywords": [
         "symfony",
         "postgresql",

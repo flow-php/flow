@@ -1,7 +1,7 @@
 {
     "name": "flow-php/psr18-telemetry-bridge",
     "type": "library",
-    "description": "Flow PHP - PSR-18 Telemetry Bridge",
+    "description": "Traceable PSR-18 HTTP client: spans and context propagation for outgoing requests.",
     "keywords": [
         "flow-php",
         "psr-18",

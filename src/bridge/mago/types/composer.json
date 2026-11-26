@@ -1,7 +1,7 @@
 {
     "name": "flow-php/mago-types-bridge",
     "type": "mago-extension",
-    "description": "Flow PHP - Mago Types Bridge",
+    "description": "Mago analyzer plugin that understands flow-php/types structures.",
     "keywords": [
         "flow-php",
         "mago",

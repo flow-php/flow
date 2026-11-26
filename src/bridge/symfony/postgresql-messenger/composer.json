@@ -1,7 +1,7 @@
 {
     "name": "flow-php/symfony-postgresql-messenger-bridge",
     "type": "library",
-    "description": "PHP ETL - Symfony PostgreSQL Messenger bridge",
+    "description": "Symfony Messenger transport on PostgreSQL without Doctrine DBAL.",
     "keywords": [
         "symfony",
         "postgresql",

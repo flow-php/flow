@@ -1,6 +1,6 @@
 {
     "name": "flow-php/flow",
-    "description": "PHP ETL - Extract Transform Load - Data processing framework",
+    "description": "Strongly typed data processing framework for PHP with a low memory footprint.",
     "license": "MIT",
     "type": "library",
     "keywords": [

@@ -1,7 +1,7 @@
 {
     "name": "flow-php/etl-adapter-avro",
     "type": "library",
-    "description": "PHP ETL - Adapter - Avro",
+    "description": "Flow adapter for Avro files. The integration is on hold.",
     "keywords": [
         "etl",
         "extract",

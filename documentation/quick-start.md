@@ -49,7 +49,7 @@ It creates a new instance of the `Flow\ETL\Flow` class, which is the main class 
 
 For the full DataFrame documentation, read the [Data Frame Guide](/documentation/components/core/core.md).
 
-[Data Frame Examples](/getting_started/#example)
+[Data Frame Examples](/getting_started/01_first_pipeline/)
 
 ## Extraction - Reading
 

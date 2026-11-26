@@ -1,7 +1,7 @@
 {
     "name": "flow-php/etl-adapter-http",
     "type": "library",
-    "description": "PHP ETL - Adapter - Http",
+    "description": "Flow adapter that sends HTTP requests and reads the responses as rows.",
     "keywords": [
         "etl",
         "extract",

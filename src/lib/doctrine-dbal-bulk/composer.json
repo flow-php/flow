@@ -2,7 +2,7 @@
     "name": "flow-php/doctrine-dbal-bulk",
     "type": "library",
     "license": "MIT",
-    "description": "Bulk inserts and updates for Doctrine DBAL",
+    "description": "Bulk inserts and updates for Doctrine DBAL.",
     "keywords": [
         "doctrine",
         "dbal",

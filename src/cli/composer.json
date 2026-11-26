@@ -1,7 +1,7 @@
 {
     "name": "flow-php/cli",
     "type": "library",
-    "description": "Flow PHP - Command Line Interface",
+    "description": "Command line tool for Flow: read, analyze and convert data files from the terminal.",
     "keywords": [
         "flow",
         "php",

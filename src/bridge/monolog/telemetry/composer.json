@@ -1,7 +1,7 @@
 {
     "name": "flow-php/monolog-telemetry-bridge",
     "type": "library",
-    "description": "Flow PHP - Monolog Telemetry Bridge",
+    "description": "Monolog handler that sends log records to Flow Telemetry.",
     "keywords": [
         "flow-php",
         "monolog",

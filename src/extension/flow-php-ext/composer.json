@@ -1,7 +1,7 @@
 {
     "name": "flow-php/flow-php-ext",
     "type": "php-ext",
-    "description": "Flow PHP native extension (Rust) - native column backend, CSV/JSON readers, Parquet ETL through arrow-ext",
+    "description": "PHP extension in Rust: the native column backend and CSV and JSON readers of Flow.",
     "keywords": ["serializer", "binary", "extension", "rust", "native", "dataframe"],
     "license": "MIT",
     "require": {

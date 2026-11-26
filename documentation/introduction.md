@@ -87,9 +87,9 @@ Going to production
 
 ## What Flow isn't
 
-Flow is not a database engine, a query planner, or a distributed compute
-framework. It runs inside each PHP runtime (CLI, FPM, queue worker) and
-processes rows in constant memory. For cluster-scale joins or SQL planning,
+Flow is not a database engine or a distributed compute framework. It runs
+inside each PHP runtime (CLI, FPM, queue worker) and processes rows in
+constant memory. For cluster-scale joins or SQL planning,
 use a distributed engine. For easy, type-safe data pipelines inside a PHP
 application, use Flow.
 

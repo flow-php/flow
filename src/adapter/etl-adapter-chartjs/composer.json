@@ -1,7 +1,7 @@
 {
     "name": "flow-php/etl-adapter-chartjs",
     "type": "library",
-    "description": "PHP ETL - Adapter - ChartJS",
+    "description": "Flow adapter that renders pipeline data as ChartJS charts.",
     "keywords": [
         "etl",
         "extract",

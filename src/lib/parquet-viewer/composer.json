@@ -1,7 +1,7 @@
 {
     "name": "flow-php/parquet-viewer",
     "type": "library",
-    "description": "PHP ETL - cli application for viewing parquet files",
+    "description": "Command line viewer for Parquet files, written in PHP.",
     "keywords": [
         "etl",
         "extract",

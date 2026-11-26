@@ -1,7 +1,7 @@
 {
     "name": "flow-php/etl-adapter-parquet",
     "type": "library",
-    "description": "PHP ETL - Adapter - Parquet",
+    "description": "Flow adapter that reads and writes Parquet files.",
     "keywords": [
         "etl",
         "extract",

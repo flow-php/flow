@@ -1,7 +1,7 @@
 {
     "name": "flow-php/etl-adapter-excel",
     "type": "library",
-    "description": "PHP ETL - Adapter - Excel",
+    "description": "Flow adapter that reads and writes Excel files.",
     "keywords": [
         "etl",
         "extract",

@@ -1,7 +1,7 @@
 {
     "name": "flow-php/filesystem-azure-bridge",
     "type": "library",
-    "description": "PHP ETL - Flow Filesystem Azure Bridge",
+    "description": "Use Azure Blob Storage as a Flow filesystem.",
     "keywords": [
         "filesystem",
         "azure",

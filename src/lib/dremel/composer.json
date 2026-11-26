@@ -1,7 +1,7 @@
 {
     "name": "flow-php/dremel",
     "type": "library",
-    "description": "PHP ETL - Dremel algorithm implementation",
+    "description": "PHP implementation of the Google Dremel algorithm for nested columnar data.",
     "keywords": [
         "etl",
         "extract",

@@ -1,7 +1,7 @@
 {
     "name": "flow-php/telemetry-otlp-bridge",
     "type": "library",
-    "description": "Flow PHP Telemetry - OTLP Exporter Bridge",
+    "description": "OTLP serializers and transports that export Flow Telemetry data.",
     "keywords": [
         "flow-php",
         "telemetry",

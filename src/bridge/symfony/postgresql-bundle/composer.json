@@ -1,7 +1,7 @@
 {
     "name": "flow-php/symfony-postgresql-bundle",
     "type": "symfony-bundle",
-    "description": "Flow PHP - Symfony PostgreSQL Bundle",
+    "description": "Symfony bundle for the Flow PostgreSQL library.",
     "keywords": [
         "flow-php",
         "symfony",

@@ -1,7 +1,7 @@
 {
     "name": "flow-php/telemetry",
     "type": "library",
-    "description": "Flow PHP - Telemetry library for metrics and tracing",
+    "description": "OpenTelemetry-compatible traces, metrics and logs for PHP.",
     "keywords": [
         "php",
         "telemetry",

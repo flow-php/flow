@@ -1,7 +1,7 @@
 {
     "name": "flow-php/psr7-telemetry-bridge",
     "type": "library",
-    "description": "Flow PHP - PSR-7 Telemetry Bridge",
+    "description": "PSR-7 carriers that propagate telemetry context and baggage through HTTP messages.",
     "keywords": [
         "flow-php",
         "psr-7",

@@ -1,7 +1,7 @@
 {
     "name": "flow-php/symfony-telemetry-bundle",
     "type": "symfony-bundle",
-    "description": "Flow PHP - Symfony Telemetry Bundle",
+    "description": "Symfony bundle that adds traces, metrics and logs to Symfony applications.",
     "keywords": [
         "flow-php",
         "symfony",

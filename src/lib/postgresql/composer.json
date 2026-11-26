@@ -1,7 +1,7 @@
 {
     "name": "flow-php/postgresql",
     "type": "library",
-    "description": "Flow PHP - PostgreSQL Client Library",
+    "description": "PostgreSQL client, query builder and SQL parser for PHP, built on the real PostgreSQL parser.",
     "keywords": [
         "php",
         "postgresql",

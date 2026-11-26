@@ -1,7 +1,7 @@
 {
     "name": "flow-php/etl-adapter-csv",
     "type": "library",
-    "description": "PHP ETL - Adapter - CSV",
+    "description": "Flow adapter that reads and writes CSV files.",
     "keywords": [
         "etl",
         "extract",

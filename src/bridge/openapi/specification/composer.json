@@ -1,7 +1,7 @@
 {
     "name": "flow-php/openapi-specification-bridge",
     "type": "library",
-    "description": "Flow PHP - OpenAPI Specification bridge",
+    "description": "Convert Flow schemas to OpenAPI 3.0 specifications and back.",
     "keywords": [
         "openapi",
         "specification",

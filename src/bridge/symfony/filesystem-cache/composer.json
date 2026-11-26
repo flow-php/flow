@@ -1,7 +1,7 @@
 {
     "name": "flow-php/symfony-filesystem-cache-bridge",
     "type": "library",
-    "description": "PHP ETL - Symfony Filesystem Cache bridge",
+    "description": "Symfony Cache adapter that stores items on a Flow filesystem: local disk, S3 or Azure.",
     "keywords": [
         "symfony",
         "filesystem",

@@ -1,7 +1,7 @@
 {
     "name": "flow-php/phpunit-postgresql-bridge",
     "type": "library",
-    "description": "Flow PHP - PHPUnit PostgreSQL Bridge",
+    "description": "PHPUnit extension for flow-php/postgresql that wraps tests in transactions.",
     "keywords": [
         "flow-php",
         "phpunit",

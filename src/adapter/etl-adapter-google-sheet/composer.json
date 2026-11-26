@@ -1,7 +1,7 @@
 {
     "name": "flow-php/etl-adapter-google-sheet",
     "type": "library",
-    "description": "PHP ETL - Adapter - Google Sheet",
+    "description": "Flow adapter that reads Google Sheets through the Sheets API v4.",
     "keywords": [
         "etl",
         "extract",

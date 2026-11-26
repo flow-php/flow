@@ -1,7 +1,7 @@
 {
     "name": "flow-php/psr3-telemetry-bridge",
     "type": "library",
-    "description": "Flow PHP - PSR-3 Telemetry Bridge",
+    "description": "PSR-3 logger on top of Flow Telemetry.",
     "keywords": [
         "flow-php",
         "psr-3",

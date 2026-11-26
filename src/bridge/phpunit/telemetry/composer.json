@@ -1,7 +1,7 @@
 {
     "name": "flow-php/phpunit-telemetry-bridge",
     "type": "library",
-    "description": "Flow PHP - PHPUnit Telemetry Bridge",
+    "description": "PHPUnit extension that exports test suite telemetry to OTLP backends.",
     "keywords": [
         "flow-php",
         "phpunit",

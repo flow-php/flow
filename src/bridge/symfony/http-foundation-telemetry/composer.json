@@ -1,7 +1,7 @@
 {
     "name": "flow-php/symfony-http-foundation-telemetry-bridge",
     "type": "library",
-    "description": "Flow PHP - Symfony Http Foundation Telemetry Bridge",
+    "description": "Symfony HttpFoundation carriers that propagate telemetry context and baggage.",
     "keywords": [
         "flow-php",
         "symfony",

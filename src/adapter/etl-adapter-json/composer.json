@@ -1,7 +1,7 @@
 {
     "name": "flow-php/etl-adapter-json",
     "type": "library",
-    "description": "PHP ETL - Adapter - JSON",
+    "description": "Flow adapter that reads and writes JSON and JSON Lines files.",
     "keywords": [
         "etl",
         "extract",

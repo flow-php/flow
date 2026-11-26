@@ -1,7 +1,7 @@
 {
     "name": "flow-php/symfony-http-foundation-bridge",
     "type": "library",
-    "description": "PHP ETL - Symfony HTTP foundation bridge",
+    "description": "Stream Flow pipelines as Symfony HttpFoundation responses.",
     "keywords": [
         "symfony",
         "http",

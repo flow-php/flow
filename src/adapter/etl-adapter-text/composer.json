@@ -1,7 +1,7 @@
 {
     "name": "flow-php/etl-adapter-text",
     "type": "library",
-    "description": "PHP ETL - Adapter - Text",
+    "description": "Flow adapter that reads and writes plain text files line by line.",
     "keywords": [
         "etl",
         "extract",

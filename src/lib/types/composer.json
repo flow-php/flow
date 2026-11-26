@@ -1,7 +1,7 @@
 {
     "name": "flow-php/types",
     "type": "library",
-    "description": "Extended types for PHP aligned with modern static analysis tools to provide better type safety.",
+    "description": "Runtime types for PHP that match what static analysis tools understand.",
     "keywords": [
         "php",
         "types"

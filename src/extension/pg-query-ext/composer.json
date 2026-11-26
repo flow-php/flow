@@ -1,7 +1,7 @@
 {
     "name": "flow-php/pg-query-ext",
     "type": "php-ext",
-    "description": "PostgreSQL query parser PHP extension using libpg_query",
+    "description": "PHP extension that parses PostgreSQL queries with libpg_query.",
     "keywords": ["postgresql", "parser", "sql", "ast", "extension", "libpg_query"],
     "license": "MIT",
     "require": {

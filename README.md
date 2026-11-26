@@ -30,11 +30,11 @@ Supported Operating Systems
 
 The most up-to-date examples are available at https://flow-php.com
 
-- [DataFrame](https://flow-php.com/documentation/example/data_frame/data_frame/#example)
-- [Reading data from Array](https://flow-php.com/documentation/example/data_reading/array/#example)
-- [Reading data from CSV](https://flow-php.com/documentation/example/data_reading/csv/#example)
-- [Joins](https://flow-php.com/documentation/example/join/join/#example)
-- [Aggregations](https://flow-php.com/documentation/example/aggregations/group_by/#example)
+- [DataFrame](https://flow-php.com/getting_started/01_first_pipeline/)
+- [Reading data from Array](https://flow-php.com/reading/array/)
+- [Reading data from CSV](https://flow-php.com/reading/csv/)
+- [Joins](https://flow-php.com/joins/join/)
+- [Aggregations](https://flow-php.com/aggregations/group_by/group_by/)
 - and many more...
 
 ## Community Contributions

@@ -2,7 +2,7 @@
     "name": "flow-php/etl-adapter-postgresql",
     "type": "library",
     "license": "MIT",
-    "description": "PHP ETL - Adapter - PostgreSQL",
+    "description": "Flow adapter that reads and writes PostgreSQL tables.",
     "keywords": [
         "postgresql",
         "postgres",

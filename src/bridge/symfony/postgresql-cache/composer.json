@@ -1,7 +1,7 @@
 {
     "name": "flow-php/symfony-postgresql-cache-bridge",
     "type": "library",
-    "description": "PHP ETL - Symfony PostgreSQL Cache bridge",
+    "description": "Symfony Cache adapter on PostgreSQL without Doctrine DBAL.",
     "keywords": [
         "symfony",
         "postgresql",

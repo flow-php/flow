@@ -1,7 +1,7 @@
 {
     "name": "flow-php/etl-adapter-logger",
     "type": "library",
-    "description": "PHP ETL - Adapter - Logger",
+    "description": "Flow adapter that logs pipeline rows through a PSR-3 logger.",
     "keywords": [
         "etl",
         "extract",

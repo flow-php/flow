@@ -1,7 +1,7 @@
 {
     "name": "flow-php/snappy",
     "type": "library",
-    "description": "PHP ETL - Google Snappy compression algorithm implementation",
+    "description": "Pure PHP implementation of the Google Snappy compression algorithm.",
     "keywords": [
         "etl",
         "extract",

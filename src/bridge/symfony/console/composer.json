@@ -1,7 +1,7 @@
 {
     "name": "flow-php/symfony-console-bridge",
     "type": "library",
-    "description": "Flow PHP - Symfony Console bridge",
+    "description": "Symfony Console integration for Flow.",
     "keywords": [
         "symfony",
         "console",

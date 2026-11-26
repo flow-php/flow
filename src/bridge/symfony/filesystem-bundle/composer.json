@@ -1,7 +1,7 @@
 {
     "name": "flow-php/symfony-filesystem-bundle",
     "type": "symfony-bundle",
-    "description": "Flow PHP - Symfony Filesystem Bundle",
+    "description": "Symfony bundle for the Flow filesystem library.",
     "keywords": [
         "flow-php",
         "symfony",

@@ -1,7 +1,7 @@
 {
     "name": "flow-php/monolog-http-bridge",
     "type": "library",
-    "description": "PHP ETL - Monolog HTTP bridge",
+    "description": "Monolog processor that normalizes PSR-7 requests and responses in the log context.",
     "keywords": [
         "logs",
         "monolog",

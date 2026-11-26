@@ -1,7 +1,7 @@
 {
     "name": "flow-php/array-dot",
     "type": "library",
-    "description": "PHP ETL - Array Dot functions",
+    "description": "Read and change nested PHP arrays with dot notation.",
     "keywords": [
         "etl",
         "extract",

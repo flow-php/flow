@@ -1,7 +1,7 @@
 {
     "name": "flow-php/etl-adapter-seal",
     "type": "library",
-    "description": "Flow PHP Adapter for Seal - php Search Engine Abstraction Layer https://php-cmsig.github.io/",
+    "description": "Flow adapter for SEAL, the PHP Search Engine Abstraction Layer.",
     "keywords": [
         "etl",
         "extract",

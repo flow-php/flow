@@ -1,7 +1,7 @@
 {
     "name": "flow-php/filesystem",
     "type": "library",
-    "description": "PHP ETL - Filesystem abstraction",
+    "description": "One filesystem API for local disks, S3, Azure Blob Storage and SFTP.",
     "keywords": [
         "etl",
         "extract",
@@ -10,8 +10,7 @@
         "filesystem",
         "remote",
         "azure",
-        "aws",
-        "gcp"
+        "aws"
     ],
     "require": {
         "php": "~8.3.0 || ~8.4.0 || ~8.5.0 || ~8.6.0",

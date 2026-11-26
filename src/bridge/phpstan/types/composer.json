@@ -1,7 +1,7 @@
 {
     "name": "flow-php/phpstan-types-bridge",
     "type": "phpstan-extension",
-    "description": "Flow PHP - PHPStan Types Bridge",
+    "description": "PHPStan extension that understands flow-php/types.",
     "keywords": [
         "flow-php",
         "phpstan",

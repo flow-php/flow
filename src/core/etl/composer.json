@@ -1,7 +1,7 @@
 {
     "name": "flow-php/etl",
     "type": "library",
-    "description": "PHP ETL - Extract Transform Load - Abstraction",
+    "description": "The Flow DataFrame: read, transform and write data in PHP within a memory limit.",
     "keywords": [
         "etl",
         "extract",

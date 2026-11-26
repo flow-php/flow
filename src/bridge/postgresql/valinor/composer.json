@@ -1,7 +1,7 @@
 {
     "name": "flow-php/postgresql-valinor-bridge",
     "type": "library",
-    "description": "Flow PHP - PostgreSQL Valinor Bridge",
+    "description": "Map PostgreSQL rows to immutable objects with Valinor and flow-php/postgresql.",
     "keywords": [
         "flow-php",
         "postgresql",

@@ -2,7 +2,7 @@
     "name": "flow-php/etl-adapter-doctrine",
     "type": "library",
     "license": "MIT",
-    "description": "PHP ETL - Adapter - Doctrine Dbal",
+    "description": "Flow adapter that reads and writes database tables through Doctrine DBAL.",
     "keywords": [
         "doctrine",
         "dbal",
