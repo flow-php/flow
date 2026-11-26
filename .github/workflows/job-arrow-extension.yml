@@ -54,7 +54,7 @@ jobs:
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           # ext-php-rs bindings are generated against the PHP headers, so builds are per PHP version and thread safety
-          key: php${{ matrix.php }}-${{ matrix.ts }}
+          key: php${{ matrix.php }}${{ matrix.ts == 'zts' && '-zts' || '' }}
           workspaces: |
             src/extension/arrow-ext -> target
 
