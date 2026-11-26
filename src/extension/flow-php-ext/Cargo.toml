@@ -9,6 +9,8 @@ crate-type = ["cdylib"]
 [features]
 # arrow-data re-validates the arrays the builders hand over with `build_unchecked`; `make test` builds with it
 arrow-validate = ["arrow-data/force_validate"]
+# links libphp, so only tests/zts_request_threads.rs enables it
+zts-embed = ["ext-php-rs/embed"]
 
 [dependencies]
 ahash = "0.8"
@@ -32,6 +34,10 @@ serde_json.workspace = true
 
 [build-dependencies]
 ext-php-rs-build = "0.2"
+
+[[test]]
+name = "zts_request_threads"
+required-features = ["zts-embed"]
 
 [profile.release]
 strip = true

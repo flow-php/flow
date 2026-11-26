@@ -66,6 +66,17 @@ jobs:
         working-directory: src/extension/pg-query-ext
         run: make test
 
+      - name: Run requests on threads that did not load the extension
+        if: matrix.php == '8.6' && matrix.ts == 'zts' && runner.os == 'Linux'
+        working-directory: src/extension/pg-query-ext
+        run: |
+          # gdb returns 0 for a crashed test, so the plain run decides and gdb only prints the backtrace
+          make test-zts || {
+            sudo apt-get install -y gdb
+            make test-zts ZTS_RUNNER="gdb -batch -ex run -ex \"thread apply all bt\" --args" || true
+            exit 1
+          }
+
       - name: Install extension
         working-directory: src/extension/pg-query-ext
         run: |

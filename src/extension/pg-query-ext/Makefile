@@ -19,7 +19,9 @@ else
     NPROC := $(shell nproc)
 endif
 
-.PHONY: all clean distclean test install rebuild
+ZTS_RUNNER ?=
+
+.PHONY: all clean distclean test test-zts install rebuild
 
 all: build
 
@@ -57,6 +59,13 @@ test: $(EXTENSION_SO)
 	@echo "Running extension tests..."
 	@cd $(EXTENSION_DIR) && make test TESTS="../tests/phpt/"
 
+# Run requests on threads that did not load the extension (ZTS PHP with the embed SAPI)
+test-zts: $(EXTENSION_SO)
+	$(CC) -D_GNU_SOURCE -Wall -Wextra -Werror -pthread $$($(PHP_CONFIG) --includes) tests/zts/zts_request_threads.c \
+		-L$$($(PHP_CONFIG) --prefix)/lib -Wl,-rpath,$$($(PHP_CONFIG) --prefix)/lib -lphp -o $(EXTENSION_DIR)/zts_request_threads
+	printf 'extension="%s"\n' "$(realpath $(EXTENSION_SO))" > $(EXTENSION_DIR)/zts.ini
+	PHP_INI_SCAN_DIR= $(ZTS_RUNNER) $(EXTENSION_DIR)/zts_request_threads $(realpath $(EXTENSION_DIR))/zts.ini
+
 # Install to current PHP
 install: $(EXTENSION_SO)
 	@cd $(EXTENSION_DIR) && make install
@@ -70,6 +79,7 @@ clean:
 	@cd $(EXTENSION_DIR) && ([ -f Makefile ] && make clean || true)
 	@chmod -R u+w $(EXTENSION_DIR)/build 2>/dev/null || true
 	@rm -rf $(EXTENSION_DIR)/build $(EXTENSION_DIR)/run-tests.php
+	@rm -f $(EXTENSION_DIR)/zts_request_threads $(EXTENSION_DIR)/zts.ini
 	@cd $(EXTENSION_DIR) && $(PHPIZE) --clean 2>/dev/null || true
 
 # Remove everything including libpg_query
