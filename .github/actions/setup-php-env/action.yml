@@ -94,8 +94,9 @@ runs:
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
       with:
         path: ${{ steps.extensions-cache.outputs.dir }}
-        key: ${{ steps.extensions-cache.outputs.key }}-${{ inputs.thread-safety }}
-        restore-keys: ${{ steps.extensions-cache.outputs.key }}-${{ inputs.thread-safety }}
+        # the NTS key has no suffix, so the caches from before the ZTS builds stay valid
+        key: ${{ steps.extensions-cache.outputs.key }}${{ inputs.thread-safety == 'zts' && '-zts' || '' }}
+        restore-keys: ${{ steps.extensions-cache.outputs.key }}${{ inputs.thread-safety == 'zts' && '-zts' || '' }}
 
     # setup-php only logs an extension that does not build; a job must not run without an extension it asked for
     - name: "Fail on a missing extension"
