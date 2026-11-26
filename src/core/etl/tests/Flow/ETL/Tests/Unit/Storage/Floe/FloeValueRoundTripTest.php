@@ -149,11 +149,9 @@ final class FloeValueRoundTripTest extends TestCase
     public function test_interval_columns(): void
     {
         $negative = new DateInterval('PT5H30M');
-        // @mago-ignore analysis:invalid-property-write
         $negative->invert = 1;
 
         $fractional = new DateInterval('PT1S');
-        // @mago-ignore analysis:invalid-property-write
         $fractional->f = 0.123456;
 
         static::assertEquals(

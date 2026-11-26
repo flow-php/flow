@@ -29,8 +29,6 @@ final readonly class DeltaCalculator
             $deltaString = bcsub((string) $current, (string) $previous, 0);
 
             // For 64-bit systems, implement proper 2's complement wrapping
-            // @mago-ignore analysis:redundant-condition
-            // @mago-ignore analysis:redundant-comparison
             if (PHP_INT_SIZE === 8) {
                 // If delta is out of range, wrap it using 2^64
                 while (bccomp($deltaString, (string) PHP_INT_MAX, 0) > 0) {
@@ -141,8 +139,6 @@ final readonly class DeltaCalculator
             $deltaString = bcsub((string) $delta, (string) $minDelta, 0);
 
             // For 64-bit systems, implement proper 2's complement wrapping
-            // @mago-ignore analysis:redundant-condition
-            // @mago-ignore analysis:redundant-comparison
             if (PHP_INT_SIZE === 8) {
                 // If delta is out of range, wrap it using 2^64
                 while (bccomp($deltaString, (string) PHP_INT_MAX, 0) > 0) {
@@ -216,8 +212,6 @@ final readonly class DeltaCalculator
                 $nextValueString = bcadd((string) $currentValue, (string) $delta, 0);
 
                 // For 64-bit systems, implement proper 2's complement wrapping
-                // @mago-ignore analysis:redundant-condition
-                // @mago-ignore analysis:redundant-comparison
                 if (PHP_INT_SIZE === 8) {
                     // If result is out of range, wrap it using 2^64
                     while (bccomp($nextValueString, (string) PHP_INT_MAX, 0) > 0) {

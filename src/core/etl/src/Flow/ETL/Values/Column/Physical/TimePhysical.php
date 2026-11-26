@@ -53,9 +53,7 @@ final readonly class TimePhysical implements Physical
             intdiv($magnitude, 60_000_000) % 60,
             intdiv($magnitude, 1_000_000) % 60,
         ));
-        // @mago-ignore analysis:invalid-property-write
         $interval->f = ($magnitude % 1_000_000) / 1_000_000;
-        // @mago-ignore analysis:invalid-property-write
         $interval->invert = $physical < 0 ? 1 : 0;
 
         return $interval;
@@ -82,9 +80,7 @@ final readonly class TimePhysical implements Physical
                 intdiv($magnitude, 60_000_000) % 60,
                 intdiv($magnitude, 1_000_000) % 60,
             ));
-            // @mago-ignore analysis:invalid-property-write
             $interval->f = ($magnitude % 1_000_000) / 1_000_000;
-            // @mago-ignore analysis:invalid-property-write
             $interval->invert = $physical < 0 ? 1 : 0;
             $values[] = $interval;
         }

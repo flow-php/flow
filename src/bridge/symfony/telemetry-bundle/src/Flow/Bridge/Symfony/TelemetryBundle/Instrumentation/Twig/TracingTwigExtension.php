@@ -17,12 +17,14 @@ use Twig\Extension\AbstractExtension;
 use Twig\Profiler\NodeVisitor\ProfilerNodeVisitor;
 use Twig\Profiler\Profile;
 
-use function is_array;
 use function preg_match;
 use function sprintf;
 
 final class TracingTwigExtension extends AbstractExtension
 {
+    /**
+     * @var SplObjectStorage<Profile, array{span: Span, tracer: Tracer, scope: Scope}>
+     */
     private SplObjectStorage $activeSpans;
 
     private int $excludedDepth = 0;
@@ -92,15 +94,11 @@ final class TracingTwigExtension extends AbstractExtension
             return;
         }
 
-        // @mago-expect analysis:impossible-assignment
         $spanData = $this->activeSpans[$profile];
 
-        // @mago-expect analysis:no-value,redundant-type-comparison,redundant-logical-operation(2)
-        if (is_array($spanData) && $spanData['tracer'] instanceof Tracer && $spanData['span'] instanceof Span) {
-            // OTEL spec: instrumentation leaves the status Unset on success.
-            $spanData['scope']->detach();
-            $spanData['tracer']->complete($spanData['span']);
-        }
+        // OTEL spec: instrumentation leaves the status Unset on success.
+        $spanData['scope']->detach();
+        $spanData['tracer']->complete($spanData['span']);
 
         unset($this->activeSpans[$profile]);
     }
@@ -108,19 +106,12 @@ final class TracingTwigExtension extends AbstractExtension
     public function reset(): void
     {
         foreach ($this->activeSpans as $profile) {
-            // @mago-expect analysis:mixed-assignment
             $spanData = $this->activeSpans[$profile];
 
-            if (is_array($spanData) && $spanData['tracer'] instanceof Tracer && $spanData['span'] instanceof Span) {
-                $spanData['span']->setAttribute('error.type', 'incomplete_render');
-                $spanData['span']->setStatus(SpanStatus::error('Twig rendering did not complete'));
-
-                if ($spanData['scope'] instanceof Scope) {
-                    $spanData['scope']->detach();
-                }
-
-                $spanData['tracer']->complete($spanData['span']);
-            }
+            $spanData['span']->setAttribute('error.type', 'incomplete_render');
+            $spanData['span']->setStatus(SpanStatus::error('Twig rendering did not complete'));
+            $spanData['scope']->detach();
+            $spanData['tracer']->complete($spanData['span']);
         }
 
         $this->activeSpans = new SplObjectStorage();

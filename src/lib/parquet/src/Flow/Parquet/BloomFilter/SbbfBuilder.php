@@ -41,7 +41,7 @@ final class SbbfBuilder
         $bytes = Sbbf::BLOCK_BYTES;
 
         while ($bytes < intdiv((int) $bits, 8)) {
-            $bytes <<= 1;
+            $bytes *= 2;
         }
 
         return new self(str_repeat("\0", $bytes), $options->fpp);

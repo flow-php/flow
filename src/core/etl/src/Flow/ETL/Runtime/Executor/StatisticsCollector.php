@@ -44,7 +44,6 @@ final class StatisticsCollector
         Analyze|bool|null $analyze,
         private readonly FlowContext $context,
     ) {
-        // @mago-ignore analysis:invalid-property-assignment-value
         $this->analyze = match (true) {
             $analyze === true => new Analyze(),
             // @mago-ignore analysis:impossible-type-comparison

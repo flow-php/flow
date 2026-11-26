@@ -63,8 +63,6 @@ final class FlatColumn implements Column
 
     public static function dateTime(string $name, Repetition $repetition = Repetition::OPTIONAL): self
     {
-        // @mago-ignore analysis:impossible-condition
-        // @mago-ignore analysis:redundant-comparison
         if (PHP_INT_MAX !== Consts::PHP_INT64_MAX) {
             throw new InvalidArgumentException(
                 'PHP_INT_MAX must be equal to 9223372036854775807 to support 64-bit timestamps.',
@@ -184,8 +182,6 @@ final class FlatColumn implements Column
 
     public static function int64(string $name, Repetition $repetition = Repetition::OPTIONAL): self
     {
-        // @mago-ignore analysis:impossible-condition
-        // @mago-ignore analysis:redundant-comparison
         if (PHP_INT_MAX !== Consts::PHP_INT64_MAX) {
             throw new InvalidArgumentException(
                 'PHP_INT_MAX must be equal to 9223372036854775807 to support 64-bit timestamps.',
@@ -207,8 +203,6 @@ final class FlatColumn implements Column
 
     public static function time(string $name, Repetition $repetition = Repetition::OPTIONAL): self
     {
-        // @mago-ignore analysis:impossible-condition
-        // @mago-ignore analysis:redundant-comparison
         if (PHP_INT_MAX !== Consts::PHP_INT64_MAX) {
             throw new InvalidArgumentException(
                 'PHP_INT_MAX must be equal to 9223372036854775807 to support 64-bit timestamps.',

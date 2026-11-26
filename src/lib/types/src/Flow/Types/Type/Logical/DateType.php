@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\Types\Type\Logical;
 
 use DateInterval;
-use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
@@ -41,8 +40,12 @@ final readonly class DateType implements Type
     {
         static $utc = new DateTimeZone('UTC');
 
-        if ($this->isValid($value)) {
-            return $value;
+        if ($value instanceof DateTimeInterface) {
+            if ($value->getOffset() === 0 && $value->format('H:i:s.u') === '00:00:00.000000') {
+                return $value;
+            }
+
+            return new DateTimeImmutable($value->format('Y-m-d'), $utc);
         }
 
         if ($value instanceof DOMElement) {
@@ -50,10 +53,6 @@ final readonly class DateType implements Type
         }
 
         try {
-            if ($value instanceof DateTimeImmutable || $value instanceof DateTime) {
-                return new DateTimeImmutable($value->format('Y-m-d'), $utc);
-            }
-
             if (is_string($value)) {
                 if (StringTemporalParts::isoDate($value)) {
                     return new DateTimeImmutable($value, $utc);
