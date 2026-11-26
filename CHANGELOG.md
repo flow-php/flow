@@ -54,6 +54,7 @@
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - Packagist links in the hero and the footer** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [fb9ddb](https://github.com/flow-php/flow/commit/fb9ddba06a51d6fe82eab50f62cde748c42ae97c) - **docs(flow-php/flow): package descriptions and dead links** - [@norberttech](https://github.com/norberttech)
 - [#2778](https://github.com/flow-php/flow/pull/2778) - **flow-php/flow - mago from 1.60.2 to 1.61.0** - [@norberttech](https://github.com/norberttech)
 - [#2778](https://github.com/flow-php/flow/pull/2778) - **flow-php/types - TimeType and DateType casts test the type directly** - [@norberttech](https://github.com/norberttech)
 - [#2778](https://github.com/flow-php/flow/pull/2778) - **flow-php/symfony-telemetry-bundle - typed span storage in TracingTwigExtension** - [@norberttech](https://github.com/norberttech)
