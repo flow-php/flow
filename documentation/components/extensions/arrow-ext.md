@@ -130,7 +130,7 @@ unchanged.
 ```php ignore
 <?php
 
-\Flow\Arrow\allocated_bytes(); // int, the bytes the extension holds outside PHP's memory manager in this process
+\Flow\Arrow\allocated_bytes(); // int, the bytes the extension holds outside PHP's memory manager on the current thread
 ```
 
 A memory limit of Flow ETL does not count these bytes. Flow ETL reads and writes Parquet with the engine of

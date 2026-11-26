@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       full-matrix:
-        description: "Build macOS on every PHP version and test the macOS PIE install; otherwise macOS builds PHP 8.3 only"
+        description: "Build macOS on every PHP version, NTS and ZTS, and test the macOS PIE install; otherwise macOS builds PHP 8.3 NTS only"
         type: boolean
         required: false
         default: true
@@ -16,6 +16,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        php: ['8.3', '8.4', '8.5', '8.6']
+        ts: ['nts', 'zts']
         include:
           - php: '8.3'
             dependencies: locked
@@ -37,10 +39,11 @@ jobs:
         uses: ./.github/actions/setup-php-env
         with:
           php-version: ${{ matrix.php }}
+          thread-safety: ${{ matrix.ts }}
           dependencies: locked
           extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, zstd'
           tools: 'composer:v2, php-config'
-          coverage: ${{ (matrix.php == '8.3' && runner.os == 'Linux') && 'pcov' || 'none' }}
+          coverage: ${{ (matrix.php == '8.3' && matrix.ts == 'nts' && runner.os == 'Linux') && 'pcov' || 'none' }}
           install-dependencies: 'false'
 
       - name: Setup Rust extension toolchain
@@ -50,8 +53,8 @@ jobs:
       - name: Cache cargo registry and build
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
-          # ext-php-rs bindings are generated against the PHP headers, so builds are per PHP version
-          key: php${{ matrix.php }}
+          # ext-php-rs bindings are generated against the PHP headers, so builds are per PHP version and thread safety
+          key: php${{ matrix.php }}-${{ matrix.ts }}
           workspaces: |
             src/extension/arrow-ext -> target
 
@@ -94,7 +97,7 @@ jobs:
           php -m | grep arrow
 
       - name: Run Parquet Integration Tests with Arrow
-        run: just test --testsuite=lib-parquet-integration ${{ (matrix.php == '8.3' && runner.os == 'Linux') && '--coverage-clover=./var/phpunit/coverage/clover/coverage.xml' || '' }}
+        run: just test --testsuite=lib-parquet-integration ${{ (matrix.php == '8.3' && matrix.ts == 'nts' && runner.os == 'Linux') && '--coverage-clover=./var/phpunit/coverage/clover/coverage.xml' || '' }}
 
       - name: Run Parquet Adapter Unit Tests with Arrow
         run: just test --testsuite=adapter-parquet-unit
@@ -103,7 +106,7 @@ jobs:
         run: just test --testsuite=adapter-parquet-integration
 
       - name: Upload to Codecov
-        if: ${{ !cancelled() && matrix.php == '8.3' && runner.os == 'Linux' }}
+        if: ${{ !cancelled() && matrix.php == '8.3' && matrix.ts == 'nts' && runner.os == 'Linux' }}
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           use_oidc: true
@@ -118,18 +121,26 @@ jobs:
       matrix:
         include:
           - php: '8.3'
+            ts: nts
             dependencies: locked
 
     steps: *build-steps
 
-  build-macos-newer-php:
-    name: Build and Test Extension (macOS, newer PHP)
+  build-macos-full-matrix:
+    name: Build and Test Extension (macOS, full matrix)
     if: ${{ inputs.full-matrix }}
     runs-on: macos-latest
     strategy:
       fail-fast: false
       matrix:
+        php: ['8.3', '8.4', '8.5', '8.6']
+        ts: ['nts', 'zts']
+        exclude:
+          - php: '8.3'
+            ts: nts
         include:
+          - php: '8.3'
+            dependencies: locked
           - php: '8.4'
             dependencies: highest
           - php: '8.5'

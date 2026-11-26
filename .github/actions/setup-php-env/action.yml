@@ -7,6 +7,10 @@ inputs:
   dependencies:
     description: 'Dependency resolution strategy (locked/lowest/highest) or custom value'
     required: true
+  thread-safety:
+    description: 'PHP build to setup: nts (non-thread-safe) or zts (thread-safe)'
+    required: false
+    default: 'nts'
   extensions:
     description: 'PHP extensions to install'
     required: false
@@ -90,13 +94,24 @@ runs:
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
       with:
         path: ${{ steps.extensions-cache.outputs.dir }}
-        key: ${{ steps.extensions-cache.outputs.key }}
-        restore-keys: ${{ steps.extensions-cache.outputs.key }}
+        key: ${{ steps.extensions-cache.outputs.key }}-${{ inputs.thread-safety }}
+        restore-keys: ${{ steps.extensions-cache.outputs.key }}-${{ inputs.thread-safety }}
 
     # setup-php only logs an extension that does not build; a job must not run without an extension it asked for
     - name: "Fail on a missing extension"
       shell: bash
       run: echo "fail-fast=true" >> "$GITHUB_ENV"
+
+    - name: "Select the thread safety of the PHP build"
+      shell: bash
+      env:
+        THREAD_SAFETY: ${{ inputs.thread-safety }}
+      run: |
+        case "$THREAD_SAFETY" in
+          nts) echo "phpts=nts" >> "$GITHUB_ENV" ;;
+          zts) echo "phpts=zts" >> "$GITHUB_ENV" ;;
+          *) echo "thread-safety must be nts or zts, got: $THREAD_SAFETY"; exit 1 ;;
+        esac
 
     - name: "Install PHP"
       uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
@@ -109,6 +124,14 @@ runs:
         extensions: "${{ inputs.extensions }}, :redis"
         coverage: ${{ inputs.coverage != '' && inputs.coverage || null }}
       env: ${{ inputs.php-env != '' && fromJSON(inputs.php-env) || fromJSON('{}') }}
+
+    # setup-php must not fall back to the other build without a failure
+    - name: "Fail on a wrong thread safety"
+      shell: bash
+      env:
+        THREAD_SAFETY: ${{ inputs.thread-safety }}
+      run: |
+        php -r 'exit((PHP_ZTS ? "zts" : "nts") === getenv("THREAD_SAFETY") ? 0 : 1);'
 
     - name: "Install just"
       uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4

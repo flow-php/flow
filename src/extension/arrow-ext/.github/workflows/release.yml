@@ -82,6 +82,10 @@ jobs:
           if [ "$TS" = "zts" ]; then
             echo "php-image=${PHP}-zts" >> "$GITHUB_OUTPUT"
             echo "ts-suffix=-zts" >> "$GITHUB_OUTPUT"
+          elif [ "$PHP" = "8.6" ]; then
+            # the official PHP 8.6 "cli" image is a ZTS build, the NTS build has its own tag
+            echo "php-image=${PHP}-nts" >> "$GITHUB_OUTPUT"
+            echo "ts-suffix=" >> "$GITHUB_OUTPUT"
           else
             echo "php-image=${PHP}-cli" >> "$GITHUB_OUTPUT"
             echo "ts-suffix=" >> "$GITHUB_OUTPUT"
@@ -95,14 +99,18 @@ jobs:
           WORKSPACE: ${{ github.workspace }}
           ARROW_VERSION: ${{ needs.create-release.outputs.tag }}
           PHP_IMAGE: ${{ steps.build-vars.outputs.php-image }}
+          TS: ${{ matrix.ts }}
         run: |
           docker run --rm \
             -v "$WORKSPACE:/workspace" \
             -w /workspace \
             -e ARROW_VERSION="$ARROW_VERSION" \
+            -e TS="$TS" \
             "php:$PHP_IMAGE" \
             bash -c '
               set -euo pipefail
+
+              [ "$(php -r "echo PHP_ZTS ? \"zts\" : \"nts\";")" = "$TS" ] || { echo "ERROR: the image PHP is not a $TS build"; exit 1; }
 
               echo "::group::Install system dependencies"
               apt-get update
@@ -176,6 +184,12 @@ jobs:
           php-version: ${{ matrix.php }}
         env:
           phpts: ${{ matrix.ts }}
+
+      - name: Verify PHP thread safety
+        env:
+          TS: ${{ matrix.ts }}
+        run: |
+          [ "$(php -r 'echo PHP_ZTS ? "zts" : "nts";')" = "$TS" ] || { echo "ERROR: PHP is not a $TS build"; exit 1; }
 
       - name: Set build variables
         id: build-vars
