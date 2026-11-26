@@ -20,10 +20,6 @@ flow-parquet-engine = { path = "crates/flow-parquet-engine", features = ["arrow-
 [dev-dependencies]
 arrow-schema = { version = "60", features = ["canonical_extension_types"] }
 
-[[test]]
-name = "zts_request_threads"
-required-features = ["zts-embed"]
-
 [profile.release]
 strip = true
 
