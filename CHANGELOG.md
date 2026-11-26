@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-11-25
+## [Unreleased] - 2026-11-26
 
 ### Added
 - [#2777](https://github.com/flow-php/flow/pull/2777) - **flow-php/etl - PHP 8.6 support in every package** - [@norberttech](https://github.com/norberttech)
@@ -54,6 +54,10 @@
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - Packagist links in the hero and the footer** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2778](https://github.com/flow-php/flow/pull/2778) - **flow-php/flow - mago from 1.60.2 to 1.61.0** - [@norberttech](https://github.com/norberttech)
+- [#2778](https://github.com/flow-php/flow/pull/2778) - **flow-php/types - TimeType and DateType casts test the type directly** - [@norberttech](https://github.com/norberttech)
+- [#2778](https://github.com/flow-php/flow/pull/2778) - **flow-php/symfony-telemetry-bundle - typed span storage in TracingTwigExtension** - [@norberttech](https://github.com/norberttech)
+- [#2778](https://github.com/flow-php/flow/pull/2778) - **flow-php/parquet - bloom filter size doubles with a multiplication instead of a shift** - [@norberttech](https://github.com/norberttech)
 - [#2777](https://github.com/flow-php/flow/pull/2777) - **flow-php/telemetry - ServiceAttribute::NAMESPACE renamed to SERVICE_NAMESPACE** - [@norberttech](https://github.com/norberttech)
 - [#2777](https://github.com/flow-php/flow/pull/2777) - **flow-php/filesystem-sftp-bridge - phpseclib constraint from ^4.0 to ^4.0.4** - [@norberttech](https://github.com/norberttech)
 - [#2777](https://github.com/flow-php/flow/pull/2777) - **flow-php/flow-php-ext - ext-php-rs 0.16.5 and ext-php-rs-build 0.2** - [@norberttech](https://github.com/norberttech)
@@ -130,6 +134,8 @@
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/cli - phar build with a composer wrapper** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2778](https://github.com/flow-php/flow/pull/2778) - **flow-php/flow - mago suppressions that 1.61.0 no longer needs** - [@norberttech](https://github.com/norberttech)
+- [#2778](https://github.com/flow-php/flow/pull/2778) - **flow-php/azure-sdk - dead null check in SimpleXMLNormalizer** - [@norberttech](https://github.com/norberttech)
 - [#2765](https://github.com/flow-php/flow/pull/2765) - **flow-php/etl - partition_by()** - [@norberttech](https://github.com/norberttech)
 - [#2765](https://github.com/flow-php/flow/pull/2765) - **flow-php/etl - Partitioning::writeColumns()** - [@norberttech](https://github.com/norberttech)
 - [#2764](https://github.com/flow-php/flow/pull/2764) - **flow-php/etl - Algorithm, PhpAlgorithm, PlainText, MultisetHashAlgorithm** - [@norberttech](https://github.com/norberttech)
