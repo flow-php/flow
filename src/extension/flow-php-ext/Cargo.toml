@@ -35,10 +35,6 @@ serde_json.workspace = true
 [build-dependencies]
 ext-php-rs-build = "0.2"
 
-[[test]]
-name = "zts_request_threads"
-required-features = ["zts-embed"]
-
 [profile.release]
 strip = true
 
