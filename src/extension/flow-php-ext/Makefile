@@ -68,7 +68,7 @@ test: build
 		fi; \
 	done; \
 	echo "$$passed/$$total tests passed ($$skipped skipped)"; \
-	if [ $$failed -eq 1 ]; then exit 1; fi
+	if [ $$failed -eq 1 ] || [ $$skipped -gt 0 ]; then exit 1; fi
 
 # Install to current PHP extension directory
 install: build

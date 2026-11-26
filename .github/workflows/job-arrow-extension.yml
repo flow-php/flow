@@ -86,6 +86,19 @@ jobs:
         env: *rust-env
         run: make test
 
+      - name: Run requests on threads that did not load the extension
+        if: matrix.php == '8.6' && matrix.ts == 'zts' && runner.os == 'Linux'
+        working-directory: src/extension/arrow-ext
+        env: *rust-env
+        run: |
+          # gdb returns 0 for a crashed test, so the plain run decides and gdb only prints the backtrace
+          cargo test --locked --features zts-embed --test zts_request_threads || {
+            sudo apt-get install -y gdb
+            cargo test --locked --features zts-embed --test zts_request_threads \
+              --config "target.x86_64-unknown-linux-gnu.runner=[\"gdb\",\"-batch\",\"-ex\",\"run\",\"-ex\",\"thread apply all bt\",\"--args\"]" || true
+            exit 1
+          }
+
       - name: Install extension and verify
         working-directory: src/extension/arrow-ext
         env: *rust-env
