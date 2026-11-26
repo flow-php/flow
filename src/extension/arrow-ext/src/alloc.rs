@@ -1,30 +1,15 @@
-//! The global allocator: `System`, counting the bytes it holds. A cargo test counts per thread, so it pins what
-//! arrow's native heap keeps while the other tests allocate on their own threads.
+//! The global allocator: `System`, counting the bytes each thread holds.
 
 use std::alloc::{GlobalAlloc, Layout, System};
-
-#[cfg(test)]
 use std::cell::Cell;
-#[cfg(not(test))]
-use std::sync::atomic::{AtomicI64, Ordering};
 
-#[cfg(test)]
 thread_local! {
     static ALLOCATED: Cell<i64> = const { Cell::new(0) };
 }
 
-#[cfg(not(test))]
-static ALLOCATED: AtomicI64 = AtomicI64::new(0);
-
-#[cfg(test)]
 fn counted(delta: i64) {
     // a thread being torn down has no counter left: nothing reads it again
     let _ = ALLOCATED.try_with(|allocated| allocated.set(allocated.get() + delta));
-}
-
-#[cfg(not(test))]
-fn counted(delta: i64) {
-    ALLOCATED.fetch_add(delta, Ordering::Relaxed);
 }
 
 struct Counting;
@@ -70,20 +55,14 @@ unsafe impl GlobalAlloc for Counting {
 static GLOBAL: Counting = Counting;
 
 /// What the current thread holds.
-#[cfg(test)]
 pub fn allocated_bytes() -> i64 {
     ALLOCATED.with(Cell::get)
 }
 
-/// What the process holds through this allocator.
-#[cfg(not(test))]
-pub fn allocated_bytes() -> i64 {
-    ALLOCATED.load(Ordering::Relaxed)
-}
-
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
+    use std::sync::{mpsc, Arc};
+    use std::thread;
 
     use arrow_array::ffi::{from_ffi, to_ffi};
     use arrow_array::types::Int64Type;
@@ -91,6 +70,32 @@ mod tests {
     use arrow_schema::{DataType, Field, Fields};
 
     use crate::alloc::allocated_bytes;
+
+    const HELD: usize = 1 << 20;
+
+    fn on_another_thread_while_it_holds<T>(bytes: usize, read: impl FnOnce() -> T) -> T {
+        let (held_tx, held_rx) = mpsc::sync_channel(0);
+        let (release_tx, release_rx) = mpsc::sync_channel::<()>(0);
+        thread::scope(|scope| {
+            scope.spawn(move || {
+                let held = vec![1u8; bytes];
+                held_tx.send(()).unwrap();
+                release_rx.recv().unwrap();
+                drop(held);
+            });
+            held_rx.recv().unwrap();
+            let seen = read();
+            release_tx.send(()).unwrap();
+            seen
+        })
+    }
+
+    #[test]
+    fn allocations_of_another_thread_leave_the_current_thread_bytes_unchanged() {
+        let before = allocated_bytes();
+        let during = on_another_thread_while_it_holds(HELD, allocated_bytes);
+        assert!(during - before < HELD as i64);
+    }
 
     fn batch() -> StructArray {
         let ids: ArrayRef = Arc::new(Int64Array::from_iter((0..1000).map(|i| (i % 7 != 0).then_some(i))));

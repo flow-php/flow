@@ -1,17 +1,24 @@
-//! The global allocator: `System`, counting the bytes it holds for `RustBackend::allocatedBytes()`.
+//! The global allocator: `System`, counting the bytes each thread holds for `RustBackend::allocatedBytes()`.
 
 use std::alloc::{GlobalAlloc, Layout, System};
-use std::sync::atomic::{AtomicI64, Ordering};
+use std::cell::Cell;
 
-static ALLOCATED: AtomicI64 = AtomicI64::new(0);
-static PEAK: AtomicI64 = AtomicI64::new(0);
+thread_local! {
+    static ALLOCATED: Cell<i64> = const { Cell::new(0) };
+    static PEAK: Cell<i64> = const { Cell::new(0) };
+}
 
-fn added(bytes: i64) {
-    let now = ALLOCATED.fetch_add(bytes, Ordering::Relaxed) + bytes;
-
-    if now > PEAK.load(Ordering::Relaxed) {
-        PEAK.fetch_max(now, Ordering::Relaxed);
-    }
+fn counted(delta: i64) {
+    // a thread being torn down has no counter left: nothing reads it again
+    let _ = ALLOCATED.try_with(|allocated| {
+        let now = allocated.get() + delta;
+        allocated.set(now);
+        let _ = PEAK.try_with(|peak| {
+            if now > peak.get() {
+                peak.set(now)
+            }
+        });
+    });
 }
 
 struct Counting;
@@ -21,7 +28,7 @@ unsafe impl GlobalAlloc for Counting {
         let ptr = System.alloc(layout);
 
         if !ptr.is_null() {
-            added(layout.size() as i64);
+            counted(layout.size() as i64);
         }
 
         ptr
@@ -31,7 +38,7 @@ unsafe impl GlobalAlloc for Counting {
         let ptr = System.alloc_zeroed(layout);
 
         if !ptr.is_null() {
-            added(layout.size() as i64);
+            counted(layout.size() as i64);
         }
 
         ptr
@@ -39,14 +46,14 @@ unsafe impl GlobalAlloc for Counting {
 
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
         System.dealloc(ptr, layout);
-        ALLOCATED.fetch_sub(layout.size() as i64, Ordering::Relaxed);
+        counted(-(layout.size() as i64));
     }
 
     unsafe fn realloc(&self, ptr: *mut u8, layout: Layout, new_size: usize) -> *mut u8 {
         let new = System.realloc(ptr, layout, new_size);
 
         if !new.is_null() {
-            added(new_size as i64 - layout.size() as i64);
+            counted(new_size as i64 - layout.size() as i64);
         }
 
         new
@@ -56,9 +63,9 @@ unsafe impl GlobalAlloc for Counting {
 #[global_allocator]
 static GLOBAL: Counting = Counting;
 
-/// Process-wide: on ZTS every thread's allocations.
+/// What the current thread holds.
 pub fn own_bytes() -> i64 {
-    ALLOCATED.load(Ordering::Relaxed)
+    ALLOCATED.with(Cell::get)
 }
 
 #[cfg(all(target_os = "linux", target_env = "gnu"))]
@@ -99,17 +106,65 @@ pub fn fix_mmap_threshold() {
 pub fn fix_mmap_threshold() {}
 
 pub fn own_peak_bytes() -> i64 {
-    PEAK.load(Ordering::Relaxed).max(own_bytes())
+    PEAK.with(Cell::get).max(own_bytes())
 }
 
 pub fn reset_peak() {
-    PEAK.store(ALLOCATED.load(Ordering::Relaxed), Ordering::Relaxed);
+    PEAK.with(|peak| peak.set(own_bytes()))
 }
 
 #[cfg(test)]
 mod tests {
-    use super::fixes_mmap_threshold;
+    use super::{fixes_mmap_threshold, own_bytes, own_peak_bytes, reset_peak};
     use std::ffi::OsString;
+    use std::sync::mpsc;
+    use std::thread;
+
+    const HELD: usize = 1 << 20;
+
+    fn on_another_thread_while_it_holds<T>(bytes: usize, read: impl FnOnce() -> T) -> T {
+        let (held_tx, held_rx) = mpsc::sync_channel(0);
+        let (release_tx, release_rx) = mpsc::sync_channel::<()>(0);
+        thread::scope(|scope| {
+            scope.spawn(move || {
+                let held = vec![1u8; bytes];
+                held_tx.send(()).unwrap();
+                release_rx.recv().unwrap();
+                drop(held);
+            });
+            held_rx.recv().unwrap();
+            let seen = read();
+            release_tx.send(()).unwrap();
+            seen
+        })
+    }
+
+    #[test]
+    fn allocations_of_another_thread_leave_the_current_thread_bytes_unchanged() {
+        let before = own_bytes();
+        let during = on_another_thread_while_it_holds(HELD, own_bytes);
+        assert!(during - before < HELD as i64);
+    }
+
+    #[test]
+    fn allocations_of_a_thread_count_on_that_thread() {
+        thread::spawn(|| {
+            let before = own_bytes();
+            let held = vec![1u8; HELD];
+            assert!(own_bytes() - before >= HELD as i64);
+            drop(held);
+            assert_eq!(own_bytes(), before);
+        })
+        .join()
+        .unwrap();
+    }
+
+    #[test]
+    fn peak_of_another_thread_leaves_the_current_thread_peak_unchanged() {
+        reset_peak();
+        on_another_thread_while_it_holds(4 * HELD, || {});
+        assert!(own_peak_bytes() - own_bytes() < HELD as i64);
+    }
 
     #[test]
     fn fixes_mmap_threshold_when_the_environment_leaves_it_unset() {
