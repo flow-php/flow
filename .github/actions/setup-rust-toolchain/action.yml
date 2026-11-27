@@ -1,4 +1,4 @@
-name: "Rust extension toolchain"
+name: "setup-rust-toolchain"
 description: "Installs the stable Rust toolchain plus the clang/libclang and autotools that ext-php-rs extensions need to build (directly or through PIE)"
 
 outputs:

@@ -1,0 +1,141 @@
+name: pull-request
+
+on:
+  # zizmor: ignore[dangerous-triggers]
+  pull_request_target:
+    types: ["opened", "edited", "reopened", "ready_for_review", "synchronize", "closed"]
+
+permissions: {}
+
+jobs:
+  # Code borrowed from: https://github.com/carthage-software/mago/blob/main/.github/workflows/commit-authorship.yml
+  check-commit-authorship:
+    runs-on: ubuntu-24.04
+    if: ${{ github.event.action != 'closed' }}
+    permissions:
+      pull-requests: read
+    # See https://stackoverflow.com/a/72408109
+    concurrency:
+      group: ${{ github.workflow }}-check-commit-authorship-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    steps:
+      - name: "Check for LLM authorship"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          COMMIT_COUNT: ${{ github.event.pull_request.commits }}
+        run: |
+          pattern="claude|anthropic|gemini|codex|openai|cursor|copilot"
+          failed=0
+
+          if [ "$COMMIT_COUNT" -gt 250 ]; then
+            echo "::error::This pull request has $COMMIT_COUNT commits, but the GitHub API returns at most 250. Split it into smaller pull requests."
+            exit 1
+          fi
+
+          for commit in $(gh api --paginate "repos/$REPOSITORY/pulls/$PR_NUMBER/commits" --jq '.[] | @base64'); do
+            json=$(base64 -d <<< "$commit")
+            sha=$(jq -r '.sha' <<< "$json")
+            author=$(jq -r '"\(.commit.author.name) <\(.commit.author.email)>"' <<< "$json")
+            committer=$(jq -r '"\(.commit.committer.name) <\(.commit.committer.email)>"' <<< "$json")
+            body=$(jq -r '.commit.message' <<< "$json" | tail -n +2)
+
+            if echo "$author" | grep -iqE "$pattern"; then
+            echo "::error::Commit $sha has LLM author: $author"
+            failed=1
+            fi
+
+            if echo "$committer" | grep -iqE "$pattern"; then
+            echo "::error::Commit $sha has LLM committer: $committer"
+            failed=1
+            fi
+
+            if echo "$body" | grep -iqE "^co-authored-by:.*($pattern)"; then
+            trailer=$(echo "$body" | grep -iE "^co-authored-by:.*($pattern)")
+            echo "::error::Commit $sha has AI co-author: $trailer"
+            failed=1
+            fi
+          done
+
+          if [ "$failed" -eq 1 ]; then
+            echo ""
+            echo "Commits must be authored by humans. LLM tools are welcome, but"
+            echo "the commit author must be a real person we can reach out to."
+            echo ""
+            echo "Please rebase and amend your commits to use your own identity,"
+            echo "and remove any LLM Co-Authored-By trailers."
+            exit 1
+          fi
+
+  pull-request-description:
+    runs-on: ubuntu-24.04
+    if: ${{ github.event.action != 'closed' }}
+    permissions:
+      contents: read
+    steps:
+      - name: "Pull Request Description - Validate"
+        uses: "docker://aeonphp/automation@sha256:efd2a2ed267aab2c45bed40540f0e522487c6817f5ae81f76032768b6ef47ed6"
+        env:
+          AEON_AUTOMATION_GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        with:
+          entrypoint: "/composer/vendor/bin/automation"
+          args: "pull-request:description:check ${{ github.repository }} ${{ github.event.pull_request.number }} --skip-from=\"dependabot[bot]\""
+
+  pull-request-size:
+    runs-on: ubuntu-24.04
+    if: ${{ github.event.action != 'closed' }}
+    continue-on-error: true
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: codelytv/pr-size-labeler@19c335e7695ba922de938806dd129f0a9b992644 # v1.12.0
+        with:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          xs_label: 'size: XS'
+          xs_max_size: 50
+          s_label: 'size: S'
+          s_max_size: 250
+          m_label: 'size: M'
+          m_max_size: 500
+          l_label: 'size: L'
+          l_max_size: 1000
+          xl_label: 'size: XL'
+          fail_if_xl: false
+          files_to_ignore: 'composer.lock timezones.json nested_timezones.json'
+          message_if_xl: ''
+
+  dependabot:
+    runs-on: ubuntu-24.04
+    if: ${{ github.event.action != 'closed' && github.event.pull_request.user.login == 'dependabot[bot]' }}
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+      - name: Enable auto-merge for Dependabot PRs
+        if: ${{steps.metadata.outputs.update-type == 'version-update:semver-patch'}}
+        run: gh pr merge --auto --merge "$PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+  pull-request-caches:
+    runs-on: ubuntu-24.04
+    if: ${{ github.event.action == 'closed' }}
+    permissions:
+      actions: write
+    steps:
+      - name: "Delete the caches of the closed pull request"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          CACHE_REF: refs/pull/${{ github.event.pull_request.number }}/merge
+        run: |
+          for id in $(gh cache list --repo "$REPOSITORY" --ref "$CACHE_REF" --limit 1000 --json id --jq '.[].id'); do
+            gh cache delete "$id" --repo "$REPOSITORY"
+          done

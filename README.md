@@ -5,7 +5,7 @@ Flow is a PHP-based, strongly typed data processing framework with a low memory 
 [![Latest Stable Version](https://poser.pugx.org/flow-php/flow/v)](https://packagist.org/packages/flow-php/flow)
 [![Latest Unstable Version](https://poser.pugx.org/flow-php/flow/v/unstable)](https://packagist.org/packages/flow-php/flow)
 [![License](https://poser.pugx.org/flow-php/flow/license)](https://packagist.org/packages/flow-php/flow)
-[![Test Suite](https://github.com/flow-php/flow/actions/workflows/test-suite.yml/badge.svg?branch=1.x)](https://github.com/flow-php/flow/actions/workflows/test-suite.yml)
+[![Test Suite](https://github.com/flow-php/flow/actions/workflows/test.yml/badge.svg?branch=1.x)](https://github.com/flow-php/flow/actions/workflows/test.yml)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/10009/badge)](https://www.bestpractices.dev/projects/10009)
 
 - 📈 [Project Roadmap](https://github.com/orgs/flow-php/projects/1)

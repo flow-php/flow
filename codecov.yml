@@ -1,0 +1,6 @@
+comment:
+  require_base: false
+
+flag_management:
+  default_rules:
+    carryforward: true

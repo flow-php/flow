@@ -1,0 +1,82 @@
+name: "setup-php"
+description: "Installs PHP with the given extensions, from the extension cache for NTS builds, and fails on a missing extension or a wrong thread safety"
+
+inputs:
+  php-version:
+    description: "PHP version"
+    required: true
+  thread-safety:
+    description: "PHP build: nts or zts"
+    required: false
+    default: "nts"
+  extensions:
+    description: "PHP extensions, in the shivammathur/setup-php syntax"
+    required: false
+    default: ""
+  ini-values:
+    description: "PHP ini values"
+    required: false
+    default: ""
+  tools:
+    description: "Tools, in the shivammathur/setup-php syntax"
+    required: false
+    default: ""
+  coverage:
+    description: "Coverage driver: none, pcov or xdebug"
+    required: false
+    default: "none"
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Setup extensions cache"
+      id: extensions-cache
+      if: ${{ inputs.thread-safety == 'nts' && inputs.extensions != '' }}
+      uses: shivammathur/cache-extensions@22e24453af1bf3851994136f122ce065ab828a74 # 1.15.2
+      with:
+        php-version: ${{ inputs.php-version }}
+        extensions: ${{ inputs.extensions }}
+        key: "php-extensions-${{ runner.os }}-${{ runner.arch }}-v1"
+      env:
+        share-cache-across-jobs: true
+        share-cache-across-workflows: true
+
+    - name: "Cache extensions"
+      if: ${{ inputs.thread-safety == 'nts' && inputs.extensions != '' }}
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+      with:
+        path: ${{ steps.extensions-cache.outputs.dir }}
+        key: ${{ steps.extensions-cache.outputs.key }}
+
+    # setup-php only logs an extension that does not build; a job must not run without an extension it asked for
+    - name: "Fail on a missing extension"
+      shell: bash
+      run: echo "fail-fast=true" >> "$GITHUB_ENV"
+
+    - name: "Select the thread safety of the PHP build"
+      shell: bash
+      env:
+        THREAD_SAFETY: ${{ inputs.thread-safety }}
+      run: |
+        case "$THREAD_SAFETY" in
+          nts) echo "phpts=nts" >> "$GITHUB_ENV" ;;
+          zts) echo "phpts=zts" >> "$GITHUB_ENV" ;;
+          *) echo "thread-safety must be nts or zts, got: $THREAD_SAFETY"; exit 1 ;;
+        esac
+
+    - name: "Install PHP"
+      uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+      with:
+        php-version: ${{ inputs.php-version }}
+        extensions: ${{ inputs.extensions }}
+        ini-values: ${{ inputs.ini-values }}
+        tools: ${{ inputs.tools }}
+        coverage: ${{ inputs.coverage }}
+
+    # setup-php must not fall back to the other build without a failure
+    - name: "Fail on a wrong thread safety"
+      shell: bash
+      env:
+        THREAD_SAFETY: ${{ inputs.thread-safety }}
+      run: |
+        php -r 'exit((PHP_ZTS ? "zts" : "nts") === getenv("THREAD_SAFETY") ? 0 : 1);'
