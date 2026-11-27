@@ -1,0 +1,1721 @@
+name: test
+
+on:
+  pull_request:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    runs-on: ubuntu-24.04
+    outputs:
+      php: ${{ steps.diff.outputs.php }}
+      extension-flow-php: ${{ steps.diff.outputs.extension-flow-php }}
+      extension-arrow: ${{ steps.diff.outputs.extension-arrow }}
+      extension-pg-query: ${{ steps.diff.outputs.extension-pg-query }}
+      website: ${{ steps.diff.outputs.website }}
+      documentation: ${{ steps.diff.outputs.documentation }}
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: "Detect changed areas"
+        id: diff
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          changed=""
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA")
+          fi
+          area() {
+            if [ "$EVENT_NAME" != "pull_request" ] || grep -qE "$2" <<< "$changed"; then
+              echo "$1=true"
+            else
+              echo "$1=false"
+            fi
+          }
+          {
+            area php '^(\.github/workflows/test\.yml$|\.github/actions/|src/|benchmarks/|tools/|\.nix/pkgs/)|^(composer\.lock|composer\.json|phpunit\.xml\.dist)$'
+            area extension-flow-php '^(src/extension/flow-php-ext/|src/extension/arrow-ext/|src/extension/parquet-engine/|\.github/workflows/test\.yml$|\.github/actions/(setup-php|composer-install|setup-rust-toolchain|enable-php-extension)/)'
+            area extension-arrow '^(src/extension/arrow-ext/|src/extension/parquet-engine/|\.github/workflows/test\.yml$|\.github/actions/(setup-php|composer-install|setup-rust-toolchain|enable-php-extension)/)'
+            area extension-pg-query '^(src/extension/pg-query-ext/|\.github/workflows/test\.yml$|\.github/actions/(setup-php|composer-install|enable-php-extension)/)'
+            area website '^(web/|src/)'
+            area documentation '^(src/|documentation/|web/landing/)|^(Justfile|README\.md)$'
+          } >> "$GITHUB_OUTPUT"
+
+  static-analyze:
+    needs: changes
+    if: ${{ needs.changes.outputs.php == 'true' }}
+    runs-on: ${{ matrix.operating-system }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+        php-version:
+          - "8.3"
+        operating-system:
+          - "ubuntu-24.04"
+
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: "Setup PHP"
+        uses: "./.github/actions/setup-php"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, :redis'
+          ini-values: 'memory_limit=-1'
+          tools: 'composer:v2'
+          coverage: "none"
+
+      - name: "Install just"
+        uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
+        with:
+          just-version: "1.50.0"
+
+      - name: "Install Composer dependencies"
+        uses: "./.github/actions/composer-install"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+
+      - name: "Install website Composer dependencies"
+        uses: "./.github/actions/composer-install"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          working-directory: "web/landing"
+          cache-key-suffix: "-website"
+          composer-file: "web/landing/composer.lock"
+
+      - name: "Static Analyze"
+        run: "just analyze"
+
+      - name: "Install actionlint + zizmor"
+        env:
+          ACTIONLINT_VERSION: "1.7.12"
+          ZIZMOR_VERSION: "1.24.1"
+        run: |
+          curl -fsSL "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz" \
+            | sudo tar -xz -C /usr/local/bin actionlint
+          pipx install "zizmor==${ZIZMOR_VERSION}"
+
+      - name: "Lint"
+        run: "just lint"
+
+  tests:
+    needs: changes
+    if: ${{ needs.changes.outputs.php == 'true' }}
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432/tcp
+        options: --health-cmd pg_isready --health-interval 2s --health-timeout 5s --health-retries 25
+      mysql:
+        image: mysql:8.0.31-debian
+        ports:
+          - 3306/tcp
+        env:
+          MYSQL_USER: mysql
+          MYSQL_PASSWORD: mysql
+          MYSQL_DATABASE: flow
+          MYSQL_ROOT_PASSWORD: root
+      elasticsearch:
+        image: elasticsearch:8.19.0
+        env:
+          discovery.type: single-node
+          xpack.security.enabled: "false"
+          ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+        options: >-
+          --health-cmd "curl http://localhost:9200/_cluster/health"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 50
+        ports:
+          - 9200/tcp
+    strategy:
+      fail-fast: false
+      matrix:
+        # composer.lock is resolved on PHP 8.3, so only 8.3 installs it; a newer PHP resolves its own set
+        include: >-
+          ${{ fromJSON(github.event_name == 'pull_request'
+          && '[{"php-version":"8.3","dependencies":"locked","coverage":true},{"php-version":"8.4","dependencies":"highest"},{"php-version":"8.5","dependencies":"highest"},{"php-version":"8.6","dependencies":"highest"}]'
+          || '[{"php-version":"8.3","dependencies":"locked","coverage":true},{"php-version":"8.3","dependencies":"lowest"},{"php-version":"8.4","dependencies":"lowest"},{"php-version":"8.5","dependencies":"lowest"},{"php-version":"8.6","dependencies":"lowest"}]') }}
+
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: "Start OpenTelemetry Collector"
+        run: |
+          docker run -d --name otel-collector \
+            -p 4317:4317 -p 4318:4318 -p 8888:8888 -p 13133:13133 \
+            -v ${{ github.workspace }}/docker/otel-collector-test-config.yaml:/etc/otelcol-contrib/config.yaml:ro \
+            otel/opentelemetry-collector-contrib:0.153.0
+          # Wait for container to be ready
+          for i in {1..30}; do
+            if curl -sf http://localhost:13133/ > /dev/null 2>&1; then
+              echo "OpenTelemetry Collector is ready"
+              break
+            fi
+            echo "Waiting for OpenTelemetry Collector... ($i/30)"
+            sleep 2
+          done
+
+      - name: "Start RustFS"
+        run: |
+          docker run -d --name rustfs -p 9000:9000 \
+            -e RUSTFS_ACCESS_KEY=flowphpaccess01 \
+            -e RUSTFS_SECRET_KEY=flowphpsecret01 \
+            -e RUSTFS_ADDRESS=:9000 \
+            -e RUSTFS_CONSOLE_ENABLE=false \
+            -e RUSTFS_REGION=us-east-1 \
+            -e RUSTFS_VOLUMES=/data \
+            rustfs/rustfs:1.0.0
+          timeout 90 sh -c 'until curl -fs http://localhost:9000/health/ready > /dev/null; do sleep 1; done' \
+            || { echo "RustFS did not become ready"; docker logs rustfs; exit 1; }
+
+      - name: "Start SFTP server"
+        run: |
+          docker run -d --name sftp -p 2222:22 \
+            -v ${{ github.workspace }}/docker/sftp.json:/app/config/sftp.json:ro \
+            emberstack/sftp:latest
+          timeout 60 sh -c 'until nc -z localhost 2222; do sleep 1; done'
+          echo "SFTP is ready"
+
+      - name: "Setup PHP"
+        uses: "./.github/actions/setup-php"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          coverage: ${{ matrix.coverage && 'pcov' || 'none' }}
+          extensions: ':psr, apcu, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, curl, pgsql, grpc, protobuf, :redis'
+          ini-values: 'memory_limit=-1, post_max_size=32M, upload_max_filesize=32M, apc.enable_cli=1'
+          tools: 'composer:v2'
+
+      - name: "Install just"
+        uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
+        with:
+          just-version: "1.50.0"
+
+      - name: "Install Composer dependencies"
+        uses: "./.github/actions/composer-install"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+
+      - &pg-query-php-version
+        name: "Resolve PHP version"
+        id: php
+        run: echo "version=$(php -r 'echo PHP_VERSION;')" >> "$GITHUB_OUTPUT"
+
+      - &pg-query-cache
+        name: "Cache pg_query.so"
+        id: pg-query-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: src/extension/pg-query-ext/ext/modules/pg_query.so
+          key: pg-query-ext-${{ runner.os }}-${{ runner.arch }}-php-${{ steps.php.outputs.version }}-${{ hashFiles('src/extension/pg-query-ext/**') }}
+
+      - &pg-query-build-dependencies
+        name: "Install pg-query-ext build dependencies"
+        if: ${{ steps.pg-query-cache.outputs.cache-hit != 'true' }}
+        run: sudo apt-get update && sudo apt-get install -y build-essential autoconf automake libtool protobuf-compiler libprotobuf-c-dev
+
+      - &pg-query-build
+        name: "Build pg-query-ext"
+        if: ${{ steps.pg-query-cache.outputs.cache-hit != 'true' }}
+        working-directory: src/extension/pg-query-ext
+        # a shallow checkout has no tags for config.m4 to describe; this build only runs the test suite
+        run: |
+          if ! git describe --tags --match '[0-9]*' >/dev/null 2>&1; then
+            PG_QUERY_EXT_VERSION="0.0.0-0-g$(git rev-parse --short HEAD)"
+            export PG_QUERY_EXT_VERSION
+          fi
+          make build
+
+      - &pg-query-enable
+        name: "Enable pg-query-ext"
+        uses: ./.github/actions/enable-php-extension
+        with:
+          name: pg_query
+          path: src/extension/pg-query-ext/ext/modules/pg_query.so
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+
+      - name: Install Azurite storage emulator
+        run: |
+          npm ci --prefix .github/tools/azurite --no-audit --no-fund
+          echo "${GITHUB_WORKSPACE}/.github/tools/azurite/node_modules/.bin" >> "${GITHUB_PATH}"
+
+      - name: Start Azurite blob endpoint
+        shell: bash
+        run: |
+          azurite-blob --blobHost 0.0.0.0 --blobPort 10000 > azurite.log 2>&1 &
+          # any HTTP response means the endpoint is up; Azurite answers the bare root with an error status
+          timeout 30 sh -c 'until curl -s -o /dev/null http://localhost:10000/; do sleep 1; done' \
+            || { echo "Azurite did not become ready"; cat azurite.log; exit 1; }
+        env:
+          AZURITE_ACCOUNTS: flowphpaccount01:flowphpkey01
+
+      # Main suite: everything except the grpc-exercising tests, so grpc is never
+      # exercised here and the process shuts down cleanly. Must pass.
+      - name: "Test"
+        timeout-minutes: 15
+        run: "just test --exclude-group grpc --log-junit ./var/phpunit/logs/junit.xml ${{ matrix.coverage && '--coverage-clover=./var/phpunit/coverage/clover/coverage.xml' || '' }}"
+        env: &test-env
+          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/postgres?serverVersion=18&charset=utf8
+          MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports['3306'] }}/flow
+          ELASTICSEARCH_URL: http://127.0.0.1:${{ job.services.elasticsearch.ports['9200'] }}
+          SQLITE_DATABASE_URL: "sqlite:///:memory:"
+          AZURITE_HOST: "localhost"
+          AZURITE_BLOB_PORT: "10000"
+          AZURITE_ACCOUNT_NAME: "flowphpaccount01"
+          AZURITE_ACCOUNT_KEY: "flowphpkey01"
+          S3_ENDPOINT: "http://localhost:9000"
+          S3_REGION: "us-east-1"
+          S3_ACCESS_KEY_ID: "flowphpaccess01"
+          S3_SECRET_ACCESS_KEY: "flowphpsecret01"
+          SFTP_HOST: "localhost"
+          SFTP_PORT: "2222"
+          SFTP_USER: "flow"
+          SFTP_PASSWORD: "flow"
+          OTEL_RECEIVER_HTTP_ENDPOINT: "http://localhost:4318"
+          OTEL_RECEIVER_GRPC_ENDPOINT: "localhost:4317"
+          OTEL_COLLECTOR_METRICS_ENDPOINT: "http://localhost:8888/metrics"
+          FLOW_PARQUET_TESTS_DEBUG: "0"
+
+      # gRPC-exercising tests, isolated. grpc's EventEngine threads race PHP's extension
+      # dlclose at process shutdown on PHP 8.5/amd64 (upstream grpc#38216, no released fix),
+      # so this step is allowed to fail ONLY on 8.5. A real grpc test regression on 8.3/8.4
+      # still fails CI. Remove continue-on-error once grpc ships a fix.
+      - name: "Test (grpc)"
+        timeout-minutes: 10
+        continue-on-error: ${{ matrix.php-version == '8.5' }}
+        run: "just test --group grpc --log-junit ./var/phpunit/logs/grpc-junit.xml ${{ matrix.coverage && '--coverage-clover=./var/phpunit/coverage/clover/grpc-coverage.xml' || '' }}"
+        env: *test-env
+
+      - name: "Upload code coverage to Codecov"
+        if: ${{ !cancelled() && matrix.coverage }}
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          use_oidc: true
+          directory: ./var/phpunit/coverage/clover
+          flags: tests
+
+      - name: "Upload test results to Codecov"
+        if: ${{ !cancelled() && matrix.coverage }}
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          use_oidc: true
+          directory: ./var/phpunit/logs
+          report_type: test_results
+
+  extension-tests:
+    needs: changes
+    if: ${{ needs.changes.outputs.php == 'true' }}
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-24.04
+    env:
+      SNAPPY_CONFIGURE_PREFIX_OPTS: "CXXFLAGS=-std=c++11"
+    strategy:
+      fail-fast: false
+      matrix:
+        include: >-
+          ${{ fromJSON(github.event_name == 'pull_request'
+          && '[{"php-version":"8.3","dependencies":"locked"},{"php-version":"8.6","dependencies":"highest"}]'
+          || '[{"php-version":"8.3","dependencies":"locked"},{"php-version":"8.4","dependencies":"highest"},{"php-version":"8.5","dependencies":"highest"},{"php-version":"8.6","dependencies":"highest"}]') }}
+
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: "Install dependencies"
+        run: |
+          sudo apt-get update && sudo apt-get install libbrotli1 liblz4-1 libzstd1 --assume-yes
+
+      - name: "Setup PHP"
+        uses: "./.github/actions/setup-php"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          coverage: ${{ matrix.php-version == '8.3' && 'pcov' || 'none' }}
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, brotli, lz4, zstd, snappy-https://github.com/kjdev/php-ext-snappy@0.2.1, :redis'
+          ini-values: 'memory_limit=-1'
+          tools: 'composer:v2'
+
+      - name: "Install just"
+        uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
+        with:
+          just-version: "1.50.0"
+
+      - name: "Install Composer dependencies"
+        uses: "./.github/actions/composer-install"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          cache-key-suffix: "-extensions"
+
+      - name: "Test Brotli"
+        run: "just test --group brotli-extension ${{ matrix.php-version == '8.3' && '--coverage-clover=./var/phpunit/coverage/clover/brotli.xml' || '' }}"
+
+      - name: "Test LZ4"
+        run: "just test --group lz4-extension ${{ matrix.php-version == '8.3' && '--coverage-clover=./var/phpunit/coverage/clover/lz4.xml' || '' }}"
+
+      - name: "Test ZSTD"
+        run: "just test --group zstd-extension ${{ matrix.php-version == '8.3' && '--coverage-clover=./var/phpunit/coverage/clover/zstd.xml' || '' }}"
+
+      - name: "Test Snappy"
+        run: "just test --group snappy-extension ${{ matrix.php-version == '8.3' && '--coverage-clover=./var/phpunit/coverage/clover/snappy.xml' || '' }}"
+
+      - name: Upload to Codecov
+        if: ${{ !cancelled() && matrix.php-version == '8.3' }}
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          use_oidc: true
+          directory: ./var/phpunit/coverage/clover
+          flags: extension-tests
+
+  phpunit-telemetry-tests:
+    needs: changes
+    if: ${{ needs.changes.outputs.php == 'true' }}
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services: &telemetry-services
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432/tcp
+        options: --health-cmd pg_isready --health-interval 2s --health-timeout 5s --health-retries 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include: >-
+          ${{ fromJSON(github.event_name == 'pull_request'
+          && '[{"phpunit-version":"11","php-version":"8.3","dependencies":"locked"},{"phpunit-version":"13","php-version":"8.5","dependencies":"highest"},{"phpunit-version":"13","php-version":"8.6","dependencies":"highest"}]'
+          || '[{"phpunit-version":"11","php-version":"8.3","dependencies":"locked"},{"phpunit-version":"12","php-version":"8.4","dependencies":"highest"},{"phpunit-version":"13","php-version":"8.5","dependencies":"highest"},{"phpunit-version":"13","php-version":"8.6","dependencies":"highest"}]') }}
+
+    steps: &telemetry-test-steps
+      - name: "Checkout"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: "Setup PHP"
+        uses: "./.github/actions/setup-php"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          coverage: ${{ matrix.php-version == '8.3' && 'pcov' || 'none' }}
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, curl, pgsql, grpc, protobuf, :redis'
+          ini-values: 'memory_limit=-1'
+          tools: 'composer:v2'
+
+      - name: "Install just"
+        uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
+        with:
+          just-version: "1.50.0"
+
+      - name: "Install Composer dependencies"
+        uses: "./.github/actions/composer-install"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+
+      - *pg-query-php-version
+
+      - *pg-query-cache
+
+      - *pg-query-build-dependencies
+
+      - *pg-query-build
+
+      - *pg-query-enable
+
+      - name: "Install PHPUnit ${{ matrix.phpunit-version }}"
+        run: |
+          composer config --working-dir=tools/phpunit --unset platform
+          composer require --working-dir=tools/phpunit --no-interaction --no-progress -W \
+            "phpunit/phpunit:^${{ matrix.phpunit-version }}"
+
+      - name: "Show PHPUnit version"
+        run: tools/phpunit/vendor/bin/phpunit --version
+
+      - name: "Test"
+        run: just test --testsuite bridge-phpunit-postgresql-unit,bridge-phpunit-postgresql-integration,bridge-phpunit-telemetry-unit ${{ matrix.php-version == '8.3' && '--coverage-clover=./var/phpunit/coverage/clover/coverage.xml' || '' }}
+        env:
+          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/postgres?serverVersion=18&charset=utf8
+
+      - name: Upload to Codecov
+        if: ${{ !cancelled() && matrix.php-version == '8.3' && matrix.phpunit-version == '11' }}
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          use_oidc: true
+          directory: ./var/phpunit/coverage/clover
+          flags: telemetry-tests
+
+  phpunit-telemetry-tests-other-combinations:
+    needs: changes
+    if: ${{ needs.changes.outputs.php == 'true' && github.event_name != 'pull_request' }}
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services: *telemetry-services
+    strategy:
+      fail-fast: false
+      matrix:
+        # PHPUnit 13 requires PHP >= 8.4.1, so 13 x 8.3 is not in the list
+        include:
+          - phpunit-version: "11"
+            php-version: "8.4"
+            dependencies: "highest"
+          - phpunit-version: "11"
+            php-version: "8.5"
+            dependencies: "highest"
+          - phpunit-version: "11"
+            php-version: "8.6"
+            dependencies: "highest"
+          - phpunit-version: "12"
+            php-version: "8.3"
+            dependencies: "locked"
+          - phpunit-version: "12"
+            php-version: "8.5"
+            dependencies: "highest"
+          - phpunit-version: "12"
+            php-version: "8.6"
+            dependencies: "highest"
+          - phpunit-version: "13"
+            php-version: "8.4"
+            dependencies: "highest"
+
+    steps: *telemetry-test-steps
+
+  mutation-tests:
+    needs: changes
+    if: ${{ needs.changes.outputs.php == 'true' }}
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+        php-version:
+          - "8.3"
+        operating-system:
+          - "ubuntu-24.04"
+
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0  # Need full history for git-diff-filter
+          persist-credentials: false
+
+      - name: "Setup PHP"
+        uses: "./.github/actions/setup-php"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          coverage: "pcov"
+          extensions: ':psr, apcu, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, :redis'
+          ini-values: 'memory_limit=-1, apc.enable_cli=1'
+          tools: 'composer:v2'
+
+      - name: "Install just"
+        uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
+        with:
+          just-version: "1.50.0"
+
+      - name: "Install Composer dependencies"
+        uses: "./.github/actions/composer-install"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "locked"
+          cache-key-suffix: "-locked"
+
+      - name: "Create cache directory"
+        run: "mkdir -p var/infection/cache"
+
+      - name: "Cache infection results"
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: "var/infection/cache"
+          key: "php-${{ matrix.php-version }}-infection-cache-${{ hashFiles('infection.json', 'mago.toml', 'tools/infection/phpunit.xml', 'composer.lock', 'tools/infection/composer.lock', 'tools/phpunit/composer.lock', 'tools/mago/composer.lock') }}"
+          restore-keys: |
+            php-${{ matrix.php-version }}-infection-cache-
+
+      - name: "Mutation Tests"
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            just test-mutation --git-diff-filter=AM --git-diff-base="origin/$BASE_REF" --ignore-msi-with-no-mutations --logger-github=false --log-verbosity=none
+          else
+            just test-mutation --logger-github=false --log-verbosity=none
+          fi
+
+  extension-flow-php-build:
+    needs: changes
+    if: ${{ needs.changes.outputs.extension-flow-php == 'true' }}
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: '8.3'
+            ts: nts
+            dependencies: locked
+          - php: '8.6'
+            ts: zts
+            dependencies: highest
+
+    steps: &extension-flow-php-build-steps
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # git describe needs history and tags to resolve the extension version
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: ./.github/actions/setup-php
+        with:
+          php-version: ${{ matrix.php }}
+          thread-safety: ${{ matrix.ts }}
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, zstd, :redis'
+          ini-values: 'memory_limit=-1'
+          tools: 'composer:v2, php-config'
+          coverage: ${{ (matrix.php == '8.3' && matrix.ts == 'nts' && runner.os == 'Linux') && 'pcov' || 'none' }}
+
+      - name: Install just
+        uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
+        with:
+          just-version: "1.50.0"
+
+      - name: Setup Rust extension toolchain
+        id: rust
+        uses: ./.github/actions/setup-rust-toolchain
+
+      - name: Cache cargo registry and build
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          # ext-php-rs bindings are generated against the PHP headers, so builds are per PHP version and thread safety
+          key: php${{ matrix.php }}${{ matrix.ts == 'zts' && '-zts' || '' }}
+          save-if: ${{ github.ref == 'refs/heads/1.x' && runner.os == 'Linux' && github.job == 'extension-flow-php-build' }}
+          workspaces: |
+            src/extension/flow-php-ext -> target
+            src/extension/arrow-ext -> target
+
+      - name: Build arrow extension
+        working-directory: src/extension/arrow-ext
+        env: &extension-flow-php-rust-env
+          LIBCLANG_PATH: ${{ steps.rust.outputs.libclang-path }}
+          CLANG_PATH: ${{ steps.rust.outputs.clang-path }}
+        run: make build
+
+      - name: Build extension
+        working-directory: src/extension/flow-php-ext
+        env: *extension-flow-php-rust-env
+        run: make build
+
+      - name: Test flow_php workspace
+        working-directory: src/extension/flow-php-ext
+        env: *extension-flow-php-rust-env
+        run: cargo test --workspace --locked --features arrow-validate
+
+      - name: Lint flow_php workspace
+        working-directory: src/extension/flow-php-ext
+        env: *extension-flow-php-rust-env
+        run: cargo fmt --all --check && cargo clippy --workspace --locked --all-targets -- -D warnings
+
+      - name: Check both extensions lock the same flow-parquet-engine dependencies
+        working-directory: src/extension
+        run: |
+          tree() { (cd "$1" && cargo tree --locked -p flow-parquet-engine --prefix none -e normal --target all | sed 's/ (.*)//' | sort -u); }
+          diff <(tree arrow-ext) <(tree flow-php-ext)
+
+      - name: Install Composer Dependencies
+        uses: ./.github/actions/composer-install
+        with:
+          php-version: ${{ matrix.php }}
+          dependencies: ${{ matrix.dependencies }}
+
+      - name: Run PHPT tests
+        working-directory: src/extension/flow-php-ext
+        env: *extension-flow-php-rust-env
+        run: make test
+
+      - name: Run requests on threads that did not load the extension
+        if: matrix.php == '8.6' && matrix.ts == 'zts' && runner.os == 'Linux'
+        working-directory: src/extension/flow-php-ext
+        env: *extension-flow-php-rust-env
+        run: |
+          # gdb returns 0 for a crashed test, so the plain run decides and gdb only prints the backtrace
+          cargo test --locked --features zts-embed --test zts_request_threads || {
+            sudo apt-get install -y gdb
+            cargo test --locked --features zts-embed --test zts_request_threads \
+              --config "target.x86_64-unknown-linux-gnu.runner=[\"gdb\",\"-batch\",\"-ex\",\"run\",\"-ex\",\"thread apply all bt\",\"--args\"]" || true
+            exit 1
+          }
+
+      - name: Rebuild extension for installation
+        working-directory: src/extension/flow-php-ext
+        env: *extension-flow-php-rust-env
+        run: make build
+
+      - name: Install extension and verify
+        uses: ./.github/actions/enable-php-extension
+        with:
+          name: flow_php
+          path: src/extension/flow-php-ext/ext/modules/flow_php.so
+
+      - name: Run ETL Unit Tests with Flow PHP Extension
+        run: just test --testsuite=etl-unit ${{ (matrix.php == '8.3' && matrix.ts == 'nts' && runner.os == 'Linux') && '--coverage-clover=./var/phpunit/coverage/clover/coverage.xml' || '' }}
+
+      - name: Run ETL Integration Tests with Flow PHP Extension
+        run: just test --testsuite=etl-integration
+
+      - name: Run CSV Adapter Unit Tests with Flow PHP Extension
+        run: just test --testsuite=adapter-csv-unit
+
+      - name: Run CSV Adapter Integration Tests with Flow PHP Extension
+        run: just test --testsuite=adapter-csv-integration
+
+      - name: Run Parquet Adapter Unit Tests with Flow PHP Extension
+        run: just test --testsuite=adapter-parquet-unit
+
+      - name: Run Parquet Adapter Integration Tests with Flow PHP Extension
+        run: just test --testsuite=adapter-parquet-integration
+
+      - name: Install arrow extension next to flow_php
+        uses: ./.github/actions/enable-php-extension
+        with:
+          name: arrow
+          path: src/extension/arrow-ext/ext/modules/arrow.so
+
+      - name: Run Parquet Adapter Unit Tests with both extensions
+        run: just test --testsuite=adapter-parquet-unit
+
+      - name: Run Parquet Adapter Integration Tests with both extensions
+        run: just test --testsuite=adapter-parquet-integration
+
+      - name: Upload to Codecov
+        if: ${{ !cancelled() && matrix.php == '8.3' && matrix.ts == 'nts' && runner.os == 'Linux' }}
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          use_oidc: true
+          directory: ./var/phpunit/coverage/clover
+          flags: flow-php-extension
+
+  extension-flow-php-build-full-matrix:
+    needs: changes
+    if: ${{ needs.changes.outputs.extension-flow-php == 'true' && github.event_name != 'pull_request' }}
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.3', '8.4', '8.5', '8.6']
+        ts: ['nts', 'zts']
+        exclude:
+          - php: '8.3'
+            ts: nts
+          - php: '8.6'
+            ts: zts
+        include:
+          - php: '8.3'
+            dependencies: locked
+          - php: '8.4'
+            dependencies: highest
+          - php: '8.5'
+            dependencies: highest
+          - php: '8.6'
+            dependencies: highest
+
+    steps: *extension-flow-php-build-steps
+
+  extension-flow-php-build-macos:
+    needs: changes
+    if: ${{ needs.changes.outputs.extension-flow-php == 'true' && github.event_name != 'pull_request' }}
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: '8.3'
+            ts: nts
+            dependencies: locked
+
+    steps: *extension-flow-php-build-steps
+
+  extension-flow-php-build-macos-full-matrix:
+    needs: changes
+    if: ${{ needs.changes.outputs.extension-flow-php == 'true' && github.event_name != 'pull_request' }}
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.3', '8.4', '8.5', '8.6']
+        ts: ['nts', 'zts']
+        exclude:
+          - php: '8.3'
+            ts: nts
+        include:
+          - php: '8.3'
+            dependencies: locked
+          - php: '8.4'
+            dependencies: highest
+          - php: '8.5'
+            dependencies: highest
+          - php: '8.6'
+            dependencies: highest
+
+    steps: *extension-flow-php-build-steps
+
+  extension-flow-php-pie-install-test:
+    needs: changes
+    if: ${{ needs.changes.outputs.extension-flow-php == 'true' && github.event_name != 'pull_request' }}
+    runs-on: ubuntu-24.04
+    env:
+      RUSTUP_TOOLCHAIN: stable
+
+    steps: &extension-flow-php-pie-steps
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # git describe needs history and tags to resolve the extension version
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: ./.github/actions/setup-php
+        with:
+          php-version: '8.3'
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, :redis'
+          ini-values: 'memory_limit=-1'
+          tools: 'composer:v2, phpize, php-config'
+
+      - name: Install Composer Dependencies
+        uses: ./.github/actions/composer-install
+        with:
+          php-version: '8.3'
+          dependencies: locked
+
+      - name: Setup Rust extension toolchain
+        id: rust
+        uses: ./.github/actions/setup-rust-toolchain
+
+      - name: Install PIE
+        run: |
+          sudo curl -L -o /usr/local/bin/pie https://github.com/php/pie/releases/latest/download/pie.phar
+          sudo chmod +x /usr/local/bin/pie
+          pie --version
+
+      - name: Prepare local package for PIE installation
+        run: |
+          # git archive applies export-subst like GitHub release archives, so the build resolves its version from .git_archival.txt
+          git archive HEAD src/extension/flow-php-ext src/extension/parquet-engine | tar -x -C "$RUNNER_TEMP"
+          cd "$RUNNER_TEMP/src/extension/flow-php-ext"
+          jq '. + {"version": "0.0.9999"}' composer.json > composer.tmp.json
+          mv composer.tmp.json composer.json
+
+      - name: Install extension via PIE (from local)
+        env:
+          LIBCLANG_PATH: ${{ steps.rust.outputs.libclang-path }}
+          CLANG_PATH: ${{ steps.rust.outputs.clang-path }}
+        run: |
+          sudo pie repository:remove packagist.org
+          sudo pie repository:add path "$RUNNER_TEMP/src/extension/flow-php-ext"
+          sudo env "PATH=$PATH" "LIBCLANG_PATH=$LIBCLANG_PATH" ${CLANG_PATH:+"CLANG_PATH=$CLANG_PATH"} "RUSTUP_TOOLCHAIN=$RUSTUP_TOOLCHAIN" "CARGO_HOME=$CARGO_HOME" "RUSTUP_HOME=$RUSTUP_HOME" pie install flow-php/flow-php-ext:0.0.9999@dev
+
+      - name: Enable extension
+        run: |
+          php -m | grep -q flow_php || echo "extension=flow_php" | sudo tee -a "$(php -r 'echo php_ini_loaded_file();')"
+
+      - name: Verify extension is loaded
+        run: |
+          php -m | grep flow_php
+
+      - name: Verify extension version
+        run: |
+          describe="$(git describe --tags --match '[0-9]*')"
+          if git describe --exact-match --tags --match '[0-9]*' HEAD >/dev/null 2>&1; then
+            expected="$describe"
+          else
+            # commits past a tag are a pre-release of the next minor: 0.44.1-65-g4525c4adc -> 0.45.0-dev+65.g4525c4adc
+            expected="$(echo "$describe" | awk -F- '{split($1, v, "."); printf "%d.%d.0-dev+%s.%s", v[1], v[2] + 1, $2, $3}')"
+          fi
+          actual="$(php -r 'echo phpversion("flow_php");')"
+          echo "expected: $expected, actual: $actual"
+          test "$actual" = "$expected"
+
+  extension-flow-php-pie-install-test-macos:
+    needs: changes
+    if: ${{ needs.changes.outputs.extension-flow-php == 'true' && github.event_name != 'pull_request' }}
+    runs-on: macos-latest
+    env:
+      RUSTUP_TOOLCHAIN: stable
+
+    steps: *extension-flow-php-pie-steps
+
+  extension-arrow-build:
+    needs: changes
+    if: ${{ needs.changes.outputs.extension-arrow == 'true' }}
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: '8.3'
+            ts: nts
+            dependencies: locked
+          - php: '8.6'
+            ts: zts
+            dependencies: highest
+
+    steps: &extension-arrow-build-steps
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # git describe needs history and tags to resolve the extension version
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: ./.github/actions/setup-php
+        with:
+          php-version: ${{ matrix.php }}
+          thread-safety: ${{ matrix.ts }}
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, zstd, :redis'
+          ini-values: 'memory_limit=-1'
+          tools: 'composer:v2, php-config'
+          coverage: ${{ (matrix.php == '8.3' && matrix.ts == 'nts' && runner.os == 'Linux') && 'pcov' || 'none' }}
+
+      - name: Install just
+        uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
+        with:
+          just-version: "1.50.0"
+
+      - name: Setup Rust extension toolchain
+        id: rust
+        uses: ./.github/actions/setup-rust-toolchain
+
+      - name: Cache cargo registry and build
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          # ext-php-rs bindings are generated against the PHP headers, so builds are per PHP version and thread safety
+          key: php${{ matrix.php }}${{ matrix.ts == 'zts' && '-zts' || '' }}
+          save-if: ${{ github.ref == 'refs/heads/1.x' && runner.os == 'Linux' && github.job == 'extension-arrow-build' }}
+          workspaces: |
+            src/extension/arrow-ext -> target
+
+      - name: Build extension
+        working-directory: src/extension/arrow-ext
+        env: &extension-arrow-rust-env
+          LIBCLANG_PATH: ${{ steps.rust.outputs.libclang-path }}
+          CLANG_PATH: ${{ steps.rust.outputs.clang-path }}
+        run: make build
+
+      - name: Test arrow crate
+        working-directory: src/extension/arrow-ext
+        env: *extension-arrow-rust-env
+        run: cargo test --workspace --locked --features arrow-validate
+
+      - name: Lint arrow crate
+        working-directory: src/extension/arrow-ext
+        env: *extension-arrow-rust-env
+        run: cargo fmt --all --check && cargo clippy --workspace --locked --all-targets -- -D warnings
+
+      - name: Install Composer Dependencies
+        uses: ./.github/actions/composer-install
+        with:
+          php-version: ${{ matrix.php }}
+          dependencies: ${{ matrix.dependencies }}
+
+      - name: Run PHPT tests
+        working-directory: src/extension/arrow-ext
+        env: *extension-arrow-rust-env
+        run: make test
+
+      - name: Run requests on threads that did not load the extension
+        if: matrix.php == '8.6' && matrix.ts == 'zts' && runner.os == 'Linux'
+        working-directory: src/extension/arrow-ext
+        env: *extension-arrow-rust-env
+        run: |
+          # gdb returns 0 for a crashed test, so the plain run decides and gdb only prints the backtrace
+          cargo test --locked --features zts-embed --test zts_request_threads || {
+            sudo apt-get install -y gdb
+            cargo test --locked --features zts-embed --test zts_request_threads \
+              --config "target.x86_64-unknown-linux-gnu.runner=[\"gdb\",\"-batch\",\"-ex\",\"run\",\"-ex\",\"thread apply all bt\",\"--args\"]" || true
+            exit 1
+          }
+
+      - name: Rebuild extension for installation
+        working-directory: src/extension/arrow-ext
+        env: *extension-arrow-rust-env
+        run: make build
+
+      - name: Install extension and verify
+        uses: ./.github/actions/enable-php-extension
+        with:
+          name: arrow
+          path: src/extension/arrow-ext/ext/modules/arrow.so
+
+      - name: Run Parquet Integration Tests with Arrow
+        run: just test --testsuite=lib-parquet-integration ${{ (matrix.php == '8.3' && matrix.ts == 'nts' && runner.os == 'Linux') && '--coverage-clover=./var/phpunit/coverage/clover/coverage.xml' || '' }}
+
+      - name: Run Parquet Adapter Unit Tests with Arrow
+        run: just test --testsuite=adapter-parquet-unit
+
+      - name: Run Parquet Adapter Integration Tests with Arrow
+        run: just test --testsuite=adapter-parquet-integration
+
+      - name: Upload to Codecov
+        if: ${{ !cancelled() && matrix.php == '8.3' && matrix.ts == 'nts' && runner.os == 'Linux' }}
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          use_oidc: true
+          directory: ./var/phpunit/coverage/clover
+          flags: arrow-extension
+
+  extension-arrow-build-full-matrix:
+    needs: changes
+    if: ${{ needs.changes.outputs.extension-arrow == 'true' && github.event_name != 'pull_request' }}
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.3', '8.4', '8.5', '8.6']
+        ts: ['nts', 'zts']
+        exclude:
+          - php: '8.3'
+            ts: nts
+          - php: '8.6'
+            ts: zts
+        include:
+          - php: '8.3'
+            dependencies: locked
+          - php: '8.4'
+            dependencies: highest
+          - php: '8.5'
+            dependencies: highest
+          - php: '8.6'
+            dependencies: highest
+
+    steps: *extension-arrow-build-steps
+
+  extension-arrow-build-macos:
+    needs: changes
+    if: ${{ needs.changes.outputs.extension-arrow == 'true' && github.event_name != 'pull_request' }}
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: '8.3'
+            ts: nts
+            dependencies: locked
+
+    steps: *extension-arrow-build-steps
+
+  extension-arrow-build-macos-full-matrix:
+    needs: changes
+    if: ${{ needs.changes.outputs.extension-arrow == 'true' && github.event_name != 'pull_request' }}
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.3', '8.4', '8.5', '8.6']
+        ts: ['nts', 'zts']
+        exclude:
+          - php: '8.3'
+            ts: nts
+        include:
+          - php: '8.3'
+            dependencies: locked
+          - php: '8.4'
+            dependencies: highest
+          - php: '8.5'
+            dependencies: highest
+          - php: '8.6'
+            dependencies: highest
+
+    steps: *extension-arrow-build-steps
+
+  extension-arrow-pie-install-test:
+    needs: changes
+    if: ${{ needs.changes.outputs.extension-arrow == 'true' && github.event_name != 'pull_request' }}
+    runs-on: ubuntu-24.04
+    env:
+      RUSTUP_TOOLCHAIN: stable
+
+    steps: &extension-arrow-pie-steps
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # git describe needs history and tags to resolve the extension version
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: ./.github/actions/setup-php
+        with:
+          php-version: '8.3'
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, :redis'
+          ini-values: 'memory_limit=-1'
+          tools: 'composer:v2, phpize, php-config'
+
+      - name: Install Composer Dependencies
+        uses: ./.github/actions/composer-install
+        with:
+          php-version: '8.3'
+          dependencies: locked
+
+      - name: Setup Rust extension toolchain
+        id: rust
+        uses: ./.github/actions/setup-rust-toolchain
+
+      - name: Install PIE
+        run: |
+          sudo curl -L -o /usr/local/bin/pie https://github.com/php/pie/releases/latest/download/pie.phar
+          sudo chmod +x /usr/local/bin/pie
+          pie --version
+
+      - name: Prepare local package for PIE installation
+        run: |
+          # git archive applies export-subst like GitHub release archives, so the build resolves its version from .git_archival.txt
+          git archive HEAD src/extension/arrow-ext src/extension/parquet-engine | tar -x -C "$RUNNER_TEMP"
+          cd "$RUNNER_TEMP/src/extension/arrow-ext"
+          jq '. + {"version": "0.0.9999"}' composer.json > composer.tmp.json
+          mv composer.tmp.json composer.json
+
+      - name: Install extension via PIE (from local)
+        env:
+          LIBCLANG_PATH: ${{ steps.rust.outputs.libclang-path }}
+          CLANG_PATH: ${{ steps.rust.outputs.clang-path }}
+        run: |
+          sudo pie repository:remove packagist.org
+          sudo pie repository:add path "$RUNNER_TEMP/src/extension/arrow-ext"
+          sudo env "PATH=$PATH" "LIBCLANG_PATH=$LIBCLANG_PATH" ${CLANG_PATH:+"CLANG_PATH=$CLANG_PATH"} "RUSTUP_TOOLCHAIN=$RUSTUP_TOOLCHAIN" "CARGO_HOME=$CARGO_HOME" "RUSTUP_HOME=$RUSTUP_HOME" pie install flow-php/arrow-ext:0.0.9999@dev
+
+      - name: Verify extension is loaded
+        run: |
+          php -m | grep arrow
+
+      - name: Verify extension version
+        run: |
+          describe="$(git describe --tags --match '[0-9]*')"
+          if git describe --exact-match --tags --match '[0-9]*' HEAD >/dev/null 2>&1; then
+            expected="$describe"
+          else
+            # commits past a tag are a pre-release of the next minor: 0.44.1-65-g4525c4adc -> 0.45.0-dev+65.g4525c4adc
+            expected="$(echo "$describe" | awk -F- '{split($1, v, "."); printf "%d.%d.0-dev+%s.%s", v[1], v[2] + 1, $2, $3}')"
+          fi
+          actual="$(php -r 'echo phpversion("arrow");')"
+          echo "expected: $expected, actual: $actual"
+          test "$actual" = "$expected"
+
+  extension-arrow-pie-install-test-macos:
+    needs: changes
+    if: ${{ needs.changes.outputs.extension-arrow == 'true' && github.event_name != 'pull_request' }}
+    runs-on: macos-latest
+    env:
+      RUSTUP_TOOLCHAIN: stable
+
+    steps: *extension-arrow-pie-steps
+
+  extension-pg-query-build:
+    needs: changes
+    if: ${{ needs.changes.outputs.extension-pg-query == 'true' }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: '8.3'
+            ts: nts
+            dependencies: locked
+          - php: '8.6'
+            ts: zts
+            dependencies: highest
+
+    steps: &extension-pg-query-build-steps
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # git describe needs history and tags to resolve the extension version
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: ./.github/actions/setup-php
+        with:
+          php-version: ${{ matrix.php }}
+          thread-safety: ${{ matrix.ts }}
+          coverage: none
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, protobuf, :redis'
+          ini-values: 'memory_limit=-1'
+          tools: 'composer:v2, phpize, php-config'
+
+      - name: Install Composer Dependencies
+        uses: ./.github/actions/composer-install
+        with:
+          php-version: ${{ matrix.php }}
+          dependencies: ${{ matrix.dependencies }}
+
+      - name: Install build dependencies (Ubuntu)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential autoconf automake libtool protobuf-compiler libprotobuf-c-dev
+
+      - name: Install build dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install autoconf automake libtool protobuf protobuf-c
+
+      - name: Build libpg_query and extension
+        working-directory: src/extension/pg-query-ext
+        run: |
+          make clean || true
+          make build
+
+      - name: Run extension tests
+        working-directory: src/extension/pg-query-ext
+        run: make test
+
+      - name: Run requests on threads that did not load the extension
+        if: matrix.php == '8.6' && matrix.ts == 'zts' && runner.os == 'Linux'
+        working-directory: src/extension/pg-query-ext
+        run: |
+          # gdb returns 0 for a crashed test, so the plain run decides and gdb only prints the backtrace
+          make test-zts || {
+            sudo apt-get install -y gdb
+            make test-zts ZTS_RUNNER="gdb -batch -ex run -ex \"thread apply all bt\" --args" || true
+            exit 1
+          }
+
+      - name: Install extension
+        uses: ./.github/actions/enable-php-extension
+        with:
+          name: pg_query
+          path: src/extension/pg-query-ext/ext/modules/pg_query.so
+
+  extension-pg-query-build-full-matrix:
+    needs: changes
+    if: ${{ needs.changes.outputs.extension-pg-query == 'true' && github.event_name != 'pull_request' }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.3', '8.4', '8.5', '8.6']
+        ts: ['nts', 'zts']
+        exclude:
+          - php: '8.3'
+            ts: nts
+          - php: '8.6'
+            ts: zts
+        include:
+          - php: '8.3'
+            dependencies: locked
+          - php: '8.4'
+            dependencies: highest
+          - php: '8.5'
+            dependencies: highest
+          - php: '8.6'
+            dependencies: highest
+
+    steps: *extension-pg-query-build-steps
+
+  extension-pg-query-build-macos:
+    needs: changes
+    if: ${{ needs.changes.outputs.extension-pg-query == 'true' && github.event_name != 'pull_request' }}
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: '8.3'
+            ts: nts
+            dependencies: locked
+
+    steps: *extension-pg-query-build-steps
+
+  extension-pg-query-build-macos-full-matrix:
+    needs: changes
+    if: ${{ needs.changes.outputs.extension-pg-query == 'true' && github.event_name != 'pull_request' }}
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.3', '8.4', '8.5', '8.6']
+        ts: ['nts', 'zts']
+        exclude:
+          - php: '8.3'
+            ts: nts
+        include:
+          - php: '8.3'
+            dependencies: locked
+          - php: '8.4'
+            dependencies: highest
+          - php: '8.5'
+            dependencies: highest
+          - php: '8.6'
+            dependencies: highest
+
+    steps: *extension-pg-query-build-steps
+
+  extension-pg-query-pie-install-test:
+    needs: changes
+    if: ${{ needs.changes.outputs.extension-pg-query == 'true' && github.event_name != 'pull_request' }}
+    runs-on: ubuntu-24.04
+
+    steps: &extension-pg-query-pie-steps
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # git describe needs history and tags to resolve the extension version
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: ./.github/actions/setup-php
+        with:
+          php-version: '8.3'
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, :redis'
+          ini-values: 'memory_limit=-1'
+          tools: 'composer:v2, phpize, php-config'
+
+      - name: Install Composer Dependencies
+        uses: ./.github/actions/composer-install
+        with:
+          php-version: '8.3'
+          dependencies: locked
+
+      - name: Install build dependencies (Ubuntu)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential autoconf automake libtool protobuf-compiler libprotobuf-c-dev
+
+      - name: Install build dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install autoconf automake libtool protobuf protobuf-c
+
+      - name: Install PIE
+        run: |
+          sudo curl -L -o /usr/local/bin/pie https://github.com/php/pie/releases/latest/download/pie.phar
+          sudo chmod +x /usr/local/bin/pie
+          pie --version
+
+      - name: Prepare local package for PIE installation
+        run: |
+          # git archive applies export-subst like GitHub release archives, so the build resolves its version from .git_archival.txt
+          git archive HEAD src/extension/pg-query-ext | tar -x -C "$RUNNER_TEMP"
+          cd "$RUNNER_TEMP/src/extension/pg-query-ext"
+          jq '. + {"version": "0.0.9999"}' composer.json > composer.tmp.json
+          mv composer.tmp.json composer.json
+
+      - name: Install extension via PIE (from local)
+        run: |
+          sudo pie repository:remove packagist.org
+          sudo pie repository:add path "$RUNNER_TEMP/src/extension/pg-query-ext"
+          sudo pie install flow-php/pg-query-ext:0.0.9999@dev
+
+      - name: Verify extension is loaded
+        run: |
+          php -m | grep pg_query
+
+      - name: Verify extension version
+        run: |
+          expected="$(git describe --tags --match '[0-9]*' | sed -E 's/-([0-9]+)-(g[0-9a-f]+)$/+\1.\2/')"
+          actual="$(php -r 'echo phpversion("pg_query");')"
+          echo "expected: $expected, actual: $actual"
+          test "$actual" = "$expected"
+
+  extension-pg-query-pie-install-test-macos:
+    needs: changes
+    if: ${{ needs.changes.outputs.extension-pg-query == 'true' && github.event_name != 'pull_request' }}
+    runs-on: macos-latest
+
+    steps: *extension-pg-query-pie-steps
+
+  website-build-phar:
+    needs: changes
+    if: ${{ needs.changes.outputs.website == 'true' }}
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: "Setup PHP"
+        uses: "./.github/actions/setup-php"
+        with:
+          php-version: "8.3"
+          coverage: "none"
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, :redis'
+          ini-values: 'memory_limit=-1'
+          tools: 'composer:v2'
+
+      - name: "Install just"
+        uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
+        with:
+          just-version: "1.50.0"
+
+      - name: "Install Composer dependencies"
+        uses: "./.github/actions/composer-install"
+        with:
+          php-version: "8.3"
+          dependencies: "locked"
+          cache-key-suffix: "-locked-phar"
+
+      - *pg-query-php-version
+
+      - *pg-query-cache
+
+      - *pg-query-build-dependencies
+
+      - *pg-query-build
+
+      - *pg-query-enable
+
+      - name: "Build PHAR file"
+        run: "just phar"
+
+      - name: "Upload Flow PHAR"
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: "website-flow-phar"
+          path: "web/landing/assets/wasm/tools/flow.phar"
+          retention-days: 1
+
+  website-build-docs:
+    needs: changes
+    if: ${{ needs.changes.outputs.website == 'true' }}
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: "Setup PHP"
+        uses: "./.github/actions/setup-php"
+        with:
+          php-version: "8.3"
+          coverage: "none"
+          extensions: ':psr, bcmath, curl, dom, hash, json, mbstring, pdo_sqlite, xml, xmlwriter, xmlreader, zip, zlib, :redis'
+          ini-values: 'memory_limit=-1'
+          tools: 'composer:v2'
+
+      - name: "Install just"
+        uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
+        with:
+          just-version: "1.50.0"
+
+      - name: "Install Composer dependencies"
+        uses: "./.github/actions/composer-install"
+        with:
+          php-version: "8.3"
+          dependencies: "locked"
+          cache-key-suffix: "-locked"
+
+      - name: "Install website Composer dependencies"
+        uses: "./.github/actions/composer-install"
+        with:
+          php-version: "8.3"
+          dependencies: "locked"
+          working-directory: "web/landing"
+          cache-key-suffix: "-website"
+          composer-file: "web/landing/composer.lock"
+
+      - name: "Build Docs"
+        run: "just docs"
+
+      - name: "Upload generated docs"
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: "website-flow-docs"
+          path: |
+            web/landing/resources/api.json
+            web/landing/resources/dsl.json
+            web/landing/resources/php.json
+            web/landing/assets/codemirror/completions/flow-api.js
+          retention-days: 1
+
+  website-tests:
+    needs: [changes, website-build-phar, website-build-docs]
+    if: ${{ needs.changes.outputs.website == 'true' }}
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version:
+          - "8.3"
+        operating-system:
+          - "ubuntu-24.04"
+
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: "Get Flow Version"
+        id: flow_version
+        uses: WyriHaximus/github-action-get-previous-tag@83f26fea93bc7efcbca2eb5591f5eaaf66b8f206 # v2.1.0
+        with:
+          fallback: 1.x-dev
+
+      - name: "Setup PHP"
+        uses: "./.github/actions/setup-php"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          coverage: "pcov"
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, :redis'
+          ini-values: 'memory_limit=-1'
+          tools: 'composer:v2'
+
+      - name: "Install just"
+        uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
+        with:
+          just-version: "1.50.0"
+
+      - name: "Install website Composer dependencies"
+        uses: "./.github/actions/composer-install"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "locked"
+          working-directory: "web/landing"
+          cache-key-suffix: "-website"
+          composer-file: "web/landing/composer.lock"
+
+      - name: "Setup Node.js"
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+
+      - name: "Create Wrangler dev.vars"
+        run: |
+          cat > .dev.vars << EOF
+          TURNSTILE_SECRET_KEY=dummy
+          TURNSTILE_MODE=bypass
+          ENABLE_R2_PROXY=true
+          RATE_LIMITER_MODE=bypass
+          EOF
+        working-directory: "terraform/cloudflare/workers"
+
+      - name: "Start Wrangler in background"
+        run: |
+          npx wrangler@latest dev --port 8787 > wrangler.log 2>&1 &
+          echo $! > wrangler.pid
+          # Wait for wrangler to be ready
+          timeout 30 bash -c 'until curl -s http://localhost:8787 > /dev/null; do sleep 1; done'
+        working-directory: "terraform/cloudflare/workers"
+
+      - name: "Download Flow PHAR"
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: "website-flow-phar"
+          path: "web/landing/assets/wasm/tools"
+
+      - name: "Download generated docs"
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: "website-flow-docs"
+          path: "web/landing"
+
+      # the website suite runs on the monorepo phpunit, not a copy of its own
+      - name: "Install PHPUnit"
+        run: "composer install --working-dir=tools/phpunit"
+
+      - name: "Install Playwright server"
+        run: "vendor/bin/playwright-install"
+        working-directory: "web/landing"
+
+      # Playwright advises against caching browsers on CI: https://playwright.dev/docs/ci#caching-browsers
+      - name: "Install Playwright Chromium headless shell"
+        run: "npx playwright install --with-deps --only-shell chromium"
+        working-directory: "web/landing/vendor/playwright-php/playwright/bin"
+
+      - name: "Test"
+        run: "just test-website"
+        env:
+          PLAYGROUND_API_URL: "http://localhost:8787/api/playground/snippets"
+          PLAYGROUND_SNIPPETS_URL: "http://localhost:8787"
+          PLAYWRIGHT_HEADLESS: "true"
+
+      - name: "Stop Wrangler"
+        if: always()
+        run: |
+          if [ -f wrangler.pid ]; then
+            kill "$(cat wrangler.pid)" || true
+          fi
+          if [ -f wrangler.log ]; then
+            echo "=== Wrangler Logs ==="
+            cat wrangler.log
+          fi
+        working-directory: "terraform/cloudflare/workers"
+
+      - name: "Test Build"
+        run: "composer build"
+        working-directory: "web/landing"
+        env:
+          SCHEME: https
+          DOMAIN: flow-php.com
+          FLOW_VERSION: ${{ steps.flow_version.outputs.tag }}
+
+  documentation-linter:
+    needs: changes
+    if: ${{ needs.changes.outputs.documentation == 'true' }}
+    runs-on: "ubuntu-24.04"
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: "Setup PHP"
+        uses: "./.github/actions/setup-php"
+        with:
+          php-version: "8.3"
+          coverage: "none"
+          extensions: ':psr, bcmath, curl, dom, hash, json, mbstring, pdo_sqlite, xml, xmlwriter, xmlreader, zip, zlib, :redis'
+          ini-values: 'memory_limit=-1'
+          tools: 'composer:v2'
+
+      - name: "Install just"
+        uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
+        with:
+          just-version: "1.50.0"
+
+      - name: "Install Composer dependencies"
+        uses: "./.github/actions/composer-install"
+        with:
+          php-version: "8.3"
+          dependencies: "locked"
+          cache-key-suffix: "-locked"
+
+      - name: "Install website Composer dependencies"
+        uses: "./.github/actions/composer-install"
+        with:
+          php-version: "8.3"
+          dependencies: "locked"
+          working-directory: "web/landing"
+          cache-key-suffix: "-website"
+          composer-file: "web/landing/composer.lock"
+
+      - name: "Build Docs"
+        run: "just docs"
+
+      - name: "MD Link Linter"
+        uses: "docker://norberttech/md-link-linter@sha256:bf17e53dd716dcc2f0a41ed45af3e7bfc06b56b40fe6d8064b29646c1582c54c" # latest as of 2026-09-25
+        with:
+          entrypoint: "/composer/vendor/bin/mdlinklint"
+          args: "--exclude=vendor --exclude=tests --exclude=examples --exclude=guides --exclude=documentation ."
+
+  test-result:
+    needs:
+      - changes
+      - static-analyze
+      - tests
+      - extension-tests
+      - phpunit-telemetry-tests
+      - phpunit-telemetry-tests-other-combinations
+      - mutation-tests
+      - extension-flow-php-build
+      - extension-flow-php-build-full-matrix
+      - extension-flow-php-build-macos
+      - extension-flow-php-build-macos-full-matrix
+      - extension-flow-php-pie-install-test
+      - extension-flow-php-pie-install-test-macos
+      - extension-arrow-build
+      - extension-arrow-build-full-matrix
+      - extension-arrow-build-macos
+      - extension-arrow-build-macos-full-matrix
+      - extension-arrow-pie-install-test
+      - extension-arrow-pie-install-test-macos
+      - extension-pg-query-build
+      - extension-pg-query-build-full-matrix
+      - extension-pg-query-build-macos
+      - extension-pg-query-build-macos-full-matrix
+      - extension-pg-query-pie-install-test
+      - extension-pg-query-pie-install-test-macos
+      - website-build-phar
+      - website-build-docs
+      - website-tests
+      - documentation-linter
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: "Fail on a failed or cancelled job"
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        run: exit 1

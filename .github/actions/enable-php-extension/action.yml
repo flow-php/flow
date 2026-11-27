@@ -1,0 +1,23 @@
+name: "enable-php-extension"
+description: "Copies a built PHP extension into the extension directory of the active PHP, enables it in the loaded php.ini, and fails when PHP does not load it"
+
+inputs:
+  name:
+    description: "Module name as php -m prints it"
+    required: true
+  path:
+    description: "Path of the built .so file"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Enable extension"
+      shell: bash
+      env:
+        EXTENSION_NAME: ${{ inputs.name }}
+        EXTENSION_PATH: ${{ inputs.path }}
+      run: |
+        sudo cp "$EXTENSION_PATH" "$(php -r 'echo ini_get("extension_dir");')/"
+        echo "extension=$(basename "$EXTENSION_PATH")" | sudo tee -a "$(php -r 'echo php_ini_loaded_file();')"
+        php -m | grep -x "$EXTENSION_NAME"

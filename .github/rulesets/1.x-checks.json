@@ -15,7 +15,8 @@
         "strict_required_status_checks_policy": false,
         "required_status_checks": [
           { "context": "check-commit-authorship", "integration_id": 15368 },
-          { "context": "pull-request-description / Pull Request - Description Validate", "integration_id": 15368 }
+          { "context": "pull-request-description", "integration_id": 15368 },
+          { "context": "test-result", "integration_id": 15368 }
         ]
       }
     },

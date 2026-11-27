@@ -1,15 +1,515 @@
+name: release
+
 on:
+  workflow_dispatch:
+    inputs:
+      run:
+        description: "The jobs to run"
+        type: choice
+        options:
+          - publish
+          - changelog
+        default: publish
+  push:
+    branches: [ 1.x ]
+    tags: [ '*' ]
+    paths-ignore:
+      - 'CHANGELOG.md'
+  schedule:
+    - cron: '0 3 * * *'
   release:
-    types:
-      - published
+    types: [ created, published ]
 
 permissions:
   contents: read
 
 jobs:
-  build-archives:
+  changelog-update:
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.run == 'changelog') || (github.event_name == 'push' && github.ref == 'refs/heads/1.x') }}
     environment: ci
-    name: "Release"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Load GitHub App private key"
+        id: app-credentials
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
+        with:
+          version: "2.42.0"
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          APP_PRIVATE_KEY: op://ci/github-app-flow-ci/private
+
+      - name: "Create GitHub App token"
+        id: app-token
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
+        with:
+          client-id: ${{ vars.FLOW_PHP_CI_CLIENT_ID }}
+          private-key: ${{ steps.app-credentials.outputs.APP_PRIVATE_KEY }}
+          owner: flow-php
+          repositories: flow
+          permission-contents: write
+          permission-pull-requests: read
+
+      - name: "Update Changelog File"
+        uses: docker://aeonphp/automation@sha256:efd2a2ed267aab2c45bed40540f0e522487c6817f5ae81f76032768b6ef47ed6
+        env:
+          AEON_AUTOMATION_GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        with:
+          entrypoint: "/composer/vendor/bin/automation"
+          args: "changelog:generate ${{ github.repository }} --github-file-update-path=CHANGELOG.md --skip-from=\"dependabot[bot]\" --skip-from=\"aeon-automation\""
+
+  changelog-release:
+    if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
+    environment: ci
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Load GitHub App private key"
+        id: app-credentials
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
+        with:
+          version: "2.42.0"
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          APP_PRIVATE_KEY: op://ci/github-app-flow-ci/private
+
+      - name: "Create GitHub App token"
+        id: app-token
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
+        with:
+          client-id: ${{ vars.FLOW_PHP_CI_CLIENT_ID }}
+          private-key: ${{ steps.app-credentials.outputs.APP_PRIVATE_KEY }}
+          owner: flow-php
+          repositories: flow
+          permission-contents: write
+          permission-pull-requests: read
+
+      - name: "Add new release to Changelog File"
+        uses: docker://aeonphp/automation@sha256:efd2a2ed267aab2c45bed40540f0e522487c6817f5ae81f76032768b6ef47ed6
+        env:
+          AEON_AUTOMATION_GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        with:
+          entrypoint: "/composer/vendor/bin/automation"
+          args: "changelog:release:unreleased ${{ github.repository }} CHANGELOG.md ${{ github.ref_name }} --github-file-changelog-update"
+
+  release-description-update:
+    if: ${{ github.event_name == 'release' && github.event.action == 'created' }}
+    environment: ci
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Load GitHub App private key"
+        id: app-credentials
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
+        with:
+          version: "2.42.0"
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          APP_PRIVATE_KEY: op://ci/github-app-flow-ci/private
+
+      - name: "Create GitHub App token"
+        id: app-token
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
+        with:
+          client-id: ${{ vars.FLOW_PHP_CI_CLIENT_ID }}
+          private-key: ${{ steps.app-credentials.outputs.APP_PRIVATE_KEY }}
+          owner: flow-php
+          repositories: flow
+          permission-contents: write
+          permission-pull-requests: read
+
+      - name: "Release - Update"
+        uses: docker://aeonphp/automation@sha256:efd2a2ed267aab2c45bed40540f0e522487c6817f5ae81f76032768b6ef47ed6
+        env:
+          AEON_AUTOMATION_GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        with:
+          entrypoint: "/composer/vendor/bin/automation"
+          args: "changelog:generate ${{ github.repository }} --tag=${{ github.event.release.tag_name }} --github-release-update --skip-from=\"dependabot[bot]\" --skip-from=\"aeon-automation\""
+
+  monorepo-split:
+    if: ${{ github.event_name == 'push' }}
+    concurrency:
+      group: ${{ github.workflow }}-monorepo-split-${{ github.ref }}
+      cancel-in-progress: false
+    environment: ci
+    runs-on: ubuntu-24.04
+
+    env:
+      PACKAGES: |
+        src/core/etl etl
+        src/cli cli
+
+        src/lib/array-dot array-dot
+        src/lib/azure-sdk azure-sdk
+        src/lib/doctrine-dbal-bulk doctrine-dbal-bulk
+        src/lib/parquet parquet
+        src/lib/parquet-viewer parquet-viewer
+        src/lib/dremel dremel
+        src/lib/filesystem filesystem
+        src/lib/snappy snappy
+        src/lib/types types
+        src/lib/postgresql postgresql
+        src/lib/telemetry telemetry
+
+        src/adapter/etl-adapter-avro etl-adapter-avro
+        src/adapter/etl-adapter-chartjs etl-adapter-chartjs
+        src/adapter/etl-adapter-csv etl-adapter-csv
+        src/adapter/etl-adapter-doctrine etl-adapter-doctrine
+        src/adapter/etl-adapter-excel etl-adapter-excel
+        src/adapter/etl-adapter-google-sheet etl-adapter-google-sheet
+        src/adapter/etl-adapter-http etl-adapter-http
+        src/adapter/etl-adapter-json etl-adapter-json
+        src/adapter/etl-adapter-logger etl-adapter-logger
+        src/adapter/etl-adapter-parquet etl-adapter-parquet
+        src/adapter/etl-adapter-text etl-adapter-text
+        src/adapter/etl-adapter-xml etl-adapter-xml
+        src/adapter/etl-adapter-postgresql etl-adapter-postgresql
+        src/adapter/etl-adapter-seal etl-adapter-seal
+
+        src/bridge/filesystem/azure filesystem-azure-bridge
+        src/bridge/filesystem/async-aws filesystem-async-aws-bridge
+        src/bridge/filesystem/sftp filesystem-sftp-bridge
+        src/bridge/monolog/http monolog-http-bridge
+        src/bridge/monolog/telemetry monolog-telemetry-bridge
+        src/bridge/openapi/specification openapi-specification-bridge
+        src/bridge/mago/types mago-types-bridge
+        src/bridge/phpstan/types phpstan-types-bridge
+        src/bridge/postgresql/valinor postgresql-valinor-bridge
+        src/bridge/psr3/telemetry psr3-telemetry-bridge
+        src/bridge/psr7/telemetry psr7-telemetry-bridge
+        src/bridge/psr18/telemetry psr18-telemetry-bridge
+        src/bridge/symfony/console symfony-console-bridge
+        src/bridge/symfony/filesystem-bundle symfony-filesystem-bundle
+        src/bridge/symfony/filesystem-cache symfony-filesystem-cache-bridge
+        src/bridge/symfony/http-foundation symfony-http-foundation-bridge
+        src/bridge/symfony/http-foundation-telemetry symfony-http-foundation-telemetry-bridge
+        src/bridge/symfony/postgresql-bundle symfony-postgresql-bundle
+        src/bridge/symfony/postgresql-cache symfony-postgresql-cache-bridge
+        src/bridge/symfony/postgresql-messenger symfony-postgresql-messenger-bridge
+        src/bridge/symfony/postgresql-session symfony-postgresql-session-bridge
+        src/bridge/symfony/telemetry-bundle symfony-telemetry-bundle
+        src/bridge/telemetry/otlp telemetry-otlp-bridge
+        src/bridge/phpunit/postgresql phpunit-postgresql-bridge
+        src/bridge/phpunit/telemetry phpunit-telemetry-bridge
+
+        src/extension/pg-query-ext pg-query-ext
+        src/extension/arrow-ext arrow-ext
+        src/extension/flow-php-ext flow-php-ext
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: "List split repositories"
+        id: packages
+        run: |
+          set -euo pipefail
+          {
+            echo "repositories<<REPOSITORIES"
+            awk 'NF && NF != 2 { exit 1 } NF { print $2 }' <<< "$PACKAGES"
+            echo "REPOSITORIES"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: "Load GitHub App private key"
+        id: app-credentials
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
+        with:
+          version: "2.42.0"
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          APP_PRIVATE_KEY: op://ci/github-app-flow-ci/private
+
+      - name: "Create GitHub App token"
+        id: app-token
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
+        with:
+          client-id: ${{ vars.FLOW_PHP_CI_CLIENT_ID }}
+          private-key: ${{ steps.app-credentials.outputs.APP_PRIVATE_KEY }}
+          owner: flow-php
+          repositories: ${{ steps.packages.outputs.repositories }}
+          permission-contents: write
+          permission-workflows: write
+
+      - name: "Resolve GitHub App bot identity"
+        id: bot
+        env:
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          id="$(gh api "users/${APP_SLUG}%5Bbot%5D" --jq .id)"
+          {
+            echo "name=${APP_SLUG}[bot]"
+            echo "email=${id}+${APP_SLUG}[bot]@users.noreply.github.com"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: "Split packages"
+        env:
+          SPLIT_TOKEN: ${{ steps.app-token.outputs.token }}
+          BOT_NAME: ${{ steps.bot.outputs.name }}
+          BOT_EMAIL: ${{ steps.bot.outputs.email }}
+        run: |
+          set -euo pipefail
+          failed=()
+
+          while read -r local_path split_repository; do
+            if [ -z "$local_path" ]; then
+              continue
+            fi
+
+            echo "::group::${local_path} to flow-php/${split_repository}"
+
+            if ! bash .github/scripts/monorepo-split.sh "$local_path" "$split_repository" < /dev/null; then
+              failed+=("$split_repository")
+            fi
+
+            echo "::endgroup::"
+          done <<< "$PACKAGES"
+
+          if [ "${#failed[@]}" -gt 0 ]; then
+            echo "::error::Split failed for: ${failed[*]}"
+            exit 1
+          fi
+
+  build-phar:
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.run == 'publish') || github.event_name == 'schedule' || (github.event_name == 'push' && github.ref == 'refs/heads/1.x') }}
+    runs-on: ubuntu-24.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+        php-version:
+          - "8.3"
+
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: "Setup PHP"
+        uses: "./.github/actions/setup-php"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, :redis'
+          ini-values: "memory_limit=-1"
+          tools: "composer:v2"
+          coverage: "none"
+
+      - name: "Install just"
+        uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
+        with:
+          just-version: "1.50.0"
+
+      - name: "Install Composer dependencies"
+        uses: "./.github/actions/composer-install"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "locked"
+          cache-key-suffix: "-locked-phar"
+
+      - &pg-query-build-dependencies
+        name: "Install pg-query-ext build dependencies"
+        run: sudo apt-get update && sudo apt-get install -y build-essential autoconf automake libtool protobuf-compiler libprotobuf-c-dev
+
+      - &pg-query-build
+        name: "Build pg-query-ext"
+        working-directory: src/extension/pg-query-ext
+        # a shallow checkout has no tags for config.m4 to describe
+        run: |
+          if ! git describe --tags --match '[0-9]*' >/dev/null 2>&1; then
+            PG_QUERY_EXT_VERSION="0.0.0-0-g$(git rev-parse --short HEAD)"
+            export PG_QUERY_EXT_VERSION
+          fi
+          make build
+
+      - &pg-query-enable
+        name: "Enable pg-query-ext"
+        uses: ./.github/actions/enable-php-extension
+        with:
+          name: pg_query
+          path: src/extension/pg-query-ext/ext/modules/pg_query.so
+
+      - name: "Build PHAR file"
+        run: "just phar"
+
+      - name: "Validate Flow PHAR"
+        run: |
+          ./build/flow.phar --version
+
+      - name: "Upload Flow PHAR for Docker build"
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: "docker-phar"
+          path: "build/flow.phar"
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: "Prepare artifact name"
+        if: ${{ github.event_name == 'push' }}
+        shell: bash
+        run: |
+          BUILD_TAG=${GITHUB_SHA:0:7}
+          echo "BUILD_TAG=$BUILD_TAG" >> "$GITHUB_ENV"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: flow-${{ env.BUILD_TAG }}.phar
+          path: build/flow.phar
+          overwrite: true
+
+  publish-website:
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.run == 'publish') || github.event_name == 'schedule' || (github.event_name == 'push' && github.ref == 'refs/heads/1.x') }}
+    environment: ci
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: ${{ github.workflow }}-publish-website-${{ github.ref }}
+      cancel-in-progress: false
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version:
+          - "8.3"
+
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: "Get Flow Version"
+        id: flow_version
+        uses: WyriHaximus/github-action-get-previous-tag@83f26fea93bc7efcbca2eb5591f5eaaf66b8f206 # v2.1.0
+        with:
+          fallback: 1.x-dev
+
+      - name: "Setup PHP"
+        uses: "./.github/actions/setup-php"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, :redis'
+          ini-values: "memory_limit=-1"
+          tools: "composer:v2"
+
+      - name: "Install just"
+        uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
+        with:
+          just-version: "1.50.0"
+
+      - name: "Install Composer dependencies"
+        uses: "./.github/actions/composer-install"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "locked"
+          cache-key-suffix: "-website-phar"
+
+      - name: "Install Composer dependencies (web/landing)"
+        uses: "./.github/actions/composer-install"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "locked"
+          working-directory: "web/landing"
+          cache-key-suffix: "-website"
+          composer-file: "web/landing/composer.lock"
+
+      - *pg-query-build-dependencies
+
+      - *pg-query-build
+
+      - *pg-query-enable
+
+      - name: "Generate documentation"
+        run: "just docs"
+
+      - name: "Build latest version Flow Phar for playground"
+        run: "just phar"
+
+      - name: "Build"
+        run: "composer build"
+        env:
+          SCHEME: https
+          DOMAIN: flow-php.com
+          PLAYGROUND_API_URL: https://flow-php.com/api/playground/snippets
+          PLAYGROUND_SNIPPETS_URL: https://playground-snippets.flow-php.com
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FLOW_VERSION: ${{ steps.flow_version.outputs.tag }}
+        working-directory: "web/landing"
+
+      - name: "Generate Api References"
+        run: "just docs-api"
+
+      - name: "Setup Node.js"
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          # the workflow also starts on a release
+          package-manager-cache: false
+
+      - name: "Build Pagefind index"
+        run: "npx --yes pagefind@1.5.2 --site web/landing/build --output-subdir pagefind"
+
+      - name: "Load GitHub App private key"
+        id: app-credentials
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
+        with:
+          version: "2.42.0"
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          APP_PRIVATE_KEY: op://ci/github-app-flow-ci/private
+
+      - name: "Create GitHub App token"
+        id: app-token
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
+        with:
+          client-id: ${{ vars.FLOW_PHP_CI_CLIENT_ID }}
+          private-key: ${{ steps.app-credentials.outputs.APP_PRIVATE_KEY }}
+          owner: flow-php
+          repositories: flow-php.com
+          permission-contents: write
+
+      - name: "Resolve GitHub App bot identity"
+        id: bot
+        env:
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          id="$(gh api "users/${APP_SLUG}%5Bbot%5D" --jq .id)"
+          {
+            echo "name=${APP_SLUG}[bot]"
+            echo "email=${id}+${APP_SLUG}[bot]@users.noreply.github.com"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: "Push build to website repository"
+        env:
+          WEBSITE_TOKEN: ${{ steps.app-token.outputs.token }}
+          COMMIT_MESSAGE: "Update from https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
+          BOT_NAME: ${{ steps.bot.outputs.name }}
+          BOT_EMAIL: ${{ steps.bot.outputs.email }}
+        run: |
+          set -euo pipefail
+          target="$(mktemp -d)"
+          helper="!f() { echo username=x-access-token; echo \"password=\${WEBSITE_TOKEN}\"; }; f"
+          git -c credential.helper= -c credential.helper="$helper" clone --quiet --depth 1 --branch main \
+            https://github.com/flow-php/flow-php.com.git "$target"
+          find "$target" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -a web/landing/build/. "$target/"
+          git -C "$target" add --all
+          if git -C "$target" diff --cached --quiet; then
+            echo "flow-php.com is up to date."
+            exit 0
+          fi
+          git -C "$target" \
+            -c user.name="$BOT_NAME" \
+            -c user.email="$BOT_EMAIL" \
+            commit --quiet -m "$COMMIT_MESSAGE"
+          git -C "$target" -c credential.helper= -c credential.helper="$helper" push --quiet origin HEAD:main
+
+  build-archives:
+    if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
+    environment: ci
     runs-on: ${{ matrix.operating-system }}
     permissions:
       contents: write
@@ -27,17 +527,32 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: "Setup PHP Environment"
-        uses: "./.github/actions/setup-php-env"
+      - name: "Setup PHP"
+        uses: "./.github/actions/setup-php"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, :redis'
+          ini-values: "memory_limit=-1"
+          tools: "composer:v2"
+          coverage: "none"
+
+      - name: "Install just"
+        uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
+        with:
+          just-version: "1.50.0"
+
+      - name: "Install Composer dependencies"
+        uses: "./.github/actions/composer-install"
         with:
           php-version: "${{ matrix.php-version }}"
           dependencies: "locked"
-          coverage: "none"
-          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib'
           cache-key-suffix: "-locked-phar"
 
-      - name: "Build pg-query-ext from source"
-        uses: "./.github/actions/pg-query-ext"
+      - *pg-query-build-dependencies
+
+      - *pg-query-build
+
+      - *pg-query-enable
 
       - name: "Build PHAR file"
         run: "just phar"
@@ -97,13 +612,146 @@ jobs:
             build/flow.phar.asc \
             --clobber
 
-  docker-image:
-    needs: build-archives
+  docker-image-build:
+    if: ${{ !cancelled() && (needs.build-phar.result == 'success' || needs.build-archives.result == 'success') }}
+    needs:
+      - build-phar
+      - build-archives
+    env:
+      REGISTRY_IMAGE: ghcr.io/flow-php/flow
+    runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
       packages: write
-    uses: ./.github/workflows/job-docker-image.yml
-    with:
-      tags: "ghcr.io/flow-php/flow:${{ github.ref_name }}"
-      phar-artifact: "docker-phar"
 
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: "linux/amd64"
+            runner: "ubuntu-24.04"
+          - platform: "linux/arm64"
+            runner: "ubuntu-24.04-arm"
+
+    steps:
+      - name: "Prepare platform pair"
+        env:
+          PLATFORM: "${{ matrix.platform }}"
+        run: |
+          echo "PLATFORM_PAIR=${PLATFORM//\//-}" >> "$GITHUB_ENV"
+
+      - name: "Checkout"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: "Download Flow PHAR"
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: "docker-phar"
+          path: "build"
+
+      - name: "Resolve extension revisions"
+        id: extensions
+        env:
+          GH_TOKEN: "${{ github.token }}"
+        run: |
+          for extension in arrow-ext pg-query-ext flow-php-ext; do
+            sha="$(gh api "repos/flow-php/${extension}/commits/1.x" --jq '.sha')"
+            echo "${extension//-/_}=1.x-dev#${sha}" >> "$GITHUB_OUTPUT"
+          done
+
+      - name: "Set up Docker Buildx"
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: "Login to GitHub Container Registry"
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Build and push by digest"
+        id: build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: ./Dockerfile
+          target: flow
+          platforms: "${{ matrix.platform }}"
+          tags: "${{ env.REGISTRY_IMAGE }}"
+          no-cache: ${{ github.event_name == 'schedule' }}
+          build-args: |
+            FLOW_ARROW_EXT=${{ steps.extensions.outputs.arrow_ext }}
+            FLOW_PG_QUERY_EXT=${{ steps.extensions.outputs.pg_query_ext }}
+            FLOW_PHP_EXT=${{ steps.extensions.outputs.flow_php_ext }}
+          outputs: type=image,push-by-digest=true,name-canonical=true,push=true
+
+      - name: "Export digest"
+        env:
+          DIGEST: "${{ steps.build.outputs.digest }}"
+          DIGESTS_DIR: "${{ runner.temp }}/digests"
+        run: |
+          mkdir -p "$DIGESTS_DIR"
+          touch "${DIGESTS_DIR}/${DIGEST#sha256:}"
+
+      - name: "Upload digest"
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: "digests-${{ env.PLATFORM_PAIR }}"
+          path: "${{ runner.temp }}/digests/*"
+          if-no-files-found: error
+          retention-days: 1
+
+  docker-image-merge:
+    env:
+      REGISTRY_IMAGE: ghcr.io/flow-php/flow
+    runs-on: ubuntu-24.04
+    needs:
+      - docker-image-build
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: "Download digests"
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: "${{ runner.temp }}/digests"
+          pattern: "digests-*"
+          merge-multiple: true
+
+      - name: "Set up Docker Buildx"
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: "Login to GitHub Container Registry"
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Create manifest list and push"
+        working-directory: "${{ runner.temp }}/digests"
+        env:
+          TAGS: "${{ github.event_name == 'release' && format('ghcr.io/flow-php/flow:{0}', github.ref_name) || 'ghcr.io/flow-php/flow:latest' }}"
+        run: |
+          tag_args=()
+          for tag in $TAGS; do
+            tag_args+=(--tag "$tag")
+          done
+
+          digest_args=()
+          for digest in *; do
+            digest_args+=("${REGISTRY_IMAGE}@sha256:${digest}")
+          done
+
+          docker buildx imagetools create "${tag_args[@]}" "${digest_args[@]}"
+
+      - name: "Inspect image"
+        env:
+          TAGS: "${{ github.event_name == 'release' && format('ghcr.io/flow-php/flow:{0}', github.ref_name) || 'ghcr.io/flow-php/flow:latest' }}"
+        run: |
+          for tag in $TAGS; do
+            docker buildx imagetools inspect "$tag"
+          done
