@@ -631,7 +631,7 @@ jobs:
           extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, zstd, :redis'
           ini-values: 'memory_limit=-1'
           tools: 'composer:v2, php-config'
-          coverage: ${{ (matrix.php == '8.3' && matrix.ts == 'nts' && runner.os == 'Linux') && 'pcov' || 'none' }}
+          coverage: ${{ (matrix.php == '8.3' && matrix.ts == 'nts') && 'pcov' || 'none' }}
 
       - name: Install just
         uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
@@ -647,7 +647,7 @@ jobs:
         with:
           # ext-php-rs bindings are generated against the PHP headers, so builds are per PHP version and thread safety
           key: php${{ matrix.php }}${{ matrix.ts == 'zts' && '-zts' || '' }}
-          save-if: ${{ github.ref == 'refs/heads/1.x' && runner.os == 'Linux' && github.job == 'extension-flow-php-build' }}
+          save-if: ${{ github.ref == 'refs/heads/1.x' && github.job == 'extension-flow-php-build' }}
           workspaces: |
             src/extension/flow-php-ext -> target
             src/extension/arrow-ext -> target
@@ -692,7 +692,7 @@ jobs:
         run: make test
 
       - name: Run requests on threads that did not load the extension
-        if: matrix.php == '8.6' && matrix.ts == 'zts' && runner.os == 'Linux'
+        if: matrix.php == '8.6' && matrix.ts == 'zts'
         working-directory: src/extension/flow-php-ext
         env: *extension-flow-php-rust-env
         run: |
@@ -716,7 +716,7 @@ jobs:
           path: src/extension/flow-php-ext/ext/modules/flow_php.so
 
       - name: Run ETL Unit Tests with Flow PHP Extension
-        run: just test --testsuite=etl-unit ${{ (matrix.php == '8.3' && matrix.ts == 'nts' && runner.os == 'Linux') && '--coverage-clover=./var/phpunit/coverage/clover/coverage.xml' || '' }}
+        run: just test --testsuite=etl-unit ${{ (matrix.php == '8.3' && matrix.ts == 'nts') && '--coverage-clover=./var/phpunit/coverage/clover/coverage.xml' || '' }}
 
       - name: Run ETL Integration Tests with Flow PHP Extension
         run: just test --testsuite=etl-integration
@@ -746,7 +746,7 @@ jobs:
         run: just test --testsuite=adapter-parquet-integration
 
       - name: Upload to Codecov
-        if: ${{ !cancelled() && matrix.php == '8.3' && matrix.ts == 'nts' && runner.os == 'Linux' }}
+        if: ${{ !cancelled() && matrix.php == '8.3' && matrix.ts == 'nts' }}
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           use_oidc: true
@@ -770,50 +770,6 @@ jobs:
             ts: nts
           - php: '8.6'
             ts: zts
-        include:
-          - php: '8.3'
-            dependencies: locked
-          - php: '8.4'
-            dependencies: highest
-          - php: '8.5'
-            dependencies: highest
-          - php: '8.6'
-            dependencies: highest
-
-    steps: *extension-flow-php-build-steps
-
-  extension-flow-php-build-macos:
-    needs: changes
-    if: ${{ needs.changes.outputs.extension-flow-php == 'true' && github.event_name != 'pull_request' }}
-    permissions:
-      contents: read
-      id-token: write
-    runs-on: macos-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - php: '8.3'
-            ts: nts
-            dependencies: locked
-
-    steps: *extension-flow-php-build-steps
-
-  extension-flow-php-build-macos-full-matrix:
-    needs: changes
-    if: ${{ needs.changes.outputs.extension-flow-php == 'true' && github.event_name != 'pull_request' }}
-    permissions:
-      contents: read
-      id-token: write
-    runs-on: macos-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        php: ['8.3', '8.4', '8.5', '8.6']
-        ts: ['nts', 'zts']
-        exclude:
-          - php: '8.3'
-            ts: nts
         include:
           - php: '8.3'
             dependencies: locked
@@ -944,7 +900,7 @@ jobs:
           extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, zstd, :redis'
           ini-values: 'memory_limit=-1'
           tools: 'composer:v2, php-config'
-          coverage: ${{ (matrix.php == '8.3' && matrix.ts == 'nts' && runner.os == 'Linux') && 'pcov' || 'none' }}
+          coverage: ${{ (matrix.php == '8.3' && matrix.ts == 'nts') && 'pcov' || 'none' }}
 
       - name: Install just
         uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
@@ -960,7 +916,7 @@ jobs:
         with:
           # ext-php-rs bindings are generated against the PHP headers, so builds are per PHP version and thread safety
           key: php${{ matrix.php }}${{ matrix.ts == 'zts' && '-zts' || '' }}
-          save-if: ${{ github.ref == 'refs/heads/1.x' && runner.os == 'Linux' && github.job == 'extension-arrow-build' }}
+          save-if: ${{ github.ref == 'refs/heads/1.x' && github.job == 'extension-arrow-build' }}
           workspaces: |
             src/extension/arrow-ext -> target
 
@@ -993,7 +949,7 @@ jobs:
         run: make test
 
       - name: Run requests on threads that did not load the extension
-        if: matrix.php == '8.6' && matrix.ts == 'zts' && runner.os == 'Linux'
+        if: matrix.php == '8.6' && matrix.ts == 'zts'
         working-directory: src/extension/arrow-ext
         env: *extension-arrow-rust-env
         run: |
@@ -1017,7 +973,7 @@ jobs:
           path: src/extension/arrow-ext/ext/modules/arrow.so
 
       - name: Run Parquet Integration Tests with Arrow
-        run: just test --testsuite=lib-parquet-integration ${{ (matrix.php == '8.3' && matrix.ts == 'nts' && runner.os == 'Linux') && '--coverage-clover=./var/phpunit/coverage/clover/coverage.xml' || '' }}
+        run: just test --testsuite=lib-parquet-integration ${{ (matrix.php == '8.3' && matrix.ts == 'nts') && '--coverage-clover=./var/phpunit/coverage/clover/coverage.xml' || '' }}
 
       - name: Run Parquet Adapter Unit Tests with Arrow
         run: just test --testsuite=adapter-parquet-unit
@@ -1026,7 +982,7 @@ jobs:
         run: just test --testsuite=adapter-parquet-integration
 
       - name: Upload to Codecov
-        if: ${{ !cancelled() && matrix.php == '8.3' && matrix.ts == 'nts' && runner.os == 'Linux' }}
+        if: ${{ !cancelled() && matrix.php == '8.3' && matrix.ts == 'nts' }}
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           use_oidc: true
@@ -1050,50 +1006,6 @@ jobs:
             ts: nts
           - php: '8.6'
             ts: zts
-        include:
-          - php: '8.3'
-            dependencies: locked
-          - php: '8.4'
-            dependencies: highest
-          - php: '8.5'
-            dependencies: highest
-          - php: '8.6'
-            dependencies: highest
-
-    steps: *extension-arrow-build-steps
-
-  extension-arrow-build-macos:
-    needs: changes
-    if: ${{ needs.changes.outputs.extension-arrow == 'true' && github.event_name != 'pull_request' }}
-    permissions:
-      contents: read
-      id-token: write
-    runs-on: macos-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - php: '8.3'
-            ts: nts
-            dependencies: locked
-
-    steps: *extension-arrow-build-steps
-
-  extension-arrow-build-macos-full-matrix:
-    needs: changes
-    if: ${{ needs.changes.outputs.extension-arrow == 'true' && github.event_name != 'pull_request' }}
-    permissions:
-      contents: read
-      id-token: write
-    runs-on: macos-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        php: ['8.3', '8.4', '8.5', '8.6']
-        ts: ['nts', 'zts']
-        exclude:
-          - php: '8.3'
-            ts: nts
         include:
           - php: '8.3'
             dependencies: locked
@@ -1225,16 +1137,10 @@ jobs:
           php-version: ${{ matrix.php }}
           dependencies: ${{ matrix.dependencies }}
 
-      - name: Install build dependencies (Ubuntu)
-        if: runner.os == 'Linux'
+      - name: Install build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential autoconf automake libtool protobuf-compiler libprotobuf-c-dev
-
-      - name: Install build dependencies (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          brew install autoconf automake libtool protobuf protobuf-c
 
       - name: Build libpg_query and extension
         working-directory: src/extension/pg-query-ext
@@ -1247,7 +1153,7 @@ jobs:
         run: make test
 
       - name: Run requests on threads that did not load the extension
-        if: matrix.php == '8.6' && matrix.ts == 'zts' && runner.os == 'Linux'
+        if: matrix.php == '8.6' && matrix.ts == 'zts'
         working-directory: src/extension/pg-query-ext
         run: |
           # gdb returns 0 for a crashed test, so the plain run decides and gdb only prints the backtrace
@@ -1277,44 +1183,6 @@ jobs:
             ts: nts
           - php: '8.6'
             ts: zts
-        include:
-          - php: '8.3'
-            dependencies: locked
-          - php: '8.4'
-            dependencies: highest
-          - php: '8.5'
-            dependencies: highest
-          - php: '8.6'
-            dependencies: highest
-
-    steps: *extension-pg-query-build-steps
-
-  extension-pg-query-build-macos:
-    needs: changes
-    if: ${{ needs.changes.outputs.extension-pg-query == 'true' && github.event_name != 'pull_request' }}
-    runs-on: macos-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - php: '8.3'
-            ts: nts
-            dependencies: locked
-
-    steps: *extension-pg-query-build-steps
-
-  extension-pg-query-build-macos-full-matrix:
-    needs: changes
-    if: ${{ needs.changes.outputs.extension-pg-query == 'true' && github.event_name != 'pull_request' }}
-    runs-on: macos-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        php: ['8.3', '8.4', '8.5', '8.6']
-        ts: ['nts', 'zts']
-        exclude:
-          - php: '8.3'
-            ts: nts
         include:
           - php: '8.3'
             dependencies: locked
@@ -1693,20 +1561,14 @@ jobs:
       - mutation-tests
       - extension-flow-php-build
       - extension-flow-php-build-full-matrix
-      - extension-flow-php-build-macos
-      - extension-flow-php-build-macos-full-matrix
       - extension-flow-php-pie-install-test
       - extension-flow-php-pie-install-test-macos
       - extension-arrow-build
       - extension-arrow-build-full-matrix
-      - extension-arrow-build-macos
-      - extension-arrow-build-macos-full-matrix
       - extension-arrow-pie-install-test
       - extension-arrow-pie-install-test-macos
       - extension-pg-query-build
       - extension-pg-query-build-full-matrix
-      - extension-pg-query-build-macos
-      - extension-pg-query-build-macos-full-matrix
       - extension-pg-query-pie-install-test
       - extension-pg-query-pie-install-test-macos
       - website-build-phar
