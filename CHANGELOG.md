@@ -63,6 +63,7 @@
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - Packagist links in the hero and the footer** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [5aff12](https://github.com/flow-php/flow/commit/5aff126c053740e330fb956cd140866251ab7e0d) - **chore(flow-php/flow): extension build jobs no longer run on macOS** - [@norberttech](https://github.com/norberttech)
 - [#2782](https://github.com/flow-php/flow/pull/2782) - **flow-php/flow - 24 workflow files into pull-request, release and test** - [@norberttech](https://github.com/norberttech)
 - [#2782](https://github.com/flow-php/flow/pull/2782) - **flow-php/flow - pull requests run a reduced matrix, the full one runs nightly** - [@norberttech](https://github.com/norberttech)
 - [#2782](https://github.com/flow-php/flow/pull/2782) - **flow-php/flow - composite actions do one thing and take everything as inputs** - [@norberttech](https://github.com/norberttech)
