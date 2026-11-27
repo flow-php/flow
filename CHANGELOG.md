@@ -1,6 +1,9 @@
-## [Unreleased] - 2026-11-26
+## [Unreleased] - 2026-11-27
 
 ### Added
+- [#2782](https://github.com/flow-php/flow/pull/2782) - **flow-php/flow - test-result check that covers every test job** - [@norberttech](https://github.com/norberttech)
+- [#2782](https://github.com/flow-php/flow/pull/2782) - **flow-php/flow - Codecov configuration with carried forward flags** - [@norberttech](https://github.com/norberttech)
+- [#2782](https://github.com/flow-php/flow/pull/2782) - **flow-php/flow - caches of a closed pull request are deleted** - [@norberttech](https://github.com/norberttech)
 - [#2780](https://github.com/flow-php/flow/pull/2780) - **flow-php/flow-php-ext - CI builds and tests the extension on NTS and ZTS PHP** - [@norberttech](https://github.com/norberttech)
 - [#2780](https://github.com/flow-php/flow/pull/2780) - **flow-php/arrow-ext - CI builds and tests the extension on NTS and ZTS PHP** - [@norberttech](https://github.com/norberttech)
 - [#2780](https://github.com/flow-php/flow/pull/2780) - **flow-php/pg-query-ext - CI builds and tests the extension on NTS and ZTS PHP** - [@norberttech](https://github.com/norberttech)
@@ -60,6 +63,11 @@
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - Packagist links in the hero and the footer** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2782](https://github.com/flow-php/flow/pull/2782) - **flow-php/flow - 24 workflow files into pull-request, release and test** - [@norberttech](https://github.com/norberttech)
+- [#2782](https://github.com/flow-php/flow/pull/2782) - **flow-php/flow - pull requests run a reduced matrix, the full one runs nightly** - [@norberttech](https://github.com/norberttech)
+- [#2782](https://github.com/flow-php/flow/pull/2782) - **flow-php/flow - composite actions do one thing and take everything as inputs** - [@norberttech](https://github.com/norberttech)
+- [#2782](https://github.com/flow-php/flow/pull/2782) - **flow-php/flow - commit authorship check reads commits from the API** - [@norberttech](https://github.com/norberttech)
+- [#2782](https://github.com/flow-php/flow/pull/2782) - **flow-php/flow - Codecov base comes from the nightly run** - [@norberttech](https://github.com/norberttech)
 - [#2780](https://github.com/flow-php/flow/pull/2780) - **flow-php/flow-php-ext - release builds fail when PHP has the wrong thread safety** - [@norberttech](https://github.com/norberttech)
 - [#2780](https://github.com/flow-php/flow/pull/2780) - **flow-php/arrow-ext - release builds fail when PHP has the wrong thread safety** - [@norberttech](https://github.com/norberttech)
 - [#2780](https://github.com/flow-php/flow/pull/2780) - **flow-php/flow-php-ext - make test fails on a skipped test** - [@norberttech](https://github.com/norberttech)
@@ -149,6 +157,8 @@
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/cli - phar build with a composer wrapper** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2782](https://github.com/flow-php/flow/pull/2782) - **flow-php/flow - test runs on push to 1.x** - [@norberttech](https://github.com/norberttech)
+- [#2782](https://github.com/flow-php/flow/pull/2782) - **flow-php/flow - reusable workflow files** - [@norberttech](https://github.com/norberttech)
 - [#2778](https://github.com/flow-php/flow/pull/2778) - **flow-php/flow - mago suppressions that 1.61.0 no longer needs** - [@norberttech](https://github.com/norberttech)
 - [#2778](https://github.com/flow-php/flow/pull/2778) - **flow-php/azure-sdk - dead null check in SimpleXMLNormalizer** - [@norberttech](https://github.com/norberttech)
 - [#2765](https://github.com/flow-php/flow/pull/2765) - **flow-php/etl - partition_by()** - [@norberttech](https://github.com/norberttech)
@@ -161,6 +171,7 @@
 - [#2755](https://github.com/flow-php/flow/pull/2755) - **flow-php/postgresql - ReturningClause::all() and ReturningClause::columns()** - [@norberttech](https://github.com/norberttech)
 
 ### Security
+- [#2782](https://github.com/flow-php/flow/pull/2782) - **flow-php/flow - release jobs build pg_query from source, not from a cache** - [@norberttech](https://github.com/norberttech)
 - [#2746](https://github.com/flow-php/flow/pull/2746) - **flow-php/web - playground file names rendered as text, not as markup** - [@norberttech](https://github.com/norberttech)
 
 ## [0.48.0] - 2026-11-17
